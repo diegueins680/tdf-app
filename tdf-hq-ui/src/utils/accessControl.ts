@@ -1,3 +1,5 @@
+import { evaluatePathAccess, getFeatureByPath } from '../features/featureRegistry';
+
 const INTERNAL_MANAGER_MODULE_KEYS = [
   'admin',
   'crm',
@@ -80,7 +82,6 @@ export function normalizeAccessRoles(roles: readonly string[] | undefined): stri
 
   return normalized;
 }
-
 export function buildAccessibleModuleSet(
   _roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
@@ -138,6 +139,15 @@ export function canAccessLabelTracks(
   return moduleSet.has('admin')
     ? hasAnyRole(normalizedRoles, [...ADMIN_ROLE_KEYS, ...LABEL_TRACK_ROLE_KEYS])
     : hasAnyRole(normalizedRoles, LABEL_TRACK_ROLE_KEYS);
+}
+
+export function canAccessLabelProjects(
+  roles: readonly string[] | undefined,
+  modules: readonly string[] | undefined,
+): boolean {
+  const normalizedRoles = normalizeAccessRoles(roles);
+  const moduleSet = buildAccessibleModuleSet(roles, modules);
+  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, CMS_EDITOR_ROLE_KEYS);
 }
 
 export function canAccessCmsAdmin(
@@ -210,6 +220,9 @@ export function pathRequiresSchoolStaff(path: string): boolean {
 }
 
 export function pathRequiresModule(path: string): string | null {
+  const registeredFeature = getFeatureByPath(path);
+  const registeredModule = registeredFeature?.requiredModules[0];
+  if (registeredModule) return registeredModule.toLowerCase();
   if (path.startsWith('/crm')) return 'crm';
   if (path.startsWith('/social/inbox')) return 'crm';
   if (path.startsWith('/estudio')) return 'scheduling';
@@ -235,10 +248,21 @@ export function canAccessPath(
   roles: readonly string[] | undefined,
   modules: readonly string[] | undefined,
 ): boolean {
+  const registryDecision = evaluatePathAccess(path, {
+    authenticated: true,
+    roles,
+    modules,
+  });
+  if (registryDecision) {
+    return registryDecision.state === 'allowed';
+  }
   if (path.startsWith('/configuracion/roles-permisos') || path.startsWith('/configuracion/usuarios-admin')) {
     return hasStrictAdminAccess(roles, modules);
   }
   if (path.startsWith('/admin/roles')) {
+    return hasStrictAdminAccess(roles, modules);
+  }
+  if (path.startsWith('/admin/commerce')) {
     return hasStrictAdminAccess(roles, modules);
   }
   if (path.startsWith('/social/inbox')) {
@@ -276,6 +300,9 @@ export function canAccessPath(
   }
   if (path.startsWith('/label/tracks')) {
     return canAccessLabelTracks(roles, modules);
+  }
+  if (path.startsWith('/label/proyectos')) {
+    return canAccessLabelProjects(roles, modules);
   }
   if (path.startsWith('/label/assets')) {
     return hasOperationsAccess(roles, modules);

@@ -4,35 +4,58 @@
 module Main (main) where
 
 import Control.Exception (IOException, bracket)
+import Control.Monad (forM_)
 import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Logger (runNoLoggingT)
+import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Crypto.Hash.Algorithms (SHA256)
+import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import qualified Data.ByteString.Lazy.Char8 as BL
+import qualified Data.ByteString as BS
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
-import Data.Either (isLeft)
-import Data.List (isInfixOf)
+import Data.Either (isLeft, isRight)
+import Data.Int (Int64)
+import Data.List (isInfixOf, nub)
+import qualified Data.Map.Strict as Map
+import Data.Maybe (fromMaybe, isNothing)
 import Data.Text (Text)
 import qualified Data.Text
+import qualified Data.Text.Encoding as TE
+import qualified Data.UUID as UUID
 import Data.Time (UTCTime (..), addDays, addUTCTime, fromGregorian, secondsToDiffTime)
-import Database.Persist (Entity (..), Key, insert_, selectList)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import Data.Word (Word8)
+import Database.Persist (Entity (..), Key, insert, insert_, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
+import qualified Network.HTTP.Client as HTTP
 import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
-import Servant (ServerError (..), ServerT, (:<|>) (..))
+import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory, setCurrentDirectory)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
+import System.FilePath ((</>))
 import System.IO (hClose)
-import System.IO.Temp (withSystemTempFile)
+import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified Test.QuickCheck as QC
 import Web.PathPieces (toPathPiece)
 
-import TDF.API (WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
-import TDF.API.Feedback (FeedbackPayload (..))
+import TDF.API (CmsContentIn (..), WhatsAppConsentRequest (..), WhatsAppOptOutRequest (..))
+import TDF.API.Feedback
+    ( FeedbackPayload (..),
+      InternalFeedbackSummaryDTO (..),
+      InternalFeedbackUpdate (..) )
+import TDF.API.DDEX (DdexExportRequest, DdexPartnerCreateRequest)
 import TDF.API.Admin (AdminEmailBroadcastRequest)
+import qualified TDF.API.Calendar as CalAPI
+import qualified TDF.Calendar.Models as Cal
+import qualified TDF.API.Inventory as Inventory
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
+import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.LiveSessions
     ( LiveSessionIntakePayload (..),
       LiveSessionMusicianPayload (..),
@@ -55,27 +78,71 @@ import TDF.API.WhatsApp
     ( CompleteReq (..),
       PreviewReq (..),
       ensureLeadCompletionUpdated,
+      extractFirstEnrollmentWebhookMessage,
       extractFirstWebhookMessage,
+      extractUniqueEnrollmentWebhookMessage,
       validateHookVerifyRequest,
       validateLeadCompletionId,
       validateLeadCompletionLookup,
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
-import TDF.App.Boot (validateSeedDatabaseStartup)
+import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import qualified TDF.APITypesSpec as APITypesSpec
+import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
+import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
-import TDF.Cron (Directive (..), parseDirective)
+import TDF.CampaignAutomation
+    ( campaignAutomationTemplatesDTO,
+      isWhatsAppCampaignOptOutMessage,
+      renderCampaignMessage,
+      validateCampaignAutomationActivation,
+      validateCampaignAutomationDailyLimit,
+      validateCampaignAutomationStatus )
+import TDF.Cron (Directive (..), parseDirective, selectInstagramSyncAccessToken)
+import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+import qualified TDF.Commerce.CourseCheckout as CourseCheckout
+import qualified TDF.Commerce.DomoQuotes as DomoQuotes
+import qualified TDF.Commerce.EventTickets as EventTickets
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
+import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
+import qualified TDF.Commerce.ServiceBookings as ServiceBookings
+import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
+import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
+import qualified TDF.Commerce.RefundStore as RefundStore
+import qualified TDF.Commerce.StateMachine as Commerce
+import qualified TDF.Routes.EventTickets as EventTicketRoutes
+import qualified TDF.Distribution.StateMachine as Distribution
+import qualified TDF.Catalog.CountryReferenceSeed as CountrySeed
+import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
+import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
+import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
+import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
+import TDF.Email (resolveRefundTimelineMessage)
+import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
+import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
+import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
+import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
 import qualified TDF.Invoice.SRI as Sri
+import TDF.Internationalization (CurrencyDefinition(..), currencyDefinition, formatMinorUnitsDecimal, formatMoney, normalizeCountryCode, normalizeCurrencyCode, normalizeLocaleCode, normalizeTimeZone)
 import TDF.DTO.SocialEventsDTO
     ( ArtistDTO (..),
       EventMetadataUpdateDTO (..),
+      EventMomentCommentCreateDTO (..),
+      EventMomentCreateDTO (..),
+      EventMomentReactionRequestDTO (..),
+      EventBudgetLineDTO (..),
+      EventFinanceEntryDTO (..),
       EventUpdateDTO (..),
+      InvitationDTO (..),
       InvitationUpdateDTO (..),
       NullableFieldUpdate (..),
       TicketCheckInRequestDTO (..),
@@ -92,40 +159,85 @@ import TDF.DTO.SocialSyncDTO
       SocialSyncPostDTO (..),
       SocialSyncPostIn (..),
       maxSocialSyncIngestPosts )
-import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId, SocialEventId)
-import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
+import TDF.Models.SocialEventsModels
+    ( EventBudgetLine (..),
+      EventFinanceEntry (..),
+      EventInvitationId,
+      EventTicket (..),
+      EventTicketOrder (..),
+      EventTicketTier (..),
+      SocialEvent (..),
+      SocialEventId )
+import TDF.Auth (AuthedUser (..), moduleName, modulesForRoles)
+import TDF.FeatureRegistry
+    ( RegistryFeature(registryFeatureId),
+      allRegistryFeatures,
+      findRegistryFeature,
+      registryFeatureAllows,
+      registryFeatureRequestable,
+      registryReviewerCanDecide )
+import TDF.Models (ArtistProfile (..), Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
-import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
+import qualified TDF.Operations.ModelSpec as OperationsModelSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
+import qualified TDF.DDEX.Detect as DDEXDetect
+import qualified TDF.DDEX.Security as DDEXSecurity
+import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
+import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
+import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
+import qualified TDF.DDEX.Types as DDEXTypes
+import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
-    ( radioServer,
+    ( StreamMetadata (..),
+      radioServer,
       resolveRadioTransmissionEnvBase,
       resolveRadioNowPlayingFetchResult,
+      validateRadioFetchedMetadata,
       validateRadioImportLimit,
       validateRadioImportSources,
       validateRadioMetadataRefreshLimit,
+      validateRadioCountryMutation,
+      validateRadioGenreMutation,
       validateRadioOptionalMetadataField,
+      validateRadioSearchFilter,
       validateRadioStreamUrl,
       validateRadioTransmissionIngestBase,
       validateRadioTransmissionWhipBase,
-      validateRadioTransmissionPublicBase )
+      validateRadioTransmissionPublicBase,
+      parseIcyMetaIntHeader )
 import TDF.RagStore
     ( availabilityOverlaps,
+      callOpenAIEmbeddingsWith,
+      shouldUseLocalEmbeddingFallback,
       validateEmbeddingModelDimensions,
       validateEmbeddingResponseDimensions,
       validateEmbeddingResponseOrder )
-import TDF.ServerAdmin (parseSocialErrorsChannel, validateSocialErrorsLimit)
-import TDF.Contracts.Server (decodeStoredContract, validateContractId, validateContractPayload, validateContractSendPayload)
+import TDF.ServerAdmin
+    ( parseSocialErrorsChannel,
+      validateAdminEmailCtaUrl,
+      validateBrainEntryTitle,
+      validateSocialErrorsLimit )
+import TDF.Contracts.Server
+    ( decodeStoredContract,
+      decodeStoredContractFor,
+      validateContractId,
+      validateContractPayload,
+      validateContractSendPayload )
 import TDF.ServerInternships
     ( parseKey,
+      selectUniqueActiveInternTimeEntry,
       validateInternProjectDateRange,
       validateInternProjectDateUpdate,
       validateInternProjectStatusInput,
+      validateInternPermissionCategory,
       validateInternPermissionDateRange,
+      validateInternPermissionDecisionNotes,
+      validateInternPermissionReason,
       validateInternProfileDateUpdate,
+      validateInternProfileSkillsUpdate,
+      validateInternProfileAreasUpdate,
       validateInternProjectTitle,
       validateInternProjectTitleUpdate,
       validateInternTaskTitle,
@@ -139,48 +251,136 @@ import TDF.ServerInternships
       validateInternTaskProgressUpdate,
       validateOptionalInternProjectStatusInput,
       validateOptionalInternTaskStatusInput )
+import TDF.ServerInternAudit
+    ( finalSummarySubmissionIsFresh,
+      projectStatusForTaskOutcomes,
+      reportBlocksCompletion,
+      reportStateCountsForFailure,
+      validateExecutionStatus,
+      validateReportableText )
 import TDF.ServerProposals
     ( ProposalContentSource (..),
       validateOptionalProposalClientPartyId,
+      validateOptionalProposalContactName,
       validateOptionalProposalContactEmail,
+      validateOptionalProposalNotes,
       validateOptionalProposalContactPhone,
       validateOptionalProposalStatus,
       validateProposalContentSource,
+      validateProposalTitle,
       validateProposalStatus,
       validateProposalVersionNumber,
       validateTemplateKey )
 import TDF.ServerFeedback
-    ( normalizeOptionalFeedbackText,
+    ( csvField,
+      filterInternalReportSummaries,
+      internalReportTypeForCategoryCode,
+      normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
+      validateEnvironment,
+      validateExternalEvidenceUrl,
       validateFeedbackDescription,
       validateFeedbackAttachmentSize,
+      validateFeedbackAttachmentContentType,
+      validateFeedbackAttachmentFileName,
+      validateFeedbackAttachmentMetadata,
       validateFeedbackTitle,
       validateFeedbackConsent,
-      validateOptionalFeedbackMetadata,
-      validateOptionalFeedbackContactEmail )
-import TDF.ServerInstagramOAuth (instagramOAuthServer, resolveInstagramRedirectUri)
+      validateGithubIssueUrl,
+      validateInternalReportState,
+      validateOptionalFeedbackContactEmail,
+      validatePriority,
+      validateReportStateTransition,
+      validateReportType,
+      validateStateTransition,
+      validateVideoLinks )
+import TDF.ServerInstagramOAuth
+    ( FacebookAccessToken (..),
+      FacebookPage (..),
+      FacebookPageList (..),
+      instagramOAuthServer,
+      parseInstagramMediaTimestamp,
+      resolveInstagramRedirectUri,
+      sanitizeFacebookGraphErrorMessage,
+      shouldFallbackToShortInstagramToken,
+      selectPrimaryInstagramCandidate,
+      validateInstagramMediaPermalink,
+      validateInstagramMediaUrl,
+      validateInstagramRedirectUri,
+      validateInstagramUsername )
 import TDF.Server
-    ( buildWhatsappCtaFor,
+    ( assetsServePathAllowed,
+      buildWhatsappCtaFor,
+      loadCourseRegistrationReceiptCounts,
+      toCourseRegistrationDTOWithReceiptCount,
+      DriveApiResp (..),
+      GoogleEventsPage (..),
+      decodeDriveMetaResourceKeyIfSuccessful,
+      driveUploadServer,
+      formatDriveUploadFailure,
+      maxGoogleCalendarPageItems,
+      parseMcpRequest,
+      parseToolCallParams,
+      resolveDriveRedirectUri,
+      resolveDrivePublicUrl,
+      resolveDrivePublicUrlAfterPermission,
       resolveProvidedDriveAccessToken,
+      selectUniqueCalendarConfigFallback,
+      validateStoredCalendarConfig,
       sanitizeStoredCoursePublicUrl,
+      validateContractsAccess,
+      validateAdsAssistChannel,
       validateWhatsAppConsentDisplayName,
       validateWhatsAppConsentSource,
       validateWhatsAppOptOutReason,
       validateCoursePublicUrlField,
+      validateMarketplaceBuyerName,
+      isMarketplaceStripeRetryStale,
+      canReplayMarketplaceStripePost,
+      validateLabelTrackPathId,
       validateDatafastCheckoutId,
+      validateOptionalDatafastPaymentIdField,
+      validateOptionalDatafastMetadataField,
       validateDatafastCredential,
+      validateOptionalDatafastCredential,
       validateDatafastBaseUrl,
+      validateConfiguredDriveRefreshToken,
+      validateDriveRedirectUri,
+      validateCalendarRedirectUri,
+      validateCalendarEventListQuery,
+      validatePayPalCredential,
       validatePayPalPayerEmailField,
       validatePayPalCreateOrderIdField,
       validatePayPalCaptureStatusField,
-      validatePayPalApprovalUrl )
+      validatePayPalApprovalUrl,
+      resolveMarketplaceOrderPaidAtForStatus,
+      validateGoogleCalendarEventId,
+      validateStoredGoogleCalendarAccessToken,
+      validateStoredGoogleCalendarRefreshToken,
+      expiredGoogleCalendarSyncRetryState,
+      extractApiErrorMessage,
+      chatKitSessionErrorMessage,
+      shouldRetryWithFallbackModel )
+import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
+      liveSessionMusicianPartyNotes,
       resolveLiveSessionMusicianLookup,
+      selectUniqueLiveSessionMusicianByEmail,
       sanitizeLiveSessionRiderFileName,
+      validateLiveSessionBandName,
+      validateLiveSessionMusicianCount,
+      validateLiveSessionOptionalEmail,
+      validateLiveSessionReferencedPartyEmail,
+      validateLiveSessionRiderFileName,
+      validateLiveSessionRiderFileSize,
       validateLiveSessionTermsAcceptance )
-import TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
+import TDF.Services.InstagramMessaging
+    ( formatInstagramGraphHttpError,
+      sendInstagramTextWithContext )
+import TDF.Services.FacebookMessaging (sendFacebookText)
+import qualified TDF.Services.Stripe as Stripe
 import TDF.Server.SocialSync
     ( socialSyncServer,
       validateSocialSyncArtistPartyId,
@@ -188,52 +388,101 @@ import TDF.Server.SocialSync
       validateSocialSyncArtistProfileId,
       validateSocialSyncPlatform,
       validateSocialSyncPostsLimit,
+      validateSocialSyncTagFilter,
       validateSocialSyncIngestSource,
+      validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
 import TDF.Server.SocialEventsHandlers (
+    collectMatchingRows,
     normalizeBudgetLineType,
-    normalizeEventStatus,
-    normalizeEventType,
     normalizeFinanceDirection,
     normalizeFinanceEntryStatus,
     normalizeFinanceSource,
     validateFinanceEntryCurrencyInput,
+    validateOptionalBudgetLineIdInput,
     normalizeArtistGenres,
     normalizeInvitationStatus,
     normalizeMomentCaption,
     normalizeMomentCommentBody,
     normalizeMomentMediaType,
-    normalizeMomentReaction,
+    normalizeLiveBroadcastTitle,
+    normalizeLiveBroadcastDescription,
+    normalizeLiveBroadcastQuality,
     normalizePositivePartyIdText,
+    validateMomentMediaDimension,
+    validateMomentMediaDuration,
+    validateStoredBudgetLineDimensions,
     validateStoredFinanceEntryDimensions,
-    parseEventStatusQueryParamEither,
-    parseEventTypeQueryParamEither,
     parseFollowerQueryParamEither,
     parseVenueIdEither,
+    parseCheckoutSessionCourseSubscription,
+    parseSubscriptionEvent,
     validateEventCreateUpdateDimensions,
     validateVenueCreateUpdateFields,
     normalizeTicketOrderStatus,
+    ticketOrderInventoryAdjustment,
+    validateDirectTicketOrderPricing,
+    validateTicketCheckoutAmount,
+    validateTicketPurchaseEventEligibility,
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,
+    parseStripeCustomerId,
+    parseStripeEphemeralKeySecret,
+    parseStripePaymentIntentResponse,
+    parseStripeRefundResponse,
+    parseStripeWebhookEventEnvelope,
+    verifyAndDecodeStripeWebhook,
+    StripeTicketPaymentEvidence (..),
+    parseStripeTicketPaymentEvidence,
+    validateStripeTicketPaymentEvidence,
+    parseStripeWebhookMarketplaceOrderId,
+    parseStripeWebhookPaymentIntentId,
+    canRecoverMarketplaceStripeOrder,
     isImageUpload,
     TicketCheckInLookup (..),
     validateInvitationToPartyId,
     validateInvitationStatusInput,
+    validateInvitationStatusUpdateInput,
     validateEventArtistIds,
+    validateArtistName,
+    validateSocialEventsFeatureAction,
+    validateArtistProfileCreateParty,
+    validateArtistProfileWriteAccess,
+    validateAuthenticatedPartyReference,
     validateRsvpStatus,
     validateTicketCheckInLookup,
+    validateStoredTicketOrderStatus,
     validateTicketCheckInOrderStatus,
     validateTicketCheckInTicketStatus,
+    storedTicketOrderSummaryFields,
+    ticketOrderAccountingEntriesEither,
+    findTicketForCheckIn,
+    validateEventTitleInput,
+    validateEventTimeRange,
+    validateOptionalTicketBuyerPartyId,
+    validateTicketPurchaseBuyerName,
     validateTicketPurchaseBuyerEmail,
+    validateTicketTierCodeInput,
     validateTicketTierCurrencyInput,
+    decodeStoredPromoCodeTierIds,
+    encodePromoCodeTierIds,
+    promoCodeDiscountAmountEither,
+    validatePromoCodeDateWindow,
+    validatePromoCodeMinimumPurchaseCents,
+    validatePromoCodeMinimumPurchaseParam,
+    validatePromoCodeRedemptionLimit,
+    validatePromoCodeTierEligibility,
     validateEventCurrencyInput,
-    validateEventCreateTypeStatus,
     validateEventMetadataUpdate,
     validateBudgetLineTypeInput,
  )
-import TDF.Auth (extractToken, extractTokenFromHeaders, sessionCookieHeader)
+import TDF.Auth
+    ( clearSessionCookieHeader,
+      extractToken,
+      extractTokenFromHeaders,
+      sessionCookieHeader )
 import TDF.Config
     ( appPort,
       assetsRootDir,
@@ -243,14 +492,29 @@ import TDF.Config
       courseMapFallback,
       courseSlugFallback,
       dbConnString,
+      defaultCurrency,
+      defaultLocale,
+      defaultTimezone,
       emailConfig,
+      emailFromName,
+      facebookAppId,
+      facebookAppSecret,
       facebookGraphBase,
       facebookMessagingApiBase,
       facebookMessagingPageId,
+      googleClientId,
+      instagramAppToken,
       instagramGraphBase,
       instagramMessagingApiBase,
       instagramMessagingAccountId,
+      instagramMessagingToken,
+      instagramVerifyToken,
+      enableGdprCompliance,
+      llmProvider,
+      llmProviderApiBase,
+      llmProviderDefaultChatModel,
       loadConfig,
+      openAiApiKey,
       openAiEmbedModel,
       openAiModel,
       ragAvailabilityDays,
@@ -271,11 +535,20 @@ import TDF.Config
       sessionCookiePath,
       sessionCookieSameSite,
       sessionCookieSecure,
-      smtpPort )
+      smtpPort,
+      smtpUseTLS,
+      supportedCurrencies )
 import TDF.Version (VersionInfo (..), getVersionInfo)
-import TDF.Seed (seededCredentialSeedingAllowed)
+import TDF.Seed
+    ( seededCredentialSeedingAllowed
+    , seededCredentialSecrets
+    , syntheticPersonaPassword
+    , syntheticPersonaSeedingAllowed
+    )
+import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
+import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
 import qualified TDF.Social.FollowHandlerSpec as FollowHandlerSpec
 import qualified TDF.Social.FollowSpec as FollowSpec
 import qualified TDF.Trials.PublicLeadSpec as PublicLeadSpec
@@ -283,7 +556,47 @@ import qualified TDF.Trials.DTO as TrialsDTO
 import qualified TDF.WhatsApp.Client as WhatsAppClient
 import qualified TDF.WhatsApp.HistorySpec as WhatsAppHistorySpec
 import qualified TDF.WhatsApp.Service as WhatsAppService
+import qualified TDF.WhatsApp.Transport as WhatsAppTransport
 import qualified TDF.WhatsApp.Types as WA
+
+newtype StripeHeaderToken = StripeHeaderToken Text
+    deriving (Show)
+
+instance QC.Arbitrary StripeHeaderToken where
+    arbitrary =
+        StripeHeaderToken . Data.Text.pack <$> QC.listOf1 stripeHeaderChar
+      where
+        stripeHeaderChar =
+            QC.elements (['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'] ++ "_-")
+
+newtype StripeBody = StripeBody BS.ByteString
+    deriving (Show)
+
+instance QC.Arbitrary StripeBody where
+    arbitrary =
+        StripeBody . BS.pack <$> QC.listOf (QC.arbitrary :: QC.Gen Word8)
+
+newtype StripeNonSuccessStatus = StripeNonSuccessStatus Int
+    deriving (Show)
+
+instance QC.Arbitrary StripeNonSuccessStatus where
+    arbitrary =
+        StripeNonSuccessStatus <$> QC.elements ([100 .. 199] ++ [201 .. 599])
+
+stripeTestConfig :: Text -> Stripe.StripeConfig
+stripeTestConfig webhookSecret =
+    Stripe.StripeConfig
+        { Stripe.stripeSecretKey = "sk_test"
+        , Stripe.stripeWebhookSecret = webhookSecret
+        , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+        }
+
+stripeV1Signature :: Text -> Text -> BS.ByteString -> Text
+stripeV1Signature webhookSecret timestamp rawBody =
+    Data.Text.pack $
+        show (hmacGetDigest (hmac (TE.encodeUtf8 webhookSecret) signedPayload :: HMAC SHA256))
+  where
+    signedPayload = TE.encodeUtf8 timestamp <> "." <> rawBody
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a
 withEnvOverrides overrides action =
@@ -316,11 +629,141 @@ clearRagEnv =
         , "RAG_EMBED_BATCH_SIZE"
         ]
 
-sampleSriScriptRequest :: Sri.SriScriptRequest
-sampleSriScriptRequest =
-    Sri.SriScriptRequest
-        (Sri.SriScriptCustomer "1790012345001" "TDF Test Customer" Nothing Nothing)
-        [ Sri.SriScriptLine
+clearSeedRuntimeEnv :: [(String, Maybe String)]
+clearSeedRuntimeEnv =
+    map
+        (\key -> (key, Nothing))
+        [ "FLY_APP_NAME"
+        , "RENDER"
+        , "RAILWAY_ENVIRONMENT"
+        , "HEROKU_APP_NAME"
+        , "VERCEL"
+        , "CF_PAGES"
+        , "K_SERVICE"
+        , "APP_ENV"
+        , "ENVIRONMENT"
+        , "NODE_ENV"
+        , "RUNTIME_ENV"
+        ]
+
+clearWhatsAppProviderCredentialEnv :: [(String, Maybe String)]
+clearWhatsAppProviderCredentialEnv =
+    [ ("WA_TOKEN", Nothing)
+    , ("WHATSAPP_TOKEN", Nothing)
+    , ("WA_PHONE_ID", Nothing)
+    , ("WHATSAPP_PHONE_NUMBER_ID", Nothing)
+    , ("WA_VERIFY_TOKEN", Nothing)
+    , ("WHATSAPP_VERIFY_TOKEN", Nothing)
+    ]
+
+clearWhatsAppTransportVersionEnv :: [(String, Maybe String)]
+clearWhatsAppTransportVersionEnv =
+    [ ("WHATSAPP_API_VERSION", Nothing)
+    , ("WA_GRAPH_API_VERSION", Nothing)
+    , ("WA_API_VERSION", Nothing)
+    ]
+
+clearWhatsAppContactEnv :: [(String, Maybe String)]
+clearWhatsAppContactEnv =
+    [ ("COURSE_WHATSAPP_NUMBER", Nothing)
+    , ("WHATSAPP_CONTACT_NUMBER", Nothing)
+    , ("WA_CONTACT_NUMBER", Nothing)
+    ]
+
+initializeTicketCheckInSchema :: SqlPersistT IO ()
+initializeTicketCheckInSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE social_event (\
+        \id INTEGER PRIMARY KEY,\
+        \organizer_party_id VARCHAR NULL,\
+        \title VARCHAR NOT NULL,\
+        \description VARCHAR NULL,\
+        \venue_id INTEGER NULL,\
+        \event_type_id VARCHAR NULL,\
+        \workflow_state_id VARCHAR NULL,\
+        \timezone VARCHAR NULL,\
+        \start_time TIMESTAMP NOT NULL,\
+        \end_time TIMESTAMP NOT NULL,\
+        \price_cents INTEGER NULL,\
+        \currency_id VARCHAR NULL,\
+        \capacity INTEGER NULL,\
+        \metadata VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket_tier (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \code VARCHAR NOT NULL,\
+        \name VARCHAR NOT NULL,\
+        \description VARCHAR NULL,\
+        \price_cents INTEGER NOT NULL,\
+        \currency VARCHAR NOT NULL,\
+        \currency_id VARCHAR NULL,\
+        \quantity_total INTEGER NOT NULL,\
+        \quantity_sold INTEGER NOT NULL,\
+        \sales_start TIMESTAMP NULL,\
+        \sales_end TIMESTAMP NULL,\
+        \is_active BOOLEAN NOT NULL,\
+        \position INTEGER NULL,\
+        \enable_waitlist BOOLEAN NOT NULL DEFAULT 0,\
+        \allow_transfers BOOLEAN NOT NULL DEFAULT 0,\
+        \refund_policy VARCHAR NOT NULL DEFAULT 'none',\
+        \refund_deadline TIMESTAMP NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket_order (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \tier_id INTEGER NOT NULL,\
+        \buyer_party_id VARCHAR NULL,\
+        \buyer_name VARCHAR NULL,\
+        \buyer_email VARCHAR NULL,\
+        \quantity INTEGER NOT NULL,\
+        \amount_cents INTEGER NOT NULL,\
+        \currency VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \metadata VARCHAR NULL,\
+        \checkout_idempotency_key VARCHAR NULL,\
+        \purchased_at TIMESTAMP NOT NULL,\
+        \stripe_payment_intent_id VARCHAR NULL,\
+        \promo_code_id INTEGER NULL,\
+        \original_amount_cents INTEGER NULL,\
+        \payment_method VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE event_ticket (\
+        \id INTEGER PRIMARY KEY,\
+        \event_id INTEGER NOT NULL,\
+        \tier_ref_id INTEGER NOT NULL,\
+        \order_ref_id INTEGER NOT NULL,\
+        \holder_name VARCHAR NULL,\
+        \holder_email VARCHAR NULL,\
+        \code VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \checked_in_at TIMESTAMP NULL,\
+        \current_holder_party_id VARCHAR NULL,\
+        \current_holder_email VARCHAR NULL,\
+        \current_holder_name VARCHAR NULL,\
+        \original_holder_party_id VARCHAR NULL,\
+        \transfer_history VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+
+sampleSriScriptLine :: Sri.SriScriptLine
+sampleSriScriptLine =
+    Sri.SriScriptLine
             (Just "SRV-001")
             Nothing
             "Studio session"
@@ -329,7 +772,12 @@ sampleSriScriptRequest =
             (Just 1500)
             Nothing
             Nothing
-        ]
+
+sampleSriScriptRequest :: Sri.SriScriptRequest
+sampleSriScriptRequest =
+    Sri.SriScriptRequest
+        (Sri.SriScriptCustomer "1790012345001" "TDF Test Customer" Nothing Nothing)
+        [sampleSriScriptLine]
         "001"
         "001"
         "cash"
@@ -338,6 +786,1232 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "public upcoming event pagination" $ do
+        it "continues past filtered pages until the requested limit is filled" $ do
+            let candidates = [1 .. 8 :: Int]
+                loadPage pageSize offset =
+                    pure (take pageSize (drop offset candidates))
+                keepEven candidate =
+                    pure (if even candidate then Just candidate else Nothing)
+            result <- collectMatchingRows 3 2 loadPage keepEven
+            result `shouldBe` [2, 4, 6]
+
+    describe "public review target visibility" $ do
+        it "keeps delivered marketplace sales visible without exposing withdrawn listings" $ do
+            let statement = publicReviewTargetStatement "marketplace_listing"
+            statement `shouldSatisfy` Data.Text.isInfixOf "listing.active OR EXISTS"
+            statement `shouldSatisfy` Data.Text.isInfixOf "delivered.to_status='delivered'"
+            statement `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
+
+        it "requires storefront packages to remain active" $ do
+            publicReviewTargetStatement "service_package"
+                `shouldSatisfy` Data.Text.isInfixOf "AND active"
+
+        it "rejects inactive or deprecated service offerings" $ do
+            let statement = publicReviewTargetStatement "service_offering"
+            statement `shouldSatisfy` Data.Text.isInfixOf "AND active"
+            statement `shouldSatisfy` Data.Text.isInfixOf "deprecated_at IS NULL"
+
+        it "does not offer review creation for hidden targets" $ do
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "offering.active AND offering.deprecated_at IS NULL"
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "WHERE package.active"
+            eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
+
+    describe "DDEX canonical write JSON contracts" $ do
+        it "accepts export writes with only a canonical standard-version id" $ do
+            let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\"}"
+            isRight (eitherDecode payload :: Either String DdexExportRequest) `shouldBe` True
+
+        it "rejects legacy DDEX export version strings and unknown profile fields" $ do
+            let payload = "{\"exportReleaseId\":42,\"exportPartnerId\":7,\"exportStandardVersionId\":\"40000000-0000-4000-8000-000000000001\",\"ernVersion\":\"4.3.2\",\"exportProfile\":\"legacy\"}"
+            isLeft (eitherDecode payload :: Either String DdexExportRequest) `shouldBe` True
+
+        it "accepts partner policies expressed as canonical standard-version ids" $ do
+            let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"]}"
+            isRight (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
+
+        it "rejects legacy partner allowedVersions arrays" $ do
+            let payload = "{\"partnerName\":\"DSP\",\"partnerDpid\":null,\"partnerAllowedStandardVersionIds\":[\"40000000-0000-4000-8000-000000000001\"],\"allowedVersions\":[\"4.3.2\"]}"
+            isLeft (eitherDecode payload :: Either String DdexPartnerCreateRequest) `shouldBe` True
+
+    describe "service storefront commercial invariants" $ do
+        it "accepts only server-configured package quantities" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let boundedRange = range `mod` 20
+                    maxSongs = minSongs + boundedRange
+                    requested = minSongs + (boundedRange `div` 2)
+                in ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs requested
+                    == Right requested
+
+        it "rejects quantity and price tampering" $
+            QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
+                let maxSongs = minSongs + (range `mod` 20)
+                in isLeft (ServiceStorefront.validatePackageOrder priceCents "USD" minSongs maxSongs (maxSongs + 1))
+                    && isLeft (ServiceStorefront.validatePackageOrder 0 "USD" minSongs maxSongs minSongs)
+
+        it "binds a Datafast resource path to the stored checkout" $ do
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-abc/payment"
+              `shouldBe` Right "/v1/checkouts/checkout-abc/payment"
+
+            ServiceStorefront.validateDatafastOrderResourcePath
+              (Just "checkout-abc")
+              "/v1/checkouts/checkout-other/payment"
+              `shouldSatisfy` isLeft
+
+        it "requires a bounded visible-ASCII order idempotency key" $ do
+            ServiceStorefront.validateIdempotencyKey (Just "2e7c0f84-2945-4bed-a838-28cf482c5afb")
+              `shouldBe` Right "2e7c0f84-2945-4bed-a838-28cf482c5afb"
+            ServiceStorefront.validateIdempotencyKey Nothing `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "too-short") `shouldSatisfy` isLeft
+            ServiceStorefront.validateIdempotencyKey (Just "invalid key with spaces") `shouldSatisfy` isLeft
+
+        it "defaults checkout configuration to sandbox and requires an explicit valid production value" $ do
+            CheckoutStore.resolveCheckoutEnvironment Nothing
+              `shouldBe` Right CheckoutStore.CheckoutSandbox
+            CheckoutStore.resolveCheckoutEnvironment (Just " production ")
+              `shouldBe` Right CheckoutStore.CheckoutProduction
+            CheckoutStore.resolveCheckoutEnvironment (Just "staging")
+              `shouldSatisfy` isLeft
+
+        it "accepts only staff-verified manual evidence on manual settlement rails" $ do
+            let now = UTCTime (fromGregorian 2026 8 17) (secondsToDiffTime 0)
+                payment = CheckoutStore.VerifiedPayment
+                  { CheckoutStore.vpAttempt = CheckoutStore.PaymentAttemptReference "attempt-1"
+                  , CheckoutStore.vpCheckout = CheckoutStore.CheckoutReference "checkout-1"
+                  , CheckoutStore.vpProvider = CheckoutStore.ProviderBankTransfer
+                  , CheckoutStore.vpEnvironment = CheckoutStore.CheckoutSandbox
+                  , CheckoutStore.vpMerchantRef = "tdf-manual-settlement"
+                  , CheckoutStore.vpResourceType = "manual_evidence"
+                  , CheckoutStore.vpProviderResource = "evidence-1"
+                  , CheckoutStore.vpProviderResourcePath = Nothing
+                  , CheckoutStore.vpOrderReference = "booking-1"
+                  , CheckoutStore.vpAmountMinor = 5000
+                  , CheckoutStore.vpCurrency = "USD"
+                  , CheckoutStore.vpEvidence = "staff_verified_manual"
+                  , CheckoutStore.vpOccurredAt = now
+                  , CheckoutStore.vpCorrelationId = "manual-review-1"
+                  }
+            CheckoutStore.validateApprovedManualPayment payment `shouldBe` Right ()
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpEvidence = "customer_submitted" }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpProvider = CheckoutStore.ProviderPayPal }
+              `shouldSatisfy` isLeft
+            CheckoutStore.validateApprovedManualPayment
+              payment { CheckoutStore.vpResourceType = "bank_reference" }
+              `shouldSatisfy` isLeft
+
+        it "binds Datafast environment declarations to the configured gateway host" $ do
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-prod.oppwa.com"
+              `shouldBe` Right ()
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutProduction
+              "https://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "http://eu-test.oppwa.com"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com.attacker.example"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateDatafastEnvironmentBase
+              CheckoutStore.CheckoutSandbox
+              "https://eu-test.oppwa.com@attacker.example"
+              `shouldSatisfy` isLeft
+
+        it "accepts only documented Datafast success codes for the immutable environment" $ do
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.100"
+              `shouldBe` True
+            ServiceStorefront.isDatafastCheckoutCreationSuccess "000.200.000"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.000.000"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutProduction "000.100.110"
+              `shouldBe` False
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.110"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.112"
+              `shouldBe` True
+            ServiceStorefront.isDatafastPaymentSuccess
+              CheckoutStore.CheckoutSandbox "000.100.999"
+              `shouldBe` False
+
+        it "uses the nested PayPal capture status rather than the order status" $ do
+            let pendingPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "custom_id" .= ("internal-order" :: Text)
+                          , "payee" .= A.object ["merchant_id" .= ("MERCHANT" :: Text)]
+                          , "payments" .= A.object
+                              [ "captures" .=
+                                  [ A.object
+                                      [ "id" .= ("CAPTURE-1" :: Text)
+                                      , "status" .= ("PENDING" :: Text)
+                                      , "amount" .= A.object
+                                          [ "value" .= ("80.00" :: Text)
+                                          , "currency_code" .= ("USD" :: Text)
+                                          ]
+                                      ]
+                                  ]
+                              ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome pendingPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "PENDING"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Just "CAPTURE-1"
+
+        it "rejects ambiguous multi-capture PayPal responses" $ do
+            let capture captureId = A.object
+                  [ "id" .= (captureId :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  ]
+                ambiguousPayload = A.object
+                  [ "status" .= ("COMPLETED" :: Text)
+                  , "purchase_units" .=
+                      [ A.object
+                          [ "payments" .= A.object
+                              [ "captures" .= [capture "CAPTURE-1", capture "CAPTURE-2"] ]
+                          ]
+                      ]
+                  ]
+            case ServiceStorefront.parsePaypalCaptureOutcome ambiguousPayload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right outcome -> do
+                ServiceStorefront.spcoStatus outcome `shouldBe` "UNKNOWN"
+                ServiceStorefront.spcoCaptureId outcome `shouldBe` Nothing
+
+        it "preserves the exact raw webhook event in PayPal verification requests" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60 + 60))
+                rawEvent = "{\"id\":\"WH-1\", \"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{}}"
+                expected = "{\"transmission_id\":\"transmission-1\",\"transmission_time\":\"2026-08-14T12:00:00Z\",\"cert_url\":\"https://api-m.sandbox.paypal.com/certs/cert.pem\",\"auth_algo\":\"SHA256withRSA\",\"transmission_sig\":\"signature-1\",\"webhook_id\":\"webhook-1\",\"webhook_event\":"
+                    <> rawEvent <> "}"
+            case ServiceStorefront.validatePaypalWebhookHeaders
+                    now
+                    (Just "transmission-1")
+                    (Just "2026-08-14T12:00:00Z")
+                    (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+                    (Just "SHA256withRSA")
+                    (Just "signature-1") of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right headers ->
+                ServiceStorefront.buildPaypalWebhookVerificationBody
+                  "webhook-1" headers rawEvent `shouldBe` expected
+
+        it "rejects stale, future, and unsupported PayPal webhook headers" $ do
+            let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (negate (4 * 24 * 60 * 60 + 1)) now)
+              `shouldSatisfy` isLeft
+
+        it "replays only payloads that match immutable verified event metadata" $ do
+            let createdAt = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+                rawEvent = TE.encodeUtf8
+                  "{\"id\":\"WH-RETRY-1\",\"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"create_time\":\"2026-08-14T12:00:00Z\",\"resource\":{\"id\":\"CAPTURE-RETRY-1\"}}"
+                payload = ProviderEventStore.ProviderEventPayload
+                  { ProviderEventStore.pepReference =
+                      ProviderEventStore.ProviderEventReference
+                        "00000000-0000-4000-8000-000000000010"
+                  , ProviderEventStore.pepProvider = "paypal"
+                  , ProviderEventStore.pepEnvironment = "sandbox"
+                  , ProviderEventStore.pepMerchantRef = "MERCHANT-RETRY"
+                  , ProviderEventStore.pepProviderEventId = "WH-RETRY-1"
+                  , ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.COMPLETED"
+                  , ProviderEventStore.pepProviderCreatedAt = Just createdAt
+                  , ProviderEventStore.pepProviderResourceId = Just "CAPTURE-RETRY-1"
+                  , ProviderEventStore.pepRawPayload = rawEvent
+                  }
+            case ProviderEventWorker.validateStoredPaypalEvent payload of
+              Left message -> expectationFailure (Data.Text.unpack message)
+              Right (environment, envelope) -> do
+                environment `shouldBe` CheckoutStore.CheckoutSandbox
+                ServiceStorefront.pweEventId envelope `shouldBe` "WH-RETRY-1"
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderEventId = "WH-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProvider = "datafast" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEventType = "PAYMENT.CAPTURE.REFUNDED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderCreatedAt =
+                Just (addUTCTime 1 createdAt) }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepProviderResourceId = Just "CAPTURE-TAMPERED" }
+              `shouldSatisfy` isLeft
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "production" }
+              `shouldSatisfy` isRight
+            ProviderEventWorker.validateStoredPaypalEvent
+              payload { ProviderEventStore.pepEnvironment = "mock" }
+              `shouldSatisfy` isLeft
+
+        it "requires a UUID event reference and an auditable replay reason" $ do
+            let now = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.parseProviderEventReference
+              "00000000-0000-4000-8000-000000000010"
+              `shouldSatisfy` isRight
+            ProviderEventStore.parseProviderEventReference "provider-event-1"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "  Provider credentials were repaired  "
+              `shouldBe` Right "Provider credentials were repaired"
+            CommerceOperationsServer.validateProviderEventReplayReason "retry"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              "credentials repaired\nreplay now"
+              `shouldSatisfy` isLeft
+            CommerceOperationsServer.validateProviderEventReplayReason
+              (Data.Text.replicate 501 "r")
+              `shouldSatisfy` isLeft
+            ProviderEventStore.validateProviderEventTimestamp
+              now (addUTCTime (5 * 60 + 1) now)
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookHeaders
+              now
+              (Just "transmission-1")
+              (Just "2026-08-14T12:00:00Z")
+              (Just "https://api-m.sandbox.paypal.com/certs/cert.pem")
+              (Just "SHA1withRSA")
+              (Just "signature-1")
+              `shouldSatisfy` isLeft
+
+        it "requires exact amount, currency, merchant, and order webhook bindings" $ do
+            let bound = ServiceStorefront.BoundPaypalCapture
+                  { ServiceStorefront.bpcCheckoutId = "00000000-0000-4000-8000-000000000001"
+                  , ServiceStorefront.bpcAttemptId = "00000000-0000-4000-8000-000000000002"
+                  , ServiceStorefront.bpcDomainType = "marketplace_sale"
+                  , ServiceStorefront.bpcDomainOrderId = "00000000-0000-4000-8000-000000000003"
+                  , ServiceStorefront.bpcExpectedAmount = 8000
+                  , ServiceStorefront.bpcCurrency = "USD"
+                  , ServiceStorefront.bpcMerchantRef = "MERCHANT"
+                  , ServiceStorefront.bpcPaypalOrderId = "ORDER-1"
+                  }
+                capture = ServiceStorefront.PaypalWebhookCapture
+                  { ServiceStorefront.pwcCaptureId = "CAPTURE-1"
+                  , ServiceStorefront.pwcStatus = "COMPLETED"
+                  , ServiceStorefront.pwcAmount = "80.00"
+                  , ServiceStorefront.pwcCurrency = "USD"
+                  , ServiceStorefront.pwcMerchantId = "MERCHANT"
+                  , ServiceStorefront.pwcPaypalOrderId = "ORDER-1"
+                  }
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture `shouldBe` Right ()
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcAmount = "79.99" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcCurrency = "EUR" }
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "OTHER-MERCHANT" bound capture `shouldSatisfy` isLeft
+            ServiceStorefront.validatePaypalWebhookCaptureBinding
+              "MERCHANT" bound capture { ServiceStorefront.pwcPaypalOrderId = "ORDER-2" }
+              `shouldSatisfy` isLeft
+
+        it "correlates asynchronous PayPal captures for course and ticket checkouts" $ do
+            ServiceStorefront.paypalWebhookDomainSupported "course_registration"
+              `shouldBe` True
+            ServiceStorefront.paypalWebhookDomainSupported "event_ticket_order"
+              `shouldBe` True
+            ServiceStorefront.paypalWebhookDomainSupported "unsupported_checkout"
+              `shouldBe` False
+
+        it "reconciles late captures without reviving expired ticket holds" $ do
+            let now = UTCTime (fromGregorian 2026 8 18)
+                  (secondsToDiffTime (17 * 60 * 60))
+                expiredAt = addUTCTime (-1) now
+                futureExpiry = addUTCTime 1 now
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "processing" (Just expiredAt) `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "processing" (Just futureExpiry) `shouldBe` False
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "expired" (Just futureExpiry) `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "cancelled" Nothing `shouldBe` True
+            ServiceStorefront.paypalCaptureRequiresReconciliation
+              now "paid" (Just expiredAt) `shouldBe` False
+
+        it "builds stable PayPal request IDs within the provider length limit" $ do
+            let first = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                replay = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0001"
+                other = ServiceStorefront.paypalRequestId
+                  "capture" "PAYPAL-ORDER-WITH-A-LONG-PROVIDER-REFERENCE-0002"
+            Data.Text.length first `shouldSatisfy` (<= 38)
+            first `shouldBe` replay
+            first `shouldNotBe` other
+
+        it "parses only represented PayPal refund evidence" $ do
+            let payload = A.object
+                  [ "id" .= ("REFUND-1" :: Text)
+                  , "status" .= ("COMPLETED" :: Text)
+                  , "amount" .= A.object
+                      [ "value" .= ("12.50" :: Text)
+                      , "currency_code" .= ("USD" :: Text)
+                      ]
+                  ]
+            ServiceStorefront.parsePaypalRefundOutcome payload
+              `shouldBe` Right ServiceStorefront.PaypalRefundOutcome
+                { ServiceStorefront.proRefundId = "REFUND-1"
+                , ServiceStorefront.proStatus = "COMPLETED"
+                , ServiceStorefront.proAmount = "12.50"
+                , ServiceStorefront.proCurrency = "USD"
+                }
+
+        it "never permits a requested refund above the unreserved captured balance" $ do
+            let refundBalanceProperty
+                  :: QC.Positive Int
+                  -> QC.NonNegative Int
+                  -> Bool
+                refundBalanceProperty
+                  (QC.Positive paidSeed) (QC.NonNegative refundedSeed) =
+                    let paid = fromIntegral (paidSeed `mod` 1000000 + 1) :: Int64
+                        refunded = fromIntegral
+                          (refundedSeed `mod` fromIntegral paid) :: Int64
+                        remaining = paid - refunded
+                    in RefundStore.validateRefundAmount
+                        paid refunded 0 remaining "USD" "usd" == Right ()
+                        && isLeft (RefundStore.validateRefundAmount
+                          paid refunded 0 (remaining + 1) "USD" "USD")
+            QC.property refundBalanceProperty
+
+        it "normalizes safe configured refund reason identifiers without hard-coding the catalog" $ do
+            RefundStore.validateRefundReason " Quality_Issue "
+              `shouldBe` Right "quality_issue"
+            RefundStore.validateRefundReason "refund reason"
+              `shouldSatisfy` isLeft
+            RefundStore.validateRefundReason "_internal"
+              `shouldSatisfy` isLeft
+
+        it "keeps payment states outside the generic service admin updater" $ do
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "in_progress"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "in_progress" "v1_delivered"
+              `shouldBe` Right ()
+            ServiceStorefront.validateServiceFulfillmentTransition "awaiting_payment" "paid"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "refunded"
+              `shouldSatisfy` isLeft
+            ServiceStorefront.validateServiceFulfillmentTransition "paid" "completed"
+              `shouldSatisfy` isLeft
+
+    describe "marketplace sale fulfillment invariants" $ do
+        it "keeps terminal fulfillment states terminal" $
+            QC.property $ \(QC.NonNegative rawMethod) (QC.NonNegative rawState) ->
+                let methods =
+                        [ MarketplaceSales.MarketplacePickup
+                        , MarketplaceSales.MarketplaceLocalDelivery
+                        , MarketplaceSales.MarketplaceShipping
+                        ]
+                    states =
+                        [ MarketplaceSales.MarketplaceOnHold
+                        , MarketplaceSales.MarketplaceReadyToFulfill
+                        , MarketplaceSales.MarketplacePicking
+                        , MarketplaceSales.MarketplaceReadyForPickup
+                        , MarketplaceSales.MarketplaceShipped
+                        , MarketplaceSales.MarketplaceDelivered
+                        , MarketplaceSales.MarketplaceCancellationRequested
+                        , MarketplaceSales.MarketplaceCancelled
+                        , MarketplaceSales.MarketplaceReturnRequested
+                        , MarketplaceSales.MarketplaceReturnAuthorized
+                        , MarketplaceSales.MarketplaceReturnInTransit
+                        , MarketplaceSales.MarketplaceReturned
+                        , MarketplaceSales.MarketplaceClosed
+                        , MarketplaceSales.MarketplaceExpired
+                        ]
+                    method = methods !! (rawMethod `mod` length methods)
+                    candidate = states !! (rawState `mod` length states)
+                    isRejected terminal =
+                        candidate == terminal
+                          || isLeft
+                            (MarketplaceSales.validateMarketplaceFulfillmentTransition
+                              method terminal candidate)
+                in all isRejected
+                    [ MarketplaceSales.MarketplaceCancelled
+                    , MarketplaceSales.MarketplaceClosed
+                    , MarketplaceSales.MarketplaceExpired
+                    ]
+
+        it "routes pickup and shipped orders through different custody states" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceReadyForPickup
+              `shouldBe` Right ()
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldSatisfy` isLeft
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplaceShipping
+              MarketplaceSales.MarketplacePicking
+              MarketplaceSales.MarketplaceShipped
+              `shouldBe` Right ()
+
+        it "never treats payment readiness as physical delivery" $ do
+            MarketplaceSales.validateMarketplaceFulfillmentTransition
+              MarketplaceSales.MarketplacePickup
+              MarketplaceSales.MarketplaceOnHold
+              MarketplaceSales.MarketplaceDelivered
+              `shouldSatisfy` isLeft
+
+    describe "marketplace rental pricing and custody invariants" $ do
+        it "uses inclusive dates without allowing a negative duration" $ do
+            let startDate = fromGregorian 2030 1 10
+            MarketplaceRentals.rentalDurationDays startDate startDate
+              `shouldBe` Right 1
+            MarketplaceRentals.rentalDurationDays startDate (addDays 6 startDate)
+              `shouldBe` Right 7
+            MarketplaceRentals.rentalDurationDays startDate (addDays (-1) startDate)
+              `shouldSatisfy` isLeft
+
+        it "calculates weekly pricing and discloses the deposit separately" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 6000) 500 1 30 10
+              `shouldBe` Right MarketplaceRentals.RentalPriceBreakdown
+                { MarketplaceRentals.rpbDurationDays = 10
+                , MarketplaceRentals.rpbRentalChargeMinor = 9000
+                , MarketplaceRentals.rpbSecurityDepositMinor = 500
+                , MarketplaceRentals.rpbCheckoutTotalMinor = 9500
+                }
+
+        it "rejects invalid limits, abusive weekly rates, and overflowing totals" $ do
+            MarketplaceRentals.calculateRentalPrice 1000 (Just 7001) 0 1 30 7
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice 1000 Nothing 0 5 3 4
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.calculateRentalPrice maxBound Nothing maxBound 1 2 2
+              `shouldSatisfy` isLeft
+
+        it "makes transition validation idempotent and keeps terminal states terminal" $
+            QC.property $ \(QC.NonNegative rawFrom) (QC.NonNegative rawTo) ->
+                let states =
+                      [ MarketplaceRentals.RentalOnHold
+                      , MarketplaceRentals.RentalConfirmed
+                      , MarketplaceRentals.RentalReadyForHandoff
+                      , MarketplaceRentals.RentalCheckedOut
+                      , MarketplaceRentals.RentalReturnDue
+                      , MarketplaceRentals.RentalReturnedPendingInspection
+                      , MarketplaceRentals.RentalDamageReview
+                      , MarketplaceRentals.RentalDepositRefundDue
+                      , MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancellationRequested
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalNoShow
+                      , MarketplaceRentals.RentalLost
+                      , MarketplaceRentals.RentalDisputed
+                      , MarketplaceRentals.RentalExpired
+                      ]
+                    fromState = states !! (rawFrom `mod` length states)
+                    toState = states !! (rawTo `mod` length states)
+                    terminalStateIsClosed terminal =
+                      toState == terminal
+                        || isLeft (MarketplaceRentals.validateMarketplaceRentalTransition terminal toState)
+                in MarketplaceRentals.validateMarketplaceRentalTransition fromState fromState == Right ()
+                    && all terminalStateIsClosed
+                      [ MarketplaceRentals.RentalClosed
+                      , MarketplaceRentals.RentalCancelled
+                      , MarketplaceRentals.RentalExpired
+                      ]
+
+        it "never skips payment confirmation, handoff, or inspection states" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalOnHold
+              MarketplaceRentals.RentalCheckedOut
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalCheckedOut
+              MarketplaceRentals.RentalClosed
+              `shouldSatisfy` isLeft
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReadyForHandoff
+              MarketplaceRentals.RentalCheckedOut
+              `shouldBe` Right ()
+
+        it "allows operational disputes after return without implying a payment chargeback" $ do
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalReturnedPendingInspection
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+            MarketplaceRentals.validateMarketplaceRentalTransition
+              MarketplaceRentals.RentalDepositRefundDue
+              MarketplaceRentals.RentalDisputed
+              `shouldBe` Right ()
+
+    describe "marketplace customer request and deposit settlement invariants" $ do
+        it "permits only domain-appropriate customer requests" $ do
+            let currentEnd = fromGregorian 2030 1 10
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "sale" "delivered" Nothing Nothing
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.SaleReturnRequest "rental" "delivered" Nothing Nothing
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just (addDays 2 currentEnd))
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceCustomerRequest
+              MarketplaceOperations.RentalExtensionRequest "rental" "checked_out"
+              (Just currentEnd) (Just currentEnd)
+              `shouldSatisfy` isLeft
+
+        it "keeps rental extensions in quote review instead of silently changing custody dates" $ do
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestNeedsQuoteAction
+              `shouldBe` Right MarketplaceOperations.CustomerRequestNeedsQuote
+            MarketplaceOperations.validateMarketplaceCustomerReview
+              MarketplaceOperations.RentalExtensionRequest
+              MarketplaceOperations.CustomerRequestSubmitted
+              MarketplaceOperations.CustomerRequestApprove
+              `shouldSatisfy` isLeft
+
+        it "requires exact deposit arithmetic and an independent reviewer" $ do
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 400
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositForfeiture 500 500 0
+              `shouldBe` Right ()
+            MarketplaceOperations.validateMarketplaceDepositSettlement
+              MarketplaceOperations.DepositBankTransfer 500 100 399
+              `shouldSatisfy` isLeft
+            MarketplaceOperations.validateIndependentDepositReviewer 42 43
+              `shouldBe` Right ()
+            MarketplaceOperations.validateIndependentDepositReviewer 42 42
+              `shouldSatisfy` isLeft
+
+        it "never permits a final customer-request review to transition again" $
+            QC.forAll (QC.arbitrary :: QC.Gen (QC.NonNegative Int)) $ \(QC.NonNegative rawStatus) ->
+              let terminal = if even rawStatus
+                    then MarketplaceOperations.CustomerRequestApproved
+                    else MarketplaceOperations.CustomerRequestRejected
+              in isLeft (MarketplaceOperations.validateMarketplaceCustomerReview
+                  MarketplaceOperations.SaleReturnRequest terminal
+                  MarketplaceOperations.CustomerRequestReject)
+
+    describe "Domo authoritative quote invariants" $ do
+        let weddingRate = DomoQuotes.DomoEventRate
+              { DomoQuotes.derBaseMinor = 180000
+              , DomoQuotes.derPerGuestMinor = 800
+              , DomoQuotes.derMinimumHours = 8
+              , DomoQuotes.derIncludedGuests = 60
+              }
+            rateCard = DomoQuotes.DomoRateCard
+              { DomoQuotes.drcEventRates = Map.fromList [("wedding", weddingRate)]
+              , DomoQuotes.drcHourMinor = 18000
+              , DomoQuotes.drcSetupHourMinor = 7000
+              , DomoQuotes.drcCateringMinimumMinor = 35000
+              , DomoQuotes.drcCateringPerGuestMinor = 650
+              , DomoQuotes.drcProductionMinor = 42000
+              , DomoQuotes.drcTransportMinor = 30000
+              , DomoQuotes.drcTaxBasisPoints = 1200
+              , DomoQuotes.drcDepositBasisPoints = 4000
+              , DomoQuotes.drcMaximumGuests = 220
+              , DomoQuotes.drcMaximumDurationHours = 24
+              , DomoQuotes.drcMaximumSetupHours = 12
+              }
+            weddingInput guests duration setup catering production transport =
+              DomoQuotes.DomoQuoteInput
+                { DomoQuotes.dqiEventType = "wedding"
+                , DomoQuotes.dqiGuests = guests
+                , DomoQuotes.dqiDurationHours = duration
+                , DomoQuotes.dqiSetupHours = setup
+                , DomoQuotes.dqiCatering = catering
+                , DomoQuotes.dqiProduction = production
+                , DomoQuotes.dqiTransport = transport
+                }
+
+        it "reproduces the preserved public formula only from an approved server rate snapshot" $ do
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 80 8 2 True True False)
+              `shouldBe` Right DomoQuotes.DomoQuoteBreakdown
+                { DomoQuotes.dqbLines =
+                    [ DomoQuotes.DomoQuoteLine "venue_base" "Domo event base" 1 180000 180000
+                    , DomoQuotes.DomoQuoteLine "venue_hours" "Domo venue hours" 8 18000 144000
+                    , DomoQuotes.DomoQuoteLine "setup_hours" "Setup and teardown hours" 2 7000 14000
+                    , DomoQuotes.DomoQuoteLine "additional_guests" "Additional guests" 20 800 16000
+                    , DomoQuotes.DomoQuoteLine "catering" "Catering and bar" 1 52000 52000
+                    , DomoQuotes.DomoQuoteLine "production" "Sound and lighting" 1 42000 42000
+                    ]
+                , DomoQuotes.dqbBillableHours = 8
+                , DomoQuotes.dqbSubtotalMinor = 448000
+                , DomoQuotes.dqbTaxMinor = 53760
+                , DomoQuotes.dqbTotalMinor = 501760
+                , DomoQuotes.dqbDepositMinor = 200704
+                , DomoQuotes.dqbBalanceMinor = 301056
+                }
+
+        it "rejects unsupported event types and every client value outside versioned limits" $ do
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 0 8 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 221 8 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 10 25 0 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              (weddingInput 10 8 13 False False False) `shouldSatisfy` isLeft
+            DomoQuotes.calculateDomoQuote rateCard
+              ((weddingInput 10 8 0 False False False)
+                { DomoQuotes.dqiEventType = "not-on-the-rate-card" })
+              `shouldSatisfy` isLeft
+
+        it "preserves line, tax, deposit, and balance arithmetic for all valid customer inputs" $
+            QC.property $ \(QC.Positive rawGuests) (QC.Positive rawDuration)
+                (QC.NonNegative rawSetup) catering production transport ->
+              let guests = rawGuests `mod` 220 + 1
+                  duration = rawDuration `mod` 24 + 1
+                  setup = rawSetup `mod` 13
+              in case DomoQuotes.calculateDomoQuote rateCard
+                    (weddingInput guests duration setup catering production transport) of
+                  Left _ -> False
+                  Right quote ->
+                    sum (map DomoQuotes.dqlSubtotalMinor (DomoQuotes.dqbLines quote))
+                        == DomoQuotes.dqbSubtotalMinor quote
+                    && DomoQuotes.dqbSubtotalMinor quote + DomoQuotes.dqbTaxMinor quote
+                        == DomoQuotes.dqbTotalMinor quote
+                    && DomoQuotes.dqbDepositMinor quote + DomoQuotes.dqbBalanceMinor quote
+                        == DomoQuotes.dqbTotalMinor quote
+                    && DomoQuotes.dqbDepositMinor quote > 0
+
+        it "never equates a verified deposit with event completion" $ do
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositDue DomoQuotes.DomoDepositPaid `shouldBe` Right ()
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositDue DomoQuotes.DomoCompleted `shouldSatisfy` isLeft
+            DomoQuotes.validateDomoQuoteTransition
+              DomoQuotes.DomoDepositPaid DomoQuotes.DomoInProgress `shouldBe` Right ()
+
+        it "keeps completed, cancelled, and expired quotes terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ DomoQuotes.DomoDraft, DomoQuotes.DomoSent, DomoQuotes.DomoViewed
+                    , DomoQuotes.DomoAccepted, DomoQuotes.DomoDepositDue
+                    , DomoQuotes.DomoDepositPaid, DomoQuotes.DomoInProgress
+                    , DomoQuotes.DomoBalanceDue, DomoQuotes.DomoCompleted
+                    , DomoQuotes.DomoCancelled, DomoQuotes.DomoExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft (DomoQuotes.validateDomoQuoteTransition terminal candidate)
+              in all closed
+                  [ DomoQuotes.DomoCompleted
+                  , DomoQuotes.DomoCancelled
+                  , DomoQuotes.DomoExpired
+                  ]
+
+    describe "service booking pricing and fulfillment invariants" $ do
+        it "calculates tax, deposit, and balance from approved integer policy values" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 180
+              `shouldBe` Right ServiceBookings.BookingPriceBreakdown
+                { ServiceBookings.bpbDurationMinutes = 180
+                , ServiceBookings.bpbBillingUnits = 3
+                , ServiceBookings.bpbSubtotalMinor = 7500
+                , ServiceBookings.bpbTaxMinor = 900
+                , ServiceBookings.bpbTotalMinor = 8400
+                , ServiceBookings.bpbDepositMinor = 4200
+                , ServiceBookings.bpbBalanceMinor = 4200
+                }
+
+        it "rejects client durations that would require silent price rounding" $ do
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 30 90
+              `shouldSatisfy` isLeft
+            ServiceBookings.calculateBookingPrice 2500 60 1200 5000 60 480 60 45
+              `shouldSatisfy` isLeft
+
+        it "never equates deposit confirmation with service completion" $ do
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingCompleted
+              `shouldSatisfy` isLeft
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingOnHold
+              ServiceBookings.BookingConfirmed
+              `shouldBe` Right ()
+            ServiceBookings.validateServiceBookingTransition
+              ServiceBookings.BookingConfirmed
+              ServiceBookings.BookingScheduled
+              `shouldBe` Right ()
+
+        it "keeps completed, cancelled, and expired bookings terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+                let states =
+                      [ ServiceBookings.BookingOnHold
+                      , ServiceBookings.BookingConfirmed
+                      , ServiceBookings.BookingScheduled
+                      , ServiceBookings.BookingInProgress
+                      , ServiceBookings.BookingBalanceDue
+                      , ServiceBookings.BookingCompleted
+                      , ServiceBookings.BookingRescheduleRequested
+                      , ServiceBookings.BookingCancellationRequested
+                      , ServiceBookings.BookingCancelled
+                      , ServiceBookings.BookingNoShow
+                      , ServiceBookings.BookingOvertimeReview
+                      , ServiceBookings.BookingDisputed
+                      , ServiceBookings.BookingExpired
+                      ]
+                    candidate = states !! (rawState `mod` length states)
+                    closed terminal = candidate == terminal
+                      || isLeft (ServiceBookings.validateServiceBookingTransition terminal candidate)
+                in all closed
+                    [ ServiceBookings.BookingCompleted
+                    , ServiceBookings.BookingCancelled
+                    , ServiceBookings.BookingExpired
+                    ]
+
+    describe "course checkout pricing and enrollment invariants" $ do
+        it "calculates an ordinary full-payment cohort entirely in minor units" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 1200 CourseCheckout.CourseFullPayment 10000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 1800
+                , CourseCheckout.cpbTotalMinor = 16800
+                , CourseCheckout.cpbDueNowMinor = 16800
+                , CourseCheckout.cpbBalanceMinor = 0
+                }
+
+        it "requires an explicit approved deposit policy instead of silently undercharging" $ do
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseFullPayment 5000
+              `shouldSatisfy` isLeft
+            CourseCheckout.calculateCoursePrice
+              15000 0 CourseCheckout.CourseDeposit 5000
+              `shouldBe` Right CourseCheckout.CoursePriceBreakdown
+                { CourseCheckout.cpbSubtotalMinor = 15000
+                , CourseCheckout.cpbTaxMinor = 0
+                , CourseCheckout.cpbTotalMinor = 15000
+                , CourseCheckout.cpbDueNowMinor = 7500
+                , CourseCheckout.cpbBalanceMinor = 7500
+                }
+
+        it "never equates a seat hold with enrollment or course completion" $ do
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentCompleted
+              `shouldSatisfy` isLeft
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentSeatHeld CourseCheckout.EnrollmentEnrolled
+              `shouldBe` Right ()
+            CourseCheckout.validateCourseEnrollmentTransition
+              CourseCheckout.EnrollmentEnrolled CourseCheckout.EnrollmentCompleted
+              `shouldBe` Right ()
+
+        it "keeps cancelled, completed, transferred, and expired seats terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ CourseCheckout.EnrollmentSeatHeld
+                    , CourseCheckout.EnrollmentEnrolled
+                    , CourseCheckout.EnrollmentWaitlisted
+                    , CourseCheckout.EnrollmentTransferRequested
+                    , CourseCheckout.EnrollmentTransferred
+                    , CourseCheckout.EnrollmentCancelled
+                    , CourseCheckout.EnrollmentCompleted
+                    , CourseCheckout.EnrollmentExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft (CourseCheckout.validateCourseEnrollmentTransition terminal candidate)
+              in all closed
+                  [ CourseCheckout.EnrollmentTransferred
+                  , CourseCheckout.EnrollmentCancelled
+                  , CourseCheckout.EnrollmentCompleted
+                  , CourseCheckout.EnrollmentExpired
+                  ]
+
+    describe "event ticket pricing and fulfillment invariants" $ do
+        it "derives stable unguessable lookup capabilities from a server-only key" $ do
+            let secret = BS.replicate 32 0x5a
+                first = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                replay = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 41
+                otherOrder = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000002" 41
+                otherEvent = EventTicketCheckoutServer.deriveTicketLookupToken
+                  secret "event-ticket-checkout-00000001" 42
+            first `shouldBe` replay
+            first `shouldSatisfy` either (const False) ((== 64) . Data.Text.length)
+            otherOrder `shouldNotBe` first
+            otherEvent `shouldNotBe` first
+            EventTicketCheckoutServer.deriveTicketLookupToken
+              (BS.replicate 31 0x5a) "event-ticket-checkout-00000001" 41
+              `shouldSatisfy` isLeft
+
+        it "accepts an explicit public checkout request with optional fields omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isRight
+
+        it "rejects null public checkout optionals instead of treating them as omitted" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"buyerPhone\":null,\"termsAccepted\":true}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
+        it "rejects unknown public checkout fields before server pricing" $ do
+            let payload =
+                  "{\"tierId\":7,\"quantity\":2,\"buyerName\":\"Ana Rivera\",\"buyerEmail\":\"ana@example.com\",\"termsAccepted\":true,\"totalMinor\":1}"
+            (eitherDecode payload :: Either String EventTicketRoutes.PublicEventTicketCheckoutRequest)
+              `shouldSatisfy` isLeft
+
+        it "snapshots buyer and organizer fee allocations in integer minor units" $ do
+            EventTickets.calculateTicketPrice 2500 2 0 200 200 0
+              `shouldBe` Right EventTickets.TicketPriceBreakdown
+                { EventTickets.tpbGrossFaceValueMinor = 5000
+                , EventTickets.tpbDiscountMinor = 0
+                , EventTickets.tpbNetFaceValueMinor = 5000
+                , EventTickets.tpbBuyerFeeMinor = 100
+                , EventTickets.tpbOrganizerFeeMinor = 100
+                , EventTickets.tpbTaxMinor = 0
+                , EventTickets.tpbCheckoutTotalMinor = 5100
+                , EventTickets.tpbOrganizerPayableMinor = 4900
+                , EventTickets.tpbPlatformFeeMinor = 200
+                }
+
+        it "rejects quantity, discount, fee, tax, and overflow tampering" $ do
+            EventTickets.calculateTicketPrice 2500 0 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 101 0 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 2501 200 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice 2500 1 0 10001 200 0 `shouldSatisfy` isLeft
+            EventTickets.calculateTicketPrice maxBound 2 0 200 200 0 `shouldSatisfy` isLeft
+
+        it "cannot issue a held ticket from an unverified browser or provider return" $ do
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentPending
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldSatisfy` isLeft
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketIssued
+              `shouldBe` Right ()
+            EventTickets.validateTicketFulfillmentTransition
+              EventTickets.TicketPaymentVerified
+              EventTickets.TicketSeatHeld
+              EventTickets.TicketCheckedIn
+              `shouldSatisfy` isLeft
+
+        it "keeps checked-in, refunded, cancelled, and expired tickets terminal" $
+            QC.property $ \(QC.NonNegative rawState) ->
+              let states =
+                    [ EventTickets.TicketSeatHeld
+                    , EventTickets.TicketIssued
+                    , EventTickets.TicketTransferRequested
+                    , EventTickets.TicketTransferred
+                    , EventTickets.TicketCheckedIn
+                    , EventTickets.TicketCancelled
+                    , EventTickets.TicketRefunded
+                    , EventTickets.TicketExpired
+                    ]
+                  candidate = states !! (rawState `mod` length states)
+                  closed terminal = candidate == terminal
+                    || isLeft
+                        (EventTickets.validateTicketFulfillmentTransition
+                          EventTickets.TicketPaymentVerified terminal candidate)
+              in all closed
+                  [ EventTickets.TicketCheckedIn
+                  , EventTickets.TicketCancelled
+                  , EventTickets.TicketRefunded
+                  , EventTickets.TicketExpired
+                  ]
+
+    describe "provider-neutral checkout state machine" $ do
+        let verifiedPayment = Commerce.PaymentVerification
+                { Commerce.pvCheckoutEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEventEnvironment = Commerce.ProviderProduction
+                , Commerce.pvEvidence = Commerce.SignatureVerifiedWebhook
+                , Commerce.pvExpectedAmountMinor = 12500
+                , Commerce.pvActualAmountMinor = 12500
+                , Commerce.pvExpectedCurrency = "USD"
+                , Commerce.pvActualCurrency = "usd"
+                , Commerce.pvExpectedMerchant = "tdf-merchant"
+                , Commerce.pvActualMerchant = "tdf-merchant"
+                , Commerce.pvExpectedOrder = "order-123"
+                , Commerce.pvActualOrder = "order-123"
+                , Commerce.pvExpectedResource = "/v1/checkouts/resource-123/payment"
+                , Commerce.pvActualResource = "/v1/checkouts/resource-123/payment"
+                }
+
+        it "allows payment only from authoritative, fully bound evidence" $
+            Commerce.transitionCheckout
+              Commerce.CheckoutProcessing
+              (Commerce.CheckoutPaymentVerified verifiedPayment)
+              `shouldBe` Right Commerce.CheckoutPaid
+
+        it "never treats a browser return or mocked evidence as payment" $
+            QC.property $ \useBrowserReturn ->
+                let evidence = if useBrowserReturn then Commerce.BrowserReturnOnly else Commerce.MockedEvidence
+                    untrusted = verifiedPayment { Commerce.pvEvidence = evidence }
+                in isLeft (Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified untrusted))
+
+        it "rejects sandbox events for production checkouts" $ do
+            let sandboxEvent = verifiedPayment { Commerce.pvEventEnvironment = Commerce.ProviderSandbox }
+            Commerce.transitionCheckout Commerce.CheckoutProcessing (Commerce.CheckoutPaymentVerified sandboxEvent)
+              `shouldSatisfy` isLeft
+
+        it "rejects every provider amount mutation" $
+            QC.property $ \(QC.NonZero delta) ->
+                isLeft (Commerce.verifyPaymentBinding verifiedPayment
+                  { Commerce.pvActualAmountMinor = 12500 + delta })
+
+        it "keeps fulfillment out of the payment state machine" $
+            Commerce.transitionCheckout Commerce.CheckoutPaid Commerce.CheckoutProviderProcessing
+              `shouldSatisfy` isLeft
+
+        it "balances immutable ledger entries independently per currency" $ do
+            Commerce.ledgerBalances [("USD", 10000), ("usd", -10000), ("EUR", 8000), ("EUR", -8000)]
+              `shouldBe` True
+            Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
+              `shouldBe` False
+
+    describe "distribution state machine invariants" $ do
+        let completeGates = Distribution.DistributionGates
+              { Distribution.metadataValid = True
+              , Distribution.identifiersValid = True
+              , Distribution.assetsValid = True
+              , Distribution.rightsComplete = True
+              , Distribution.splitsAccepted = True
+              , Distribution.termsAccepted = True
+              , Distribution.commerciallyCleared = True
+              }
+
+        it "requires every intake and rights gate before validation" $
+            QC.property $ \metadata identifiers assets rights splits terms ->
+              let gates = completeGates
+                    { Distribution.metadataValid = metadata
+                    , Distribution.identifiersValid = identifiers
+                    , Distribution.assetsValid = assets
+                    , Distribution.rightsComplete = rights
+                    , Distribution.splitsAccepted = splits
+                    , Distribution.termsAccepted = terms
+                    }
+              in isRight (Distribution.transitionDistribution gates
+                    Distribution.DistributionDraft Distribution.DistributionValidated)
+                    == and [metadata, identifiers, assets, rights, splits, terms]
+
+        it "accepts only positive splits totaling exactly 100 percent" $
+            QC.property $ \(QC.NonEmpty rawShares) ->
+              let shares = map (\value -> 1 + abs value `mod` 9999) rawShares
+              in Distribution.splitTotalValid shares == (sum shares == 10000)
+
+        it "cannot mark distribution paid without commercial clearance" $
+            Distribution.transitionDistribution
+              (completeGates { Distribution.commerciallyCleared = False })
+              Distribution.DistributionPaymentDue
+              Distribution.DistributionPaid
+              `shouldSatisfy` isLeft
+
+        it "rejects mock and sandbox evidence for production status" $
+            QC.property $ \useMock ->
+              let evidence = if useMock then Distribution.MockEvidence else Distribution.SandboxEvidence
+              in isLeft (Distribution.validateRecipientEvidence Distribution.EvidenceProduction evidence)
+
+        it "keeps package generation, send, acknowledgement, acceptance, and live distinct" $ do
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionScheduled Distribution.DistributionPackageGenerated
+              `shouldBe` Right Distribution.DistributionPackageGenerated
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionPackageGenerated Distribution.DistributionSent
+              `shouldSatisfy` isLeft
+            Distribution.transitionDistribution completeGates
+              Distribution.DistributionSent Distribution.DistributionLive
+              `shouldSatisfy` isLeft
+
+    describe "DDEX intake safety and truthfulness" $ do
+        it "rejects entities, XInclude, malformed XML, and invalid UTF-8" $ do
+            let unsafePayloads =
+                  [ "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY e SYSTEM \"file:///etc/passwd\">]><x>&e;</x>"
+                  , "<?xml version=\"1.0\"?><x xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include href=\"file:///etc/passwd\"/></x>"
+                  , "<?xml version=\"1.0\"?><unclosed>"
+                  ]
+            mapM_ (\payload ->
+              DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack payload)
+                `shouldSatisfy` isLeft) unsafePayloads
+            DDEXSecurity.safeParseXml DDEXSecurity.defaultXmlParseConfig (BL.pack "\255\254")
+              `shouldSatisfy` isLeft
+
+        it "detects ERN 4.3.2 without inventing a version" $ do
+            let payload = BL.pack "<ernNewReleaseMessage xmlns=\"http://ddex.net/xml/ern/432\" MessageSchemaVersionId=\"ern/432\"></ernNewReleaseMessage>"
+            fmap DDEXTypes.detectionVersion (DDEXDetect.detectDocument payload)
+              `shouldBe` Just "4.3.2"
+
+        it "refuses to render ERN with placeholder sender or recipient identities" $
+            DDEXConvert.catalogToErn DDEXConvert.defaultConvertConfig currentSocialSyncTestTime [] [] [] []
+              `shouldSatisfy` isLeft
+
+    describe "governed country reference snapshot" $ do
+        it "contains one complete, bilingual identity for every ISO alpha-2 code" $ do
+            let seeds = CountrySeed.countryReferenceSeeds
+                alpha2 = map CountrySeed.countrySeedAlpha2 seeds
+                alpha3 = map CountrySeed.countrySeedAlpha3 seeds
+                numericCodes = map CountrySeed.countrySeedNumericCode seeds
+            length seeds `shouldBe` 249
+            length (nub alpha2) `shouldBe` 249
+            length (nub alpha3) `shouldBe` 249
+            length (nub numericCodes) `shouldBe` 249
+            all (not . Data.Text.null . CountrySeed.countrySeedNameEs) seeds `shouldBe` True
+            all (not . Data.Text.null . CountrySeed.countrySeedNameEn) seeds `shouldBe` True
+
+        it "retains reviewed UN/ISO provenance and the ISO-only TW identity" $ do
+            CountrySeed.countryReferenceSnapshotDate `shouldBe` "2026-08-11"
+            "UN M49" `Data.Text.isInfixOf` CountrySeed.countryReferenceSourceVersion `shouldBe` True
+            let taiwan =
+                    [ ( CountrySeed.countrySeedAlpha3 seed
+                      , CountrySeed.countrySeedNumericCode seed
+                      , CountrySeed.countrySeedNameEs seed
+                      )
+                    | seed <- CountrySeed.countryReferenceSeeds
+                    , CountrySeed.countrySeedAlpha2 seed == "TW"
+                    ]
+            taiwan `shouldBe` [("TWN", "158", "Taiwán")]
+
+    describe "internationalization primitives" $ do
+        it "validates ISO 4217 currency codes and currency precision" $ do
+            normalizeCurrencyCode " eur " `shouldBe` Just "EUR"
+            normalizeCurrencyCode "ZZZ" `shouldBe` Nothing
+            fmap currencyDecimalPlaces (currencyDefinition "JPY") `shouldBe` Just 0
+
+        it "formats money with locale-aware separators" $ do
+            formatMoney "en" "USD" 123456 `shouldBe` "$1,234.56 USD"
+            formatMoney "de" "EUR" 123456 `shouldBe` "1.234,56 € EUR"
+            formatMoney "ja" "JPY" 1234 `shouldBe` "¥1,234 JPY"
+            formatMinorUnitsDecimal "USD" 123456 `shouldBe` "1234.56"
+            formatMinorUnitsDecimal "JPY" 1234 `shouldBe` "1234"
+
+        it "normalizes supported locales, countries, and IANA timezone identifiers" $ do
+            normalizeLocaleCode "pt-BR" `shouldBe` Just "pt"
+            normalizeLocaleCode "ar" `shouldBe` Just "ar"
+            normalizeLocaleCode "english" `shouldBe` Nothing
+            normalizeCountryCode " br " `shouldBe` Just "BR"
+            normalizeCountryCode "BRA" `shouldBe` Nothing
+            normalizeCountryCode "ZZ" `shouldBe` Nothing
+            normalizeTimeZone "Europe/Berlin" `shouldBe` Just "Europe/Berlin"
+            normalizeTimeZone "../etc/passwd" `shouldBe` Nothing
+
+    describe "event logistics route parsing" $ do
+        it "parses Google durations including fractional seconds" $ do
+            parseGoogleDurationSeconds "901s" `shouldBe` Just 901
+            parseGoogleDurationSeconds "1.2s" `shouldBe` Just 2
+            parseGoogleDurationSeconds "invalid" `shouldBe` Nothing
+
+        it "extracts the selected route metrics without retaining provider payloads" $
+            parseGoogleRouteResponse
+                "{\"routes\":[{\"duration\":\"1200s\",\"staticDuration\":\"900s\",\"distanceMeters\":12500,\"polyline\":{\"encodedPolyline\":\"abc123\"}}]}"
+                `shouldBe` Right RouteEstimateResult
+                    { rerDurationSeconds = 1200
+                    , rerStaticDurationSeconds = Just 900
+                    , rerDistanceMeters = 12500
+                    , rerEncodedPolyline = Just "abc123"
+                    }
+
+        it "rejects route responses with no usable route" $
+            parseGoogleRouteResponse "{\"routes\":[]}" `shouldSatisfy` isLeft
+
+    describe "campaign automation templates" $ do
+        it "ships the four revenue campaigns with bounded, unique WhatsApp steps" $ do
+            let templates = campaignAutomationTemplatesDTO
+                steps = concatMap DTO.catSteps templates
+                providerNames = map DTO.casProviderTemplateName steps
+            map DTO.catKey templates
+                `shouldMatchList`
+                    [ "music-services"
+                    , "domo-bookings"
+                    , "managed-operations"
+                    , "marketplace-validation"
+                    ]
+            map (length . DTO.catSteps) templates `shouldBe` replicate 4 3
+            length providerNames `shouldBe` length (nub providerNames)
+            forM_ steps $ \step -> do
+                DTO.casPosition step `shouldSatisfy` (> 0)
+                DTO.casDelayDays step `shouldSatisfy` (>= 0)
+                DTO.casBody step `shouldSatisfy` Data.Text.isInfixOf "{{name}}"
+                DTO.casBody step `shouldSatisfy` Data.Text.isInfixOf "{{url}}"
+                WhatsAppClient.normalizeWhatsAppTemplateName
+                    (DTO.casProviderTemplateName step)
+                    `shouldBe` Right (DTO.casProviderTemplateName step)
+                WhatsAppClient.normalizeWhatsAppTemplateLanguage
+                    (DTO.casLanguageCode step)
+                    `shouldBe` Right (DTO.casLanguageCode step)
+
+        it "renders the only two approved personalization variables" $
+            renderCampaignMessage
+                "Ada"
+                "https://example.test/oferta"
+                "Hola {{name}}. Revisa {{url}}."
+                `shouldBe`
+                    "Hola Ada. Revisa https://example.test/oferta."
+
+        it "recognizes explicit inbound opt-out commands without matching normal conversation" $ do
+            map isWhatsAppCampaignOptOutMessage ["SALIR", " salir! ", "STOP", "cancelar.", "BAJA"]
+                `shouldBe` replicate 5 True
+            map isWhatsAppCampaignOptOutMessage ["quiero salir mañana", "no", "listo", ""]
+                `shouldBe` replicate 4 False
+
+        it "bounds activation statuses and daily send caps" $ do
+            validateCampaignAutomationDailyLimit Nothing `shouldBe` Right 20
+            validateCampaignAutomationDailyLimit (Just 1) `shouldBe` Right 1
+            validateCampaignAutomationDailyLimit (Just 100) `shouldBe` Right 100
+            validateCampaignAutomationDailyLimit (Just 0) `shouldSatisfy` isLeft
+            validateCampaignAutomationDailyLimit (Just 101) `shouldSatisfy` isLeft
+            validateCampaignAutomationStatus " Active " `shouldBe` Right "active"
+            validateCampaignAutomationStatus "sending" `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" Nothing `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" (Just False) `shouldSatisfy` isLeft
+            validateCampaignAutomationActivation "active" (Just True) `shouldBe` Right "active"
+            validateCampaignAutomationActivation "paused" Nothing `shouldBe` Right "paused"
+
+    describe "WhatsApp campaign template validation" $ do
+        it "rejects unsafe template names and malformed language codes" $ do
+            WhatsAppClient.normalizeWhatsAppTemplateName "tdf_campaign_intro_v1"
+                `shouldBe` Right "tdf_campaign_intro_v1"
+            WhatsAppClient.normalizeWhatsAppTemplateName "TDF Campaign"
+                `shouldSatisfy` isLeft
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es"
+                `shouldBe` Right "es"
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es_MX"
+                `shouldBe` Right "es_MX"
+            WhatsAppClient.normalizeWhatsAppTemplateLanguage "es-mx"
+                `shouldSatisfy` isLeft
+
+    describe "resolveRefundTimelineMessage" $ do
+        it "uses the default refund timeline when none is provided" $
+            resolveRefundTimelineMessage Nothing
+                `shouldBe` "El reembolso aparecerá en tu cuenta en 5-10 días hábiles."
+
+        it "uses the provided refund timeline verbatim" $
+            resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
+                `shouldBe` "Tu banco lo verá en 48 horas."
+
     describe "seededCredentialSeedingAllowed" $ do
         it "allows seeded demo credentials in local development by default" $
             seededCredentialSeedingAllowed []
@@ -345,8 +2019,6 @@ main = hspec $ do
 
         it "blocks seeded demo credentials in hosted runtimes" $ do
             seededCredentialSeedingAllowed [("FLY_APP_NAME", "tdf-hq")]
-                `shouldBe` False
-            seededCredentialSeedingAllowed [("KOYEB_APP_NAME", "tdf-hq")]
                 `shouldBe` False
             seededCredentialSeedingAllowed [("FLY_APP_NAME", "   ")]
                 `shouldBe` True
@@ -358,6 +2030,39 @@ main = hspec $ do
                 `shouldBe` False
             seededCredentialSeedingAllowed [("NODE_ENV", "test")]
                 `shouldBe` True
+
+        it "requires strong runtime-only secrets before creating demo credentials" $ do
+            seededCredentialSecrets [] `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "too-short")
+                , ("TDF_SEED_TOKEN_PREFIX", "also-too-short")
+                ]
+                `shouldBe` Nothing
+            seededCredentialSecrets
+                [ ("TDF_SEED_DEMO_PASSWORD", "isolated-fixture-password")
+                , ("TDF_SEED_TOKEN_PREFIX", "isolated-fixture-token-prefix")
+                ]
+                `shouldBe` Just ("isolated-fixture-password", "isolated-fixture-token-prefix")
+
+    describe "syntheticPersonaSeedingAllowed" $ do
+        it "requires both an explicit flag and an explicit local or test environment" $ do
+            syntheticPersonaSeedingAllowed [] `shouldBe` False
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "test")]
+                `shouldBe` True
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "production")]
+                `shouldBe` False
+            syntheticPersonaSeedingAllowed
+                [("TDF_ENABLE_SYNTHETIC_PERSONAS", "true"), ("NODE_ENV", "test"), ("FLY_APP_NAME", "tdf-hq")]
+                `shouldBe` False
+
+        it "requires a runtime-only persona password with at least sixteen characters" $ do
+            syntheticPersonaPassword [] `shouldBe` Nothing
+            syntheticPersonaPassword [("TDF_PERSONA_TEST_PASSWORD", "short")]
+                `shouldBe` Nothing
+            syntheticPersonaPassword [("TDF_PERSONA_TEST_PASSWORD", "fiction-only-credential")]
+                `shouldBe` Just "fiction-only-credential"
 
     describe "validateSeedDatabaseStartup" $ do
         it "allows database seeding in local development" $
@@ -377,6 +2082,36 @@ main = hspec $ do
             validateSeedDatabaseStartup True [("APP_ENV", "production")]
                 `shouldSatisfy` seedDbGuardMessage
 
+    describe "validateDatabaseStartupSafety" $ do
+        it "blocks destructive schema reset in hosted or production runtimes" $ do
+            let resetDbGuardMessage (Left msg) =
+                    "RESET_DB=true is not allowed" `isInfixOf` msg
+                resetDbGuardMessage _ = False
+            validateDatabaseStartupSafety True False [("APP_ENV", "production")]
+                `shouldSatisfy` resetDbGuardMessage
+            validateDatabaseStartupSafety True False []
+                `shouldBe` Right ()
+
+    describe "002_party_booking_enhancements migration" $
+        it "backfills only bookings with missing titles" $ do
+            migration <- readFile "sql/002_party_booking_enhancements.sql"
+            migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
+            migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
+
+    describe "operations control-center migrations" $ do
+        it "limits rollback updates to rows whose enabled state changes" $ do
+            rollback <- readFile "sql/2026-08-09_admin_operations_control_center_rollback.sql"
+            rollback `shouldContain`
+                "UPDATE operations_organization SET operations_enabled = FALSE, updated_at = now()\nWHERE operations_enabled IS DISTINCT FROM FALSE;"
+            rollback `shouldContain`
+                "UPDATE operations_provider_config SET enabled = FALSE, updated_at = now()\nWHERE enabled IS DISTINCT FROM FALSE;"
+
+        it "keeps the backfill record projection explicit" $ do
+            migration <- readFile "sql/2026-08-09_admin_operations_control_center.sql"
+            migration `shouldContain`
+                "SELECT entity_type, entity_id, correlation_key, occurred_at,\n        priority, title_es, title_en, metadata"
+            migration `shouldNotContain` "SELECT * FROM ("
+
     describe "getVersionInfo" $ do
         let clearEnv keys = map (\key -> (key, Nothing)) keys
             commitEnvKeys =
@@ -391,11 +2126,6 @@ main = hspec $ do
                 , "RENDER_GIT_COMMIT"
                 , "RENDER_GIT_COMMIT_SHA"
                 , "VERCEL_GIT_COMMIT_SHA"
-                , "KOYEB_GIT_SHA"
-                , "KOYEB_GIT_COMMIT"
-                , "KOYEB_GIT_COMMIT_SHA"
-                , "KOYEB_DEPLOYMENT_GIT_SHA"
-                , "KOYEB_DEPLOYMENT_GIT_COMMIT"
                 , "FLY_GIT_SHA"
                 ]
             buildTimeEnvKeys =
@@ -443,11 +2173,36 @@ main = hspec $ do
                     commit info `shouldBe` "abc123def456"
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
+        it "skips hidden-format runtime metadata instead of exposing misleading version fields" $
+            let hiddenBuildTime =
+                    "2026-04-18T"
+                        <> Data.Text.unpack (Data.Text.singleton '\x202E')
+                        <> "01:02:03Z"
+            in
+            withEnvOverrides
+                (clearEnv buildTimeEnvKeys
+                    ++ [ ("BUILD_TIME", Just hiddenBuildTime)
+                       , ("SOURCE_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
         it "skips whitespace-bearing commit aliases instead of exposing ambiguous version metadata" $
             withEnvOverrides
                 (clearEnv commitEnvKeys
                     ++ [ ("GIT_SHA", Just "abc123 def456")
                        , ("GITHUB_SHA", Just "abc123def456")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    commit info `shouldBe` "abc123def456"
+
+        it "canonicalizes uppercase commit aliases before publishing version metadata" $
+            withEnvOverrides
+                (clearEnv commitEnvKeys
+                    ++ [ ("GIT_SHA", Just "ABC123DEF456")
+                       , ("GITHUB_SHA", Just "fedcba987654")
                        ])
                 $ do
                     info <- getVersionInfo
@@ -473,17 +2228,742 @@ main = hspec $ do
                     info <- getVersionInfo
                     buildTime info `shouldBe` "2026-04-18T01:02:03Z"
 
+        it "skips malformed build-time aliases before publishing version metadata" $
+            withEnvOverrides
+                (clearEnv buildTimeEnvKeys
+                    ++ [ ("BUILD_TIME", Just "deployed today")
+                       , ("SOURCE_BUILD_TIME", Just "2026-02-30T01:02:03Z")
+                       , ("RENDER_BUILD_TIME", Just "2026-04-18T01:02:03Z")
+                       ])
+                $ do
+                    info <- getVersionInfo
+                    buildTime info `shouldBe` "2026-04-18T01:02:03Z"
+
+    describe "MCP parser" $ do
+        it "rejects ambiguous request method names before dispatch" $ do
+            let requestWithMethod methodName =
+                    A.object
+                        [ "jsonrpc" .= ("2.0" :: Text)
+                        , "id" .= (1 :: Int)
+                        , "method" .= (methodName :: Text)
+                        , "params" .= A.object []
+                        ]
+            parseMcpRequest (requestWithMethod "tools/call extra")
+                `shouldSatisfy` isNothing
+            parseMcpRequest (requestWithMethod "tools/call\nextra")
+                `shouldSatisfy` isNothing
+            parseMcpRequest (requestWithMethod "tools/call?debug=true")
+                `shouldSatisfy` isNothing
+
+        it "rejects ambiguous tool call names before constructing error messages" $ do
+            let callWithName toolName =
+                    A.object
+                        [ "name" .= (toolName :: Text)
+                        , "arguments" .= A.object []
+                        ]
+            parseToolCallParams (callWithName "tdf_health_check extra")
+                `shouldSatisfy` isNothing
+            parseToolCallParams (callWithName "tdf_health_check\nextra")
+                `shouldSatisfy` isNothing
+            parseToolCallParams (callWithName "tdf_health_check?verbose=true")
+                `shouldSatisfy` isNothing
+
+    describe "Stripe response decoding" $ do
+        it "builds idempotent marketplace PaymentIntent requests with nested metadata" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "tdf-marketplace-order-order_123")
+                    2500
+                    "USD"
+                    "Marketplace order order_123"
+                    (Just "{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"order_123\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "tdf-marketplace-order-order_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22purpose%22%3a%22marketplace_order%22"
+                _ -> expectationFailure "Expected a strict PaymentIntent form body"
+
+        it "omits idempotency headers from legacy PaymentIntent requests" $ do
+            request <-
+                Stripe.buildPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    Nothing
+                    2500
+                    "USD"
+                    "Legacy payment"
+                    Nothing
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "binds mobile customer PaymentIntents to the same nested ticket context" $ do
+            request <-
+                Stripe.buildPaymentIntentForCustomerRequest
+                    (stripeTestConfig "whsec_test")
+                    (Just "ticket-order-party_123-request_123")
+                    "cus_123"
+                    5100
+                    "USD"
+                    "Tickets for event 12"
+                    (Just "{\"order_id\":\"41\",\"event_id\":\"12\"}")
+            lookup "Idempotency-Key" (HTTP.requestHeaders request)
+                `shouldBe` Just "ticket-order-party_123-request_123"
+            case HTTP.requestBody request of
+                HTTP.RequestBodyBS body -> do
+                    body `shouldSatisfy` BS.isInfixOf "customer=cus_123"
+                    body `shouldSatisfy` BS.isInfixOf "metadata[tdf_context]="
+                    body `shouldSatisfy` BS.isInfixOf "%22order_id%22%3a%2241%22"
+                    body `shouldNotSatisfy` BS.isInfixOf "&metadata="
+                _ -> expectationFailure "Expected a strict customer PaymentIntent form body"
+
+        it "rejects unsafe idempotency keys before allocating an HTTP manager" $ do
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                "   "
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must not be blank"
+            Stripe.createPaymentIntentWithIdempotencyKey
+                (stripeTestConfig "whsec_test")
+                (Data.Text.replicate 256 "a")
+                2500
+                "USD"
+                "Marketplace order"
+                Nothing
+                `shouldReturn` Left "Stripe idempotency key must be 255 bytes or fewer"
+
+        it "retrieves persisted marketplace PaymentIntents without replaying POST" $ do
+            request <-
+                Stripe.buildRetrievePaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_marketplace_123"
+            HTTP.method request `shouldBe` "GET"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_marketplace_123"
+            lookup "Idempotency-Key" (HTTP.requestHeaders request) `shouldBe` Nothing
+
+        it "cancels bound ticket PaymentIntents before releasing reservations" $ do
+            request <-
+                Stripe.buildCancelPaymentIntentRequest
+                    (stripeTestConfig "whsec_test")
+                    "pi_ticket_123"
+            HTTP.method request `shouldBe` "POST"
+            HTTP.path request `shouldBe` "/v1/payment_intents/pi_ticket_123/cancel"
+
+        it "stops ambiguous idempotent POST retries before Stripe may prune the key" $ do
+            let createdAt = UTCTime (fromGregorian 2026 7 12) (secondsToDiffTime 0)
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60 - 1) createdAt)
+                createdAt
+                `shouldBe` False
+            isMarketplaceStripeRetryStale
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` True
+            canReplayMarketplaceStripePost
+                (addUTCTime (60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                Nothing
+                `shouldBe` False
+            canReplayMarketplaceStripePost
+                (addUTCTime (23 * 60 * 60) createdAt)
+                createdAt
+                "tdf-marketplace-order-order_123"
+                (Just "tdf-marketplace-order-order_123")
+                `shouldBe` False
+
+        it "allows only one stripe_pending order per marketplace cart" $ do
+            withSystemTempDirectory "marketplace-stripe-index" $ \tmpDir -> do
+                pool <-
+                    runNoLoggingT $
+                        createSqlitePool
+                            (Data.Text.pack (tmpDir </> "marketplace.sqlite"))
+                            1
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "CREATE TABLE marketplace_order (id TEXT PRIMARY KEY, cart_id TEXT, status TEXT NOT NULL)"
+                            []
+                        rawExecute
+                            "CREATE UNIQUE INDEX uq_marketplace_cart_active_stripe_payment \
+                            \ON marketplace_order(cart_id) \
+                            \WHERE cart_id IS NOT NULL AND status = 'stripe_pending'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_1', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+                runSqlPool
+                    ( rawExecute
+                        "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                        []
+                    )
+                    pool
+                    `shouldThrow` anyException
+                runSqlPool
+                    ( do
+                        rawExecute
+                            "UPDATE marketplace_order SET status = 'stripe_failed' WHERE id = 'order_1'"
+                            []
+                        rawExecute
+                            "INSERT INTO marketplace_order (id, cart_id, status) VALUES ('order_2', 'cart_1', 'stripe_pending')"
+                            []
+                    )
+                    pool
+
+        it "decodes successful JSON response bodies" $
+            Stripe.decodeStripeResponse
+                200
+                "{\"id\":\"pi_123\"}"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Right (A.object ["id" .= ("pi_123" :: Text)])
+
+        it "uses the parse failure message for malformed successful responses" $
+            Stripe.decodeStripeResponse
+                200
+                "not-json"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Left "Failed to parse Stripe PaymentIntent response"
+
+        it "uses status-specific fallbacks for malformed Stripe error bodies" $ do
+            Stripe.decodeStripeResponse
+                402
+                "not-json"
+                "Failed to parse Stripe PaymentIntent response"
+                "Stripe API error"
+                `shouldBe` Left "Stripe API error with status: 402"
+            Stripe.decodeStripeResponse
+                500
+                "not-json"
+                "Failed to parse Stripe refund response"
+                "Stripe refund error"
+                `shouldBe` Left "Stripe refund error with status: 500"
+
+        it "preserves malformed non-success status for every generated Stripe HTTP status" $
+            QC.property $ \(StripeNonSuccessStatus status) ->
+                Stripe.decodeStripeResponse
+                    status
+                    "not-json"
+                    "parse failed"
+                    "Stripe API error"
+                    QC.=== Left ("Stripe API error with status: " <> Data.Text.pack (show status))
+
+        it "rejects invalid payout account creation preconditions before HTTP allocation" $
+            Stripe.createConnectExpressAccount
+                (stripeTestConfig "whsec_test")
+                "ecuador"
+                Nothing
+                Nothing
+                `shouldReturn` Left "country must be a 2-letter ISO code"
+
+        it "rejects invalid account link preconditions before HTTP allocation" $ do
+            Stripe.createAccountLink
+                (stripeTestConfig "whsec_test")
+                "account_123"
+                "https://example.com/refresh"
+                "https://example.com/return"
+                `shouldReturn` Left "Stripe account id must be an acct_* identifier"
+            Stripe.createAccountLink
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                ""
+                "https://example.com/return"
+                `shouldReturn` Left "refreshUrl must not be blank"
+
+        it "rejects invalid tip PaymentIntent preconditions before HTTP allocation" $ do
+            Stripe.createPaymentIntentForTip
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                1000
+                1001
+                "usd"
+                "tip"
+                Nothing
+                `shouldReturn` Left "applicationFeeCents must not exceed amountCents"
+            Stripe.createPaymentIntentForTip
+                (stripeTestConfig "whsec_test")
+                "acct_123"
+                1000
+                100
+                "US1"
+                "tip"
+                Nothing
+                `shouldReturn` Left "currency must be a 3-letter ISO code"
+
+        it "accepts generated webhook signatures that satisfy the HMAC contract" $
+            QC.property $ \(StripeHeaderToken secret) (StripeHeaderToken timestamp) (StripeBody rawBody) ->
+                let header =
+                        "t=" <> timestamp
+                            <> ",v1="
+                            <> stripeV1Signature secret timestamp rawBody
+                in Stripe.verifyWebhookSignature (stripeTestConfig secret) header rawBody QC.=== True
+
+        it "rejects generated webhook signatures when the signed body changes" $
+            QC.property $ \(StripeHeaderToken secret) (StripeHeaderToken timestamp) (StripeBody rawBody) ->
+                let header =
+                        "t=" <> timestamp
+                            <> ",v1="
+                            <> stripeV1Signature secret timestamp rawBody
+                in Stripe.verifyWebhookSignature
+                    (stripeTestConfig secret)
+                    header
+                    (BS.snoc rawBody 0)
+                    QC.=== False
+
+        it "rejects webhook signatures that do not contain both timestamp and v1 fields" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                rawBody = "{\"id\":\"evt_123\"}"
+                signature = stripeV1Signature secret timestamp rawBody
+                cfg = stripeTestConfig secret
+            Stripe.verifyWebhookSignature cfg "" rawBody `shouldBe` False
+            Stripe.verifyWebhookSignature cfg ("t=" <> timestamp) rawBody `shouldBe` False
+            Stripe.verifyWebhookSignature cfg ("v1=" <> signature) rawBody `shouldBe` False
+
+        it "verifies Stripe signatures against exact raw JSON bytes before decoding" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody =
+                    BL.pack
+                        "{\n  \"id\": \"evt_raw_123\", \"type\": \"payment_intent.succeeded\"\n}"
+                strictBody = BL.toStrict rawBody
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp strictBody
+                cfg = stripeTestConfig secret
+            case verifyAndDecodeStripeWebhook now cfg (Just header) rawBody of
+                Left err -> expectationFailure ("Expected raw webhook to verify: " <> Data.Text.unpack err)
+                Right payload ->
+                    parseStripeWebhookEventEnvelope payload
+                        `shouldBe` Right ("evt_raw_123", "payment_intent.succeeded")
+            verifyAndDecodeStripeWebhook
+                now
+                cfg
+                (Just header)
+                "{\"id\":\"evt_raw_123\",\"type\":\"payment_intent.succeeded\"}"
+                `shouldBe` Left "Invalid webhook signature"
+
+        it "rejects missing signatures and malformed raw Stripe JSON deterministically" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                malformedBody = "{"
+                header =
+                    "t=" <> timestamp
+                        <> ",v1="
+                        <> stripeV1Signature secret timestamp (BL.toStrict malformedBody)
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg Nothing "{}"
+                `shouldBe` Left "Missing Stripe-Signature header"
+            verifyAndDecodeStripeWebhook now cfg (Just header) malformedBody
+                `shouldBe` Left "Invalid webhook JSON"
+
+        it "accepts rotated v1 signatures and rejects stale signed deliveries" $ do
+            let secret = "whsec_test"
+                timestamp = "1710000000"
+                now = posixSecondsToUTCTime 1710000000
+                rawBody = "{\"id\":\"evt_rotated\",\"type\":\"invoice.paid\"}"
+                validSignature = stripeV1Signature secret timestamp (BL.toStrict rawBody)
+                rotatedHeader =
+                    "t=" <> timestamp
+                        <> ",v1=0000000000000000000000000000000000000000000000000000000000000000"
+                        <> ",v1=" <> validSignature
+                staleNow = addUTCTime 301 now
+                cfg = stripeTestConfig secret
+            verifyAndDecodeStripeWebhook now cfg (Just rotatedHeader) rawBody
+                `shouldSatisfy` isRight
+            verifyAndDecodeStripeWebhook staleNow cfg (Just rotatedHeader) rawBody
+                `shouldBe` Left "Invalid webhook signature"
+
+        it "extracts required PaymentIntent fields from explicit object payloads" $
+            parseStripePaymentIntentResponse
+                ( A.object
+                    [ "id" .= ("pi_123" :: Text)
+                    , "client_secret" .= ("secret_123" :: Text)
+                    ]
+                )
+                `shouldBe` Right ("pi_123", "secret_123")
+
+        it "rejects malformed PaymentIntent payloads without falling through partial matches" $ do
+            parseStripePaymentIntentResponse
+                (A.object ["client_secret" .= ("secret_123" :: Text)])
+                `shouldBe` Left "Could not parse Stripe response"
+            parseStripePaymentIntentResponse
+                (A.object ["id" .= ("pi_123" :: Text)])
+                `shouldBe` Left "Could not parse Stripe client secret"
+            parseStripePaymentIntentResponse A.Null
+                `shouldBe` Left "Could not parse Stripe response"
+
+        it "extracts Customer and Ephemeral Key fields from explicit Stripe payloads" $ do
+            parseStripeCustomerId
+                (A.object ["id" .= ("cus_123" :: Text)])
+                `shouldBe` Right "cus_123"
+            parseStripeEphemeralKeySecret
+                (A.object ["secret" .= ("ephkey_123" :: Text)])
+                `shouldBe` Right "ephkey_123"
+
+        it "rejects malformed Customer and Ephemeral Key payloads deterministically" $ do
+            parseStripeCustomerId (A.object [])
+                `shouldBe` Left "Could not parse Stripe customer response"
+            parseStripeCustomerId A.Null
+                `shouldBe` Left "Could not parse Stripe customer response"
+            parseStripeEphemeralKeySecret (A.object [])
+                `shouldBe` Left "Could not parse Stripe ephemeral key response"
+            parseStripeEphemeralKeySecret A.Null
+                `shouldBe` Left "Could not parse Stripe ephemeral key response"
+
+        it "extracts Stripe webhook envelope and nested PaymentIntent ids predictably" $ do
+            let webhookPayload =
+                    A.object
+                        [ "id" .= ("evt_123" :: Text)
+                        , "type" .= ("payment_intent.succeeded" :: Text)
+                        , "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= ("pi_123" :: Text)
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookEventEnvelope webhookPayload
+                `shouldBe` Right ("evt_123", "payment_intent.succeeded")
+            parseStripeWebhookPaymentIntentId webhookPayload
+                `shouldBe` Just "pi_123"
+
+        it "requires complete immutable ticket evidence before a signed webhook can issue tickets" $ do
+            let ticketPayload amount currency orderId eventId status =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= ("pi_ticket_123" :: Text)
+                                        , "status" .= (status :: Text)
+                                        , "amount_received" .= (amount :: Int)
+                                        , "currency" .= (currency :: Text)
+                                        , "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ( TE.decodeUtf8 . BL.toStrict . A.encode $
+                                                            A.object
+                                                                [ "order_id" .= (orderId :: Text)
+                                                                , "event_id" .= (eventId :: Text)
+                                                                ]
+                                                       )
+                                                ]
+                                        ]
+                                ]
+                        ]
+                expectedEvidence =
+                    StripeTicketPaymentEvidence
+                        { stpePaymentIntentId = "pi_ticket_123"
+                        , stpeStatus = "succeeded"
+                        , stpeAmountReceived = 5100
+                        , stpeCurrency = "USD"
+                        , stpeOrderId = "41"
+                        , stpeEventId = "12"
+                        }
+                validPayload = ticketPayload 5100 "usd" "41" "12" "succeeded"
+            parseStripeTicketPaymentEvidence validPayload `shouldBe` Right expectedEvidence
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Right ()
+            validateStripeTicketPaymentEvidence "41" "12" "pi_ticket_123" 5000 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket amount does not match the immutable order total"
+            validateStripeTicketPaymentEvidence "41" "99" "pi_ticket_123" 5100 "USD" expectedEvidence
+                `shouldBe` Left "Stripe ticket event metadata does not match the stored event"
+            parseStripeTicketPaymentEvidence
+                (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+
+        it "recovers marketplace order ids from Stripe metadata context" $ do
+            let webhookPayload =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object
+                                                [ "tdf_context"
+                                                    .= ("{\"purpose\":\"marketplace_order\",\"marketplace_order_id\":\"9bb34967-6f48-47b8-976f-17c79f276913\"}" :: Text)
+                                                ]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId webhookPayload
+                `shouldBe` Just "9bb34967-6f48-47b8-976f-17c79f276913"
+
+        it "ignores malformed marketplace metadata context" $
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata" .= A.object ["tdf_context" .= ("not-json" :: Text)]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "requires the canonical marketplace purpose before recovering an order id" $ do
+            let webhookPayload contextJson =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object ["tdf_context" .= (contextJson :: Text)]
+                                        ]
+                                ]
+                        ]
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                (webhookPayload "{\"purpose\":\"artist_tip\",\"marketplace_order_id\":\"order_123\"}")
+                `shouldBe` Nothing
+            parseStripeWebhookMarketplaceOrderId
+                ( A.object
+                    [ "data"
+                        .= A.object
+                            [ "object"
+                                .= A.object
+                                    [ "metadata"
+                                        .= A.object
+                                            [ "purpose" .= ("marketplace_order" :: Text)
+                                            , "marketplace_order_id" .= ("order_123" :: Text)
+                                            ]
+                                    ]
+                            ]
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "only recovers unbound Stripe-pending marketplace orders" $ do
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") Nothing
+                `shouldBe` True
+            canRecoverMarketplaceStripeOrder "pending" (Just "stripe") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" Nothing Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "paypal") Nothing
+                `shouldBe` False
+            canRecoverMarketplaceStripeOrder "stripe_pending" (Just "stripe") (Just "pi_other")
+                `shouldBe` False
+
+        it "extracts checkout session course subscription fields only when complete" $ do
+            let checkoutPayload regId subscriptionId =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "metadata"
+                                            .= A.object
+                                                [ "course_registration_id" .= (regId :: Text)
+                                                ]
+                                        , "subscription" .= (subscriptionId :: Text)
+                                        ]
+                                ]
+                        ]
+            parseCheckoutSessionCourseSubscription
+                (checkoutPayload "42" "sub_123")
+                `shouldBe` Just (42, "sub_123")
+            parseCheckoutSessionCourseSubscription
+                (checkoutPayload "not-a-number" "sub_123")
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["metadata" .= A.object []]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["subscription" .= ("sub_123" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseCheckoutSessionCourseSubscription A.Null
+                `shouldBe` Nothing
+
+        it "extracts subscription webhook fields only when id and status are present" $ do
+            let subscriptionPayload subscriptionId status =
+                    A.object
+                        [ "data"
+                            .= A.object
+                                [ "object"
+                                    .= A.object
+                                        [ "id" .= (subscriptionId :: Text)
+                                        , "status" .= (status :: Text)
+                                        ]
+                                ]
+                        ]
+            parseSubscriptionEvent
+                (subscriptionPayload "sub_123" "past_due")
+                `shouldBe` Just ("sub_123", "past_due")
+            parseSubscriptionEvent
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["id" .= ("sub_123" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseSubscriptionEvent
+                ( A.object
+                    [ "data" .= A.object
+                        [ "object" .= A.object ["status" .= ("active" :: Text)]
+                        ]
+                    ]
+                )
+                `shouldBe` Nothing
+            parseSubscriptionEvent A.Null
+                `shouldBe` Nothing
+
+        it "rejects malformed Stripe webhook payloads with deterministic outcomes" $ do
+            parseStripeWebhookEventEnvelope
+                (A.object ["type" .= ("payment_intent.succeeded" :: Text)])
+                `shouldBe` Left "Invalid webhook payload"
+            parseStripeWebhookEventEnvelope
+                (A.object ["id" .= ("evt_123" :: Text)])
+                `shouldBe` Left "Invalid webhook event type"
+            parseStripeWebhookPaymentIntentId
+                ( A.object
+                    [ "id" .= ("evt_123" :: Text)
+                    , "type" .= ("payment_intent.succeeded" :: Text)
+                    , "data" .= A.object []
+                    ]
+                )
+                `shouldBe` Nothing
+
+        it "extracts refund ids from explicit Stripe refund response objects" $ do
+            parseStripeRefundResponse
+                (A.object ["id" .= ("re_123" :: Text)])
+                `shouldBe` Right "re_123"
+            parseStripeRefundResponse (A.object [])
+                `shouldBe` Left "Could not parse Stripe refund response"
+            parseStripeRefundResponse A.Null
+                `shouldBe` Left "Could not parse Stripe refund response"
+
+    describe "PaymentCreate JSON contract" $ do
+        let paymentJson paidAt period =
+                A.object
+                    [ "pcPartyId" .= (1 :: Int)
+                    , "pcAmountCents" .= (2500 :: Int)
+                    , "pcCurrency" .= ("usd" :: Text)
+                    , "pcMethod" .= ("cash" :: Text)
+                    , "pcPaidAt" .= (paidAt :: Text)
+                    , "pcConcept" .= ("Manual class payment" :: Text)
+                    , "pcPeriod" .= (period :: Text)
+                    ]
+            decodePayment paidAt period =
+                eitherDecode @PaymentCreate (A.encode (paymentJson paidAt period))
+            failsWith expected result =
+                case result of
+                    Left err -> expected `isInfixOf` err
+                    Right _ -> False
+
+        it "accepts valid manual payment dates and periods at the API boundary" $
+            case decodePayment "2026-05-19" "2026-05" of
+                Left err ->
+                    expectationFailure ("Expected valid payment payload, got: " <> err)
+                Right payment -> do
+                    pcPaidAt payment `shouldBe` "2026-05-19"
+                    pcPeriod payment `shouldBe` Just "2026-05"
+
+        it "rejects impossible payment dates before handler fallback parsing" $
+            decodePayment "2026-02-31" "2026-02"
+                `shouldSatisfy`
+                    failsWith "pcPaidAt must be a valid date in YYYY-MM-DD format"
+
+        it "rejects malformed payment periods before manual payment storage" $
+            decodePayment "2026-05-19" "2026-13"
+                `shouldSatisfy`
+                    failsWith "pcPeriod must be in YYYY-MM format"
+
+    describe "locale preference JSON contracts" $ do
+        it "accepts only canonical locale, currency, and country UUIDs for preference updates" $
+            case eitherDecode @DTO.LocalePreferencesUpdate
+                "{\"localeId\":\"11111111-1111-4111-8111-111111111111\",\"currencyId\":\"33333333-3333-4333-8333-333333333333\",\"timezone\":\"Europe/Berlin\",\"countryId\":\"22222222-2222-4222-8222-222222222222\"}" of
+                Left err -> expectationFailure err
+                Right update -> do
+                    Just (DTO.lpuLocaleId update) `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    Just (DTO.lpuCurrencyId update) `shouldBe` UUID.fromString "33333333-3333-4333-8333-333333333333"
+                    DTO.lpuTimezone update `shouldBe` "Europe/Berlin"
+                    DTO.lpuCountryId update `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
+
+        it "rejects legacy copied locale, currency, and country preference writes" $
+            eitherDecode @DTO.LocalePreferencesUpdate
+                "{\"locale\":\"de\",\"currency\":\"EUR\",\"timezone\":\"Europe/Berlin\",\"countryCode\":\"DE\"}"
+                `shouldSatisfy` isLeft
+
+        it "decodes currency conversion audit records in minor units" $
+            case eitherDecode @DTO.CurrencyConversionAuditCreate
+                "{\"sourceCurrency\":\"USD\",\"targetCurrency\":\"JPY\",\"sourceMinorUnits\":10000,\"targetMinorUnits\":1500000,\"exchangeRate\":150,\"rateSource\":\"frankfurter\"}" of
+                Left err -> expectationFailure err
+                Right audit -> do
+                    DTO.ccaSourceCurrency audit `shouldBe` "USD"
+                    DTO.ccaTargetCurrency audit `shouldBe` "JPY"
+                    DTO.ccaExchangeRate audit `shouldBe` 150
+
     describe "loadConfig" $ do
+        it "loads and validates international defaults from the environment" $ do
+            withEnvOverrides
+                [ ("DEFAULT_CURRENCY", Just "eur")
+                , ("SUPPORTED_CURRENCIES", Just "USD, EUR, GBP, JPY, BRL")
+                , ("DEFAULT_TIMEZONE", Just "Europe/Berlin")
+                , ("SUPPORTED_LOCALES", Just "en, es, fr, de, pt")
+                , ("DEFAULT_LOCALE", Just "de-DE")
+                , ("ENABLE_GDPR_COMPLIANCE", Just "true")
+                ] $ do
+                    cfg <- loadConfig
+                    defaultCurrency cfg `shouldBe` "EUR"
+                    supportedCurrencies cfg `shouldBe` ["USD", "EUR", "GBP", "JPY", "BRL"]
+                    defaultTimezone cfg `shouldBe` "Europe/Berlin"
+                    defaultLocale cfg `shouldBe` "de"
+                    enableGdprCompliance cfg `shouldBe` True
+
+            withEnvOverrides
+                [ ("DEFAULT_CURRENCY", Just "JPY")
+                , ("SUPPORTED_CURRENCIES", Just "USD,EUR")
+                ] $
+                    loadConfig `shouldThrow` \err ->
+                        "DEFAULT_CURRENCY must also be listed in SUPPORTED_CURRENCIES"
+                            `isInfixOf` show (err :: IOException)
+
         it "rejects malformed APP_PORT instead of booting on an unintended port" $ do
             let assertInvalid rawPort =
                     withEnvOverrides
                         [ ("APP_PORT", Just rawPort) ]
                         $ loadConfig `shouldThrow` \err ->
-                            "APP_PORT must be a positive integer"
+                            "APP_PORT must be a port number between 1 and 65535"
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "not-a-port"
             assertInvalid "0"
             assertInvalid "-1"
+            assertInvalid "70000"
 
             withEnvOverrides
                 [ ("APP_PORT", Just " 9090 ") ]
@@ -524,6 +3004,89 @@ main = hspec $ do
                     cfg <- loadConfig
                     fmap smtpPort (emailConfig cfg) `shouldBe` Just 2525
 
+        it "rejects malformed SMTP_TLS instead of silently disabling TLS" $ do
+            let configuredSmtp extra =
+                    [ ("SMTP_HOST", Just "smtp.example.com")
+                    , ("SMTP_USER", Just "mailer")
+                    , ("SMTP_PASS", Just "secret")
+                    , ("SMTP_FROM", Just "tdf@example.com")
+                    ] <> extra
+
+            withEnvOverrides
+                (configuredSmtp [("SMTP_TLS", Just " off ")])
+                $ do
+                    cfg <- loadConfig
+                    fmap smtpUseTLS (emailConfig cfg) `shouldBe` Just False
+
+            withEnvOverrides
+                (configuredSmtp [("SMTP_TLS", Just "maybe")])
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_TLS must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects SMTP_USERNAME/SMTP_USER conflicts before choosing a fallback" $ do
+            withEnvOverrides
+                [ ("SMTP_PORT", Just "587")
+                , ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Just "primary-mailer")
+                , ("SMTP_USER", Just "alias-mailer")
+                , ("SMTP_PASSWORD", Just "secret")
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_USERNAME and SMTP_USER must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("SMTP_PORT", Just "587")
+                , ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USERNAME", Just "mailer")
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASSWORD", Just "primary-secret")
+                , ("SMTP_PASS", Just "alias-secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "SMTP_PASSWORD and SMTP_PASS must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes SMTP_FROM_NAME and rejects unsafe email display names" $ do
+            withEnvOverrides
+                [ ("SMTP_HOST", Just "smtp.example.com")
+                , ("SMTP_USER", Just "mailer")
+                , ("SMTP_PASS", Just "secret")
+                , ("SMTP_FROM", Just "tdf@example.com")
+                , ("SMTP_FROM_NAME", Just "  TDF Records HQ  ")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    fmap emailFromName (emailConfig cfg) `shouldBe` Just "TDF Records HQ"
+
+            let assertInvalid rawName expectedMessage =
+                    withEnvOverrides
+                        [ ("SMTP_HOST", Just "smtp.example.com")
+                        , ("SMTP_USER", Just "mailer")
+                        , ("SMTP_PASS", Just "secret")
+                        , ("SMTP_FROM", Just "tdf@example.com")
+                        , ("SMTP_FROM_NAME", Just rawName)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "TDF Records\nBcc: ops@example.com"
+                "SMTP_FROM_NAME must not contain control characters"
+            let hiddenName =
+                    "TDF Records "
+                        <> Data.Text.unpack (Data.Text.singleton '\x202E')
+                        <> "HQ"
+            assertInvalid
+                hiddenName
+                "SMTP_FROM_NAME must not contain hidden formatting characters"
+            assertInvalid
+                (Data.Text.unpack (Data.Text.replicate 121 "x"))
+                "SMTP_FROM_NAME must be 120 characters or fewer"
+
         it "rejects malformed startup boolean flags instead of silently changing boot behavior" $ do
             withEnvOverrides
                 [ ("RUN_MIGRATIONS", Just "tru")
@@ -547,14 +3110,14 @@ main = hspec $ do
 
         it "rejects malformed seed trigger tokens before enabling seed endpoints" $ do
             withEnvOverrides
-                [ ("SEED_TRIGGER_TOKEN", Just " seed-token_123456 ") ]
+                (clearSeedRuntimeEnv <> [("SEED_TRIGGER_TOKEN", Just " seed-token_123456 ")])
                 $ do
                     cfg <- loadConfig
                     seedTriggerToken cfg `shouldBe` Just "seed-token_123456"
 
             let assertInvalid rawToken expectedMessage =
                     withEnvOverrides
-                        [ ("SEED_TRIGGER_TOKEN", Just rawToken) ]
+                        (clearSeedRuntimeEnv <> [("SEED_TRIGGER_TOKEN", Just rawToken)])
                         $ loadConfig `shouldThrow` \err ->
                             expectedMessage `isInfixOf` show (err :: IOException)
             assertInvalid
@@ -567,8 +3130,24 @@ main = hspec $ do
                 "seed-token\nInjected: value"
                 "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
             assertInvalid
+                ("seed-token_123456" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "SEED_TRIGGER_TOKEN must not contain hidden formatting characters"
+            assertInvalid
                 (replicate 513 'a')
                 "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
+
+        it "rejects seed trigger tokens in hosted or production runtimes before enabling unauthenticated seed endpoints" $ do
+            let assertBlocked runtimeOverride =
+                    withEnvOverrides
+                        ( clearSeedRuntimeEnv
+                            <> [ ("SEED_TRIGGER_TOKEN", Just "seed-token_123456")
+                               , runtimeOverride
+                               ]
+                        )
+                        $ loadConfig `shouldThrow` \err ->
+                            "SEED_TRIGGER_TOKEN must be unset in hosted or production runtimes"
+                                `isInfixOf` show (err :: IOException)
+            assertBlocked ("APP_ENV", Just "production")
 
         it "treats blank SMTP templates as unconfigured but rejects partial SMTP config" $ do
             withEnvOverrides
@@ -640,6 +3219,29 @@ main = hspec $ do
                     "SESSION_COOKIE_SECURE must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
+        it "keeps Secure on both session set and clear cookie headers" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Just "https://hq.example.com")
+                , ("SESSION_COOKIE_NAME", Nothing)
+                , ("SESSION_COOKIE_DOMAIN", Nothing)
+                , ("SESSION_COOKIE_PATH", Nothing)
+                , ("SESSION_COOKIE_SECURE", Nothing)
+                , ("SESSION_COOKIE_SAMESITE", Nothing)
+                , ("SESSION_COOKIE_MAX_AGE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    let secureSetCookie =
+                            "tdf_session=session-token; Path=/; HttpOnly; SameSite=None; "
+                                <> "Max-Age=2592000; Secure"
+                        secureClearCookie =
+                            "tdf_session=; Path=/; HttpOnly; SameSite=None; Max-Age=0; "
+                                <> "Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure"
+                    sessionCookieHeader cfg "session-token"
+                        `shouldBe` secureSetCookie
+                    clearSessionCookieHeader cfg
+                        `shouldBe` secureClearCookie
+
         it "rejects malformed session cookie SameSite values instead of silently using Lax" $ do
             withEnvOverrides
                 [ ("SESSION_COOKIE_SAMESITE", Just " Strict ") ]
@@ -709,6 +3311,11 @@ main = hspec $ do
             assertInvalid "bad_domain.example.com"
             assertInvalid "bad..example.com"
             assertInvalid "-bad.example.com"
+            assertInvalid "localhost"
+            assertInvalid "com"
+            assertInvalid "127.0.0.1"
+            assertInvalid "example.c"
+            assertInvalid "example.123"
 
         it "rejects malformed session cookie paths before emitting ambiguous Set-Cookie headers" $ do
             let assertInvalid rawPath =
@@ -721,6 +3328,8 @@ main = hspec $ do
             assertInvalid "/hq; Secure"
             assertInvalid "/hq admin"
             assertInvalid "/hq,admin"
+            assertInvalid ("/hq" <> ['\x200B'])
+            assertInvalid ("/hq" <> ['\x202E'] <> "admin")
 
         it "rejects malformed session cookie max-age values instead of silently using the default" $ do
             withEnvOverrides
@@ -793,6 +3402,18 @@ main = hspec $ do
                 "https://hq-admin/app"
                 "HQ_APP_URL must be an absolute http(s) URL"
             assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com:0443/app"
+                "HQ_APP_URL must be an absolute http(s) URL"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com:443/app"
+                "HQ_APP_URL must omit default port for https"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "http://cdn.example.com:80/assets"
+                "HQ_ASSETS_BASE_URL must omit default port for http"
+            assertInvalid
                 "HQ_ASSETS_BASE_URL"
                 "https://cdn/assets"
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL"
@@ -806,12 +3427,34 @@ main = hspec $ do
                 "HQ_ASSETS_BASE_URL must be an absolute http(s) URL without query or fragment"
             assertInvalid
                 "HQ_APP_URL"
+                "https://hq.example.com//admin"
+                "HQ_APP_URL path must not start with // or contain backslashes"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets\\logo"
+                "HQ_ASSETS_BASE_URL path must not start with // or contain backslashes"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com/app/../admin"
+                "HQ_APP_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "HQ_ASSETS_BASE_URL"
+                "https://cdn.example.com/assets//logo"
+                "HQ_ASSETS_BASE_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "HQ_APP_URL"
                 "https://hq.example.com/app\SOHadmin"
                 "HQ_APP_URL must not contain control characters"
+            assertInvalid
+                "HQ_APP_URL"
+                "https://hq.example.com/app\8238admin"
+                "HQ_APP_URL must not contain hidden formatting characters"
 
-        it "normalizes configured outbound API base URLs before building requests" $
+        it "normalizes configured outbound API base URLs before building requests" $ do
+            let providerApiBaseText = llmProviderApiBase llmProvider
+                providerApiBase = Data.Text.unpack providerApiBaseText
             withEnvOverrides
-                [ ("CHATKIT_API_BASE", Just " https://api.openai.com/ ")
+                [ ("CHATKIT_API_BASE", Just (" " <> providerApiBase <> "/ "))
                 , ("FACEBOOK_GRAPH_BASE", Just " https://graph.facebook.com/v21.0/ ")
                 , ( "FACEBOOK_MESSAGING_API_BASE"
                   , Just " https://graph.facebook.com/v22.0/ "
@@ -823,7 +3466,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    chatKitApiBase cfg `shouldBe` "https://api.openai.com"
+                    chatKitApiBase cfg `shouldBe` providerApiBaseText
                     facebookGraphBase cfg `shouldBe` "https://graph.facebook.com/v21.0"
                     facebookMessagingApiBase cfg
                         `shouldBe` "https://graph.facebook.com/v22.0"
@@ -832,6 +3475,7 @@ main = hspec $ do
                         `shouldBe` "https://graph.facebook.com/v23.0"
 
         it "rejects malformed outbound API base URLs before token-bearing requests are built" $ do
+            let providerApiBase = Data.Text.unpack (llmProviderApiBase llmProvider)
             let apiBaseKeys =
                     [ "CHATKIT_API_BASE"
                     , "FACEBOOK_GRAPH_BASE"
@@ -861,8 +3505,32 @@ main = hspec $ do
                 "FACEBOOK_GRAPH_BASE must be an absolute https URL"
             assertInvalid
                 "CHATKIT_API_BASE"
-                "https://api.openai.com?proxy=1"
+                "   "
+                "CHATKIT_API_BASE is configured but blank; unset it to use the default"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                (providerApiBase <> "?proxy=1")
                 "CHATKIT_API_BASE must be an absolute https URL without query or fragment"
+            assertInvalid
+                "FACEBOOK_MESSAGING_API_BASE"
+                "https://graph.facebook.com//v20.0"
+                "FACEBOOK_MESSAGING_API_BASE path must not start with // or contain backslashes"
+            assertInvalid
+                "INSTAGRAM_GRAPH_BASE"
+                "https://graph.instagram.com/v1\\profile"
+                "INSTAGRAM_GRAPH_BASE path must not start with // or contain backslashes"
+            assertInvalid
+                "FACEBOOK_GRAPH_BASE"
+                "https://graph.facebook.com/v20.0/../debug"
+                "FACEBOOK_GRAPH_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                (providerApiBase <> "/v1//chat")
+                "CHATKIT_API_BASE path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+            assertInvalid
+                "CHATKIT_API_BASE"
+                (providerApiBase <> ":0443")
+                "CHATKIT_API_BASE must be an absolute https URL"
 
         it "normalizes configured Graph messaging node ids before building send URLs" $
             withEnvOverrides
@@ -875,6 +3543,119 @@ main = hspec $ do
                     facebookMessagingPageId cfg `shouldBe` Just "page_123-abc.456"
                     instagramMessagingAccountId cfg
                         `shouldBe` Just "17841400000000000"
+
+        it "rejects Facebook page-id fallback alias conflicts before send URLs are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_PAGE_ID", Just "page_primary")
+                , ("FACEBOOK_PAGE_ID", Just "page_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_MESSAGING_PAGE_ID and FACEBOOK_PAGE_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects Facebook app credential alias conflicts before OAuth and webhook use" $ do
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Just " app_primary ")
+                , ("META_APP_ID", Just "app_primary")
+                , ("FACEBOOK_APP_SECRET", Just " secret_primary ")
+                , ("META_APP_SECRET", Just "secret_primary")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    facebookAppId cfg `shouldBe` Just "app_primary"
+                    facebookAppSecret cfg `shouldBe` Just "secret_primary"
+
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Just "app_primary")
+                , ("META_APP_ID", Just "app_fallback")
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ("META_APP_SECRET", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_APP_ID and META_APP_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Just "secret_primary")
+                , ("META_APP_SECRET", Just "secret_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_APP_SECRET and META_APP_SECRET must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects malformed Facebook app credentials before OAuth and webhook use" $ do
+            let assertInvalid overrides expectedMessage =
+                    withEnvOverrides overrides $
+                        loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Just "app/primary")
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ("META_APP_SECRET", Nothing)
+                ]
+                "FACEBOOK_APP_ID must be a Graph node id"
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Just "secret\nInjected: value")
+                , ("META_APP_SECRET", Nothing)
+                ]
+                "FACEBOOK_APP_SECRET must not contain whitespace or control characters"
+            assertInvalid
+                [ ("FACEBOOK_APP_ID", Nothing)
+                , ("META_APP_ID", Nothing)
+                , ("FACEBOOK_APP_SECRET", Nothing)
+                , ( "META_APP_SECRET"
+                  , Just ("secret" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                  )
+                ]
+                "META_APP_SECRET must not contain hidden formatting characters"
+
+        it "rejects Facebook token fallback alias conflicts before bearer requests are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_TOKEN", Just "token_primary")
+                , ("FACEBOOK_PAGE_ACCESS_TOKEN", Just "token_fallback")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_MESSAGING_TOKEN and FACEBOOK_PAGE_ACCESS_TOKEN must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes Instagram verify token aliases before Meta webhook verification" $
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just " webhook-secret_123 ")
+                , ("IG_VERIFY_TOKEN", Just "webhook-secret_123")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramVerifyToken cfg `shouldBe` Just "webhook-secret_123"
+
+        it "rejects Instagram verify token fallback ambiguity before webhook verification" $ do
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just "primary-secret")
+                , ("IG_VERIFY_TOKEN", Just "fallback-secret")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_VERIFY_TOKEN and IG_VERIFY_TOKEN must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Just "webhook secret")
+                , ("IG_VERIFY_TOKEN", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_VERIFY_TOKEN must not contain whitespace or control characters"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("INSTAGRAM_VERIFY_TOKEN", Nothing)
+                , ("IG_VERIFY_TOKEN", Just ("webhook" <> Data.Text.unpack (Data.Text.singleton '\x202E') <> "secret"))
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "IG_VERIFY_TOKEN must not contain hidden formatting characters"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed Graph messaging node ids before token-bearing requests are built" $ do
             let graphIdKeys =
@@ -894,10 +3675,46 @@ main = hspec $ do
                             )
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page/123"
+            assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" ".page_123"
+            assertInvalid "FACEBOOK_MESSAGING_PAGE_ID" "page_123."
             assertInvalid "FACEBOOK_PAGE_ID" "page?debug=1"
             assertInvalid "FACEBOOK_PAGE_ID" "---"
+            assertInvalid "FACEBOOK_PAGE_ID" "_page"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "..."
+            assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784_"
             assertInvalid "INSTAGRAM_MESSAGING_ACCOUNT_ID" "1784\naccess"
+
+        it "normalizes configured Google client ids before Google login audience checks" $ do
+            withEnvOverrides
+                [ ("GOOGLE_CLIENT_ID", Just "  tdf-client-123.apps.googleusercontent.com  ") ]
+                $ do
+                    cfg <- loadConfig
+                    googleClientId cfg `shouldBe` Just "tdf-client-123.apps.googleusercontent.com"
+
+            withEnvOverrides
+                [ ("GOOGLE_CLIENT_ID", Just "   ") ]
+                $ do
+                    cfg <- loadConfig
+                    googleClientId cfg `shouldBe` Nothing
+
+        it "rejects malformed Google client ids before Google login verification fallback" $ do
+            let assertInvalid rawClientId expectedMessage =
+                    withEnvOverrides
+                        [ ("GOOGLE_CLIENT_ID", Just rawClientId) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "tdf client.apps.googleusercontent.com"
+                "GOOGLE_CLIENT_ID must not contain whitespace"
+            assertInvalid
+                "tdf-client.apps.googleusercontent.com/oauth"
+                "GOOGLE_CLIENT_ID must not contain path, query, or fragment characters"
+            assertInvalid
+                "tdf-client\SOHapps.googleusercontent.com"
+                "GOOGLE_CLIENT_ID must not contain control characters"
+            assertInvalid
+                (replicate 513 'a')
+                "GOOGLE_CLIENT_ID must be 512 characters or fewer"
 
         it "normalizes configured OpenAI embedding models before sizing RAG storage" $
             withEnvOverrides
@@ -913,14 +3730,33 @@ main = hspec $ do
                     "OPENAI_EMBED_MODEL must be one of"
                         `isInfixOf` show (err :: IOException)
 
-        it "normalizes configured OpenAI chat models before fallback requests are built" $
+        it "rejects malformed OpenAI embedding model ids before sizing RAG storage" $ do
+            let assertInvalid rawModel expectedMessage =
+                    withEnvOverrides
+                        [ ("OPENAI_EMBED_MODEL", Just rawModel) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "text-embedding-3-small debug"
+                "OPENAI_EMBED_MODEL must not contain whitespace"
+            assertInvalid
+                "text-embedding-3-small/path"
+                "OPENAI_EMBED_MODEL must use only ASCII letters"
+            assertInvalid
+                ("text-embedding-3-small" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "OPENAI_EMBED_MODEL must use only ASCII letters"
+
+        it "normalizes configured OpenAI chat models before fallback requests are built" $ do
+            let providerChatModelText = llmProviderDefaultChatModel llmProvider
+                providerChatModel = Data.Text.unpack providerChatModelText
             withEnvOverrides
-                [ ("OPENAI_MODEL", Just " gpt-4.1-mini ") ]
+                [ ("OPENAI_MODEL", Just (" " <> providerChatModel <> " ")) ]
                 $ do
                     cfg <- loadConfig
-                    openAiModel cfg `shouldBe` "gpt-4.1-mini"
+                    openAiModel cfg `shouldBe` providerChatModelText
 
         it "rejects malformed OpenAI chat models instead of building ambiguous fallback requests" $ do
+            let providerChatModel = Data.Text.unpack (llmProviderDefaultChatModel llmProvider)
             let assertInvalid rawModel expectedMessage =
                     withEnvOverrides
                         [ ("OPENAI_MODEL", Just rawModel) ]
@@ -930,7 +3766,7 @@ main = hspec $ do
                 "gpt 4.1"
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
-                "gpt-4.1\nsource"
+                (providerChatModel <> "\nsource")
                 "OPENAI_MODEL must not contain whitespace"
             assertInvalid
                 "gpt/4?debug=1"
@@ -938,6 +3774,124 @@ main = hspec $ do
             assertInvalid
                 (Data.Text.unpack (Data.Text.replicate 257 "a"))
                 "OPENAI_MODEL must be 256 characters or fewer"
+
+        it "rejects malformed OpenAI API keys before bearer requests are built" $ do
+            withEnvOverrides
+                [ ("OPENAI_API_KEY", Just " sk-test_123 ") ]
+                $ do
+                    cfg <- loadConfig
+                    openAiApiKey cfg `shouldBe` Just "sk-test_123"
+
+            let assertInvalid rawKey expectedMessage =
+                    withEnvOverrides
+                        [ ("OPENAI_API_KEY", Just rawKey) ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "sk test"
+                "OPENAI_API_KEY must not contain whitespace or control characters"
+            assertInvalid
+                "sk-test\nInjected: value"
+                "OPENAI_API_KEY must not contain whitespace or control characters"
+            assertInvalid
+                ("sk-test" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "OPENAI_API_KEY must not contain hidden formatting characters"
+            assertInvalid
+                "sk-tést"
+                "OPENAI_API_KEY must contain visible ASCII characters only"
+            assertInvalid
+                (Data.Text.unpack (Data.Text.replicate 4097 "a"))
+                "OPENAI_API_KEY must be 4096 characters or fewer"
+
+        it "does not hide OpenAI billing failures behind model fallback retries" $ do
+            shouldRetryWithFallbackModel
+                404
+                "The model gpt-expired does not exist or you do not have access to it."
+                `shouldBe` True
+            shouldRetryWithFallbackModel
+                0
+                "OpenAI chat request failed: model_not_found while connecting"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "billing_hard_limit_reached: model_not_found for this account"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "billing_not_active: model_not_found for this account"
+                `shouldBe` False
+            shouldRetryWithFallbackModel
+                403
+                "payment_required: model_not_found for this account"
+                `shouldBe` False
+
+        it "sanitizes upstream OpenAI errors before fallback handling exposes them" $ do
+            let payload =
+                    A.object
+                        [ "error" .= A.object
+                            [ "type" .= ("invalid_request_error" :: Text)
+                            , "code" .= ("model_not_found" :: Text)
+                            , "message" .=
+                                ( "model\nnot\NULfound"
+                                    <> Data.Text.replicate 700 "x"
+                                    :: Text
+                                )
+                            ]
+                        ]
+            case extractApiErrorMessage payload of
+                Just msg -> do
+                    msg `shouldSatisfy`
+                        Data.Text.isInfixOf
+                            "invalid_request_error: model_not_found: model not found"
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+                    msg `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+                    Data.Text.length msg `shouldSatisfy` (<= 520)
+                Nothing ->
+                    expectationFailure "Expected sanitized upstream API error message"
+
+        it "redacts upstream API secrets before fallback error handling exposes them" $ do
+            let payload =
+                    A.object
+                        [ "error" .= A.object
+                            [ "type" .= ("invalid_request_error" :: Text)
+                            , "message" .=
+                                ( "Authorization: Bearer sk-live-secret api_key=sk-query-secret "
+                                    <> "{\"access_token\":\"token-secret\","
+                                    <> "\"client_secret\":\"client-secret\"} "
+                                    <> "X-Api-Key: sk-header-secret"
+                                    :: Text
+                                )
+                            ]
+                        ]
+            case extractApiErrorMessage payload of
+                Just msg -> do
+                    msg `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+                    msg `shouldSatisfy` Data.Text.isInfixOf "api_key=[redacted]"
+                    msg `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+                    msg `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+                    msg `shouldSatisfy` Data.Text.isInfixOf "X-Api-Key: [redacted]"
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-live-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-query-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "token-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "client-secret")
+                    msg `shouldSatisfy` (not . Data.Text.isInfixOf "sk-header-secret")
+                Nothing ->
+                    expectationFailure "Expected redacted upstream API error message"
+
+        it "uses status fallback text for non-JSON ChatKit upstream errors" $ do
+            chatKitSessionErrorMessage 503 (BL.pack "<html>unavailable</html>")
+                `shouldBe` "Error al crear sesión ChatKit (HTTP 503)"
+            chatKitSessionErrorMessage
+                429
+                ( A.encode $
+                    A.object
+                        [ "error" .= A.object
+                            [ "message" .= ("rate limit\nretry later" :: Text)
+                            ]
+                        ]
+                )
+                `shouldBe` "rate limit retry later"
 
         it "normalizes configured RAG tuning integers before building retrieval plans" $ do
             withEnvOverrides
@@ -1007,6 +3961,15 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     chatKitWorkflowId cfg `shouldBe` Just "wf_public"
+
+        it "rejects conflicting ChatKit workflow aliases before creating sessions" $
+            withEnvOverrides
+                [ ("CHATKIT_WORKFLOW_ID", Just "wf_private")
+                , ("VITE_CHATKIT_WORKFLOW_ID", Just "wf_public")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "CHATKIT_WORKFLOW_ID and VITE_CHATKIT_WORKFLOW_ID must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed ChatKit workflow fallbacks at startup" $ do
             let assertInvalid :: String -> String -> String -> Expectation
@@ -1122,15 +4085,40 @@ main = hspec $ do
                     "COURSE_DEFAULT_MAP_URL must not contain control characters"
                         `isInfixOf` show (err :: IOException)
 
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Nothing)
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/avatar\\copy.jpg")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR path must not start with // or contain backslashes"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Just "https://maps.example.com/studio/../admin")
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_MAP_URL path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                [ ("COURSE_DEFAULT_MAP_URL", Nothing)
+                , ("COURSE_DEFAULT_INSTRUCTOR_AVATAR", Just "https://cdn.example.com/assets//avatar.jpg")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "COURSE_DEFAULT_INSTRUCTOR_AVATAR path must not start with // or contain backslashes, empty, dot, or dot-dot segments"
+                        `isInfixOf` show (err :: IOException)
+
         it "normalizes WhatsApp enrollment fallback config before minting public links" $
             withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
                 [ ("COURSE_EDITION_SLUG", Just "  ")
                 , ("COURSE_DEFAULT_SLUG", Just " Produccion-Musical-MAY-2026 ")
                 , ("COURSE_REG_URL", Just "  ")
                 , ("HQ_APP_URL", Just " https://hq.example.com/app/ ")
                 , ("WA_GRAPH_API_VERSION", Just "  ")
                 , ("WHATSAPP_API_VERSION", Just " v21.0 ")
-                ]
+                ])
                 $ do
                     cfg <- WhatsAppService.loadWhatsAppConfig
                     WhatsAppService.courseSlug cfg `shouldBe` "produccion-musical-may-2026"
@@ -1138,22 +4126,329 @@ main = hspec $ do
                     WhatsAppService.appBaseUrl cfg `shouldBe` "https://hq.example.com/app/"
                     WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
 
-        it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do
+        it "rejects conflicting WhatsApp course slug aliases before enrollment fallback links" $
             withEnvOverrides
-                [ ("COURSE_REG_URL", Just "javascript:alert(1)") ]
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("COURSE_EDITION_SLUG", Just "produccion-musical-may-2026")
+                , ("COURSE_DEFAULT_SLUG", Just "produccion-musical-june-2026")
+                , ("COURSE_REG_URL", Nothing)
+                , ("HQ_APP_URL", Just "https://hq.example.com/app/")
+                ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
-                    "COURSE_REG_URL must be an absolute http(s) URL"
+                    "WhatsApp course slug aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+        it "discovers canonical WhatsApp provider credential aliases before enrollment sends" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_TOKEN", Just " token_123 ")
+                , ("WHATSAPP_PHONE_NUMBER_ID", Just " 1234567890 ")
+                ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waToken cfg `shouldBe` "token_123"
+                    WhatsAppService.waPhoneId cfg `shouldBe` "1234567890"
+
+        it "rejects conflicting WhatsApp provider credential aliases before fallback use" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_TOKEN", Just "token_service")
+                , ("WHATSAPP_TOKEN", Just "token_transport")
+                ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "WhatsApp access token aliases conflict"
                         `isInfixOf` show (err :: IOException)
 
             withEnvOverrides
-                [ ("HQ_APP_URL", Just "https://hq.example.com/app copy") ]
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token_transport")
+                , ("WA_TOKEN", Just "token_service")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp access token aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects conflicting WhatsApp API version aliases before provider URL construction" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_GRAPH_API_VERSION", Just "v21.0")
+                , ("WHATSAPP_API_VERSION", Just "v20.0")
+                ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "WhatsApp API version aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_API_VERSION", Just "v21.0")
+                , ("WA_API_VERSION", Just "v20.0")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp API version aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+        it "compares normalized WhatsApp API version aliases before fallback selection" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                [ ("WA_GRAPH_API_VERSION", Just " V21.0 ")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waApiVersion cfg `shouldBe` "v21.0"
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_API_VERSION", Just " V21.0 ")
+                , ("WA_API_VERSION", Just "v21.0")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waApiVersion cfg `shouldBe` Just "v21.0"
+
+        it "normalizes WhatsApp verify token aliases before webhook verification" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_VERIFY_TOKEN", Just " webhook-secret_123 ") ])
+                $ do
+                    cfg <- WhatsAppService.loadWhatsAppConfig
+                    WhatsAppService.waVerifyToken cfg `shouldBe` Just "webhook-secret_123"
+                    validateHookVerifyRequest
+                        (Just "subscribe")
+                        (Just "challenge-123")
+                        (Just "webhook-secret_123")
+                        (WhatsAppService.waVerifyToken cfg)
+                        `shouldBe` Right "challenge-123"
+
+                    transport <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waVerifyToken transport `shouldBe` Just "webhook-secret_123"
+
+        it "rejects malformed WhatsApp provider credentials before enrollment sends" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token value") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp access token"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("WA_VERIFY_TOKEN", Just "webhook secret") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "Invalid WhatsApp verify token"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects missing WhatsApp enrollment provider credentials before send attempts" $ do
+            let cfg =
+                    WhatsAppService.WhatsAppConfig
+                        { WhatsAppService.waToken = ""
+                        , WhatsAppService.waPhoneId = "   "
+                        , WhatsAppService.waVerifyToken = Nothing
+                        , WhatsAppService.courseSlug = "produccion-musical"
+                        , WhatsAppService.courseRegUrl = Nothing
+                        , WhatsAppService.appBaseUrl = "http://localhost:5173"
+                        , WhatsAppService.waApiVersion = "v20.0"
+                        }
+            case WhatsAppService.requireWhatsAppProviderCredentials cfg of
+                Left err -> do
+                    err `shouldContain` "WhatsApp configuration not available"
+                    err `shouldContain` "WA_TOKEN"
+                    err `shouldContain` "WHATSAPP_TOKEN"
+                    err `shouldContain` "WA_PHONE_ID"
+                    err `shouldContain` "WHATSAPP_PHONE_NUMBER_ID"
+                Right creds ->
+                    expectationFailure
+                        ("Expected missing WhatsApp provider credentials to fail, got " <> show creds)
+
+            WhatsAppService.requireWhatsAppProviderCredentials
+                cfg
+                    { WhatsAppService.waToken = " token_123 "
+                    , WhatsAppService.waPhoneId = " 1234567890 "
+                    }
+                `shouldBe` Right ("token_123", "1234567890")
+
+        it "normalizes WhatsApp transport alias fallbacks before provider sends" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WA_TOKEN", Just " token_123 ")
+                , ("WA_PHONE_ID", Just " 1234567890 ")
+                , ("WA_API_VERSION", Just " V21.0 ")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waToken cfg `shouldBe` Just "token_123"
+                    WhatsAppTransport.waPhoneId cfg `shouldBe` Just "1234567890"
+                    WhatsAppTransport.waApiVersion cfg `shouldBe` Just "v21.0"
+
+        it "normalizes WhatsApp contact-number fallbacks before course CTAs use them" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just " +593 99 123 4567 ") ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waContactNumber cfg `shouldBe` Just "+593991234567"
+                    buildWhatsappCtaFor
+                        (WhatsAppTransport.waContactNumber cfg)
+                        "Curso de Producción Musical"
+                        "https://tdf.example.com/curso/produccion"
+                        `shouldSatisfy`
+                            Data.Text.isPrefixOf "https://wa.me/593991234567?text="
+
+        it "rejects conflicting WhatsApp contact-number aliases before CTA fallback use" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just " +593 99 123 4567 ")
+                , ("WHATSAPP_CONTACT_NUMBER", Just "+593991234567")
+                ])
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    WhatsAppTransport.waContactNumber cfg `shouldBe` Just "+593991234567"
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("COURSE_WHATSAPP_NUMBER", Just "+593991234567")
+                , ("WA_CONTACT_NUMBER", Just "+593981234567")
+                ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "WhatsApp contact number aliases conflict"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects malformed WhatsApp transport fallbacks before provider sends" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_TOKEN", Just "token value") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp access token"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_PHONE_NUMBER_ID", Just "123/messages") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp phone number id"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_API_VERSION", Just "latest") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp Graph API version"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_VERIFY_TOKEN", Just "webhook\nsecret") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp verify token"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                clearWhatsAppTransportVersionEnv ++
+                clearWhatsAppContactEnv ++
+                [ ("WHATSAPP_CONTACT_NUMBER", Just "099 123 4567") ])
+                $ WhatsAppTransport.loadWhatsAppEnv `shouldThrow` \err ->
+                    "Invalid WhatsApp contact number"
+                        `isInfixOf` show (err :: IOException)
+
+        it "validates outgoing WhatsApp send input before reporting missing provider config" $
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++ clearWhatsAppTransportVersionEnv ++ clearWhatsAppContactEnv)
+                $ do
+                    cfg <- WhatsAppTransport.loadWhatsAppEnv
+                    let assertSendError rawPhone rawMessage expectedMessage = do
+                            result <- WhatsAppTransport.sendWhatsAppTextIO cfg rawPhone rawMessage
+                            case result of
+                                Left err ->
+                                    Data.Text.unpack err `shouldContain` expectedMessage
+                                Right value ->
+                                    expectationFailure
+                                        ( "Expected WhatsApp send validation to fail, got: "
+                                            <> show value
+                                        )
+                    assertSendError
+                        "call me"
+                        "Hola"
+                        "Invalid WhatsApp recipient phone"
+                    assertSendError
+                        "+593991234567"
+                        "   "
+                        "Invalid WhatsApp message body"
+
+        it "rejects malformed WhatsApp enrollment fallback URLs before sending unsafe links" $ do
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "javascript:alert(1)") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "http://enroll.example.com/course") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "https://localhost/course") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("COURSE_REG_URL", Just "https://enroll.example.com/course?preview=1") ])
+                $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
+                    "COURSE_REG_URL must be an absolute https URL without query or fragment"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (clearWhatsAppProviderCredentialEnv ++
+                [ ("HQ_APP_URL", Just "https://hq.example.com/app copy") ])
                 $ WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                     "HQ_APP_URL must be an absolute http(s) URL"
                         `isInfixOf` show (err :: IOException)
 
         it "rejects malformed WhatsApp API versions before building Graph request paths" $ do
             let assertInvalid overrides =
-                    withEnvOverrides overrides $
+                    withEnvOverrides (clearWhatsAppProviderCredentialEnv ++ overrides) $
                         WhatsAppService.loadWhatsAppConfig `shouldThrow` \err ->
                             "WhatsApp API version must look like v20.0"
                                 `isInfixOf` show (err :: IOException)
@@ -1164,6 +4459,14 @@ main = hspec $ do
             assertInvalid
                 [ ("WA_GRAPH_API_VERSION", Just "   ")
                 , ("WHATSAPP_API_VERSION", Just "2024-01")
+                ]
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "v0")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
+                ]
+            assertInvalid
+                [ ("WA_GRAPH_API_VERSION", Just "v21.00")
+                , ("WHATSAPP_API_VERSION", Just "v21.0")
                 ]
 
         it "surfaces WhatsApp provider send failures before reporting enrollment success" $ do
@@ -1212,6 +4515,13 @@ main = hspec $ do
                             ]
                         ]
             WhatsAppClient.extractMessageId whitespacePayload `shouldBe` Nothing
+            let hiddenFormatPayload =
+                    A.object
+                        [ "messages" .=
+                            [ A.object ["id" .= ("wamid.valid\x202E\&fdp" :: Text)]
+                            ]
+                        ]
+            WhatsAppClient.extractMessageId hiddenFormatPayload `shouldBe` Nothing
 
         it "rejects multiple WhatsApp provider message ids instead of choosing an ambiguous acknowledgement" $ do
             let payload =
@@ -1234,7 +4544,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "requires keyword target_session_attrs to be a standalone connection option" $
             withEnvOverrides
@@ -1256,7 +4566,8 @@ main = hspec $ do
                         `shouldBe`
                             "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret "
                                 <> "dbname=tdf_hq_target_session_attrs=debug "
-                                <> "target_session_attrs=read-write"
+                                <> "target_session_attrs=read-write "
+                                <> "options='-c default_transaction_read_only=off'"
 
         it "keeps fallback connection URL aliases from shaping complete DB_* settings" $
             withEnvOverrides
@@ -1274,7 +4585,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "ignores sslmode from DATABASE_URL when DB_* vars stay authoritative" $
             withEnvOverrides
@@ -1291,7 +4602,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "prefers explicit PGSSLMODE when DB_* vars stay authoritative" $
             withEnvOverrides
@@ -1308,7 +4619,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=tdf-hq-db.flycast port=5432 user=tdf_hq password=secret dbname=tdf_hq sslmode=disable target_session_attrs=read-write options='-c default_transaction_read_only=off'"
 
         it "rejects malformed keyword sslmode values before building ambiguous DB connection strings" $
             withEnvOverrides
@@ -1379,7 +4690,87 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
+
+        it "applies explicit DB sslmode to DATABASE_URL fallback connection strings" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl sslMode =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", sslMode)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+
+            withEnvOverrides (withoutKeywordDb baseUrl (Just " require "))
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg
+                        `shouldBe`
+                            baseUrl <> "?sslmode=require&target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
+
+            withEnvOverrides
+                (withoutKeywordDb (baseUrl <> "?sslmode=require") (Just "disable"))
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_SSLMODE conflicts with DATABASE_URL sslmode"
+                        `isInfixOf` show (err :: IOException)
+
+        it "normalizes surrounding whitespace on DATABASE_URL before URL fallback handling" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "  postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq  ")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    dbConnString cfg
+                        `shouldBe`
+                            "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
+
+        it "rejects conflicting connection URL aliases before choosing a DB fallback target" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "postgresql://flyuser:flypass@db-primary.internal:5432/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Just "postgresql://flyuser:flypass@db-replica.internal:5432/tdf_hq")
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                , ("DB_SSLMODE", Nothing)
+                , ("PGSSLMODE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL and DATABASE_PRIVATE_URL must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
 
         it "keeps DATABASE_URL authoritative when only partial keyword DB env vars exist" $
             withEnvOverrides
@@ -1400,7 +4791,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "falls back to standard PG* env vars when DB_* vars are not configured" $
             withEnvOverrides
@@ -1421,7 +4812,46 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "host=pg.fly.internal port=6543 user=flyuser password=flypass dbname=flydb target_session_attrs=read-write options='-c default_transaction_read_only=off'"
+
+        it "rejects conflicting keyword DB aliases instead of silently choosing a fallback" $ do
+            let completeKeywordDb =
+                    [ ("DATABASE_URL", Nothing)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Just "db-primary.internal")
+                    , ("PGHOST", Nothing)
+                    , ("DB_PORT", Just "5432")
+                    , ("PGPORT", Nothing)
+                    , ("DB_USER", Just "tdf_hq")
+                    , ("PGUSER", Nothing)
+                    , ("DB_PASS", Just "secret")
+                    , ("PGPASSWORD", Nothing)
+                    , ("DB_NAME", Just "tdf_hq")
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                setOverrides overrides =
+                    map
+                        (\pair@(envKey, _) ->
+                            case lookup envKey overrides of
+                                Just value -> (envKey, Just value)
+                                Nothing -> pair)
+                        completeKeywordDb
+
+            withEnvOverrides
+                (setOverrides [("PGHOST", "db-replica.internal")])
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_HOST and PGHOST must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides
+                (setOverrides [("DB_SSLMODE", "require"), ("PGSSLMODE", "disable")])
+                $ loadConfig `shouldThrow` \err ->
+                    "DB_SSLMODE and PGSSLMODE must not be set to different values"
+                        `isInfixOf` show (err :: IOException)
 
         it "preserves an explicit read-write target_session_attrs setting on DATABASE_URL" $
             withEnvOverrides
@@ -1442,7 +4872,7 @@ main = hspec $ do
                 ]
                 $ do
                     cfg <- loadConfig
-                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write"
+                    dbConnString cfg `shouldBe` "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq?sslmode=require&target_session_attrs=read-write&options=-c%20default_transaction_read_only%3Doff"
 
         it "requires target_session_attrs to be an actual non-blank URL query parameter" $ do
             let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
@@ -1473,6 +4903,7 @@ main = hspec $ do
                         `shouldBe` baseUrl
                             <> "?application_name=target_session_attrs=debug"
                             <> "&target_session_attrs=read-write"
+                            <> "&options=-c%20default_transaction_read_only%3Doff"
 
             withEnvOverrides
                 (withoutKeywordDb (baseUrl <> "?target_session_attrs="))
@@ -1601,9 +5032,61 @@ main = hspec $ do
             expectInvalid (baseUrl <> "?sslmode=require&")
             expectInvalid (baseUrl <> "?=value")
 
+        it "rejects unsafe DATABASE_URL query parameter names before fallback use" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    , ("DB_SSLMODE", Nothing)
+                    , ("PGSSLMODE", Nothing)
+                    ]
+                expectInvalid databaseUrl =
+                    withEnvOverrides (withoutKeywordDb databaseUrl)
+                        $ loadConfig `shouldThrow` \err ->
+                            ( "DATABASE_URL query parameter names must use only "
+                                <> "ASCII letters, numbers, and underscores"
+                            )
+                                `isInfixOf` show (err :: IOException)
+
+            expectInvalid (baseUrl <> "?target_session_attrs%20=read-write")
+            expectInvalid (baseUrl <> "?sslmode=require&target-session-attrs=read-write")
+
         it "rejects unsupported DATABASE_URL schemes before building ambiguous DB connection strings" $
             withEnvOverrides
                 [ ("DATABASE_URL", Just "mysql://user:pass@db.internal:3306/tdf_hq")
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must use postgres:// or postgresql://"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects scheme-less DATABASE_URL fallback values before treating them as libpq keywords" $
+            withEnvOverrides
+                [ ("DATABASE_URL", Just "host=db.fly.internal port=5432 dbname=tdf_hq")
                 , ("DATABASE_PRIVATE_URL", Nothing)
                 , ("POSTGRES_URL", Nothing)
                 , ("POSTGRES_PRISMA_URL", Nothing)
@@ -1643,6 +5126,30 @@ main = hspec $ do
                     "DATABASE_URL must include a PostgreSQL host"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with blank userinfo usernames" $ do
+            let expectBlankUsername raw =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just raw)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL userinfo must include a username"
+                                `isInfixOf` show (err :: IOException)
+            expectBlankUsername "postgresql://:flypass@db.fly.internal:5432/tdf_hq"
+            expectBlankUsername "postgresql://@db.fly.internal:5432/tdf_hq"
+
         it "rejects DATABASE_URL fallback values with malformed bracketed hosts" $ do
             let expectInvalidHost raw =
                     withEnvOverrides
@@ -1666,6 +5173,34 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             expectInvalidHost "postgresql://flyuser:flypass@[db.fly.internal]:5432/tdf_hq"
             expectInvalidHost "postgresql://flyuser:flypass@[2001:::1]:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@[2001::db8::1]:5432/tdf_hq"
+
+        it "rejects DATABASE_URL fallback values with malformed host labels" $ do
+            let expectInvalidHost raw =
+                    withEnvOverrides
+                        [ ("DATABASE_URL", Just raw)
+                        , ("DATABASE_PRIVATE_URL", Nothing)
+                        , ("POSTGRES_URL", Nothing)
+                        , ("POSTGRES_PRISMA_URL", Nothing)
+                        , ("DB_HOST", Nothing)
+                        , ("DB_PORT", Nothing)
+                        , ("DB_USER", Nothing)
+                        , ("DB_PASS", Nothing)
+                        , ("DB_NAME", Nothing)
+                        , ("PGHOST", Nothing)
+                        , ("PGPORT", Nothing)
+                        , ("PGUSER", Nothing)
+                        , ("PGPASSWORD", Nothing)
+                        , ("PGDATABASE", Nothing)
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            "DATABASE_URL must include a valid PostgreSQL host"
+                                `isInfixOf` show (err :: IOException)
+            expectInvalidHost "postgresql://flyuser:flypass@db..internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@bad_host.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@db\x0663.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@-db.internal:5432/tdf_hq"
+            expectInvalidHost "postgresql://flyuser:flypass@999.999.999.999:5432/tdf_hq"
 
         it "rejects DATABASE_URL fallback values without an explicit database name" $ do
             let expectMissingDatabase raw =
@@ -1734,6 +5269,84 @@ main = hspec $ do
                     "DATABASE_URL must not include a fragment"
                         `isInfixOf` show (err :: IOException)
 
+        it "rejects DATABASE_URL fallback values with control characters before building DB connection strings" $ do
+            let databaseUrl =
+                    "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                        <> "\SOHtarget_session_attrs=any"
+            withEnvOverrides
+                [ ("DATABASE_URL", Just databaseUrl)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must not contain control characters"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects DATABASE_URL fallback values with hidden formatting characters before building DB connection strings" $ do
+            let databaseUrl =
+                    "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                        <> "\x200B"
+            withEnvOverrides
+                [ ("DATABASE_URL", Just databaseUrl)
+                , ("DATABASE_PRIVATE_URL", Nothing)
+                , ("POSTGRES_URL", Nothing)
+                , ("POSTGRES_PRISMA_URL", Nothing)
+                , ("DB_HOST", Nothing)
+                , ("DB_PORT", Nothing)
+                , ("DB_USER", Nothing)
+                , ("DB_PASS", Nothing)
+                , ("DB_NAME", Nothing)
+                , ("PGHOST", Nothing)
+                , ("PGPORT", Nothing)
+                , ("PGUSER", Nothing)
+                , ("PGPASSWORD", Nothing)
+                , ("PGDATABASE", Nothing)
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "DATABASE_URL must not contain hidden formatting characters"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects percent-encoded whitespace or control bytes in DATABASE_URL fallbacks" $ do
+            let baseUrl = "postgresql://flyuser:flypass@db.fly.internal:5432/tdf_hq"
+                withoutKeywordDb databaseUrl =
+                    [ ("DATABASE_URL", Just databaseUrl)
+                    , ("DATABASE_PRIVATE_URL", Nothing)
+                    , ("POSTGRES_URL", Nothing)
+                    , ("POSTGRES_PRISMA_URL", Nothing)
+                    , ("DB_HOST", Nothing)
+                    , ("DB_PORT", Nothing)
+                    , ("DB_USER", Nothing)
+                    , ("DB_PASS", Nothing)
+                    , ("DB_NAME", Nothing)
+                    , ("PGHOST", Nothing)
+                    , ("PGPORT", Nothing)
+                    , ("PGUSER", Nothing)
+                    , ("PGPASSWORD", Nothing)
+                    , ("PGDATABASE", Nothing)
+                    ]
+                expectInvalid databaseUrl =
+                    withEnvOverrides (withoutKeywordDb databaseUrl)
+                        $ loadConfig `shouldThrow` \err ->
+                            ( "DATABASE_URL must not contain percent-encoded "
+                                <> "whitespace or control bytes"
+                            )
+                                `isInfixOf` show (err :: IOException)
+
+            expectInvalid "postgresql://flyuser:fly%0Apass@db.fly.internal:5432/tdf_hq"
+            expectInvalid (baseUrl <> "?application_name=tdf%20hq")
+            expectInvalid (baseUrl <> "?application_name=tdf%7Fhq")
+
         it "rejects DATABASE_URL fallback values with malformed ports before opening DB connections" $ do
             let expectInvalidPort raw expected =
                     withEnvOverrides
@@ -1759,6 +5372,9 @@ main = hspec $ do
                 "postgresql://flyuser:flypass@db.fly.internal:pg/tdf_hq"
                 "DATABASE_URL port must be numeric"
             expectInvalidPort
+                "postgresql://flyuser:flypass@db.fly.internal:05432/tdf_hq"
+                "DATABASE_URL port must not contain leading zeros"
+            expectInvalidPort
                 "postgresql://flyuser:flypass@db.fly.internal:70000/tdf_hq"
                 "DATABASE_URL port must be between 1 and 65535"
 
@@ -1768,6 +5384,83 @@ main = hspec $ do
                     <> " must be a Graph node id using only ASCII letters, numbers, "
                     <> "'.', '_' or '-' with at least one letter or number "
                     <> "(128 chars max)"
+
+        it "normalizes configured Instagram app-token fallbacks before sync or backfill use" $ do
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Just " app-token ")
+                , ("INSTAGRAM_MESSAGING_TOKEN", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramAppToken cfg `shouldBe` Just "app-token"
+                    instagramMessagingToken cfg `shouldBe` Just "app-token"
+
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Just "   ")
+                , ("INSTAGRAM_MESSAGING_TOKEN", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    instagramAppToken cfg `shouldBe` Nothing
+                    instagramMessagingToken cfg `shouldBe` Nothing
+
+        it "rejects malformed configured Instagram token fallbacks at startup" $ do
+            let assertInvalid envName rawToken expectedMessage =
+                    withEnvOverrides
+                        [ ( "INSTAGRAM_APP_TOKEN"
+                          , if envName == "INSTAGRAM_APP_TOKEN"
+                              then Just rawToken
+                              else Nothing
+                          )
+                        , ( "INSTAGRAM_MESSAGING_TOKEN"
+                          , if envName == "INSTAGRAM_MESSAGING_TOKEN"
+                              then Just rawToken
+                              else Nothing
+                          )
+                        ]
+                        $ loadConfig `shouldThrow` \err ->
+                            expectedMessage `isInfixOf` show (err :: IOException)
+            assertInvalid
+                "INSTAGRAM_APP_TOKEN"
+                "app token"
+                "INSTAGRAM_APP_TOKEN must not contain whitespace or control characters"
+            assertInvalid
+                "INSTAGRAM_APP_TOKEN"
+                ("app-token" <> Data.Text.unpack (Data.Text.singleton '\x202E'))
+                "INSTAGRAM_APP_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+                "INSTAGRAM_MESSAGING_TOKEN"
+                "tokené"
+                "INSTAGRAM_MESSAGING_TOKEN must contain visible ASCII characters only"
+
+        it "falls back to configured Instagram sync tokens only after blank stored tokens are ignored" $ do
+            selectInstagramSyncAccessToken (Just " account-token ") (Just " configured-token ")
+                `shouldBe` Just "account-token"
+            selectInstagramSyncAccessToken (Just "   ") (Just " configured-token ")
+                `shouldBe` Just "configured-token"
+            selectInstagramSyncAccessToken (Just "   ") (Just "\t")
+                `shouldBe` Nothing
+
+        it "rejects malformed Instagram sync tokens before Graph URL construction" $ do
+            let assertInvalid rawToken expectedMessage =
+                    withEnvOverrides
+                        [ ("INSTAGRAM_GRAPH_BASE", Just "https://graph.instagram.com") ]
+                        $ do
+                            cfg <- loadConfig
+                            case buildUserMediaRequestUrl cfg rawToken "17841400000000000" of
+                                Left err ->
+                                    Data.Text.unpack err `shouldContain` expectedMessage
+                                Right value ->
+                                    expectationFailure
+                                        ( "Expected malformed Instagram sync token to fail, got: "
+                                            <> value
+                                        )
+            assertInvalid
+                "tokené"
+                "Instagram access token must contain visible ASCII characters only"
+            assertInvalid
+                (Data.Text.replicate 4097 "a")
+                "Instagram access token must be 4096 characters or fewer"
 
         it "rejects malformed Instagram send payloads before building Graph requests" $
             withEnvOverrides
@@ -1796,6 +5489,30 @@ main = hspec $ do
                         cfg
                         Nothing
                         Nothing
+                        "recipient/1"
+                        "hola"
+                        `shouldReturn`
+                            Left
+                                ( "Instagram recipient id must be a Graph node id using only "
+                                    <> "ASCII letters, numbers, '.', '_' or '-' with at least "
+                                    <> "one letter or number (256 chars max)"
+                                )
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "---"
+                        "hola"
+                        `shouldReturn`
+                            Left
+                                ( "Instagram recipient id must be a Graph node id using only "
+                                    <> "ASCII letters, numbers, '.', '_' or '-' with at least "
+                                    <> "one letter or number (256 chars max)"
+                                )
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
                         "recipient-1"
                         "   "
                         `shouldReturn` Left "Instagram message body requerido"
@@ -1813,6 +5530,15 @@ main = hspec $ do
                         "recipient-1"
                         "hola\NULops"
                         `shouldReturn` Left "Instagram message body must not contain control characters"
+                    sendInstagramTextWithContext
+                        cfg
+                        Nothing
+                        Nothing
+                        "recipient-1"
+                        ("hola" <> Data.Text.singleton '\x202E' <> "ops")
+                        `shouldReturn`
+                            Left
+                                "Instagram message body must not contain hidden formatting or separator characters"
 
         it "does not use the configured fallback token when a targeted account has no connected token" $
             withEnvOverrides
@@ -1830,6 +5556,54 @@ main = hspec $ do
                         "recipient-1"
                         "hola"
                         `shouldReturn` Left "Instagram connected asset token no configurado"
+
+        it "rejects blank targeted Instagram credentials instead of falling back to configured credentials" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just "configured-token")
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ do
+                    cfg <- loadConfig
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "   ")
+                        Nothing
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset token no configurado"
+                    sendInstagramTextWithContext
+                        cfg
+                        (Just "connected-token")
+                        (Just "   ")
+                        "recipient-1"
+                        "hola"
+                        `shouldReturn` Left "Instagram connected asset account id no configurado"
+
+        it "rejects oversized configured fallback tokens at startup" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ( "INSTAGRAM_MESSAGING_TOKEN"
+                  , Just (Data.Text.unpack (Data.Text.replicate 4097 "a"))
+                  )
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_MESSAGING_TOKEN must be 4096 characters or fewer"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects hidden-format configured fallback tokens at startup" $
+            withEnvOverrides
+                [ ("INSTAGRAM_APP_TOKEN", Nothing)
+                , ("INSTAGRAM_MESSAGING_TOKEN", Just ("configured" <> ['\x202E'] <> "token"))
+                , ("INSTAGRAM_MESSAGING_ACCOUNT_ID", Just "configured-account")
+                , ("INSTAGRAM_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "INSTAGRAM_MESSAGING_TOKEN must not contain hidden formatting characters"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed targeted Instagram context instead of falling back to configured credentials" $
             withEnvOverrides
@@ -1898,6 +5672,63 @@ main = hspec $ do
                         "hola"
                         `shouldReturn` Left "Instagram connected asset account id no configurado"
 
+        it "sanitizes malformed Graph error bodies before surfacing fallback send failures" $ do
+            let formatted =
+                    Data.Text.unpack $
+                        formatInstagramGraphHttpError
+                            500
+                            (BL.pack "bad\255\nline\226\128\139tail")
+            formatted `shouldContain` "HTTP 500: bad"
+            formatted `shouldContain` "line tail"
+            formatted `shouldNotContain` "\n"
+            formatted `shouldNotContain` "\x200B"
+
+        it "redacts Graph token fields before surfacing fallback send failures" $ do
+            let formatted =
+                    Data.Text.unpack $
+                        formatInstagramGraphHttpError
+                            400
+                            ( BL.pack
+                                ( "GET /oauth/access_token?client_secret=app-secret&code=oauth-code"
+                                    <> "&fb_exchange_token=short-token failed: "
+                                    <> "Authorization: Bearer transport-token "
+                                    <> "{\"access_token\":\"page-token\",\"error\":{\"code\":190}}"
+                                )
+                            )
+            formatted `shouldContain` "client_secret=[redacted]"
+            formatted `shouldContain` "code=[redacted]"
+            formatted `shouldContain` "fb_exchange_token=[redacted]"
+            formatted `shouldContain` "Bearer [redacted]"
+            formatted `shouldContain` "\"access_token\":\"[redacted]\""
+            formatted `shouldContain` "\"code\":190"
+            formatted `shouldNotContain` "app-secret"
+            formatted `shouldNotContain` "oauth-code"
+            formatted `shouldNotContain` "short-token"
+            formatted `shouldNotContain` "transport-token"
+            formatted `shouldNotContain` "page-token"
+
+    describe "Facebook messaging context fallback" $ do
+        it "rejects hidden-format outgoing message bodies before fallback config is evaluated" $
+            sendFacebookText
+                (error "Facebook config should be unused when payload validation fails")
+                "recipient-1"
+                ("hola" <> Data.Text.singleton '\x202E' <> "ops")
+                `shouldReturn`
+                    Left
+                        "Facebook message body must not contain hidden formatting or separator characters"
+
+        it "rejects non-ASCII configured fallback tokens at startup before authorization headers are built" $
+            withEnvOverrides
+                [ ("FACEBOOK_MESSAGING_TOKEN", Nothing)
+                , ("FACEBOOK_PAGE_ACCESS_TOKEN", Just "tokené")
+                , ("FACEBOOK_MESSAGING_PAGE_ID", Just "page-1")
+                , ("FACEBOOK_PAGE_ID", Nothing)
+                , ("FACEBOOK_MESSAGING_API_BASE", Just "https://graph.example.com")
+                ]
+                $ loadConfig `shouldThrow` \err ->
+                    "FACEBOOK_PAGE_ACCESS_TOKEN must contain visible ASCII characters only"
+                        `isInfixOf` show (err :: IOException)
+
     describe "SRI invoice script discovery" $ do
         it "decodes UTF-8 SRI script JSON output without corrupting localized statuses" $
             case Sri.decodeSriScriptOutput "{\"ok\":true,\"status\":\"autorización emitida\"}" of
@@ -1925,7 +5756,9 @@ main = hspec $ do
                 "{\"ok\":true,\"status\":\"autorizado\\nextra\"}"
 
         it "requires issued SRI results to carry confirmed document identifiers" $ do
-            let assertInvalid expected raw =
+            let validSriAuthorizationNumber =
+                    "3003202601179321509200120011000000000163200767814"
+                assertInvalid expected raw =
                     case Sri.decodeSriScriptOutput raw of
                         Left err ->
                             Data.Text.unpack err `shouldContain` expected
@@ -1944,13 +5777,34 @@ main = hspec $ do
                 "authorizationNumber is required when status is issued"
                 "{\"ok\":true,\"status\":\"issued\",\"invoiceNumber\":\"001-100-000000001\"}"
             assertInvalid
+                "authorizationNumber is required when status is issued"
+                "{\"ok\":true,\"status\":\"Issued\",\"invoiceNumber\":\"001-100-000000001\"}"
+            assertInvalid
                 "invoiceNumber is required when status is issued"
                 ( "{\"ok\":true,\"status\":\"issued\","
-                    <> "\"authorizationNumber\":\"123\",\"invoiceNumber\":\"  \"}"
+                    <> "\"authorizationNumber\":\""
+                    <> validSriAuthorizationNumber
+                    <> "\",\"invoiceNumber\":\"  \"}"
+                )
+            assertInvalid
+                "authorizationNumber must contain exactly 49 ASCII digits"
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\"}"
+                )
+            assertInvalid
+                "invoiceNumber must use SRI format ###-###-#########"
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\""
+                    <> validSriAuthorizationNumber
+                    <> "\","
+                    <> "\"invoiceNumber\":\"INV-2026-1\"}"
                 )
             let completeIssued =
-                    "{\"ok\":true,\"status\":\"issued\","
-                        <> "\"authorizationNumber\":\" 123 \","
+                    "{\"ok\":true,\"status\":\" ISSUED \","
+                        <> "\"authorizationNumber\":\" "
+                        <> validSriAuthorizationNumber
+                        <> " \","
                         <> "\"invoiceNumber\":\" 001-100-000000001 \"}"
             case Sri.decodeSriScriptOutput completeIssued of
                 Left err ->
@@ -1959,8 +5813,174 @@ main = hspec $ do
                             <> Data.Text.unpack err
                         )
                 Right result -> do
-                    DTO.sirAuthorizationNumber result `shouldBe` Just "123"
+                    DTO.sirStatus result `shouldBe` "issued"
+                    DTO.sirAuthorizationNumber result
+                        `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
                     DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
+
+        it "validates optional SRI document identifiers before returning script output" $ do
+            let validSriAuthorizationNumber =
+                    "3003202601179321509200120011000000000163200767814"
+                assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed optional SRI document id to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "authorizationNumber must contain exactly 49 ASCII digits"
+                "{\"ok\":false,\"status\":\"received\",\"authorizationNumber\":\"123\"}"
+            assertInvalid
+                "invoiceNumber must use SRI format ###-###-#########"
+                "{\"ok\":false,\"status\":\"received\",\"invoiceNumber\":\"INV-2026-1\"}"
+            case Sri.decodeSriScriptOutput
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"authorizationNumber\":\" "
+                    <> validSriAuthorizationNumber
+                    <> " \","
+                    <> "\"invoiceNumber\":\" 001-100-000000001 \"}"
+                ) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected optional SRI document ids to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result -> do
+                    DTO.sirAuthorizationNumber result
+                        `shouldBe` Just (Data.Text.pack validSriAuthorizationNumber)
+                    DTO.sirInvoiceNumber result `shouldBe` Just "001-100-000000001"
+
+        it "validates optional SRI target ids before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI target id to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "targetId must contain only ASCII letters"
+                "{\"ok\":false,\"status\":\"received\",\"targetId\":\"page/../../secret\"}"
+            assertInvalid
+                "targetId must be 128 characters or fewer"
+                ( "{\"ok\":false,\"status\":\"received\",\"targetId\":\""
+                    <> Data.Text.unpack (Data.Text.replicate 129 "a")
+                    <> "\"}"
+                )
+            case Sri.decodeSriScriptOutput
+                "{\"ok\":false,\"status\":\"received\",\"targetId\":\" Page-ABC_123.4:debug \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI target id to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    DTO.sirTargetId result `shouldBe` Just "Page-ABC_123.4:debug"
+
+        it "validates optional SRI buyer email before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI buyer email to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"not-an-email\"}"
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"buyer@example.123\"}"
+            assertInvalid
+                "buyerEmail must be a valid email address"
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\"buyer@example.c\"}"
+            assertInvalid
+                "buyerEmail must be 254 characters or fewer"
+                ( "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\""
+                    <> Data.Text.unpack (Data.Text.replicate 245 "a")
+                    <> "@example.com\"}"
+                )
+            assertInvalid
+                "buyerEmail must match buyer.email"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyerEmail\":\"billing@example.com\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"email\":\"other@example.com\"}}"
+                )
+            case Sri.decodeSriScriptOutput
+                "{\"ok\":false,\"status\":\"received\",\"buyerEmail\":\" Billing+SRI@Example.COM \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI buyer email to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    DTO.sirBuyerEmail result `shouldBe` Just "billing+sri@example.com"
+
+        it "validates nested SRI buyer data before returning script output" $ do
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI buyer object to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "buyer.ruc must contain ASCII digits only"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"179A012345001\",\"legalName\":\"Cliente Demo\"}}"
+                )
+            assertInvalid
+                "buyer.legalName is required"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\",\"legalName\":\"   \"}}"
+                )
+            assertInvalid
+                "buyer.email must be a valid email address"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"email\":\"not-an-email\"}}"
+                )
+            assertInvalid
+                "buyer.phone must not contain control characters"
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\"1790012345001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"phone\":\"099\\n123\"}}"
+                )
+
+            case Sri.decodeSriScriptOutput
+                ( "{\"ok\":false,\"status\":\"received\","
+                    <> "\"buyer\":{\"ruc\":\" 1790012345001 \","
+                    <> "\"legalName\":\" Cliente Demo \","
+                    <> "\"email\":\" Billing@Example.COM \","
+                    <> "\"phone\":\" +593 99 123 4567 \"}}"
+                ) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid nested SRI buyer data to normalize, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right result ->
+                    case DTO.sirBuyer result of
+                        Nothing ->
+                            expectationFailure "Expected nested SRI buyer data to be preserved"
+                        Just buyer -> do
+                            DTO.sibRuc buyer `shouldBe` "1790012345001"
+                            DTO.sibLegalName buyer `shouldBe` "Cliente Demo"
+                            DTO.sibEmail buyer `shouldBe` Just "billing@example.com"
+                            DTO.sibPhone buyer `shouldBe` Just "+593 99 123 4567"
 
         it "rejects negative SRI totals before invoice results are trusted" $
             case Sri.decodeSriScriptOutput
@@ -1978,6 +5998,331 @@ main = hspec $ do
                             <> show value
                         )
 
+        it "requires SRI script totals to match the validated invoice request" $ do
+            case Sri.decodeSriScriptOutputForRequest
+                sampleSriScriptRequest
+                "{\"ok\":true,\"status\":\"saved\",\"total\":90}" of
+                    Left err ->
+                        expectationFailure
+                            ( "Expected matching SRI script total to decode, got: "
+                                <> Data.Text.unpack err
+                            )
+                    Right result ->
+                        DTO.sirTotal result `shouldBe` Just 90
+
+            let assertInvalid expected raw =
+                    case Sri.decodeSriScriptOutputForRequest sampleSriScriptRequest raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected mismatched SRI script total to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "total is required"
+                "{\"ok\":true,\"status\":\"saved\"}"
+            assertInvalid
+                "total does not match request total"
+                "{\"ok\":true,\"status\":\"saved\",\"total\":91}"
+            assertInvalid
+                "total must use cents precision"
+                "{\"ok\":true,\"status\":\"saved\",\"total\":90.001}"
+
+        it "rejects unexpected top-level or nested SRI keys so script schema drift fails explicitly" $ do
+            let assertInvalid raw =
+                    case Sri.decodeSriScriptOutput raw of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` "Invalid SRI script JSON output"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected unexpected SRI script keys to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                ( "{\"ok\":true,\"status\":\"issued\","
+                    <> "\"authorizationNumber\":\"123\","
+                    <> "\"invoiceNumber\":\"001-100-000000001\","
+                    <> "\"traceId\":\"abc\"}"
+                )
+            assertInvalid
+                ( "{\"ok\":true,\"status\":\"autorización emitida\","
+                    <> "\"buyer\":{"
+                    <> "\"ruc\":\"0999999999001\","
+                    <> "\"legalName\":\"Cliente Demo\","
+                    <> "\"country\":\"EC\"}}"
+                )
+
+        it "rejects malformed SRI requests before script discovery masks payload errors" $
+            withEnvOverrides
+                [ ( "SRI_INVOICE_SCRIPT"
+                  , Just "/tmp/tdf-hq-missing-sri-script-never-created.mjs"
+                  )
+                ]
+                $ do
+                    result <-
+                        Sri.runSriInvoiceScript
+                            sampleSriScriptRequest { Sri.paymentMode = "wire" }
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err
+                                `shouldContain` "paymentMode must be one of: cash, debit, credit"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid SRI payment mode to fail, got: " <> show value)
+
+        it "caps SRI invoice lines before invoking the browser runner" $
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = replicate 101 sampleSriScriptLine } of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "supports at most 100 invoice lines"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected oversized SRI invoice request to fail, got: "
+                                <> show value
+                            )
+
+        it "keeps SRI invoice amounts within JavaScript-safe integer bounds" $ do
+            let assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected unsafe SRI invoice amount to fail, got: "
+                                    <> show value
+                                )
+                tooLargeInteger = 9007199254740992
+                nearHalfSafeInteger = 4503599627370496
+            assertInvalid
+                "lines[1].quantity must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.quantity = tooLargeInteger }
+                        ]
+                    }
+            assertInvalid
+                "lines[1].unitCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.unitCents = tooLargeInteger }
+                        ]
+                    }
+            assertInvalid
+                "lines[1].totalCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine
+                            { Sri.quantity = 3
+                            , Sri.unitCents = 3002399751580331
+                            }
+                        ]
+                    }
+            assertInvalid
+                "totalCents must be 9007199254740991 or less"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine { Sri.unitCents = nearHalfSafeInteger }
+                        , sampleSriScriptLine { Sri.unitCents = nearHalfSafeInteger }
+                        ]
+                    }
+
+        it "rejects hidden formatting markers in SRI request text before invoking the script" $ do
+            let hidden = Data.Text.singleton '\x202E'
+                assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected hidden-format SRI request text to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "customer.legalName must not contain control characters or hidden formatting characters"
+                sampleSriScriptRequest
+                    { Sri.customer =
+                        (Sri.customer sampleSriScriptRequest)
+                            { Sri.legalName = "TDF" <> hidden <> " Customer" }
+                    }
+            assertInvalid
+                "lines[1].description must not contain control characters or hidden formatting characters"
+                sampleSriScriptRequest
+                    { Sri.lines =
+                        [ sampleSriScriptLine
+                            { Sri.description = "Studio" <> hidden <> " session" }
+                        ]
+                    }
+            assertInvalid
+                ( "certificatePassword must not contain control characters or "
+                    <> "hidden formatting characters"
+                )
+                sampleSriScriptRequest
+                    { Sri.certificatePassword = Just ("secret" <> hidden <> "token")
+                    }
+
+        it "rejects malformed SRI customer tax ids before invoking the script" $ do
+            let withRuc rawRuc =
+                    sampleSriScriptRequest
+                        { Sri.customer =
+                            (Sri.customer sampleSriScriptRequest) { Sri.ruc = rawRuc }
+                        }
+                assertInvalid expected rawRuc =
+                    case Sri.validateSriScriptRequest (withRuc rawRuc) of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI customer RUC to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid "customer.ruc must contain ASCII digits only" "1790012345A01"
+            assertInvalid "customer.ruc must contain 10 or 13 digits" "179001234"
+
+            case Sri.validateSriScriptRequest (withRuc " 1710034065 ") of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid cedula-style SRI customer id to pass, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.ruc (Sri.customer validated) `shouldBe` "1710034065"
+
+        it "normalizes and validates optional SRI customer emails before invoking the script" $ do
+            let withEmail rawEmail =
+                    sampleSriScriptRequest
+                        { Sri.customer =
+                            (Sri.customer sampleSriScriptRequest) { Sri.email = rawEmail }
+                        }
+                assertInvalid expected rawEmail =
+                    case Sri.validateSriScriptRequest (withEmail rawEmail) of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI customer email to fail, got: "
+                                    <> show value
+                                )
+            case Sri.validateSriScriptRequest
+                (withEmail (Just " Customer+Billing@Example.COM ")) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected valid SRI customer email to pass, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.email (Sri.customer validated)
+                        `shouldBe` Just "customer+billing@example.com"
+            case Sri.validateSriScriptRequest (withEmail (Just "   ")) of
+                Left err ->
+                    expectationFailure
+                        ( "Expected blank SRI customer email to be omitted, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    Sri.email (Sri.customer validated) `shouldBe` Nothing
+
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "not-an-email")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example..com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just ".customer@example.com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@-example.com")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example.123")
+            assertInvalid
+                "customer.email must be a valid email address"
+                (Just "customer@example.c")
+            assertInvalid
+                "customer.email must be 254 characters or fewer"
+                (Just (Data.Text.replicate 245 "a" <> "@example.com"))
+
+        it "requires explicit SRI IVA codes for tax rates the runner cannot infer" $ do
+            let unsupportedTaxLine =
+                    sampleSriScriptLine { Sri.taxBps = Just 1200 }
+                explicitIvaLine =
+                    unsupportedTaxLine { Sri.sriIvaCode = Just "2" }
+                malformedIvaLine =
+                    unsupportedTaxLine { Sri.sriIvaCode = Just "2A" }
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [unsupportedTaxLine] } of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "taxBps must be 0, 500, or 1500 unless sriIvaCode is provided"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsupported inferred SRI tax rate to fail, got: "
+                            <> show value
+                        )
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [explicitIvaLine] } of
+                Left err ->
+                    expectationFailure
+                        ( "Expected explicit SRI IVA code to allow custom tax bps, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated ->
+                    case Sri.lines validated of
+                        [line] -> do
+                            Sri.taxBps line `shouldBe` Just 1200
+                            Sri.sriIvaCode line `shouldBe` Just "2"
+                        linesValue ->
+                            expectationFailure
+                                ( "Expected one validated SRI line, got: "
+                                    <> show linesValue
+                                )
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest { Sri.lines = [malformedIvaLine] } of
+                Left err ->
+                    Data.Text.unpack err
+                        `shouldContain` "sriIvaCode must contain ASCII digits only"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed explicit SRI IVA code to fail, got: "
+                            <> show value
+                        )
+
+        it "requires three-digit SRI establishment and emission point codes before script discovery" $ do
+            let assertInvalid expected request =
+                    case Sri.validateSriScriptRequest request of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed SRI point code to fail, got: "
+                                    <> show value
+                                )
+            assertInvalid
+                "establishment must contain exactly 3 digits"
+                sampleSriScriptRequest { Sri.establishment = "1" }
+            assertInvalid
+                "emissionPoint must contain exactly 3 digits"
+                sampleSriScriptRequest { Sri.emissionPoint = "0100" }
+            assertInvalid
+                "establishment must contain ASCII digits only"
+                sampleSriScriptRequest { Sri.establishment = "\x0660\x0660\x0661" }
+            case Sri.validateSriScriptRequest
+                sampleSriScriptRequest
+                    { Sri.establishment = " 001 "
+                    , Sri.emissionPoint = " 002 "
+                    } of
+                Left err ->
+                    expectationFailure
+                        ( "Expected fixed-width SRI point codes to validate, got: "
+                            <> Data.Text.unpack err
+                        )
+                Right validated -> do
+                    Sri.establishment validated `shouldBe` "001"
+                    Sri.emissionPoint validated `shouldBe` "002"
+
         it "keeps explicit SRI_INVOICE_SCRIPT paths authoritative when they are missing" $
             withEnvOverrides
                 [ ( "SRI_INVOICE_SCRIPT"
@@ -1993,6 +6338,188 @@ main = hspec $ do
                         Right value ->
                             expectationFailure
                                 ("Expected missing SRI script path to fail, got: " <> show value)
+
+        it "rejects blank SRI_INVOICE_SCRIPT instead of falling through to default discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "   ")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must not be blank"
+                    Right value ->
+                        expectationFailure
+                            ("Expected blank SRI script path to fail, got: " <> show value)
+
+        it "rejects surrounding whitespace in SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides
+                [ ( "SRI_INVOICE_SCRIPT"
+                  , Just " /tmp/tdf-hq-missing-sri-script-never-created.mjs "
+                  )
+                ]
+                $ do
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err -> do
+                            Data.Text.unpack err
+                                `shouldContain` "SRI_INVOICE_SCRIPT must not include leading or trailing whitespace"
+                            Data.Text.unpack err
+                                `shouldNotContain` "does not point to an existing file"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected whitespace-padded SRI script path to fail, got: "
+                                    <> show value
+                                )
+
+        it "rejects control-character SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            mapM_
+                (\rawPath ->
+                    withEnvOverrides [("SRI_INVOICE_SCRIPT", Just rawPath)] $ do
+                        result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                        case result of
+                            Left err ->
+                                Data.Text.unpack err
+                                    `shouldContain` "SRI_INVOICE_SCRIPT must not contain control characters"
+                            Right value ->
+                                expectationFailure
+                                    ("Expected control-character SRI script path to fail, got: " <> show value))
+                [ "/tmp/tdf-hq-sri\nscript.mjs"
+                , "/tmp/tdf-hq-sri-script.mjs\n"
+                ]
+
+        it "rejects hidden-format SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides
+                [("SRI_INVOICE_SCRIPT", Just ("/tmp/tdf-hq-sri" <> ['\x202E'] <> "script.mjs"))]
+                $ do
+                    result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                    case result of
+                        Left err ->
+                            Data.Text.unpack err
+                                `shouldContain` "SRI_INVOICE_SCRIPT must not contain control characters or hidden formatting characters"
+                        Right value ->
+                            expectationFailure
+                                ("Expected hidden-format SRI script path to fail, got: " <> show value)
+
+        it "rejects relative SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "scripts/generate-sri-invoice.mjs")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err ->
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must be an absolute path"
+                    Right value ->
+                        expectationFailure
+                            ("Expected relative SRI script path to fail, got: " <> show value)
+
+        it "rejects non-JavaScript SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            withEnvOverrides [("SRI_INVOICE_SCRIPT", Just "/tmp/tdf-hq-sri-script.txt")] $ do
+                result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                case result of
+                    Left err -> do
+                        Data.Text.unpack err
+                            `shouldContain` "SRI_INVOICE_SCRIPT must point to a .mjs, .js, or .cjs Node script"
+                        Data.Text.unpack err
+                            `shouldNotContain` "does not point to an existing file"
+                    Right value ->
+                        expectationFailure
+                            ("Expected non-JavaScript SRI script path to fail, got: " <> show value)
+
+        it "rejects non-normalized SRI_INVOICE_SCRIPT paths before filesystem discovery" $
+            let expected = "SRI_INVOICE_SCRIPT must be a normalized absolute file path"
+            in forM_
+                   [ "/tmp/tdf-hq-sri/../tdf-sri-script.mjs"
+                   , "/tmp/tdf-hq-sri/./tdf-sri-script.mjs"
+                   , "/tmp//tdf-sri-script.mjs"
+                   ]
+                   $ \rawPath ->
+                       withEnvOverrides [("SRI_INVOICE_SCRIPT", Just rawPath)] $ do
+                           result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                           case result of
+                               Left err -> do
+                                   Data.Text.unpack err `shouldContain` expected
+                                   Data.Text.unpack err
+                                       `shouldNotContain` "does not point to an existing file"
+                               Right value ->
+                                   expectationFailure
+                                       ( "Expected non-normalized SRI script path to fail, got: "
+                                           <> show value
+                                       )
+
+        it "rejects ambiguous default SRI script discovery before invoking node" $
+            withSystemTempDirectory "tdf-sri-defaults" $ \tmpDir -> do
+                let parentScriptDir = tmpDir </> "scripts"
+                    childDir = tmpDir </> "tdf-hq"
+                    childScriptDir = childDir </> "scripts"
+                    scriptName = "generate-sri-invoice.mjs"
+                    scriptBody =
+                        "console.log('{\"ok\":true,\"status\":\"saved\",\"total\":90}')\n"
+                createDirectoryIfMissing True parentScriptDir
+                createDirectoryIfMissing True childScriptDir
+                writeFile (parentScriptDir </> scriptName) scriptBody
+                writeFile (childScriptDir </> scriptName) scriptBody
+                withEnvOverrides [("SRI_INVOICE_SCRIPT", Nothing)] $
+                    bracket getCurrentDirectory setCurrentDirectory $ \_ -> do
+                        setCurrentDirectory childDir
+                        result <- Sri.runSriInvoiceScript sampleSriScriptRequest
+                        case result of
+                            Left err -> do
+                                Data.Text.unpack err
+                                    `shouldContain` "Found multiple default SRI invoice scripts"
+                                Data.Text.unpack err
+                                    `shouldContain` "Set SRI_INVOICE_SCRIPT to choose one explicitly"
+                            Right value ->
+                                expectationFailure
+                                    ( "Expected ambiguous SRI script discovery to fail, got: "
+                                        <> show value
+                                    )
+
+        it "rejects non-JavaScript default SRI discovery candidates before fallback selection" $
+            withSystemTempDirectory "tdf-sri-defaults" $ \tmpDir -> do
+                let scriptDir = tmpDir </> "scripts"
+                    scriptPath = scriptDir </> "generate-sri-invoice.txt"
+                createDirectoryIfMissing True scriptDir
+                writeFile scriptPath "not a node invoice runner\n"
+                result <- Sri.discoverDefaultScriptPath [scriptPath]
+                case result of
+                    Left err -> do
+                        Data.Text.unpack err
+                            `shouldContain` "Default SRI invoice script discovery candidate"
+                        Data.Text.unpack err
+                            `shouldContain` ".mjs, .js, or .cjs Node script"
+                        Data.Text.unpack err
+                            `shouldNotContain` "Could not find scripts/generate-sri-invoice.mjs"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected invalid default SRI discovery candidate to fail, got: "
+                                <> show value
+                            )
+
+        it "rejects malformed default SRI discovery candidates before filesystem fallback" $
+            forM_
+                [ ( "   "
+                  , "Default SRI invoice script discovery candidate must not be blank"
+                  )
+                , ( " scripts/generate-sri-invoice.mjs"
+                  , "Default SRI invoice script discovery candidate must not include leading or trailing whitespace"
+                  )
+                , ( "scripts/generate-sri-invoice.mjs\n"
+                  , "Default SRI invoice script discovery candidate must not contain control characters"
+                  )
+                , ( "scripts/generate" <> ['\x202E'] <> "-sri-invoice.mjs"
+                  , "Default SRI invoice script discovery candidate must not contain control characters or hidden formatting characters"
+                  )
+                ]
+                $ \(candidate, expected) -> do
+                    result <- Sri.discoverDefaultScriptPath [candidate]
+                    case result of
+                        Left err -> do
+                            Data.Text.unpack err `shouldContain` expected
+                            Data.Text.unpack err
+                                `shouldNotContain` "Could not find scripts/generate-sri-invoice.mjs"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed default SRI discovery candidate to fail, got: "
+                                    <> show value
+                                )
 
         it "rejects existing non-JavaScript script paths before invoking node" $
             withSystemTempFile "tdf-sri-script.txt" $ \scriptPath handle -> do
@@ -2024,6 +6551,34 @@ main = hspec $ do
                                 expectationFailure
                                     ("Expected missing Node runner to fail, got: " <> show value)
 
+        it "bounds and sanitizes failed SRI runner stderr before returning backend errors" $ do
+            let formatted =
+                    Sri.formatSriScriptFailure
+                        ("fatal\NULdetail\x202Ehidden\x2028line\n" <> replicate 2100 'x')
+            Data.Text.unpack formatted `shouldContain` "fatal detail"
+            Data.Text.unpack formatted `shouldContain` "hidden line"
+            Data.Text.unpack formatted `shouldContain` "[SRI script stderr truncated]"
+            formatted `shouldSatisfy` (not . Data.Text.any (\ch -> ch == '\NUL' || ch == '\DEL'))
+            formatted `shouldSatisfy` (not . Data.Text.any (`elem` ['\x202E', '\x2028']))
+            Data.Text.length formatted `shouldSatisfy` (<= 2040)
+
+        it "redacts SRI runner stderr secrets before returning backend errors" $ do
+            let formatted =
+                    Sri.formatSriScriptFailure
+                        ( "certificatePassword=sri-cert-secret "
+                            <> "Authorization: Bearer sri-bearer-secret "
+                            <> "{\"access_token\":\"sri-access-secret\","
+                            <> "\"client_secret\":\"sri-client-secret\"}"
+                        )
+            formatted `shouldSatisfy` Data.Text.isInfixOf "certificatePassword=[redacted]"
+            formatted `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+            formatted `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+            formatted `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-cert-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-bearer-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-access-secret")
+            formatted `shouldSatisfy` (not . Data.Text.isInfixOf "sri-client-secret")
+
     describe "CORS environment fallback discovery" $ do
         it "falls through unset or blank primary names to documented CORS aliases" $
             withEnvOverrides
@@ -2042,6 +6597,16 @@ main = hspec $ do
                     lookupFirstNonEmptyEnv ["CORS_DISABLE_DEFAULTS", "DISABLE_DEFAULT_CORS"]
                         `shouldReturn` Just "1"
 
+        it "rejects conflicting documented CORS aliases instead of silently picking one" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com")
+                , ("ALLOW_ORIGINS", Just "https://admin.example.com")
+                ]
+                $ lookupFirstNonEmptyEnv ["ALLOWED_ORIGINS", "ALLOW_ORIGINS"]
+                    `shouldThrow` \err ->
+                        "CORS fallback aliases ALLOWED_ORIGINS and ALLOW_ORIGINS must not be set to different values"
+                            `isInfixOf` show (err :: IOException)
+
         it "derives origin-only defaults from configured app fallback bases" $ do
             deriveCorsOriginFromAppBase " https://hq.example.com/app/ "
                 `shouldBe` Right "https://hq.example.com"
@@ -2052,6 +6617,73 @@ main = hspec $ do
                 Right origin ->
                     expectationFailure
                         ("Expected query-bearing fallback to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com:0443/app" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected ambiguous fallback port to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com//admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected ambiguous fallback path to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app//admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected repeated fallback path separator to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app/../admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected relative fallback path segment to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app/%2e%2e/admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected encoded relative fallback path segment to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app%2fadmin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected encoded fallback path separator to fail, got: " <> origin)
+            case deriveCorsOriginFromAppBase "https://hq.example.com/app\\admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback"
+                Right origin ->
+                    expectationFailure
+                        ("Expected backslash fallback path to fail, got: " <> origin)
+
+        it "rejects hidden Unicode before CORS fallback URL parsing can reshape origins" $ do
+            let hiddenFormat = "\x202E"
+                assertHiddenOriginInvalid rawOrigin =
+                    withEnvOverrides
+                        [ ("ALLOWED_ORIGINS", Just rawOrigin)
+                        , ("ALLOW_ORIGINS", Nothing)
+                        , ("ALLOW_ORIGIN", Nothing)
+                        , ("CORS_ALLOW_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ORIGIN", Nothing)
+                        , ("ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_DISABLE_DEFAULTS", Nothing)
+                        , ("DISABLE_DEFAULT_CORS", Nothing)
+                        , ("HQ_APP_URL", Nothing)
+                        ]
+                        $ corsPolicy `shouldThrow` \err ->
+                            "Configured CORS origins must contain only ASCII URL characters"
+                                `isInfixOf` show (err :: IOException)
+
+            assertHiddenOriginInvalid
+                ("https://app.example.com" <> hiddenFormat <> "evil.example")
+
+            case deriveCorsOriginFromAppBase
+                ("https://hq.example.com/app/" <> hiddenFormat <> "preview") of
+                Left msg ->
+                    msg
+                        `shouldContain`
+                            "HQ_APP_URL CORS fallback must contain only ASCII URL characters"
+                Right origin ->
+                    expectationFailure
+                        ("Expected hidden-format app fallback to fail, got: " <> origin)
 
         it "rejects malformed configured origins before building the credentialed policy" $ do
             let assertInvalid rawOrigin =
@@ -2069,8 +6701,90 @@ main = hspec $ do
                                 `isInfixOf` show (err :: IOException)
             assertInvalid "https://app.example.com/admin"
             assertInvalid "javascript:alert(1)"
+            assertInvalid "https://admin"
             assertInvalid "https://999.999.999.999"
             assertInvalid "https://1.2.3"
+            assertInvalid "https://app.example.com:0443"
+            assertInvalid "https://app.example.com//"
+            assertInvalid "*/"
+
+        it "rejects explicit default CORS ports before fallback origins can mismatch browsers" $ do
+            let assertConfiguredInvalid rawOrigin =
+                    withEnvOverrides
+                        [ ("ALLOWED_ORIGINS", Just rawOrigin)
+                        , ("ALLOW_ORIGINS", Nothing)
+                        , ("ALLOW_ORIGIN", Nothing)
+                        , ("CORS_ALLOW_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ORIGIN", Nothing)
+                        , ("ALLOW_ALL_ORIGINS", Nothing)
+                        , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                        , ("HQ_APP_URL", Nothing)
+                        ]
+                        $ corsPolicy `shouldThrow` \err ->
+                            "Configured CORS origins must omit default ports"
+                                `isInfixOf` show (err :: IOException)
+            assertConfiguredInvalid "https://app.example.com:443"
+            assertConfiguredInvalid "http://app.example.com:80"
+
+            case deriveCorsOriginFromAppBase "https://hq.example.com:443/admin" of
+                Left msg -> msg `shouldContain` "HQ_APP_URL CORS fallback must omit default ports"
+                Right origin ->
+                    expectationFailure
+                        ("Expected default-port fallback to fail, got: " <> origin)
+
+        it "rejects wildcard origins mixed with explicit allowlist entries" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "*, https://app.example.com")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not mix wildcard" `isInfixOf` show (err :: IOException)
+
+        it "rejects blank CORS allowlist entries instead of silently dropping them" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com, ,https://admin.example.com")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not contain blank entries" `isInfixOf` show (err :: IOException)
+
+        it "rejects duplicate normalized CORS origins instead of silently deduping them" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com, https://APP.example.com/")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not contain duplicate entries after normalization"
+                        `isInfixOf` show (err :: IOException)
+
+        it "rejects allow-all CORS flags mixed with explicit allowlists" $
+            withEnvOverrides
+                [ ("ALLOWED_ORIGINS", Just "https://app.example.com")
+                , ("ALLOW_ORIGINS", Nothing)
+                , ("ALLOW_ORIGIN", Nothing)
+                , ("CORS_ALLOW_ORIGINS", Nothing)
+                , ("CORS_ALLOW_ORIGIN", Nothing)
+                , ("ALLOW_ALL_ORIGINS", Just "true")
+                , ("CORS_ALLOW_ALL_ORIGINS", Nothing)
+                ]
+                $ corsPolicy `shouldThrow` \err ->
+                    "must not be combined with configured CORS origins"
+                        `isInfixOf` show (err :: IOException)
 
         it "rejects malformed boolean CORS flags instead of treating typos as false" $ do
             let baseOverrides =
@@ -2109,6 +6823,7 @@ main = hspec $ do
 
         it "rejects arbitrary shared preview hosts instead of granting credentialed CORS broadly" $ do
             isTrustedPreviewOrigin "https://attacker.pages.dev" `shouldBe` False
+            isTrustedPreviewOrigin "https://nested.branch.tdf-app.pages.dev" `shouldBe` False
             isTrustedPreviewOrigin "https://tdf-app.pages.dev.evil.example" `shouldBe` False
             isTrustedPreviewOrigin "http://preview.tdf-app.pages.dev" `shouldBe` False
             isTrustedPreviewOrigin "https://attacker.vercel.app" `shouldBe` False
@@ -2125,7 +6840,17 @@ main = hspec $ do
             requestWithHeaders headers =
                 defaultRequest { requestHeaders = headers }
 
-        it "accepts a valid bearer token and keeps it authoritative over the cookie" $ do
+        it "accepts matching bearer and session cookie tokens without ambiguity" $ do
+            cfg <- loadAuthConfig
+            extractToken
+                cfg
+                (requestWithHeaders
+                    [ ("Authorization", "Bearer shared-token")
+                    , ("Cookie", "tdf_session_test=shared-token")
+                    ])
+                `shouldBe` Right "shared-token"
+
+        it "rejects conflicting bearer and session cookie tokens instead of silently choosing one credential" $ do
             cfg <- loadAuthConfig
             extractToken
                 cfg
@@ -2133,7 +6858,7 @@ main = hspec $ do
                     [ ("Authorization", "Bearer header-token")
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
-                `shouldBe` Right "header-token"
+                `shouldBe` Left "Conflicting auth credentials found"
 
         it "uses the configured session cookie when no Authorization header is present" $ do
             cfg <- loadAuthConfig
@@ -2162,7 +6887,7 @@ main = hspec $ do
                     [ ("Authorization", "Bearer header\NULtoken")
                     , ("Cookie", "tdf_session_test=cookie-token")
                     ])
-                `shouldBe` Left "Invalid Authorization header"
+                `shouldBe` Left "Missing or invalid auth token"
 
         it "rejects duplicate Authorization headers instead of choosing an ambiguous token" $ do
             cfg <- loadAuthConfig
@@ -2229,23 +6954,422 @@ main = hspec $ do
                 (Just "tdf_session_test=cookie-token")
                 `shouldBe` Left "Invalid Authorization header"
 
+        it "rejects conflicting valid authorization and session cookie tokens" $ do
+            cfg <- loadAuthConfig
+            extractTokenFromHeaders
+                cfg
+                (Just "Bearer header-token")
+                (Just "tdf_session_test=cookie-token")
+                `shouldBe` Left "Conflicting auth credentials found"
+
     describe "resolveInstagramRedirectUri" $ do
         let loadInstagramConfig =
                 withEnvOverrides [("HQ_APP_URL", Just "https://hq.example.com/admin")] loadConfig
+
+        it "normalizes Facebook OAuth token responses before Instagram token fallback handling" $ do
+            case eitherDecode "{\"access_token\":\" token-123 \",\"token_type\":\" Bearer \",\"expires_in\":3600}" of
+                Left err ->
+                    expectationFailure ("Expected valid Facebook token response to decode, got: " <> err)
+                Right decodedToken -> do
+                    fatAccessToken decodedToken `shouldBe` "token-123"
+                    fatTokenType decodedToken `shouldBe` "bearer"
+                    fatExpiresIn decodedToken `shouldBe` Just 3600
+            case eitherDecode "{\"access_token\":\"token-123\"}" of
+                Left err ->
+                    expectationFailure ("Expected token_type fallback response to decode, got: " <> err)
+                Right decodedToken ->
+                    fatTokenType decodedToken `shouldBe` "bearer"
+
+        it "rejects malformed Facebook OAuth token responses before ambiguous fallback use" $ do
+            let assertInvalid rawPayload expectedMessage =
+                    case (eitherDecode rawPayload :: Either String FacebookAccessToken) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right decodedToken ->
+                            expectationFailure ("Expected malformed Facebook token response to fail, got: " <> show decodedToken)
+            assertInvalid
+                "{\"access_token\":\"   \",\"token_type\":\"bearer\"}"
+                "Facebook access_token must not be blank"
+            assertInvalid
+                "{\"access_token\":\"token with spaces\",\"token_type\":\"bearer\"}"
+                "Facebook access_token must not contain whitespace or control characters"
+            assertInvalid
+                "{\"access_token\":\"token\\u202E123\",\"token_type\":\"bearer\"}"
+                "hidden formatting characters"
+            assertInvalid
+                ( BL.pack $
+                    "{\"access_token\":\""
+                        <> Data.Text.unpack (Data.Text.replicate 4097 "x")
+                        <> "\",\"token_type\":\"bearer\"}"
+                )
+                "Facebook access_token must be 4096 characters or fewer"
+            assertInvalid
+                "{\"access_token\":\"token-123\",\"token_type\":\"Basic\"}"
+                "Facebook token_type must be Bearer"
+            assertInvalid
+                "{\"access_token\":\"token-123\",\"expires_in\":0}"
+                "Facebook expires_in must be positive"
+
+        it "only falls back to the short Instagram token for transport or retryable Facebook failures" $ do
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed: connection timed out" })
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed (503): service unavailable" })
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
+                ( err502
+                    { errBody =
+                        "Facebook request failed: StatusCodeException statusCode = 503 service unavailable"
+                    }
+                )
+                `shouldBe` True
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook request failed (400): invalid token" })
+                `shouldBe` False
+            shouldFallbackToShortInstagramToken
+                ( err502
+                    { errBody =
+                        "Facebook request failed: StatusCodeException statusCode = 400 invalid token"
+                    }
+                )
+                `shouldBe` False
+            shouldFallbackToShortInstagramToken
+                (err502 { errBody = "Facebook parse error: missing access_token" })
+                `shouldBe` False
+            shouldFallbackToShortInstagramToken
+                (err500 { errBody = "Facebook request configuration invalid: bad graph base" })
+                `shouldBe` False
+
+        it "rejects malformed Facebook page rows before storing OAuth credentials" $ do
+            let decodePages rawPayload =
+                    eitherDecode rawPayload :: Either String FacebookPageList
+                facebookPagePayload pageId pageName pageToken =
+                    BL.pack $
+                        "{\"data\":[{\"id\":\""
+                            <> pageId
+                            <> "\",\"name\":\""
+                            <> pageName
+                            <> "\",\"access_token\":\""
+                            <> pageToken
+                            <> "\"}]}"
+                assertInvalid rawPayload expectedMessage =
+                    case decodePages rawPayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right decodedPages ->
+                            expectationFailure
+                                ( "Expected malformed Facebook page response to fail, got: "
+                                    <> show decodedPages
+                                )
+            case decodePages
+                (facebookPagePayload " page-123 " " TDF HQ " " page-token-123 ") of
+                Left err ->
+                    expectationFailure ("Expected valid Facebook page response, got: " <> err)
+                Right (FacebookPageList [page]) -> do
+                    fpId page `shouldBe` "page-123"
+                    fpName page `shouldBe` "TDF HQ"
+                    fpAccessToken page `shouldBe` "page-token-123"
+                Right decodedPages ->
+                    expectationFailure
+                        ( "Expected one Facebook page discovery row, got: "
+                            <> show decodedPages
+                        )
+
+            assertInvalid
+                "{}"
+                "key \"data\" not found"
+            assertInvalid
+                (facebookPagePayload "   " "TDF HQ" "page-token")
+                "Facebook page id must not be blank"
+            assertInvalid
+                (facebookPagePayload "page 123" "TDF HQ" "page-token")
+                "Facebook page id must not contain whitespace"
+            assertInvalid
+                (facebookPagePayload "page/123" "TDF HQ" "page-token")
+                "Facebook page id must contain only ASCII letters"
+            assertInvalid
+                (facebookPagePayload "page-123" "   " "page-token")
+                "Facebook page name must not be blank"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF\\nHQ" "page-token")
+                "Facebook page name must not contain control"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF\\u2028HQ" "page-token")
+                "Facebook page name must not contain control, separator, or hidden formatting characters"
+            assertInvalid
+                (facebookPagePayload "page-123" "TDF HQ" "page token")
+                "Facebook page access_token must not contain whitespace"
+            assertInvalid
+                ( BL.pack $
+                    "{\"data\":["
+                        <> "{\"id\":\"page-123\",\"name\":\"TDF HQ\",\"access_token\":\"page-token\"},"
+                        <> "{\"id\":\"page-123\",\"name\":\"TDF HQ Backup\","
+                        <> "\"access_token\":\"backup-token\"}"
+                        <> "]}"
+                )
+                "Facebook page list must not contain duplicate page ids"
+
+        it "normalizes Instagram usernames before OAuth page handles are persisted" $ do
+            validateInstagramUsername " TDF.Studio_01 "
+                `shouldBe` Right "tdf.studio_01"
+
+            let assertInvalid rawUsername expectedMessage =
+                    case validateInstagramUsername rawUsername of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expectedMessage
+                        Right username ->
+                            expectationFailure
+                                ( "Expected invalid Instagram username to fail, got: "
+                                    <> Data.Text.unpack username
+                                )
+            assertInvalid "   " "must not be blank"
+            assertInvalid "tdf studio" "must not contain whitespace"
+            assertInvalid
+                ("tdf" <> "\NUL" <> "studio")
+                "must not contain whitespace"
+            assertInvalid ("tdf" <> "\x202E" <> "studio") "hidden formatting"
+            assertInvalid "---" "at least one ASCII letter or digit"
+            assertInvalid "tdf/studio" "only ASCII letters"
+            assertInvalid ".tdfstudio" "dots must be internal"
+            assertInvalid "tdfstudio." "dots must be internal"
+            assertInvalid "tdf..studio" "dots must be internal"
+            assertInvalid (Data.Text.replicate 65 "a") "64 characters or fewer"
+
+        it "rejects malformed Instagram media timestamps before OAuth media DTO fallback rendering" $ do
+            parseInstagramMediaTimestamp Nothing `shouldBe` Right Nothing
+            case parseInstagramMediaTimestamp (Just "2026-05-21T16:30:00Z") of
+                Right (Just timestamp) ->
+                    timestamp `shouldBe` UTCTime (fromGregorian 2026 5 21) (secondsToDiffTime 59400)
+                other ->
+                    expectationFailure
+                        ("Expected valid Instagram media timestamp to parse, got: " <> show other)
+            case parseInstagramMediaTimestamp (Just "2017-03-17T22:25:29+0000") of
+                Right (Just timestamp) ->
+                    timestamp `shouldBe` UTCTime (fromGregorian 2017 3 17) (secondsToDiffTime 80729)
+                other ->
+                    expectationFailure
+                        ( "Expected compact-offset Instagram media timestamp to parse, got: "
+                            <> show other
+                        )
+
+            let assertInvalid rawTimestamp expectedMessage =
+                    case parseInstagramMediaTimestamp (Just rawTimestamp) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right timestamp ->
+                            expectationFailure
+                                ( "Expected invalid Instagram media timestamp to fail, got: "
+                                    <> show timestamp
+                                )
+            assertInvalid "not-a-timestamp" "valid ISO-8601"
+            assertInvalid " 2026-05-21T16:30:00Z " "surrounding whitespace"
+            assertInvalid
+                ("2026-05-21T16:30:00Z" <> "\x202E")
+                "hidden formatting"
+
+        it "rejects malformed Instagram media URLs before OAuth media DTO fallback rendering" $ do
+            validateInstagramMediaUrl Nothing `shouldBe` Right Nothing
+            validateInstagramMediaUrl (Just "https://cdn.example.com/media.jpg?size=large")
+                `shouldBe` Right (Just "https://cdn.example.com/media.jpg?size=large")
+            validateInstagramMediaPermalink (Just "https://www.instagram.com/p/abc123/")
+                `shouldBe` Right (Just "https://www.instagram.com/p/abc123/")
+
+            let assertInvalid validate rawUrl expectedMessage =
+                    case validate (Just rawUrl) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 502
+                            BL.unpack (errBody serverErr) `shouldContain` expectedMessage
+                        Right mediaUrl ->
+                            expectationFailure
+                                ( "Expected invalid Instagram media URL to fail, got: "
+                                    <> show mediaUrl
+                                )
+            assertInvalid validateInstagramMediaUrl "   " "must not be blank"
+            assertInvalid
+                validateInstagramMediaUrl
+                " https://cdn.example.com/media.jpg "
+                "surrounding whitespace"
+            assertInvalid
+                validateInstagramMediaUrl
+                "http://cdn.example.com/media.jpg"
+                "absolute https URL"
+            assertInvalid
+                validateInstagramMediaPermalink
+                "https://www.instagram.com/p/abc123/\x202E"
+                "visible ASCII URL characters"
+            assertInvalid validateInstagramMediaPermalink "https:///p/abc123/" "plain host"
+            assertInvalid
+                validateInstagramMediaPermalink
+                "https://user@example.com/p/abc123/"
+                "plain host"
+
+        it "sanitizes Facebook Graph errors before OAuth handler responses expose them" $ do
+            let sanitized =
+                    sanitizeFacebookGraphErrorMessage
+                        ( "Graph request\nfailed\NUL for token"
+                            <> "\x202E"
+                            <> "value"
+                        )
+            sanitized `shouldBe` "Graph request failed for token value"
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+            sanitized `shouldSatisfy` (not . Data.Text.isInfixOf "\x202E")
+
+            let longSanitized =
+                    sanitizeFacebookGraphErrorMessage (Data.Text.replicate 520 "x")
+            longSanitized `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+            Data.Text.length longSanitized `shouldSatisfy` (<= 512)
+
+            let redacted =
+                    sanitizeFacebookGraphErrorMessage
+                        ( "GET /oauth/access_token?client_secret=app-secret&code=oauth-code"
+                            <> "&fb_exchange_token=short-token failed: "
+                            <> "{\"access_token\":\"page-token\",\"error\":{\"code\":190}}"
+                        )
+            redacted `shouldSatisfy` Data.Text.isInfixOf "client_secret=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "code=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "fb_exchange_token=[redacted]"
+            redacted `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+            redacted `shouldSatisfy` Data.Text.isInfixOf "\"code\":190"
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "app-secret")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "oauth-code")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "short-token")
+            redacted `shouldSatisfy` (not . Data.Text.isInfixOf "page-token")
+
+        it "rejects ambiguous, duplicate, or malformed Instagram page fallbacks before selecting one" $ do
+            let firstPage = ("ig-1", "page-1" :: Text)
+                secondPage = ("ig-2", "page-2" :: Text)
+
+            case selectPrimaryInstagramCandidate [] [firstPage, secondPage] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "primary page fallback is ambiguous"
+                Right value ->
+                    expectationFailure
+                        ("Expected ambiguous Instagram fallback to fail, got " <> show value)
+
+            case selectPrimaryInstagramCandidate ["ig-2"] [firstPage, secondPage] of
+                Right (Just selected) ->
+                    selected `shouldBe` "page-2"
+                other ->
+                    expectationFailure
+                        ("Expected preferred Instagram page to resolve, got " <> show other)
+
+            case selectPrimaryInstagramCandidate ["ig-missing"] [firstPage, secondPage] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "primary page fallback is ambiguous"
+                Right value ->
+                    expectationFailure
+                        ("Expected stale Instagram preference fallback to fail, got " <> show value)
+
+            case selectPrimaryInstagramCandidate ["ig-1"] [firstPage, ("ig-1", "page-duplicate")] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "duplicate Instagram user ids"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate Instagram candidate ids to fail, got " <> show value)
+
+            forM_ [" ig-1", "ig 1", "ig-1\x202E"] $ \candidateId ->
+                case selectPrimaryInstagramCandidate [] [(candidateId, "page-malformed" :: Text)] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 409
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "candidate page ids are malformed"
+                    Right value ->
+                        expectationFailure
+                            ("Expected malformed Instagram candidate id to fail, got " <> show value)
+
+            forM_ [" ig-1", "ig 1", "ig-1\x202E"] $ \storedId ->
+                case selectPrimaryInstagramCandidate [storedId] [firstPage] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 409
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "stored preferred page ids are malformed"
+                    Right value ->
+                        expectationFailure
+                            ("Expected malformed stored Instagram fallback id to fail, got " <> show value)
+
+            case selectPrimaryInstagramCandidate ["ig-1", "ig-1"] [firstPage] of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "stored preferred page ids contain duplicates"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate stored Instagram fallback ids to fail, got " <> show value)
 
         it "uses the configured Instagram callback fallback when the request omits redirectUri" $ do
             cfg <- loadInstagramConfig
             resolveInstagramRedirectUri cfg Nothing
                 `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
-            resolveInstagramRedirectUri cfg (Just "   ")
-                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+
+        it "rejects blank explicit Instagram redirect URIs instead of using the fallback" $ do
+            cfg <- loadInstagramConfig
+            case resolveInstagramRedirectUri cfg (Just "   ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "redirectUri must be an absolute https Instagram OAuth callback URL"
+                Right value ->
+                    expectationFailure
+                        ( "Expected blank explicit Instagram redirectUri to fail, got: "
+                            <> show value
+                        )
+
+        it "rejects unsafe configured Instagram callback fallbacks before token exchange" $ do
+            cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig
+            case resolveInstagramRedirectUri cfg Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "Configured Instagram OAuth callback URL must be an absolute https URL"
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsafe configured Instagram redirect fallback to fail, got: "
+                            <> show value
+                        )
 
         it "normalizes valid explicit Instagram redirect URIs before token exchange" $ do
             cfg <- loadInstagramConfig
             resolveInstagramRedirectUri
                 cfg
-                (Just " https://tdf-app.pages.dev/oauth/instagram/callback ")
+                (Just " https://hq.example.com/admin/oauth/instagram/callback ")
+                `shouldBe` Right "https://hq.example.com/admin/oauth/instagram/callback"
+
+        it "only accepts HTTPS or local development Instagram OAuth callback shapes" $ do
+            validateInstagramRedirectUri
+                " https://tdf-app.pages.dev/oauth/instagram/callback "
                 `shouldBe` Right "https://tdf-app.pages.dev/oauth/instagram/callback"
+            validateInstagramRedirectUri
+                " http://127.0.0.1:5173/oauth/instagram/callback "
+                `shouldBe` Right "http://127.0.0.1:5173/oauth/instagram/callback"
+
+            let assertInvalid rawRedirect =
+                    case validateInstagramRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute https Instagram OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
+            assertInvalid "http://hq.example.com/oauth/instagram/callback"
+            assertInvalid "https://localhost/oauth/instagram/callback"
+            assertInvalid "https://127.0.0.1:5173/oauth/instagram/callback"
+            assertInvalid "https://[::1]:5173/oauth/instagram/callback"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
 
         it "requires social inbox access before exchanging Instagram OAuth codes" $ do
             let fanUser =
@@ -2285,15 +7409,511 @@ main = hspec $ do
                             errHTTPCode serverErr `shouldBe` 400
                             BL.unpack (errBody serverErr)
                                 `shouldContain`
-                                    "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment"
+                                    "redirectUri must be an absolute https Instagram OAuth callback URL"
                         Right value ->
                             expectationFailure
                                 ("Expected invalid Instagram redirectUri to be rejected, got " <> show value)
             assertInvalid "/oauth/instagram/callback"
             assertInvalid "javascript:alert(1)"
+            assertInvalid "http://hq.example.com/admin/oauth/instagram/callback"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/other"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback?next=/admin"
             assertInvalid "https://tdf-app.pages.dev/oauth/instagram/callback#token"
+
+        it "rejects explicit Instagram redirect URIs that do not match the configured callback" $ do
+            cfg <- loadInstagramConfig
+            let assertMismatch rawRedirect =
+                    case resolveInstagramRedirectUri cfg (Just rawRedirect) of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must match the configured Instagram OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected mismatched Instagram redirectUri to be rejected, got " <> show value)
+            assertMismatch "https://tdf-app.pages.dev/oauth/instagram/callback"
+            assertMismatch "https://hq.example.com/oauth/instagram/callback"
+
+    describe "Google Calendar OAuth redirect validation" $ do
+        it "only accepts HTTPS public or local HTTP Calendar callbacks" $ do
+            validateCalendarRedirectUri
+                " https://tdf-app.pages.dev/configuracion/integraciones/calendario "
+                `shouldBe` Right "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+            validateCalendarRedirectUri
+                " http://127.0.0.1:5173/configuracion/integraciones/calendario "
+                `shouldBe` Right "http://127.0.0.1:5173/configuracion/integraciones/calendario"
+
+            let assertInvalid rawRedirect =
+                    case validateCalendarRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    "redirectUri must be an absolute https Google Calendar OAuth callback URL"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Calendar redirectUri to be rejected, got " <> show value)
+            assertInvalid "http://hq.example.com/configuracion/integraciones/calendario"
+            assertInvalid "https://localhost/configuracion/integraciones/calendario"
+            assertInvalid "https://127.0.0.1:5173/configuracion/integraciones/calendario"
+            assertInvalid "https://[::1]:5173/configuracion/integraciones/calendario"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin/../"
+                    <> "configuracion/integraciones/calendario"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin//"
+                    <> "configuracion/integraciones/calendario"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/configuracion/integraciones/calendario#token"
+
+    describe "Google Calendar config fallback discovery" $ do
+        it "validates stored sync cursors before returning the implicit config fallback" $ do
+            let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
+                calendarConfigWithOwner ownerId syncCursor =
+                    Entity
+                        (toSqlKey 1 :: Cal.GoogleCalendarConfigId)
+                        Cal.GoogleCalendarConfig
+                            { Cal.googleCalendarConfigOwnerId = ownerId
+                            , Cal.googleCalendarConfigCalendarId = "primary"
+                            , Cal.googleCalendarConfigAccessToken = Nothing
+                            , Cal.googleCalendarConfigRefreshToken = Nothing
+                            , Cal.googleCalendarConfigTokenType = Nothing
+                            , Cal.googleCalendarConfigTokenExpiresAt = Nothing
+                            , Cal.googleCalendarConfigSyncCursor = syncCursor
+                            , Cal.googleCalendarConfigSyncedAt = Nothing
+                            , Cal.googleCalendarConfigCreatedAt = now
+                            , Cal.googleCalendarConfigUpdatedAt = now
+                            }
+                calendarConfig = calendarConfigWithOwner Nothing
+
+            case selectUniqueCalendarConfigFallback [calendarConfig (Just " cursor-1 ")] of
+                Right (Just (Entity _ cfg)) ->
+                    Cal.googleCalendarConfigSyncCursor cfg `shouldBe` Just "cursor-1"
+                other ->
+                    expectationFailure
+                        ("Expected valid calendar fallback config, got: " <> show other)
+
+            case selectUniqueCalendarConfigFallback
+                [calendarConfig (Just ("cursor" <> Data.Text.singleton '\x202E'))] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar sync cursor is invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored sync cursor to fail, got: " <> show value)
+
+            case selectUniqueCalendarConfigFallback
+                [calendarConfigWithOwner (Just (toSqlKey 0)) (Just "cursor-1")] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar config ownerId is invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored ownerId to fail, got: " <> show value)
+
+            let expiredTokenConfig =
+                    let baseConfig = calendarConfig Nothing
+                    in baseConfig
+                        { entityVal =
+                            (entityVal baseConfig)
+                              { Cal.googleCalendarConfigAccessToken = Just "ya29.access-token_123"
+                              , Cal.googleCalendarConfigTokenExpiresAt =
+                                  Just (UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 0))
+                              }
+                        }
+            case selectUniqueCalendarConfigFallback
+                [expiredTokenConfig] of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` "Stored Google Calendar config timestamps are invalid"
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid stored token expiry to fail, got: " <> show value)
+
+        it "validates explicit Google Calendar configs before returning DTOs" $ do
+            let now = UTCTime (fromGregorian 2026 5 13) (secondsToDiffTime 0)
+                calendarConfig rawCalendarId syncCursor =
+                    Entity
+                        (toSqlKey 7 :: Cal.GoogleCalendarConfigId)
+                        Cal.GoogleCalendarConfig
+                            { Cal.googleCalendarConfigOwnerId = Just (toSqlKey 11)
+                            , Cal.googleCalendarConfigCalendarId = rawCalendarId
+                            , Cal.googleCalendarConfigAccessToken = Nothing
+                            , Cal.googleCalendarConfigRefreshToken = Nothing
+                            , Cal.googleCalendarConfigTokenType = Nothing
+                            , Cal.googleCalendarConfigTokenExpiresAt = Nothing
+                            , Cal.googleCalendarConfigSyncCursor = syncCursor
+                            , Cal.googleCalendarConfigSyncedAt = Nothing
+                            , Cal.googleCalendarConfigCreatedAt = now
+                            , Cal.googleCalendarConfigUpdatedAt = now
+                            }
+
+            case validateStoredCalendarConfig (calendarConfig "primary" (Just " cursor-1 ")) of
+                Right (Entity _ cfg) ->
+                    Cal.googleCalendarConfigSyncCursor cfg `shouldBe` Just "cursor-1"
+                other ->
+                    expectationFailure
+                        ("Expected explicit calendar config to validate, got: " <> show other)
+
+            case validateStoredCalendarConfig (calendarConfig " primary " Nothing) of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 500
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "Stored Google Calendar config calendarId is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid explicit calendar config to fail, got: " <> show value)
+
+        it "rejects malformed stored OAuth tokens before sync fallback requests are built" $ do
+            validateStoredGoogleCalendarAccessToken (Just " ya29.access-token_123 ")
+                `shouldBe` Right "ya29.access-token_123"
+            validateStoredGoogleCalendarRefreshToken " 1//refresh-token_123 "
+                `shouldBe` Right "1//refresh-token_123"
+
+            case validateStoredGoogleCalendarAccessToken Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 401
+                    BL.unpack (errBody serverErr)
+                        `shouldContain` "No hay access_token para Google Calendar"
+                Right value ->
+                    expectationFailure
+                        ("Expected missing Calendar access token to fail, got: " <> show value)
+
+            let assertStoredTokenInvalid label result = case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 500
+                        BL.unpack (errBody serverErr)
+                            `shouldContain` ("Stored Google Calendar " <> label <> " is invalid")
+                    Right value ->
+                        expectationFailure
+                            ("Expected malformed Calendar token to fail, got: " <> show value)
+
+            assertStoredTokenInvalid
+                "access token"
+                (validateStoredGoogleCalendarAccessToken (Just "ya29.access token"))
+            assertStoredTokenInvalid
+                "access token"
+                ( validateStoredGoogleCalendarAccessToken
+                    (Just ("ya29.access" <> Data.Text.singleton '\x202E' <> "token"))
+                )
+            assertStoredTokenInvalid
+                "refresh token"
+                (validateStoredGoogleCalendarRefreshToken "refresh\ntoken")
+            assertStoredTokenInvalid
+                "refresh token"
+                ( validateStoredGoogleCalendarRefreshToken
+                    ("refresh-tok" <> Data.Text.singleton '\x00E9' <> "n")
+                )
+
+    describe "Google Calendar event page decoding" $ do
+        it "requires an items array instead of treating malformed pages as empty syncs" $ do
+            (eitherDecode "{\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
+                `shouldSatisfy` isLeft
+            case eitherDecode "{\"items\":[],\"nextSyncToken\":\"cursor-1\"}" of
+                Left err ->
+                    expectationFailure ("Expected empty Google Calendar page to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    parsedItems `shouldBe` []
+                    nextPage `shouldBe` Nothing
+                    nextSync `shouldBe` Just "cursor-1"
+
+        it "rejects oversized Google Calendar pages before sync fallback accumulation" $ do
+            let eventPayload n =
+                    A.object
+                        [ "id" .= ("event-" <> Data.Text.pack (show n) :: Text)
+                        ]
+                oversizedPage =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ eventPayload n
+                                | n <- [1 .. maxGoogleCalendarPageItems + 1]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+            case eitherDecode oversizedPage :: Either String GoogleEventsPage of
+                Left err ->
+                    err `shouldContain` "Google Calendar page must contain 2000 items or fewer"
+                Right page ->
+                    expectationFailure
+                        ("Expected oversized Google Calendar page to fail, got: " <> show page)
+
+        it "rejects malformed or ambiguous Google Calendar cursors before sync fallback handling" $ do
+            case eitherDecode "{\"items\":[],\"nextPageToken\":\" page-cursor \",\"nextSyncToken\":null}" of
+                Left err ->
+                    expectationFailure ("Expected valid Google Calendar page cursor to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    parsedItems `shouldBe` []
+                    nextPage `shouldBe` Just "page-cursor"
+                    nextSync `shouldBe` Nothing
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected "{\"items\":[],\"nextPageToken\":\"   \"}"
+            assertRejected "{\"items\":[],\"nextSyncToken\":\"sync cursor\"}"
+            assertRejected "{\"items\":[],\"nextPageToken\":\"page-cursor\",\"nextSyncToken\":\"sync-cursor\"}"
+
+        it "rejects non-object Google Calendar items instead of silently skipping them" $
+            (eitherDecode "{\"items\":[\"not-an-event\"],\"nextSyncToken\":\"cursor-1\"}" :: Either String GoogleEventsPage)
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed Google Calendar event objects before sync" $ do
+            let validPayload =
+                    "{\"items\":[{\"id\":\" event-123 \",\"status\":\" CONFIRMED \"}]"
+                        <> ",\"nextSyncToken\":\"cursor-1\"}"
+            case eitherDecode validPayload of
+                Left err ->
+                    expectationFailure
+                        ("Expected valid Google Calendar event object to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems nextPage nextSync) -> do
+                    length parsedItems `shouldBe` 1
+                    nextPage `shouldBe` Nothing
+                    nextSync `shouldBe` Just "cursor-1"
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected "{\"items\":[{}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected "{\"items\":[{\"id\":7}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected "{\"items\":[{\"id\":\"event 123\"}],\"nextSyncToken\":\"cursor-1\"}"
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"status\":\"archived\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"status\":7}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+
+        it "rejects malformed optional Google Calendar text fields before sync can silently skip events" $ do
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"summary\":7}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"description\":\"ok\\u0000bad\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"location\":\"Sala\\u202E1\"}"
+                    <> "],\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "summary" .= Data.Text.replicate 1025 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "location" .= Data.Text.replicate 1025 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
+            assertRejected $
+                A.encode $
+                    A.object
+                        [ "items" .=
+                            [ A.object
+                                [ "id" .= ("event-123" :: Text)
+                                , "description" .= Data.Text.replicate 10001 "s"
+                                ]
+                            ]
+                        , "nextSyncToken" .= ("cursor-1" :: Text)
+                        ]
+
+        it "rejects malformed Google Calendar attendee shapes before persistence" $ do
+            let pageWithAttendees attendeesValue =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ A.object
+                                    [ "id" .= ("event-123" :: Text)
+                                    , "attendees" .= attendeesValue
+                                    ]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+                assertRejected attendeesValue =
+                    ( eitherDecode (pageWithAttendees attendeesValue)
+                        :: Either String GoogleEventsPage
+                    )
+                        `shouldSatisfy` isLeft
+
+            case eitherDecode
+                (pageWithAttendees [A.object ["email" .= ("fan@example.com" :: Text)]]) of
+                Left err ->
+                    expectationFailure
+                        ("Expected Google Calendar attendees to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems _ _) ->
+                    length parsedItems `shouldBe` 1
+
+            assertRejected ("fan@example.com" :: Text)
+            assertRejected [A.String "fan@example.com"]
+            assertRejected [A.object []]
+            assertRejected [A.object ["email" .= (7 :: Int)]]
+            assertRejected [A.object ["email" .= ("not-an-email" :: Text)]]
+            assertRejected
+                [ A.object ["email" .= ("fan@example.com" :: Text)]
+                , A.object ["email" .= ("FAN@example.com" :: Text)]
+                ]
+
+        it "rejects malformed Google Calendar date fields before ambiguous sync writes" $ do
+            case eitherDecode
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"updated\":\"2026-05-14T15:00:00Z\""
+                    <> ",\"start\":{\"dateTime\":\"2026-05-14T16:00:00-05:00\"}"
+                    <> ",\"end\":{\"date\":\"2026-05-15\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                ) of
+                    Left err ->
+                        expectationFailure
+                            ( "Expected valid Google Calendar date fields to decode, got: "
+                                <> err
+                            )
+                    Right (GoogleEventsPage parsedItems _ _) ->
+                        length parsedItems `shouldBe` 1
+
+            let assertRejected rawPayload =
+                    (eitherDecode rawPayload :: Either String GoogleEventsPage)
+                        `shouldSatisfy` isLeft
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"updated\":\"soon\"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"start\":\"2026-05-14\"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\",\"start\":{}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"start\":{\"dateTime\":\"not-a-date\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+            assertRejected
+                ( "{\"items\":[{\"id\":\"event-123\""
+                    <> ",\"start\":{\"dateTime\":\"2026-05-14T16:00:00Z\""
+                    <> ",\"date\":\"2026-05-14\"}}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                )
+
+        it "rejects unsafe Google Calendar htmlLink values before persisting synced events" $ do
+            let pageWithHtmlLink rawLink =
+                    A.encode $
+                        A.object
+                            [ "items" .=
+                                [ A.object
+                                    [ "id" .= ("event-123" :: Text)
+                                    , "htmlLink" .= (rawLink :: Text)
+                                    ]
+                                ]
+                            , "nextSyncToken" .= ("cursor-1" :: Text)
+                            ]
+                assertRejected rawLink =
+                    ( eitherDecode (pageWithHtmlLink rawLink)
+                        :: Either String GoogleEventsPage
+                    )
+                        `shouldSatisfy` isLeft
+
+            case eitherDecode
+                (pageWithHtmlLink "https://www.google.com/calendar/event?eid=abc123") of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical Google Calendar htmlLink to decode, got: " <> err)
+                Right (GoogleEventsPage parsedItems _ _) ->
+                    length parsedItems `shouldBe` 1
+
+            assertRejected "javascript:alert(1)"
+            assertRejected "http://www.google.com/calendar/event?eid=abc123"
+            assertRejected "https://evil.example.com/calendar/event?eid=abc123"
+            assertRejected "https://www.google.com/search?q=calendar"
+            assertRejected "https://www.google.com/calendar/event"
+            assertRejected "https://www.google.com/calendar/event?eid="
+            assertRejected "https://www.google.com/calendar/event?eid=abc123&eid=def456"
+            assertRejected " https://www.google.com/calendar/event?eid=abc123 "
+            assertRejected "https://www.google.com/calendar/event?eid=abc123#fragment"
+
+        it "rejects duplicate Google Calendar event ids before sync fallback upserts" $
+            ( eitherDecode
+                ( "{\"items\":[{\"id\":\"event-123\"},{\"id\":\" event-123 \"}]"
+                    <> ",\"nextSyncToken\":\"cursor-1\"}"
+                ) :: Either String GoogleEventsPage
+            )
+                `shouldSatisfy` isLeft
+
+        it "drops partial incremental events when expired sync cursors fall back to full sync" $ do
+            let staleEvent = A.object ["id" .= ("stale-event" :: Text)]
+                retryState = expiredGoogleCalendarSyncRetryState Nothing Nothing [staleEvent]
+            retryState
+                `shouldBe` (Nothing, Nothing, Nothing, Nothing, [] :: [A.Value])
+
+        it "rejects hidden formatting marks in Calendar ids before fallback lookups" $ do
+            CalAPI.normalizeCalendarId " primary "
+                `shouldBe` Right "primary"
+            CalAPI.normalizeCalendarId "en.ec#holiday@group.v.calendar.google.com"
+                `shouldBe` Right "en.ec#holiday@group.v.calendar.google.com"
+            CalAPI.normalizeCalendarId ("primary" <> Data.Text.singleton '\x200B')
+                `shouldBe` Left "calendarId must not contain hidden formatting characters"
+            CalAPI.normalizeCalendarId "primary?alt=json"
+                `shouldBe`
+                    Left "calendarId must not contain URL path or query delimiters"
+            validateGoogleCalendarEventId ("event-123" <> Data.Text.singleton '\x202E')
+                `shouldBe` Left "Google Calendar event id must not contain hidden formatting characters"
+
+        it "rejects hidden formatting marks in Calendar status filters before event lookups" $
+            case validateCalendarEventListQuery
+                Nothing
+                Nothing
+                Nothing
+                (Just ("confirmed" <> Data.Text.singleton '\x202E')) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err)
+                            `shouldContain` "status must not contain hidden formatting characters"
+                    Right value ->
+                        expectationFailure
+                            ( "Expected hidden-format Calendar status filter to fail, got: "
+                                <> show value
+                            )
+
+    describe "CMS content request JSON" $ do
+        it "defaults omitted status only when clients omit it instead of sending null" $ do
+            case eitherDecode "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"es\",\"payload\":{}}" of
+                Left err ->
+                    expectationFailure ("Expected CMS content payload to decode, got: " <> err)
+                Right payload ->
+                    cciStatus payload `shouldBe` Nothing
+
+            case ( eitherDecode "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"es\",\"status\":null}"
+                    :: Either String CmsContentIn
+                 ) of
+                Left err ->
+                    err `shouldContain` "status must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null CMS status to fail, got: " <> show payload)
 
     describe "WhatsApp consent payloads" $ do
         it "accept canonical public consent and opt-out bodies" $ do
@@ -2317,6 +7937,23 @@ main = hspec $ do
                     worReason payload `shouldBe` Just "stop"
                     worSendMessage payload `shouldBe` Just True
 
+        it "normalizes optional consent and opt-out text during JSON decoding" $ do
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"name\":\"  Ada  \",\"consent\":true,\"source\":\"   \",\"sendMessage\":false}" of
+                Left err ->
+                    expectationFailure ("Expected padded consent payload to decode, got: " <> err)
+                Right payload -> do
+                    wcrName payload `shouldBe` Just "Ada"
+                    wcrSource payload `shouldBe` Nothing
+
+            case eitherDecode
+                "{\"phone\":\"+593991234567\",\"reason\":\"   \",\"sendMessage\":false}" of
+                Left err ->
+                    expectationFailure ("Expected blank opt-out payload to decode, got: " <> err)
+                Right payload -> do
+                    worReason payload `shouldBe` Nothing
+                    worSendMessage payload `shouldBe` Just False
+
         it "rejects unknown consent or opt-out keys so typoed public requests fail explicitly" $ do
             isLeft
                 ( eitherDecode
@@ -2330,6 +7967,38 @@ main = hspec $ do
                     :: Either String WhatsAppOptOutRequest
                 )
                 `shouldBe` True
+
+        it "rejects null optional consent fields instead of silently defaulting them" $ do
+            let assertConsentNull rawJson expectedMessage =
+                    case (eitherDecode rawJson :: Either String WhatsAppConsentRequest) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null consent field to fail, got: " <> show payload)
+                assertOptOutNull rawJson expectedMessage =
+                    case (eitherDecode rawJson :: Either String WhatsAppOptOutRequest) of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null opt-out field to fail, got: " <> show payload)
+
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"name\":null,\"consent\":true}"
+                "name must be omitted instead of null"
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"source\":null,\"consent\":true}"
+                "source must be omitted instead of null"
+            assertConsentNull
+                "{\"phone\":\"+593991234567\",\"consent\":true,\"sendMessage\":null}"
+                "sendMessage must be omitted instead of null"
+            assertOptOutNull
+                "{\"phone\":\"+593991234567\",\"reason\":null}"
+                "reason must be omitted instead of null"
+            assertOptOutNull
+                "{\"phone\":\"+593991234567\",\"reason\":\"stop\",\"sendMessage\":null}"
+                "sendMessage must be omitted instead of null"
 
         it "normalizes optional consent metadata before storage or confirmation messages" $ do
             validateWhatsAppConsentDisplayName (Just "  Ada  ")
@@ -2358,7 +8027,7 @@ main = hspec $ do
                     (Just (Data.Text.replicate 121 "a"))
                 )
             assertInvalid
-                "source must not contain control characters"
+                "source must not contain control or formatting characters"
                 (validateWhatsAppConsentSource "public" (Just "landing\npage"))
             assertInvalid
                 "reason is too long"
@@ -2375,27 +8044,6 @@ main = hspec $ do
         it "drops explicit blank feedback metadata values instead of storing ambiguous empty strings" $ do
             normalizeOptionalFeedbackText Nothing `shouldBe` Nothing
             normalizeOptionalFeedbackText (Just "   ") `shouldBe` Nothing
-
-    describe "validateOptionalFeedbackMetadata" $ do
-        it "normalizes bounded optional feedback metadata before storage and notifications" $ do
-            validateOptionalFeedbackMetadata "category" Nothing `shouldBe` Right Nothing
-            validateOptionalFeedbackMetadata "category" (Just "   ") `shouldBe` Right Nothing
-            validateOptionalFeedbackMetadata "category" (Just "  billing  ")
-                `shouldBe` Right (Just "billing")
-            validateOptionalFeedbackMetadata "severity" (Just " P1 ")
-                `shouldBe` Right (Just "P1")
-
-        it "rejects oversized or control-character feedback metadata explicitly" $ do
-            let assertInvalid raw expectedMessage =
-                    case validateOptionalFeedbackMetadata "severity" (Just raw) of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid feedback metadata, got " <> show value)
-            assertInvalid (Data.Text.replicate 81 "x") "severity must be 80 characters or fewer"
-            assertInvalid "high\nBcc: ops@example.com" "severity must not contain control characters"
 
     describe "validateFeedbackTitle" $ do
         it "trims valid feedback titles before storage and notification" $
@@ -2415,6 +8063,10 @@ main = hspec $ do
             assertInvalid
                 "Bug\nBcc: attacker@example.com"
                 "title must not contain control characters"
+            assertInvalid
+                ("Checkout " <> "\x202E" <> "diap")
+                "title must not contain control characters or hidden formatting characters"
+            assertInvalid "!!!" "title must include letters or numbers"
             assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
 
     describe "validateFeedbackDescription" $ do
@@ -2438,6 +8090,9 @@ main = hspec $ do
             assertInvalid
                 "steps\NULhidden"
                 "description must not contain control characters"
+            assertInvalid
+                ("steps" <> "\x200D" <> "hidden")
+                "description must not contain control characters or hidden formatting characters"
 
     describe "validateFeedbackConsent" $ do
         it "requires explicit consent before the backend stores or emails feedback" $ do
@@ -2473,6 +8128,10 @@ main = hspec $ do
             assertInvalid "user.@example.com"
             assertInvalid "user..name@example.com"
             assertInvalid "user()@example.com"
+            assertInvalid "user@example.123"
+            assertInvalid "user@example.c"
+            assertInvalid (Data.Text.replicate 65 "a" <> "@example.com")
+            assertInvalid ("user@" <> Data.Text.replicate 64 "a" <> ".com")
 
         it "rejects oversized feedback contact emails before storage and notification" $
             case validateOptionalFeedbackContactEmail
@@ -2492,6 +8151,8 @@ main = hspec $ do
                 `shouldBe` Right (Just "https://tdf.example.com/curso/produccion")
             validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me/593991234567")
                 `shouldBe` Right (Just "https://wa.me/593991234567")
+            validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://api.whatsapp.com:443/send?phone=593991234567")
+                `shouldBe` Right (Just "https://api.whatsapp.com:443/send?phone=593991234567")
 
         it "rejects non-HTTPS course URLs instead of persisting insecure or broken public links" $ do
             let assertInvalid fieldName rawValue =
@@ -2511,6 +8172,26 @@ main = hspec $ do
             assertInvalid "instructorAvatarUrl" "ftp://cdn.example.com/avatar.png"
             assertInvalid "landingUrl" "https://tdf.example.com/curso\NULpreview"
 
+        it "rejects WhatsApp CTA URLs on non-default HTTPS ports so public course links stay canonical" $
+            case validateCoursePublicUrlField "whatsappCtaUrl" (Just "https://wa.me:8443/593991234567") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "whatsappCtaUrl must use wa.me, api.whatsapp.com, or web.whatsapp.com on the default HTTPS port"
+                Right value ->
+                    expectationFailure ("Expected non-default WhatsApp CTA port to be rejected, got " <> show value)
+
+        it "rejects fragment-bearing public course URLs before persisting ambiguous links" $
+            case validateCoursePublicUrlField "landingUrl" (Just "https://tdf.example.com/curso#token") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "landingUrl must not include a URL fragment"
+                Right value ->
+                    expectationFailure ("Expected fragment-bearing course URL to be rejected, got " <> show value)
+
         it "drops stale persisted public course URLs before metadata serialization" $ do
             sanitizeStoredCoursePublicUrl "landingUrl" (Just "  https://tdf.example.com/curso/produccion  ")
                 `shouldBe` Just "https://tdf.example.com/curso/produccion"
@@ -2528,10 +8209,10 @@ main = hspec $ do
             validateDatafastBaseUrl Nothing `shouldBe` Right "https://test.oppwa.com"
             validateDatafastBaseUrl (Just " https://eu-prod.oppwa.com/ ")
                 `shouldBe` Right "https://eu-prod.oppwa.com"
-            validateDatafastBaseUrl (Just "https://eu-prod.oppwa.com:443")
-                `shouldBe` Right "https://eu-prod.oppwa.com:443"
+            validateDatafastBaseUrl (Just " HTTPS://EU-PROD.OPPWA.COM/ ")
+                `shouldBe` Right "https://eu-prod.oppwa.com"
 
-        it "rejects malformed Datafast bases before payment requests are built" $ do
+        it "rejects malformed or explicit-port Datafast bases before payment requests are built" $ do
             let assertInvalid rawValue =
                     case validateDatafastBaseUrl (Just rawValue) of
                         Left err -> do
@@ -2546,9 +8227,11 @@ main = hspec $ do
             assertInvalid "http://payments.example.com"
             assertInvalid "https://test.oppwa.com/v1"
             assertInvalid "https://test.oppwa.com?proxy=1"
+            assertInvalid "https://test.oppwa.com//"
             assertInvalid "http://localhost:8080"
             assertInvalid "https://payments.example.com"
             assertInvalid "https://oppwa.com.evil.example"
+            assertInvalid "https://test.oppwa.com:443"
             assertInvalid "https://test.oppwa.com:8443"
 
     describe "validateDatafastCredential" $ do
@@ -2580,6 +8263,67 @@ main = hspec $ do
                 (Just "bearer token")
                 "must not contain control characters or whitespace"
 
+        it "rejects oversized Datafast credentials before gateway requests are built" $ do
+            let oversized = Data.Text.unpack (Data.Text.replicate 4097 "a")
+                assertInvalid envName result =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (envName <> " must be 4096 characters or fewer")
+                        Right value ->
+                            expectationFailure
+                                ("Expected oversized Datafast credential, got " <> show value)
+            assertInvalid
+                "DATAFAST_BEARER_TOKEN"
+                (validateDatafastCredential "DATAFAST_BEARER_TOKEN" (Just oversized))
+            assertInvalid
+                "DATAFAST_VERSIONDF"
+                (validateOptionalDatafastCredential "DATAFAST_VERSIONDF" (Just oversized))
+
+    describe "validatePayPalCredential" $ do
+        it "rejects oversized PayPal credentials before Basic auth headers are built" $ do
+            let oversized = Data.Text.unpack (Data.Text.replicate 4097 "a")
+            case validatePayPalCredential "PAYPAL_CLIENT_SECRET" (Just oversized) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "PAYPAL_CLIENT_SECRET must be 4096 characters or fewer"
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized PayPal credential, got " <> show value)
+
+    describe "validateMarketplaceBuyerName" $ do
+        it "requires checkout buyer names to include visible identity text before storage" $ do
+            validateMarketplaceBuyerName "  Ada Lovelace  "
+                `shouldBe` Right "Ada Lovelace"
+
+            case validateMarketplaceBuyerName " ... --- " of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "buyerName must include letters or numbers"
+                Right value ->
+                    expectationFailure
+                        ("Expected punctuation-only buyerName to fail, got " <> show value)
+
+    describe "validateAdsAssistChannel" $ do
+        it "accepts omitted or supported channels and rejects explicit blank fallback channels" $ do
+            validateAdsAssistChannel Nothing `shouldBe` Right Nothing
+            validateAdsAssistChannel (Just " Instagram ")
+                `shouldBe` Right (Just "instagram")
+
+            case validateAdsAssistChannel (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "channel must be omitted instead of blank"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank ads assist channel to fail, got " <> show value)
+
     describe "validateDatafastCheckoutId" $ do
         it "normalizes safe Datafast checkout ids before building widget URLs" $ do
             validateDatafastCheckoutId "  8ac7a4a18c9d_test-01.02  "
@@ -2596,10 +8340,60 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid Datafast checkout id, got " <> show value)
             assertInvalid "   "
+            assertInvalid "---"
+            assertInvalid "..."
             assertInvalid "../payment"
             assertInvalid "checkout?entityId=other"
             assertInvalid "checkout&entityId=other"
             assertInvalid "checkout#fragment"
+
+    describe "validateOptionalDatafastPaymentIdField" $ do
+        it "normalizes optional Datafast payment ids before marketplace storage" $ do
+            validateOptionalDatafastPaymentIdField Nothing `shouldBe` Right Nothing
+            validateOptionalDatafastPaymentIdField (Just " 8ac7a4a18c9d_pay-01.02 ")
+                `shouldBe` Right (Just "8ac7a4a18c9d_pay-01.02")
+
+        it "rejects malformed upstream Datafast payment ids before storage" $ do
+            let assertInvalid rawValue =
+                    case validateOptionalDatafastPaymentIdField rawValue of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "Datafast returned an invalid payment id"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Datafast payment id, got " <> show value)
+            assertInvalid (Just "   ")
+            assertInvalid (Just "../payment")
+            assertInvalid (Just "payment?entityId=other")
+            assertInvalid (Just "payment#fragment")
+
+    describe "validateOptionalDatafastMetadataField" $ do
+        it "normalizes optional Datafast response metadata before marketplace storage" $ do
+            validateOptionalDatafastMetadataField "Datafast result description" Nothing
+                `shouldBe` Right Nothing
+            validateOptionalDatafastMetadataField "Datafast result description" (Just "  autorización emitida  ")
+                `shouldBe` Right (Just "autorización emitida")
+            validateOptionalDatafastMetadataField "Datafast payment brand" (Just "   ")
+                `shouldBe` Right Nothing
+
+        it "rejects malformed Datafast response metadata before marketplace storage" $ do
+            let assertInvalid fieldName rawValue =
+                    case validateOptionalDatafastMetadataField fieldName (Just rawValue) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (fieldName <> " must be 512 characters or fewer")
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid Datafast metadata, got " <> show value)
+            assertInvalid "Datafast result description" "approved\nwith note"
+            assertInvalid
+                "Datafast auth code"
+                ("AUTH" <> Data.Text.singleton '\x202E' <> "123")
+            assertInvalid "Datafast acquirer code" (Data.Text.replicate 513 "A")
 
     describe "validatePayPalApprovalUrl" $ do
         it "requires a trimmed HTTPS PayPal approval URL before returning checkout data" $ do
@@ -2654,6 +8448,9 @@ main = hspec $ do
                 (Just "https://www.paypal.com/checkoutnow?token=ORDER-123&flow=checkout")
                 invalidMessage
             assertInvalid
+                (Just "https://www.paypal.com/checkoutnow?flow=checkout&token=ORDER-123")
+                invalidMessage
+            assertInvalid
                 (Just "https://www.paypal.com/checkoutnow?token=https://evil.example/ORDER-123")
                 invalidMessage
             assertInvalid
@@ -2699,6 +8496,9 @@ main = hspec $ do
             assertInvalid Nothing "PayPal capture response did not include a status"
             assertInvalid (Just "   ") "PayPal capture response status cannot be blank"
             assertInvalid
+                (Just (Data.Text.replicate 65 "A"))
+                "PayPal capture response status must be 64 characters or fewer"
+            assertInvalid
                 (Just "COM PLETED")
                 "PayPal capture response status must not contain control characters"
             assertInvalid
@@ -2724,6 +8524,44 @@ main = hspec $ do
             assertInvalid (Just "payer@example..com") "PayPal returned an invalid payer email"
             assertInvalid (Just "payer\n@example.com") "PayPal returned an invalid payer email"
 
+    describe "resolveMarketplaceOrderPaidAtForStatus" $ do
+        it "rejects paidAt payloads unless the final marketplace status is paid" $ do
+            let now = UTCTime (fromGregorian 2026 5 15) (secondsToDiffTime 43200)
+                paidAt = addUTCTime (-3600) now
+                assertRejected result =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "paidAt can only be set when status is paid"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid paidAt update, got " <> show value)
+
+            assertRejected $
+                resolveMarketplaceOrderPaidAtForStatus
+                    now
+                    "pending"
+                    Nothing
+                    Nothing
+                    (Just (Just paidAt))
+
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                (Just (Just paidAt))
+                `shouldBe` Right (Just paidAt)
+
+            resolveMarketplaceOrderPaidAtForStatus
+                now
+                "pending"
+                (Just "paid")
+                Nothing
+                Nothing
+                `shouldBe` Right (Just now)
+
     describe "buildWhatsappCtaFor" $ do
         it "uses a configured WhatsApp contact only after phone normalization accepts it" $ do
             buildWhatsappCtaFor
@@ -2733,13 +8571,93 @@ main = hspec $ do
                 `shouldSatisfy`
                     Data.Text.isPrefixOf "https://wa.me/593991234567?text="
 
-        it "falls back to a numberless WhatsApp CTA when the configured contact is malformed" $ do
+        it "falls back to a numberless WhatsApp CTA when the configured contact is malformed or local-only" $ do
             buildWhatsappCtaFor
                 (Just "593")
                 "Curso de Producción Musical"
                 "https://tdf.example.com/curso/produccion"
                 `shouldSatisfy`
                     Data.Text.isPrefixOf "https://wa.me/?text="
+            buildWhatsappCtaFor
+                (Just "099 123 4567")
+                "Curso de Producción Musical"
+                "https://tdf.example.com/curso/produccion"
+                `shouldSatisfy`
+                    Data.Text.isPrefixOf "https://wa.me/?text="
+
+    describe "resolveDriveRedirectUri" $ do
+        let loadDriveConfig =
+                withEnvOverrides [("HQ_APP_URL", Just "https://hq.example.com/admin")] loadConfig
+
+        it "uses the validated configured Google Drive callback fallback" $ do
+            cfg <- loadDriveConfig
+            resolveDriveRedirectUri cfg Nothing
+                `shouldBe` Right "https://hq.example.com/admin/oauth/google-drive/callback"
+
+        it "rejects blank explicit Google Drive callback overrides instead of falling back" $ do
+            cfg <- loadDriveConfig
+            case resolveDriveRedirectUri cfg (Just "   ") of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 400
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            "redirectUri must be omitted instead of blank"
+                Right value ->
+                    expectationFailure
+                        ( "Expected blank explicit Drive redirectUri to fail, got: "
+                            <> show value
+                        )
+
+        it "rejects unsafe configured Google Drive callback fallbacks before token exchange" $ do
+            cfg <- withEnvOverrides [("HQ_APP_URL", Just "http://hq.example.com/admin")] loadConfig
+            case resolveDriveRedirectUri cfg Nothing of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 503
+                    BL.unpack (errBody serverErr)
+                        `shouldContain`
+                            ( "Configured Google Drive OAuth callback URL must be an "
+                                <> "absolute https URL"
+                            )
+                Right value ->
+                    expectationFailure
+                        ( "Expected unsafe configured Drive redirect fallback to fail, got: "
+                            <> show value
+                        )
+
+        it "only accepts HTTPS or local development Google Drive OAuth callback shapes" $ do
+            validateDriveRedirectUri
+                " https://tdf-app.pages.dev/oauth/google-drive/callback "
+                `shouldBe` Right "https://tdf-app.pages.dev/oauth/google-drive/callback"
+            validateDriveRedirectUri
+                " http://127.0.0.1:5173/oauth/google-drive/callback "
+                `shouldBe` Right "http://127.0.0.1:5173/oauth/google-drive/callback"
+
+            let assertInvalid rawRedirect =
+                    case validateDriveRedirectUri rawRedirect of
+                        Left serverErr -> do
+                            errHTTPCode serverErr `shouldBe` 400
+                            BL.unpack (errBody serverErr)
+                                `shouldContain`
+                                    ( "redirectUri must be an absolute https Google Drive "
+                                        <> "OAuth callback URL"
+                                    )
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid Drive redirectUri to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid "http://hq.example.com/oauth/google-drive/callback"
+            assertInvalid "https://localhost/oauth/google-drive/callback"
+            assertInvalid "https://127.0.0.1:5173/oauth/google-drive/callback"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/other"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin/../"
+                    <> "oauth/google-drive/callback"
+            assertInvalid $
+                "https://tdf-app.pages.dev/admin//"
+                    <> "oauth/google-drive/callback"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback?next=/admin"
+            assertInvalid "https://tdf-app.pages.dev/oauth/google-drive/callback#token"
 
     describe "resolveProvidedDriveAccessToken" $ do
         it "normalizes matching token sources and rejects conflicting upload credentials" $ do
@@ -2788,9 +8706,220 @@ main = hspec $ do
                 (Just "ya29.valid\NULtoken")
                 "Google Drive access token must not contain control characters"
             assertInvalid
+                (Just "ya29.valid\x202E\&token")
+                Nothing
+                "Google Drive access token must not contain hidden formatting characters"
+            assertInvalid
+                (Just "ya29.tokén")
+                Nothing
+                "Google Drive access token must contain only ASCII characters"
+            assertInvalid
                 (Just (Data.Text.replicate 4097 "a"))
                 Nothing
                 "Google Drive access token must be 4096 characters or fewer"
+
+    describe "validateConfiguredDriveRefreshToken" $ do
+        it "rejects malformed configured refresh tokens before upload fallback refreshes OAuth" $ do
+            validateConfiguredDriveRefreshToken " 1//refresh-token_123 "
+                `shouldBe` Right "1//refresh-token_123"
+
+            let assertInvalid rawToken expectedMessage =
+                    case validateConfiguredDriveRefreshToken rawToken of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 503
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed configured Drive refresh token, got "
+                                    <> show value
+                                )
+            assertInvalid "   " "DRIVE_REFRESH_TOKEN is required"
+            assertInvalid
+                "refresh token"
+                "DRIVE_REFRESH_TOKEN must not contain whitespace"
+            assertInvalid
+                "refresh\ntoken"
+                "DRIVE_REFRESH_TOKEN must not contain control characters"
+            assertInvalid
+                ("refresh" <> Data.Text.singleton '\x202E' <> "token")
+                "DRIVE_REFRESH_TOKEN must not contain hidden formatting characters"
+            assertInvalid
+                ("refresh" <> Data.Text.singleton '\233' <> "token")
+                "DRIVE_REFRESH_TOKEN must contain only ASCII characters"
+            assertInvalid
+                (Data.Text.replicate 4097 "a")
+                "DRIVE_REFRESH_TOKEN must be 4096 characters or fewer"
+
+    describe "resolveDrivePublicUrl" $ do
+        it "rejects view-only links in Drive webContentLink responses" $ do
+            case eitherDecode
+                "{\"id\":\"1A_B-99\",\"webViewLink\":\"https://drive.google.com/file/d/1A_B-99/view?usp=sharing\",\"webContentLink\":\"https://drive.usercontent.google.com/download?id=1A_B-99&export=download\"}"
+                :: Either String DriveApiResp of
+                    Left err ->
+                        expectationFailure
+                            ("Expected valid Drive response to decode, got: " <> err)
+                    Right resp -> do
+                        darWebViewLink resp
+                            `shouldBe`
+                                Just "https://drive.google.com/file/d/1A_B-99/view?usp=sharing"
+                        darWebContentLink resp
+                            `shouldBe`
+                                Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download"
+
+            case eitherDecode
+                "{\"id\":\"1A_B-99\",\"webContentLink\":\"https://drive.google.com/file/d/1A_B-99/view?usp=sharing\"}"
+                :: Either String DriveApiResp of
+                    Left err ->
+                        err
+                            `shouldContain`
+                                "webContentLink must be a Google Drive download https link"
+                    Right resp ->
+                        expectationFailure
+                            ("Expected view-only webContentLink to be rejected, got: " <> show resp)
+
+        it "uses sanitized Google Drive JSON error messages before raw fallback bodies" $ do
+            let formatted =
+                    formatDriveUploadFailure
+                        404
+                        ( A.encode $
+                            A.object
+                                [ "error" .=
+                                    A.object
+                                        [ "code" .= (404 :: Int)
+                                        , "status" .= ("NOT_FOUND" :: Text)
+                                        , "message" .= ("folder\nnot\NULfound" :: Text)
+                                        , "details" .=
+                                            A.object ["reason" .= ("ignored" :: Text)]
+                                        ]
+                                ]
+                        )
+            formatted `shouldBe` "Drive upload failed with status 404. NOT_FOUND: folder not found"
+
+        it "rejects conflicting Drive resource keys before public URL fallback handling" $ do
+            case eitherDecode
+                ( "{\"id\":\"1A_B-99\","
+                    <> "\"webContentLink\":\"https://drive.usercontent.google.com/download"
+                    <> "?id=1A_B-99&resourcekey=rk_link\","
+                    <> "\"resourceKey\":\"rk_upload\"}"
+                )
+                :: Either String DriveApiResp of
+                    Left err ->
+                        err `shouldContain` "Drive upload response has conflicting resource keys"
+                    Right resp ->
+                        expectationFailure
+                            ("Expected conflicting Drive resource keys to be rejected, got: " <> show resp)
+
+        it "trusts Drive metadata resource keys only from successful responses" $ do
+            decodeDriveMetaResourceKeyIfSuccessful
+                200
+                "{\"resourceKey\":\"rk_meta\"}"
+                `shouldBe` Just "rk_meta"
+            decodeDriveMetaResourceKeyIfSuccessful
+                404
+                "{\"resourceKey\":\"rk_meta\"}"
+                `shouldBe` Nothing
+            decodeDriveMetaResourceKeyIfSuccessful
+                200
+                "{\"resourceKey\":\"rk meta\"}"
+                `shouldBe` Nothing
+
+        it "keeps canonical Google Drive download links only when they point at the uploaded file" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just " https://drive.usercontent.google.com/download?id=1A_B-99&export=download ")
+                Nothing
+                (Just " rk_123 ")
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download&resourcekey=rk_123"
+
+        it "only returns a public Drive URL after the permission grant succeeds" $ do
+            let expectedUrl =
+                    "https://drive.usercontent.google.com/download?id=1A_B-99" <>
+                    "&export=download&resourcekey=rk_123"
+            resolveDrivePublicUrlAfterPermission
+                200
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    Just expectedUrl
+            resolveDrivePublicUrlAfterPermission
+                204
+                "1A_B-99"
+                Nothing
+                Nothing
+                Nothing
+                `shouldBe`
+                    Just "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrlAfterPermission
+                403
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&export=download")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    Nothing
+
+        it "falls back to the canonical download URL when Drive returns an ambiguous or mismatched content link" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/uc?export=download&id=other-file")
+                Nothing
+                (Just "rk_123")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99&resourcekey=rk_123"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/uc?export=download&id=1A_B-99&id=other-file")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/settings/storage?id=1A_B-99")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.google.com/file/d/1A_B-99/view?usp=sharing")
+                Nothing
+                Nothing
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+
+        it "drops Drive resource keys when explicit API fallback candidates disagree" $ do
+            resolveDrivePublicUrl
+                "1A_B-99"
+                Nothing
+                (Just "rk_upload")
+                (Just "rk_meta")
+                `shouldBe`
+                    "https://drive.google.com/uc?export=download&id=1A_B-99"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&resourcekey=rk_link&export=download")
+                (Just "rk_upload")
+                Nothing
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download&resourcekey=rk_upload"
+            resolveDrivePublicUrl
+                "1A_B-99"
+                (Just "https://drive.usercontent.google.com/download?id=1A_B-99&resourcekey=rk_link&export=download")
+                (Just "rk_upload")
+                (Just "rk_meta")
+                `shouldBe`
+                    "https://drive.usercontent.google.com/download?id=1A_B-99&export=download"
+
+    describe "assetsServePathAllowed" $
+        it "keeps the internal evidence subtree outside the public raw asset route" $ do
+            assetsServePathAllowed [] `shouldBe` True
+            assetsServePathAllowed ["inventory", "fixture.png"] `shouldBe` True
+            assetsServePathAllowed [".internal-feedback"] `shouldBe` False
+            assetsServePathAllowed [".internal-feedback", "report", "evidence.png"] `shouldBe` False
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do
@@ -2812,6 +8941,35 @@ main = hspec $ do
                 (Data.Text.replicate 160 "a" <> ".png")
                 `shouldBe` (Data.Text.replicate 116 "a" <> ".png")
 
+    describe "validateFeedbackAttachmentFileName" $ do
+        it "accepts safe attachment names after stable backend sanitization" $
+            validateFeedbackAttachmentFileName "  Bug report final?.png  "
+                `shouldBe` Right "Bug-report-final-.png"
+
+        it "rejects ambiguous attachment names before feedback storage falls back to a generic path" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackAttachmentFileName raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment file name, got " <> show value)
+            assertInvalid "   " "attachment file name is required"
+            assertInvalid "../secret.png" "attachment file name must not contain path separators"
+            assertInvalid "folder\\secret.png" "attachment file name must not contain path separators"
+            assertInvalid "screen\8203shot.png" "attachment file name must not contain control characters"
+            assertInvalid
+                (Data.Text.replicate 121 "a" <> ".png")
+                "attachment file name must be 120 characters or fewer"
+            assertInvalid "__--__" "attachment file name must include a usable name"
+            assertInvalid "debug.html" "attachment file name extension is not allowed"
+            assertInvalid "debug.html.txt" "attachment file name extension is not allowed"
+            assertInvalid "payload.exe" "attachment file name extension is not allowed"
+            assertInvalid "payload.exe.png" "attachment file name extension is not allowed"
+            assertInvalid "script.JS" "attachment file name extension is not allowed"
+            assertInvalid "vector.svg" "attachment file name extension is not allowed"
+
     describe "validateFeedbackAttachmentSize" $ do
         it "accepts non-empty boundary-sized feedback attachments" $ do
             validateFeedbackAttachmentSize 1 `shouldBe` Right ()
@@ -2829,11 +8987,91 @@ main = hspec $ do
             assertInvalid 0 "attachment must not be empty"
             assertInvalid (10 * 1024 * 1024 + 1) "attachment must be 10 MB or smaller"
 
+    describe "validateFeedbackAttachmentContentType" $ do
+        it "normalizes supported feedback attachment media types before storing uploads" $ do
+            validateFeedbackAttachmentContentType " Image/PNG; charset=binary "
+                `shouldBe` Right "image/png"
+            validateFeedbackAttachmentContentType "application/pdf"
+                `shouldBe` Right "application/pdf"
+            validateFeedbackAttachmentContentType "text/plain; charset=utf-8"
+                `shouldBe` Right "text/plain"
+            validateFeedbackAttachmentContentType "text/csv"
+                `shouldBe` Right "text/csv"
+
+        it "rejects ambiguous or executable-like feedback attachment media types" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateFeedbackAttachmentContentType raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment content type, got " <> show value)
+            assertInvalid "   " "attachment content type is required"
+            assertInvalid
+                (Data.Text.replicate 101 "a")
+                "attachment content type must be 100 characters or fewer"
+            assertInvalid
+                "image/png;\nContent-Type: text/html"
+                "attachment content type must not contain control characters"
+            assertInvalid
+                ("image/png" <> "\x202E")
+                "attachment content type must not contain control characters"
+            assertInvalid
+                "image/png; text/html"
+                "attachment content type parameters must be key=value tokens"
+            assertInvalid
+                "image/png;"
+                "attachment content type parameters must be key=value tokens"
+            assertInvalid
+                "image/png; name=payload.html"
+                "attachment content type must not include filename parameters"
+            assertInvalid
+                "application/pdf; filename*=utf-8''payload.html"
+                "attachment content type must not include filename parameters"
+            assertInvalid
+                "application/pdf; filename*0=payload; filename*1=.html"
+                "attachment content type must not include filename parameters"
+            assertInvalid
+                "text/html"
+                "attachment content type must be a PDF, image, plain text, or CSV file"
+            assertInvalid
+                "application/javascript"
+                "attachment content type must be a PDF, image, plain text, or CSV file"
+
+    describe "validateFeedbackAttachmentMetadata" $ do
+        it "accepts attachment filenames only when their extensions match the content type" $ do
+            validateFeedbackAttachmentMetadata
+                "  screenshot.JPG  "
+                " Image/JPEG; charset=binary "
+                `shouldBe` Right ("screenshot.JPG", "image/jpeg")
+            validateFeedbackAttachmentMetadata "debug log.txt" "text/plain"
+                `shouldBe` Right ("debug-log.txt", "text/plain")
+            validateFeedbackAttachmentMetadata "export.csv" "application/csv"
+                `shouldBe` Right ("export.csv", "application/csv")
+
+        it "rejects mismatched or missing attachment extensions before feedback storage" $ do
+            let assertInvalid rawName rawContentType =
+                    case validateFeedbackAttachmentMetadata rawName rawContentType of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "attachment file name extension must match its content type"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid attachment metadata, got " <> show value)
+            assertInvalid "screenshot.png" "application/pdf"
+            assertInvalid "report.pdf" "image/png"
+            assertInvalid "debug-log" "text/plain"
+
     describe "feedback multipart parsing" $ do
         it "accepts omitted consent as false and normalizes explicit truthy values" $ do
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "  Broken flow  ")
                     , ("description", "  Steps to reproduce  ")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     ]) :: Either String FeedbackPayload of
                 Left err ->
                     expectationFailure ("Expected feedback payload without consent to parse, got: " <> err)
@@ -2845,12 +9083,45 @@ main = hspec $ do
             case fromMultipart (mkFeedbackMultipart
                     [ ("title", "Broken flow")
                     , ("description", "Steps to reproduce")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     , ("consent", " yes ")
                     ]) :: Either String FeedbackPayload of
                 Left err ->
                     expectationFailure ("Expected truthy feedback consent to parse, got: " <> err)
                 Right payload ->
                     fpConsent payload `shouldBe` True
+
+        it "requires and trims canonical catalog IDs while normalizing optional contact data" $
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("categoryId", " 11111111-1111-1111-1111-111111111111 ")
+                    , ("severityId", " 22222222-2222-2222-2222-222222222222 ")
+                    , ("contactEmail", " user@example.com ")
+                    ]) :: Either String FeedbackPayload of
+                Left err ->
+                    expectationFailure ("Expected optional feedback fields to parse, got: " <> err)
+                Right payload -> do
+                    fpCategoryId payload `shouldBe` "11111111-1111-1111-1111-111111111111"
+                    fpSeverityId payload `shouldBe` "22222222-2222-2222-2222-222222222222"
+                    fpContactEmail payload `shouldBe` Just "user@example.com"
+
+        it "rejects missing canonical IDs and obsolete string relationship fields" $ do
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    ]) :: Either String FeedbackPayload of
+                Left err -> err `shouldContain` "Missing field: categoryId"
+                Right payload -> expectationFailure ("Expected missing IDs to be rejected, got: " <> show payload)
+            case fromMultipart (mkFeedbackMultipart
+                    [ ("title", "Broken flow")
+                    , ("description", "Steps to reproduce")
+                    , ("category", "bug")
+                    , ("severity", "P2")
+                    ]) :: Either String FeedbackPayload of
+                Left err -> err `shouldContain` "Unexpected field: category"
+                Right payload -> expectationFailure ("Expected legacy feedback fields to be rejected, got: " <> show payload)
 
         it "rejects malformed consent values instead of silently coercing them to false" $
             case fromMultipart (mkFeedbackMultipart
@@ -2889,6 +9160,8 @@ main = hspec $ do
             case fromMultipart (mkFeedbackMultipartWithFiles
                     [ ("title", "Broken flow")
                     , ("description", "Steps to reproduce")
+                    , ("categoryId", "11111111-1111-1111-1111-111111111111")
+                    , ("severityId", "22222222-2222-2222-2222-222222222222")
                     ]
                     [ mkFeedbackAttachment "first.png"
                     , mkFeedbackAttachment "second.png"
@@ -2947,6 +9220,21 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected invalid invitation status to be rejected, got " <> show value)
 
+    describe "validateInvitationStatusUpdateInput" $ do
+        it "preserves the current invitation status when an update omits the field" $ do
+            validateInvitationStatusUpdateInput Nothing `shouldBe` Right Nothing
+
+        it "canonicalizes explicit update statuses and rejects blank updates that would silently reset state" $ do
+            validateInvitationStatusUpdateInput (Just " Accepted ")
+                `shouldBe` Right (Just "accepted")
+            case validateInvitationStatusUpdateInput (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "pending, accepted, declined"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank invitation update status to be rejected, got " <> show value)
+
     describe "validateInvitationToPartyId" $ do
         it "accepts positive numeric ids and canonicalizes them" $ do
             validateInvitationToPartyId " 0042 " `shouldBe` Right "42"
@@ -2997,9 +9285,11 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid social sync id to be rejected, got " <> show value)
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "   "
+            assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "+12"
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "-12"
             assertInvalid "artistPartyId must be a positive integer" validateSocialSyncArtistPartyId "0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "abc"
+            assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "7.0"
             assertInvalid "artistProfileId must be a positive integer" validateSocialSyncArtistProfileId "-1"
 
     describe "social sync platform validation" $ do
@@ -3042,6 +9332,12 @@ main = hspec $ do
             assertInvalid "externalPostId must not contain whitespace" "ig media 42"
             assertInvalid "externalPostId must not contain whitespace" "ig-media\n42"
             assertInvalid
+                "externalPostId must not contain control characters"
+                ("ig-media" <> Data.Text.singleton '\NUL' <> "42")
+            assertInvalid
+                "externalPostId must not contain hidden formatting characters"
+                ("ig-media" <> Data.Text.singleton '\x200D' <> "42")
+            assertInvalid
                 "externalPostId must be 256 characters or fewer"
                 (Data.Text.replicate 257 "a")
 
@@ -3069,6 +9365,34 @@ main = hspec $ do
                 (Data.Text.replicate 65 "a")
                 "ingestSource must be 64 characters or fewer"
 
+    describe "social sync caption validation" $ do
+        it "normalizes optional captions before summary and tag fallback handling" $ do
+            validateSocialSyncCaption Nothing `shouldBe` Right Nothing
+            validateSocialSyncCaption (Just "   ") `shouldBe` Right Nothing
+            validateSocialSyncCaption (Just "  New single out now\nstream it  ")
+                `shouldBe` Right (Just "New single out now\nstream it")
+
+        it "rejects oversized or hidden-control captions before social sync rows are stored" $ do
+            let assertInvalid raw expected =
+                    case validateSocialSyncCaption (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid social sync caption to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (Data.Text.replicate 8193 "a")
+                "caption must be 8192 characters or fewer"
+            assertInvalid
+                ("New single" <> Data.Text.singleton '\NUL')
+                "caption must not contain unsupported control"
+            assertInvalid
+                ("New single" <> Data.Text.singleton '\x202E' <> "out now")
+                "caption must not contain unsupported control"
+
     describe "social sync permalink validation" $ do
         it "normalizes omitted, blank, and valid public permalink URLs before storage" $ do
             validateSocialSyncPermalink Nothing `shouldBe` Right Nothing
@@ -3088,10 +9412,10 @@ main = hspec $ do
                                     <> show value
                                 )
             assertInvalid "https://instagram.com/p/post 42" "permalink must not contain whitespace"
-            assertInvalid "/p/post-42" "permalink must be an absolute public http(s) URL"
-            assertInvalid "javascript:alert(1)" "permalink must be an absolute public http(s) URL"
-            assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public http(s) URL"
-            assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public http(s) URL"
+            assertInvalid "/p/post-42" "permalink must be an absolute public https URL"
+            assertInvalid "javascript:alert(1)" "permalink must be an absolute public https URL"
+            assertInvalid "https://localhost/p/post-42" "permalink must be an absolute public https URL"
+            assertInvalid "https://user@example.com/p/post-42" "permalink must be an absolute public https URL"
             assertInvalid
                 ("https://instagram.com/p/" <> Data.Text.replicate 2049 "a")
                 "permalink must be 2048 characters or fewer"
@@ -3148,7 +9472,7 @@ main = hspec $ do
                     case validateSocialSyncMediaUrls (Just [raw]) of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` "absolute public http(s) URLs"
+                            BL.unpack (errBody err) `shouldContain` "absolute public https URLs"
                         Right value ->
                             expectationFailure
                                 ( "Expected invalid social sync mediaUrl to be rejected, got "
@@ -3239,7 +9563,7 @@ main = hspec $ do
                         [ mkIngestPost "instagram" "ig-media-42" (Just "manual")
                         , mkIngestPost "facebook" "fb-post-7" (Just "meta_ads")
                         ]
-            (result, runs) <- runSocialSyncIngestHandler request
+            (result, posts, runs) <- runSocialSyncIngestHandler request
             case result of
                 Left err ->
                     expectationFailure ("Expected mixed social sync ingest to succeed, got: " <> show err)
@@ -3247,12 +9571,148 @@ main = hspec $ do
                     ssirInserted response `shouldBe` 2
                     ssirUpdated response `shouldBe` 0
                     ssirTotal response `shouldBe` 2
+            length posts `shouldBe` 2
             case runs of
                 [run] -> do
                     socialSyncRunPlatform run `shouldBe` "mixed"
                     socialSyncRunIngestSource run `shouldBe` "mixed"
                 _ ->
                     expectationFailure ("Expected one social sync run audit row, got: " <> show runs)
+
+        it "rejects duplicate normalized post identities before recording ambiguous ingest audit rows" $ do
+            let mkIngestPost platform externalPostId =
+                    SocialSyncPostIn
+                        { sspPlatform = platform
+                        , sspExternalPostId = externalPostId
+                        , sspCaption = Nothing
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Nothing
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                request =
+                    SocialSyncIngestRequest
+                        [ mkIngestPost "instagram" " ig-media-42 "
+                        , mkIngestPost " Instagram " "ig-media-42"
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "posts must not contain duplicate platform/externalPostId pairs"
+                Right response ->
+                    expectationFailure
+                        ("Expected duplicate social sync ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects negative direct metric payloads before recording ingest audit rows" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-negative-metric"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Just (-1)
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "likeCount must be greater than or equal to 0"
+                Right response ->
+                    expectationFailure
+                        ("Expected negative metric ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects future postedAt values before recording ingest audit rows" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-future"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt =
+                                Just
+                                    ( UTCTime
+                                        (fromGregorian 2999 1 1)
+                                        (secondsToDiffTime 0)
+                                    )
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain`
+                            "postedAt must not be more than five minutes in the future"
+                Right response ->
+                    expectationFailure
+                        ("Expected future postedAt ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "normalizes captions before persisting summary and tag data" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-caption"
+                            , sspCaption = Just "  New single out now  "
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Nothing
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, _runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err ->
+                    expectationFailure ("Expected social sync ingest to succeed, got: " <> show err)
+                Right response ->
+                    ssirInserted response `shouldBe` 1
+            case posts of
+                [post] -> do
+                    socialSyncPostCaption post `shouldBe` Just "New single out now"
+                    socialSyncPostSummary post `shouldBe` Just "New single out now"
+                    socialSyncPostTags post `shouldBe` Just "release"
+                _ ->
+                    expectationFailure ("Expected one stored social sync post, got: " <> show posts)
 
         it "rejects ambiguous media URL lists before recording ingest audit rows" $ do
             let request =
@@ -3273,13 +9733,160 @@ main = hspec $ do
                             , sspViewCount = Nothing
                             }
                         ]
-            (result, runs) <- runSocialSyncIngestHandler request
+            (result, posts, runs) <- runSocialSyncIngestHandler request
             case result of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "mediaUrls entries must not be blank"
                 Right response ->
                     expectationFailure ("Expected invalid social sync ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects the full batch before writing any posts when a later payload is invalid" $ do
+            let validPost =
+                    SocialSyncPostIn
+                        { sspPlatform = "instagram"
+                        , sspExternalPostId = "ig-media-42"
+                        , sspCaption = Just "New single out now"
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Just ["https://cdn.example.com/post.jpg"]
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                invalidPost =
+                    SocialSyncPostIn
+                        { sspPlatform = "instagram"
+                        , sspExternalPostId = "ig-media-43"
+                        , sspCaption = Nothing
+                        , sspPermalink = Nothing
+                        , sspMediaUrls = Just ["https://cdn.example.com/post-2.jpg", "   "]
+                        , sspPostedAt = Nothing
+                        , sspArtistPartyId = Nothing
+                        , sspArtistProfileId = Nothing
+                        , sspIngestSource = Nothing
+                        , sspLikeCount = Nothing
+                        , sspCommentCount = Nothing
+                        , sspShareCount = Nothing
+                        , sspViewCount = Nothing
+                        }
+                request = SocialSyncIngestRequest [validPost, invalidPost]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "mediaUrls entries must not be blank"
+                Right response ->
+                    expectationFailure ("Expected invalid social sync batch to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "infers artistPartyId from artistProfileId before persisting social sync rows" $ do
+            let setup = do
+                    partyId <- insertSocialSyncPartyFixture 21 "Artist Party"
+                    _ <- insertSocialSyncArtistProfileFixture 7 partyId
+                    pure ()
+                request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-profile-only"
+                            , sspCaption = Just "Profile-linked post"
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Just "7"
+                            , sspIngestSource = Just "manual"
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandlerWithSetup setup request
+            case result of
+                Left err ->
+                    expectationFailure ("Expected profile-linked social sync ingest to succeed, got: " <> show err)
+                Right response -> do
+                    ssirInserted response `shouldBe` 1
+                    ssirUpdated response `shouldBe` 0
+                    ssirTotal response `shouldBe` 1
+            case posts of
+                [post] -> do
+                    fmap fromSqlKey (socialSyncPostArtistPartyId post) `shouldBe` Just 21
+                    fmap fromSqlKey (socialSyncPostArtistProfileId post) `shouldBe` Just 7
+                _ ->
+                    expectationFailure ("Expected one stored social sync post, got: " <> show posts)
+            length runs `shouldBe` 1
+
+        it "rejects unknown artistProfileId values before any social sync rows are written" $ do
+            let request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-missing-profile"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Nothing
+                            , sspArtistProfileId = Just "999"
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandler request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 404
+                    BL.unpack (errBody err) `shouldContain` "artistProfileId not found"
+                Right response ->
+                    expectationFailure ("Expected missing artistProfileId ingest to fail, got: " <> show response)
+            length posts `shouldBe` 0
+            length runs `shouldBe` 0
+
+        it "rejects mismatched artistPartyId and artistProfileId before writing social sync rows" $ do
+            let setup = do
+                    _ <- insertSocialSyncPartyFixture 21 "Artist Party A"
+                    otherPartyId <- insertSocialSyncPartyFixture 22 "Artist Party B"
+                    _ <- insertSocialSyncArtistProfileFixture 7 otherPartyId
+                    pure ()
+                request =
+                    SocialSyncIngestRequest
+                        [ SocialSyncPostIn
+                            { sspPlatform = "instagram"
+                            , sspExternalPostId = "ig-media-mismatched-artist"
+                            , sspCaption = Nothing
+                            , sspPermalink = Nothing
+                            , sspMediaUrls = Nothing
+                            , sspPostedAt = Nothing
+                            , sspArtistPartyId = Just "21"
+                            , sspArtistProfileId = Just "7"
+                            , sspIngestSource = Nothing
+                            , sspLikeCount = Nothing
+                            , sspCommentCount = Nothing
+                            , sspShareCount = Nothing
+                            , sspViewCount = Nothing
+                            }
+                        ]
+            (result, posts, runs) <- runSocialSyncIngestHandlerWithSetup setup request
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "artistProfileId must belong to artistPartyId"
+                Right response ->
+                    expectationFailure ("Expected mismatched artist references to fail, got: " <> show response)
+            length posts `shouldBe` 0
             length runs `shouldBe` 0
 
     describe "social sync posts limit validation" $ do
@@ -3298,6 +9905,25 @@ main = hspec $ do
             assertInvalid 0
             assertInvalid (-5)
             assertInvalid 501
+
+    describe "social sync tag filter validation" $ do
+        it "normalizes omitted, blank, and canonical tag labels" $ do
+            validateSocialSyncTagFilter Nothing `shouldBe` Right Nothing
+            validateSocialSyncTagFilter (Just "   ") `shouldBe` Right Nothing
+            validateSocialSyncTagFilter (Just " Release_2026 ")
+                `shouldBe` Right (Just "release_2026")
+
+        it "rejects malformed tag filters before fallback tag scans run" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateSocialSyncTagFilter (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid social sync tag to be rejected, got " <> show value)
+            assertInvalid "release show" "tag must contain only ASCII letters"
+            assertInvalid "release\nshow" "tag must contain only ASCII letters"
+            assertInvalid (Data.Text.replicate 65 "x") "tag must be 64 characters or fewer"
 
     describe "social sync posts list handler" $ do
         it "applies the tag filter before the response limit so tagged queries do not miss older matches" $ do
@@ -3324,6 +9950,17 @@ main = hspec $ do
                     expectationFailure ("Expected blank-tag social sync query to succeed, got: " <> show err)
                 Right posts ->
                     map sspdExternalPostId posts `shouldBe` ["ig-general-newest"]
+
+        it "rejects malformed tag filters before issuing broad fallback queries" $ do
+            let setup =
+                    insert_ (mkSocialSyncPost "instagram" "ig-release" (Just "release") currentSocialSyncTestTime)
+            result <- runSocialSyncListHandler setup Nothing Nothing Nothing (Just "release show") (Just 1)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "tag must contain only ASCII letters"
+                Right posts ->
+                    expectationFailure ("Expected malformed tag filter to fail, got: " <> show posts)
 
     describe "social events update payload parsing" $ do
         it "distinguishes missing metadata fields from explicit nulls for event updates" $ do
@@ -3355,6 +9992,24 @@ main = hspec $ do
                 Right parsed ->
                     iudMessageUpdate parsed `shouldBe` FieldNull
 
+        it "maps legacy venueContact updates to the phone field and rejects conflicting aliases" $ do
+            case eitherDecode "{\"venueName\":\"Sala Uno\",\"venueContact\":\"+593991234567\"}"
+                :: Either String VenueUpdateDTO of
+                Left err ->
+                    expectationFailure err
+                Right parsed ->
+                    vcuPhone (vudContactUpdate parsed) `shouldBe` FieldValue "+593991234567"
+
+            (eitherDecode
+                "{\"venueName\":\"Sala Uno\",\"venuePhone\":\"+593991234567\",\"venueContact\":\"+593991234568\"}"
+                :: Either String VenueUpdateDTO)
+                `shouldSatisfy` isLeft
+
+            (eitherDecode
+                "{\"venueName\":\"Sala Uno\",\"venueContact\":\"{\\\"phone\\\":\\\"+593991234567\\\"}\"}"
+                :: Either String VenueUpdateDTO)
+                `shouldSatisfy` isLeft
+
         it "rejects unexpected venue update keys so contact typos fail instead of no-oping" $
             case eitherDecode
                 "{\"venueName\":\"Sala Uno\",\"venuePhoneNumber\":\"+593991234567\"}"
@@ -3374,6 +10029,192 @@ main = hspec $ do
                     expectationFailure
                         ("Expected unexpected invitation update keys to be rejected, got " <> show parsed)
 
+        it "rejects unexpected invitation create keys before handlers silently ignore typos" $
+            case eitherDecode
+                "{\"invitationToPartyId\":\"12\",\"invitationStatus\":\"pending\",\"message\":\"typo\"}"
+                :: Either String InvitationDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure
+                        ("Expected unexpected invitation create keys to be rejected, got " <> show parsed)
+
+    describe "social event moment request parsing" $ do
+        it "accepts canonical moment payloads and rejects unexpected keys before handlers silently ignore them" $ do
+            case eitherDecode
+                "{\"emCreateAuthorName\":\"Ada\",\"emCreateCaption\":\"Aftermovie\",\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":1080}"
+                :: Either String EventMomentCreateDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment create payload to decode, got " <> err)
+                Right parsed -> do
+                    emCreateAuthorName parsed `shouldBe` Just "Ada"
+                    emCreateCaption parsed `shouldBe` Just "Aftermovie"
+                    emCreateMediaUrl parsed `shouldBe` "https://cdn.example.com/moment.jpg"
+                    emCreateMediaType parsed `shouldBe` "image"
+                    emCreateMediaWidth parsed `shouldBe` Just 1080
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment reaction payload to decode, got " <> err)
+                Right parsed ->
+                    emrrReactionTypeId parsed `shouldBe` "50800000-0000-4000-8000-000000000001"
+
+            case eitherDecode
+                "{\"emccAuthorName\":\"Ada\",\"emccBody\":\"Set impecable\"}"
+                :: Either String EventMomentCommentCreateDTO of
+                Left err ->
+                    expectationFailure ("Expected canonical moment comment payload to decode, got " <> err)
+                Right parsed -> do
+                    emccAuthorName parsed `shouldBe` Just "Ada"
+                    emccBody parsed `shouldBe` "Set impecable"
+
+            case eitherDecode
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"unexpected\":true}"
+                :: Either String EventMomentCreateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment create key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\",\"reaction\":\"love\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment reaction key to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"fire\"}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    err `shouldContain` "canonical UUID"
+                Right parsed ->
+                    expectationFailure ("Expected reaction labels to be rejected, got " <> show parsed)
+
+            case eitherDecode
+                "{\"emccBody\":\"Set impecable\",\"comment\":\"typo\"}"
+                :: Either String EventMomentCommentCreateDTO of
+                Left err ->
+                    err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected unexpected moment comment key to be rejected, got " <> show parsed)
+
+    describe "fan club content reaction request parsing" $ do
+        it "accepts only the canonical content-reaction UUID field" $ do
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000004\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err ->
+                    expectationFailure ("Expected canonical content reaction payload to decode, got " <> err)
+                Right parsed ->
+                    DTO.crrReactionTypeId parsed
+                        `shouldBe` UUID.fromWords 0x50900000 0x00004000 0x80000000 0x00000004
+
+            case eitherDecode
+                "{\"crrReactionTypeId\":\"50900000-0000-4000-8000-000000000001\",\"crrReaction\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq of
+                Left err -> err `shouldContain` "unknown fields"
+                Right parsed ->
+                    expectationFailure ("Expected obsolete content reaction strings to be rejected, got " <> show parsed)
+
+            (eitherDecode "{\"crrReactionTypeId\":\"fire\"}"
+                :: Either String DTO.ContentReactionReq)
+                `shouldSatisfy` isLeft
+
+    describe "fan club creator badge response contract" $ do
+        it "serializes canonical UUID identity and bilingual presentation instead of a badge string" $ do
+            let badgeId = fromMaybe UUID.nil (UUID.fromText "50a00000-0000-4000-8000-000000000003")
+                awardedAt = posixSecondsToUTCTime 0
+                payload = A.toJSON DTO.CreatorBadgeDTO
+                    { DTO.cbBadgeTypeId = badgeId
+                    , DTO.cbCode = "og"
+                    , DTO.cbNameEs = "Miembro fundador"
+                    , DTO.cbNameEn = "Founding member"
+                    , DTO.cbAwardedAt = awardedAt
+                    , DTO.cbExpiresAt = Nothing
+                    }
+            payload `shouldBe` A.object
+                [ "cbBadgeTypeId" .= badgeId
+                , "cbCode" .= ("og" :: Text)
+                , "cbNameEs" .= ("Miembro fundador" :: Text)
+                , "cbNameEn" .= ("Founding member" :: Text)
+                , "cbAwardedAt" .= awardedAt
+                , "cbExpiresAt" .= (Nothing :: Maybe UTCTime)
+                ]
+
+    describe "inventory asset image upload multipart parsing" $ do
+        it "rejects Unicode space lookalikes before storage filename fallbacks sanitize them" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String Inventory.AssetUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected invalid inventory asset upload metadata, got: "
+                                    <> Data.Text.unpack (fdFileName (Inventory.aufFile parsed))
+                                )
+
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "Front panel.png")]
+                    [mkEventImageFile "file" "front-panel.png"])
+                :: Either String Inventory.AssetUploadForm of
+                Left err ->
+                    expectationFailure ("Expected canonical asset upload form to parse, got: " <> err)
+                Right parsed ->
+                    Inventory.aufName parsed `shouldBe` Just "Front panel.png"
+
+            assertInvalid
+                "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    [("name", "front" <> Data.Text.singleton '\x00A0' <> "panel.png")]
+                    [mkEventImageFile "file" "front-panel.png"])
+            assertInvalid
+                "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" ("front" <> Data.Text.singleton '\x2007' <> "panel.png")])
+            assertInvalid
+                "Asset upload MIME type must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "front-panel.png")
+                        { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
+                    ])
+            assertInvalid
+                "Uploaded file name must be 218 characters or fewer"
+                (mkEventImageMultipart
+                    [("name", "front-panel.png")]
+                    [mkEventImageFile "file" (Data.Text.replicate 215 "a" <> ".png")])
+
+        it "rejects hidden executable or vector extensions before storage filename fallbacks" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String Inventory.AssetUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected dangerous inventory asset upload name to be "
+                                    <> "rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (Inventory.aufFile parsed))
+                                )
+
+            assertInvalid
+                "Asset upload file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    [("name", "amp.jar.png")]
+                    [mkEventImageFile "file" "amp.png"])
+            assertInvalid
+                "Uploaded file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster.svgz.png"])
+
     describe "social event image upload multipart parsing" $ do
         it "accepts the canonical file plus optional display name" $
             case fromMultipart
@@ -3386,6 +10227,38 @@ main = hspec $ do
                 Right parsed -> do
                     eiuName parsed `shouldBe` Just "Poster final"
                     fdFileName (eiuFile parsed) `shouldBe` "poster.png"
+
+        it "rejects blank explicit image names instead of silently using browser filename fallbacks" $
+            case fromMultipart
+                (mkEventImageMultipart
+                    [("name", "   ")]
+                    [mkEventImageFile "file" "poster.png"])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err
+                        `shouldContain`
+                            "name must not be blank; omit it to use the browser file name"
+                Right parsed ->
+                    expectationFailure
+                        ( "Expected blank event image upload name to be rejected, got file: "
+                            <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                        )
+
+        it "rejects uploads with no usable image name or browser filename" $
+            case fromMultipart
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "   "])
+                :: Either String EventImageUploadForm of
+                Left err ->
+                    err
+                        `shouldContain`
+                            "Either image name or uploaded browser file name must be provided"
+                Right parsed ->
+                    expectationFailure
+                        ( "Expected unnamed event image upload to be rejected, got file: "
+                            <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                        )
 
         it "rejects duplicate or unexpected multipart parts instead of silently ignoring upload intent" $ do
             case fromMultipart
@@ -3432,32 +10305,202 @@ main = hspec $ do
                 Right _ ->
                     expectationFailure "Expected duplicate image file field to be rejected"
 
+        it "rejects path-like or control-character image names before storage sanitizes them" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected unsafe event image upload name to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image name must not contain path separators"
+                (mkEventImageMultipart
+                    [("name", "posters/final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded image name must not contain control characters"
+                (mkEventImageMultipart
+                    [("name", "poster\nfinal.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded image name must not contain control characters or Unicode formatting marks"
+                (mkEventImageMultipart
+                    [("name", "poster\x202E\&final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                ( "Uploaded image name must not contain control characters or Unicode formatting marks"
+                    <> ", or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    [("name", "poster" <> Data.Text.singleton '\x00A0' <> "final.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain path separators"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "posters/final.png"])
+            assertInvalid
+                ( "Uploaded image name must not contain URL delimiters "
+                    <> "or percent-encoded path markers"
+                )
+                (mkEventImageMultipart
+                    [("name", "posters%2Ffinal.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                ( "Uploaded browser file name must not contain URL delimiters "
+                    <> "or percent-encoded path markers"
+                )
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster#final.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain control characters"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster\nfinal.png"])
+            assertInvalid
+                "Uploaded browser file name must not contain control characters or Unicode formatting marks"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster\x200B\&final.png"])
+            assertInvalid
+                ( "Uploaded browser file name must not contain control characters or Unicode formatting marks"
+                    <> ", or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    []
+                    [ mkEventImageFile
+                        "file"
+                        ("poster" <> Data.Text.singleton '\x2007' <> "final.png")
+                    ])
+            assertInvalid
+                "Uploaded image name must include a non-empty base name"
+                (mkEventImageMultipart
+                    [("name", ".png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded image name must include a non-empty base name"
+                (mkEventImageMultipart
+                    [("name", "-.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must include a non-empty base name"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" ".png"])
+            assertInvalid
+                "Uploaded browser file name must include a non-empty base name"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "-.png"])
+            assertInvalid
+                "Uploaded image name must be 180 characters or fewer"
+                (mkEventImageMultipart
+                    [("name", Data.Text.replicate 181 "a" <> ".png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must be 180 characters or fewer"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" (Data.Text.replicate 181 "a" <> ".png")])
+
+        it "rejects hidden executable, vector, or document extensions before event image storage" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected dangerous event image upload name to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    [("name", "poster.pdf.png")]
+                    [mkEventImageFile "file" "poster.png"])
+            assertInvalid
+                "Uploaded browser file name must not hide executable or document extensions"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster.svgz.png"])
+
+        it "rejects non-image or mismatched upload metadata before handler storage fallbacks run" $ do
+            let assertInvalid :: String -> MultipartData Tmp -> Expectation
+                assertInvalid expectedMessage multipart =
+                    case fromMultipart multipart :: Either String EventImageUploadForm of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right parsed ->
+                            expectationFailure
+                                ( "Expected invalid event image upload metadata to be rejected, got: "
+                                    <> Data.Text.unpack (fdFileName (eiuFile parsed))
+                                )
+
+            assertInvalid
+                "Uploaded image must be a raster image"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.pdf")
+                        { fdFileCType = "application/pdf" }
+                    ])
+            assertInvalid
+                "Uploaded image MIME type must not contain control characters"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png\n" }
+                    ])
+            assertInvalid
+                ( "Uploaded image MIME type must not contain control characters "
+                    <> "or Unicode formatting marks, or non-ASCII spaces"
+                )
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png" <> Data.Text.singleton '\x00A0' }
+                    ])
+            assertInvalid
+                "Uploaded image MIME type must not include filename parameters"
+                (mkEventImageMultipart
+                    []
+                    [ (mkEventImageFile "file" "poster.png")
+                        { fdFileCType = "image/png; filename=poster.html" }
+                    ])
+            assertInvalid
+                "Uploaded image file name must include a supported image extension"
+                (mkEventImageMultipart
+                    []
+                    [mkEventImageFile "file" "poster"])
+            assertInvalid
+                "Uploaded image extension must match its MIME type"
+                (mkEventImageMultipart
+                    [("name", "poster.jpg")]
+                    [mkEventImageFile "file" "poster.png"])
+
     describe "validateEventMetadataUpdate" $ do
         let baseUpdate = EventMetadataUpdateDTO
                 { emuTicketUrl = FieldMissing
                 , emuImageUrl = FieldMissing
                 , emuIsPublic = FieldMissing
-                , emuType = FieldMissing
-                , emuStatus = FieldMissing
                 , emuCurrency = FieldMissing
                 , emuBudgetCents = FieldMissing
                 }
 
-        it "normalizes supported event type/status updates and keeps blank values as explicit clears" $ do
+        it "normalizes supported currency updates" $ do
             validateEventMetadataUpdate
                 baseUpdate
-                    { emuType = FieldValue " FESTIVAL "
-                    , emuStatus = FieldValue " canceled "
-                    , emuCurrency = FieldValue " usd "
-                    }
+                    { emuCurrency = FieldValue " usd " }
                 `shouldBe` Right
                     baseUpdate
-                        { emuType = FieldValue "festival"
-                        , emuStatus = FieldValue "cancelled"
-                        , emuCurrency = FieldValue "USD"
-                        }
-            validateEventMetadataUpdate baseUpdate { emuType = FieldValue "   " }
-                `shouldBe` Right baseUpdate { emuType = FieldNull }
+                        { emuCurrency = FieldValue "USD" }
             validateEventMetadataUpdate baseUpdate { emuCurrency = FieldValue "   " }
                 `shouldBe` Right baseUpdate { emuCurrency = FieldNull }
 
@@ -3470,52 +10513,64 @@ main = hspec $ do
                         Right value ->
                             expectationFailure ("Expected invalid event metadata update to be rejected, got " <> show value)
             assertInvalid
-                baseUpdate { emuType = FieldValue "warehouse" }
-                "eventType must be one of: party, concert, festival, conference, showcase, other"
-            assertInvalid
-                baseUpdate { emuStatus = FieldValue "sold_out" }
-                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-            assertInvalid
                 baseUpdate { emuCurrency = FieldValue "usdollars" }
                 "eventCurrency must be a 3-letter ISO code"
 
-    describe "validateEventCreateTypeStatus" $ do
-        it "defaults omitted or blank create values and normalizes supported explicit values" $ do
-            validateEventCreateTypeStatus Nothing Nothing
-                `shouldBe` Right ("party", "planning")
-            validateEventCreateTypeStatus (Just "   ") (Just " canceled ")
-                `shouldBe` Right ("party", "cancelled")
-            validateEventCreateTypeStatus (Just " FESTIVAL ") Nothing
-                `shouldBe` Right ("festival", "planning")
-
-        it "rejects invalid explicit create values instead of silently falling back" $ do
-            let assertInvalid result expected =
-                    case result of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 400
-                            BL.unpack (errBody err) `shouldContain` expected
-                        Right value ->
-                            expectationFailure ("Expected invalid event create metadata to be rejected, got " <> show value)
-            assertInvalid
-                (validateEventCreateTypeStatus (Just "warehouse") Nothing)
-                "eventType must be one of: party, concert, festival, conference, showcase, other"
-            assertInvalid
-                (validateEventCreateTypeStatus Nothing (Just "sold_out"))
-                "eventStatus must be one of: planning, announced, on_sale, live, completed, cancelled"
-
     describe "validateEventCurrencyInput" $ do
-        it "defaults omitted or blank create currencies to USD and normalizes explicit ISO codes" $ do
-            validateEventCurrencyInput Nothing `shouldBe` Right "USD"
-            validateEventCurrencyInput (Just "   ") `shouldBe` Right "USD"
-            validateEventCurrencyInput (Just " eur ") `shouldBe` Right "EUR"
+        it "uses the configured default for omitted values and normalizes explicit ISO codes" $ do
+            validateEventCurrencyInput "EUR" Nothing `shouldBe` Right "EUR"
+            validateEventCurrencyInput "EUR" (Just "   ") `shouldBe` Right "EUR"
+            validateEventCurrencyInput "EUR" (Just " jpy ") `shouldBe` Right "JPY"
 
         it "rejects malformed explicit event currencies instead of storing opaque metadata" $ do
-            case validateEventCurrencyInput (Just "usdollars") of
+            case validateEventCurrencyInput "EUR" (Just "usdollars") of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err) `shouldContain` "eventCurrency must be a 3-letter ISO code"
+                    BL.unpack (errBody err) `shouldContain` "eventCurrency must be a valid ISO 4217 code"
                 Right value ->
                     expectationFailure ("Expected invalid event currency to be rejected, got " <> show value)
+
+    describe "validateEventTitleInput" $ do
+        it "trims event titles before create/update persistence" $
+            validateEventTitleInput "  Noche TDF  "
+                `shouldBe` Right "Noche TDF"
+
+        it "rejects malformed event titles before public event rows are written" $ do
+            let assertInvalid expectedMessage rawTitle =
+                    case validateEventTitleInput rawTitle of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid event title to be rejected, got " <> show value)
+            assertInvalid "title is required" "   "
+            assertInvalid
+                "title must be 160 characters or fewer"
+                (Data.Text.replicate 161 "a")
+            assertInvalid
+                "title must not contain control characters"
+                ("Noche" <> Data.Text.singleton '\NUL' <> "TDF")
+            assertInvalid
+                "hidden formatting characters"
+                ("Noche" <> Data.Text.singleton '\x202E' <> "TDF")
+
+    describe "validateEventTimeRange" $ do
+        let start = UTCTime (fromGregorian 2026 8 17) (secondsToDiffTime 3600)
+
+        it "accepts an event without a confirmed end" $
+            validateEventTimeRange start Nothing `shouldBe` Right ()
+
+        it "accepts a confirmed end after the start" $
+            validateEventTimeRange start (Just (addUTCTime 3600 start)) `shouldBe` Right ()
+
+        it "rejects an end at or before the start" $ do
+            forM_ [start, addUTCTime (-1) start] $ \invalidEnd ->
+                case validateEventTimeRange start (Just invalidEnd) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` "start time must be before end time"
+                    Right () -> expectationFailure "Expected invalid event time range to be rejected"
 
     describe "validateEventCreateUpdateDimensions" $ do
         it "accepts omitted, free, and finite non-negative event pricing dimensions" $ do
@@ -3562,6 +10617,9 @@ main = hspec $ do
                 (validateVenueCreateUpdateFields "   " Nothing Nothing Nothing)
                 "venue name is required"
             assertInvalid
+                (validateVenueCreateUpdateFields "Teatro\nTDF" Nothing Nothing Nothing)
+                "venue name must not contain control characters"
+            assertInvalid
                 (validateVenueCreateUpdateFields "Teatro TDF" (Just (-0.18)) Nothing Nothing)
                 "venue latitude and longitude must be provided together"
             assertInvalid
@@ -3585,10 +10643,39 @@ main = hspec $ do
         it "requires matching raster MIME and extension for event image uploads" $ do
             isImageUpload " image/jpeg " "poster.JPG" `shouldBe` True
             isImageUpload "image/png; charset=binary" "poster.png" `shouldBe` True
+            isImageUpload "image/png\n" "poster.png" `shouldBe` False
+            isImageUpload "image/png\x200B" "poster.png" `shouldBe` False
             isImageUpload "application/octet-stream" "poster.jpg" `shouldBe` False
             isImageUpload "image/jpeg" "poster.txt" `shouldBe` False
             isImageUpload "image/png" "poster.jpg" `shouldBe` False
             isImageUpload "image/svg+xml" "poster.svg" `shouldBe` False
+
+    describe "ArtistDTO JSON contract" $
+        it "requires canonical genre ids and rejects legacy label writes" $ do
+            (eitherDecode @ArtistDTO "{\"artistName\":null,\"artistGenreIds\":[]}")
+                `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":null}")
+                `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenres\":[\"Rock\"]}")
+                `shouldSatisfy` isLeft
+            (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
+                `shouldSatisfy` isRight
+
+    describe "validateArtistName" $ do
+        it "trims canonical artist names before persistence" $
+            validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"
+
+        it "rejects blank or control-character artist names before artist writes persist them" $ do
+            let assertInvalid rawName expected =
+                    case validateArtistName rawName of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid artist name to be rejected, got " <> show value)
+            assertInvalid "   " "artist name is required"
+            assertInvalid "Los\nMentores" "artist name must not contain control characters"
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =
@@ -3597,6 +10684,7 @@ main = hspec $ do
                     , artistPartyId = Nothing
                     , artistName = ""
                     , artistGenres = []
+                    , artistGenreIds = []
                     , artistBio = Nothing
                     , artistAvatarUrl = Nothing
                     , artistSocialLinks = Nothing
@@ -3604,10 +10692,16 @@ main = hspec $ do
                     , artistUpdatedAt = Nothing
                     }
 
-        it "preserves omitted artist references and canonicalizes explicit positive ids" $ do
+        it "requires explicit artist ids and canonicalizes explicit positive ids" $ do
             fmap (map fromSqlKey)
-                (validateEventArtistIds [mkArtist Nothing, mkArtist (Just " 0042 "), mkArtist (Just "7")])
+                (validateEventArtistIds [mkArtist (Just " 0042 "), mkArtist (Just "7")])
                 `shouldBe` Right [42, 7]
+            case validateEventArtistIds [mkArtist Nothing] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId is required"
+                Right value ->
+                    expectationFailure ("Expected missing event artist id to be rejected, got " <> show value)
 
         it "rejects duplicate artist ids before event writes hit the join-table constraint" $
             case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
@@ -3645,6 +10739,8 @@ main = hspec $ do
                             expectationFailure ("Expected invalid venue id to be rejected, got " <> show (fromSqlKey value))
             assertInvalid "   "
             assertInvalid "venue-42"
+            assertInvalid "+42"
+            assertInvalid "0x2a"
             assertInvalid "0"
             assertInvalid "-5"
 
@@ -3655,28 +10751,48 @@ main = hspec $ do
         it "rejects blank and non-numeric ids" $ do
             normalizePositivePartyIdText "   " `shouldBe` Nothing
             normalizePositivePartyIdText "abc" `shouldBe` Nothing
+            normalizePositivePartyIdText "+42" `shouldBe` Nothing
+            normalizePositivePartyIdText "0x2a" `shouldBe` Nothing
+            normalizePositivePartyIdText (Data.Text.singleton '\x0661') `shouldBe` Nothing
 
     describe "moment normalizers" $ do
         it "normalizes supported media types and reactions" $ do
             normalizeMomentMediaType " PHOTO " `shouldBe` Just "image"
             normalizeMomentMediaType "clip" `shouldBe` Just "video"
             normalizeMomentMediaType "audio" `shouldBe` Nothing
-            normalizeMomentReaction "heart" `shouldBe` Just "love"
-            normalizeMomentReaction "CLAP" `shouldBe` Just "applause"
-            normalizeMomentReaction "wow" `shouldBe` Nothing
 
         it "accepts blank captions as missing and rejects oversize captions" $ do
             normalizeMomentCaption (Just "   ") `shouldBe` Right Nothing
             normalizeMomentCaption (Just "  aftermovie  ") `shouldBe` Right (Just "aftermovie")
+            let assertInvalidCaption rawCaption expectedMessage =
+                    case normalizeMomentCaption (Just rawCaption) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid caption to fail, got " <> show value)
             case normalizeMomentCaption (Just (Data.Text.replicate 281 "a")) of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "Moment caption must be 280 characters or less"
                 Right value ->
                     expectationFailure ("Expected oversize caption to fail, got " <> show value)
+            assertInvalidCaption
+                ("after" <> Data.Text.singleton '\x202e' <> "movie")
+                "Moment caption must not contain control characters"
+            assertInvalidCaption
+                "after\nmovie"
+                "Moment caption must not contain control characters"
 
         it "requires non-empty comment bodies and enforces comment length" $ do
             normalizeMomentCommentBody "  impecable set  " `shouldBe` Right "impecable set"
+            let assertInvalidComment rawBody expectedMessage =
+                    case normalizeMomentCommentBody rawBody of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid moment comment to fail, got " <> show value)
             case normalizeMomentCommentBody "   " of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -3689,6 +10805,106 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "Moment comment body must be 500 characters or less"
                 Right value ->
                     expectationFailure ("Expected oversize moment comment to fail, got " <> show value)
+            assertInvalidComment
+                ("set" <> Data.Text.singleton '\x202e' <> "recap")
+                "Moment comment body must not contain control characters"
+            assertInvalidComment
+                "set\nrecap"
+                "Moment comment body must not contain control characters"
+
+        it "rejects invalid moment media dimensions instead of silently dropping them" $ do
+            validateMomentMediaDimension "Moment media width" Nothing `shouldBe` Right Nothing
+            validateMomentMediaDimension "Moment media width" (Just 1080)
+                `shouldBe` Right (Just 1080)
+            validateMomentMediaDimension "Moment media height" (Just 720)
+                `shouldBe` Right (Just 720)
+            validateMomentMediaDuration Nothing `shouldBe` Right Nothing
+            validateMomentMediaDuration (Just 0) `shouldBe` Right (Just 0)
+            validateMomentMediaDuration (Just 180000) `shouldBe` Right (Just 180000)
+
+            let assertInvalid result expected =
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid moment media dimension to fail, got " <> show value)
+
+            assertInvalid
+                (validateMomentMediaDimension "Moment media width" (Just 0))
+                "Moment media width must be greater than 0"
+            assertInvalid
+                (validateMomentMediaDimension "Moment media height" (Just (-5)))
+                "Moment media height must be greater than 0"
+            assertInvalid
+                (validateMomentMediaDuration (Just (-1)))
+                "Moment media duration must be 0 or greater"
+
+    describe "live broadcast normalizers" $ do
+        it "requires a non-empty title and trims accepted titles" $ do
+            normalizeLiveBroadcastTitle (Just "  Frente al escenario  ")
+                `shouldBe` Right "Frente al escenario"
+            let assertInvalidTitle rawTitle expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast title to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastTitle rawTitle)
+            assertInvalidTitle Nothing "Live broadcast title is required"
+            assertInvalidTitle (Just "   ") "Live broadcast title is required"
+            assertInvalidTitle
+                (Just (Data.Text.replicate 121 "a"))
+                "Live broadcast title must be 120 characters or less"
+            assertInvalidTitle
+                (Just ("set" <> Data.Text.singleton '\x202e' <> "view"))
+                "Live broadcast title must not contain control characters"
+
+        it "accepts missing descriptions and rejects unsafe or oversize descriptions" $ do
+            normalizeLiveBroadcastDescription Nothing `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "   ") `shouldBe` Right Nothing
+            normalizeLiveBroadcastDescription (Just "  Empieza el encore  ")
+                `shouldBe` Right (Just "Empieza el encore")
+            let assertInvalidDescription rawDescription expectedMessage =
+                    either
+                        (\err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        )
+                        (\value ->
+                            expectationFailure
+                                ("Expected invalid live broadcast description to fail, got " <> show value)
+                        )
+                        (normalizeLiveBroadcastDescription rawDescription)
+            assertInvalidDescription
+                (Just (Data.Text.replicate 281 "b"))
+                "Live broadcast description must be 280 characters or less"
+            assertInvalidDescription
+                (Just ("encore" <> Data.Text.singleton '\x202e'))
+                "Live broadcast description must not contain control characters"
+
+        it "defaults blank quality to auto and rejects unsupported quality values" $ do
+            normalizeLiveBroadcastQuality Nothing `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "   ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just " AUTO ") `shouldBe` Right "auto"
+            normalizeLiveBroadcastQuality (Just "720p") `shouldBe` Right "720p"
+            normalizeLiveBroadcastQuality (Just "480P") `shouldBe` Right "480p"
+            either
+                (\err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Live broadcast quality must be one of: auto, 720p, 480p"
+                )
+                (\value ->
+                    expectationFailure
+                        ("Expected invalid live broadcast quality to fail, got " <> show value)
+                )
+                (normalizeLiveBroadcastQuality (Just "1080p"))
 
     describe "parseFollowerQueryParamEither" $ do
         it "canonicalizes numeric follower query params before delete lookups" $ do
@@ -3717,6 +10933,28 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "follower query param must be a positive integer"
                 Right _ -> expectationFailure "Expected non-positive follower query param to be rejected"
+
+    describe "validateOptionalTicketBuyerPartyId" $ do
+        it "treats omitted or blank buyer ids as absent and canonicalizes positive ids" $ do
+            validateOptionalTicketBuyerPartyId "buyerPartyId" Nothing
+                `shouldBe` Right Nothing
+            validateOptionalTicketBuyerPartyId "buyerPartyId" (Just "   ")
+                `shouldBe` Right Nothing
+            validateOptionalTicketBuyerPartyId "buyerPartyId" (Just " 0042 ")
+                `shouldBe` Right (Just "42")
+
+        it "rejects malformed buyer ids before ticket order filters or writes become ambiguous" $ do
+            let assertInvalid field raw expected =
+                    case validateOptionalTicketBuyerPartyId field (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid optional ticket buyer id to be rejected, got " <> show value)
+            assertInvalid "buyerPartyId" "buyer-42" "buyerPartyId must be a positive integer"
+            assertInvalid "buyerPartyId" "0" "buyerPartyId must be a positive integer"
+            assertInvalid "ticketPurchaseBuyerPartyId" "-7" "ticketPurchaseBuyerPartyId must be a positive integer"
 
     describe "parseInvitationIdsEither" $ do
         it "parses numeric ids into typed keys" $ do
@@ -3747,14 +10985,87 @@ main = hspec $ do
                 Right _ -> expectationFailure "Expected Infinity radius to be rejected"
 
     describe "normalizeTicketOrderStatus" $ do
-        it "defaults to pending for empty/unknown values" $ do
+        it "defaults to pending only for omitted or blank values" $ do
             normalizeTicketOrderStatus Nothing `shouldBe` "pending"
             normalizeTicketOrderStatus (Just "  ") `shouldBe` "pending"
-            normalizeTicketOrderStatus (Just "unknown") `shouldBe` "pending"
 
         it "normalizes valid statuses" $ do
             normalizeTicketOrderStatus (Just "PAID") `shouldBe` "paid"
             normalizeTicketOrderStatus (Just "canceled") `shouldBe` "cancelled"
+
+        it "does not mask unsupported persisted statuses as pending" $
+            normalizeTicketOrderStatus (Just " Unknown ") `shouldBe` "unknown"
+
+    describe "ticket order inventory transitions" $ do
+        it "keeps the existing reservation when a pending Stripe order becomes paid" $
+            ticketOrderInventoryAdjustment 3 "pending" "paid" `shouldBe` 0
+
+        it "releases pending reservations exactly once when an order closes" $ do
+            ticketOrderInventoryAdjustment 3 "pending" "cancelled" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "pending" "refunded" `shouldBe` (-3)
+            ticketOrderInventoryAdjustment 3 "cancelled" "cancelled" `shouldBe` 0
+            ticketOrderInventoryAdjustment 3 "refunded" "refunded" `shouldBe` 0
+
+        it "releases paid inventory once and treats equivalent status spellings canonically" $ do
+            ticketOrderInventoryAdjustment 2 "paid" "refunded" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "pending" "CANCELED" `shouldBe` (-2)
+            ticketOrderInventoryAdjustment 2 "paid" "paid" `shouldBe` 0
+
+    describe "direct ticket order pricing policy" $ do
+        it "allows only zero-priced direct issuance" $ do
+            case validateDirectTicketOrderPricing False 0 of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected free tier to be allowed: " <> show err)
+            case validateDirectTicketOrderPricing True 2500 of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
+                Right () -> expectationFailure "Expected manager identity not to count as payment evidence"
+
+        it "requires all priced direct orders to use a verified checkout" $
+            case validateDirectTicketOrderPricing False 1 of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "server-verified checkout"
+                Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+
+    describe "ticket purchase event eligibility" $ do
+        it "allows only public events in buyer-facing sale states" $ do
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") True of
+                Right () -> pure ()
+                Left err -> expectationFailure ("Expected on-sale public event: " <> show err)
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":false}") True of
+                Left err -> errHTTPCode err `shouldBe` 403
+                Right () -> expectationFailure "Expected private event purchase to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") False of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected completed event purchase to be rejected"
+
+        it "rejects disabled purchase capability and malformed stored metadata" $ do
+            case validateTicketPurchaseEventEligibility Nothing False of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right () -> expectationFailure "Expected disabled purchase capability to be rejected"
+            case validateTicketPurchaseEventEligibility (Just "not-json") True of
+                Left err -> errHTTPCode err `shouldBe` 500
+                Right () -> expectationFailure "Expected malformed metadata to be rejected"
+
+    describe "ticket checkout amount validation" $ do
+        it "uses checked arithmetic before deciding whether a checkout is free" $ do
+            validateTicketCheckoutAmount 2 2500 `shouldBe` Right 5000
+            case validateTicketCheckoutAmount 4 (maxBound `div` 2 + 1) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "supported limit"
+                Right amount ->
+                    expectationFailure
+                        ("Expected overflowing checkout amount to be rejected, got " <> show amount)
+
+        it "rejects totals above Stripe's eight-digit amount contract" $
+            case validateTicketCheckoutAmount 2 50000000 of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right amount ->
+                    expectationFailure
+                        ("Expected oversized Stripe amount to be rejected, got " <> show amount)
 
     describe "normalizeTicketStatus" $ do
         it "defaults to issued when missing" $ do
@@ -3763,6 +11074,95 @@ main = hspec $ do
         it "normalizes alternate ticket status spellings" $ do
             normalizeTicketStatus (Just "checkedin") `shouldBe` "checked_in"
             normalizeTicketStatus (Just "CANCELED") `shouldBe` "cancelled"
+
+    describe "promo code helper invariants" $ do
+        let now = UTCTime (fromGregorian 2026 5 24) (secondsToDiffTime 43200)
+            past = addUTCTime (-60) now
+            future = addUTCTime 60 now
+
+        it "keeps date windows and redemption limits explicit for absent and present fields" $ do
+            validatePromoCodeDateWindow now Nothing Nothing `shouldBe` Right ()
+            validatePromoCodeDateWindow now (Just past) (Just future) `shouldBe` Right ()
+            validatePromoCodeDateWindow now (Just future) Nothing
+                `shouldBe` Left "Promo code is not yet valid"
+            validatePromoCodeDateWindow now Nothing (Just past)
+                `shouldBe` Left "Promo code has expired"
+
+            validatePromoCodeRedemptionLimit 2 Nothing `shouldBe` Right ()
+            validatePromoCodeRedemptionLimit 1 (Just 2) `shouldBe` Right ()
+            validatePromoCodeRedemptionLimit 2 (Just 2)
+                `shouldBe` Left "Promo code redemption limit reached"
+
+        it "round-trips stored tier ids and rejects malformed or mismatched restrictions" $ do
+            encodePromoCodeTierIds Nothing `shouldBe` Nothing
+            decodeStoredPromoCodeTierIds (encodePromoCodeTierIds (Just ["vip", "ga"]))
+                `shouldBe` Just ["vip", "ga"]
+
+            validatePromoCodeTierEligibility Nothing (Just "vip") `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) Nothing
+                `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) (Just "vip")
+                `shouldBe` Right ()
+            validatePromoCodeTierEligibility (encodePromoCodeTierIds (Just ["vip"])) (Just "ga")
+                `shouldBe` Left "Promo code is not valid for this ticket tier"
+            validatePromoCodeTierEligibility (Just "not-json") (Just "vip")
+                `shouldBe` Left "Promo code tier restrictions are invalid"
+
+        it "validates minimum purchase amounts without assuming optional inputs exist" $ do
+            validatePromoCodeMinimumPurchaseParam Nothing (Just "not-a-number")
+                `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseParam (Just 1000) Nothing
+                `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "not-a-number")
+                `shouldBe` Left "Invalid amount"
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "999")
+                `shouldBe` Left "Purchase amount does not meet minimum requirement"
+            validatePromoCodeMinimumPurchaseParam (Just 1000) (Just "1000")
+                `shouldBe` Right ()
+
+            validatePromoCodeMinimumPurchaseCents Nothing 999 `shouldBe` Right ()
+            validatePromoCodeMinimumPurchaseCents (Just 1000) 999
+                `shouldBe` Left "Purchase amount does not meet minimum requirement"
+            validatePromoCodeMinimumPurchaseCents (Just 1000) 1000 `shouldBe` Right ()
+
+        it "calculates promo discounts only for supported stored discount types" $ do
+            promoCodeDiscountAmountEither 1500 "percentage" 2000 `shouldBe` Right 300
+            promoCodeDiscountAmountEither 1500 "fixed_amount" 2000 `shouldBe` Right 1500
+            promoCodeDiscountAmountEither 1500 "fixed" 200 `shouldBe` Right 200
+            promoCodeDiscountAmountEither 1500 "bogus" 20
+                `shouldBe` Left "Promo code discount type is invalid"
+            promoCodeDiscountAmountEither 1500 "fixed_amount" (-1)
+                `shouldBe` Left "Promo code discount value is invalid"
+            promoCodeDiscountAmountEither 1500 "percentage" 10001
+                `shouldBe` Left "Promo code percentage discount is invalid"
+
+    describe "validateTicketPurchaseBuyerName" $ do
+        it "normalizes optional buyer names before ticket order storage" $ do
+            validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerName (Just "   ") `shouldBe` Right Nothing
+            validateTicketPurchaseBuyerName (Just "  Ada Lovelace  ")
+                `shouldBe` Right (Just "Ada Lovelace")
+
+        it "rejects unsafe buyer names before they are copied onto generated tickets" $ do
+            let assertInvalid raw expected =
+                    case validateTicketPurchaseBuyerName (Just raw) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid ticket buyer name to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "ticketPurchaseBuyerName must be 160 characters or fewer"
+            assertInvalid
+                "Ada\nBcc: ops@example.com"
+                "ticketPurchaseBuyerName must not contain control characters"
+            assertInvalid
+                "Ada\x202ELovelace"
+                "ticketPurchaseBuyerName must not contain control characters or hidden formatting characters"
 
     describe "validateTicketPurchaseBuyerEmail" $ do
         it "normalizes valid optional buyer emails before ticket order storage" $ do
@@ -3809,7 +11209,7 @@ main = hspec $ do
                     { ticketCheckInTicketId = Just " 0042 "
                     , ticketCheckInTicketCode = Nothing
                     }
-                `shouldBe` Right (TicketCheckInLookupById "42")
+                `shouldBe` Right (TicketCheckInLookupById 42)
             validateTicketCheckInLookup
                 TicketCheckInRequestDTO
                     { ticketCheckInTicketId = Nothing
@@ -3829,6 +11229,17 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected ambiguous ticket check-in payload to be rejected, got " <> show value)
 
+            case validateTicketCheckInLookup
+                TicketCheckInRequestDTO
+                    { ticketCheckInTicketId = Just "42"
+                    , ticketCheckInTicketCode = Just "   "
+                    } of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err) `shouldContain` "Provide exactly one of ticketCheckInTicketId or ticketCheckInTicketCode"
+                Right value ->
+                    expectationFailure ("Expected blank secondary ticket check-in lookup to be rejected, got " <> show value)
+
         it "rejects non-numeric or non-positive ticket ids before lookup" $ do
             let assertInvalid rawTicketId =
                     case validateTicketCheckInLookup
@@ -3841,6 +11252,7 @@ main = hspec $ do
                             BL.unpack (errBody err) `shouldContain` "ticketCheckInTicketId must be a positive integer"
                         Right value ->
                             expectationFailure ("Expected invalid ticket id to be rejected, got " <> show value)
+            assertInvalid "   "
             assertInvalid "0"
             assertInvalid "-7"
             assertInvalid "ticket-42"
@@ -3883,6 +11295,67 @@ main = hspec $ do
             assertInvariant "Stored ticket order status is invalid"
                 (validateTicketCheckInOrderStatus (Just "unknown"))
 
+    describe "validateStoredTicketOrderStatus" $ do
+        it "rejects invalid persisted ticket order states before status updates can fall back to pending" $ do
+            validateStoredTicketOrderStatus (Just " refunded ")
+                `shouldBe` Right "refunded"
+            case validateStoredTicketOrderStatus (Just "unknown") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err) `shouldContain` "Stored ticket order status is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid stored ticket order status to be rejected, got " <> show value)
+
+    describe "ticket order finance accounting invariants" $ do
+        it "rejects invalid stored ticket order statuses before generated finance fallbacks" $ do
+            let eventKey = toSqlKey 42 :: SocialEventId
+                now = UTCTime (fromGregorian 2026 5 2) (secondsToDiffTime 0)
+                mkOrder rawStatus amountCents =
+                    Entity (toSqlKey 7) EventTicketOrder
+                        { eventTicketOrderEventId = eventKey
+                        , eventTicketOrderTierId = toSqlKey 3
+                        , eventTicketOrderBuyerPartyId = Just "11"
+                        , eventTicketOrderBuyerName = Just "Ada"
+                        , eventTicketOrderBuyerEmail = Just "ada@example.com"
+                        , eventTicketOrderQuantity = 1
+                        , eventTicketOrderAmountCents = amountCents
+                        , eventTicketOrderCurrency = "USD"
+                        , eventTicketOrderStatus = rawStatus
+                        , eventTicketOrderMetadata = Nothing
+                        , eventTicketOrderPurchasedAt = now
+                        , eventTicketOrderStripePaymentIntentId = Nothing
+                        , eventTicketOrderPromoCodeId = Nothing
+                        , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                        , eventTicketOrderOriginalAmountCents = Nothing
+                        , eventTicketOrderPaymentMethod = Nothing
+                        , eventTicketOrderCreatedAt = now
+                        , eventTicketOrderUpdatedAt = now
+                        }
+
+            storedTicketOrderSummaryFields (mkOrder " paid " 1500)
+                `shouldBe` Right (1500, "paid")
+            case ticketOrderAccountingEntriesEither eventKey (mkOrder "paid" 1500) of
+                Right [entry] -> do
+                    efeAmountCents entry `shouldBe` 1500
+                    efeSource entry `shouldBe` "ticket_sale"
+                    efeStatus entry `shouldBe` "posted"
+                other ->
+                    expectationFailure
+                        ("Expected one generated paid ticket accounting entry, got " <> show other)
+
+            let assertInvalid result =
+                    case result of
+                        Left err ->
+                            err `shouldBe` "Stored ticket order status is invalid"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid ticket order status to be rejected, got " <> show value)
+                invalidOrder = mkOrder "unknown" 1500
+
+            assertInvalid (storedTicketOrderSummaryFields invalidOrder)
+            assertInvalid (ticketOrderAccountingEntriesEither eventKey invalidOrder)
+
     describe "validateTicketCheckInTicketStatus" $ do
         it "accepts canonical ticket states for ticket check-in decisions" $ do
             validateTicketCheckInTicketStatus " ISSUED " `shouldBe` Right "issued"
@@ -3901,10 +11374,164 @@ main = hspec $ do
             assertInvariant ""
             assertInvariant "unknown"
 
+    describe "findTicketForCheckIn" $ do
+        it "keeps numeric ticket-id lookup scoped to the requested event" $ do
+            result <- runStdoutLoggingT $ do
+                pool <- createSqlitePool ":memory:" 1
+                liftIO $ runSqlPool initializeTicketCheckInSchema pool
+                liftIO $ runSqlPool (do
+                    let now = UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 0)
+                    firstEventId <-
+                        insert
+                            SocialEvent
+                                { socialEventOrganizerPartyId = Just "1"
+                                , socialEventTitle = "First Event"
+                                , socialEventDescription = Nothing
+                                , socialEventVenueId = Nothing
+                                , socialEventStartTime = now
+                                , socialEventEndTime = Just (addUTCTime 3600 now)
+                                , socialEventPriceCents = Nothing
+                                , socialEventCapacity = Nothing
+                                , socialEventMetadata = Nothing
+                                , socialEventEventTypeId = Nothing
+                                , socialEventWorkflowStateId = Nothing
+                                , socialEventTimezone = Nothing
+                                , socialEventCurrencyId = Nothing
+                                , socialEventCreatedAt = now
+                                , socialEventUpdatedAt = now
+                                }
+                    secondEventId <-
+                        insert
+                            SocialEvent
+                                { socialEventOrganizerPartyId = Just "2"
+                                , socialEventTitle = "Second Event"
+                                , socialEventDescription = Nothing
+                                , socialEventVenueId = Nothing
+                                , socialEventStartTime = now
+                                , socialEventEndTime = Just (addUTCTime 5400 now)
+                                , socialEventPriceCents = Nothing
+                                , socialEventCapacity = Nothing
+                                , socialEventMetadata = Nothing
+                                , socialEventEventTypeId = Nothing
+                                , socialEventWorkflowStateId = Nothing
+                                , socialEventTimezone = Nothing
+                                , socialEventCurrencyId = Nothing
+                                , socialEventCreatedAt = now
+                                , socialEventUpdatedAt = now
+                                }
+                    tierId <-
+                        insert
+                            EventTicketTier
+                                { eventTicketTierEventId = secondEventId
+                                , eventTicketTierCode = "GEN"
+                                , eventTicketTierName = "General"
+                                , eventTicketTierDescription = Nothing
+                                , eventTicketTierPriceCents = 1500
+                                , eventTicketTierCurrency = "USD"
+                                , eventTicketTierQuantityTotal = 10
+                                , eventTicketTierQuantitySold = 1
+                                , eventTicketTierSalesStart = Nothing
+                                , eventTicketTierSalesEnd = Nothing
+                                , eventTicketTierIsActive = True
+                                , eventTicketTierPosition = Nothing
+                                , eventTicketTierEnableWaitlist = False
+                                , eventTicketTierAllowTransfers = False
+                              , eventTicketTierRefundPolicy = "none"
+                              , eventTicketTierRefundDeadline = Nothing
+                              , eventTicketTierCurrencyId = Nothing
+                              , eventTicketTierCreatedAt = now
+                                , eventTicketTierUpdatedAt = now
+                                }
+                    orderId <-
+                        insert
+                            EventTicketOrder
+                                { eventTicketOrderEventId = secondEventId
+                                , eventTicketOrderTierId = tierId
+                                , eventTicketOrderBuyerPartyId = Just "2"
+                                , eventTicketOrderBuyerName = Just "Ada"
+                                , eventTicketOrderBuyerEmail = Just "ada@example.com"
+                                , eventTicketOrderQuantity = 1
+                                , eventTicketOrderAmountCents = 1500
+                                , eventTicketOrderCurrency = "USD"
+                                , eventTicketOrderStatus = "paid"
+                                , eventTicketOrderMetadata = Nothing
+                                , eventTicketOrderCheckoutIdempotencyKey = Nothing
+                                , eventTicketOrderPurchasedAt = now
+                                , eventTicketOrderStripePaymentIntentId = Nothing
+                                , eventTicketOrderPromoCodeId = Nothing
+                                , eventTicketOrderOriginalAmountCents = Nothing
+                                , eventTicketOrderPaymentMethod = Nothing
+                                , eventTicketOrderCreatedAt = now
+                                , eventTicketOrderUpdatedAt = now
+                                }
+                    ticketId <-
+                        insert
+                            EventTicket
+                                { eventTicketEventId = secondEventId
+                                , eventTicketTierRefId = tierId
+                                , eventTicketOrderRefId = orderId
+                                , eventTicketHolderName = Just "Ada"
+                                , eventTicketHolderEmail = Just "ada@example.com"
+                                , eventTicketCode = "TDF-AB12CD34EF56"
+                                , eventTicketStatus = "issued"
+                                , eventTicketCheckedInAt = Nothing
+                                , eventTicketCurrentHolderPartyId = Just "2"
+                                , eventTicketCurrentHolderEmail = Just "ada@example.com"
+                                , eventTicketCurrentHolderName = Just "Ada"
+                                , eventTicketOriginalHolderPartyId = Just "2"
+                                , eventTicketTransferHistory = Nothing
+                                , eventTicketCreatedAt = now
+                                , eventTicketUpdatedAt = now
+                                }
+                    scopedMiss <- findTicketForCheckIn firstEventId (TicketCheckInLookupById (fromSqlKey ticketId))
+                    scopedHit <- findTicketForCheckIn secondEventId (TicketCheckInLookupById (fromSqlKey ticketId))
+                    pure (scopedMiss, scopedHit)) pool
+
+            case result of
+                (Nothing, Just (Entity foundId foundTicket)) -> do
+                    fromSqlKey foundId `shouldSatisfy` (> 0)
+                    eventTicketCode foundTicket `shouldBe` "TDF-AB12CD34EF56"
+                other ->
+                    expectationFailure
+                        ("Expected cross-event ticket-id lookup to miss and same-event lookup to hit, got " <> show other)
+
+    describe "validateRadioSearchFilter" $ do
+        it "normalizes meaningful radio search filters before stream matching" $ do
+            validateRadioSearchFilter "country" 80 Nothing `shouldBe` Right Nothing
+            validateRadioSearchFilter "country" 80 (Just "  EC  ")
+                `shouldBe` Right (Just "ec")
+            validateRadioSearchFilter "genre" 120 (Just "  Drum and Bass  ")
+                `shouldBe` Right (Just "drum and bass")
+
+        it
+            "rejects blank, oversized, or control-character radio search filters"
+            $ do
+            let assertInvalid raw expected =
+                    case validateRadioSearchFilter "country" 80 raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid radio search filter to be rejected, got "
+                                    <> show value
+                                )
+            assertInvalid (Just "   ") "country filter must be omitted or non-blank"
+            assertInvalid
+                (Just (Data.Text.replicate 81 "x"))
+                "country filter must be 80 characters or fewer"
+            assertInvalid
+                (Just "EC\NUL")
+                "country filter must not contain control or hidden formatting characters"
+
     describe "validateRadioStreamUrl" $ do
         it "trims surrounding whitespace and accepts http(s) stream URLs" $
             validateRadioStreamUrl "  HTTPS://radio.example.com/live  "
                 `shouldBe` Right "HTTPS://radio.example.com/live"
+
+        it "allows slash-like query values without treating them as path segments" $
+            validateRadioStreamUrl "https://radio.example.com/live?relay=/edge/../main"
+                `shouldBe` Right "https://radio.example.com/live?relay=/edge/../main"
 
         it "accepts explicit numeric ports, including bracketed IPv6 hosts" $ do
             validateRadioStreamUrl "https://radio.example.com:8443/live"
@@ -3935,6 +11562,20 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not contain control characters"
                 Right _ -> expectationFailure "Expected control-character streamUrl to be rejected"
+            case validateRadioStreamUrl
+                ("https://radio.example.com/live" <> Data.Text.singleton '\x200B') of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl must not contain hidden formatting characters"
+                Right _ -> expectationFailure "Expected hidden-format streamUrl to be rejected"
+            case validateRadioStreamUrl
+                ("https://radio.example.com/ma" <> Data.Text.singleton '\x00F1' <> "ana") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl must contain only ASCII URL characters"
+                Right _ -> expectationFailure "Expected non-ASCII streamUrl to be rejected"
             case validateRadioStreamUrl "https://radio.example.com/live#main" of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
@@ -3964,6 +11605,12 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl port must be numeric"
                 Right _ -> expectationFailure "Expected non-numeric port streamUrl to be rejected"
+            case validateRadioStreamUrl "https://radio.example.com:0443/live" of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "streamUrl port must not include leading zeros"
+                Right _ -> expectationFailure "Expected leading-zero port streamUrl to be rejected"
 
         it "rejects out-of-range ports instead of storing unreachable stream endpoints" $ do
             let assertInvalid rawUrl =
@@ -3991,6 +11638,29 @@ main = hspec $ do
             assertInvalid "https://radio.example.com./live"
             assertInvalid "https://rádio.example.com/live"
             assertInvalid "https://[2001:db8::１]/live"
+
+        it "rejects oversized DNS hosts before metadata fetches can fail ambiguously" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "streamUrl must include a valid host"
+                        Right value ->
+                            expectationFailure
+                                ("Expected oversized streamUrl host to be rejected, got " <> show value)
+            assertInvalid
+                ("https://" <> Data.Text.replicate 64 "a" <> ".example.com/live")
+            assertInvalid
+                ( "https://"
+                    <> Data.Text.intercalate
+                        "."
+                        [ Data.Text.replicate 63 "a"
+                        , Data.Text.replicate 63 "b"
+                        , Data.Text.replicate 63 "c"
+                        , Data.Text.replicate 61 "d"
+                        ]
+                    <> ".com/live"
+                )
 
         it "rejects malformed bracketed IPv6 hosts before metadata fetches can use them" $ do
             let assertInvalid rawUrl =
@@ -4050,9 +11720,13 @@ main = hspec $ do
             assertPrivateTarget "https://192.168.1.23/live"
             assertPrivateTarget "https://[::1]/live"
             assertPrivateTarget "https://[fd12::1234]/live"
+            assertPrivateTarget "https://[fec0::1]/live"
             assertPrivateTarget "https://[::ffff:127.0.0.1]/live"
             assertPrivateTarget "https://[::ffff:7f00:1]/live"
             assertPrivateTarget "https://[0:0:0:0:0:ffff:c0a8:117]/live"
+            assertPrivateTarget "https://[2002:0a00:0001::]/live"
+            assertPrivateTarget "https://[2002:c0a8:0117::]/live"
+            assertPrivateTarget "https://[64:ff9b::127.0.0.1]/live"
 
         it "rejects reserved IP ranges before metadata/import fetches can target them" $ do
             let assertReservedTarget rawUrl =
@@ -4072,6 +11746,7 @@ main = hspec $ do
             assertReservedTarget "https://255.255.255.255/live"
             assertReservedTarget "https://[2001:db8::1]/live"
             assertReservedTarget "https://[ff02::1]/live"
+            assertReservedTarget "https://[2002:c000:020a::]/live"
 
         it "rejects authorities that embed user info instead of storing credential-like stream URLs" $
             case validateRadioStreamUrl "https://dj@radio.example.com/live" of
@@ -4079,6 +11754,21 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "streamUrl must not include user info"
                 Right _ -> expectationFailure "Expected userinfo-bearing streamUrl to be rejected"
+
+        it "rejects ambiguous stream URL paths before metadata fetches can resolve a different endpoint" $ do
+            let assertInvalid rawUrl =
+                    case validateRadioStreamUrl rawUrl of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    "streamUrl path must not contain empty, dot, or dot-dot segments"
+                        Right value ->
+                            expectationFailure
+                                ("Expected ambiguous streamUrl path to be rejected, got " <> show value)
+            assertInvalid "https://radio.example.com//live"
+            assertInvalid "https://radio.example.com/live/./main"
+            assertInvalid "https://radio.example.com/live/../admin"
 
         it "rejects non-http stream URLs before they can be stored" $
             case validateRadioStreamUrl "ftp://radio.example.com/live" of
@@ -4127,8 +11817,17 @@ main = hspec $ do
                                 ("Expected invalid public radio base to be rejected, got " <> show value)
             assertInvalid "https://" "RADIO_PUBLIC_BASE must include a host"
             assertInvalid
+                ("https://radio.example.com/ma" <> Data.Text.singleton '\x00F1' <> "ana")
+                "RADIO_PUBLIC_BASE must contain only ASCII URL characters"
+            assertInvalid
                 "http://127.0.0.1/live"
                 "RADIO_PUBLIC_BASE must not target localhost or private network addresses"
+            assertInvalid
+                "https://radio.example.com/live/../admin"
+                "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
+            assertInvalid
+                "https://radio.example.com//live"
+                "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
 
     describe "resolveRadioTransmissionEnvBase" $ do
         it "uses fallback bases only when transmission env vars are absent" $ do
@@ -4163,6 +11862,35 @@ main = hspec $ do
             assertBlank "RADIO_INGEST_BASE" "\t\n"
             assertBlank "RADIO_WHIP_BASE" ""
 
+        it "rejects malformed transmission env vars as server config errors" $ do
+            let assertInvalid label rawValue expectedMessage =
+                    case
+                        resolveRadioTransmissionEnvBase
+                            label
+                            "https://fallback.example.com"
+                            (Just rawValue)
+                    of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 500
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    Data.Text.unpack (label <> expectedMessage)
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid radio base env to be rejected, got " <> show value)
+            assertInvalid
+                "RADIO_PUBLIC_BASE"
+                "https://radio.example.com/live stream"
+                " must not contain whitespace"
+            assertInvalid
+                "RADIO_WHIP_BASE"
+                "https://radio.example.com/whip\NUL"
+                " must not contain control characters"
+            assertInvalid
+                "RADIO_PUBLIC_BASE"
+                ("https://radio.example.com/live" <> "\x200B")
+                " must not contain hidden formatting characters"
+
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
             validateRadioTransmissionIngestBase "  RTMPS://stream.example.com/live/  "
@@ -4191,6 +11919,16 @@ main = hspec $ do
                 (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live\DEL")
                 "RADIO_INGEST_BASE must not contain control characters"
             assertInvalid
+                ( validateRadioTransmissionIngestBase
+                    ("rtmp://stream.example.com/live" <> Data.Text.singleton '\x200B')
+                )
+                "RADIO_INGEST_BASE must not contain hidden formatting characters"
+            assertInvalid
+                ( validateRadioTransmissionIngestBase
+                    ("rtmp://stream.example.com/l" <> Data.Text.singleton '\x00ED' <> "ve")
+                )
+                "RADIO_INGEST_BASE must contain only ASCII URL characters"
+            assertInvalid
                 (validateRadioTransmissionWhipBase "rtmp://stream.example.com/whip")
                 "RADIO_WHIP_BASE must be https"
             assertInvalid
@@ -4199,6 +11937,12 @@ main = hspec $ do
             assertInvalid
                 (validateRadioTransmissionWhipBase "https://127.0.0.1/whip")
                 "RADIO_WHIP_BASE must not target localhost or private network addresses"
+            assertInvalid
+                (validateRadioTransmissionIngestBase "rtmp://stream.example.com/live/./stage")
+                "RADIO_INGEST_BASE path must not contain empty, dot, or dot-dot segments"
+            assertInvalid
+                (validateRadioTransmissionWhipBase "https://stream.example.com//whip")
+                "RADIO_WHIP_BASE path must not contain empty, dot, or dot-dot segments"
 
     describe "validateRadioOptionalMetadataField" $ do
         it "trims optional radio metadata and treats blank values as omitted" $ do
@@ -4224,8 +11968,66 @@ main = hspec $ do
                     (Just (Data.Text.replicate 161 "a")))
                 "rtrName must be 160 characters or fewer"
             assertInvalid
-                (validateRadioOptionalMetadataField "rtrGenre" 120 (Just "ambient\ntechno"))
-                "rtrGenre must not contain control characters"
+                (validateRadioOptionalMetadataField "icy-genre" 120 (Just "ambient\ntechno"))
+                "icy-genre must not contain control or hidden formatting characters"
+
+    describe "validateRadioGenreMutation" $
+        it "distinguishes explicit relation removal from a canonical UUID replacement" $
+            case UUID.fromString "11111111-1111-4111-8111-111111111111" of
+                Nothing -> expectationFailure "Expected valid test genre UUID"
+                Just genreId -> do
+                    validateRadioGenreMutation Nothing (Just True) `shouldSatisfy` isRight
+                    validateRadioGenreMutation (Just genreId) Nothing `shouldSatisfy` isRight
+                    case validateRadioGenreMutation (Just genreId) (Just True) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain`
+                                "rsuClearGenre cannot be combined with rsuGenreId"
+                        Right () -> expectationFailure "Expected conflicting genre mutation to be rejected"
+
+    describe "validateRadioCountryMutation" $
+        it "distinguishes explicit relation removal from a canonical UUID replacement" $
+            case UUID.fromString "22222222-2222-4222-8222-222222222222" of
+                Nothing -> expectationFailure "Expected valid test country UUID"
+                Just countryId -> do
+                    validateRadioCountryMutation Nothing (Just True) `shouldSatisfy` isRight
+                    validateRadioCountryMutation (Just countryId) Nothing `shouldSatisfy` isRight
+                    case validateRadioCountryMutation (Just countryId) (Just True) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain`
+                                "rsuClearCountry cannot be combined with rsuCountryId"
+                        Right () -> expectationFailure "Expected conflicting country mutation to be rejected"
+
+    describe "validateRadioFetchedMetadata" $ do
+        it "normalizes fetched ICY metadata before refresh persistence" $
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just "  TDF Live  "
+                    , smGenre = Just "  Ambient  "
+                    }
+                `shouldBe` Right
+                    StreamMetadata
+                        { smName = Just "TDF Live"
+                        , smGenre = Just "Ambient"
+                        }
+
+        it "rejects missing or malformed fetched ICY metadata instead of persisting provider text blindly" $ do
+            validateRadioFetchedMetadata
+                StreamMetadata { smName = Just "   ", smGenre = Nothing }
+                `shouldBe` Left "no metadata"
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just (Data.Text.replicate 161 "a")
+                    , smGenre = Nothing
+                    }
+                `shouldBe` Left "icy-name metadata must be 160 characters or fewer"
+            validateRadioFetchedMetadata
+                StreamMetadata
+                    { smName = Just "TDF Live"
+                    , smGenre = Just ("ambient" <> Data.Text.singleton '\x202E')
+                    }
+                `shouldBe` Left "icy-genre metadata must not contain control or hidden formatting characters"
 
     describe "validateRadioImportSources" $ do
         it "uses defaults only when sources are omitted and canonicalizes explicit public import URLs" $ do
@@ -4283,7 +12085,7 @@ main = hspec $ do
                     Right value ->
                         expectationFailure ("Expected invalid radio import sources to be rejected, got " <> show value)
             assertInvalid (Just []) "sources must include at least one public http(s) URL"
-            assertInvalid (Just ["   "]) "sources must include at least one public http(s) URL"
+            assertInvalid (Just ["   "]) "sources must not include blank entries"
             assertInvalid (Just ["ftp://radio.example.com/catalog.csv"]) "source must be http(s)"
             assertInvalid (Just ["http://127.0.0.1/catalog.csv"]) "source must not target localhost or private network addresses"
 
@@ -4322,6 +12124,17 @@ main = hspec $ do
             assertRejected 401
 
     describe "resolveRadioNowPlayingFetchResult" $ do
+        it "requires a complete positive icy-metaint header before reading stream metadata" $ do
+            parseIcyMetaIntHeader "16000" `shouldBe` Just 16000
+            parseIcyMetaIntHeader "  4096  " `shouldBe` Just 4096
+            parseIcyMetaIntHeader "262144" `shouldBe` Just 262144
+            parseIcyMetaIntHeader "262145" `shouldBe` Nothing
+            parseIcyMetaIntHeader "016000" `shouldBe` Nothing
+            parseIcyMetaIntHeader "16000; charset=utf-8" `shouldBe` Nothing
+            parseIcyMetaIntHeader "16000x" `shouldBe` Nothing
+            parseIcyMetaIntHeader "+16000" `shouldBe` Nothing
+            parseIcyMetaIntHeader "0" `shouldBe` Nothing
+
         it "keeps reachable-but-empty metadata distinct from upstream fetch failures" $ do
             case resolveRadioNowPlayingFetchResult (Right Nothing) of
                 Right value -> do
@@ -4351,6 +12164,22 @@ main = hspec $ do
                     expectationFailure
                         ("Expected now-playing title metadata to parse, got " <> show err)
 
+        it "rejects malformed stream titles instead of returning hidden control metadata" $ do
+            let assertInvalid rawTitle expectedMessage =
+                    case resolveRadioNowPlayingFetchResult (Right (Just rawTitle)) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 502
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected malformed now-playing metadata to fail, got " <> show value)
+            assertInvalid
+                "Los Nin\nTarika"
+                "Now-playing metadata title must not contain control or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 513 "a")
+                "Now-playing metadata title must be 512 characters or fewer"
+
     describe "radio request JSON contracts" $ do
         it "accepts canonical radio request payloads used by current handlers" $ do
             case eitherDecode "{\"rirSources\":[\"https://radio.example.com/catalog.csv\"],\"rirLimit\":25}" of
@@ -4370,16 +12199,27 @@ main = hspec $ do
             case eitherDecode $
                 "{\"rsuStreamUrl\":\"https://radio.example.com/live\""
                     <> ",\"rsuName\":\"TDF Live\""
-                    <> ",\"rsuCountry\":\"EC\""
-                    <> ",\"rsuGenre\":\"ambient\"}"
+                    <> ",\"rsuCountryId\":\"22222222-2222-4222-8222-222222222222\""
+                    <> ",\"rsuGenreId\":\"11111111-1111-4111-8111-111111111111\"}"
              of
                 Left err ->
                     expectationFailure ("Expected canonical radio stream upsert payload to decode, got: " <> err)
                 Right payload -> do
                     rsuStreamUrl payload `shouldBe` "https://radio.example.com/live"
                     rsuName payload `shouldBe` Just "TDF Live"
-                    rsuCountry payload `shouldBe` Just "EC"
-                    rsuGenre payload `shouldBe` Just "ambient"
+                    rsuCountryId payload `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
+                    rsuClearCountry payload `shouldBe` Nothing
+                    rsuGenreId payload `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    rsuClearGenre payload `shouldBe` Nothing
+
+            case eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearGenre\":true}"
+             of
+                Left err ->
+                    expectationFailure ("Expected explicit radio genre clear to decode, got: " <> err)
+                Right payload -> do
+                    rsuGenreId payload `shouldBe` Nothing
+                    rsuClearGenre payload `shouldBe` Just True
 
             case eitherDecode "{\"rnpStreamUrl\":\"https://radio.example.com/live\"}" of
                 Left err ->
@@ -4387,13 +12227,13 @@ main = hspec $ do
                 Right payload ->
                     rnpStreamUrl payload `shouldBe` "https://radio.example.com/live"
 
-            case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\",\"rtrCountry\":\"EC\"}" of
+            case eitherDecode "{\"rtrName\":\"TDF Live\",\"rtrGenreId\":\"11111111-1111-4111-8111-111111111111\",\"rtrCountryId\":\"22222222-2222-4222-8222-222222222222\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical radio transmission payload to decode, got: " <> err)
                 Right payload -> do
                     rtrName payload `shouldBe` Just "TDF Live"
-                    rtrGenre payload `shouldBe` Just "ambient"
-                    rtrCountry payload `shouldBe` Just "EC"
+                    rtrGenreId payload `shouldBe` UUID.fromString "11111111-1111-4111-8111-111111111111"
+                    rtrCountryId payload `shouldBe` UUID.fromString "22222222-2222-4222-8222-222222222222"
 
             case eitherDecode $
                 "{\"rpuStreamUrl\":\"https://radio.example.com/live\""
@@ -4439,7 +12279,118 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
 
             ( eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenre\":\"ambient\"}"
+                    :: Either String RadioStreamUpsert
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountry\":\"EC\"}"
+                    :: Either String RadioStreamUpsert
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rtrName\":\"TDF Live\",\"rtrGenre\":\"ambient\"}"
+                    :: Either String RadioTransmissionRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                "{\"rtrName\":\"TDF Live\",\"rtrCountry\":\"EC\"}"
+                    :: Either String RadioTransmissionRequest
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
                 "{\"streamUrl\":\"https://radio.example.com/live\",\"stationName\":\"Radio Uno\"}"
+                    :: Either String RadioPresenceUpsert
+                )
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null radio optional fields before fallback handling" $ do
+            let assertImportDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioImportRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio fallback payload to be rejected, got " <> show value)
+                assertRefreshDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioMetadataRefreshRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio fallback payload to be rejected, got " <> show value)
+                assertStreamDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioStreamUpsert of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio stream payload to be rejected, got " <> show value)
+                assertTransmissionDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioTransmissionRequest of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio transmission payload to be rejected, got " <> show value)
+                assertPresenceDecodeError rawPayload expectedMessage =
+                    case eitherDecode rawPayload :: Either String RadioPresenceUpsert of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected radio presence payload to be rejected, got " <> show value)
+
+            assertImportDecodeError
+                "{\"rirSources\":null}"
+                ("rirSources must be omitted instead of null" :: String)
+            assertImportDecodeError
+                "{\"rirLimit\":null}"
+                ("rirLimit must be omitted instead of null" :: String)
+            assertRefreshDecodeError
+                "{\"rmrLimit\":null}"
+                ("rmrLimit must be omitted instead of null" :: String)
+            assertRefreshDecodeError
+                "{\"rmrOnlyMissing\":null}"
+                ("rmrOnlyMissing must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuName\":null}"
+                ("rsuName must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuCountryId\":null}"
+                ("rsuCountryId must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearCountry\":null}"
+                ("rsuClearCountry must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuGenreId\":null}"
+                ("rsuGenreId must be omitted instead of null" :: String)
+            assertStreamDecodeError
+                "{\"rsuStreamUrl\":\"https://radio.example.com/live\",\"rsuClearGenre\":null}"
+                ("rsuClearGenre must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrName\":null}"
+                ("rtrName must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrGenreId\":null}"
+                ("rtrGenreId must be omitted instead of null" :: String)
+            assertTransmissionDecodeError
+                "{\"rtrCountryId\":null}"
+                ("rtrCountryId must be omitted instead of null" :: String)
+            assertPresenceDecodeError
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":null}"
+                ("rpuStationName must be omitted instead of null" :: String)
+            assertPresenceDecodeError
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationId\":null}"
+                ("rpuStationId must be omitted instead of null" :: String)
+
+        it "rejects extra radio presence keys so typoed station metadata cannot be silently ignored" $
+            ( eitherDecode
+                "{\"rpuStreamUrl\":\"https://radio.example.com/live\",\"rpuStationName\":\"Radio Uno\",\"stationName\":\"typo\"}"
                     :: Either String RadioPresenceUpsert
                 )
                 `shouldSatisfy` isLeft
@@ -4458,7 +12409,8 @@ main = hspec $ do
                         , rpuStationName = Nothing
                         , rpuStationId = Nothing
                         }
-                _searchStreams
+                _autoStopOptions
+                    :<|> _searchStreams
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -4505,7 +12457,8 @@ main = hspec $ do
                         , rpuStationName = Just "Radio\NULUno"
                         , rpuStationId = Just (Data.Text.replicate 161 "a")
                         }
-                _searchStreams
+                _autoStopOptions
+                    :<|> _searchStreams
                     :<|> _upsertActive
                     :<|> _importStreams
                     :<|> _refreshMetadata
@@ -4534,7 +12487,7 @@ main = hspec $ do
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
                             BL.unpack (errBody err)
-                                `shouldContain` "rpuStationName must not contain control characters"
+                                `shouldContain` "rpuStationName must not contain control or hidden formatting characters"
                         Right value ->
                             expectationFailure
                                 ("Expected malformed radio presence metadata to be rejected, got " <> show value)
@@ -4545,6 +12498,23 @@ main = hspec $ do
                             rpStreamUrl persisted `shouldBe` "https://radio.example.com/live"
                             rpStationName persisted `shouldBe` Just "Radio Uno"
                             rpStationId persisted `shouldBe` Just "station-uno"
+
+    describe "validateProposalTitle" $ do
+        it "trims valid proposal titles before CRM persistence" $
+            validateProposalTitle "  TDF Live Sessions Proposal  "
+                `shouldBe` Right "TDF Live Sessions Proposal"
+
+        it "rejects blank, symbol-only, oversized, or control-character proposal titles before they reach storage or PDF generation" $ do
+            let assertInvalid raw expected = case validateProposalTitle raw of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal title to be rejected, got: " <> show value)
+            assertInvalid "   " "title is required"
+            assertInvalid (Data.Text.replicate 161 "x") "title must be 160 characters or fewer"
+            assertInvalid "Launch\nBcc: ops@example.com" "title must not contain control characters"
+            assertInvalid "---" "title must include letters or numbers"
 
     describe "validateTemplateKey" $ do
         it "trims and canonicalizes proposal template keys before lookup" $ do
@@ -4567,8 +12537,6 @@ main = hspec $ do
         it "accepts exactly one normalized proposal content source" $ do
             validateProposalContentSource (Just "\\section*{Proposal}") Nothing
                 `shouldBe` Right (ProposalInlineLatex "\\section*{Proposal}")
-            validateProposalContentSource (Just "   ") (Just "  tdf_live_sessions  ")
-                `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
             validateProposalContentSource Nothing (Just "  TDF_Live_Sessions  ")
                 `shouldBe` Right (ProposalTemplateKey "tdf_live_sessions")
 
@@ -4581,6 +12549,7 @@ main = hspec $ do
                         expectationFailure ("Expected invalid proposal content source to be rejected, got: " <> show value)
             assertInvalid Nothing Nothing "latex or templateKey required"
             assertInvalid (Just "\\section*{Proposal}") (Just "tdf_live_sessions") "Provide either latex or templateKey, not both"
+            assertInvalid (Just "   ") (Just "tdf_live_sessions") "latex must not be blank"
 
     describe "proposal status validation" $ do
         it "defaults omitted create status to draft and normalizes supported explicit statuses" $ do
@@ -4616,6 +12585,27 @@ main = hspec $ do
             assertInvalid 0
             assertInvalid (-2)
 
+    describe "validateOptionalProposalContactName" $ do
+        it "normalizes optional proposal contact names and bounds their stored shape" $ do
+            validateOptionalProposalContactName Nothing `shouldBe` Right Nothing
+            validateOptionalProposalContactName (Just "   ") `shouldBe` Right Nothing
+            validateOptionalProposalContactName (Just "  Ana Gomez  ")
+                `shouldBe` Right (Just "Ana Gomez")
+
+            let assertInvalid raw expected = case validateOptionalProposalContactName (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid proposal contactName to be rejected, got " <> show value)
+            assertInvalid
+                (Data.Text.replicate 161 "a")
+                "contactName must be 160 characters or fewer"
+            assertInvalid
+                "Ana\NULGomez"
+                "contactName must not contain control characters"
+
     describe "validateOptionalProposalContactEmail" $ do
         it "normalizes valid proposal contact emails and treats blanks as unset" $ do
             validateOptionalProposalContactEmail Nothing `shouldBe` Right Nothing
@@ -4640,7 +12630,17 @@ main = hspec $ do
             assertInvalid "sales()@example.com"
             assertInvalid (Data.Text.replicate 65 "a" <> "@example.com")
             assertInvalid ("sales@" <> Data.Text.replicate 64 "a" <> ".com")
-            assertInvalid (Data.Text.replicate 245 "a" <> "@example.com")
+
+        it "rejects oversized proposal contact emails with an explicit length error" $
+            case validateOptionalProposalContactEmail
+                    (Just (Data.Text.replicate 245 "a" <> "@example.com")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "contactEmail must be 254 characters or fewer"
+                Right value ->
+                    expectationFailure
+                        ("Expected oversized proposal contact email to be rejected, got " <> show value)
 
     describe "validateOptionalProposalContactPhone" $ do
         it "normalizes valid proposal contact phones and treats blanks as unset" $ do
@@ -4650,18 +12650,43 @@ main = hspec $ do
                 `shouldBe` Right (Just "+593991234567")
 
         it "rejects malformed proposal contact phones before CRM storage" $ do
-            let assertInvalid raw = case validateOptionalProposalContactPhone (Just raw) of
+            let assertInvalid raw expected = case validateOptionalProposalContactPhone (Just raw) of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL.unpack (errBody err)
-                            `shouldContain` "contactPhone must be a valid phone number"
+                            `shouldContain` expected
                     Right value ->
                         expectationFailure
                             ("Expected invalid proposal contact phone to be rejected, got " <> show value)
-            assertInvalid "---"
-            assertInvalid "12345"
-            assertInvalid "+1234567890123456"
-            assertInvalid "call me at 099 123 4567"
+            assertInvalid "---" "contactPhone must be a valid phone number"
+            assertInvalid "12345" "contactPhone must be a valid phone number"
+            assertInvalid "+1234567890123456" "contactPhone must be a valid phone number"
+            assertInvalid "call me at 099 123 4567" "contactPhone must be a valid phone number"
+            assertInvalid "+593 99\n123 4567" "contactPhone must not contain control characters"
+            assertInvalid
+                ("+593 99" <> Data.Text.singleton '\x202E' <> "123 4567")
+                "contactPhone must not contain hidden formatting characters"
+
+    describe "validateOptionalProposalNotes" $ do
+        it "normalizes blank proposal notes and preserves multiline notes" $ do
+            validateOptionalProposalNotes "notes" Nothing `shouldBe` Right Nothing
+            validateOptionalProposalNotes "notes" (Just "   ") `shouldBe` Right Nothing
+            validateOptionalProposalNotes "notes" (Just "  Linea uno\nLinea dos\tOK  ")
+                `shouldBe` Right (Just "Linea uno\nLinea dos\tOK")
+
+        it "rejects unsafe or hidden-format proposal notes instead of persisting ambiguous backend text" $ do
+            let assertInvalid fieldName raw expected = case validateOptionalProposalNotes fieldName (Just raw) of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid proposal notes to be rejected, got " <> show value)
+            assertInvalid "notes" "Confirmado\NULinternamente" "notes must not contain control characters other than tabs or line breaks"
+            assertInvalid "versionNotes" "Compartido\ESCinternamente" "versionNotes must not contain control characters other than tabs or line breaks"
+            assertInvalid
+              "notes"
+              ("Confirmado" <> Data.Text.singleton '\x202E' <> "internamente")
+              "or hidden formatting characters"
 
     describe "validateOptionalProposalClientPartyId" $ do
         it "preserves omitted ids and accepts positive client party ids" $ do
@@ -4678,20 +12703,43 @@ main = hspec $ do
             assertInvalid 0
             assertInvalid (-9)
 
+    describe "validateContractsAccess" $ do
+        let contractUser roles =
+                AuthedUser
+                    { auPartyId = toSqlKey 1
+                    , auRoles = roles
+                    , auModules = modulesForRoles roles
+                    }
+
+        it "allows operations users and rejects ordinary authenticated users before contract handlers run" $ do
+            validateContractsAccess (contractUser [Admin]) `shouldBe` Right ()
+            validateContractsAccess (contractUser [Manager]) `shouldBe` Right ()
+            case validateContractsAccess (contractUser [Fan]) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contracts access requires operations role"
+                Right value ->
+                    expectationFailure
+                        ("Expected fan contract access to be rejected, got: " <> show value)
+
     describe "validateContractId" $ do
-        it "accepts UUID-shaped contract ids and canonicalizes surrounding whitespace" $
-            validateContractId " 550e8400-e29b-41d4-a716-446655440000 "
+        it "accepts canonical UUID-shaped contract ids" $
+            validateContractId "550e8400-e29b-41d4-a716-446655440000"
                 `shouldBe` Right "550e8400-e29b-41d4-a716-446655440000"
 
-        it "rejects non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
+        it "rejects non-canonical or non-UUID ids with a 400 instead of falling through to ambiguous lookups" $ do
             let assertInvalid raw = case validateContractId raw of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL.unpack (errBody err) `shouldContain` "Invalid contract id"
                     Right value ->
                         expectationFailure ("Expected invalid contract id to be rejected, got: " <> show value)
+            assertInvalid " 550e8400-e29b-41d4-a716-446655440000 "
+            assertInvalid "550E8400-E29B-41D4-A716-446655440000"
             assertInvalid "contract-123"
             assertInvalid "../contracts/store"
+            assertInvalid "00000000-0000-0000-0000-000000000000"
 
     describe "validateContractPayload" $ do
         it "requires object payloads and normalizes the explicit stored contract kind" $ do
@@ -4729,10 +12777,88 @@ main = hspec $ do
                 (A.object ["kind" .= ("___" :: Text)])
                 "Contract payload kind must include at least one ASCII letter or number"
             assertInvalid
+                (A.object ["kind" .= ("_generic" :: Text)])
+                "Contract payload kind must start and end with an ASCII letter or number"
+            assertInvalid
+                (A.object ["kind" .= ("generic-" :: Text)])
+                "Contract payload kind must start and end with an ASCII letter or number"
+            assertInvalid
                 (A.object ["kind" .= Data.Text.replicate 65 "a"])
                 "Contract payload kind must be 64 characters or fewer"
             assertInvalid (A.object ["kind" .= A.Null]) "Contract payload kind must be a non-empty slug"
             assertInvalid (A.object ["kind" .= (42 :: Int)]) "Contract payload kind must be a non-empty slug"
+
+        it "rejects server-managed envelope keys inside contract payloads so create requests cannot over-post stored metadata" $ do
+            let assertInvalid payload expected = case validateContractPayload payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected reserved-key contract payload to be rejected, got: " <> show value)
+            assertInvalid
+                (A.object ["kind" .= ("generic" :: Text), "id" .= ("550e8400-e29b-41d4-a716-446655440000" :: Text)])
+                "Contract payload must not include server-managed field: id"
+            assertInvalid
+                (A.object ["kind" .= ("generic" :: Text), "created_at" .= ("2026-01-01T00:00:00Z" :: Text)])
+                "Contract payload must not include server-managed field: created_at"
+
+        it "rejects payload text that would break out of contract PDF verbatim rendering" $ do
+            let assertInvalid terminator =
+                    case validateContractPayload
+                        (A.object
+                            [ "kind" .= ("generic" :: Text)
+                            , "sections" .=
+                                [ A.object
+                                    [ "body" .= ("line one\n" <> terminator <> "\n\\input{/tmp/private}" :: Text)
+                                    ]
+                                ]
+                            ]
+                        ) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
+                        Right value ->
+                            expectationFailure ("Expected unsafe contract payload text to be rejected, got: " <> show value)
+            mapM_
+                assertInvalid
+                [ "\\end{verbatim}"
+                , "\\end {verbatim}"
+                , "\\end\t{verbatim}"
+                , "\\end\n{verbatim}"
+                ]
+
+        it "rejects payload keys that would break out of contract PDF verbatim rendering" $
+            case validateContractPayload
+                (A.object
+                    [ "kind" .= ("generic" :: Text)
+                    , "sections" .=
+                        [ A.object
+                            [ "\\end{verbatim}" .= ("\\input{/tmp/private}" :: Text)
+                            ]
+                        ]
+                    ]
+                ) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contract payload text must not include the LaTeX verbatim terminator"
+                Right value ->
+                    expectationFailure ("Expected unsafe contract payload key to be rejected, got: " <> show value)
+
+        it "rejects oversized contract payloads before storage or PDF rendering" $
+            case validateContractPayload
+                (A.object
+                    [ "kind" .= ("generic" :: Text)
+                    , "body" .= Data.Text.replicate (256 * 1024) "a"
+                    ]
+                ) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "Contract payload must be 262144 bytes or fewer"
+                Right value ->
+                    expectationFailure ("Expected oversized contract payload to be rejected, got: " <> show value)
 
     describe "validateContractSendPayload" $ do
         it "requires an object body with a canonical recipient email" $
@@ -4756,6 +12882,12 @@ main = hspec $ do
                 "Contract send payload must include a valid email"
             assertInvalid
                 (A.object ["email" .= ("sales@" <> Data.Text.replicate 64 "a" <> ".com")])
+                "Contract send payload must include a valid email"
+            assertInvalid
+                (A.object ["email" .= ("sales@example.123" :: Text)])
+                "Contract send payload must include a valid email"
+            assertInvalid
+                (A.object ["email" .= ("sales@example.c" :: Text)])
                 "Contract send payload must include a valid email"
             assertInvalid
                 (A.object ["email" .= ("sales@example.com" :: Text), "subject" .= ("Contract" :: Text)])
@@ -4784,11 +12916,50 @@ main = hspec $ do
                     expectationFailure "Expected stored contract with unexpected keys to be rejected"
 
         it "rejects stored contracts with invalid persisted ids instead of rendering the wrong contract identity" $
-            case decodeStoredContract "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+            let assertInvalidStoredId storedPayload =
+                    case decodeStoredContract storedPayload of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
+                        Right _ ->
+                            expectationFailure "Expected stored contract with invalid id to be rejected"
+            in do
+                assertInvalidStoredId "{\"id\":\"not-a-uuid\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+                assertInvalidStoredId "{\"id\":\"00000000-0000-0000-0000-000000000000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+
+        it "rejects non-canonical stored contract envelopes instead of normalizing persisted drift" $ do
+            let assertInvalidStored expected storedPayload =
+                    case decodeStoredContract storedPayload of
+                        Left err ->
+                            Data.Text.unpack err `shouldContain` expected
+                        Right _ ->
+                            expectationFailure "Expected non-canonical stored contract to be rejected"
+            assertInvalidStored
+                "Stored contract id is not canonical"
+                "{\"id\":\" 550e8400-e29b-41d4-a716-446655440000 \",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+            assertInvalidStored
+                "Stored contract kind is not canonical"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\" Generic \",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+            assertInvalidStored
+                "Stored contract payload is not canonical"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\" Generic \"},\"created_at\":\"2026-01-01T00:00:00Z\"}"
+
+        it "rejects stored contracts whose envelope id does not match the requested route id" $
+            case decodeStoredContractFor
+                "550e8400-e29b-41d4-a716-446655440000"
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440001\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
                 Left err ->
-                    Data.Text.unpack err `shouldContain` "Stored contract id is invalid"
+                    Data.Text.unpack err `shouldContain` "Stored contract id does not match requested contract id"
                 Right _ ->
-                    expectationFailure "Expected stored contract with invalid id to be rejected"
+                    expectationFailure "Expected stored contract id mismatch to be rejected"
+
+        it "rejects non-canonical requested route ids before matching stored contract envelopes" $
+            case decodeStoredContractFor
+                " 550e8400-e29b-41d4-a716-446655440000 "
+                "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"generic\",\"payload\":{\"kind\":\"generic\"},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Requested contract id is not canonical"
+                Right _ ->
+                    expectationFailure "Expected non-canonical requested contract id to be rejected"
 
         it "rejects stored contracts whose top-level kind disagrees with payload.kind" $
             case decodeStoredContract "{\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"kind\":\"nda\",\"payload\":{\"kind\":\"msa\",\"amountCents\":25000},\"created_at\":\"2026-01-01T00:00:00Z\"}" of
@@ -4819,9 +12990,13 @@ main = hspec $ do
             validateOptionalInternProjectStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternProjectStatusInput (Just " paused ")
                 `shouldBe` Right (Just "paused")
+            validateOptionalInternProjectStatusInput (Just " CANCELLED ")
+                `shouldBe` Right (Just "cancelled")
             validateOptionalInternTaskStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternTaskStatusInput (Just " DOING ")
                 `shouldBe` Right (Just "doing")
+            validateOptionalInternTaskStatusInput (Just " cancelled ")
+                `shouldBe` Right (Just "cancelled")
             validateOptionalInternPermissionStatusInput Nothing `shouldBe` Right Nothing
             validateOptionalInternPermissionStatusInput (Just " APPROVED ")
                 `shouldBe` Right (Just "approved")
@@ -4835,13 +13010,13 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship status to be rejected, got " <> show value)
             assertInvalid
                 (validateInternProjectStatusInput (Just "   "))
-                "projectStatus must be one of: active, paused, completed"
+                "projectStatus must be one of: active, paused, completed, cancelled"
             assertInvalid
                 (validateOptionalInternProjectStatusInput (Just "archived"))
-                "projectStatus must be one of: active, paused, completed"
+                "projectStatus must be one of: active, paused, completed, cancelled"
             assertInvalid
                 (validateOptionalInternTaskStatusInput (Just "review"))
-                "taskStatus must be one of: todo, doing, blocked, done"
+                "taskStatus must be one of: todo, doing, blocked, done, cancelled"
             assertInvalid
                 (validateOptionalInternPermissionStatusInput (Just "maybe"))
                 "permissionStatus must be one of: pending, approved, rejected"
@@ -4863,6 +13038,175 @@ main = hspec $ do
             assertInvalid (validateInternTaskProgressUpdate (Just (-1)))
             assertInvalid (validateInternTaskProgressUpdate (Just 101))
 
+    describe "studio internship audit execution validation" $ do
+        it "normalizes every supported execution status used by the Spanish workflow" $ do
+            validateExecutionStatus " PENDING " `shouldBe` Right "pending"
+            validateExecutionStatus "in_progress" `shouldBe` Right "in_progress"
+            validateExecutionStatus "passed" `shouldBe` Right "passed"
+            validateExecutionStatus "failed" `shouldBe` Right "failed"
+            validateExecutionStatus "blocked" `shouldBe` Right "blocked"
+            validateExecutionStatus "not_applicable" `shouldBe` Right "not_applicable"
+            validateExecutionStatus "ready_for_retest" `shouldBe` Right "ready_for_retest"
+            validateExecutionStatus "verified" `shouldBe` Right "verified"
+
+        it "rejects unknown execution states and unsafe reportable text" $ do
+            case validateExecutionStatus "done" of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected status rejection, got " <> show value)
+            validateReportableText "actualResult" 20 "  Resultado claro  "
+                `shouldBe` Right "Resultado claro"
+            case validateReportableText "actualResult" 20 "fallo\NULoculto" of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected control rejection, got " <> show value)
+
+        it "keeps completion tied to submitted reports and completed retests" $ do
+            let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)
+            reportStateCountsForFailure "draft" (Just submittedAt) `shouldBe` False
+            reportStateCountsForFailure "submitted" (Just submittedAt) `shouldBe` True
+            reportStateCountsForFailure "received" (Just submittedAt) `shouldBe` True
+            reportStateCountsForFailure "received" Nothing `shouldBe` False
+            reportBlocksCompletion False "ready_for_retest" `shouldBe` True
+            reportBlocksCompletion False "received" `shouldBe` False
+            reportBlocksCompletion True "confirmed" `shouldBe` True
+            reportBlocksCompletion True "closed" `shouldBe` False
+
+        it "derives a deterministic project terminal state from every sibling outcome" $ do
+            projectStatusForTaskOutcomes [] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["done", "todo"] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["cancelled", "blocked"] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["cancelled", "cancelled"] `shouldBe` Just "cancelled"
+            projectStatusForTaskOutcomes ["done", "cancelled"] `shouldBe` Just "completed"
+            projectStatusForTaskOutcomes ["cancelled", "done"] `shouldBe` Just "completed"
+
+        it "requires final-summary submission to be at least as new as its source data" $ do
+            let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)
+            finalSummarySubmissionIsFresh Nothing [] `shouldBe` False
+            finalSummarySubmissionIsFresh (Just submittedAt) [] `shouldBe` True
+            finalSummarySubmissionIsFresh (Just submittedAt) [submittedAt] `shouldBe` True
+            finalSummarySubmissionIsFresh (Just submittedAt) [addUTCTime 1 submittedAt] `shouldBe` False
+
+    describe "internal feedback workflow validation" $ do
+        it "filters the complete visible report set before applying the export cap" $ do
+            let now = UTCTime (fromGregorian 2026 8 24) (secondsToDiffTime 3600)
+                baseSummary = InternalFeedbackSummaryDTO
+                    { ifsId = "target"
+                    , ifsTitle = "Needle report"
+                    , ifsReportType = "error"
+                    , ifsState = "received"
+                    , ifsModuleName = "Scheduling"
+                    , ifsFeatureName = Just "Booking"
+                    , ifsEnvironment = "staging"
+                    , ifsPlatform = "web"
+                    , ifsProposedSeverityId = Nothing
+                    , ifsAuthoritativeSeverityId = Nothing
+                    , ifsPriority = Nothing
+                    , ifsBlocking = False
+                    , ifsReporterPartyId = 1
+                    , ifsReporterName = "Intern"
+                    , ifsInternshipProjectId = Nothing
+                    , ifsInternshipTaskId = Nothing
+                    , ifsTestCaseId = Nothing
+                    , ifsTestExecutionId = Nothing
+                    , ifsDuplicateOf = Nothing
+                    , ifsCreatedAt = now
+                    , ifsUpdatedAt = now
+                    }
+                newerNonMatches =
+                    [ baseSummary
+                        { ifsId = Data.Text.pack (show index)
+                        , ifsTitle = "Unrelated report"
+                        }
+                    | index <- [1 .. 1000 :: Int]
+                    ]
+                filtered = filterInternalReportSummaries
+                    Nothing Nothing (Just "needle") (newerNonMatches ++ [baseSummary])
+            map ifsId filtered `shouldBe` ["target"]
+
+        it "neutralizes spreadsheet formulas while preserving quoted CSV data" $ do
+            csvField "ordinary" `shouldBe` "\"ordinary\""
+            csvField "a \"quoted\" value" `shouldBe` "\"a \"\"quoted\"\" value\""
+            csvField "=HYPERLINK(\"https://attacker.invalid\")" `shouldBe`
+                "\"'=HYPERLINK(\"\"https://attacker.invalid\"\")\""
+            csvField "  @SUM(A1:A2)" `shouldBe` "\"'  @SUM(A1:A2)\""
+
+        it "distinguishes omitted administrative fields from explicit JSON null when clearing triage values" $ do
+            fmap ifuPriority (eitherDecode "{}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right Nothing
+            fmap ifuPriority (eitherDecode "{\"ifuPriority\":null}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right (Just Nothing)
+            fmap ifuAssignedTo (eitherDecode "{\"ifuAssignedTo\":42}" :: Either String InternalFeedbackUpdate)
+                `shouldBe` Right (Just (Just 42))
+
+        it "accepts the requested report taxonomy without granting authoritative triage" $ do
+            (validateReportType " ACCEssibility " :: Either ServerError Text)
+                `shouldBe` Right "accessibility"
+            (validateReportType "content_translation" :: Either ServerError Text)
+                `shouldBe` Right "content_translation"
+            case (validateReportType "incident" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected type rejection, got " <> show value)
+            (validatePriority " URGENT " :: Either ServerError Text)
+                `shouldBe` Right "urgent"
+            (validateEnvironment " staging " :: Either ServerError Text)
+                `shouldBe` Right "staging"
+
+        it "maps internal report types from the persisted feedback-category codes" $ do
+            internalReportTypeForCategoryCode "bug" `shouldBe` Just "error"
+            internalReportTypeForCategoryCode " accessibility " `shouldBe` Just "accessibility"
+            internalReportTypeForCategoryCode "permissions" `shouldBe` Just "permissions"
+            internalReportTypeForCategoryCode "ux" `shouldBe` Nothing
+
+        it "enforces explicit triage transitions including clarification, retest, closure, and reopening" $ do
+            (validateStateTransition "received" "needs_information" :: Either ServerError Text)
+                `shouldBe` Right "needs_information"
+            (validateStateTransition "in_progress" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            (validateStateTransition "ready_for_retest" "verified" :: Either ServerError Text)
+                `shouldBe` Right "verified"
+            (validateStateTransition "verified" "closed" :: Either ServerError Text)
+                `shouldBe` Right "closed"
+            (validateStateTransition "closed" "received" :: Either ServerError Text)
+                `shouldBe` Right "received"
+            case (validateStateTransition "received" "closed" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right value -> expectationFailure ("Expected transition rejection, got " <> show value)
+
+        it "keeps standalone reports out of the retest-only state" $ do
+            (validateReportStateTransition True "in_progress" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            case (validateReportStateTransition False "in_progress" "ready_for_retest" :: Either ServerError Text) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err) `shouldContain` "linked test case"
+                Right value -> expectationFailure ("Expected unlinked transition rejection, got " <> show value)
+            (validateReportStateTransition False "in_progress" "verified" :: Either ServerError Text)
+                `shouldBe` Right "verified"
+            case (validateReportStateTransition True "in_progress" "verified" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right value -> expectationFailure ("Expected linked verification rejection, got " <> show value)
+            (validateReportStateTransition False "in_progress" "discarded" :: Either ServerError Text)
+                `shouldBe` Right "discarded"
+
+        it "requires known states and public HTTPS evidence links" $ do
+            (validateInternalReportState "state" "ready_for_retest" :: Either ServerError Text)
+                `shouldBe` Right "ready_for_retest"
+            (validateExternalEvidenceUrl " https://evidence.example.test/video/123 " :: Either ServerError Text)
+                `shouldBe` Right "https://evidence.example.test/video/123"
+            forM_ ["http://evidence.example.test/a", "https://localhost/a", "https://127.0.0.1/a", "https://10.0.0.1/a", "https://192.168.1.2/a", "https://169.254.169.254/latest", "https://172.16.0.2/a", "file:///tmp/a"] $ \url ->
+                case (validateExternalEvidenceUrl url :: Either ServerError Text) of
+                    Left err -> errHTTPCode err `shouldBe` 400
+                    Right value -> expectationFailure ("Expected unsafe URL rejection, got " <> show value)
+            (validateVideoLinks (Just "https://evidence.example.test/a\nhttps://evidence.example.test/b") :: Either ServerError (Maybe Text))
+                `shouldBe` Right (Just "https://evidence.example.test/a\nhttps://evidence.example.test/b")
+            (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/issues/123" :: Either ServerError Text)
+                `shouldBe` Right "https://github.com/diegueins680/tdf-app/issues/123"
+            case (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/pull/123" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected non-issue GitHub URL rejection, got " <> show value)
+            case (validateGithubIssueUrl "https://github.com/diegueins680/tdf-app/issues/123oops" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 400
+                Right value -> expectationFailure ("Expected malformed GitHub issue URL rejection, got " <> show value)
+
     describe "internship project title validation" $ do
         it "trims project titles while preserving omitted update payloads" $ do
             validateInternProjectTitle "  Backline inventory audit  "
@@ -4880,6 +13224,23 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship project title, got " <> show value)
             assertInvalid (validateInternProjectTitle "   ")
             assertInvalid (validateInternProjectTitleUpdate (Just "   "))
+
+        it "rejects unsafe or oversized project titles before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship project title, got " <> show value)
+            assertInvalid
+                (validateInternProjectTitle "Backline\nAudit")
+                "project title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternProjectTitle ("Backline" <> Data.Text.singleton '\x202E' <> "Audit"))
+                "project title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternProjectTitle (Data.Text.replicate 161 "a"))
+                "project title must be 160 characters or fewer"
 
     describe "internship task title validation" $ do
         it "trims task titles while preserving omitted update payloads" $ do
@@ -4899,6 +13260,23 @@ main = hspec $ do
             assertInvalid (validateInternTaskTitle "   ")
             assertInvalid (validateInternTaskTitleUpdate (Just "   "))
 
+        it "rejects unsafe or oversized task titles before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship task title, got " <> show value)
+            assertInvalid
+                (validateInternTaskTitle "Metadata\rPass")
+                "task title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTaskTitle ("Metadata" <> Data.Text.singleton '\x202E' <> "Pass"))
+                "task title must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTaskTitle (Data.Text.replicate 161 "a"))
+                "task title must be 160 characters or fewer"
+
     describe "internship todo text validation" $ do
         it "trims meaningful todo text while preserving omitted update payloads" $ do
             validateInternTodoText "  Confirm drum mics  "
@@ -4916,6 +13294,23 @@ main = hspec $ do
                         expectationFailure ("Expected invalid internship todo text to be rejected, got " <> show value)
             assertInvalid (validateInternTodoText "   ")
             assertInvalid (validateInternTodoTextUpdate (Just "   "))
+
+        it "rejects unsafe or oversized todo text before persistence" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship todo text, got " <> show value)
+            assertInvalid
+                (validateInternTodoText "Confirm cables\NUL")
+                "todo text must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTodoText ("Confirm" <> Data.Text.singleton '\x202E' <> "cables"))
+                "todo text must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternTodoText (Data.Text.replicate 501 "a"))
+                "todo text must be 500 characters or fewer"
 
     describe "internship party id validation" $ do
         it "preserves omitted optional ids, clear operations, and positive party references" $ do
@@ -4942,12 +13337,12 @@ main = hspec $ do
                 (validateOptionalInternPartyIdUpdate "assignedTo" (Just (Just 0)))
 
     describe "internship path identifier parsing" $ do
-        it "accepts positive persistent ids used by internship capture routes" $
-            case (parseKey @ME.InternProject "42" :: Either ServerError (Key ME.InternProject)) of
+        it "accepts UUID persistent ids used by internship capture routes" $
+            case (parseKey @ME.InternProject "00000000-0000-4000-8000-000000000042" :: Either ServerError (Key ME.InternProject)) of
                 Left err ->
-                    expectationFailure ("Expected positive internship path id to parse, got " <> show err)
+                    expectationFailure ("Expected UUID internship path id to parse, got " <> show err)
                 Right projectKey ->
-                    toPathPiece projectKey `shouldBe` "42"
+                    toPathPiece projectKey `shouldBe` "00000000-0000-4000-8000-000000000042"
 
         it "rejects zero, negative, or malformed ids before internship handlers hit the database" $ do
             let assertInvalid rawId expectedMessage =
@@ -4959,7 +13354,77 @@ main = hspec $ do
                             expectationFailure "Expected invalid internship path id to be rejected"
             assertInvalid "0" "positive integer"
             assertInvalid "-3" "positive integer"
+            assertInvalid " 42 " "Invalid identifier"
+            assertInvalid "0042" "Invalid identifier"
+            assertInvalid "+42" "Invalid identifier"
             assertInvalid "project-7" "Invalid identifier"
+
+    describe "internship profile text validation" $ do
+        it "normalizes nullable profile skills and areas before persistence" $ do
+            validateInternProfileSkillsUpdate Nothing `shouldBe` Right Nothing
+            validateInternProfileSkillsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
+            validateInternProfileSkillsUpdate (Just (Just "  Patch bays\nLive sound  "))
+                `shouldBe` Right (Just (Just "Patch bays\nLive sound"))
+            validateInternProfileAreasUpdate (Just (Just "   "))
+                `shouldBe` Right (Just Nothing)
+
+        it "rejects oversized or unsafe profile text before storing intern profile rows" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure ("Expected invalid internship profile text, got " <> show value)
+            assertInvalid
+                (validateInternProfileSkillsUpdate (Just (Just (Data.Text.replicate 1001 "x"))))
+                "profile skills must be 1000 characters or fewer"
+            assertInvalid
+                (validateInternProfileSkillsUpdate (Just (Just ("Patch" <> Data.Text.singleton '\NUL'))))
+                "profile skills must not contain control characters"
+            assertInvalid
+                (validateInternProfileAreasUpdate (Just (Just ("Live" <> Data.Text.singleton '\x202E'))))
+                "profile areas must not contain control characters"
+
+    describe "internship permission text validation" $ do
+        it "trims permission category, reason, and decision notes before persistence" $ do
+            validateInternPermissionCategory "  leave  " `shouldBe` Right "leave"
+            validateInternPermissionReason Nothing `shouldBe` Right Nothing
+            validateInternPermissionReason (Just "   ") `shouldBe` Right Nothing
+            validateInternPermissionReason (Just "  Dentist\nfollow-up  ")
+                `shouldBe` Right (Just "Dentist\nfollow-up")
+            validateInternPermissionDecisionNotes Nothing `shouldBe` Right Nothing
+            validateInternPermissionDecisionNotes (Just Nothing) `shouldBe` Right (Just Nothing)
+            validateInternPermissionDecisionNotes (Just (Just "  Approved\twith receipt  "))
+                `shouldBe` Right (Just (Just "Approved\twith receipt"))
+
+        it "rejects blank, oversized, or unsafe permission text before storing requests or decisions" $ do
+            let assertInvalid result expected = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL.unpack (errBody err) `shouldContain` expected
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid internship permission text, got " <> show value)
+            assertInvalid
+                (validateInternPermissionCategory "   ")
+                "permission category is required"
+            assertInvalid
+                (validateInternPermissionCategory (Data.Text.replicate 81 "a"))
+                "permission category must be 80 characters or fewer"
+            assertInvalid
+                (validateInternPermissionCategory "leave\nrequest")
+                "permission category must not contain control or hidden formatting characters"
+            assertInvalid
+                (validateInternPermissionReason (Just ("Dentist" <> Data.Text.singleton '\NUL')))
+                "permission reason must not contain control characters"
+            assertInvalid
+                ( validateInternPermissionDecisionNotes
+                    (Just (Just ("Approved" <> Data.Text.singleton '\x202E')))
+                )
+                "decision notes must not contain control characters"
+            assertInvalid
+                (validateInternPermissionReason (Just (Data.Text.replicate 1001 "x")))
+                "permission reason must be 1000 characters or fewer"
 
     describe "internship permission date validation" $ do
         it "accepts open-ended and same-day permission ranges" $ do
@@ -5110,10 +13575,11 @@ main = hspec $ do
     describe "internship task update permissions" $ do
         it "allows interns to change status/progress while keeping admin-only task edits available to admins" $ do
             validateInternTaskUpdatePermissions False
-                (InternTaskUpdate Nothing Nothing (Just "doing") (Just 55) Nothing Nothing)
+                (InternTaskUpdate Nothing Nothing Nothing (Just "doing") (Just 55) Nothing Nothing)
                 `shouldBe` Right ()
             validateInternTaskUpdatePermissions True
-                (InternTaskUpdate (Just "Retitle")
+                (InternTaskUpdate (Just "project-2")
+                    (Just "Retitle")
                     (Just (Just "Add checklist"))
                     Nothing
                     Nothing
@@ -5121,27 +13587,22 @@ main = hspec $ do
                     (Just Nothing))
                 `shouldBe` Right ()
 
-        it "rejects non-admin attempts to change title, description, assignee, or due date instead of silently ignoring them" $ do
+        it "rejects non-admin attempts to change project, title, description, assignee, or due date instead of silently ignoring them" $ do
             let assertForbidden payload = case validateInternTaskUpdatePermissions False payload of
                     Left err -> do
                         errHTTPCode err `shouldBe` 403
                         BL.unpack (errBody err)
-                            `shouldContain` "Only admins can update task title, description, assignee, or due date"
+                            `shouldContain` "Only admins can update task project, title, description, assignee, or due date"
                     Right value ->
                         expectationFailure
                             ("Expected non-admin task update to be rejected, got " <> show value)
-            assertForbidden (InternTaskUpdate (Just "Retitle") Nothing Nothing Nothing Nothing Nothing)
-            assertForbidden (InternTaskUpdate Nothing (Just (Just "Details")) Nothing Nothing Nothing Nothing)
-            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing (Just (Just 7)) Nothing)
-            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing (Just Nothing))
+            assertForbidden (InternTaskUpdate (Just "project-2") Nothing Nothing Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing (Just "Retitle") Nothing Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing (Just (Just "Details")) Nothing Nothing Nothing Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing (Just (Just 7)) Nothing)
+            assertForbidden (InternTaskUpdate Nothing Nothing Nothing Nothing Nothing Nothing (Just Nothing))
 
     describe "event finance normalizers" $ do
-        it "normalizes event type and status with safe fallbacks" $ do
-            normalizeEventType (Just " FESTIVAL ") `shouldBe` Just "festival"
-            normalizeEventType (Just "unknown-type") `shouldBe` Nothing
-            normalizeEventStatus (Just "canceled") `shouldBe` Just "cancelled"
-            normalizeEventStatus (Just "not-real") `shouldBe` Nothing
-
         it "rejects invalid explicit budget line types instead of silently rewriting them to expense" $ do
             validateBudgetLineTypeInput " income " `shouldBe` Right "income"
             validateBudgetLineTypeInput "EXPENSE" `shouldBe` Right "expense"
@@ -5183,6 +13644,46 @@ main = hspec $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid inherited event currency to be rejected, got " <> show value)
+
+        it "rejects blank finance budget line ids instead of silently clearing the relationship" $ do
+            validateOptionalBudgetLineIdInput Nothing `shouldBe` Right Nothing
+            validateOptionalBudgetLineIdInput (Just "  42  ") `shouldBe` Right (Just "42")
+            case validateOptionalBudgetLineIdInput (Just "   ") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "budgetLineId must be omitted or null when no budget line should be linked"
+                Right value ->
+                    expectationFailure
+                        ("Expected blank budgetLineId to be rejected, got " <> show value)
+
+        it "validates ticket tier codes before fallback normalization can hide ambiguous input" $ do
+            validateTicketTierCodeInput "General Admission" " vip pass "
+                `shouldBe` Right "VIP-PASS"
+            validateTicketTierCodeInput "General Admission" "   "
+                `shouldBe` Right "GENERAL-ADMISSION"
+
+            let assertInvalid rawName rawCode expected =
+                    case validateTicketTierCodeInput rawName rawCode of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expected
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid ticket tier code to be rejected, got " <> show value)
+
+            assertInvalid
+                "General Admission"
+                "!!!"
+                "ticket tier code must include at least one letter or digit"
+            assertInvalid
+                "!!!"
+                "   "
+                "ticket tier code must include at least one letter or digit"
+            assertInvalid
+                "General Admission"
+                (Data.Text.replicate 65 "A")
+                "ticket tier code must be 64 characters or fewer"
 
         it "validates ticket tier currencies before ticket tiers can persist opaque codes" $ do
             validateTicketTierCurrencyInput "eur" " usd " `shouldBe` Right "USD"
@@ -5244,24 +13745,74 @@ main = hspec $ do
                 Right value ->
                     expectationFailure ("Expected invalid stored finance currency to be rejected, got " <> show value)
 
-    describe "event list query validation" $ do
-        it "accepts blank filters and canonicalizes supported event type and status values" $ do
-            parseEventTypeQueryParamEither Nothing `shouldBe` Right Nothing
-            parseEventTypeQueryParamEither (Just "   ") `shouldBe` Right Nothing
-            parseEventTypeQueryParamEither (Just " FESTIVAL ") `shouldBe` Right (Just "festival")
-            parseEventStatusQueryParamEither (Just " canceled ") `shouldBe` Right (Just "cancelled")
+        it "rejects non-positive persisted finance amounts instead of including impossible rows in summaries" $ do
+            case validateStoredFinanceEntryDimensions
+                validStoredFinanceEntry { eventFinanceEntryAmountCents = 0 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry amount is invalid"
+                Right value ->
+                    expectationFailure ("Expected zero stored finance amount to be rejected, got " <> show value)
+            case validateStoredFinanceEntryDimensions
+                validStoredFinanceEntry { eventFinanceEntryAmountCents = -1 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored finance entry amount is invalid"
+                Right value ->
+                    expectationFailure ("Expected negative stored finance amount to be rejected, got " <> show value)
 
-        it "rejects unsupported filters instead of silently broadening the result set" $ do
-            let assertInvalid expectedMessage result = case result of
-                    Left err -> do
-                        errHTTPCode err `shouldBe` 400
-                        BL.unpack (errBody err) `shouldContain` expectedMessage
-                    Right value ->
-                        expectationFailure ("Expected invalid event list filter error, got " <> show value)
-            assertInvalid "eventType must be one of"
-                (parseEventTypeQueryParamEither (Just "meetup"))
-            assertInvalid "eventStatus must be one of"
-                (parseEventStatusQueryParamEither (Just "paused"))
+    describe "stored budget line invariants" $ do
+        let budgetTimestamp = UTCTime (fromGregorian 2026 1 1) 0
+            validStoredBudgetLine =
+                EventBudgetLine
+                    { eventBudgetLineEventId = toSqlKey 1
+                    , eventBudgetLineCode = "TICKET-SALES"
+                    , eventBudgetLineName = "Ticket sales"
+                    , eventBudgetLineLineType = "income"
+                    , eventBudgetLineCategory = "tickets"
+                    , eventBudgetLinePlannedCents = 250000
+                    , eventBudgetLineNotes = Nothing
+                    , eventBudgetLineCreatedAt = budgetTimestamp
+                    , eventBudgetLineUpdatedAt = budgetTimestamp
+                    }
+
+        it "accepts persisted budget lines whose summary dimensions are already canonical" $
+            validateStoredBudgetLineDimensions validStoredBudgetLine
+                `shouldBe` Right (250000, "income")
+
+        it "rejects invalid persisted budget line dimensions instead of treating them as expense fallbacks" $ do
+            case validateStoredBudgetLineDimensions validStoredBudgetLine { eventBudgetLineLineType = "misc" } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored budget line type is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored budget line type to be rejected, got " <> show value)
+            case validateStoredBudgetLineDimensions validStoredBudgetLine { eventBudgetLinePlannedCents = -1 } of
+                Left err ->
+                    Data.Text.unpack err `shouldContain` "Stored budget line planned cents is invalid"
+                Right value ->
+                    expectationFailure ("Expected invalid stored budget cents to be rejected, got " <> show value)
+
+    describe "event budget line JSON contract" $ do
+        it "rejects unknown write fields before budget line handlers can ignore typoed input" $ do
+            let canonicalPayload =
+                    "{\"eblId\":null,\"eblEventId\":null,\"eblCode\":\"TICKETS\","
+                        <> "\"eblName\":\"Ticket sales\",\"eblType\":\"income\","
+                        <> "\"eblCategory\":\"tickets\",\"eblPlannedCents\":250000,"
+                        <> "\"eblActualCents\":null,\"eblNotes\":null,"
+                        <> "\"eblCreatedAt\":null,\"eblUpdatedAt\":null}"
+                unexpectedPayload =
+                    "{\"eblId\":null,\"eblEventId\":null,\"eblCode\":\"TICKETS\","
+                        <> "\"eblName\":\"Ticket sales\",\"eblType\":\"income\","
+                        <> "\"eblCategory\":\"tickets\",\"eblPlannedCents\":250000,"
+                        <> "\"eblActualCents\":null,\"eblNotes\":null,"
+                        <> "\"eblCreatedAt\":null,\"eblUpdatedAt\":null,"
+                        <> "\"ignored\":true}"
+            case (eitherDecode canonicalPayload :: Either String EventBudgetLineDTO) of
+                Left err ->
+                    expectationFailure ("Expected canonical budget line payload to decode, got: " <> err)
+                Right payload ->
+                    eblCode payload `shouldBe` "TICKETS"
+
+            (eitherDecode unexpectedPayload :: Either String EventBudgetLineDTO)
+                `shouldSatisfy` isLeft
 
     describe "availabilityOverlaps" $ do
         let day = fromGregorian 2025 1 1
@@ -5331,6 +13882,124 @@ main = hspec $ do
             validateEmbeddingResponseDimensions 1 [[infinityValue]]
                 `shouldSatisfy` isLeft
 
+    describe "shouldUseLocalEmbeddingFallback" $
+        it "does not hide upstream embedding response shape drift behind local vectors" $ do
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings request failed: socket closed"
+                `shouldBe` True
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 503)."
+                `shouldBe` True
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 400): payload too large"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 400): invalid_request_error"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings response invalid: Embedding response size mismatch"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "  openai embeddings response invalid: Embedding response dimension mismatch  "
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 401)."
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 403): permission_denied"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error (status 429): insufficient_quota"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                "OpenAI embeddings error: model_not_found"
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                ( "OpenAI embeddings error: The model `text-embedding-3-large` "
+                    <> "does not exist or you do not have access to it."
+                )
+                `shouldBe` False
+            shouldUseLocalEmbeddingFallback
+                ( "OpenAI embeddings error: "
+                    <> "You do not have access to model text-embedding-3-large."
+                )
+                `shouldBe` False
+
+    describe "callOpenAIEmbeddingsWith" $ do
+        it "returns sanitized request exceptions as errors so embedding fallback can handle them" $
+            withEnvOverrides
+                ( clearRagEnv
+                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
+                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                       ]
+                )
+                $ do
+                    cfg <- loadConfig
+                    result <-
+                        callOpenAIEmbeddingsWith
+                            ( \_ ->
+                                ioError
+                                    ( userError
+                                        ( "socket\nclosed\NUL"
+                                            <> replicate 700 'x'
+                                        )
+                                    )
+                            )
+                            cfg
+                            ["consulta"]
+                    case result of
+                        Left err -> do
+                            err `shouldSatisfy`
+                                Data.Text.isInfixOf "OpenAI embeddings request failed"
+                            err `shouldSatisfy` Data.Text.isInfixOf "socket closed"
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "\n")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "\NUL")
+                            err `shouldSatisfy` Data.Text.isInfixOf "[truncated]"
+                            Data.Text.length err `shouldSatisfy` (<= 560)
+                        Right value ->
+                            expectationFailure
+                                ("Expected request exception to return Left, got " <> show value)
+
+        it "redacts upstream embedding secrets before fallback error handling exposes them" $
+            withEnvOverrides
+                ( clearRagEnv
+                    ++ [ ("OPENAI_API_KEY", Just "sk-test")
+                       , ("OPENAI_EMBED_MODEL", Just "text-embedding-3-small")
+                       ]
+                )
+                $ do
+                    cfg <- loadConfig
+                    result <-
+                        callOpenAIEmbeddingsWith
+                            ( \_ ->
+                                ioError
+                                    ( userError
+                                        ( "Authorization: Bearer sk-live-secret "
+                                            <> "api_key=sk-query-secret "
+                                            <> "{\"access_token\":\"token-secret\","
+                                            <> "\"client_secret\":\"client-secret\"} "
+                                            <> "X-Api-Key: sk-header-secret"
+                                        )
+                                    )
+                            )
+                            cfg
+                            ["consulta"]
+                    case result of
+                        Left err -> do
+                            err `shouldSatisfy` Data.Text.isInfixOf "Authorization: [redacted]"
+                            err `shouldSatisfy` Data.Text.isInfixOf "api_key=[redacted]"
+                            err `shouldSatisfy` Data.Text.isInfixOf "\"access_token\":\"[redacted]\""
+                            err `shouldSatisfy` Data.Text.isInfixOf "\"client_secret\":\"[redacted]\""
+                            err `shouldSatisfy` Data.Text.isInfixOf "X-Api-Key: [redacted]"
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-live-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-query-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "token-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "client-secret")
+                            err `shouldSatisfy` (not . Data.Text.isInfixOf "sk-header-secret")
+                        Right value ->
+                            expectationFailure
+                                ("Expected redacted request exception, got " <> show value)
+
     describe "parseDirective" $ do
         it "parses SEND/HOLD directives regardless of casing" $ do
             parseDirective "send: Hola!" `shouldBe` Right (Send "Hola!")
@@ -5343,10 +14012,38 @@ main = hspec $ do
         it "requires HOLD reason even when NEED exists" $ do
             parseDirective "HOLD:\nNEED: email" `shouldBe` Left "HOLD directive empty"
 
+        it "rejects nested or duplicate auto-reply directives instead of silently choosing one" $ do
+            parseDirective "SEND: Hola\nHOLD: Falta email"
+                `shouldBe` Left "SEND directive contains nested directive line"
+            parseDirective "SEND:\nNEED: email"
+                `shouldBe` Left "SEND directive contains nested directive line"
+            parseDirective "HOLD: Falta confirmar datos\nSEND: Hola"
+                `shouldBe` Left "HOLD directive contains nested directive line"
+            parseDirective "HOLD: Falta confirmar datos\nNEED: email\nNEED: phone"
+                `shouldBe` Left "HOLD directive must include at most one NEED line"
+
     describe "validateHookVerifyRequest" $ do
         it "accepts subscribe verification requests with a matching token" $ do
             validateHookVerifyRequest (Just "SuBsCrIbE") (Just "challenge-123") (Just "secret") (Just "secret")
                 `shouldBe` Right "challenge-123"
+
+        it "rejects unsafe hub.mode values before webhook verification fallback checks" $ do
+            let assertInvalidMode rawMode = do
+                    case validateHookVerifyRequest
+                        (Just rawMode)
+                        (Just "challenge-123")
+                        (Just "secret")
+                        (Just "secret") of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain` "hub.mode must not contain whitespace"
+                        Right value ->
+                            expectationFailure
+                                ("Expected unsafe hub.mode to be rejected, got " <> show value)
+            assertInvalidMode " subscribe "
+            assertInvalidMode "sub\nscribe"
+            assertInvalidMode ("sub" <> Data.Text.singleton '\x200B' <> "scribe")
 
         it "rejects unsafe challenge echoes before returning webhook verification text" $ do
             case validateHookVerifyRequest
@@ -5372,6 +14069,30 @@ main = hspec $ do
                         `shouldContain` "hub.challenge must be 512 characters or fewer"
                 Right value ->
                     expectationFailure ("Expected oversized challenge to be rejected, got " <> show value)
+            case validateHookVerifyRequest
+                (Just "subscribe")
+                (Just ("challenge" <> Data.Text.singleton '\x200B' <> "-123"))
+                (Just "secret")
+                (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.challenge must not contain hidden formatting characters"
+                Right value ->
+                    expectationFailure
+                        ("Expected hidden-format challenge to be rejected, got " <> show value)
+            case validateHookVerifyRequest
+                (Just "subscribe")
+                (Just " challenge-123 ")
+                (Just "secret")
+                (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.challenge must not contain whitespace"
+                Right value ->
+                    expectationFailure
+                        ("Expected whitespace-padded challenge to be rejected, got " <> show value)
 
         it "rejects missing verification query params with precise 400s" $ do
             case validateHookVerifyRequest Nothing (Just "challenge-123") (Just "secret") (Just "secret") of
@@ -5421,6 +14142,56 @@ main = hspec $ do
             case validateHookVerifyRequest
                     (Just "subscribe")
                     (Just "challenge-123")
+                    (Just "secret token")
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must not contain control characters or whitespace"
+                Right _ -> expectationFailure "Expected whitespace-bearing hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just ("secret" <> Data.Text.singleton '\x202E'))
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hidden formatting characters"
+                Right _ -> expectationFailure "Expected hidden-format hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just ("secr" <> Data.Text.singleton '\x00E9' <> "t"))
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must contain visible ASCII characters only"
+                Right _ -> expectationFailure "Expected non-ASCII hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just (Data.Text.replicate 513 "a"))
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must be 512 characters or fewer"
+                Right _ -> expectationFailure "Expected oversized hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just " secret ")
+                    (Just "secret") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "hub.verify_token must not contain control characters or whitespace"
+                Right _ -> expectationFailure "Expected padded hub.verify_token to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
                     (Just "secret")
                     (Just "secret\nInjected") of
                 Left err -> do
@@ -5428,6 +14199,46 @@ main = hspec $ do
                     BL.unpack (errBody err)
                         `shouldContain` "WhatsApp verify token is misconfigured"
                 Right _ -> expectationFailure "Expected unsafe verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just "secret token") of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected whitespace-bearing verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just ("secret" <> Data.Text.singleton '\x202E')) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected hidden-format verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just ("secr" <> Data.Text.singleton '\x00E9' <> "t")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected non-ASCII verify-token config to be rejected"
+            case validateHookVerifyRequest
+                    (Just "subscribe")
+                    (Just "challenge-123")
+                    (Just "secret")
+                    (Just (Data.Text.replicate 513 "a")) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 503
+                    BL.unpack (errBody err)
+                        `shouldContain` "WhatsApp verify token is misconfigured"
+                Right _ -> expectationFailure "Expected oversized verify-token config to be rejected"
 
     describe "extractFirstWebhookMessage" $ do
         it "scans all webhook entries and changes before treating a batch as no-message" $ do
@@ -5520,7 +14331,7 @@ main = hspec $ do
                 Nothing ->
                     expectationFailure "Expected actionable webhook text to be selected"
 
-        it "skips blank-sender text rows before selecting a later batched webhook message" $ do
+        it "normalizes Meta sender ids and skips malformed sender rows before selecting a message" $ do
             let blankSenderMessage =
                     WA.WAMessage
                         (Just "wamid.blank-sender")
@@ -5530,6 +14341,24 @@ main = hspec $ do
                         Nothing
                         Nothing
                         (Just "1770000001")
+                malformedSenderMessage =
+                    WA.WAMessage
+                        (Just "wamid.bad-sender")
+                        "text"
+                        "call me at 099 123 4567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                metaSenderMessage =
+                    WA.WAMessage
+                        (Just "wamid.meta-sender")
+                        "text"
+                        "593991234567"
+                        (Just (WA.WAText "INSCRIBIRME"))
+                        Nothing
+                        Nothing
+                        (Just "1770000003")
                 enrollmentMessage =
                     WA.WAMessage
                         (Just "wamid.valid-sender")
@@ -5538,13 +14367,18 @@ main = hspec $ do
                         (Just (WA.WAText "INSCRIBIRME"))
                         Nothing
                         Nothing
-                        (Just "1770000002")
+                        (Just "1770000004")
                 payload =
                     WA.WAMetaWebhook
                         [ WA.WAEntry
                             [ WA.WAChange
                                 ( WA.WAValue
-                                    (Just [blankSenderMessage, enrollmentMessage])
+                                    (Just
+                                        [ blankSenderMessage
+                                        , malformedSenderMessage
+                                        , metaSenderMessage
+                                        , enrollmentMessage
+                                        ])
                                     Nothing
                                     Nothing
                                 )
@@ -5552,7 +14386,7 @@ main = hspec $ do
                         ]
             case extractFirstWebhookMessage payload of
                 Just (WA.WAMessage msgId _ senderId msgText _ _ _) -> do
-                    msgId `shouldBe` Just "wamid.valid-sender"
+                    msgId `shouldBe` Just "wamid.meta-sender"
                     senderId `shouldBe` "+593991234567"
                     case msgText of
                         Just (WA.WAText messageBody) ->
@@ -5560,16 +14394,159 @@ main = hspec $ do
                         Nothing ->
                             expectationFailure "Expected later text body to be selected"
                 Nothing ->
-                    expectationFailure "Expected later valid webhook text to be selected"
+                    expectationFailure "Expected normalized webhook sender to be selected"
+
+    describe "extractFirstEnrollmentWebhookMessage" $ do
+        it "selects a later enrollment request instead of letting an unrelated first text hide it" $ do
+            let greetingMessage =
+                    WA.WAMessage
+                        (Just "wamid.greeting")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Hola"))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                enrollmentMessage =
+                    WA.WAMessage
+                        (Just "wamid.enroll")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                messageId (WA.WAMessage msgId _ _ _ _ _ _) = msgId
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [greetingMessage, enrollmentMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            fmap messageId (extractFirstWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.greeting")
+            fmap messageId (extractFirstEnrollmentWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.enroll")
+
+        it "ignores negated or incidental enrollment mentions before selecting a command" $ do
+            let negativeMessage =
+                    WA.WAMessage
+                        (Just "wamid.no")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "No quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just "1770000001")
+                incidentalMessage =
+                    WA.WAMessage
+                        (Just "wamid.incidental")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Tengo una pregunta para inscribir a mi hija"))
+                        Nothing
+                        Nothing
+                        (Just "1770000002")
+                commandMessage =
+                    WA.WAMessage
+                        (Just "wamid.command")
+                        "text"
+                        "+593991234567"
+                        (Just (WA.WAText "Quiero inscribirme, por favor"))
+                        Nothing
+                        Nothing
+                        (Just "1770000003")
+                messageId (WA.WAMessage msgId _ _ _ _ _ _) = msgId
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    (Just [negativeMessage, incidentalMessage, commandMessage])
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+                negativeOnlyPayload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                (WA.WAValue (Just [negativeMessage]) Nothing Nothing)
+                            ]
+                        ]
+            fmap messageId (extractFirstEnrollmentWebhookMessage payload)
+                `shouldBe` Just (Just "wamid.command")
+            fmap messageId (extractFirstEnrollmentWebhookMessage negativeOnlyPayload)
+                `shouldBe` Nothing
+
+    describe "extractUniqueEnrollmentWebhookMessage" $ do
+        it "rejects batched enrollment commands from different senders instead of choosing a first sender" $ do
+            let enrollmentMessage msgId sender ts =
+                    WA.WAMessage
+                        (Just msgId)
+                        "text"
+                        sender
+                        (Just (WA.WAText "Quiero inscribirme"))
+                        Nothing
+                        Nothing
+                        (Just ts)
+                payload =
+                    WA.WAMetaWebhook
+                        [ WA.WAEntry
+                            [ WA.WAChange
+                                ( WA.WAValue
+                                    ( Just
+                                        [ enrollmentMessage
+                                            "wamid.one"
+                                            "+593991234567"
+                                            "1770000001"
+                                        , enrollmentMessage
+                                            "wamid.two"
+                                            "+593992345678"
+                                            "1770000002"
+                                        ]
+                                    )
+                                    Nothing
+                                    Nothing
+                                )
+                            ]
+                        ]
+            case extractUniqueEnrollmentWebhookMessage payload of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "multiple senders"
+                Right value ->
+                    expectationFailure
+                        ("Expected ambiguous enrollment webhook to fail, got: " <> show value)
 
     describe "PreviewReq" $ do
-        it "accepts only the canonical preview-link request body" $ do
+        it "accepts canonical preview-link bodies and normalizes user-entered phone formatting up front" $ do
             case eitherDecode "{\"phone\":\"+593991234567\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical preview-link payload to decode, got: " <> err)
                 Right payload ->
                     phone payload `shouldBe` "+593991234567"
+            case eitherDecode "{\"phone\":\" +593 99 123 4567 \"}" of
+                Left err ->
+                    expectationFailure ("Expected formatted preview-link payload to decode, got: " <> err)
+                Right payload ->
+                    phone payload `shouldBe` "+593991234567"
+
+        it "rejects malformed or over-posted preview-link request bodies before the handler can mint ambiguous leads" $ do
             (eitherDecode "{\"phone\":\"+593991234567\",\"status\":\"COMPLETED\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"call me maybe\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"+025550123\"}" :: Either String PreviewReq)
+                `shouldSatisfy` isLeft
+            (eitherDecode "{\"phone\":\"(02) 555-0123\"}" :: Either String PreviewReq)
                 `shouldSatisfy` isLeft
 
     describe "validateLeadCompletionRequest" $ do
@@ -5596,15 +14573,42 @@ main = hspec $ do
                         expectationFailure ("Expected invalid lead completion payload to be rejected, got " <> show value)
             assertInvalid (CompleteReq "   " "Ada Lovelace" "ada@example.com") "Completion token is required"
             assertInvalid (CompleteReq validToken "   " "ada@example.com") "Invalid name: must be 1-200 characters"
-            assertInvalid (CompleteReq validToken "Ada\nLovelace" "ada@example.com") "Invalid name: must not contain control characters"
+            assertInvalid
+                (CompleteReq validToken "Ada\nLovelace" "ada@example.com")
+                "Invalid name: must not contain control or hidden formatting characters"
+            assertInvalid
+                ( CompleteReq
+                    validToken
+                    ("Ada" <> Data.Text.singleton '\x202E' <> "Lovelace")
+                    "ada@example.com"
+                )
+                "Invalid name: must not contain control or hidden formatting characters"
+            assertInvalid
+                ( CompleteReq
+                    validToken
+                    ("Ada" <> Data.Text.singleton '\x00A0' <> "Lovelace")
+                    "ada@example.com"
+                )
+                "Invalid name: must not contain control or hidden formatting characters, or non-ASCII spaces"
+            assertInvalid
+                (CompleteReq validToken "---" "ada@example.com")
+                "Invalid name: must include letters or numbers"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada @example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example..com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@-example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example-.com") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example.123") "Invalid email format"
+            assertInvalid (CompleteReq validToken "Ada Lovelace" "ada@example.c") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" ".ada@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada.@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada..lovelace@example.com") "Invalid email format"
             assertInvalid (CompleteReq validToken "Ada Lovelace" "ada()@example.com") "Invalid email format"
+            assertInvalid
+                (CompleteReq validToken "Ada Lovelace" (Data.Text.replicate 65 "a" <> "@example.com"))
+                "Invalid email format"
+            assertInvalid
+                (CompleteReq validToken "Ada Lovelace" ("ada@" <> Data.Text.replicate 64 "a" <> ".com"))
+                "Invalid email format"
             assertInvalid
                 (CompleteReq validToken "Ada Lovelace" (Data.Text.replicate 245 "a" <> "@example.com"))
                 "Invalid email: must be 254 characters or fewer"
@@ -5672,11 +14676,27 @@ main = hspec $ do
                 409
                 "Lead completion is not available"
             assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just ("LINK_SENT", Just (" " <> validToken <> " "))))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just ("LINK_SENT", Just (leadCompletionConsumedToken 42))))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
                 (validateLeadCompletionLookup validToken (Just ("COLD", Just validToken)))
                 409
                 "Lead completion is not available"
             assertLookupFailure
                 (validateLeadCompletionLookup validToken (Just ("ARCHIVED", Just validToken)))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just ("link_sent", Just validToken)))
+                409
+                "Lead completion is not available"
+            assertLookupFailure
+                (validateLeadCompletionLookup validToken (Just (" LINK_SENT ", Just validToken)))
                 409
                 "Lead completion is not available"
             assertLookupFailure
@@ -5730,6 +14750,20 @@ main = hspec $ do
                     BL.unpack (errBody err) `shouldContain` "channel inválido"
                 Right _ -> expectationFailure "Expected invalid channel to be rejected"
 
+        it "rejects control or hidden-format channel values before normalization" $ do
+            let assertRejected rawChannel expectedMessage =
+                    case parseSocialErrorsChannel (Just rawChannel) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right channel ->
+                            expectationFailure
+                                ("Expected unsafe social errors channel to be rejected, got " <> show channel)
+            assertRejected "whatsapp\n" "control characters"
+            assertRejected
+                ("whats" <> Data.Text.singleton '\x202E' <> "app")
+                "hidden format characters"
+
     describe "validateSocialErrorsLimit" $ do
         it "keeps the default only when the caller omits the limit" $ do
             validateSocialErrorsLimit Nothing `shouldBe` Right 50
@@ -5747,6 +14781,54 @@ main = hspec $ do
             assertRejected 0
             assertRejected 201
 
+    describe "validateAdminEmailCtaUrl" $ do
+        it "accepts blank values or canonical public https URLs for email CTA links" $ do
+            validateAdminEmailCtaUrl Nothing `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just "   ") `shouldBe` Right Nothing
+            validateAdminEmailCtaUrl (Just "  https://example.com/launch?utm_source=hq  ")
+                `shouldBe` Right (Just "https://example.com/launch?utm_source=hq")
+
+        it "rejects insecure or non-public CTA URLs instead of sending ambiguous email links" $ do
+            let assertRejected rawUrl expectedMessage =
+                    case validateAdminEmailCtaUrl (Just rawUrl) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid CTA URL to be rejected, got " <> show value)
+            assertRejected "http://example.com/launch" "CTA URL must be an absolute https URL"
+            assertRejected "https://example.com@evil.test/launch" "CTA URL must not include user info"
+            assertRejected "https://localhost/launch" "CTA URL must be an absolute public https URL"
+            assertRejected "https://example.com/launch#preview" "CTA URL must not include a URL fragment"
+            assertRejected
+                "https://example.com/launch/%2e%2e/reset"
+                "CTA URL path must not contain empty, dot, or dot-dot segments"
+
+    describe "validateBrainEntryTitle" $ do
+        it "trims safe Studio Brain titles before admin storage" $
+            validateBrainEntryTitle "  Release Checklist  "
+                `shouldBe` Right "Release Checklist"
+
+        it "rejects malformed Studio Brain titles before admin storage" $ do
+            let assertRejected rawTitle expectedMessage =
+                    case validateBrainEntryTitle rawTitle of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid brain title to be rejected, got " <> show value)
+            assertRejected "   " "Brain entry title is required"
+            assertRejected
+                (Data.Text.replicate 161 "x")
+                "Brain entry title must be 160 characters or fewer"
+            assertRejected
+                "Release\nChecklist"
+                "Brain entry title must not contain control characters"
+            assertRejected
+                ("Release " <> Data.Text.singleton '\x202E' <> "Checklist")
+                "Brain entry title must not contain hidden format characters"
+
     describe "AdminEmailBroadcastRequest" $ do
         it "rejects unknown JSON fields so typos cannot silently change send behavior" $ do
             let payload =
@@ -5756,22 +14838,46 @@ main = hspec $ do
                     <> "\"dryrun\":false}"
             isLeft (eitherDecode payload :: Either String AdminEmailBroadcastRequest) `shouldBe` True
 
+        it "rejects null send controls instead of silently falling back to live defaults" $ do
+            let assertInvalid payload expectedMessage =
+                    case eitherDecode payload :: Either String AdminEmailBroadcastRequest of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ("Expected null broadcast control to be rejected, got " <> show value)
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"dryRun\":null}"
+                "dryRun must be omitted instead of null"
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"limit\":null}"
+                "limit must be omitted instead of null"
+            assertInvalid
+                "{\"subject\":\"Launch\",\"bodyLines\":[\"Line 1\"],\"includeInactive\":null}"
+                "includeInactive must be omitted instead of null"
+
     describe "FanProfileUpdate" $ do
         it "accepts canonical fan profile update payloads and rejects typoed keys" $ do
             case eitherDecode
-                "{\"fpuDisplayName\":\"Ada\",\"fpuCity\":\"Quito\"}" :: Either String DTO.FanProfileUpdate of
+                "{\"fpuDisplayName\":\"Ada\",\"fpuCity\":\"Quito\",\"fpuFavoriteGenreIds\":[]}" :: Either String DTO.FanProfileUpdate of
                 Left err ->
                     expectationFailure ("Expected canonical fan profile update payload to decode, got: " <> err)
                 Right payload -> do
                     DTO.fpuDisplayName payload `shouldBe` Just "Ada"
                     DTO.fpuCity payload `shouldBe` Just "Quito"
                     DTO.fpuAvatarUrl payload `shouldBe` Nothing
-                    DTO.fpuFavoriteGenres payload `shouldBe` Nothing
+                    DTO.fpuFavoriteGenreIds payload `shouldBe` []
                     DTO.fpuBio payload `shouldBe` Nothing
 
             isLeft
                 ( eitherDecode
-                    "{\"fpuDisplayName\":\"Ada\",\"fpuDisplayname\":\"Quito\"}"
+                    "{\"fpuDisplayName\":\"Ada\",\"fpuFavoriteGenreIds\":[],\"fpuDisplayname\":\"Quito\"}"
+                    :: Either String DTO.FanProfileUpdate
+                )
+                `shouldBe` True
+
+            isLeft
+                ( eitherDecode
+                    "{\"fpuFavoriteGenreIds\":[],\"fpuFavoriteGenres\":\"Soul, Indie\"}"
                     :: Either String DTO.FanProfileUpdate
                 )
                 `shouldBe` True
@@ -5875,6 +14981,20 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+        it "rejects explicit null issueSri instead of falling back to SRI emission" $
+            case
+                ( eitherDecode
+                    "{\"customerId\":42,\"lineItems\":[{\"description\":\"Studio session\",\"quantity\":1,\"unitCents\":9000}],\"issueSri\":null}"
+                    :: Either String DTO.GenerateSessionInvoiceReq
+                ) of
+                Left err ->
+                    err `shouldContain` "issueSri must be omitted or set to true/false"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null issueSri to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "ClassSessionUpdate" $ do
         it "accepts canonical patch payloads and rejects typo-only bodies so class-session updates cannot silently no-op" $ do
             case (eitherDecode "{\"teacherId\":12}" :: Either String TrialsDTO.ClassSessionUpdate) of
@@ -5897,6 +15017,27 @@ main = hspec $ do
                 )
                 `shouldBe` True
 
+        it "rejects empty or null-only patch bodies before class-session handlers run fallback updates" $ do
+            isLeft
+                ( eitherDecode
+                    "{}"
+                    :: Either String TrialsDTO.ClassSessionUpdate
+                )
+                `shouldBe` True
+
+            case
+                ( eitherDecode
+                    "{\"notes\":null}"
+                    :: Either String TrialsDTO.ClassSessionUpdate
+                ) of
+                Left err ->
+                    err `shouldContain` "notes must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ( "Expected null class-session notes patch to be rejected, got: "
+                            <> show payload
+                        )
+
     describe "buildLiveSessionUsernameCollisionCandidate" $ do
         it "preserves the collision suffix within the 60-character username budget" $ do
             let base = Data.Text.replicate 60 "a"
@@ -5911,6 +15052,212 @@ main = hspec $ do
                 `shouldBe` LookupLiveSessionMusicianByEmail "player@example.com"
             resolveLiveSessionMusicianLookup Nothing `shouldBe` CreateLiveSessionMusician
             resolveLiveSessionMusicianLookup (Just "   ") `shouldBe` CreateLiveSessionMusician
+
+    describe "selectUniqueLiveSessionMusicianByEmail" $
+        it "rejects duplicate musician email matches instead of selecting an arbitrary party" $ do
+            let now = UTCTime (fromGregorian 2026 1 1) (secondsToDiffTime 0)
+                mkParty displayName emailAddr =
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = displayName
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just emailAddr
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
+                        , partyCreatedAt = now
+                        }
+                singleParty =
+                    Entity (toSqlKey 7) (mkParty "Single Musician" "player@example.com")
+                invalidParty =
+                    Entity (toSqlKey 0) (mkParty "Invalid Musician" "invalid@example.com")
+                duplicateParties =
+                    [ Entity (toSqlKey 11) (mkParty "First Duplicate" "dupe@example.com")
+                    , Entity (toSqlKey 12) (mkParty "Second Duplicate" "dupe@example.com")
+                    ]
+
+            case selectUniqueLiveSessionMusicianByEmail [] of
+                Right Nothing -> pure ()
+                other ->
+                    expectationFailure
+                        ("Expected no musician email match, got " <> show other)
+            case selectUniqueLiveSessionMusicianByEmail [singleParty] of
+                Right (Just partyEnt) ->
+                    entityKey partyEnt `shouldBe` toSqlKey 7
+                other ->
+                    expectationFailure
+                        ("Expected a single musician email match, got " <> show other)
+            case selectUniqueLiveSessionMusicianByEmail [invalidParty] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 500
+                    BL.unpack (errBody err)
+                        `shouldContain` "Stored live-session musician party id is invalid"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid musician party id to fail, got " <> show value)
+            case selectUniqueLiveSessionMusicianByEmail duplicateParties of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 409
+                    BL.unpack (errBody err)
+                        `shouldContain` "Multiple parties match this musician email"
+                Right value ->
+                    expectationFailure
+                        ("Expected duplicate musician email matches to fail, got " <> show value)
+
+    describe "validateLiveSessionMusicianCount" $ do
+        it "rejects empty musician lists before intake persistence creates orphan sessions" $ do
+            validateLiveSessionMusicianCount
+                [ LiveSessionMusicianPayload
+                    { lsmPartyId = Nothing
+                    , lsmName = "Keys"
+                    , lsmEmail = Just "keys@example.com"
+                    , lsmInstrumentId = Nothing
+                    , lsmNotes = Nothing
+                    , lsmIsExisting = False
+                    }
+                ]
+                `shouldBe` Right ()
+
+            case validateLiveSessionMusicianCount [] of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL.unpack (errBody err)
+                        `shouldContain` "At least one musician is required"
+                Right value ->
+                    expectationFailure
+                        ("Expected empty live-session musician list to fail, got " <> show value)
+
+        it "rejects oversized or ambiguous musician references before DB fallback lookup" $ do
+            let mkMusician partyId email =
+                    LiveSessionMusicianPayload
+                        { lsmPartyId = partyId
+                        , lsmName = "Keys"
+                        , lsmEmail = email
+                        , lsmInstrumentId = Nothing
+                        , lsmNotes = Nothing
+                        , lsmIsExisting = maybe False (const True) partyId
+                        }
+                assertRejected expectedMessage musicians =
+                    case validateLiveSessionMusicianCount musicians of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session musician list, got "
+                                    <> show value
+                                )
+
+            assertRejected
+                "musicians must contain at most 50 entries"
+                (replicate 51 (mkMusician Nothing Nothing))
+            assertRejected
+                "musician partyId must be a positive integer"
+                [mkMusician (Just 0) Nothing]
+            assertRejected
+                "referenced musician partyIds must be distinct"
+                [mkMusician (Just 7) Nothing, mkMusician (Just 7) Nothing]
+            assertRejected
+                "musician emails must be distinct"
+                [ mkMusician Nothing (Just " Player@Example.com ")
+                , mkMusician Nothing (Just "player@example.com")
+                ]
+
+    describe "validateLiveSessionBandName" $ do
+        it "trims live-session band names before intake persistence" $
+            validateLiveSessionBandName "  The House Band  "
+                `shouldBe` Right "The House Band"
+
+        it "rejects unsafe live-session band names before intake persistence" $ do
+            let assertInvalid rawBandName expectedMessage =
+                    case validateLiveSessionBandName rawBandName of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session bandName, got "
+                                    <> show value
+                                )
+
+            assertInvalid "   " "bandName is required"
+            assertInvalid
+                (Data.Text.replicate 161 "a")
+                "bandName must be 160 characters or fewer"
+            assertInvalid
+                "The House Band\NUL"
+                "bandName must not contain control characters"
+            assertInvalid
+                ("The House" <> Data.Text.singleton '\x202E' <> "Band")
+                "bandName must not contain control characters"
+
+    describe "validateLiveSessionOptionalEmail" $ do
+        it "normalizes optional live-session emails before lookup and persistence" $ do
+            validateLiveSessionOptionalEmail "contactEmail" Nothing `shouldBe` Right Nothing
+            validateLiveSessionOptionalEmail "contactEmail" (Just "   ")
+                `shouldBe` Right Nothing
+            validateLiveSessionOptionalEmail "contactEmail" (Just " Player@Example.com ")
+                `shouldBe` Right (Just "player@example.com")
+
+        it "rejects malformed live-session emails instead of falling back to new accounts" $ do
+            let assertInvalid fieldName rawEmail =
+                    case validateLiveSessionOptionalEmail fieldName (Just rawEmail) of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err)
+                                `shouldContain`
+                                    (Data.Text.unpack fieldName <> " must be a valid email address")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected malformed live-session email to be rejected, got "
+                                    <> show value
+                                )
+
+            assertInvalid "contactEmail" "contact example.com"
+            assertInvalid "musicians.email" "player@example..com"
+            assertInvalid "musicians.email" "player\n@example.com"
+
+    describe "validateLiveSessionReferencedPartyEmail" $ do
+        it "accepts omitted or matching emails for referenced musicians without turning intake rows into party updates" $ do
+            validateLiveSessionReferencedPartyEmail
+                (Just " Artist@Example.com ")
+                Nothing
+                `shouldBe` Right (Just "artist@example.com")
+            validateLiveSessionReferencedPartyEmail
+                (Just " Artist@Example.com ")
+                (Just "artist@example.com")
+                `shouldBe` Right (Just "artist@example.com")
+
+        it "rejects mismatched or newly introduced emails for referenced musicians so intake payloads cannot rewrite party identity data" $ do
+            let assertInvalid existingEmail suppliedEmail = do
+                    case validateLiveSessionReferencedPartyEmail existingEmail suppliedEmail of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` "must match the existing party email"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected referenced musician email mismatch to be rejected, got "
+                                    <> show value
+                                )
+
+            assertInvalid
+                (Just "artist@example.com")
+                (Just "other@example.com")
+            assertInvalid
+                Nothing
+                (Just "artist@example.com")
+
+    describe "liveSessionMusicianPartyNotes" $
+        it "omits blank instrument notes for auto-created musician parties" $ do
+            liveSessionMusicianPartyNotes Nothing `shouldBe` Nothing
+            liveSessionMusicianPartyNotes (Just "   ") `shouldBe` Nothing
+            liveSessionMusicianPartyNotes (Just "  Synths  ") `shouldBe` Just "Synths"
 
     describe "validateLiveSessionTermsAcceptance" $ do
         it "requires explicit accepted terms before live-session intake persistence" $ do
@@ -5931,6 +15278,15 @@ main = hspec $ do
             assertInvalid False (Just "TDF Live Sessions v2") "acceptedTerms must be true"
             assertInvalid True Nothing "termsVersion is required"
             assertInvalid True (Just "   ") "termsVersion is required"
+            assertInvalid True (Just (Data.Text.replicate 161 "v")) "termsVersion must be 160 characters or fewer"
+            assertInvalid
+                True
+                (Just "TDF Live Sessions v2\NUL")
+                "termsVersion must not contain control characters or hidden formatting characters"
+            assertInvalid
+                True
+                (Just ("TDF Live" <> Data.Text.singleton '\x202E' <> " Sessions v2"))
+                "termsVersion must not contain control characters or hidden formatting characters"
 
     describe "sanitizeLiveSessionRiderFileName" $ do
         it "reduces rider upload names to a stable safe basename before persistence" $ do
@@ -5946,6 +15302,59 @@ main = hspec $ do
             sanitizeLiveSessionRiderFileName "..." `shouldBe` "rider"
             sanitizeLiveSessionRiderFileName "___" `shouldBe` "rider"
             sanitizeLiveSessionRiderFileName "???" `shouldBe` "rider"
+
+        it "bounds sanitized rider upload names before filesystem writes" $ do
+            let sanitized = sanitizeLiveSessionRiderFileName (Data.Text.replicate 220 "a" <> ".pdf")
+            Data.Text.length sanitized `shouldBe` 160
+            sanitized `shouldBe` Data.Text.replicate 160 "a"
+
+    describe "validateLiveSessionRiderFileName" $ do
+        it "accepts safe rider names after stable backend sanitization" $
+            validateLiveSessionRiderFileName "  Stage rider final?.pdf  "
+                `shouldBe` Right "Stage-rider-final-.pdf"
+
+        it "rejects ambiguous rider names before upload storage falls back to a generic path" $ do
+            let assertInvalid raw expectedMessage =
+                    case validateLiveSessionRiderFileName raw of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session rider file name, got "
+                                    <> show value
+                                )
+            assertInvalid "   " "rider file name is required"
+            assertInvalid "../stage.pdf" "rider file name must not contain path separators"
+            assertInvalid "folder\\stage.pdf" "rider file name must not contain path separators"
+            assertInvalid "stage\8203plot.pdf" "rider file name must not contain control characters"
+            assertInvalid
+                (Data.Text.replicate 161 "a" <> ".pdf")
+                "rider file name must be 160 characters or fewer"
+            assertInvalid "___" "rider file name must include a usable name"
+            assertInvalid "stage-setup.sh" "rider file name extension is not allowed"
+            assertInvalid "stage-setup.sh.pdf" "rider file name extension is not allowed"
+            assertInvalid "stage-plot.HTML" "rider file name extension is not allowed"
+
+    describe "validateLiveSessionRiderFileSize" $ do
+        it "rejects empty, invalid, or oversized rider uploads before writing them" $ do
+            validateLiveSessionRiderFileSize 1 `shouldBe` Right ()
+            validateLiveSessionRiderFileSize (10 * 1024 * 1024) `shouldBe` Right ()
+
+            let assertInvalid size expectedMessage =
+                    case validateLiveSessionRiderFileSize size of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid live-session rider size, got "
+                                    <> show value
+                                )
+
+            assertInvalid (-1) "rider file size is invalid"
+            assertInvalid 0 "rider file must not be empty"
+            assertInvalid (10 * 1024 * 1024 + 1) "rider file must be 10 MB or smaller"
 
     describe "resolveLiveSessionSetlistSortOrders" $ do
         let mkSong title sortOrder =
@@ -5990,6 +15399,50 @@ main = hspec $ do
                     lsiAcceptedTerms payload `shouldBe` True
                     lsiTermsVersion payload `shouldBe` Just "TDF Live Sessions v2"
 
+        it "normalizes bounded top-level optional text fields before intake persistence" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("bandDescription", "  Duo session\nwith guests  ")
+                    , ("primaryGenreId", "  0f8fad5b-d9cb-469f-a165-70867728950e  ")
+                    , ("inputList", "  Kick\nSnare  ")
+                    , ("availability", "  Weekdays after 18:00  ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected safe optional text to parse, got: " <> err)
+                Right payload -> do
+                    lsiBandDescription payload `shouldBe` Just "Duo session\nwith guests"
+                    lsiPrimaryGenreId payload `shouldBe` Just "0f8fad5b-d9cb-469f-a165-70867728950e"
+                    lsiInputList payload `shouldBe` Just "Kick\nSnare"
+                    lsiAvailability payload `shouldBe` Just "Weekdays after 18:00"
+
+        it "rejects unsafe or oversized top-level optional text before intake persistence" $ do
+            let assertInvalid fieldName rawValue expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , (fieldName, rawValue)
+                            , ("musicians", "[]")
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected invalid optional intake text to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "primaryGenreId"
+                ("0f8fad5b" <> Data.Text.singleton '\x202E')
+                "primaryGenreId must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "availability"
+                ("Weekdays" <> Data.Text.singleton '\NUL' <> "after 18:00")
+                "availability must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "inputList"
+                (Data.Text.replicate 4001 "A")
+                "inputList must be 4000 characters or fewer"
+
         it "normalizes valid contact and musician emails before the intake reaches persistence" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -6007,8 +15460,7 @@ main = hspec $ do
                             lsmPartyId musician `shouldBe` Nothing
                             lsmName musician `shouldBe` "Keys"
                             lsmEmail musician `shouldBe` Just "player@example.com"
-                            lsmInstrument musician `shouldBe` Nothing
-                            lsmRole musician `shouldBe` Nothing
+                            lsmInstrumentId musician `shouldBe` Nothing
                             lsmNotes musician `shouldBe` Nothing
                             lsmIsExisting musician `shouldBe` False
                         musicians ->
@@ -6024,6 +15476,28 @@ main = hspec $ do
                     expectationFailure ("Expected valid contactPhone to be accepted, got: " <> err)
                 Right payload ->
                     lsiContactPhone payload `shouldBe` Just "+593991234567"
+
+        it "requires exact YYYY-MM-DD session dates before intake persistence" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("sessionDate", " 2026-05-20 ")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected canonical sessionDate to parse, got: " <> err)
+                Right payload ->
+                    lsiSessionDate payload `shouldBe` Just (fromGregorian 2026 5 20)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("sessionDate", "2026-5-20")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Invalid date format for sessionDate"
+                Right payload ->
+                    expectationFailure
+                        ("Expected loose sessionDate to be rejected, got: " <> show payload)
 
         it "accepts the canonical frontend musician and setlist keys instead of requiring internal prefixes" $
             case fromMultipart (mkLiveSessionMultipart
@@ -6053,6 +15527,63 @@ main = hspec $ do
                         songs ->
                             expectationFailure ("Expected one song from canonical payload, got: " <> show songs)
 
+        it "rejects oversized nested musician and setlist arrays before intake persistence" $ do
+            let oversizedMusicians =
+                    "[" <> Data.Text.intercalate
+                        ","
+                        (replicate 51 "{\"name\":\"Keys\",\"isExisting\":false}")
+                        <> "]"
+                oversizedSetlist =
+                    "[" <> Data.Text.intercalate
+                        ","
+                        (replicate 101 "{\"title\":\"Intro Jam\"}")
+                        <> "]"
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", oversizedMusicians)
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musicians must contain at most 50 entries"
+                Right payload ->
+                    expectationFailure
+                        ("Expected oversized musicians payload to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", oversizedSetlist)
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "setlist must contain at most 100 songs"
+                Right payload ->
+                    expectationFailure
+                        ("Expected oversized setlist payload to be rejected, got: " <> show payload)
+
+        it "rejects malformed setlist song keys before intake persistence" $ do
+            let assertInvalid rawSongKey expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\"Intro Jam\",\"songKey\":\""
+                                  <> rawSongKey
+                                  <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected invalid setlist songKey to be rejected, got: " <> show payload)
+
+            assertInvalid
+                (Data.Text.replicate 65 "a")
+                "setlist song songKey must be 64 characters or fewer"
+            assertInvalid
+                ("C" <> Data.Text.singleton '\x202E' <> "m")
+                "setlist song songKey must not contain control characters or hidden formatting characters"
+
         it "rejects conflicting canonical and legacy musician keys instead of accepting ambiguous payloads" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -6064,6 +15595,42 @@ main = hspec $ do
                     err `shouldContain` "Conflicting fields: name and lsmName must match when both are provided"
                 Right payload ->
                     expectationFailure ("Expected conflicting musician aliases to be rejected, got: " <> show payload)
+
+        it "rejects null canonical aliases paired with legacy values instead of falling back silently" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"email\":null,\"lsmEmail\":\"player@example.com\",\"isExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Conflicting fields: email and lsmEmail must match when both are provided"
+                Right payload ->
+                    expectationFailure ("Expected null/value musician aliases to be rejected, got: " <> show payload)
+
+        it "rejects null optional nested aliases instead of treating them as omitted" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"name\":\"Keys\",\"email\":null,\"isExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "email must be omitted instead of null"
+                Right payload ->
+                    expectationFailure ("Expected null musician email to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"songKey\":null}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "songKey must be omitted instead of null"
+                Right payload ->
+                    expectationFailure ("Expected null setlist songKey to be rejected, got: " <> show payload)
 
         it "rejects unexpected nested musician or setlist fields instead of silently ignoring typos" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -6144,6 +15711,16 @@ main = hspec $ do
 
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
+                    , ("contactEmail", "lead@example.123")
+                    , ("musicians", "[]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "contactEmail must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected ambiguous contactEmail domain to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
                     , ( "musicians"
                       , "[{\"lsmName\":\"Keys\",\"lsmEmail\":\"not-an-email\",\"lsmIsExisting\":false}]"
                       )
@@ -6163,6 +15740,17 @@ main = hspec $ do
                     err `shouldContain` "musician email must be a valid email address"
                 Right payload ->
                     expectationFailure ("Expected malformed musician email local part to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"Keys\",\"lsmEmail\":\"keys@example.c\",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "musician email must be a valid email address"
+                Right payload ->
+                    expectationFailure ("Expected ambiguous musician email domain to be rejected, got: " <> show payload)
 
         it "rejects malformed contact phones instead of storing ambiguous free-form contact text" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -6195,6 +15783,75 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected anonymous musician row to be rejected, got: " <> show payload)
 
+        it "rejects unsafe musician names before intake rows can persist display text" $ do
+            let assertInvalid rawName expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\""
+                                    <> rawName
+                                    <> "\",\"lsmIsExisting\":false}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician name to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "Keys\\nLead"
+                "musician name must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "Keys\\u202ELead"
+                "musician name must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "musician name must be 160 characters or fewer"
+
+        it "normalizes safe musician notes but rejects hidden, control, or oversized note text" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"lsmName\":\"Keys\",\"lsmNotes\":\"  bring DI\\nstand  \",\"lsmIsExisting\":false}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected multiline musician notes to parse, got: " <> err)
+                Right payload ->
+                    case lsiMusicians payload of
+                        [musician] ->
+                            lsmNotes musician `shouldBe` Just "bring DI\nstand"
+                        musicians ->
+                            expectationFailure ("Expected one musician, got: " <> show musicians)
+
+            let assertInvalid rawNotes expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\"Keys\",\"lsmNotes\":\""
+                                    <> rawNotes
+                                    <> "\",\"lsmIsExisting\":false}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician notes to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "bring DI\\u202Estand"
+                "musician notes must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "bring DI\\u0000stand"
+                "musician notes must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 4001 "A")
+                "musician notes must be 4000 characters or fewer"
+
         it "rejects blank setlist titles instead of silently dropping songs from the intake" $
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -6206,7 +15863,79 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected blank setlist title to be rejected, got: " <> show payload)
 
-        it "rejects non-positive setlist bpm values instead of persisting impossible tempo metadata" $
+        it "rejects unsafe setlist titles before intake rows can persist ambiguous display text" $ do
+            let assertInvalid rawTitle expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\""
+                                    <> rawTitle
+                                    <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe setlist title to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "Intro\\nJam"
+                "setlist song title must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "Intro\\u202EJam"
+                "setlist song title must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 161 "A")
+                "setlist song title must be 160 characters or fewer"
+
+        it "normalizes safe setlist lyrics but rejects hidden or malformed lyric text" $ do
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ( "setlist"
+                      , "[{\"title\":\"Intro Jam\",\"lyrics\":\"  line one\\nline two\\t  \"}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    expectationFailure ("Expected multiline setlist lyrics to parse, got: " <> err)
+                Right payload ->
+                    case lsiSetlist payload of
+                        [song] ->
+                            lssLyrics song `shouldBe` Just "line one\nline two"
+                        songs ->
+                            expectationFailure ("Expected one setlist song, got: " <> show songs)
+
+            let assertInvalid rawLyrics expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ("musicians", "[]")
+                            , ( "setlist"
+                              , "[{\"title\":\"Intro Jam\",\"lyrics\":\""
+                                    <> rawLyrics
+                                    <> "\"}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe setlist lyrics to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "verse\\u202Echorus"
+                "setlist song lyrics must not contain control characters or hidden formatting characters"
+            assertInvalid
+                "verse\\u0000chorus"
+                "setlist song lyrics must not contain control characters or hidden formatting characters"
+            assertInvalid
+                (Data.Text.replicate 4001 "A")
+                "setlist song lyrics must be 4000 characters or fewer"
+
+        it "rejects impossible setlist bpm values before intake persistence" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
                     , ("musicians", "[]")
@@ -6216,6 +15945,16 @@ main = hspec $ do
                     err `shouldContain` "setlist song bpm must be a positive integer"
                 Right payload ->
                     expectationFailure ("Expected non-positive setlist bpm to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
+                    , ("setlist", "[{\"title\":\"Intro Jam\",\"bpm\":401}]")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "setlist song bpm must be 400 or fewer"
+                Right payload ->
+                    expectationFailure ("Expected oversized setlist bpm to be rejected, got: " <> show payload)
 
         it "rejects negative or duplicate resolved setlist sortOrder values instead of accepting ambiguous ordering" $ do
             case fromMultipart (mkLiveSessionMultipart
@@ -6267,6 +16006,46 @@ main = hspec $ do
                 Right payload ->
                     expectationFailure ("Expected partyId with isExisting=false to be rejected, got: " <> show payload)
 
+        it "rejects duplicate existing musician party ids before intake rows can double-book the same party" $
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ( "musicians"
+                      , "[{\"partyId\":42,\"name\":\"Keys\",\"isExisting\":true},"
+                            <> "{\"partyId\":42,\"name\":\"Synth\",\"isExisting\":true}]"
+                      )
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "referenced musician partyIds must be distinct"
+                Right payload ->
+                    expectationFailure ("Expected duplicate musician partyIds to be rejected, got: " <> show payload)
+
+        it "rejects legacy copied musician fields and malformed canonical IDs before intake persistence" $ do
+            let assertInvalid extraFields expectedMessage =
+                    case fromMultipart (mkLiveSessionMultipart
+                            [ ("bandName", "The House Band")
+                            , ( "musicians"
+                              , "[{\"lsmName\":\"Keys\",\"lsmIsExisting\":false,"
+                                    <> extraFields
+                                    <> "}]"
+                              )
+                            ]) :: Either String LiveSessionIntakePayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ( "Expected unsafe musician metadata to be rejected, got: "
+                                    <> show payload
+                                )
+            assertInvalid
+                "\"instrument\":\"Synth Lead\""
+                "Unexpected fields in LiveSessionMusicianPayload: instrument"
+            assertInvalid
+                "\"role\":\"Lead\""
+                "Unexpected fields in LiveSessionMusicianPayload: role"
+            assertInvalid
+                ("\"instrumentId\":\"" <> Data.Text.replicate 37 "a" <> "\"")
+                "musician instrumentId must be 36 characters or fewer"
+
         it "rejects duplicate scalar fields instead of silently taking the first multipart value" $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
@@ -6306,6 +16085,16 @@ main = hspec $ do
             case fromMultipart (mkLiveSessionMultipart
                     [ ("bandName", "The House Band")
                     , ("musicians", "[]")
+                    , ("primaryGenre", "Jazz fusion")
+                    ]) :: Either String LiveSessionIntakePayload of
+                Left err ->
+                    err `shouldContain` "Unexpected field: primaryGenre"
+                Right payload ->
+                    expectationFailure ("Expected legacy primaryGenre to be rejected, got: " <> show payload)
+
+            case fromMultipart (mkLiveSessionMultipart
+                    [ ("bandName", "The House Band")
+                    , ("musicians", "[]")
                     , ("nickname", "House")
                     ]) :: Either String LiveSessionIntakePayload of
                 Left err ->
@@ -6325,12 +16114,23 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistEnrichmentSpec.spec
     ArtistPromotionSpec.spec
+    CatalogRecordsSpec.spec
+    CatalogSecuritySpec.spec
+    CatalogPipelineSpec.spec
+    DDEXParseSpec.spec
+    DDEXBusinessRulesSpec.spec
+    DirectoryPolicySpec.spec
+    EventDiscoverySpec.spec
+    EventResearchSpec.spec
     ArtistSpec.spec
+    ServerAuthSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec
     ServerProposalsSpec.spec
     ServerExtraSpec.spec
+    ServerFanClubSpec.spec
     FollowSpec.spec
     FollowHandlerSpec.spec
     PublicLeadSpec.spec
@@ -6419,11 +16219,19 @@ currentSocialSyncTestTime =
 
 runSocialSyncIngestHandler
     :: SocialSyncIngestRequest
-    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncRun])
-runSocialSyncIngestHandler request =
+    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncPost], [SocialSyncRun])
+runSocialSyncIngestHandler =
+    runSocialSyncIngestHandlerWithSetup (pure ())
+
+runSocialSyncIngestHandlerWithSetup
+    :: SqlPersistT IO ()
+    -> SocialSyncIngestRequest
+    -> IO (Either ServerError SocialSyncIngestResponse, [SocialSyncPost], [SocialSyncRun])
+runSocialSyncIngestHandlerWithSetup setup request =
     runNoLoggingT $ do
         pool <- createSqlitePool ":memory:" 1
         liftIO $ runSqlPool initializeSocialSyncSchema pool
+        liftIO $ runSqlPool setup pool
         let env =
                 Env
                     { envPool = pool
@@ -6431,11 +16239,15 @@ runSocialSyncIngestHandler request =
                     }
         result <- liftIO $
             runExceptT (runReaderT (socialSyncIngestHandlerFor socialSyncAdminUser request) env)
+        posts <- liftIO $
+            runSqlPool
+                (fmap entityVal <$> (selectList [] [] :: SqlPersistT IO [Entity SocialSyncPost]))
+                pool
         runs <- liftIO $
             runSqlPool
-                (fmap entityVal <$> selectList [] [])
+                (fmap entityVal <$> (selectList [] [] :: SqlPersistT IO [Entity SocialSyncRun]))
                 pool
-        pure (result, runs)
+        pure (result, posts, runs)
 
 runSocialSyncListHandler
     :: SqlPersistT IO ()
@@ -6524,12 +16336,59 @@ seedRadioPresenceParty =
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
         , partyNotes = Nothing
+        , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
         , partyCreatedAt = UTCTime (fromGregorian 2026 4 15) (secondsToDiffTime 0)
         }
 
 initializeSocialSyncSchema :: SqlPersistT IO ()
 initializeSocialSyncSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"slug\" VARCHAR NULL,\
+        \\"bio\" VARCHAR NULL,\
+        \\"city\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"hero_image_url\" VARCHAR NULL,\
+        \\"spotify_artist_id\" VARCHAR NULL,\
+        \\"spotify_url\" VARCHAR NULL,\
+        \\"youtube_channel_id\" VARCHAR NULL,\
+        \\"youtube_url\" VARCHAR NULL,\
+        \\"website_url\" VARCHAR NULL,\
+        \\"featured_video_url\" VARCHAR NULL,\
+        \\"genres\" VARCHAR NULL,\
+        \\"highlights\" VARCHAR NULL,\
+        \\"stripe_account_id\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NULL,\
+        \CONSTRAINT \"unique_artist_profile_party\" UNIQUE (\"artist_party_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"social_sync_post\" (\
         \\"id\" INTEGER PRIMARY KEY,\
@@ -6552,7 +16411,9 @@ initializeSocialSyncSchema = do
         \\"view_count\" INTEGER NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
-        \UNIQUE(\"platform\", \"external_post_id\")\
+        \UNIQUE(\"platform\", \"external_post_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"artist_profile_id\") REFERENCES \"artist_profile\"(\"id\")\
         \)"
         []
     rawExecute
@@ -6568,6 +16429,140 @@ initializeSocialSyncSchema = do
         \\"error_message\" VARCHAR NULL\
         \)"
         []
+
+initializeCourseRegistrationSummarySchema :: SqlPersistT IO ()
+initializeCourseRegistrationSummarySchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS course_registration (\
+        \id INTEGER PRIMARY KEY,\
+        \course_slug VARCHAR NOT NULL,\
+        \party_id INTEGER NULL,\
+        \full_name VARCHAR NULL,\
+        \email VARCHAR NULL,\
+        \phone_e164 VARCHAR NULL,\
+        \source VARCHAR NOT NULL,\
+        \status VARCHAR NOT NULL,\
+        \admin_notes VARCHAR NULL,\
+        \how_heard VARCHAR NULL,\
+        \utm_source VARCHAR NULL,\
+        \utm_medium VARCHAR NULL,\
+        \utm_campaign VARCHAR NULL,\
+        \utm_content VARCHAR NULL,\
+        \stripe_payment_intent_id VARCHAR NULL,\
+        \stripe_subscription_id VARCHAR NULL,\
+        \subscription_status VARCHAR NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS course_registration_receipt (\
+        \id INTEGER PRIMARY KEY,\
+        \registration_id INTEGER NOT NULL,\
+        \party_id INTEGER NULL,\
+        \file_url VARCHAR NOT NULL,\
+        \file_name VARCHAR NULL,\
+        \mime_type VARCHAR NULL,\
+        \notes VARCHAR NULL,\
+        \uploaded_by INTEGER NULL,\
+        \created_at TIMESTAMP NOT NULL,\
+        \updated_at TIMESTAMP NOT NULL\
+        \)"
+        []
+
+mkCourseRegistrationSummaryFixture :: Text -> UTCTime -> ME.CourseRegistration
+mkCourseRegistrationSummaryFixture slug now =
+    ME.CourseRegistration
+        { ME.courseRegistrationCourseSlug = slug
+        , ME.courseRegistrationPartyId = Nothing
+        , ME.courseRegistrationFullName = Just "Ada Lovelace"
+        , ME.courseRegistrationEmail = Just "ada@example.com"
+        , ME.courseRegistrationPhoneE164 = Just "+593999000111"
+        , ME.courseRegistrationSource = "landing"
+        , ME.courseRegistrationStatus = "pending_payment"
+        , ME.courseRegistrationAdminNotes = Nothing
+        , ME.courseRegistrationHowHeard = Nothing
+        , ME.courseRegistrationUtmSource = Nothing
+        , ME.courseRegistrationUtmMedium = Nothing
+        , ME.courseRegistrationUtmCampaign = Nothing
+        , ME.courseRegistrationUtmContent = Nothing
+        , ME.courseRegistrationStripePaymentIntentId = Nothing
+        , ME.courseRegistrationStripeSubscriptionId = Nothing
+        , ME.courseRegistrationSubscriptionStatus = Nothing
+        , ME.courseRegistrationCreatedAt = now
+        , ME.courseRegistrationUpdatedAt = now
+        }
+
+mkCourseRegistrationReceiptSummaryFixture
+    :: Key ME.CourseRegistration
+    -> Text
+    -> UTCTime
+    -> ME.CourseRegistrationReceipt
+mkCourseRegistrationReceiptSummaryFixture regKey fileName now =
+    ME.CourseRegistrationReceipt
+        { ME.courseRegistrationReceiptRegistrationId = regKey
+        , ME.courseRegistrationReceiptPartyId = Nothing
+        , ME.courseRegistrationReceiptFileUrl = "https://example.com/" <> fileName
+        , ME.courseRegistrationReceiptFileName = Just fileName
+        , ME.courseRegistrationReceiptMimeType = Just "application/pdf"
+        , ME.courseRegistrationReceiptNotes = Nothing
+        , ME.courseRegistrationReceiptUploadedBy = Nothing
+        , ME.courseRegistrationReceiptCreatedAt = now
+        , ME.courseRegistrationReceiptUpdatedAt = now
+        }
+
+insertSocialSyncPartyFixture :: Int -> Text -> SqlPersistT IO (Key Party)
+insertSocialSyncPartyFixture keyVal displayName =
+    let partyId = toSqlKey (fromIntegral keyVal)
+    in do
+        insertKey
+            partyId
+            Party
+                { partyLegalName = Nothing
+                , partyDisplayName = displayName
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Nothing
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
+                , partyCreatedAt = currentSocialSyncTestTime
+                }
+        pure partyId
+
+insertSocialSyncArtistProfileFixture :: Int -> Key Party -> SqlPersistT IO (Key ArtistProfile)
+insertSocialSyncArtistProfileFixture keyVal partyId =
+    let profileId = toSqlKey (fromIntegral keyVal)
+    in do
+        insertKey
+            profileId
+            ArtistProfile
+                { artistProfileArtistPartyId = partyId
+                , artistProfileSlug = Just "artist-profile"
+                , artistProfileBio = Nothing
+                , artistProfileCity = Nothing
+                , artistProfileHeroImageUrl = Nothing
+                , artistProfileSpotifyArtistId = Nothing
+                , artistProfileSpotifyUrl = Nothing
+                , artistProfileYoutubeChannelId = Nothing
+                , artistProfileYoutubeUrl = Nothing
+                , artistProfileWebsiteUrl = Nothing
+                , artistProfileFeaturedVideoUrl = Nothing
+                , artistProfileGenres = Nothing
+                , artistProfileHighlights = Nothing
+                , artistProfileStripeAccountId = Nothing
+                , artistProfileCountryCode = Nothing
+                , artistProfileCountryId = Nothing
+                , artistProfileCreatedAt = currentSocialSyncTestTime
+                , artistProfileUpdatedAt = Nothing
+                }
+        pure profileId
 
 initializeRadioPresenceSchema :: SqlPersistT IO ()
 initializeRadioPresenceSchema = do
@@ -6585,6 +16580,9 @@ initializeRadioPresenceSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []

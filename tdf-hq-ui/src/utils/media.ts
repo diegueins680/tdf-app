@@ -52,33 +52,34 @@ const normalizeYoutubeVideoId = (candidate: string | null | undefined): string |
   return value;
 };
 
-export const normalizeYoutubeEmbed = (raw?: string | null): string | null => {
+export const extractYoutubeVideoId = (raw?: string | null): string | null => {
   if (!raw) return null;
+  const directId = normalizeYoutubeVideoId(raw);
+  if (directId) return directId;
   const url = parseUrl(raw);
   if (!url) return null;
   const host = url.hostname.toLowerCase();
   if (hostMatches(host, 'youtube.com')) {
     const v = normalizeYoutubeVideoId(url.searchParams.get('v'));
-    if (v) return `https://www.youtube.com/embed/${v}`;
+    if (v) return v;
     const parts = url.pathname.split('/').filter(Boolean);
     const route = parts[0];
     const videoId =
       route === 'shorts' || route === 'embed' || route === 'live' || route === 'v'
         ? normalizeYoutubeVideoId(parts[1])
         : null;
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    return null;
+    return videoId;
   }
   if (hostMatches(host, 'youtu.be')) {
     const [firstPathSegment] = url.pathname.split('/').filter(Boolean);
-    const videoId = normalizeYoutubeVideoId(firstPathSegment);
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
+    return normalizeYoutubeVideoId(firstPathSegment);
   }
   return null;
+};
+
+export const normalizeYoutubeEmbed = (raw?: string | null): string | null => {
+  const videoId = extractYoutubeVideoId(raw);
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 };
 
 const normalizeSpotifyPath = (pathname: string): string | null => {

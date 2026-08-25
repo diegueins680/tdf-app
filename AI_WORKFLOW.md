@@ -39,6 +39,7 @@ Do not hand-edit generated API client files.
    - Backend: `cd tdf-hq && stack test && stack build`
    - Web UI: `npm run test:ui && npm run build:ui`
    - Mobile: `npm run test:mobile && npm run typecheck:mobile`
+   - Formal checks for invariants/model logic: `npm run verify:formal`
 5. If API shapes changed, update `tdf-hq/docs/openapi/api.yaml` and regenerate clients:
    - `npm run generate:api:ui`
    - `npm run generate:api:mobile`
@@ -84,6 +85,7 @@ Recommended guardrails:
 
 - Some older docs still implied the backend OpenAPI was auto-generated. For client generation in this repo, `tdf-hq/docs/openapi/api.yaml` is the spec that matters.
 - Older agent docs also claimed the backend or mobile lacked automated tests. That is stale: both exist now.
+- `FORMAL_VERIFICATION.md` is the source of truth for when to add invariants, model checks, and property tests.
 - `tdf-mobile/` is a submodule. If it is missing or incomplete, root mobile scripts will skip unless `REQUIRE_MOBILE_WORKSPACE=1`.
 - `gh auth` can be shadowed by stale `GH_TOKEN` / `GITHUB_TOKEN` / `GITHUB_PAT` values; re-auth or clear them if polling looks broken.
 

@@ -16,6 +16,7 @@
 module TDF.ModelsExtra where
 
 import           Data.Aeson        (ToJSON(..), (.=), object)
+import           Data.Int          (Int64)
 import           Data.Text         (Text)
 import qualified Data.Text         as T
 import           Data.Time          (Day, UTCTime)
@@ -25,10 +26,18 @@ import           Database.Persist.TH
 import           GHC.Generics       (Generic)
 import           Web.PathPieces     (toPathPiece)
 
-import           TDF.Models         (InvoiceId, PartyId, ServiceKind)
+import           TDF.Catalog.Models
+  ( FeedbackCategoryId
+  , FeedbackSeverityId
+  , GenreId
+  , InstrumentId
+  , ServiceOfferingId
+  , WorkflowStateId
+  )
+import           TDF.Models         (ArtistProfileId, InvoiceId, PartyId, ServiceKind)
 import           TDF.UUIDInstances  ()
 
-data AssetStatus = Active | Booked | OutForMaintenance | Retired
+data AssetStatus = Active | Booked | OutForMaintenance | Retired | Sold
   deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic)
 derivePersistField "AssetStatus"
 
@@ -76,6 +85,71 @@ Campaign
     endDate     Day Maybe
     createdAt   UTCTime default=now()
     updatedAt   UTCTime default=now()
+    deriving Show Generic
+
+CampaignAutomation
+    campaignId  CampaignId
+    templateKey Text
+    status      Text default='draft'
+    startAt     UTCTime
+    dailyLimit  Int default=20
+    lastRunAt   UTCTime Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    UniqueCampaignAutomationCampaign campaignId
+    UniqueCampaignAutomationTemplate templateKey
+    IndexCampaignAutomationStatus status startAt !force
+    deriving Show Generic
+
+CampaignAutomationStep
+    automationId        CampaignAutomationId
+    position            Int
+    delayDays           Int
+    channel             Text default='whatsapp'
+    providerTemplateName Text
+    languageCode        Text default='es'
+    body                 Text
+    ctaPath              Text
+    active               Bool default=True
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueCampaignAutomationStep automationId position
+    IndexCampaignAutomationStepActive automationId active position !force
+    deriving Show Generic
+
+CampaignEnrollment
+    automationId   CampaignAutomationId
+    partyId        PartyId
+    status         Text default='scheduled'
+    nextStepPosition Int default=1
+    nextRunAt      UTCTime
+    lastSentAt     UTCTime Maybe
+    stoppedAt      UTCTime Maybe
+    stopReason     Text Maybe
+    createdAt      UTCTime default=now()
+    updatedAt      UTCTime default=now()
+    UniqueCampaignEnrollment automationId partyId
+    IndexCampaignEnrollmentDue automationId status nextRunAt !force
+    IndexCampaignEnrollmentParty partyId createdAt !force
+    deriving Show Generic
+
+CampaignDelivery
+    automationId     CampaignAutomationId
+    enrollmentId     CampaignEnrollmentId
+    stepId           CampaignAutomationStepId
+    partyId          PartyId
+    channel          Text
+    status           Text default='pending'
+    scheduledAt      UTCTime
+    attemptedAt      UTCTime Maybe
+    sentAt           UTCTime Maybe
+    providerMessageId Text Maybe
+    error             Text Maybe
+    bodySnapshot      Text
+    createdAt         UTCTime default=now()
+    updatedAt         UTCTime default=now()
+    UniqueCampaignDelivery enrollmentId stepId
+    IndexCampaignDeliveryAutomation automationId status createdAt !force
     deriving Show Generic
 
 AdCreative
@@ -198,9 +272,14 @@ CourseRegistration
     utmMedium    Text Maybe
     utmCampaign  Text Maybe
     utmContent   Text Maybe
+    stripePaymentIntentId Text Maybe
+    stripeSubscriptionId  Text Maybe
+    subscriptionStatus    Text Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
     IndexCourseRegistrationParty partyId createdAt !force
+    UniqueCourseRegistrationStripePaymentIntent stripePaymentIntentId !force
+    UniqueCourseRegistrationStripeSubscription stripeSubscriptionId !force
     deriving Show Generic
 
 CourseRegistrationReceipt
@@ -316,10 +395,12 @@ AssetKitMember
 
 PipelineCard
     Id          UUID default=gen_random_uuid()
-    serviceKind ServiceKind
+    serviceKind ServiceKind Maybe
+    serviceOfferingId ServiceOfferingId Maybe
     title       Text
     artist      Text Maybe
-    stage       Text
+    stage       Text Maybe
+    workflowStateId WorkflowStateId Maybe
     sortOrder   Int default=0
     notes       Text Maybe
     createdAt   UTCTime default=now()
@@ -394,6 +475,7 @@ LiveSessionIntake
     bandName     Text
     bandDescription Text Maybe
     primaryGenre Text Maybe
+    primaryGenreId GenreId Maybe
     inputList    Text Maybe
     contactEmail Text Maybe
     contactPhone Text Maybe
@@ -413,6 +495,7 @@ LiveSessionMusician
     name        Text
     email       Text Maybe
     instrument  Text Maybe
+    instrumentId InstrumentId Maybe
     role        Text Maybe
     notes       Text Maybe
     isExisting  Bool default=False
@@ -434,6 +517,8 @@ Feedback
     description  Text
     category     Text Maybe
     severity     Text Maybe
+    categoryId   FeedbackCategoryId Maybe
+    severityId   FeedbackSeverityId Maybe
     contactEmail Text Maybe
     attachment   Text Maybe
     consent      Bool default=False
@@ -535,6 +620,7 @@ InputRow
     channelNumber     Int
     trackName         Text Maybe
     instrument        Text Maybe
+    instrumentId      InstrumentId Maybe
     micId             AssetId Maybe
     standId           AssetId Maybe
     cableId           AssetId Maybe
@@ -564,6 +650,9 @@ AssetCheckout
     paymentType      Text Maybe
     paymentInstallments Int Maybe
     paymentReference Text Maybe
+    paymentAmountCents Int Maybe
+    paymentCurrency  Text Maybe
+    paymentOutstandingCents Int Maybe
     checkedOutByRef  Text
     checkedOutAt     UTCTime default=now()
     dueAt            UTCTime Maybe
@@ -651,6 +740,8 @@ MarketplaceOrder
     currency        Text default='USD'
     status          Text default='pending'
     paymentProvider Text Maybe
+    stripePaymentIntentId Text Maybe
+    stripeIdempotencyKey Text Maybe
     paypalOrderId   Text Maybe
     paypalPayerEmail Text Maybe
     datafastCheckoutId Text Maybe
@@ -664,6 +755,7 @@ MarketplaceOrder
     paidAt          UTCTime Maybe
     createdAt       UTCTime default=now()
     updatedAt       UTCTime default=now()
+    UniqueMarketplaceOrderStripePaymentIntent stripePaymentIntentId !force
     deriving Show Generic
 
 MarketplaceOrderItem
@@ -685,6 +777,24 @@ LabelTrack
     updatedAt   UTCTime default=now()
     deriving Show Generic
 
+-- Operational project notes are typed records, not list-shaped CMS payloads.
+-- Deletion is represented by active=False so previously shared notes remain
+-- recoverable and auditable at the database boundary.
+LabelProjectNote
+    Id          UUID default=gen_random_uuid()
+    text        Text
+    completed   Bool default=false
+    active      Bool default=true
+    createdBy   PartyId Maybe
+    updatedBy   PartyId Maybe
+    createdAt   UTCTime default=now()
+    updatedAt   UTCTime default=now()
+    version     Int default=1
+    sourceCmsContentId Int64 Maybe
+    sourceItemId Text Maybe
+    UniqueLabelProjectNoteSource sourceCmsContentId sourceItemId !force
+    deriving Show Generic
+
 InternProfile
     Id          UUID default=gen_random_uuid()
     partyId     PartyId
@@ -703,6 +813,9 @@ InternProject
     title       Text
     description Text Maybe
     status      Text default='active'
+    activationStatus Text default='active'
+    activatedAt UTCTime Maybe
+    notificationsEnabled Bool default=False
     startAt     Day Maybe
     dueAt       Day Maybe
     createdBy   PartyId
@@ -716,8 +829,10 @@ InternTask
     title       Text
     description Text Maybe
     status      Text default='todo'
+    activationStatus Text default='active'
     progress    Int default=0
     assignedTo  PartyId Maybe
+    proposedAssignee PartyId Maybe
     dueAt       Day Maybe
     createdBy   PartyId
     createdAt   UTCTime default=now()
@@ -758,6 +873,354 @@ InternPermissionRequest
     updatedAt     UTCTime default=now()
     deriving Show Generic
 
+InternAuditPlan
+    Id                   UUID default=gen_random_uuid()
+    projectId            InternProjectId
+    taskId               InternTaskId
+    environment          Text
+    status               Text default='draft'
+    durationDays         Int default=14
+    expectedHoursMin     Int default=20
+    expectedHoursMax     Int default=30
+    midpointPercent      Int default=50
+    proposedAssignee     PartyId Maybe
+    finalReviewRequired  Bool default=True
+    completionJustification Text Maybe
+    completionExceptionApproved Bool default=False
+    completionApprovedBy PartyId Maybe
+    completionApprovedAt UTCTime Maybe
+    createdBy            PartyId
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternAuditPlanTask taskId
+    deriving Show Generic
+
+InternTestCase
+    Id                   UUID default=gen_random_uuid()
+    planId               InternAuditPlanId
+    stableId             Text
+    moduleName           Text
+    featureName          Text
+    userRole             Text
+    objective            Text
+    businessPurpose      Text
+    preconditions        Text
+    requiredTestData     Text
+    environment          Text
+    platform             Text
+    browserOrDevice      Text
+    language             Text
+    detailedSteps        Text
+    expectedResult       Text
+    expectedPersistedState Text
+    expectedSideEffects  Text
+    cleanupInstructions  Text
+    criticality          Text
+    evidenceRequirement  Text
+    exploratoryCharter   Text Maybe
+    applicable           Bool default=True
+    sortOrder            Int default=0
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternTestCaseStableId planId stableId
+    deriving Show Generic
+
+InternTestExecution
+    Id                   UUID default=gen_random_uuid()
+    testCaseId           InternTestCaseId
+    executionNumber      Int
+    executorPartyId      PartyId
+    status               Text default='pending'
+    actualResult         Text Maybe
+    persistedStateObserved Text Maybe
+    sideEffectsObserved  Text Maybe
+    blockerReason        Text Maybe
+    evidenceSummary      Text Maybe
+    startedAt            UTCTime Maybe
+    completedAt          UTCTime Maybe
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternTestExecutionNumber testCaseId executionNumber
+    deriving Show Generic
+
+InternDailySummary
+    Id                   UUID default=gen_random_uuid()
+    taskId               InternTaskId
+    authorPartyId        PartyId
+    workDate             Day
+    minutesWorked        Int
+    modulesTested        Text
+    casesCompleted       Int
+    reportsCreated       Int
+    blockers             Text Maybe
+    nextStep             Text
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    deriving Show Generic
+
+InternFinalSummary
+    Id                   UUID default=gen_random_uuid()
+    planId               InternAuditPlanId
+    authorPartyId        PartyId
+    generatedSnapshot    Text
+    conclusions          Text Maybe
+    submittedAt          UTCTime Maybe
+    approvedBy           PartyId Maybe
+    approvedAt           UTCTime Maybe
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternFinalSummaryPlan planId
+    deriving Show Generic
+
+InternalFeedbackReport
+    Id                   UUID default=gen_random_uuid()
+    feedbackId           FeedbackId
+    reportType           Text
+    state                Text default='draft'
+    moduleName           Text
+    featureName          Text Maybe
+    environment          Text
+    urlOrScreen          Text Maybe
+    platform             Text
+    device               Text Maybe
+    browser              Text Maybe
+    language             Text
+    accountRole          Text
+    reproductionSteps    Text Maybe
+    expectedResult       Text Maybe
+    actualResult         Text Maybe
+    frequency            Text Maybe
+    proposedSeverityId   FeedbackSeverityId Maybe
+    authoritativeSeverityId FeedbackSeverityId Maybe
+    priority             Text Maybe
+    testCaseId           InternTestCaseId Maybe
+    testExecutionId      InternTestExecutionId Maybe
+    internshipProjectId  InternProjectId Maybe
+    internshipTaskId     InternTaskId Maybe
+    reporterPartyId      PartyId
+    blocking             Bool default=False
+    assignedTo           PartyId Maybe
+    duplicateOf          FeedbackId Maybe
+    resolution           Text Maybe
+    retestResult         Text Maybe
+    closureReason        Text Maybe
+    githubIssueUrl       Text Maybe
+    videoLinks           Text Maybe
+    submittedAt          UTCTime Maybe
+    closedAt             UTCTime Maybe
+    version              Int default=1
+    createdAt            UTCTime default=now()
+    updatedAt            UTCTime default=now()
+    UniqueInternalFeedbackReport feedbackId
+    deriving Show Generic
+
+InternalFeedbackEvidence
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    uploadedBy           PartyId
+    kind                 Text default='attachment'
+    originalFileName     Text Maybe
+    storagePath          Text Maybe
+    contentType          Text Maybe
+    sizeBytes            Int Maybe
+    externalUrl          Text Maybe
+    caption              Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackComment
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    authorPartyId        PartyId
+    kind                 Text default='comment'
+    body                 Text
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackHistory
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    actorPartyId         PartyId
+    action               Text
+    previousState        Text Maybe
+    newState             Text Maybe
+    metadata             Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternalFeedbackRetest
+    Id                   UUID default=gen_random_uuid()
+    reportId             InternalFeedbackReportId
+    executionId          InternTestExecutionId Maybe
+    testerPartyId        PartyId
+    result               Text
+    notes                Text Maybe
+    evidenceSummary      Text Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+InternAuditNotificationOutbox
+    Id                   UUID default=gen_random_uuid()
+    recipientPartyId     PartyId
+    reportId             InternalFeedbackReportId Maybe
+    planId               InternAuditPlanId Maybe
+    templateKey          Text
+    deliveryMode         Text
+    testTransport        Bool default=True
+    payload              Text
+    dispatchedAt         UTCTime Maybe
+    createdAt            UTCTime default=now()
+    deriving Show Generic
+
+ArtistTip
+    artistProfileId       ArtistProfileId
+    tipperPartyId         PartyId Maybe
+    tipperEmail           Text Maybe
+    tipperName            Text Maybe
+    amountCents           Int
+    currency              Text
+    platformFeeCents      Int
+    stripePaymentIntentId Text Maybe
+    status                Text default='pending'
+    message               Text Maybe
+    createdAt             UTCTime default=now()
+    updatedAt             UTCTime default=now()
+    IndexArtistTipArtist artistProfileId createdAt !force
+    UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
+    deriving Show Generic
+
+ServiceStorefrontPackage
+    Id               UUID default=gen_random_uuid()
+    serviceKind      Text
+    tier             Text
+    name             Text
+    description      Text Maybe
+    priceUsdCents    Int
+    currency         Text default='USD'
+    minSongCount     Int default=1
+    maxSongCount     Int default=1
+    turnaroundDays   Int default=7
+    revisionCount    Int default=2
+    deliverables     Text Maybe
+    features         Text Maybe
+    active           Bool default=True
+    sortOrder        Int default=0
+    createdAt        UTCTime default=now()
+    updatedAt        UTCTime default=now()
+    deriving Show Generic
+
+ServiceStorefrontOrder
+    Id                    UUID default=gen_random_uuid()
+    orderNumber           Text
+    buyerName             Text
+    buyerEmail            Text
+    buyerPhone            Text Maybe
+    artistName            Text Maybe
+    packageId             ServiceStorefrontPackageId
+    serviceKind           Text
+    tier                  Text
+    priceUsdCents         Int
+    currency              Text default='USD'
+    status                Text default='pending_payment'
+    paymentProvider       Text Maybe
+    stripePaymentIntentId Text Maybe
+    stripeIdempotencyKey  Text Maybe
+    datafastCheckoutId    Text Maybe
+    datafastResourcePath  Text Maybe
+    datafastPaymentId     Text Maybe
+    paypalOrderId         Text Maybe
+    paypalCaptureId       Text Maybe
+    paypalPayerEmail      Text Maybe
+    lookupTokenHash       Text Maybe
+    createIdempotencyKey  Text Maybe
+    createRequestSha256   Text Maybe
+    checkoutId            UUID Maybe
+    paidAt                UTCTime Maybe
+    genre                 Text Maybe
+    songCount             Int default=1
+    notes                 Text Maybe
+    referenceTrackUrl     Text Maybe
+    deadline              Day Maybe
+    sourceFilesUrl        Text Maybe
+    deliverablesUrl       Text Maybe
+    pipelineCardId        PipelineCardId Maybe
+    createdAt             UTCTime default=now()
+    updatedAt             UTCTime default=now()
+    UniqueServiceStorefrontOrderNumber orderNumber
+    UniqueServiceStorefrontOrderStripePI stripePaymentIntentId !force
+    UniqueServiceStorefrontOrderDatafastCheckout datafastCheckoutId !force
+    UniqueServiceStorefrontOrderDatafastPayment datafastPaymentId !force
+    UniqueServiceStorefrontOrderPaypal paypalOrderId !force
+    UniqueServiceStorefrontOrderPaypalCapture paypalCaptureId !force
+    UniqueServiceStorefrontOrderCreateIdempotency createIdempotencyKey !force
+    deriving Show Generic
+
+ServiceStorefrontOrderStatusChange
+    Id        UUID default=gen_random_uuid()
+    orderId   ServiceStorefrontOrderId
+    status    Text
+    notes     Text Maybe
+    changedBy Text Maybe
+    createdAt UTCTime default=now()
+    deriving Show Generic
+
+ServiceStorefrontRevision
+    Id             UUID default=gen_random_uuid()
+    orderId        ServiceStorefrontOrderId
+    revisionNumber Int
+    feedback       Text
+    status         Text default='pending'
+    createdAt      UTCTime default=now()
+    completedAt    UTCTime Maybe
+    UniqueServiceStorefrontRevisionOrderNumber orderId revisionNumber
+    deriving Show Generic
+
+FeatureAccessRequest sql=feature_access_requests
+    requesterPartyId PartyId
+    featureId Text
+    action Text
+    roleContext Text
+    moduleContext Text
+    justification Text Maybe
+    status Text default='pending'
+    reviewerGroup Text
+    reviewerPartyId PartyId Maybe
+    reviewerNotes Text Maybe
+    requestedAt UTCTime
+    updatedAt UTCTime
+    decidedAt UTCTime Maybe
+    cancelledAt UTCTime Maybe
+    expiresAt UTCTime Maybe
+    IndexFeatureAccessRequestRequester requesterPartyId requestedAt !force
+    IndexFeatureAccessRequestQueue status reviewerGroup requestedAt !force
+    IndexFeatureAccessRequestDuplicate requesterPartyId featureId action status !force
+    deriving Show Generic
+
+FeatureAccessRequestHistory sql=feature_access_request_history
+    requestId FeatureAccessRequestId
+    actorPartyId PartyId Maybe
+    transition Text
+    fromStatus Text Maybe
+    toStatus Text
+    note Text Maybe
+    createdAt UTCTime
+    IndexFeatureAccessRequestHistory requestId createdAt !force
+    deriving Show Generic
+
+FeatureNavigationPreference sql=feature_navigation_preferences
+    partyId PartyId
+    featureId Text
+    favorite Bool default=False
+    pinned Bool default=False
+    pinOrder Int Maybe
+    lastVisitedAt UTCTime Maybe
+    useCount Int default=0
+    updatedAt UTCTime
+    UniqueFeatureNavigationPreference partyId featureId
+    IndexFeatureNavigationPreferencePinned partyId pinned pinOrder !force
+    IndexFeatureNavigationPreferenceRecent partyId lastVisitedAt !force
+    deriving Show Generic
+
 |]
 
 instance ToJSON (Entity Asset) where
@@ -776,7 +1239,7 @@ instance ToJSON (Entity InputRow) where
     [ "id"             .= toPathPiece key
     , "channel"        .= inputRowChannelNumber row
     , "trackName"      .= inputRowTrackName row
-    , "instrument"     .= inputRowInstrument row
+    , "instrumentId"   .= fmap toPathPiece (inputRowInstrumentId row)
     , "micId"          .= fmap toPathPiece (inputRowMicId row)
     , "standId"        .= fmap toPathPiece (inputRowStandId row)
     , "cableId"        .= fmap toPathPiece (inputRowCableId row)

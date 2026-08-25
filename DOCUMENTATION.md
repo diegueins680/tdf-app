@@ -56,11 +56,13 @@ Welcome to the comprehensive documentation for the TDF Records Platform. This in
 
 ### Testing Guides
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures (26 test cases)
+- **[FORMAL_VERIFICATION.md](FORMAL_VERIFICATION.md)** - Invariants, model checks, property tests, and formal audit gate
 - **[BEST_PRACTICES.md](BEST_PRACTICES.md#suggested-workflow)** - Quality gates workflow
 - **[DEVELOPMENT.md](DEVELOPMENT.md#testing)** - Running tests
 
 ### Quality Assurance
 - Run `npm run quality` - Consolidated quality gate (lint + typecheck + backend tests)
+- Run `npm run verify:formal` - Formal verification gate (model checks + formal audit)
 - Run `npm run lint:ui` - ESLint checks for frontend
 - Run `npm run typecheck:ui` - TypeScript type checking
 - Run `stack test` (from tdf-hq/) - Backend test suite
@@ -104,9 +106,10 @@ curl -X PUT http://localhost:8080/api/users/1/roles \
 #### CMS (página pública Records)
 - Slugs separados por tipo para carga dinámica desde BD (no un solo entry):
   - `records-release-*`: cada release (payload con `title`, `artist`, `releasedOn`, `description/blurb`, `cover`, `links[]`).
-  - `records-session-*`: cada video de sesión (`youtubeId`, `title`, `duration?`, `guests?`, `description?`).
+  - `records-sessions`: colección editable de videos (`playlistUrl`, `videos[]` con `url` o `youtubeId`, `title`, `duration?`, `guests?`, `description?`, `sortOrder?`).
+  - `records-session-*`: formato legacy por video individual; se conserva como fallback si no hay colección `records-sessions` publicada.
   - `records-recording-*`: cada tarjeta de “Grabaciones recientes” (`title`, `image`, `description`, `artist?`, `recordedAt?`, `vibe?`).
-- El frontend usa el endpoint público `GET /cms/contents?locale=es&slugPrefix=records-...` para poblar hero, releases, sesiones y grabaciones.
+- El frontend usa `GET /cms/content?slug=records-sessions&locale=es` para sesiones y `GET /cms/contents?locale=es&slugPrefix=records-...` para releases/grabaciones y formatos legacy.
 
 ## 🚀 Deployment & Operations
 

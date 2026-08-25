@@ -1,7 +1,10 @@
 import {
   buildLoginRedirectPath,
+  normalizeOnboardingIntent,
   pickLandingPath,
   readSafeRedirectPath,
+  readOnboardingIntent,
+  resolvePostAuthPath,
   sanitizeRedirectPath,
 } from './loginRouting';
 import { canAccessPath } from './accessControl';
@@ -83,6 +86,30 @@ describe('pickLandingPath', () => {
     });
 
     expect(failures).toEqual([]);
+  });
+});
+
+describe('onboarding intent routing', () => {
+  it('accepts explicit intents and legacy role campaign links without treating them as permissions', () => {
+    expect(readOnboardingIntent('?intent=artist_profile')).toBe('artist_profile');
+    expect(readOnboardingIntent('?roles=Fan')).toBe('follow_artists');
+    expect(normalizeOnboardingIntent('Intern')).toBe('internships');
+    expect(normalizeOnboardingIntent('Admin')).toBeNull();
+  });
+
+  it('honors a redirect only when the returned session can access it', () => {
+    expect(resolvePostAuthPath('follow_artists', ['Customer'], [], '/fans')).toBe('/fans');
+    expect(resolvePostAuthPath('follow_artists', ['Customer'], [], '/practicas')).toBe('/fans');
+  });
+
+  it('turns governed artist and internship intents into access requests for Customer accounts', () => {
+    expect(resolvePostAuthPath('artist_profile', ['Customer'])).toBe(
+      '/solicitudes-acceso/nueva?feature=artist.onboarding&action=create',
+    );
+    expect(resolvePostAuthPath('internships', ['Customer'])).toBe(
+      '/solicitudes-acceso/nueva?feature=internships&action=view',
+    );
+    expect(resolvePostAuthPath('internships', ['Intern'], ['Internships'])).toBe('/practicas');
   });
 });
 

@@ -1,28 +1,45 @@
-import { lazy } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
 import { Navigate, Outlet, Route } from 'react-router-dom';
 
-import { ConfigurationIndexRedirect, Shell } from './AppShell';
+const Shell = lazy(() => import('./AppShell').then((module) => ({ default: module.Shell })));
+const ConfigurationIndexRedirect = lazy(() => import('./AppShell').then((module) => ({
+  default: module.ConfigurationIndexRedirect,
+})));
 
 const AboutPage = lazy(() => import('../pages/AboutPage'));
 const AdsInboxPage = lazy(() => import('../pages/AdsInboxPage'));
 const AdminDiagnosticsPage = lazy(() => import('../pages/AdminDiagnosticsPage'));
 const AdminTokenPage = lazy(() => import('../pages/AdminTokenPage'));
 const AdminUsersPage = lazy(() => import('../pages/AdminUsersPage'));
-const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
+const ArtistEnrichmentReviewPage = lazy(() => import('../pages/ArtistEnrichmentReviewPage'));
 const BookingsPage = lazy(() => import('../pages/BookingsPage'));
 const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
+const CatalogsPage = lazy(() => import('../pages/CatalogsPage'));
+const FeedbackCatalogPage = lazy(() => import('../pages/FeedbackCatalogPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
+const CampaignAutomationsPage = lazy(() => import('../pages/CampaignAutomationsPage'));
 const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
 const ClassesPage = lazy(() => import('../pages/ClassesPage'));
 const CmsAdminPage = lazy(() => import('../pages/CmsAdminPage'));
+const CommerceProviderEventsPage = lazy(() => import('../pages/CommerceProviderEventsPage'));
 const CompaniesPage = lazy(() => import('../pages/CompaniesPage'));
 const CourseBuilderPage = lazy(() => import('../pages/CourseBuilderPage'));
 const CourseRegistrationsAdminPage = lazy(() => import('../pages/CourseRegistrationsAdminPage'));
 const DocsPage = lazy(() => import('../pages/DocsPage'));
-const FanHubPage = lazy(() => import('../pages/FanHubPage'));
+const DirectoryManagePage = lazy(() => import('../pages/DirectoryManagePage'));
+const DirectoryAdminPage = lazy(() => import('../pages/DirectoryAdminPage'));
+const EstebanMunozReportPage = lazy(() => import('../pages/EstebanMunozReportPage'));
+const EventDiscoverySourcesPage = lazy(() => import('../pages/EventDiscoverySourcesPage'));
+const DavidCelayaReportPage = lazy(() => import('../pages/DavidCelayaReportPage'));
+const WorkAccountReportBuilderPage = lazy(() => import('../pages/WorkAccountReportBuilderPage'));
+const FanClubPage = lazy(() => import('../pages/FanClubPage'));
+const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfilePage'));
 const InstagramConnectPage = lazy(() => import('../pages/InstagramConnectPage'));
 const InternshipsPage = lazy(() => import('../pages/InternshipsPage'));
+const InternTaskDetailPage = lazy(() => import('../pages/InternTaskDetailPage'));
+const InternAuditPlanPage = lazy(() => import('../pages/InternAuditPlanPage'));
+const InternalFeedbackPage = lazy(() => import('../pages/InternalFeedbackPage'));
 const InventoryPage = lazy(() => import('../pages/InventoryPage'));
 const KanbanPage = lazy(() => import('../pages/KanbanPage'));
 const LabelArtistsPage = lazy(() => import('../pages/LabelArtistsPage'));
@@ -30,6 +47,9 @@ const LabelAssetsPage = lazy(() => import('../pages/LabelAssetsPage'));
 const LabelProjectsPage = lazy(() => import('../pages/LabelProjectsPage'));
 const LabelReleasesPage = lazy(() => import('../pages/LabelReleasesPage'));
 const LabelTracksPage = lazy(() => import('../pages/LabelTracksPage'));
+const DdexInboxPage = lazy(() => import('../features/ddex/DdexInboxPage'));
+const DdexDocumentPage = lazy(() => import('../features/ddex/DdexDocumentPage'));
+const PartnerManagementPage = lazy(() => import('../features/ddex/PartnerManagementPage'));
 const LeadsPage = lazy(() => import('../pages/LeadsPage'));
 const LiveSessionIntakePage = lazy(() => import('../pages/LiveSessionIntakePage'));
 const LogsPage = lazy(() => import('../pages/LogsPage'));
@@ -37,34 +57,48 @@ const ManualPage = lazy(() => import('../pages/ManualPage'));
 const MarketplaceOrdersPage = lazy(() => import('../pages/MarketplaceOrdersPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const OrdersPage = lazy(() => import('../pages/OrdersPage'));
+const OperationsControlCenterPage = lazy(() => import('../pages/OperationsControlCenterPage'));
 const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
+const AppearanceModeCatalogPage = lazy(() => import('../pages/AppearanceModeCatalogPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
-const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
+const RadioAutoStopCatalogPage = lazy(() => import('../pages/RadioAutoStopCatalogPage'));
+const ReactionTypesCatalogPage = lazy(() => import('../pages/ReactionTypesCatalogPage'));
 const ReservasEquipoPage = lazy(() => import('../pages/ReservasEquipoPage'));
 const RoomsPage = lazy(() => import('../pages/RoomsPage'));
 const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
+const CollaborativeEventCreatorPage = lazy(() => import('../pages/CollaborativeEventCreatorPage'));
+const SocialEventDetailPage = lazy(() => import('../pages/SocialEventDetailPage'));
+const EventLogisticsPage = lazy(() => import('../pages/EventLogisticsPage'));
+const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));
 const SocialPageView = lazy(() => import('../pages/SocialPage'));
 const SystemPage = lazy(() => import('../pages/SystemPage'));
 const SystemStatusPage = lazy(() => import('../pages/SystemStatusPage'));
 const TeacherPortalPage = lazy(() => import('../pages/TeacherPortalPage'));
+const TdfDomoCampaignPage = lazy(() => import('../pages/TdfDomoCampaignPage'));
 const TeachersPage = lazy(() => import('../pages/TeachersPage'));
 const TidalAgentPage = lazy(() => import('../pages/TidalAgentPage'));
 const TrialLessonsPage = lazy(() => import('../pages/TrialLessonsPage'));
 const UserRoleManagement = lazy(() => import('../components/UserRoleManagement'));
 const UxOptionsPage = lazy(() => import('../pages/UxOptionsPage'));
+const UserActivityPage = lazy(() => import('../pages/UserActivityPage'));
 const WhatsAppConsentPage = lazy(() => import('../pages/WhatsAppConsentPage'));
+const AccessRequestsPage = lazy(() => import('../pages/AccessRequestsPage'));
+const NewAccessRequestPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.NewAccessRequestPage,
+})));
+const AccessRequestReviewPage = lazy(() => import('../pages/AccessRequestsPage').then((module) => ({
+  default: module.AccessRequestReviewPage,
+})));
 
 export function renderProtectedRoutes() {
   return (
     <>
       <Route element={<Shell />}>
-        <Route path="/" element={<Navigate to="/inicio" replace />} />
-
         <Route path="/parties" element={<Navigate to="/crm/contactos" replace />} />
         <Route path="/bookings" element={<Navigate to="/estudio/calendario" replace />} />
         <Route path="/pipelines" element={<Navigate to="/estudio/pipelines" replace />} />
@@ -72,21 +106,41 @@ export function renderProtectedRoutes() {
         <Route path="/contactos" element={<Navigate to="/crm/contactos" replace />} />
         <Route path="/system" element={<Navigate to="/configuracion/preferencias" replace />} />
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
+        <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
-        <Route path="/inicio" element={<FanHubPage />} />
+        <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
+        <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
+        <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/social" element={<SocialPageView />} />
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />
         <Route path="/social/eventos" element={<SocialEventsPage />} />
+        <Route path="/social/eventos/nuevo" element={<CollaborativeEventCreatorPage />} />
+        <Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} />
+        <Route path="/social/eventos/:eventId/logistica" element={<EventLogisticsPage />} />
+        <Route path="/social/eventos-descubiertos" element={<RecentlyDiscoveredEventsPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/acerca" element={<AboutPage />} />
         <Route path="/seguridad" element={<SecurityPage />} />
+        <Route path="/solicitudes-acceso" element={<AccessRequestsPage />} />
+        <Route path="/solicitudes-acceso/nueva" element={<NewAccessRequestPage />} />
+        <Route path="/solicitudes-acceso/revision" element={<AccessRequestReviewPage />} />
+        <Route path="/fans/clubs/:artistId" element={<FanClubPage />} />
+        <Route path="/fans/clubs/:artistId/members" element={<FanClubMemberProfilePage />} />
+        <Route path="/fans/clubs/:artistId/members/:partyId" element={<FanClubMemberProfilePage />} />
         <Route path="/practicas" element={<InternshipsPage />} />
+        <Route path="/practicas/tareas/:taskId" element={<InternTaskDetailPage />} />
+        <Route path="/practicas/auditorias/:planId" element={<InternAuditPlanPage />} />
+        <Route path="/feedback/interno" element={<InternalFeedbackPage />} />
+        <Route path="/feedback/interno/:reportId" element={<InternalFeedbackPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
+        <Route path="/admin/commerce/provider-events" element={<CommerceProviderEventsPage />} />
+        <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
+        <Route path="/admin/artists/enrichment" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
         <Route path="/herramientas/tidal-agent" element={<TidalAgentPage />} />
         <Route path="/herramientas/token-admin" element={<AdminTokenPage />} />
@@ -104,6 +158,7 @@ export function renderProtectedRoutes() {
           <Route path="servicios" element={<ServiceTypesPage />} />
           <Route path="pipelines" element={<KanbanPage />} />
           <Route path="live-sessions" element={<LiveSessionIntakePage />} />
+          <Route path="campanas/tdf-sessions-domo" element={<TdfDomoCampaignPage />} />
           <Route path="reportes" element={<ReportsPage />} />
           <Route index element={<Navigate to="calendario" replace />} />
         </Route>
@@ -114,6 +169,10 @@ export function renderProtectedRoutes() {
           <Route path="releases" element={<LabelReleasesPage />} />
           <Route path="assets" element={<LabelAssetsPage />} />
           <Route path="tracks" element={<LabelTracksPage />} />
+          <Route path="ddex" element={<DdexInboxPage />} />
+          <Route path="ddex/documents/:id" element={<DdexDocumentPage />} />
+          <Route path="ddex/documents/:id/import" element={<DdexDocumentPage />} />
+          <Route path="ddex/partners" element={<PartnerManagementPage />} />
           <Route index element={<Navigate to="artistas" replace />} />
         </Route>
 
@@ -127,6 +186,9 @@ export function renderProtectedRoutes() {
 
         <Route path="/finanzas" element={<Outlet />}>
           <Route path="pagos" element={<PaymentsPage />} />
+          <Route path="creador-reporte-cuenta" element={<WorkAccountReportBuilderPage />} />
+          <Route path="reporte-esteban-munoz" element={<EstebanMunozReportPage />} />
+          <Route path="reporte-david-celaya" element={<DavidCelayaReportPage />} />
           <Route index element={<Navigate to="pagos" replace />} />
         </Route>
 
@@ -138,15 +200,25 @@ export function renderProtectedRoutes() {
         </Route>
 
         <Route path="/configuracion" element={<Outlet />}>
+          <Route path="catalogos" element={<CatalogsPage />} />
+          <Route path="catalogos/radio-auto-stop" element={<RadioAutoStopCatalogPage />} />
+          <Route path="catalogos/apariencia" element={<AppearanceModeCatalogPage />} />
+          <Route path="catalogos/feedback" element={<FeedbackCatalogPage />} />
+          <Route path="catalogos/reacciones" element={<ReactionTypesCatalogPage />} />
+          <Route path="catalogos/reacciones-contenido" element={<ReactionTypesCatalogPage catalogCode="content-reaction-types" />} />
+          <Route path="catalogos/insignias-creadores" element={<ReactionTypesCatalogPage catalogCode="creator-badge-types" />} />
           <Route path="inscripciones-curso" element={<CourseRegistrationsAdminPage />} />
           <Route path="cursos" element={<CourseBuilderPage />} />
           <Route path="usuarios-admin" element={<AdminUsersPage />} />
           <Route path="estado" element={<SystemStatusPage />} />
+          <Route path="actividad" element={<UserActivityPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="brain" element={<BrainAdminPage />} />
           <Route path="roles-permisos" element={<UserRoleManagement />} />
           <Route path="integraciones/calendario" element={<CalendarSyncPage />} />
           <Route path="cms" element={<CmsAdminPage />} />
+          <Route path="campanas-automaticas" element={<CampaignAutomationsPage />} />
+          <Route path="fuentes-eventos" element={<EventDiscoverySourcesPage />} />
           <Route path="whatsapp-consentimiento" element={<WhatsAppConsentPage />} />
           <Route path="opciones-ux" element={<UxOptionsPage />} />
           <Route path="preferencias" element={<SystemPage />} />

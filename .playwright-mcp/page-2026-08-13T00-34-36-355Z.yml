@@ -1,0 +1,240 @@
+- generic [ref=f32e4]:
+  - generic [ref=f32e9]:
+    - generic [ref=f32e12]:
+      - link [ref=f32e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f32e22]
+      - generic [ref=f32e25]:
+        - link [ref=f32e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f32e35]
+        - link [ref=f32e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f32e45]
+        - link [ref=f32e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f32e55]:
+            - img "Messages" [ref=f32e57]
+            - generic "Direct messaging - 3 new notifications link" [ref=f32e60]: "3"
+        - link [ref=f32e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f32e71]
+        - link [ref=f32e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f32e83]
+        - link [ref=f32e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f32e94]
+        - link [ref=f32e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f32e104]
+        - link [ref=f32e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f32e116]:
+            - img "tdf.records.label's profile picture" [ref=f32e117]
+      - generic [ref=f32e118]:
+        - link [ref=f32e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f32e126]
+        - link [ref=f32e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f32e134]
+    - generic [ref=f32e137]:
+      - main [ref=f32e138]:
+        - generic [ref=f32e140]:
+          - generic [ref=f32e141]:
+            - generic [ref=f32e142]:
+              - button [ref=f32e147] [cursor=pointer]:
+                - link [ref=f32e149]:
+                  - img "federico__molinari_'s profile picture" [ref=f32e150]
+              - generic [ref=f32e151]:
+                - generic [ref=f32e152]:
+                  - generic [ref=f32e153]:
+                    - link [ref=f32e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "federico__molinari_" [level=2] [ref=f32e156]
+                    - button [ref=f32e158] [cursor=pointer]:
+                      - img "Options" [ref=f32e160]
+                  - generic [ref=f32e164]: Federico Molinari
+                  - generic [ref=f32e166]:
+                    - generic [ref=f32e168]:
+                      - generic [ref=f32e169]: "169"
+                      - text: posts
+                    - link "8,499 followers" [ref=f32e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f32e172]:
+                        - generic "8,499" [ref=f32e173]
+                        - text: followers
+                    - link "962 following" [ref=f32e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f32e176]:
+                        - generic [ref=f32e177]: "962"
+                        - text: following
+                - generic [ref=f32e178]:
+                  - generic [ref=f32e180]:
+                    - generic [ref=f32e181]:
+                      - img "Link icon" [ref=f32e183]
+                      - link "on.soundcloud.com/VmMVYu2mbLxoA7oX9" [ref=f32e187] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fon.soundcloud.com%2FVmMVYu2mbLxoA7oX9%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAad5uxTUlp93IhXoL7fpw3kYG5l_k1TGT3WSPdwTurRmyhU3_GrM4kVgfSK7eQ_aem_WO5lh0kPkyzLLTlN1nkWpw%26utm_id%3D97760_v0_s00_e0_tv3&e=AUC0UFw6Z4cLt0YNlHAkGcn8rpzbmCUwjs_CX2V83hxDmaFBdgk5MgTOk91Q1tIWQi2lC49Uz4Q3KhSiolZkvkSDGiF03IBmBQV0scxTl0bY0foe-siJxj1SuGj9oZdTP5WR6O6HRMkg
+                    - link "Threads federico__molinari_" [ref=f32e190] [cursor=pointer]:
+                      - /url: https://www.threads.com/@federico__molinari_?xmt=AQG0JAwPUf9jVvVIFyCGqTol0AjBWdUFnllyD14PL8a2jz4
+                      - img "Threads" [ref=f32e192]
+                      - generic [ref=f32e194]: federico__molinari_
+                  - link "Followed by julieth__thenoirkult, shonky__ + 19 more" [ref=f32e196] [cursor=pointer]:
+                    - /url: /federico__molinari_/followers/mutualOnly
+                    - generic [ref=f32e198]:
+                      - generic [ref=f32e200]:
+                        - button [ref=f32e201]:
+                          - link [ref=f32e202]
+                        - button [ref=f32e203]:
+                          - link [ref=f32e204]
+                        - button [ref=f32e205]:
+                          - link [ref=f32e206]
+                      - generic [ref=f32e207]: Followed by julieth__thenoirkult, shonky__ + 19 more
+            - generic [ref=f32e212]:
+              - button "Following Down chevron icon" [ref=f32e214] [cursor=pointer]:
+                - generic [ref=f32e215]:
+                  - generic [ref=f32e216]: Following
+                  - img "Down chevron icon" [ref=f32e219]
+              - button "Message" [ref=f32e222] [cursor=pointer]
+              - button [ref=f32e224] [cursor=pointer]:
+                - img "Similar accounts" [ref=f32e226]
+            - menu [ref=f32e230]:
+              - list [ref=f32e234]:
+                - listitem [ref=f32e235]
+                - listitem [ref=f32e236]
+                - listitem [ref=f32e237]:
+                  - link "View Parties highlight" [ref=f32e240] [cursor=pointer]:
+                    - /url: /stories/highlights/17875953392984208/
+                    - button "federico__molinari_'s highlight story picture Parties" [ref=f32e241]:
+                      - button [ref=f32e242]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e245]
+                      - generic [ref=f32e246]: Parties
+                - listitem [ref=f32e249]:
+                  - link "View Studio highlight" [ref=f32e252] [cursor=pointer]:
+                    - /url: /stories/highlights/18001722913903518/
+                    - button "federico__molinari_'s highlight story picture Studio" [ref=f32e253]:
+                      - button [ref=f32e254]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e257]
+                      - generic [ref=f32e258]: Studio
+                - listitem [ref=f32e261]:
+                  - link "View Bass highlight" [ref=f32e264] [cursor=pointer]:
+                    - /url: /stories/highlights/17971970030443441/
+                    - button "federico__molinari_'s highlight story picture Bass" [ref=f32e265]:
+                      - button [ref=f32e266]:
+                        - img "federico__molinari_'s highlight story picture" [ref=f32e269]
+                      - generic [ref=f32e270]: Bass
+          - generic [ref=f32e273]:
+            - tablist [ref=f32e274]:
+              - link [ref=f32e276] [cursor=pointer]:
+                - /url: /federico__molinari_/
+                - img "Posts" [ref=f32e278]
+              - link [ref=f32e289] [cursor=pointer]:
+                - /url: /federico__molinari_/reels/
+                - img "Reels" [ref=f32e291]
+              - link [ref=f32e294] [cursor=pointer]:
+                - /url: /federico__molinari_/reposts/
+                - img "Reposts" [ref=f32e296]
+              - link [ref=f32e299] [cursor=pointer]:
+                - /url: /federico__molinari_/tagged/
+                - img "Tagged" [ref=f32e301]
+            - tabpanel
+          - progressbar [ref=f32e305]:
+            - img "Loading..." [ref=f32e306]
+      - contentinfo [ref=f32e319]:
+        - generic [ref=f32e320]:
+          - generic [ref=f32e322]:
+            - link "Meta" [ref=f32e324] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f32e327] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f32e330] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f32e333] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f32e336] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f32e339] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f32e342] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f32e345] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f32e348] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f32e351] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f32e354] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f32e357] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f32e360] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f32e363] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f32e366] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f32e368]:
+            - generic [ref=f32e369] [cursor=pointer]:
+              - generic [ref=f32e370]:
+                - generic [ref=f32e371]: English
+                - img "Down chevron icon" [ref=f32e374]
+              - combobox "Switch Display Language" [ref=f32e376]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f32e377]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f32e380] [cursor=pointer]:
+    - generic [ref=f32e382]:
+      - img "Messages" [ref=f32e384]
+      - generic [ref=f32e387]: Messages

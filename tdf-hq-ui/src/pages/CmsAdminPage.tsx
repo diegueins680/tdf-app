@@ -10,7 +10,6 @@ import {
   Chip,
   Divider,
   Grid,
-  LinearProgress,
   MenuItem,
   Paper,
   Dialog,
@@ -21,62 +20,41 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
-import ApiErrorNotice from '../components/ApiErrorNotice';
+import { Catalogs, type AuthoredContent, type CatalogItem } from '../api/catalogs';
+import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
-import { COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
-import { CUSTOM_CMS_SLUG_OPTION, DEFAULT_CMS_SLUGS, getCmsSlugFieldState } from './cmsAdminSlugSelection';
+import { PUBLIC_BASE } from '../config/appConfig';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
 
-const locales = ['es', 'en'];
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
-const CONTENT_STATUS_OPTIONS = ['draft', 'published'] as const;
-type ContentStatus = (typeof CONTENT_STATUS_OPTIONS)[number];
-const STATUS_FILTER_OPTIONS = ['all', 'published', 'draft', 'archived'] as const;
-type StatusFilter = (typeof STATUS_FILTER_OPTIONS)[number];
+type ContentStatus = 'draft';
+type StatusFilter = string;
 type SamplePayload = {
   heroTitle?: string;
   heroSubtitle?: string;
   locale?: string;
 } & Record<string, unknown>;
-const schemaHints: Record<string, string[]> = {
-  'records-public': ['heroTitle', 'heroSubtitle', 'ctaText', 'ctaUrl', 'cards[]'],
-  'fan-hub': ['heroTitle', 'heroSubtitle', 'ctaWhatsapp', 'sections[]'],
-  'course-production': ['heroTitle', 'heroSubtitle', 'bullets[]', 'ctaPrimary', 'sessions[]'],
-};
 const draftAutosaveHelperText =
-  'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas.';
-const samplePayloads: Record<string, SamplePayload> = {
-  'records-public': {
-    heroTitle: 'Lanzamientos destacados',
-    heroSubtitle: 'Explora los releases recientes del sello.',
-    locale: 'es',
-  },
-  'fan-hub': {
-    heroTitle: 'Descubre artistas emergentes',
-    heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
-    locale: 'es',
-  },
-  'course-production': {
-    heroTitle: 'Producción musical en vivo',
-    heroSubtitle: 'Reserva tu cupo con clases hands-on.',
-    locale: 'es',
-  },
+  'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas.';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const getSchemaHints = (content: AuthoredContent | undefined): string[] | undefined => {
+  if (!content || !isRecord(content.schema) || !Array.isArray(content.schema['required'])) return undefined;
+  const required = content.schema['required'].filter((value): value is string => typeof value === 'string');
+  return required.length > 0 ? required : undefined;
 };
-const livePathForSlug = (slug: string) => {
-  switch (slug) {
-    case 'records-public':
-      return '/records';
-    case 'fan-hub':
-      return '/fans';
-    case 'course-production':
-      return `/curso/${COURSE_DEFAULTS.slug}`;
-    default:
-      return `/${slug}`;
-  }
+
+const getSamplePayload = (content: AuthoredContent | undefined): SamplePayload | undefined => {
+  if (!content || !isRecord(content.schema) || !isRecord(content.schema['example'])) return undefined;
+  return content.schema['example'] as SamplePayload;
 };
 
 interface DiffLine {
@@ -101,12 +79,6 @@ const buildLineDiff = (left: string, right: string): DiffLine[] => {
   return result;
 };
 
-const isStatusFilter = (value: string): value is StatusFilter =>
-  STATUS_FILTER_OPTIONS.some((status) => status === value);
-
-const isContentStatus = (value: string): value is ContentStatus =>
-  CONTENT_STATUS_OPTIONS.some((status) => status === value);
-
 const parseMinVersionFilter = (raw: string): number | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -126,32 +98,43 @@ const formatCmsAdminTimestamp = (value: string) => {
   }
 };
 
-const CMS_STATUS_LABELS: Record<string, string> = {
-  archived: 'Archivado',
-  draft: 'Borrador',
-  published: 'Publicado',
-};
-
 const normalizeCmsStatus = (value: string) => value.trim().toLowerCase();
 
-const formatCmsStatusLabel = (value: string) => {
+const fallbackCmsStatusLabel = (value: string) => {
   const normalized = normalizeCmsStatus(value);
-  return CMS_STATUS_LABELS[normalized] ?? (value.trim() || 'Sin estado');
+  if (!normalized) return 'Sin estado';
+  return normalized.charAt(0).toLocaleUpperCase() + normalized.slice(1);
 };
 
 export default function CmsAdminPage() {
+  useDocumentTitle('Configuración / CMS');
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const querySlug = searchParams.get('slug')?.trim() ?? '';
+  const queryLocale = searchParams.get('locale')?.trim() ?? '';
+  const [contentIdFilter, setContentIdFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as { contentId?: string }) : null;
+      return parsed?.contentId ?? '';
+    } catch {
+      return '';
+    }
+  });
   const [slugFilter, setSlugFilter] = useState<string>(() => {
-    if (typeof window === 'undefined') return 'records-public';
+    if (querySlug) return querySlug;
+    if (typeof window === 'undefined') return '';
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? (JSON.parse(raw) as { slug?: string }) : null;
-      return parsed?.slug ?? 'records-public';
+      return parsed?.slug ?? '';
     } catch {
-      return 'records-public';
+      return '';
     }
   });
   const [localeFilter, setLocaleFilter] = useState<string>(() => {
+    if (queryLocale) return queryLocale;
     if (typeof window === 'undefined') return 'es';
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -173,42 +156,101 @@ export default function CmsAdminPage() {
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [pendingVersion, setPendingVersion] = useState<CmsContentDTO | null>(null);
   const [showDraftDiff, setShowDraftDiff] = useState(false);
-  const [showLivePayload, setShowLivePayload] = useState(false);
-  const draftKey = useMemo(() => `${DRAFT_PREFIX}:${slugFilter}:${localeFilter}`, [slugFilter, localeFilter]);
+  const authoredContentsQuery = useQuery({
+    queryKey: ['catalog-authored-contents', localeFilter],
+    queryFn: () => Catalogs.listAuthoredContents(localeFilter),
+  });
+  const localeCatalogQuery = useQuery({
+    queryKey: ['catalog-locales', localeFilter],
+    queryFn: () => Catalogs.listItems('locales', { locale: localeFilter, pageSize: 200 }),
+  });
+  const workflowStatesQuery = useQuery({
+    queryKey: ['catalog-workflow-states', 'catalog-publication', localeFilter],
+    queryFn: () => Catalogs.listWorkflowStates('catalog-publication', localeFilter),
+  });
+  const authoredContents = useMemo(
+    () => (Array.isArray(authoredContentsQuery.data) ? authoredContentsQuery.data : []),
+    [authoredContentsQuery.data],
+  );
+  const localeItems = useMemo<CatalogItem[]>(
+    () => (Array.isArray(localeCatalogQuery.data?.items) ? localeCatalogQuery.data.items : []),
+    [localeCatalogQuery.data],
+  );
+  const localeLabels = useMemo(
+    () => new Map(localeItems.map((item) => [item.code, `${item.name} (${item.code})`] as const)),
+    [localeItems],
+  );
+  const statusLabels = useMemo(
+    () => new Map((workflowStatesQuery.data ?? []).map((state) => [state.code, state.name] as const)),
+    [workflowStatesQuery.data],
+  );
+  const statusLabel = (value: string) =>
+    statusLabels.get(normalizeCmsStatus(value)) ?? fallbackCmsStatusLabel(value);
+  const selectedContent = useMemo(
+    () => authoredContents.find((content) => content.id === contentIdFilter),
+    [authoredContents, contentIdFilter],
+  );
+  const draftKey = useMemo(
+    () => `${DRAFT_PREFIX}:${contentIdFilter || 'unselected'}:${localeFilter}`,
+    [contentIdFilter, localeFilter],
+  );
   const normalizedSlugFilter = slugFilter.trim();
-  const hasSlugSelection = normalizedSlugFilter.length > 0;
-  const slugFieldState = useMemo(() => getCmsSlugFieldState(slugFilter), [slugFilter]);
-  const customSlugHelperText = hasSlugSelection
-    ? 'Usa el mismo slug que consume la ruta pública.'
-    : 'Completa este slug para habilitar el guardado y Abrir página en vivo.';
-  const saveActionLabel = status === 'published' ? 'Guardar y publicar' : 'Guardar borrador';
-  const statusHelperText =
-    status === 'published'
-      ? 'Publicará esta versión al guardar y actualizará la página en vivo.'
-      : 'Guardará esta versión como borrador sin cambiar la página en vivo.';
+  const hasSlugSelection = Boolean(contentIdFilter && selectedContent && normalizedSlugFilter);
+  const saveActionLabel = 'Guardar borrador';
+  const baseStatusHelperText = 'Guardará esta versión como borrador sin cambiar la página en vivo.';
+
+  useEffect(() => {
+    if (authoredContents.length === 0) return;
+    const requestedContent = querySlug
+      ? authoredContents.find((content) => content.currentSlug === querySlug)
+      : undefined;
+    if (querySlug && !requestedContent) return;
+    const currentContent = authoredContents.find((content) => content.id === contentIdFilter);
+    const storedSlugContent = authoredContents.find((content) => content.currentSlug === slugFilter);
+    const nextContent = requestedContent ?? currentContent ?? storedSlugContent ?? authoredContents[0];
+    if (!nextContent) return;
+    if (contentIdFilter !== nextContent.id) setContentIdFilter(nextContent.id);
+    if (slugFilter !== nextContent.currentSlug) setSlugFilter(nextContent.currentSlug);
+  }, [authoredContents, contentIdFilter, querySlug, slugFilter]);
+
+  useEffect(() => {
+    if (queryLocale && queryLocale !== localeFilter) {
+      setLocaleFilter(queryLocale);
+    }
+  }, [localeFilter, queryLocale]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ slug: slugFilter, locale: localeFilter }));
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ contentId: contentIdFilter, slug: slugFilter, locale: localeFilter }),
+      );
     } catch {
       // ignore storage issues
     }
-  }, [slugFilter, localeFilter]);
+  }, [contentIdFilter, slugFilter, localeFilter]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(draftKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { title?: string; payload?: string; status?: string };
-      if (parsed.title !== undefined) setTitle(parsed.title);
-      if (parsed.payload !== undefined) setPayload(parsed.payload);
-      if (parsed.status && isContentStatus(parsed.status)) setStatus(parsed.status);
-      setEditingFromId(null);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { title?: string; payload?: string };
+        setTitle(parsed.title ?? '');
+        setPayload(parsed.payload ?? '{}');
+        setStatus('draft');
+        setEditingFromId(null);
+        return;
+      }
     } catch {
       // ignore broken drafts
     }
+
+    setTitle('');
+    setPayload('{}');
+    setStatus('draft');
+    setEditingFromId(null);
   }, [draftKey]);
 
   useEffect(() => {
@@ -223,8 +265,9 @@ export default function CmsAdminPage() {
   }, [payload]);
 
   const listQuery = useQuery({
-    queryKey: ['cms-content', slugFilter, localeFilter],
-    queryFn: () => Cms.list({ slug: slugFilter, locale: localeFilter }),
+    queryKey: ['cms-content', contentIdFilter, localeFilter],
+    queryFn: () => Cms.list({ contentId: contentIdFilter, locale: localeFilter }),
+    enabled: hasSlugSelection,
   });
 
   const liveQuery = useQuery({
@@ -274,11 +317,10 @@ export default function CmsAdminPage() {
     () => versions.find((v) => v.ccdId === editingFromId)?.ccdVersion ?? null,
     [editingFromId, versions],
   );
-  const liveContent = liveQuery.data;
-
-  useEffect(() => {
-    setShowLivePayload(false);
-  }, [liveContent?.ccdId]);
+  const liveContent =
+    liveQuery.data && normalizeCmsStatus(liveQuery.data.ccdStatus) !== 'missing'
+      ? liveQuery.data
+      : null;
 
   const liveVersion = liveContent?.ccdVersion ?? null;
   const draftBehindLive =
@@ -303,19 +345,18 @@ export default function CmsAdminPage() {
 
   const handleCreate = () => {
     if (!hasSlugSelection) {
-      alert('Selecciona o escribe un slug antes de guardar la versión.');
       return;
     }
+    if (payloadError) return;
     let parsed: unknown = null;
     try {
       parsed = JSON.parse(payload);
     } catch {
-      alert('Payload no es JSON válido.');
       return;
     }
     const normalizedTitle = title.trim();
     createMutation.mutate({
-      cciSlug: normalizedSlugFilter,
+      cciContentId: contentIdFilter,
       cciLocale: localeFilter,
       cciTitle: normalizedTitle.length > 0 ? normalizedTitle : undefined,
       cciStatus: status,
@@ -325,10 +366,11 @@ export default function CmsAdminPage() {
   };
 
   const loadVersionIntoForm = (v: CmsContentDTO) => {
+    if (v.ccdContentId) setContentIdFilter(v.ccdContentId);
     setSlugFilter(v.ccdSlug);
     setLocaleFilter(v.ccdLocale);
     setTitle(v.ccdTitle ?? '');
-    setStatus((v.ccdStatus as 'draft' | 'published') ?? 'draft');
+    setStatus('draft');
     setEditingFromId(v.ccdId);
     try {
       setPayload(JSON.stringify(v.ccdPayload ?? {}, null, 2));
@@ -379,7 +421,7 @@ export default function CmsAdminPage() {
     try {
       const fresh = await Cms.getPublic(normalizedSlugFilter, localeFilter);
       setTitle(fresh.ccdTitle ?? '');
-      setStatus((fresh.ccdStatus as 'draft' | 'published') ?? 'draft');
+      setStatus('draft');
       setEditingFromId(fresh.ccdId);
       try {
         setPayload(JSON.stringify(fresh.ccdPayload ?? {}, null, 2));
@@ -395,7 +437,7 @@ export default function CmsAdminPage() {
   };
 
   const liveUrl = hasSlugSelection
-    ? `${PUBLIC_BASE}${livePathForSlug(normalizedSlugFilter)}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
+    ? `${PUBLIC_BASE}${selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
     : '';
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
@@ -415,9 +457,12 @@ export default function CmsAdminPage() {
   const titleChangedFromLive = liveContent
     ? title.trim() !== (liveContent.ccdTitle ?? '').trim()
     : false;
-  const statusChangedFromLive = liveContent
-    ? status !== liveContent.ccdStatus
-    : false;
+  // A published version is always loaded into a new draft. That governed
+  // lifecycle difference is not an editorial change and must not keep the
+  // "use live" action open after title and payload match.
+  const statusChangedFromLive = false;
+  const canCompareWithLive =
+    Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const liveEditorActionState = useMemo(
     () => getCmsLiveEditorActionState({
       hasSlugSelection,
@@ -438,6 +483,11 @@ export default function CmsAdminPage() {
       titleChangedFromLive,
     ],
   );
+  const liveContentSummary = canCompareWithLive
+    ? 'El comparador revisa el payload en vivo contra este borrador.'
+    : liveEditorActionState.showUseLiveAction
+      ? 'Carga la versión en vivo para editar la estructura publicada desde el formulario.'
+      : 'El editor ya usa el payload en vivo.';
   const draftVsLiveDiff = useMemo(
     () => buildLineDiff(livePayloadPretty || '', formattedPayload || ''),
     [formattedPayload, livePayloadPretty],
@@ -479,10 +529,10 @@ export default function CmsAdminPage() {
     const parts: string[] = [];
     if (sharedVersionTitle) parts.push(`título ${sharedVersionTitle}`);
     if (sharedVersionSlug) parts.push(`slug ${sharedVersionSlug}`);
-    if (sharedVersionLocale) parts.push(`locale ${sharedVersionLocale}`);
-    if (sharedVersionStatus) parts.push(`estado ${formatCmsStatusLabel(sharedVersionStatus)}`);
+    if (sharedVersionLocale) parts.push(`idioma ${localeLabels.get(sharedVersionLocale) ?? sharedVersionLocale}`);
+    if (sharedVersionStatus) parts.push(`estado ${statusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
-  }, [sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle]);
+  }, [localeLabels, sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle, statusLabels]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: filteredVersions.length,
@@ -493,15 +543,11 @@ export default function CmsAdminPage() {
     [filteredVersions.length, minVersionFilter, statusFilter, versions.length],
   );
   const historyStatuses = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          versions
-            .map((version) => normalizeCmsStatus(version.ccdStatus))
-            .filter((value) => value !== ''),
-        ),
-      ),
-    [versions],
+    () => [...(workflowStatesQuery.data ?? [])]
+      .filter((state) => state.active)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((state) => state.code),
+    [workflowStatesQuery.data],
   );
   const hasActiveVersionFilters = statusFilter.trim().toLowerCase() !== 'all' || minVersionFilter != null;
   const showSingleLiveVersionSummary =
@@ -510,8 +556,26 @@ export default function CmsAdminPage() {
     filteredVersions.length === 1 &&
     liveContent?.ccdId === versions[0]?.ccdId;
   const visibleVersionRows = showSingleLiveVersionSummary ? [] : filteredVersions;
+  const hasStaleVersionPublishCandidate = visibleVersionRows.some((version) => (
+    liveVersion !== null
+    && version.ccdVersion < liveVersion
+    && normalizeCmsStatus(version.ccdStatus) !== 'published'
+    && liveContent?.ccdId !== version.ccdId
+    && editingFromId !== version.ccdId
+  ));
   const versionToolbarHint = showSingleLiveVersionSummary ? null : versionListUiState.toolbarHint;
-  const showHistoryStatusFilter = historyStatuses.length > 1 || statusFilter !== 'all';
+  const showHistoryStatusFilter = (versions.length > 2 && historyStatuses.length > 1) || statusFilter !== 'all';
+  const showHistoryMinVersionFilter = versions.length > 2 || minVersionFilter != null;
+  const showVersionHistoryEmptyState =
+    Boolean(versionListUiState.emptyMessage) &&
+    !listQuery.isLoading &&
+    !listQuery.isError &&
+    !listDataInvalid;
+  const showVersionEmptyResetAction = showVersionHistoryEmptyState && versionListUiState.showEmptyReset;
+  const showVersionToolbarReset = versionListUiState.showToolbarReset && !showVersionEmptyResetAction;
+  const showVersionToolbarControls =
+    versionListUiState.showToolbarFilters
+    && (showHistoryStatusFilter || showHistoryMinVersionFilter || showVersionToolbarReset);
   const versionCountLabel = useMemo(() => {
     const totalVersions = versions.length;
     const visibleVersions = filteredVersions.length;
@@ -525,10 +589,10 @@ export default function CmsAdminPage() {
   }, [filteredVersions.length, versions.length]);
   const editingSourceChipLabel = editingFromId
     ? editingVersion != null
-      ? `Base: v${editingVersion} · ID ${editingFromId}`
+      ? `Base: v${editingVersion}`
       : `Base: ID ${editingFromId}`
     : null;
-  const samplePayload = samplePayloads[normalizedSlugFilter];
+  const samplePayload = getSamplePayload(selectedContent);
   const samplePayloadPreview = useMemo(
     () => (samplePayload ? JSON.stringify(samplePayload, null, 2) : ''),
     [samplePayload],
@@ -542,66 +606,127 @@ export default function CmsAdminPage() {
   const liveLookupFailed = liveQuery.isError;
   const liveLookupPending = liveQuery.isLoading || liveQuery.isFetching;
   const liveLookupUnresolved = liveLookupPending || liveLookupFailed;
+  const schemaHint = getSchemaHints(selectedContent);
   const payloadHelperText = payloadError
     ? `Error: ${payloadError}`
-    : schemaHints[normalizedSlugFilter]
-      ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHints[normalizedSlugFilter]?.join(', ')}`
+    : schemaHint
+      ? `Estructura JSON del bloque (usa objetos/arrays). Claves sugeridas: ${schemaHint.join(', ')}`
       : 'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.';
   const hasSamplePayload = Boolean(samplePayload);
-  const hasCustomNewPayloadDraft = !liveContent && payload.trim() !== '{}';
+  const hasStartedNewContentDraft = title.trim().length > 0 || payload.trim() !== '{}';
+  const hasCustomNewContentDraft = !liveContent && hasStartedNewContentDraft;
   const showExampleAction =
     hasSamplePayload
     && !editorMatchesSamplePayload
-    && !hasCustomNewPayloadDraft
+    && !hasCustomNewContentDraft
     && !liveContent
     && !liveLookupUnresolved;
+  const showLiveStartEmptyEditorGuard =
+    hasSlugSelection
+    && Boolean(liveContent)
+    && editingFromId === null
+    && !payloadError
+    && title.trim().length === 0
+    && formattedPayload.trim() === '{}';
   const samplePayloadGuidance = liveLookupPending && hasSamplePayload
     ? 'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.'
     : liveLookupFailed && hasSamplePayload
     ? 'No pudimos confirmar si ya existe una versión en vivo. Reintenta la carga en vivo antes de partir de un ejemplo.'
     : liveContent
-    ? 'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.'
+    ? 'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.'
     : samplePayload
       ? editorMatchesSamplePayload
         ? 'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.'
-        : hasCustomNewPayloadDraft
+        : hasCustomNewContentDraft
         ? 'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.'
-        : 'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).'
+        : 'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.'
       : hasSlugSelection
-        ? 'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.'
-        : 'Elige un slug sugerido o escribe uno para empezar a editar.';
+        ? 'Este tipo no tiene un ejemplo persistido. Completa las claves requeridas del esquema o trae la versión en vivo.'
+        : 'Elige una definición editorial persistida para empezar a editar.';
   const showSamplePayloadGuidance =
-    !liveLookupFailed && (!liveContent || liveEditorActionState.showUseLiveAction);
+    !liveLookupFailed && (!liveContent || (liveEditorActionState.showUseLiveAction && showLiveStartEmptyEditorGuard));
+  const showLiveStartGuidance =
+    showSamplePayloadGuidance && Boolean(liveContent) && liveEditorActionState.showUseLiveAction;
+  const editorHasMetadataDraft = titleChangedFromLive || statusChangedFromLive;
   const compareHint = livePayloadPretty
     ? payloadError
       ? 'Corrige el JSON para volver a comparar este borrador con la versión en vivo.'
       : payloadChanged
         ? editorHasMeaningfulPayloadDraft
-          ? 'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.'
-          : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
-        : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
+          ? 'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.'
+          : showLiveStartGuidance
+            ? 'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.'
+            : 'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.'
+        : editorHasMetadataDraft
+          ? 'El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.'
+          : 'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.'
     : 'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.';
   const editorGuidance = `${draftAutosaveHelperText} ${compareHint}`;
-  const canCompareWithLive = Boolean(livePayloadPretty) && !payloadError && payloadChanged && editorHasMeaningfulPayloadDraft;
   const showFormatPayloadAction = !payloadError && payload !== formattedPayload;
-  const showClearPayloadAction = payload.trim() !== '{}' && !liveContent;
+  const showClearPayloadAction =
+    !liveContent
+    && (payload.trim() !== '{}' || (editingFromId === null && title.trim().length > 0));
+  const handleClearEditorDraft = () => {
+    setPayload('{}');
+    if (!liveContent && editingFromId === null) {
+      setTitle('');
+      setStatus('draft');
+    }
+  };
+  const editorHasFirstVersionContentDraft =
+    title.trim().length > 0 || (!payloadError && formattedPayload.trim() !== '{}');
+  const showFirstVersionLiveLookupGuard =
+    hasSlugSelection
+    && liveLookupPending
+    && !listQuery.isError
+    && !listDataInvalid
+    && versions.length === 0
+    && !liveContent
+    && editorHasFirstVersionContentDraft;
+  const showFirstVersionEmptyDraftGuard =
+    hasSlugSelection
+    && !payloadError
+    && !listQuery.isError
+    && !listDataInvalid
+    && versions.length === 0
+    && !liveContent
+    && !editorHasFirstVersionContentDraft;
+  const statusHelperText = !hasSlugSelection
+    ? 'Selecciona un contenido persistido para habilitar el guardado.'
+    : showFirstVersionLiveLookupGuard
+      ? 'Espera a que termine la búsqueda en vivo antes de guardar la primera versión.'
+    : showFirstVersionEmptyDraftGuard
+      ? 'Agrega un título o payload antes de guardar la primera versión.'
+      : showLiveStartEmptyEditorGuard
+        ? 'Parte de la versión en vivo o empieza un borrador propio antes de guardar.'
+        : baseStatusHelperText;
+  const canSaveVersion =
+    hasSlugSelection
+    && !payloadError
+    && !showFirstVersionLiveLookupGuard
+    && !showFirstVersionEmptyDraftGuard
+    && !showLiveStartEmptyEditorGuard;
+  const showSaveVersionAction =
+    hasSlugSelection
+    && !liveEditorActionState.showLiveInSyncChip
+    && !showFirstVersionLiveLookupGuard
+    && !showFirstVersionEmptyDraftGuard
+    && !showLiveStartEmptyEditorGuard;
   const showFirstVersionHistoryGuidance =
+    hasSlugSelection &&
+    editorHasFirstVersionContentDraft &&
     !listQuery.isLoading &&
     !listQuery.isError &&
     !listDataInvalid &&
     versions.length === 0 &&
+    !liveLookupUnresolved &&
     !hasActiveVersionFilters;
   const showVersionHistorySection =
     listQuery.isLoading ||
     listQuery.isError ||
     listDataInvalid ||
-    versions.length > 0 ||
+    (versions.length > 0 && !showSingleLiveVersionSummary) ||
     hasActiveVersionFilters;
-  const showVersionHistoryEmptyState =
-    Boolean(versionListUiState.emptyMessage) &&
-    !listQuery.isLoading &&
-    !listQuery.isError &&
-    !listDataInvalid;
 
   return (
     <SessionGate message="Inicia sesión para administrar contenido público.">
@@ -618,7 +743,7 @@ export default function CmsAdminPage() {
             <Stack spacing={1.5}>
               <Typography fontWeight={700}>{pendingVersion.ccdTitle ?? pendingVersion.ccdSlug}</Typography>
               <Typography variant="body2" color="text.secondary">
-                v{pendingVersion.ccdVersion} · {formatCmsStatusLabel(pendingVersion.ccdStatus)} · {pendingVersion.ccdLocale} ·{' '}
+                v{pendingVersion.ccdVersion} · {statusLabel(pendingVersion.ccdStatus)} · {localeLabels.get(pendingVersion.ccdLocale) ?? pendingVersion.ccdLocale} ·{' '}
                 {pendingVersion.ccdPublishedAt
                   ? `publicado ${formatCmsAdminTimestamp(pendingVersion.ccdPublishedAt)}`
                   : `creado ${formatCmsAdminTimestamp(pendingVersion.ccdCreatedAt)}`}
@@ -626,7 +751,7 @@ export default function CmsAdminPage() {
               <Typography variant="body2">
                 Live actual:{' '}
                 {liveContent
-                  ? `v${liveContent.ccdVersion} (${formatCmsStatusLabel(liveContent.ccdStatus)} · ${liveContent.ccdLocale})`
+                  ? `v${liveContent.ccdVersion} (${statusLabel(liveContent.ccdStatus)} · ${localeLabels.get(liveContent.ccdLocale) ?? liveContent.ccdLocale})`
                   : 'no hay versión publicada'}
               </Typography>
               <Typography
@@ -692,7 +817,7 @@ export default function CmsAdminPage() {
         </DialogActions>
       </Dialog>
       <Dialog open={showDraftDiff} onClose={() => setShowDraftDiff(false)} fullWidth maxWidth="md">
-        <DialogTitle>Comparar borrador vs. live</DialogTitle>
+        <DialogTitle>Comparar borrador con versión en vivo</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1}>
             <Typography variant="body2" color="text.secondary">
@@ -742,61 +867,55 @@ export default function CmsAdminPage() {
           <Typography variant="overline" color="text.secondary">CMS</Typography>
           <Typography variant="h4" fontWeight={800}>Contenido público</Typography>
           <Typography color="text.secondary">
-            Crear, publicar y versionar bloques para páginas públicas (records, fan hub, landing cursos).
+            Crear borradores versionados para páginas editoriales tipadas. Records se administra como entidades estructuradas en Catálogos.
           </Typography>
         </Box>
-        {hasSlugSelection && liveContent && (
-          <Button variant="outlined" href={liveUrl} target="_blank" rel="noreferrer">
-            Abrir página en vivo
-          </Button>
-        )}
       </Stack>
 
       <Paper variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={2.5}>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
+              {authoredContentsQuery.isLoading && (
+                <ApiLoadingNotice title="Cargando contenidos" message="Consultando las definiciones editoriales publicadas." />
+              )}
+              {authoredContentsQuery.isError && (
+                <ApiErrorNotice
+                  error={authoredContentsQuery.error}
+                  title="No pudimos cargar los contenidos editoriales"
+                  onRetry={() => authoredContentsQuery.refetch()}
+                />
+              )}
               <TextField
                 select
                 fullWidth
-                label="Slug"
-                value={slugFieldState.selectValue}
+                label="Contenido"
+                value={contentIdFilter}
                 onChange={(e) => {
-                  const nextValue = e.target.value;
-                  setSlugFilter(nextValue === CUSTOM_CMS_SLUG_OPTION ? '' : nextValue);
+                  const nextContent = authoredContents.find((content) => content.id === e.target.value);
+                  setContentIdFilter(nextContent?.id ?? '');
+                  setSlugFilter(nextContent?.currentSlug ?? '');
                 }}
-                helperText={
-                  slugFieldState.showCustomInput
-                    ? 'Escribe el slug exacto abajo si todavía no aparece en la lista.'
-                    : 'Identificador de la página.'
-                }
+                helperText={selectedContent
+                  ? `${selectedContent.currentSlug} · esquema v${selectedContent.schemaVersion}`
+                  : 'Selecciona una definición editorial persistida.'}
+                disabled={authoredContentsQuery.isLoading || authoredContentsQuery.isError}
               >
-                {DEFAULT_CMS_SLUGS.map((slug) => (
-                  <MenuItem key={slug} value={slug}>{slug}</MenuItem>
+                {authoredContents.map((content) => (
+                  <MenuItem key={content.id} value={content.id}>{content.name}</MenuItem>
                 ))}
-                <MenuItem value={CUSTOM_CMS_SLUG_OPTION}>Otro slug…</MenuItem>
               </TextField>
-              {slugFieldState.showCustomInput && (
-                <TextField
-                  fullWidth
-                  label="Slug personalizado"
-                  value={slugFilter}
-                  onChange={(e) => setSlugFilter(e.target.value)}
-                  sx={{ mt: 1 }}
-                  helperText={customSlugHelperText}
-                />
-              )}
             </Grid>
             <Grid item xs={12} md={2}>
               <TextField
                 select
                 fullWidth
-                label="Locale"
+                label="Idioma"
                 value={localeFilter}
                 onChange={(e) => setLocaleFilter(e.target.value)}
               >
-                {locales.map((loc) => (
-                  <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                {localeItems.map((option) => (
+                  <MenuItem key={option.id} value={option.code}>{localeLabels.get(option.code) ?? option.name}</MenuItem>
                 ))}
               </TextField>
             </Grid>
@@ -806,19 +925,24 @@ export default function CmsAdminPage() {
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={5}>
-              <Card variant="outlined">
+              <Card variant="outlined" data-testid="cms-admin-live-content-card">
                 <CardContent>
                   <Stack spacing={1.5}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Typography variant="subtitle1" fontWeight={700}>Contenido en vivo</Typography>
                     </Stack>
-                    {liveQuery.isLoading && <LinearProgress />}
+                    {liveQuery.isLoading && (
+                      <ApiLoadingNotice
+                        title="Cargando contenido publicado"
+                        message="Consultando la versión en vivo antes de mostrar la vista previa."
+                      />
+                    )}
                     {liveQuery.isError && (
                       <ApiErrorNotice
                         error={liveQuery.error}
                         title="No pudimos cargar el contenido publicado"
                         onRetry={() => {
-                          void liveQuery.refetch();
+                          return liveQuery.refetch();
                         }}
                         showCorsHint
                         helper={
@@ -828,7 +952,12 @@ export default function CmsAdminPage() {
                         }
                       />
                     )}
-                    {!liveQuery.isError && !liveQuery.isLoading && !liveContent && (
+                    {!hasSlugSelection && (
+                      <Alert severity="info">
+                        Elige un slug para consultar la versión publicada de esa página.
+                      </Alert>
+                    )}
+                    {hasSlugSelection && !liveQuery.isError && !liveQuery.isLoading && !liveContent && (
                       <Alert severity="warning">
                         <AlertTitle>Sin contenido publicado</AlertTitle>
                         Publica una versión para activar la vista previa en vivo y el enlace a la página pública.
@@ -840,7 +969,7 @@ export default function CmsAdminPage() {
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           <Chip label={`v${liveContent.ccdVersion}`} size="small" />
                           <Chip
-                            label={formatCmsStatusLabel(liveContent.ccdStatus)}
+                            label={statusLabel(liveContent.ccdStatus)}
                             size="small"
                             color={normalizeCmsStatus(liveContent.ccdStatus) === 'published' ? 'success' : 'default'}
                           />
@@ -854,28 +983,18 @@ export default function CmsAdminPage() {
                         </Stack>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                           <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-                            Payload en vivo disponible.
+                            {liveContentSummary}
                           </Typography>
                           <Button
                             size="small"
-                            variant="text"
-                            onClick={() => setShowLivePayload((current) => !current)}
+                            variant="outlined"
+                            href={liveUrl}
+                            target="_blank"
+                            rel="noreferrer"
                           >
-                            {showLivePayload ? 'Ocultar payload en vivo' : 'Ver payload en vivo'}
+                            Abrir página en vivo
                           </Button>
                         </Stack>
-                        {showLivePayload && (
-                          <TextField
-                            label="Payload actual"
-                            value={livePayloadPretty}
-                            multiline
-                            minRows={8}
-                            InputProps={{ readOnly: true }}
-                          />
-                        )}
-                        <Typography variant="caption" color="text.secondary">
-                          La página pública se abre con el botón principal de arriba.
-                        </Typography>
                       </Stack>
                     )}
                   </Stack>
@@ -922,7 +1041,7 @@ export default function CmsAdminPage() {
                   {showClearPayloadAction && (
                     <Button
                       variant="text"
-                      onClick={() => setPayload('{}')}
+                      onClick={handleClearEditorDraft}
                       disabled={createMutation.isPending}
                     >
                       Limpiar
@@ -953,11 +1072,11 @@ export default function CmsAdminPage() {
                     </Button>
                   )}
                   {liveEditorActionState.showLiveInSyncChip && (
-                    <Chip label="Editor coincide con live" color="success" variant="outlined" />
+                    <Chip label="Editor coincide con versión en vivo" color="success" variant="outlined" />
                   )}
                   {canCompareWithLive && (
                     <Button variant="text" onClick={() => setShowDraftDiff(true)}>
-                      Comparar con live
+                      Comparar cambios
                     </Button>
                   )}
                   {liveFetchError && <Chip label={liveFetchError} color="error" variant="outlined" />}
@@ -969,28 +1088,26 @@ export default function CmsAdminPage() {
                 >
                   {editorGuidance}
                 </Typography>
-                <TextField
-                  select
-                  label="Estado"
-                  value={status}
-                  onChange={(e) => {
-                    const next = e.target.value.trim();
-                    setStatus(isContentStatus(next) ? next : 'draft');
-                  }}
-                  helperText={statusHelperText}
-                  sx={{ width: 240 }}
-                >
-                  <MenuItem value="draft">Borrador</MenuItem>
-                  <MenuItem value="published">Publicado</MenuItem>
-                </TextField>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    onClick={handleCreate}
-                    disabled={createMutation.isPending || !hasSlugSelection}
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip label="Borrador" size="small" />
+                  <Typography
+                    data-testid="cms-admin-first-version-save-guidance"
+                    variant="caption"
+                    color="text.secondary"
                   >
-                    {saveActionLabel}
-                  </Button>
+                    {statusHelperText}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  {showSaveVersionAction && (
+                    <Button
+                      variant="contained"
+                      onClick={handleCreate}
+                      disabled={createMutation.isPending || !canSaveVersion}
+                    >
+                      {saveActionLabel}
+                    </Button>
+                  )}
                   {editingSourceChipLabel && <Chip label={editingSourceChipLabel} size="small" color="info" />}
                   {createMutation.isError && (
                     <Alert severity="error" sx={{ flexGrow: 1 }}>
@@ -1033,8 +1150,17 @@ export default function CmsAdminPage() {
                   {versionToolbarHint}
                 </Typography>
               )}
+              {hasStaleVersionPublishCandidate && (
+                <Typography
+                  data-testid="cms-admin-stale-version-publish-guidance"
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Las versiones anteriores a la versión en vivo se revisan en el formulario antes de publicarlas.
+                </Typography>
+              )}
             </Stack>
-            {versionListUiState.showToolbarFilters && (
+            {showVersionToolbarControls && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
                 {showHistoryStatusFilter && (
                   <TextField
@@ -1044,25 +1170,29 @@ export default function CmsAdminPage() {
                     value={statusFilter}
                     onChange={(e) => {
                       const next = e.target.value.trim();
-                      setStatusFilter(isStatusFilter(next) ? next : 'all');
+                      setStatusFilter(next || 'all');
                     }}
                     sx={{ minWidth: 140 }}
                   >
                     <MenuItem value="all">Todos</MenuItem>
-                    <MenuItem value="published">Publicados</MenuItem>
-                    <MenuItem value="draft">Borradores</MenuItem>
-                    <MenuItem value="archived">Archivados</MenuItem>
+                    {historyStatuses.map((historyStatus) => (
+                      <MenuItem key={historyStatus} value={historyStatus}>
+                        {statusLabel(historyStatus)}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 )}
-                <TextField
-                  size="small"
-                  type="number"
-                  label="Versión mínima"
-                  value={minVersionFilter ?? ''}
-                  onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
-                  sx={{ width: 150 }}
-                />
-                {versionListUiState.showToolbarReset && (
+                {showHistoryMinVersionFilter && (
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Versión mínima"
+                    value={minVersionFilter ?? ''}
+                    onChange={(e) => setMinVersionFilter(parseMinVersionFilter(e.target.value))}
+                    sx={{ width: 150 }}
+                  />
+                )}
+                {showVersionToolbarReset && (
                   <Button
                     size="small"
                     onClick={resetVersionFilters}
@@ -1073,17 +1203,22 @@ export default function CmsAdminPage() {
               </Stack>
             )}
           </Stack>
-          {listQuery.isLoading && <LinearProgress />}
-                  {listQuery.error && (
-                    <ApiErrorNotice
-                      error={listQuery.error}
-                      title="No pudimos cargar la lista de versiones"
-                      onRetry={() => {
-                        void listQuery.refetch();
-                      }}
-                      showCorsHint
-                    />
-                  )}
+          {listQuery.isLoading && (
+            <ApiLoadingNotice
+              title="Cargando versiones guardadas"
+              message="Buscando el historial de este slug e idioma."
+            />
+          )}
+          {listQuery.error && (
+            <ApiErrorNotice
+              error={listQuery.error}
+              title="No pudimos cargar la lista de versiones"
+              onRetry={() => {
+                return listQuery.refetch();
+              }}
+              showCorsHint
+            />
+          )}
           {listDataInvalid && (
             <Alert severity="warning">
               Respuesta inesperada del servidor. Revisa las credenciales o intenta de nuevo.
@@ -1092,6 +1227,13 @@ export default function CmsAdminPage() {
           <Stack spacing={1.5}>
             {visibleVersionRows.map((v) => {
               const isCurrentLiveVersion = liveContent?.ccdId === v.ccdId;
+              const rowStatus = normalizeCmsStatus(v.ccdStatus);
+              const rowHasPublishedTimestamp = Boolean(v.ccdPublishedAt);
+              const rowNeedsPublishReview = liveVersion !== null && v.ccdVersion < liveVersion;
+              const showRowStatusChip =
+                !sharedVersionStatus
+                && !isCurrentLiveVersion
+                && !(rowStatus === 'published' && rowHasPublishedTimestamp);
               const rowActions = getCmsVersionRowActions(v.ccdStatus, {
                 isCurrentLive: isCurrentLiveVersion,
                 isLoadedInEditor: editingFromId === v.ccdId,
@@ -1109,18 +1251,18 @@ export default function CmsAdminPage() {
                       <Typography fontWeight={700}>{rowTitle}</Typography>
                       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
                         {!sharedVersionSlug && <Chip label={v.ccdSlug} size="small" />}
-                        {!sharedVersionLocale && <Chip label={v.ccdLocale} size="small" />}
+                        {!sharedVersionLocale && <Chip label={localeLabels.get(v.ccdLocale) ?? v.ccdLocale} size="small" />}
                         {!sharedVersionTitle && <Chip label={`v${v.ccdVersion}`} size="small" />}
-                        {!sharedVersionStatus && !isCurrentLiveVersion && (
+                        {showRowStatusChip && (
                           <Chip
-                            label={formatCmsStatusLabel(v.ccdStatus)}
+                            label={statusLabel(v.ccdStatus)}
                             size="small"
-                            color={normalizeCmsStatus(v.ccdStatus) === 'published' ? 'success' : 'default'}
+                            color={rowStatus === 'published' ? 'success' : 'default'}
                           />
                         )}
                         {v.ccdPublishedAt && !isCurrentLiveVersion && (
                           <Chip
-                            label={`pub: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
+                            label={`Publicado: ${formatCmsAdminTimestamp(v.ccdPublishedAt)}`}
                             size="small"
                             variant="outlined"
                           />
@@ -1128,7 +1270,7 @@ export default function CmsAdminPage() {
                       </Stack>
                     </Box>
                     <Stack direction="row" spacing={1}>
-                      {rowActions.showPublish && (
+                      {rowActions.showPublish && !rowNeedsPublishReview && (
                         <Button
                           size="small"
                           variant="outlined"
@@ -1173,7 +1315,7 @@ export default function CmsAdminPage() {
               </Typography>
             )}
             {showVersionHistoryEmptyState && (
-              versionListUiState.showEmptyReset ? (
+              showVersionEmptyResetAction ? (
                 <Alert
                   severity="info"
                   action={(

@@ -1,0 +1,31 @@
+{
+  "name": "tdf-label-creative-loop",
+  "description": "Continuous creative improvement loop for TDF Records. Generates ideas, runs A/B tests, analyzes results, and steers product toward engagement.",
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 9 * * 1",
+    "tz": "America/Guayaquil"
+  },
+  "tasks": [
+    {
+      "name": "generate-ideas",
+      "command": "node agents/tdf-label-creative/scripts/generate-ideas.js",
+      "cwd": "/Users/diegosaa/GitHub/tdf-app"
+    },
+    {
+      "name": "prioritize-backlog",
+      "command": "node agents/tdf-label-creative/scripts/prioritize-backlog.js",
+      "cwd": "/Users/diegosaa/GitHub/tdf-app",
+      "dependsOn": ["generate-ideas"]
+    },
+    {
+      "name": "analyze-experiments",
+      "command": "node agents/tdf-label-creative/scripts/analyze-experiments.js",
+      "cwd": "/Users/diegosaa/GitHub/tdf-app"
+    }
+  ],
+  "reporting": {
+    "outputDir": "/Users/diegosaa/.openclaw/orgs/tdf-label/reports",
+    "template": "creative-director-report-YYYYMMDD.md"
+  }
+}

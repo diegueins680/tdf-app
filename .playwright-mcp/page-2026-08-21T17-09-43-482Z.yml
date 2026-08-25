@@ -1,0 +1,79 @@
+- generic [ref=e4974]:
+  - generic [ref=e4977]:
+    - link [ref=e4982] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e4987]
+    - generic [ref=e4991]:
+      - link "Home Home" [ref=e4996] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e4997]:
+          - img "Home" [ref=e5001]
+          - generic [ref=e5003]: Home
+      - link "Reels Reels" [ref=e5011] [cursor=pointer]:
+        - /url: /reels/
+        - generic [ref=e5012]:
+          - img "Reels" [ref=e5016]
+          - generic [ref=e5018]: Reels
+      - link "Messages Messages" [ref=e5028] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e5029]:
+          - img "Messages" [ref=e5033]
+          - generic [ref=e5035]: Messages
+      - link "Search Search" [ref=e5043] [cursor=pointer]:
+        - /url: /explore/
+        - generic [ref=e5044]:
+          - img "Search" [ref=e5048]
+          - generic [ref=e5051]: Search
+      - link "Notifications Notifications" [ref=e5060] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e5061]:
+          - img "Notifications" [ref=e5065]
+          - generic [ref=e5067]: Notifications
+      - link "New post Create" [ref=e5076] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e5077]:
+          - img "New post" [ref=e5081]
+          - generic [ref=e5083]: Create
+      - link "Professional dashboard Dashboard" [ref=e5091] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e5092]:
+          - img "Professional dashboard" [ref=e5096]
+          - generic [ref=e5099]: Dashboard
+      - link "tdf.records.label's profile picture Profile" [ref=e5108] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - generic [ref=e5109]:
+          - link [ref=e5113]:
+            - img "tdf.records.label's profile picture" [ref=e5114]
+          - generic [ref=e5115]: Profile
+    - generic [ref=e5120]:
+      - link "Settings More" [ref=e5123] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e5124]:
+          - img "Settings" [ref=e5128]
+          - generic [ref=e5129]: More
+      - link "Also from Meta Also from Meta" [ref=e5136] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=e5137]:
+          - img "Also from Meta" [ref=e5141]
+          - generic [ref=e5143]: Also from Meta
+  - main [ref=e5150]:
+    - generic [ref=e5155]:
+      - navigation "Thread list" [ref=e5156]:
+        - generic [ref=e5157]:
+          - generic [ref=e5158]:
+            - button [ref=e5160] [cursor=pointer]:
+              - img "Back" [ref=e5163]
+            - generic [ref=e5165]: Message requests
+          - generic [ref=e5168]:
+            - button "Eye-off icon for the hidden requests Hidden Requests Chevron icon to indicate entering the hidden requests window" [ref=e5169] [cursor=pointer]:
+              - generic [ref=e5171]:
+                - img "Eye-off icon for the hidden requests" [ref=e5174]
+                - generic [ref=e5176]: Hidden Requests
+                - img "Chevron icon to indicate entering the hidden requests window" [ref=e5182]
+            - generic [ref=e5184]: Chats will appear here after you send or receive a message
+          - generic [ref=e5186]:
+            - separator [ref=e5187]
+            - button "Delete all 0" [ref=e5189] [cursor=pointer]
+      - generic [ref=e5194]:
+        - heading "Message requests" [active] [level=2] [ref=e5201]
+        - generic [ref=e5202]: These messages are from people you've restricted or don't follow. They won't know you viewed their request until you allow them to message you.

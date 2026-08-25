@@ -11,6 +11,8 @@ neon-env-vars
 # Build artifacts - Backend (Haskell)
 .stack-work/
 .stack-root/
+.stack-root-local/
+tdf-hq/.release/
 *.hi
 *.o
 *.dyn_hi
@@ -62,6 +64,10 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+blob-report/
+artifacts/persona-playwright/
 
 # Temporary files
 tmp/
@@ -83,3 +89,13 @@ tmp-meta-*.json
 screencast/meta-app-review/frame-check/
 screencast/meta-app-review/output/[0-9a-f]*.webm
 screencast/meta-app-review/output/final.mp4
+
+# Cabal build artifacts
+.cabal/
+
+# Media/evidence directories - should not be committed (host externally)
+screenshots/
+evidence/
+screencast/
+artifacts/releases/
+.instagram-token-state.json

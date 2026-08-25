@@ -15,7 +15,24 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { get, post, postForm } = await import('./client');
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+  },
+}));
+
+const {
+  ApiError,
+  get,
+  getPendingApiRequestCount,
+  HTTP_STATUS_REQUEST_TIMEOUT,
+  post,
+  postForm,
+  subscribeToApiActivity,
+} = await import('./client');
+const { AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
 
 interface MockResponseOptions {
   ok?: boolean;
@@ -24,6 +41,11 @@ interface MockResponseOptions {
   contentType?: string;
   body?: string;
 }
+
+const HTTP_STATUS_SERVER_ERROR_BASE = 500;
+const HTTP_STATUS_BAD_GATEWAY_OFFSET = 2;
+const HTTP_STATUS_BAD_GATEWAY: NonNullable<MockResponseOptions['status']> =
+  HTTP_STATUS_SERVER_ERROR_BASE + HTTP_STATUS_BAD_GATEWAY_OFFSET;
 
 const buildResponse = (opts: MockResponseOptions = {}): Response => {
   const {
@@ -53,6 +75,7 @@ describe('api client', () => {
     buildAuthorizationHeaderMock.mockReset();
     buildAuthorizationHeaderMock.mockReturnValue('Bearer test-token');
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
+    expect(getPendingApiRequestCount()).toBe(0);
   });
 
   it('returns undefined for successful responses with empty body', async () => {
@@ -61,6 +84,64 @@ describe('api client', () => {
     const result = await get<undefined>('/health');
 
     expect(result).toBeUndefined();
+  });
+
+  it('tracks pending requests for global loading indicators', async () => {
+    let resolveFetch: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    const activityCounts: number[] = [];
+    const unsubscribe = subscribeToApiActivity(() => {
+      activityCounts.push(getPendingApiRequestCount());
+    });
+
+    try {
+      const request = get<{ ok: boolean }>('/slow-report');
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(getPendingApiRequestCount()).toBe(1);
+      expect(activityCounts).toEqual([1]);
+
+      expect(resolveFetch).toBeDefined();
+      resolveFetch?.(buildResponse({ body: '{"ok":true}' }));
+
+      await expect(request).resolves.toEqual({ ok: true });
+      expect(getPendingApiRequestCount()).toBe(0);
+      expect(activityCounts).toEqual([1, 0]);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it('represents an aborted request with the request-timeout status contract', async () => {
+    fetchMock.mockRejectedValueOnce(new DOMException('Request aborted', 'AbortError'));
+
+    const request = get('/slow-report');
+
+    await expect(request).rejects.toMatchObject({
+      name: ApiError.name,
+      status: HTTP_STATUS_REQUEST_TIMEOUT,
+    });
+    expect(getPendingApiRequestCount()).toBe(0);
+  });
+
+  it('propagates caller cancellation without converting it into a timeout', async () => {
+    fetchMock.mockImplementationOnce((_path, init) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('Request cancelled', 'AbortError'));
+      }, { once: true });
+    }));
+    const controller = new AbortController();
+
+    const cancelledRequest = get('/superseded-search', { signal: controller.signal });
+    controller.abort();
+
+    await expect(cancelledRequest).rejects.toMatchObject({ name: 'AbortError' });
+    expect(getPendingApiRequestCount()).toBe(0);
   });
 
   it('parses JSON when successful responses include a payload', async () => {
@@ -181,5 +262,42 @@ describe('api client', () => {
     );
 
     await expect(get('/errors-array')).rejects.toThrow('Campo requerido');
+  });
+
+  it('falls back to the raw body when JSON error payloads are malformed', async () => {
+    const malformedBody = '{"message":"truncated"';
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: HTTP_STATUS_BAD_GATEWAY,
+        statusText: 'Bad Gateway',
+        contentType: 'application/json',
+        body: malformedBody,
+      }),
+    );
+
+    await expect(get('/malformed-error')).rejects.toThrow(malformedBody);
+  });
+
+  it('notifies the session layer when protected API auth has expired', async () => {
+    const listener = jest.fn();
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    fetchMock.mockResolvedValueOnce(
+      buildResponse({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        contentType: 'text/plain',
+        body: 'Missing or invalid auth token',
+      }),
+    );
+
+    try {
+      await expect(get('/protected')).rejects.toThrow('Missing or invalid auth token');
+
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    }
   });
 });

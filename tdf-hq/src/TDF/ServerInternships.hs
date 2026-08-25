@@ -3,6 +3,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.ServerInternships where
 
@@ -12,7 +14,15 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isDigit)
+import           Data.Char                  ( GeneralCategory
+                                            ( Format
+                                            , LineSeparator
+                                            , ParagraphSeparator
+                                            )
+                                            , generalCategory
+                                            , isControl
+                                            , isDigit
+                                            )
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe, isJust)
@@ -21,23 +31,25 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
-import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectFirst, selectList, update, (==.), (=.), (<-.))
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist           (Entity(..), Key, SelectOpt(..), count, delete, getBy, getEntity, getJustEntity, insert, selectList, toPersistValue, update, (==.), (=.), (<-.))
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Internships        (InternshipsAPI)
 import           TDF.API.Types
 import           TDF.Auth                   (AuthedUser(..))
+import           TDF.Catalog.Security       (loadCanonicalPartyRoleMap, selectCanonicalPartyIdsByRole)
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra            as ME
+import           TDF.ServerInternAudit      (internAuditServer)
 
 internProjectStatuses :: [Text]
-internProjectStatuses = ["active", "paused", "completed"]
+internProjectStatuses = ["active", "paused", "completed", "cancelled"]
 
 internTaskStatuses :: [Text]
-internTaskStatuses = ["todo", "doing", "blocked", "done"]
+internTaskStatuses = ["todo", "doing", "blocked", "done", "cancelled"]
 
 internPermissionStatuses :: [Text]
 internPermissionStatuses = ["pending", "approved", "rejected"]
@@ -70,6 +82,17 @@ validateInternTaskProgressUpdate (Just rawProgress)
   | otherwise =
       Right (Just rawProgress)
 
+selectUniqueActiveInternTimeEntry
+  :: [Entity ME.InternTimeEntry]
+  -> Either ServerError (Maybe (Entity ME.InternTimeEntry))
+selectUniqueActiveInternTimeEntry [] = Right Nothing
+selectUniqueActiveInternTimeEntry [entry] = Right (Just entry)
+selectUniqueActiveInternTimeEntry _ =
+  Left err409
+    { errBody =
+        "Multiple active clock-ins found; resolve time entries before changing clock state"
+    }
+
 validateInternPermissionDateRange :: Day -> Maybe Day -> Either ServerError ()
 validateInternPermissionDateRange _ Nothing = Right ()
 validateInternPermissionDateRange startAt (Just endAt)
@@ -97,6 +120,21 @@ validateInternProfileDateUpdate currentStart currentEnd updateStart updateEnd
   where
     effectiveStart = fromMaybe currentStart updateStart
     effectiveEnd = fromMaybe currentEnd updateEnd
+
+validateInternProfileSkillsUpdate
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternProfileSkillsUpdate =
+  validateNullableInternTextField "profile skills" internProfileTextMaxLength
+
+validateInternProfileAreasUpdate
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternProfileAreasUpdate =
+  validateNullableInternTextField "profile areas" internProfileTextMaxLength
+
+internProfileTextMaxLength :: Int
+internProfileTextMaxLength = 1000
 
 validateInternProjectDateRange :: Maybe Day -> Maybe Day -> Either ServerError ()
 validateInternProjectDateRange Nothing _ = Right ()
@@ -137,24 +175,102 @@ validateInternTodoText :: Text -> Either ServerError Text
 validateInternTodoText rawText
   | T.null normalized =
       Left err400 { errBody = "todo text is required" }
+  | T.length normalized > internTodoTextMaxLength =
+      Left err400 { errBody = "todo text must be 500 characters or fewer" }
+  | T.any isUnsafeInternTitleChar normalized =
+      Left err400
+        { errBody = "todo text must not contain control or hidden formatting characters" }
   | otherwise =
       Right normalized
   where
     normalized = T.strip rawText
+
+internTodoTextMaxLength :: Int
+internTodoTextMaxLength = 500
 
 validateInternTodoTextUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternTodoTextUpdate Nothing = Right Nothing
 validateInternTodoTextUpdate (Just rawText) =
   Just <$> validateInternTodoText rawText
 
-validateInternProjectTitle :: Text -> Either ServerError Text
-validateInternProjectTitle rawTitle
-  | T.null normalized =
-      Left err400 { errBody = "project title is required" }
+validateInternPermissionCategory :: Text -> Either ServerError Text
+validateInternPermissionCategory rawCategory
+  | T.null category =
+      Left err400 { errBody = "permission category is required" }
+  | T.length category > internPermissionCategoryMaxLength =
+      Left err400 { errBody = "permission category must be 80 characters or fewer" }
+  | T.any isUnsafeInternTitleChar category =
+      Left err400
+        { errBody = "permission category must not contain control or hidden formatting characters" }
   | otherwise =
-      Right normalized
+      Right category
   where
-    normalized = T.strip rawTitle
+    category = T.strip rawCategory
+
+validateInternPermissionReason :: Maybe Text -> Either ServerError (Maybe Text)
+validateInternPermissionReason =
+  validateOptionalInternTextField "permission reason" internPermissionTextMaxLength
+
+validateInternPermissionDecisionNotes
+  :: Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateInternPermissionDecisionNotes =
+  validateNullableInternTextField "decision notes" internPermissionTextMaxLength
+
+internPermissionCategoryMaxLength :: Int
+internPermissionCategoryMaxLength = 80
+
+internPermissionTextMaxLength :: Int
+internPermissionTextMaxLength = 1000
+
+validateOptionalInternTextField
+  :: Text
+  -> Int
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateOptionalInternTextField _ _ Nothing = Right Nothing
+validateOptionalInternTextField fieldName maxLength (Just rawText)
+  | T.null normalized =
+      Right Nothing
+  | T.length normalized > maxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
+        }
+  | T.any isUnsafeInternLongTextChar normalized =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                fieldName
+                  <> " must not contain control characters other than tabs or line breaks, "
+                  <> "or hidden formatting characters"
+        }
+  | otherwise =
+      Right (Just normalized)
+  where
+    normalized = T.strip rawText
+
+validateNullableInternTextField
+  :: Text
+  -> Int
+  -> Maybe (Maybe Text)
+  -> Either ServerError (Maybe (Maybe Text))
+validateNullableInternTextField _ _ Nothing = Right Nothing
+validateNullableInternTextField _ _ (Just Nothing) = Right (Just Nothing)
+validateNullableInternTextField fieldName maxLength (Just (Just rawText)) =
+  Just <$> validateOptionalInternTextField fieldName maxLength (Just rawText)
+
+isUnsafeInternLongTextChar :: Char -> Bool
+isUnsafeInternLongTextChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateInternProjectTitle :: Text -> Either ServerError Text
+validateInternProjectTitle =
+  validateInternTitleField "project title"
 
 validateInternProjectTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternProjectTitleUpdate Nothing = Right Nothing
@@ -162,28 +278,52 @@ validateInternProjectTitleUpdate (Just rawTitle) =
   Just <$> validateInternProjectTitle rawTitle
 
 validateInternTaskTitle :: Text -> Either ServerError Text
-validateInternTaskTitle rawTitle
-  | T.null normalized =
-      Left err400 { errBody = "task title is required" }
-  | otherwise =
-      Right normalized
-  where
-    normalized = T.strip rawTitle
+validateInternTaskTitle =
+  validateInternTitleField "task title"
 
 validateInternTaskTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 validateInternTaskTitleUpdate Nothing = Right Nothing
 validateInternTaskTitleUpdate (Just rawTitle) =
   Just <$> validateInternTaskTitle rawTitle
 
+validateInternTitleField :: Text -> Text -> Either ServerError Text
+validateInternTitleField fieldName rawTitle
+  | T.null normalized =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
+        }
+  | T.length normalized > internTitleMaxLength =
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be 160 characters or fewer"))
+        }
+  | T.any isUnsafeInternTitleChar normalized =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must not contain control or hidden formatting characters"))
+        }
+  | otherwise =
+      Right normalized
+  where
+    normalized = T.strip rawTitle
+
+internTitleMaxLength :: Int
+internTitleMaxLength = 160
+
+isUnsafeInternTitleChar :: Char -> Bool
+isUnsafeInternTitleChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 validateInternTaskUpdatePermissions :: Bool -> InternTaskUpdate -> Either ServerError ()
 validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..}
   | isAdminUser = Right ()
-  | isJust ituTitle
+  | isJust ituProjectId
+      || isJust ituTitle
       || isJust ituDescription
       || isJust ituAssignedTo
       || isJust ituDueAt =
       Left err403
-        { errBody = "Only admins can update task title, description, assignee, or due date" }
+        { errBody = "Only admins can update task project, title, description, assignee, or due date" }
   | otherwise = Right ()
 
 validatePositiveInternPartyId :: Text -> Int64 -> Either ServerError Int64
@@ -209,6 +349,10 @@ validateInternStatusValue fieldName allowedStatuses rawStatus
       BL.fromStrict . TE.encodeUtf8 $
         fieldName <> " must be one of: " <> T.intercalate ", " allowedStatuses
 
+validateInternActivationStatus :: Text -> Either ServerError Text
+validateInternActivationStatus =
+  validateInternStatusValue "activationStatus" ["draft", "active"]
+
 internshipsServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -223,12 +367,13 @@ internshipsServer user =
   :<|> (listProjectsH :<|> createProjectH)
   :<|> updateProjectH
   :<|> (listTasksH :<|> createTaskH)
-  :<|> updateTaskH
+  :<|> taskByIdH
   :<|> (listTodosH :<|> createTodoH :<|> updateTodoH :<|> deleteTodoH)
   :<|> listTimeEntriesH
   :<|> clockInH
   :<|> clockOutH
   :<|> (listPermissionsH :<|> createPermissionH :<|> updatePermissionH)
+  :<|> internAuditServer user
   where
     ensureAdmin :: MonadError ServerError m => m ()
     ensureAdmin = unless (isAdmin user) $
@@ -245,20 +390,26 @@ internshipsServer user =
     isIntern :: AuthedUser -> Bool
     isIntern AuthedUser{..} = M.Intern `elem` auRoles
 
+    taskByIdH
+      :: (MonadReader Env m, MonadIO m, MonadError ServerError m)
+      => Text
+      -> (InternTaskUpdate -> m InternTaskDTO) :<|> m NoContent
+    taskByIdH requestedTaskId =
+      updateTaskH requestedTaskId :<|> deleteTaskH requestedTaskId
+
     listInternsH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternSummaryDTO]
     listInternsH = do
       ensureAdmin
-      roles <- withPool $ selectList [M.PartyRoleRole ==. M.Intern, M.PartyRoleActive ==. True] []
-      let partyIds = map (M.partyRolePartyId . entityVal) roles
+      partyIds <- withPool $ selectCanonicalPartyIdsByRole M.Intern
       if null partyIds
         then pure []
         else do
           parties <- withPool $ selectList [M.PartyId <-. partyIds] [Asc M.PartyDisplayName]
-          allRoles <- withPool $ selectList [M.PartyRolePartyId <-. partyIds, M.PartyRoleActive ==. True] [Asc M.PartyRoleRole]
-          let rolesByParty = Map.fromListWith (++)
-                [ (M.partyRolePartyId (entityVal role), [M.partyRoleRole (entityVal role)])
-                | role <- allRoles
-                ]
+          rolesResult <- withPool $ loadCanonicalPartyRoleMap partyIds
+          rolesByParty <- either
+            (\message -> throwError err500 {errBody = BL.fromStrict (TE.encodeUtf8 message)})
+            pure
+            rolesResult
           pure
             [ InternSummaryDTO
                 { isPartyId = fromSqlKey pid
@@ -300,9 +451,9 @@ internshipsServer user =
             _ -> False
       when invalidHours $
         throwError err400 { errBody = "Required hours must be non-negative" }
-      let cleanedSkills = fmap normalizeOptionalText ipuSkills
-          cleanedAreas = fmap normalizeOptionalText ipuAreas
-          updates = catMaybes
+      cleanedSkills <- either throwError pure (validateInternProfileSkillsUpdate ipuSkills)
+      cleanedAreas <- either throwError pure (validateInternProfileAreasUpdate ipuAreas)
+      let updates = catMaybes
             [ fmap (ME.InternProfileStartAt =.) ipuStartAt
             , fmap (ME.InternProfileEndAt =.) ipuEndAt
             , fmap (ME.InternProfileRequiredHours =.) ipuRequiredHours
@@ -346,11 +497,17 @@ internshipsServer user =
       projects <- if isAdmin user
         then withPool $ selectList [] [Desc ME.InternProjectCreatedAt]
         else do
-          tasks <- withPool $ selectList [ME.InternTaskAssignedTo ==. Just (auPartyId user)] []
+          tasks <- withPool $ selectList
+            [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+            , ME.InternTaskActivationStatus ==. "active"
+            ] []
           let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
           if null projectIds
             then pure []
-            else withPool $ selectList [ME.InternProjectId <-. projectIds] [Desc ME.InternProjectCreatedAt]
+            else withPool $ selectList
+              [ ME.InternProjectId <-. projectIds
+              , ME.InternProjectActivationStatus ==. "active"
+              ] [Desc ME.InternProjectCreatedAt]
       pure (map toProjectDTO projects)
 
     createProjectH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => InternProjectCreate -> m InternProjectDTO
@@ -359,12 +516,17 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternProjectTitle ipcTitle)
       statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus ipcActivationStatus
       either throwError pure (validateInternProjectDateRange ipcStartAt ipcDueAt)
       ent <- withPool $ do
         newId <- insert ME.InternProject
           { ME.internProjectTitle       = titleVal
           , ME.internProjectDescription = ipcDescription
           , ME.internProjectStatus      = statusVal
+          , ME.internProjectActivationStatus = fromMaybe "active" activationStatus
+          , ME.internProjectActivatedAt = if activationStatus == Just "draft" then Nothing else Just now
+          , ME.internProjectNotificationsEnabled = False
           , ME.internProjectStartAt     = ipcStartAt
           , ME.internProjectDueAt       = ipcDueAt
           , ME.internProjectCreatedBy   = auPartyId user
@@ -378,36 +540,53 @@ internshipsServer user =
     updateProjectH rawId InternProjectUpdate{..} = do
       ensureAdmin
       projectKey <- parseKey @ME.InternProject rawId
-      now <- liftIO getCurrentTime
       titleUpdate <- either throwError pure (validateInternProjectTitleUpdate ipuTitle)
       statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
-      mEntity <- withPool $ getEntity projectKey
-      ent <- maybe (throwError err404) pure mEntity
-      let project = entityVal ent
-      either throwError pure $
-        validateInternProjectDateUpdate
-          (ME.internProjectStartAt project)
-          (ME.internProjectDueAt project)
-          ipuStartAt
-          ipuDueAt
-      let updates = catMaybes
+      let auditControlledUpdate = isJust ipuStatus || isJust ipuStartAt || isJust ipuDueAt
+          updates = catMaybes
             [ fmap (ME.InternProjectTitle =.) titleUpdate
             , fmap (ME.InternProjectDescription =.) ipuDescription
             , fmap (ME.InternProjectStatus =.) statusUpdate
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
             , fmap (ME.InternProjectDueAt =.) ipuDueAt
             ]
-      unless (null updates) $
-        withPool $ update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
-      updated <- withPool $ getJustEntity projectKey
-      pure (toProjectDTO updated)
+      result <- withPool $ do
+        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
+          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
+        mEntity <- getEntity projectKey
+        case mEntity of
+          Nothing -> pure (Left err404)
+          Just ent -> do
+            let project = entityVal ent
+            auditPlanCount <- if auditControlledUpdate
+              then count [ME.InternAuditPlanProjectId ==. projectKey]
+              else pure 0
+            if auditPlanCount > 0
+              then pure (Left err409
+                { errBody = "Audit project status and schedule are controlled by its audit plans"
+                })
+              else case validateInternProjectDateUpdate
+                (ME.internProjectStartAt project)
+                (ME.internProjectDueAt project)
+                ipuStartAt
+                ipuDueAt of
+                  Left err -> pure (Left err)
+                  Right () -> do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) $
+                      update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
+                    Right <$> getJustEntity projectKey
+      either throwError (pure . toProjectDTO) result
 
     listTasksH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTaskDTO]
     listTasksH = do
       ensureInternAccess
       let baseFilters = if isAdmin user
             then []
-            else [ME.InternTaskAssignedTo ==. Just (auPartyId user)]
+            else
+              [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+              , ME.InternTaskActivationStatus ==. "active"
+              ]
       tasks <- withPool $ selectList baseFilters [Desc ME.InternTaskUpdatedAt]
       let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
       projectMap <- loadProjectMap projectIds
@@ -422,17 +601,25 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternTaskTitle itcTitle)
       assignedTo <- either throwError pure (validateOptionalInternPartyIdInput "assignedTo" itcAssignedTo)
+      proposedAssignee <- either throwError pure (validateOptionalInternPartyIdInput "proposedAssignee" itcProposedAssignee)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus itcActivationStatus
+      when (activationStatus == Just "draft" && isJust assignedTo) $
+        throwError err400 { errBody = "Draft tasks must use proposedAssignee instead of assignedTo" }
       mProject <- withPool $ getEntity projectKey
       _ <- maybe (throwError err404) pure mProject
       let assignedKey = fmap toSqlKey assignedTo
+          proposedKey = fmap toSqlKey (proposedAssignee <|> assignedTo)
       ent <- withPool $ do
         newId <- insert ME.InternTask
           { ME.internTaskProjectId   = projectKey
           , ME.internTaskTitle       = titleVal
           , ME.internTaskDescription = itcDescription
           , ME.internTaskStatus      = "todo"
+          , ME.internTaskActivationStatus = fromMaybe "active" activationStatus
           , ME.internTaskProgress    = 0
           , ME.internTaskAssignedTo  = assignedKey
+          , ME.internTaskProposedAssignee = proposedKey
           , ME.internTaskDueAt       = itcDueAt
           , ME.internTaskCreatedBy   = auPartyId user
           , ME.internTaskCreatedAt   = now
@@ -447,16 +634,23 @@ internshipsServer user =
     updateTaskH rawId InternTaskUpdate{..} = do
       ensureInternAccess
       taskKey <- parseKey @ME.InternTask rawId
-      now <- liftIO getCurrentTime
-      mEntity <- withPool $ getEntity taskKey
-      ent <- maybe (throwError err404) pure mEntity
-      let task = entityVal ent
-          assignedKey = ME.internTaskAssignedTo task
-          isOwner = assignedKey == Just (auPartyId user)
-          isAdminUser = isAdmin user
-      unless (isAdminUser || isOwner) $
-        throwError err403 { errBody = "Only admins or assignees can update tasks" }
+      let isAdminUser = isAdmin user
+          auditControlledUpdate = isJust ituStatus
+            || isJust ituProgress
+            || isJust ituAssignedTo
+            || isJust ituProjectId
+            || isJust ituDueAt
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
+      projectUpdate <-
+        if isAdminUser
+          then case ituProjectId of
+            Nothing -> pure Nothing
+            Just projectId -> do
+              projectKey <- parseKey @ME.InternProject projectId
+              mProject <- withPool $ getEntity projectKey
+              _ <- maybe (throwError err404) pure mProject
+              pure (Just projectKey)
+          else pure Nothing
       titleUpdate <- either throwError pure (validateInternTaskTitleUpdate ituTitle)
       statusUpdate <- either throwError pure (validateOptionalInternTaskStatusInput ituStatus)
       progressUpdate <- either throwError pure (validateInternTaskProgressUpdate ituProgress)
@@ -466,7 +660,8 @@ internshipsServer user =
           else pure Nothing
       let
           adminUpdates =
-            [ fmap (ME.InternTaskTitle =.) titleUpdate
+            [ fmap (ME.InternTaskProjectId =.) projectUpdate
+            , fmap (ME.InternTaskTitle =.) titleUpdate
             , fmap (ME.InternTaskDescription =.) ituDescription
             , fmap (ME.InternTaskAssignedTo =.) (fmap (fmap toSqlKey) assignedToUpdate)
             , fmap (ME.InternTaskDueAt =.) ituDueAt
@@ -480,14 +675,55 @@ internshipsServer user =
               then catMaybes (adminUpdates ++ commonUpdates)
               else catMaybes commonUpdates
       result <- withPool $ do
-        unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
-        getEntity taskKey
-      entUpdated <- maybe (throwError err404) pure result
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure (Right Nothing)
+          _ -> do
+            lockedTask <- getJustEntity taskKey
+            let isOwner = ME.internTaskAssignedTo (entityVal lockedTask) == Just (auPartyId user)
+            if not (isAdminUser || isOwner)
+              then pure (Left err403
+                { errBody = "Only admins or assignees can update tasks"
+                })
+              else do
+                mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+                if isJust mAuditPlan && auditControlledUpdate
+                  then pure (Left err409
+                    { errBody = "Audit task project, assignee, status, progress, and due date are controlled by its audit plan"
+                    })
+                  else do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
+                    Right <$> getEntity taskKey
+      mUpdated <- either throwError pure result
+      entUpdated <- maybe (throwError err404) pure mUpdated
       let projectKey = ME.internTaskProjectId (entityVal entUpdated)
           assigned = ME.internTaskAssignedTo (entityVal entUpdated)
       projectMap <- loadProjectMap [projectKey]
       partyMap <- loadPartyMap (maybe [] pure assigned)
       pure (toTaskDTO projectMap partyMap entUpdated)
+
+    deleteTaskH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => Text -> m NoContent
+    deleteTaskH rawId = do
+      ensureAdmin
+      taskKey <- parseKey @ME.InternTask rawId
+      result <- withPool $ do
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure Nothing
+          _ -> do
+            mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+            case mAuditPlan of
+              Just _ -> pure (Just False)
+              Nothing -> delete taskKey >> pure (Just True)
+      case result of
+        Nothing -> throwError err404
+        Just False -> throwError err409
+          { errBody = "Audit-owned tasks cannot be deleted; cancel the audit plan instead"
+          }
+        Just True -> pure NoContent
 
     listTodosH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTodoDTO]
     listTodosH = do
@@ -566,7 +802,12 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
-      active <- withPool $ selectFirst [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing] [Desc ME.InternTimeEntryClockIn]
+      activeEntries <-
+        withPool $
+          selectList
+            [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing]
+            [Desc ME.InternTimeEntryClockIn, LimitTo 2]
+      active <- either throwError pure (selectUniqueActiveInternTimeEntry activeEntries)
       when (isJust active) $
         throwError err409 { errBody = "Already clocked in" }
       ent <- withPool $ do
@@ -587,7 +828,12 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
-      mOpen <- withPool $ selectFirst [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing] [Desc ME.InternTimeEntryClockIn]
+      openEntries <-
+        withPool $
+          selectList
+            [ME.InternTimeEntryPartyId ==. partyId, ME.InternTimeEntryClockOut ==. Nothing]
+            [Desc ME.InternTimeEntryClockIn, LimitTo 2]
+      mOpen <- either throwError pure (selectUniqueActiveInternTimeEntry openEntries)
       case mOpen of
         Nothing -> throwError err404 { errBody = "No active clock-in" }
         Just (Entity entryId entry) -> do
@@ -619,12 +865,14 @@ internshipsServer user =
       ensureInternAccess
       now <- liftIO getCurrentTime
       let partyId = auPartyId user
+      categoryVal <- either throwError pure (validateInternPermissionCategory ipcCategory)
+      reasonVal <- either throwError pure (validateInternPermissionReason ipcReason)
       either throwError pure (validateInternPermissionDateRange ipcStartAt ipcEndAt)
       ent <- withPool $ do
         newId <- insert ME.InternPermissionRequest
           { ME.internPermissionRequestPartyId    = partyId
-          , ME.internPermissionRequestCategory   = ipcCategory
-          , ME.internPermissionRequestReason     = ipcReason
+          , ME.internPermissionRequestCategory   = categoryVal
+          , ME.internPermissionRequestReason     = reasonVal
           , ME.internPermissionRequestStartAt    = ipcStartAt
           , ME.internPermissionRequestEndAt      = ipcEndAt
           , ME.internPermissionRequestStatus     = "pending"
@@ -644,9 +892,11 @@ internshipsServer user =
       permKey <- parseKey @ME.InternPermissionRequest rawId
       now <- liftIO getCurrentTime
       statusUpdate <- either throwError pure (validateOptionalInternPermissionStatusInput ipuStatus)
+      decisionNotesUpdate <-
+        either throwError pure (validateInternPermissionDecisionNotes ipuDecisionNotes)
       let updates = catMaybes
             [ fmap (ME.InternPermissionRequestStatus =.) statusUpdate
-            , fmap (ME.InternPermissionRequestDecisionNotes =.) ipuDecisionNotes
+            , fmap (ME.InternPermissionRequestDecisionNotes =.) decisionNotesUpdate
             ]
           reviewUpdates =
             if statusUpdate /= Nothing
@@ -678,6 +928,7 @@ internshipsServer user =
       , ipTitle       = ME.internProjectTitle project
       , ipDescription = ME.internProjectDescription project
       , ipStatus      = ME.internProjectStatus project
+      , ipActivationStatus = ME.internProjectActivationStatus project
       , ipStartAt     = ME.internProjectStartAt project
       , ipDueAt       = ME.internProjectDueAt project
       , ipCreatedAt   = ME.internProjectCreatedAt project
@@ -696,9 +947,11 @@ internshipsServer user =
       , itTitle        = ME.internTaskTitle task
       , itDescription  = ME.internTaskDescription task
       , itStatus       = ME.internTaskStatus task
+      , itActivationStatus = ME.internTaskActivationStatus task
       , itProgress     = ME.internTaskProgress task
       , itAssignedTo   = fmap fromSqlKey (ME.internTaskAssignedTo task)
       , itAssignedName = ME.internTaskAssignedTo task >>= (`Map.lookup` partyMap)
+      , itProposedAssignee = fmap fromSqlKey (ME.internTaskProposedAssignee task)
       , itDueAt        = ME.internTaskDueAt task
       , itCreatedAt    = ME.internTaskCreatedAt task
       , itUpdatedAt    = ME.internTaskUpdatedAt task
@@ -785,12 +1038,6 @@ internshipsServer user =
             | Entity pid project <- projects
             ]
 
-    normalizeOptionalText :: Maybe Text -> Maybe Text
-    normalizeOptionalText Nothing = Nothing
-    normalizeOptionalText (Just txt) =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
-
 withPool
   :: (MonadReader Env m, MonadIO m)
   => SqlPersistT IO a
@@ -806,17 +1053,22 @@ parseKey
      )
   => Text
   -> m (Key record)
-parseKey raw =
-  let trimmed = T.strip raw
-      isSignedNegativeInt =
-        case T.uncons trimmed of
-          Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
-          _ -> False
-      isNonPositiveDigits =
-        T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
-  in
-    if isSignedNegativeInt || isNonPositiveDigits
-      then
-          throwError err400 { errBody = "identifier must be a positive integer" }
-      else
-        maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece trimmed)
+parseKey raw
+  | isSignedNegativeInt || isNonPositiveDigits =
+      throwError err400 { errBody = "identifier must be a positive integer" }
+  | raw /= trimmed =
+      invalid
+  | otherwise =
+      case fromPathPiece trimmed of
+        Just key | toPathPiece key == trimmed -> pure key
+        _ -> invalid
+  where
+    trimmed = T.strip raw
+    isSignedNegativeInt =
+      case T.uncons trimmed of
+        Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
+        _ -> False
+    isNonPositiveDigits =
+      T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
+    invalid =
+      throwError err400 { errBody = "Invalid identifier" }

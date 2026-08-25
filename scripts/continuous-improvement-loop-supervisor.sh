@@ -5,16 +5,17 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="${1:-${CONTINUOUS_LOOP_CONFIG:-$ROOT/scripts/continuous-improvement-loop.codex.json}}"
 STATE_DIR="${CONTINUOUS_LOOP_STATE_DIR:-$ROOT/tmp/continuous-improvement-loop}"
 LOG_FILE="${CONTINUOUS_LOOP_LOG_FILE:-$ROOT/tmp/continuous-improvement-loop.log}"
+LOG_MAX_SIZE_BYTES="${CONTINUOUS_LOOP_LOG_MAX_SIZE_BYTES:-104857600}"  # 100 MB default
 PID_FILE="${CONTINUOUS_LOOP_PID_FILE:-$ROOT/tmp/continuous-improvement-loop.pid}"
 CHILD_PID_FILE="${CONTINUOUS_LOOP_CHILD_PID_FILE:-$STATE_DIR/child.pid}"
 STATUS_FILE="${CONTINUOUS_LOOP_STATUS_FILE:-$STATE_DIR/status.json}"
 STOP_FILE="${CONTINUOUS_LOOP_STOP_FILE:-$STATE_DIR/stop}"
 HEARTBEAT_FILE="${CONTINUOUS_LOOP_HEARTBEAT_FILE:-$STATE_DIR/heartbeat.txt}"
 LOCK_DIR="${CONTINUOUS_LOOP_LOCK_DIR:-$STATE_DIR/lock}"
-RESTART_DELAY_SECONDS="${CONTINUOUS_LOOP_RESTART_DELAY_SECONDS:-15}"
+RESTART_DELAY_SECONDS="${CONTINUOUS_LOOP_RESTART_DELAY_SECONDS:-30}"
 HEARTBEAT_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS:-1800}"
 POLL_INTERVAL_SECONDS="${CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS:-15}"
-CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-7200}"
+CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-10800}"
 
 export PATH="${CONTINUOUS_LOOP_PATH:-/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/.local/bin:${PATH:-}}"
 if [ -f "$ROOT/.env" ]; then
@@ -38,7 +39,36 @@ export CONTINUOUS_LOOP_CONFIG="$CONFIG"
 export CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS="$CHILD_TIMEOUT_SECONDS"
 
 log() {
+  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
+  fi
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
+}
+
+# POSIX-compatible log rotation: keep at most N .old backups, remove oldest first
+rotate_old_logs() {
+  local max_backups="${CONTINUOUS_LOOP_LOG_MAX_BACKUPS:-3}"
+  local count=0
+  # Count existing .old files (newest first by filename timestamp order)
+  for f in "$LOG_FILE."*.old; do
+    [ -f "$f" ] || continue
+    count=$((count + 1))
+  done
+  while [ "$count" -gt "$max_backups" ]; do
+    local oldest=""
+    for f in "$LOG_FILE."*.old; do
+      [ -f "$f" ] || continue
+      if [ -z "$oldest" ] || [ "$f" \< "$oldest" ]; then
+        oldest="$f"
+      fi
+    done
+    if [ -n "$oldest" ]; then
+      rm -f "$oldest"
+      count=$((count - 1))
+    else
+      break
+    fi
+  done
 }
 
 gh_auth_token_available() {
@@ -120,6 +150,8 @@ if last_exit_code:
         data['lastExitCode'] = int(last_exit_code)
     except Exception:
         data['lastExitCode'] = last_exit_code
+if state in {'running', 'starting'}:
+    data.pop('lastError', None)
 if 'startedAt' not in data:
     data['startedAt'] = now
 tmp = status_file + '.tmp'
@@ -190,11 +222,19 @@ restart_count=0
 stale_restart_count=0
 child_pid=""
 child_started_epoch=0
+last_error_signature=""
+last_error_time=0
+error_repeat_count=0
 
 json_update "starting" "startup" "Supervisor booting" "" "" "$restart_count" "$stale_restart_count"
 log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG"
 
 preflight_block_reason() {
+  if [ -f "$STATE_DIR/.pause-codex" ]; then
+    echo "blocked: Codex pause flag is present ($STATE_DIR/.pause-codex); remove it to resume"
+    return 0
+  fi
+
   local config_check=""
   if ! config_check="$(node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only 2>&1)"; then
     echo "blocked: ${config_check}"
@@ -254,6 +294,35 @@ PY
     return 0
   fi
 
+  # Preflight divergence guard: detect local commits that would cause rebase conflicts
+  local git_remote git_branch merge_base merge_tree_output conflict_files
+  git_remote="$(git -C "$ROOT" config --get branch.main.remote 2>/dev/null || echo "origin")"
+  git_branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")"
+  if [ -n "$git_remote" ] && [ -n "$git_branch" ]; then
+    git -C "$ROOT" fetch "$git_remote" "$git_branch" >/dev/null 2>&1 || true
+    merge_base="$(git -C "$ROOT" merge-base HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
+    if [ -n "$merge_base" ]; then
+      merge_tree_output="$(git -C "$ROOT" merge-tree "$merge_base" HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
+      if [ -n "$merge_tree_output" ]; then
+        conflict_files="$(printf '%s' "$merge_tree_output" | grep -E '^[^<>]*$' | grep -v '^$' | head -n 20 || true)"
+        if [ -n "$conflict_files" ]; then
+          local repair_file="$STATE_DIR/repair-needed.md"
+          cat > "$repair_file" <<REPAIR
+# CIL Supervisor Repair Needed
+
+**Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Reason:** Preflight divergence guard detected that local commits would cause rebase conflicts with ${git_remote}/${git_branch}.
+**Conflict files:**
+${conflict_files}
+**Suggested action:** Reset local branch to ${git_remote}/${git_branch} or resolve conflicts manually before resuming.
+REPAIR
+          echo "blocked: Preflight divergence guard detected rebase conflicts with ${git_remote}/${git_branch}; repair artifact written to ${repair_file}"
+          return 0
+        fi
+      fi
+    fi
+  fi
+
   return 1
 }
 
@@ -270,6 +339,22 @@ start_child() {
   fi
 
   json_update "starting" "launching-child" "Starting bounded loop child" "" "" "$restart_count" "$stale_restart_count"
+  # Rotate log if oversized before spawning child, so the >> redirect always appends to a fresh file
+  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
+  fi
+  # Rotate old backups: keep at most N and remove any oversized
+  rotate_old_logs
+  local old_log
+  old_log=""
+  for f in "$LOG_FILE."*.old; do
+    [ -f "$f" ] || continue
+    old_log="$f"
+    break
+  done
+  if [ -n "$old_log" ] && [ "$(stat -f%z "$old_log" 2>/dev/null || stat -c%s "$old_log" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+    rm -f "$old_log"
+  fi
   CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE="$STATUS_FILE" \
   CONTINUOUS_LOOP_LOG_FILE="$LOG_FILE" \
   CONTINUOUS_LOOP_PID_FILE="$PID_FILE" \
@@ -278,7 +363,7 @@ start_child() {
   CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS="$HEARTBEAT_TIMEOUT_SECONDS" \
   CONTINUOUS_LOOP_RESTART_DELAY_SECONDS="$RESTART_DELAY_SECONDS" \
   CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS="$POLL_INTERVAL_SECONDS" \
-  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --max-iterations 1 >> "$LOG_FILE" 2>&1 &
+  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" >> "$LOG_FILE" 2>&1 &
   child_pid=$!
   child_started_epoch="$(date +%s)"
   echo "$child_pid" > "$CHILD_PID_FILE"
@@ -315,6 +400,40 @@ while true; do
     child_pid=""
     child_started_epoch=0
     restart_count=$((restart_count + 1))
+
+    # Crash-loop detection: if same error signature repeats >3 times in 10 min, block
+    now_epoch="$(date +%s)"
+    error_sig="exit:${exit_code}"
+    if [ "$error_sig" = "$last_error_signature" ] && [ $((now_epoch - last_error_time)) -le 600 ]; then
+      error_repeat_count=$((error_repeat_count + 1))
+    else
+      error_repeat_count=1
+      last_error_signature="$error_sig"
+    fi
+    last_error_time="$now_epoch"
+
+    if [ "$error_repeat_count" -gt 3 ]; then
+      repair_file="$STATE_DIR/repair-needed.md"
+      cat > "$repair_file" <<REPAIR
+# CIL Supervisor Repair Needed
+
+**Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Reason:** Child exited with the same error signature ${error_repeat_count} times within 10 minutes.
+**Last exit code:** ${exit_code}
+**Restart count:** ${restart_count}
+**Suggested action:** Inspect the child log at ${LOG_FILE} and resolve the root cause before resuming.
+REPAIR
+      json_update "blocked" "crash-loop-detected" "Child crashed ${error_repeat_count} times with same error; repair artifact written to ${repair_file}" "" "$exit_code" "$restart_count" "$stale_restart_count"
+      log "CRASH-LOOP BLOCKED: child exited ${error_repeat_count} times with ${error_sig}; repair artifact at ${repair_file}"
+      # Stay in blocked state until operator removes repair file or restarts supervisor
+      while [ -f "$repair_file" ]; do
+        sleep "$POLL_INTERVAL_SECONDS"
+      done
+      log "crash-loop repair artifact removed; resuming"
+      error_repeat_count=0
+      last_error_signature=""
+    fi
+
     json_update "restarting" "child-exited" "Loop child exited; restarting after delay" "" "$exit_code" "$restart_count" "$stale_restart_count"
     log "child exited code=$exit_code; restarting in ${RESTART_DELAY_SECONDS}s"
     sleep "$RESTART_DELAY_SECONDS"

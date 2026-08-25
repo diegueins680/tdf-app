@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type MouseEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { requiredString } from '../lib/schemas';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyCreate, PartyUpdate } from '../api/types';
@@ -25,12 +29,7 @@ import {
   Alert,
   InputAdornment,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  OutlinedInput,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import EditIcon from '@mui/icons-material/Edit';
 import SchoolIcon from '@mui/icons-material/School';
 import AddIcon from '@mui/icons-material/Add';
@@ -39,19 +38,21 @@ import SearchIcon from '@mui/icons-material/Search';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useNavigate } from 'react-router-dom';
-import type { Role } from '../api/generated/client';
 import { Admin } from '../api/admin';
-import { ALL_ROLES } from '../constants/roles';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
-import { normalizeRolesInput } from '../utils/roles';
 import PartyRelatedPopover from '../components/PartyRelatedPopover';
-
-type RoleValue = Role | (string & Record<never, never>);
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 interface CreatePartyDialogProps {
   open: boolean;
   onClose: () => void;
+}
+
+function normalizeSearch(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 const normalizePartyContactValue = (value?: string | null) => {
@@ -68,35 +69,60 @@ const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagra
   return contactParts.length > 0 ? contactParts.join(' · ') : 'Falta correo e Instagram';
 };
 
+const getSingleContactPrimaryActionLabel = ({
+  canManageRoles,
+  party,
+}: {
+  canManageRoles: boolean;
+  party: Pick<PartyDTO, 'hasUserAccount' | 'primaryEmail'>;
+}) => {
+  if (!hasPartyPrimaryEmail(party)) return 'Completar contacto';
+  if (!party.hasUserAccount) return 'Crear usuario';
+  return canManageRoles ? 'Revisar acceso' : 'Editar contacto';
+};
+
 const formatPartyCountLabel = (count: number) => `${count} contacto${count === 1 ? '' : 's'}`;
 const hasPartyPrimaryEmail = (party?: Pick<PartyDTO, 'primaryEmail'> | null) =>
   normalizePartyContactValue(party?.primaryEmail) != null;
 
+const createPartySchema = z.object({
+  name: requiredString('Nombre'),
+});
+type CreatePartyFormData = z.infer<typeof createPartySchema>;
+
 function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
   const qc = useQueryClient();
-  const [name, setName] = useState('');
   const [isOrg, setIsOrg] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreatePartyFormData>({
+    resolver: zodResolver(createPartySchema),
+    defaultValues: { name: '' },
+  });
 
   const mutation = useMutation<PartyDTO, Error, PartyCreate>({
     mutationFn: (body) => Parties.create(body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['parties'] });
-      setName('');
+      reset();
       onClose();
     },
   });
 
-  const handleSubmit = () => {
-    if (!name) return;
-    mutation.mutate({ cDisplayName: name, cIsOrg: isOrg });
-  };
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({ cDisplayName: data.name, cIsOrg: isOrg });
+  });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Nuevo contacto</DialogTitle>
       <DialogContent>
         <Stack gap={2} sx={{ mt: 1 }}>
-          <TextField label="Nombre / Display" value={name} onChange={(e) => setName(e.target.value)} required />
+          <TextField
+            {...register('name')}
+            label="Nombre / Display"
+            required
+            error={Boolean(errors.name)}
+            helperText={errors.name?.message}
+          />
           <Typography variant="body2" color="text.secondary">
             {`Tipo actual: ${isOrg ? 'Empresa' : 'Persona'}. Usa Persona para individuos y Empresa para bandas, sellos o negocios.`}
           </Typography>
@@ -113,11 +139,17 @@ function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions>
-          <Button onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained" disabled={!name || mutation.isPending}>
-            Crear
-          </Button>
-        </DialogActions>
+        <Button onClick={onClose}>Cancelar</Button>
+        <Button
+          onClick={() => {
+            void onSubmit();
+          }}
+          variant="contained"
+          disabled={mutation.isPending}
+        >
+          Crear
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }
@@ -169,7 +201,7 @@ function EditPartyDialog({ party, open, onClose }: EditPartyDialogProps) {
             helperText="Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones."
           />
           <TextField label="Instagram" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-          <TextField label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <TextField type="tel" label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -202,7 +234,6 @@ interface CreateUserFromPartyDialogProps {
 function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromPartyDialogProps) {
   const qc = useQueryClient();
   const [username, setUsername] = useState('');
-  const [roles, setRoles] = useState<RoleValue[]>([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -211,7 +242,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   useEffect(() => {
     setUsername('');
     setEmail(party?.primaryEmail ?? '');
-    setRoles([]);
     setError(null);
     setSuccess(null);
   }, [party, open]);
@@ -221,12 +251,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
   const usernameHelperText = trimmedEmail
     ? `Déjalo vacío para usar ${trimmedEmail} como usuario de acceso.`
     : 'Déjalo vacío y usaremos el correo del contacto cuando lo completes arriba.';
-
-  const selectRoles = (value: string | string[]) => normalizeRolesInput(value, ALL_ROLES);
-
-  const handleRoleChange = (event: SelectChangeEvent<RoleValue[]>) => {
-    setRoles(selectRoles(event.target.value));
-  };
 
   const handleCreateUser = async () => {
     if (!party) return;
@@ -244,7 +268,6 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
       await Admin.createUser({
         partyId: party.partyId,
         username: username.trim() || undefined,
-        roles: roles.length ? roles : undefined,
       });
       setSuccess('Se creó la cuenta y se envió la contraseña temporal por correo.');
       await qc.invalidateQueries({ queryKey: ['parties'] });
@@ -282,29 +305,10 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
             placeholder={trimmedEmail || 'Se completará con el correo principal'}
             fullWidth
           />
-          <FormControl fullWidth>
-            <InputLabel id="create-user-roles-label">Roles iniciales</InputLabel>
-            <Select<RoleValue[]>
-              labelId="create-user-roles-label"
-              multiple
-              value={roles}
-              onChange={handleRoleChange}
-              input={<OutlinedInput label="Roles iniciales" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((role) => (
-                    <Chip key={role} label={role} size="small" />
-                  ))}
-                </Box>
-              )}
-            >
-              {ALL_ROLES.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Alert severity="info">
+            La cuenta se crea sin asignaciones administrativas. Los roles se solicitan después en Roles y permisos
+            mediante revisión y aprobación separada.
+          </Alert>
           {error && <Alert severity="error">{error}</Alert>}
           {success && <Alert severity="success">{success}</Alert>}
           <Alert severity="info">
@@ -333,6 +337,7 @@ function CreateUserFromPartyDialog({ party, open, onClose }: CreateUserFromParty
 }
 
 export default function PartiesPage() {
+  useDocumentTitle('CRM / Contactos');
   const navigate = useNavigate();
   const { session } = useSession();
   const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
@@ -356,12 +361,12 @@ export default function PartiesPage() {
   const showInitialLoadingState = partiesQuery.isLoading && partiesQuery.data == null;
 
   const filtered = useMemo(() => {
-    const term = trimmedSearch.toLowerCase();
+    const term = normalizeSearch(trimmedSearch);
     if (!term) return parties;
     return parties.filter((party) => {
-      const haystack = [party.displayName, party.primaryEmail ?? '', party.instagram ?? '']
-        .join(' ')
-        .toLowerCase();
+      const haystack = normalizeSearch(
+        [party.displayName, party.primaryEmail ?? '', party.instagram ?? ''].join(' '),
+      );
       return haystack.includes(term);
     });
   }, [parties, trimmedSearch]);
@@ -401,6 +406,9 @@ export default function PartiesPage() {
   const singleContactSummaryDescription = trimmedSearch === ''
     ? 'Revísalo aquí; haz clic en su nombre para ver relaciones. Cuando exista el segundo, volverán el buscador y la tabla para comparar contactos.'
     : 'La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.';
+  const singleContactPrimaryActionLabel = singleContact == null
+    ? 'Acciones'
+    : getSingleContactPrimaryActionLabel({ canManageRoles, party: singleContact });
   const baseTableGuidanceText = 'Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta.';
   const tableGuidanceText = [
     baseTableGuidanceText,
@@ -432,14 +440,17 @@ export default function PartiesPage() {
   const editContactActionLabel = missingPrimaryEmail ? 'Completar contacto' : 'Editar contacto';
 
   return (
-    <Stack gap={3}>
-      <Stack spacing={1}>
-        <Typography variant="h4">Personas / CRM</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Gestiona personas, empresas y roles en un solo lugar. El tipo se elige dentro del formulario de alta.
-        </Typography>
-      </Stack>
-
+    <PageShell
+      title="Contactos"
+      subtitle="Gestiona personas, empresas y roles en un solo lugar."
+      loading={showInitialLoadingState}
+      actions={(
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+          Nuevo contacto
+        </Button>
+      )}
+    >
+      <Stack gap={3}>
       <Paper sx={{ p: 3 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
@@ -474,31 +485,26 @@ export default function PartiesPage() {
               fullWidth
             />
           )}
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setCreateOpen(true)}
-            >
-              Nuevo contacto
-            </Button>
-          </Stack>
         </Stack>
 
         {partiesQuery.error && <Alert severity="error">{partiesQuery.error.message}</Alert>}
 
         {showInitialLoadingState ? (
-          <Alert severity="info" variant="outlined">
-            Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine.
-          </Alert>
-        ) : !partiesQuery.isLoading && !partiesQuery.error && !hasContacts ? (
-          <Alert severity="info" variant="outlined">
-            Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto.
-          </Alert>
+          <SkeletonCards
+            count={3}
+            label="Cargando contactos… El buscador y la tabla aparecerán cuando esta primera carga termine."
+          />
+        ) : !partiesQuery.error && !hasContacts ? (
+          <EmptyState
+            title="Sin contactos aún"
+            description="Todavía no hay contactos. Crea el primero desde Nuevo contacto. El buscador y la tabla aparecerán cuando exista al menos un contacto. El tipo se elige dentro del formulario de alta."
+          />
         ) : showSearchEmptyState ? (
-          <Alert severity="info" variant="outlined">
-            {`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
-          </Alert>
+          <EmptyState
+            icon={<SearchIcon />}
+            title="Sin resultados"
+            description={`No hay contactos que coincidan con "${trimmedSearch}". Limpia la búsqueda desde el buscador para volver a ver toda la lista.`}
+          />
         ) : showSingleContactSummary && singleContact ? (
           <Box
             sx={{
@@ -551,9 +557,10 @@ export default function PartiesPage() {
               <Stack direction="row" spacing={1}>
                 <Button
                   variant="outlined"
+                  aria-label={`Abrir acciones para ${singleContact.displayName}`}
                   onClick={(event) => openActionsMenu(event, singleContact)}
                 >
-                  {`Acciones de ${singleContact.displayName}`}
+                  {singleContactPrimaryActionLabel}
                 </Button>
               </Stack>
             </Stack>
@@ -571,59 +578,60 @@ export default function PartiesPage() {
                 </Typography>
               )
             )}
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Nombre</TableCell>
-                  <TableCell>Contacto</TableCell>
-                  <TableCell align="right">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {partiesQuery.isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={3}>Cargando...</TableCell>
-                  </TableRow>
-                )}
-                {!partiesQuery.isLoading && filtered.map((party) => (
-                  <TableRow key={party.partyId} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Button
-                          variant="text"
-                          onClick={(event) => {
-                            setRelatedParty(party);
-                            setRelatedAnchor(event.currentTarget);
-                          }}
-                          sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
-                        >
-                          <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                            {party.displayName}
-                          </Typography>
-                        </Button>
-                        {party.isOrg && <Chip label="Empresa" size="small" />}
-                        {party.hasUserAccount && !allVisibleContactsHaveUserAccount && (
-                          <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
-                        )}
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{getPartyContactSummary(party)}</TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Acciones">
-                        <IconButton
-                          onClick={(event) => openActionsMenu(event, party)}
-                          aria-label={`Abrir acciones para ${party.displayName}`}
-                          aria-haspopup="menu"
-                          aria-expanded={actionsMenuTarget?.party.partyId === party.partyId ? 'true' : undefined}
-                        >
-                          <MoreHorizIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <LazyPaginatedList
+              items={filtered}
+              pagination={{ itemLabel: 'contactos', initialRowsPerPage: 25, resetKey: trimmedSearch }}
+              renderItems={(visibleParties) => (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Nombre</TableCell>
+                      <TableCell>Contacto</TableCell>
+                      <TableCell align="right">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleParties.map((party) => (
+                      <TableRow key={party.partyId} hover>
+                        <TableCell>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Button
+                              variant="text"
+                              onClick={(event) => {
+                                setRelatedParty(party);
+                                setRelatedAnchor(event.currentTarget);
+                              }}
+                              sx={{ p: 0, minWidth: 0, textTransform: 'none', justifyContent: 'flex-start' }}
+                            >
+                              <Typography fontWeight={600} sx={{ textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                                {party.displayName}
+                              </Typography>
+                            </Button>
+                            {party.isOrg && <Chip label="Empresa" size="small" />}
+                            {party.hasUserAccount && !allVisibleContactsHaveUserAccount && (
+                              <Chip label="Usuario creado" size="small" color="success" variant="outlined" />
+                            )}
+                          </Stack>
+                        </TableCell>
+                        <TableCell>{getPartyContactSummary(party)}</TableCell>
+                        <TableCell align="right">
+                          <Tooltip title="Acciones">
+                            <IconButton
+                              onClick={(event) => openActionsMenu(event, party)}
+                              aria-label={`Abrir acciones para ${party.displayName}`}
+                              aria-haspopup="menu"
+                              aria-expanded={actionsMenuTarget?.party.partyId === party.partyId ? 'true' : undefined}
+                            >
+                              <MoreHorizIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            />
           </>
         )}
       </Paper>
@@ -667,5 +675,6 @@ export default function PartiesPage() {
         }}
       />
     </Stack>
+    </PageShell>
   );
 }

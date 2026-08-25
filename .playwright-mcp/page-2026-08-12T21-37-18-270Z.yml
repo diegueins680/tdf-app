@@ -1,0 +1,68 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e411] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e412] [cursor=pointer]
+            - link [ref=f43e413] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e414] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e415] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e416] [cursor=pointer]
+              - button [ref=f43e417] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e418]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e419] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e421]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: blue_records333
+                - button [ref=f43e422] [cursor=pointer]
+                - group
+              - alert [ref=f43e400]:
+                - generic [ref=f43e404]: No hay contactos que coincidan con "blue_records333". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e423] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e424] [cursor=pointer]
+      - button [ref=f43e426] [cursor=pointer]
+      - button [ref=f43e428] [cursor=pointer]
+      - button [ref=f43e429] [cursor=pointer]
+      - button [ref=f43e430] [cursor=pointer]
+      - button [ref=f43e431] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e434]:
+    - heading "Nuevo contacto" [level=2] [ref=f43e435]
+    - generic [ref=f43e437]:
+      - generic [ref=f43e438]:
+        - generic:
+          - text: Nombre / Display
+          - generic: "*"
+        - generic [ref=f43e439]:
+          - textbox "Nombre / Display" [ref=f43e440]
+          - group:
+            - generic: Nombre / Display *
+      - paragraph [ref=f43e441]: "Tipo actual: Empresa. Usa Persona para individuos y Empresa para bandas, sellos o negocios."
+      - button "Cambiar a persona" [active] [ref=f43e445] [cursor=pointer]
+    - generic [ref=f43e443]:
+      - button "Cancelar" [ref=f43e444] [cursor=pointer]
+      - button "Crear" [disabled]

@@ -4,17 +4,28 @@
 module TDF.WhatsApp.Transport
   ( WhatsAppEnv(..)
   , loadWhatsAppEnv
+  , sendWhatsAppTemplateIO
   , sendWhatsAppTextIO
   ) where
 
 import           Data.Maybe (fromMaybe, isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Network.HTTP.Client (Manager, newManager)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Manager)
+import           TDF.DB (sharedTlsManager)
 import           System.Environment (lookupEnv)
 
-import           TDF.WhatsApp.Client (SendTextResult, sendText)
+import           TDF.WhatsApp.Client
+  ( SendTextResult
+  , normalizeGraphApiVersion
+  , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppMessageBody
+  , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppRecipientPhone
+  , normalizeWhatsAppVerifyToken
+  , sendTemplate
+  , sendText
+  )
 
 data WhatsAppEnv = WhatsAppEnv
   { waManager       :: Manager
@@ -27,12 +38,30 @@ data WhatsAppEnv = WhatsAppEnv
 
 loadWhatsAppEnv :: IO WhatsAppEnv
 loadWhatsAppEnv = do
-  manager <- newManager tlsManagerSettings
-  token <- firstNonEmptyText ["WHATSAPP_TOKEN", "WA_TOKEN"]
-  phoneId <- firstNonEmptyText ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
-  verify <- firstNonEmptyText ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
-  contact <- firstNonEmptyText ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
-  apiVersion <- firstNonEmptyText ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
+  manager <- pure sharedTlsManager
+  token <-
+    validateOptionalEnvText normalizeWhatsAppAccessToken
+      =<< firstNonEmptyAliasText "WhatsApp access token" ["WHATSAPP_TOKEN", "WA_TOKEN"]
+  phoneId <-
+    validateOptionalEnvText normalizeWhatsAppPhoneNumberId
+      =<< firstNonEmptyAliasText
+        "WhatsApp phone number id"
+        ["WHATSAPP_PHONE_NUMBER_ID", "WA_PHONE_ID"]
+  verify <-
+    validateOptionalEnvText normalizeWhatsAppVerifyToken
+      =<< firstNonEmptyAliasText
+        "WhatsApp verify token"
+        ["WHATSAPP_VERIFY_TOKEN", "WA_VERIFY_TOKEN"]
+  contact <-
+    firstNormalizedAliasText
+      "WhatsApp contact number"
+      normalizeWhatsAppContactNumber
+      ["COURSE_WHATSAPP_NUMBER", "WHATSAPP_CONTACT_NUMBER", "WA_CONTACT_NUMBER"]
+  apiVersion <-
+    firstNormalizedAliasText
+      "WhatsApp API version"
+      normalizeGraphApiVersion
+      ["WHATSAPP_API_VERSION", "WA_GRAPH_API_VERSION", "WA_API_VERSION"]
   pure WhatsAppEnv
     { waManager = manager
     , waToken = token
@@ -42,15 +71,70 @@ loadWhatsAppEnv = do
     , waApiVersion = apiVersion
     }
 
+validateOptionalEnvText :: (Text -> Either String Text) -> Maybe Text -> IO (Maybe Text)
+validateOptionalEnvText _ Nothing = pure Nothing
+validateOptionalEnvText normalizeValue (Just rawValue) =
+  either fail (pure . Just) (normalizeValue rawValue)
+
+normalizeWhatsAppContactNumber :: Text -> Either String Text
+normalizeWhatsAppContactNumber rawPhone =
+  case normalizeWhatsAppRecipientPhone rawPhone of
+    Left _ -> Left contactNumberMessage
+    Right phone ->
+      let digitsOnly = T.filter (\ch -> ch >= '0' && ch <= '9') phone
+      in case T.uncons digitsOnly of
+           Just (firstDigit, _)
+             | firstDigit /= '0' -> Right phone
+           _ -> Left contactNumberMessage
+  where
+    contactNumberMessage =
+      "Invalid WhatsApp contact number: expected international 8-15 digits with country code"
+
 sendWhatsAppTextIO :: WhatsAppEnv -> Text -> Text -> IO (Either Text SendTextResult)
 sendWhatsAppTextIO env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion} phone msg =
-  case (waToken, waPhoneId) of
-    (Just tok, Just pid) -> do
-      let version = fromMaybe "v20.0" waApiVersion
-      result <- sendText waManager version tok pid phone msg
-      pure (either (Left . T.pack) Right result)
-    _ ->
-      pure (Left (missingConfigMessage env))
+  case normalizeWhatsAppRecipientPhone phone of
+    Left err -> pure (Left (T.pack err))
+    Right recipientPhone ->
+      case normalizeWhatsAppMessageBody msg of
+        Left err -> pure (Left (T.pack err))
+        Right messageBody ->
+          case (waToken, waPhoneId) of
+            (Just tok, Just pid) -> do
+              let version = fromMaybe "v20.0" waApiVersion
+              result <- sendText waManager version tok pid recipientPhone messageBody
+              pure (either (Left . T.pack) Right result)
+            _ ->
+              pure (Left (missingConfigMessage env))
+
+sendWhatsAppTemplateIO
+  :: WhatsAppEnv
+  -> Text
+  -> Text
+  -> Text
+  -> [Text]
+  -> IO (Either Text SendTextResult)
+sendWhatsAppTemplateIO
+  env@WhatsAppEnv{waManager, waToken, waPhoneId, waApiVersion}
+  phone
+  templateName
+  languageCode
+  parameters =
+    case (waToken, waPhoneId) of
+      (Just tok, Just pid) -> do
+        let version = fromMaybe "v20.0" waApiVersion
+        result <-
+          sendTemplate
+            waManager
+            version
+            tok
+            pid
+            phone
+            templateName
+            languageCode
+            parameters
+        pure (either (Left . T.pack) Right result)
+      _ ->
+        pure (Left (missingConfigMessage env))
 
 missingConfigMessage :: WhatsAppEnv -> Text
 missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
@@ -70,12 +154,47 @@ missingConfigMessage WhatsAppEnv{waToken, waPhoneId} =
           else T.intercalate "; " (map pieceToText missingPieces)
   in T.concat ["WhatsApp configuration not available: ", details]
 
-firstNonEmptyText :: [String] -> IO (Maybe Text)
-firstNonEmptyText names = go names
+firstNonEmptyAliasText :: String -> [String] -> IO (Maybe Text)
+firstNonEmptyAliasText label names = do
+  values <- traverse lookupAlias names
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstName, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictName, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstName <> " and " <> conflictName
+              <> " are both set with different values"
   where
-    go [] = pure Nothing
-    go (name:rest) = do
+    lookupAlias name = do
+      val <- lookupEnv name
+      pure $ do
+        txt <- T.strip . T.pack <$> val
+        if T.null txt
+          then Nothing
+          else Just (name, txt)
+
+firstNormalizedAliasText :: String -> (Text -> Either String Text) -> [String] -> IO (Maybe Text)
+firstNormalizedAliasText label normalizeValue names = do
+  values <- traverse lookupAlias names
+  case [entry | Just entry <- values] of
+    [] -> pure Nothing
+    (firstName, firstValue):rest ->
+      case filter ((/= firstValue) . snd) rest of
+        [] -> pure (Just firstValue)
+        (conflictName, _):_ ->
+          fail $
+            label <> " aliases conflict: "
+              <> firstName <> " and " <> conflictName
+              <> " are both set with different values"
+  where
+    lookupAlias name = do
       val <- lookupEnv name
       case fmap (T.strip . T.pack) val of
-        Just txt | not (T.null txt) -> pure (Just txt)
-        _ -> go rest
+        Just txt | not (T.null txt) ->
+          case normalizeValue txt of
+            Left err -> fail err
+            Right normalized -> pure (Just (name, normalized))
+        _ -> pure Nothing

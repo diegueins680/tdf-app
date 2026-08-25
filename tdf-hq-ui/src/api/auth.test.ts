@@ -117,30 +117,53 @@ describe('auth api', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('shows a friendly startup message after login retries are exhausted', async () => {
+  it('uses each configured login retry once before showing a startup message', async () => {
     jest.useFakeTimers();
+    const loginPayload = {
+      username: 'admin',
+      password: 'Password123',
+    };
 
     fetchMock.mockImplementation(() =>
       Promise.resolve({
         ok: false,
         status: 503,
-        headers: createHeaders('application/json', { 'retry-after': '5' }),
+        headers: createHeaders('application/json'),
         text: jest.fn<() => Promise<string>>().mockResolvedValue('{"error":"starting"}'),
       } as unknown as Response),
     );
 
-    const promise = loginRequest({
-      username: 'admin',
-      password: 'Password123',
-    });
+    const promise = loginRequest(loginPayload);
     const rejection = expect(promise).rejects.toThrow('El servicio está arrancando. Intenta de nuevo en unos segundos.');
 
-    await jest.advanceTimersByTimeAsync(5000);
-    await jest.advanceTimersByTimeAsync(5000);
-    await jest.advanceTimersByTimeAsync(5000);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await jest.advanceTimersByTimeAsync(1999);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    await jest.advanceTimersByTimeAsync(4999);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(1);
 
     await rejection;
     expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock.mock.calls).toEqual(
+      Array.from({ length: 4 }, () => [
+        '/login',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginPayload),
+        },
+      ]),
+    );
   });
 
   it('extracts structured JSON error messages for login failures', async () => {
@@ -157,5 +180,29 @@ describe('auth api', () => {
         password: 'Password123',
       }),
     ).rejects.toThrow('Usuario o contraseña inválidos');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('wraps login network failures with a stable service message', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const promise = loginRequest({
+      username: 'admin',
+      password: 'Password123',
+    });
+    const rejection = expect(promise).rejects.toThrow(
+      'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.',
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await jest.advanceTimersByTimeAsync(2000);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    await jest.advanceTimersByTimeAsync(5000);
+
+    await rejection;
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 });

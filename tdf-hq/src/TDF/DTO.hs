@@ -5,20 +5,35 @@
 module TDF.DTO where
 
 import           GHC.Generics (Generic)
-import           Data.Aeson (Options, ToJSON(..), FromJSON(..), defaultOptions, genericParseJSON, genericToJSON, rejectUnknownFields)
+import           Data.Aeson
+  ( Options
+  , ToJSON(..)
+  , FromJSON(..)
+  , Value(Null)
+  , defaultOptions
+  , genericParseJSON
+  , genericToJSON
+  , rejectUnknownFields
+  , withObject
+  , (.:)
+  )
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import           Data.Aeson.Types (fieldLabelModifier, omitNothingFields)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Int (Int64)
 import           Data.Time (UTCTime, Day)
+import           Data.UUID (UUID)
 import           Data.Char (toLower)
+import           Data.Maybe (isJust)
 
 import           Database.Persist (Entity(..))
 import           Database.Persist.Sql (fromSqlKey)
 
 import           TDF.Models
 import qualified TDF.Models as M
-import           TDF.API.Types (BandDTO)
+import           TDF.API.Types (BandDTO, rejectNullOptionalFields)
 
 strictDecodeOptions :: Options
 strictDecodeOptions = defaultOptions { rejectUnknownFields = True }
@@ -67,8 +82,25 @@ data ArtistProfileDTO = ArtistProfileDTO
   , apYoutubeUrl      :: Maybe Text
   , apWebsiteUrl      :: Maybe Text
   , apFeaturedVideoUrl :: Maybe Text
+  -- Presentation-only labels resolved from canonical genre rows. Historical
+  -- text is returned only while an existing profile remains unmapped.
   , apGenres          :: Maybe Text
+  , apGenreIds        :: [UUID]
   , apHighlights      :: Maybe Text
+  , apOfficialName    :: Maybe Text
+  , apCountry         :: Maybe Text
+  , apInstagramUrl    :: Maybe Text
+  , apSocialLinks     :: Maybe Text
+  , apDiscography     :: Maybe Text
+  , apAchievements    :: Maybe Text
+  , apHeroOriginalUrl :: Maybe Text
+  , apHeroSquareUrl   :: Maybe Text
+  , apHeroLandscapeUrl :: Maybe Text
+  , apHeroResponsiveUrls :: Maybe Text
+  , apHeroFocalPoint  :: Maybe Text
+  , apLastVerifiedAt  :: Maybe UTCTime
+  , apConfidence      :: Maybe Double
+  , apReviewStatus    :: Maybe Text
   , apFollowerCount   :: Int
   , apHasUserAccount  :: Bool
   } deriving (Show, Generic)
@@ -87,11 +119,20 @@ data ArtistProfileUpsert = ArtistProfileUpsert
   , apuYoutubeUrl      :: Maybe Text
   , apuWebsiteUrl      :: Maybe Text
   , apuFeaturedVideoUrl :: Maybe Text
-  , apuGenres          :: Maybe Text
+  , apuGenreIds        :: [UUID]
   , apuHighlights      :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON ArtistProfileUpsert where
   parseJSON = genericParseJSON strictDecodeOptions
+
+data ArtistProfilePhotoUpdate = ArtistProfilePhotoUpdate
+  { aphuHeroImageUrl :: Text
+  } deriving (Show, Generic)
+instance FromJSON ArtistProfilePhotoUpdate where
+  parseJSON = withObject "ArtistProfilePhotoUpdate" $ \obj -> do
+    case filter (/= AesonKey.fromText "apuHeroImageUrl") (AesonKeyMap.keys obj) of
+      [] -> ArtistProfilePhotoUpdate <$> obj .: "apuHeroImageUrl"
+      _  -> fail "ArtistProfilePhotoUpdate contains unexpected keys"
 
 data ArtistReleaseDTO = ArtistReleaseDTO
   { arArtistId     :: Int64
@@ -157,37 +198,25 @@ data ArtistPromoDayReportDTO = ArtistPromoDayReportDTO
 instance ToJSON ArtistPromoDayReportDTO
 
 data FanProfileDTO = FanProfileDTO
-  { fpArtistId      :: Int64
-  , fpDisplayName   :: Maybe Text
-  , fpAvatarUrl     :: Maybe Text
-  , fpFavoriteGenres :: Maybe Text
-  , fpBio           :: Maybe Text
-  , fpCity          :: Maybe Text
+  { fpArtistId        :: Int64
+  , fpDisplayName     :: Maybe Text
+  , fpAvatarUrl       :: Maybe Text
+  , fpFavoriteGenres  :: Maybe Text
+  , fpFavoriteGenreIds :: [UUID]
+  , fpBio             :: Maybe Text
+  , fpCity            :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON FanProfileDTO
 
 data FanProfileUpdate = FanProfileUpdate
-  { fpuDisplayName   :: Maybe Text
-  , fpuAvatarUrl     :: Maybe Text
-  , fpuFavoriteGenres :: Maybe Text
-  , fpuBio           :: Maybe Text
-  , fpuCity          :: Maybe Text
+  { fpuDisplayName      :: Maybe Text
+  , fpuAvatarUrl        :: Maybe Text
+  , fpuFavoriteGenreIds :: [UUID]
+  , fpuBio              :: Maybe Text
+  , fpuCity             :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON FanProfileUpdate where
   parseJSON = genericParseJSON strictDecodeOptions
-
-data CountryDTO = CountryDTO
-  { countryCode :: Text
-  , countryName :: Text
-  } deriving (Show, Generic)
-instance ToJSON CountryDTO
-instance FromJSON CountryDTO
-
-toCountryDTO :: Entity Country -> CountryDTO
-toCountryDTO (Entity _ Country{..}) = CountryDTO
-  { countryCode = countryCode
-  , countryName = countryName
-  }
 
 data FanFollowDTO = FanFollowDTO
   { ffArtistId      :: Int64
@@ -198,6 +227,23 @@ data FanFollowDTO = FanFollowDTO
   , ffStartedAt     :: Day
   } deriving (Show, Generic)
 instance ToJSON FanFollowDTO
+
+data ArtistFanDTO = ArtistFanDTO
+  { afFanId       :: Int64
+  , afDisplayName :: Text
+  , afAvatarUrl   :: Maybe Text
+  , afFollowedAt  :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON ArtistFanDTO
+
+data ArtistFansResponse = ArtistFansResponse
+  { afrItems    :: [ArtistFanDTO]
+  , afrPage     :: Int
+  , afrPageSize :: Int
+  , afrTotal    :: Int
+  } deriving (Show, Generic)
+instance ToJSON ArtistFansResponse where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
 
 -- Social follows between any parties (used for vCard/NFC exchanges)
 data PartyFollowDTO = PartyFollowDTO
@@ -264,6 +310,157 @@ data CampaignUpsert = CampaignUpsert
 instance FromJSON CampaignUpsert where
   parseJSON = genericParseJSON strictDecodeOptions
 
+data CampaignAutomationStepDTO = CampaignAutomationStepDTO
+  { casPosition             :: Int
+  , casDelayDays            :: Int
+  , casChannel              :: Text
+  , casProviderTemplateName :: Text
+  , casLanguageCode         :: Text
+  , casBody                 :: Text
+  , casCtaPath              :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationStepDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationTemplateDTO = CampaignAutomationTemplateDTO
+  { catKey         :: Text
+  , catName        :: Text
+  , catObjective   :: Text
+  , catAudience    :: Text
+  , catOffer       :: Text
+  , catLandingPath :: Text
+  , catSteps       :: [CampaignAutomationStepDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationTemplateDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationDTO = CampaignAutomationDTO
+  { caaId              :: Int64
+  , caaCampaignId      :: Int64
+  , caaTemplateKey     :: Text
+  , caaName            :: Text
+  , caaObjective       :: Maybe Text
+  , caaStatus          :: Text
+  , caaStartAt         :: UTCTime
+  , caaDailyLimit      :: Int
+  , caaLastRunAt       :: Maybe UTCTime
+  , caaEnrollmentCount :: Int
+  , caaScheduledCount  :: Int
+  , caaSentCount       :: Int
+  , caaConvertedCount  :: Int
+  , caaStoppedCount    :: Int
+  , caaFailedCount     :: Int
+  , caaSteps           :: [CampaignAutomationStepDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationInstall = CampaignAutomationInstall
+  { caiTemplateKey :: Text
+  , caiStartAt     :: Maybe UTCTime
+  , caiDailyLimit  :: Maybe Int
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationInstall where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignAutomationEnroll = CampaignAutomationEnroll
+  { caePartyIds :: [Int64]
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationEnroll where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentRejectedDTO = CampaignEnrollmentRejectedDTO
+  { cerPartyId :: Int64
+  , cerReason  :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignEnrollmentRejectedDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationEnrollResultDTO = CampaignAutomationEnrollResultDTO
+  { carAcceptedPartyIds :: [Int64]
+  , carRejected         :: [CampaignEnrollmentRejectedDTO]
+  } deriving (Show, Generic)
+instance ToJSON CampaignAutomationEnrollResultDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignAutomationStatusUpdate = CampaignAutomationStatusUpdate
+  { cauStatus            :: Text
+  , cauTemplatesApproved :: Maybe Bool
+  } deriving (Show, Generic)
+instance FromJSON CampaignAutomationStatusUpdate where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentStatusUpdate = CampaignEnrollmentStatusUpdate
+  { cesStatus :: Text
+  , cesReason :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON CampaignEnrollmentStatusUpdate where
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
+
+data CampaignEnrollmentDTO = CampaignEnrollmentDTO
+  { cedId               :: Int64
+  , cedPartyId          :: Int64
+  , cedPartyName        :: Text
+  , cedPhoneE164        :: Maybe Text
+  , cedConsentActive    :: Bool
+  , cedStatus           :: Text
+  , cedNextStepPosition :: Int
+  , cedNextRunAt        :: UTCTime
+  , cedLastSentAt       :: Maybe UTCTime
+  , cedStopReason       :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignEnrollmentDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
+data CampaignPreviewDTO = CampaignPreviewDTO
+  { cpdPartyId          :: Int64
+  , cpdPartyName        :: Text
+  , cpdStepPosition     :: Int
+  , cpdProviderTemplateName :: Text
+  , cpdLanguageCode     :: Text
+  , cpdRenderedBody     :: Text
+  , cpdCtaUrl           :: Text
+  } deriving (Show, Generic)
+instance ToJSON CampaignPreviewDTO where
+  toJSON =
+    genericToJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      }
+
 data AdCreativeDTO = AdCreativeDTO
   { adId        :: Int64
   , adCampaignId :: Maybe Int64
@@ -318,7 +515,12 @@ data AdsAssistRequest = AdsAssistRequest
   , aarPartyId    :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON AdsAssistRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "AdsAssistRequest"
+      ["aarAdId", "aarCampaignId", "aarChannel", "aarPartyId"]
+      value
+    genericParseJSON strictDecodeOptions value
 
 data AdsAssistResponse = AdsAssistResponse
   { aasReply         :: Text
@@ -341,7 +543,8 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   , rpuStationName :: Maybe Text
   , rpuStationId   :: Maybe Text
   } deriving (Show, Generic)
-instance FromJSON RadioPresenceUpsert
+instance FromJSON RadioPresenceUpsert where
+  parseJSON = genericParseJSON strictDecodeOptions
 
 data VCardExchangeRequest = VCardExchangeRequest
   { vcerPartyId :: Int64
@@ -359,6 +562,8 @@ data CourseRegistrationDTO = CourseRegistrationDTO
   , crPhoneE164   :: Maybe Text
   , crSource      :: Text
   , crStatus      :: Text
+  , crReceiptCount :: Int
+  , crFollowUpCount :: Int
   , crAdminNotes  :: Maybe Text
   , crHowHeard    :: Maybe Text
   , crUtmSource   :: Maybe Text
@@ -435,6 +640,22 @@ data LogEntryDTO = LogEntryDTO
   } deriving (Show, Generic)
 instance ToJSON LogEntryDTO
 
+data UserActivityDTO = UserActivityDTO
+  { uaId             :: Int64
+  , uaCreatedAt      :: UTCTime
+  , uaActorPartyId   :: Maybe Int64
+  , uaActorName      :: Text
+  , uaActorUsernames :: [Text]
+  , uaActorRoles     :: [Text]
+  , uaEntity         :: Text
+  , uaEntityId       :: Text
+  , uaAction         :: Text
+  , uaMetadata       :: Maybe Value
+  } deriving (Show, Generic)
+
+instance ToJSON UserActivityDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
+
 data PartyCreate = PartyCreate
   { cLegalName        :: Maybe Text
   , cDisplayName      :: Text
@@ -446,7 +667,6 @@ data PartyCreate = PartyCreate
   , cInstagram        :: Maybe Text
   , cEmergencyContact :: Maybe Text
   , cNotes            :: Maybe Text
-  , cRoles            :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 instance FromJSON PartyCreate where
   parseJSON = genericParseJSON strictDecodeOptions
@@ -464,7 +684,40 @@ data PartyUpdate = PartyUpdate
   , uNotes            :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON PartyUpdate where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    update <- genericParseJSON strictDecodeOptions value
+    if partyUpdateHasAnyField update
+      then pure update
+      else fail "PartyUpdate must include at least one field"
+
+partyUpdateFieldNames :: [Text]
+partyUpdateFieldNames =
+  [ "uLegalName"
+  , "uDisplayName"
+  , "uIsOrg"
+  , "uTaxId"
+  , "uPrimaryEmail"
+  , "uPrimaryPhone"
+  , "uWhatsapp"
+  , "uInstagram"
+  , "uEmergencyContact"
+  , "uNotes"
+  ]
+
+partyUpdateHasAnyField :: PartyUpdate -> Bool
+partyUpdateHasAnyField PartyUpdate{..} =
+  or
+    [ isJust uLegalName
+    , isJust uDisplayName
+    , isJust uIsOrg
+    , isJust uTaxId
+    , isJust uPrimaryEmail
+    , isJust uPrimaryPhone
+    , isJust uWhatsapp
+    , isJust uInstagram
+    , isJust uEmergencyContact
+    , isJust uNotes
+    ]
 
 toPartyDTO :: Bool -> Entity Party -> PartyDTO
 toPartyDTO = toPartyDTOWithBand Nothing
@@ -508,6 +761,7 @@ data BookingDTO = BookingDTO
   , partyId     :: Maybe Int64
   , engineerPartyId :: Maybe Int64
   , engineerName :: Maybe Text
+  , serviceOfferingId :: Maybe UUID
   , serviceType :: Maybe Text
   , serviceOrderId    :: Maybe Int64
   , serviceOrderTitle :: Maybe Text
@@ -516,6 +770,7 @@ data BookingDTO = BookingDTO
   , resources   :: [BookingResourceDTO]
   , courseSlug        :: Maybe Text
   , coursePrice       :: Maybe Double
+  , courseCurrency    :: Maybe Text
   , courseCapacity    :: Maybe Int
   , courseRemaining   :: Maybe Int
   , courseLocation    :: Maybe Text
@@ -620,10 +875,27 @@ data GenerateSessionInvoiceReq = GenerateSessionInvoiceReq
   , gsiCertificatePassword :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GenerateSessionInvoiceReq where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = dtoCamelDrop 3
-    , rejectUnknownFields = True
-    }
+  parseJSON raw = do
+    withObject "GenerateSessionInvoiceReq" rejectAmbiguousSessionInvoiceFallbacks raw
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      } raw
+    where
+      rejectAmbiguousSessionInvoiceFallbacks obj = do
+        rejectNullField
+          "customerId"
+          "customerId must be omitted instead of null to use the session client fallback"
+          obj
+        rejectNullField
+          "issueSri"
+          "issueSri must be omitted or set to true/false"
+          obj
+
+      rejectNullField fieldName message obj =
+        case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+          Just Null -> fail message
+          _ -> pure ()
 
 data SriIssueBuyerDTO = SriIssueBuyerDTO
   { sibRuc       :: Text
@@ -634,7 +906,11 @@ data SriIssueBuyerDTO = SriIssueBuyerDTO
 instance ToJSON SriIssueBuyerDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
 instance FromJSON SriIssueBuyerDTO where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
 
 data SriIssueResultDTO = SriIssueResultDTO
   { sirOk                  :: Bool
@@ -649,7 +925,11 @@ data SriIssueResultDTO = SriIssueResultDTO
 instance ToJSON SriIssueResultDTO where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3, omitNothingFields = True }
 instance FromJSON SriIssueResultDTO where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+  parseJSON =
+    genericParseJSON defaultOptions
+      { fieldLabelModifier = dtoCamelDrop 3
+      , rejectUnknownFields = True
+      }
 
 dtoCamelDrop :: Int -> String -> String
 dtoCamelDrop n xs = case drop n xs of
@@ -704,6 +984,9 @@ instance FromJSON LoginRequest where
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
+  , marketingOptIn :: Maybe Bool
+  , termsAccepted :: Maybe Bool
+  , termsVersion :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GoogleLoginRequest where
   parseJSON = genericParseJSON strictDecodeOptions
@@ -716,17 +999,21 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
-  , internshipStartAt :: Maybe Day
-  , internshipEndAt   :: Maybe Day
-  , internshipRequiredHours :: Maybe Int
-  , internshipSkills  :: Maybe Text
-  , internshipAreas   :: Maybe Text
-  , roles           :: Maybe [RoleEnum]
+  , termsAccepted   :: Maybe Bool
+  , termsVersion    :: Maybe Text
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON SignupRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "SignupRequest"
+      [ "googleIdToken"
+      , "fanArtistIds"
+      , "claimArtistId"
+      ]
+      value
+    genericParseJSON strictDecodeOptions value
 
 data ChangePasswordRequest = ChangePasswordRequest
   { username        :: Maybe Text
@@ -734,7 +1021,9 @@ data ChangePasswordRequest = ChangePasswordRequest
   , newPassword     :: Text
   } deriving (Show, Generic)
 instance FromJSON ChangePasswordRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields "ChangePasswordRequest" ["username"] value
+    genericParseJSON strictDecodeOptions value
 
 data PasswordResetRequest = PasswordResetRequest
   { email :: Text
@@ -754,6 +1043,7 @@ data LoginResponse = LoginResponse
   , partyId :: Int64
   , roles   :: [RoleEnum]
   , modules :: [Text]
+  , accountCreated :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON LoginResponse
 
@@ -763,7 +1053,431 @@ data SessionResponse = SessionResponse
   , sessionPartyId :: Int64
   , sessionRoles :: [RoleEnum]
   , sessionModules :: [Text]
+  , sessionFeatureFlags :: [Text]
+  , sessionPreferences :: LocalePreferencesDTO
   } deriving (Show, Generic)
 
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
+
+data FeatureAccessRequestCreate = FeatureAccessRequestCreate
+  { featureId     :: Text
+  , action        :: Text
+  , justification :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestDecision = FeatureAccessRequestDecision
+  { decision :: Text
+  , notes    :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestDecision where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestCancel = FeatureAccessRequestCancel
+  { cancellationNote :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON FeatureAccessRequestCancel where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FeatureAccessRequestHistoryDTO = FeatureAccessRequestHistoryDTO
+  { farhId          :: Int64
+  , farhTransition  :: Text
+  , farhFromStatus  :: Maybe Text
+  , farhToStatus    :: Text
+  , farhNote        :: Maybe Text
+  , farhCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON FeatureAccessRequestHistoryDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 4 }
+
+data FeatureAccessRequestDTO = FeatureAccessRequestDTO
+  { farId               :: Int64
+  , farRequesterPartyId :: Int64
+  , farFeatureId        :: Text
+  , farAction           :: Text
+  , farRoleContext      :: [Text]
+  , farModuleContext    :: [Text]
+  , farStatus           :: Text
+  , farReviewerGroup    :: Text
+  , farJustification    :: Maybe Text
+  , farReviewerNotes    :: Maybe Text
+  , farRequestedAt      :: UTCTime
+  , farUpdatedAt        :: UTCTime
+  , farDecidedAt        :: Maybe UTCTime
+  , farCancelledAt      :: Maybe UTCTime
+  , farExpiresAt        :: Maybe UTCTime
+  , farHistory          :: [FeatureAccessRequestHistoryDTO]
+  } deriving (Show, Generic)
+
+instance ToJSON FeatureAccessRequestDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 3 }
+
+data NavigationPreferenceUpdate = NavigationPreferenceUpdate
+  { npuFavorite :: Bool
+  , npuPinned   :: Bool
+  , npuPinOrder :: Maybe Int
+  } deriving (Show, Generic)
+
+instance FromJSON NavigationPreferenceUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data NavigationPreferenceDTO = NavigationPreferenceDTO
+  { npFeatureId     :: Text
+  , npFavorite      :: Bool
+  , npPinned        :: Bool
+  , npPinOrder      :: Maybe Int
+  , npLastVisitedAt :: Maybe UTCTime
+  , npUseCount      :: Int
+  , npUpdatedAt     :: UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON NavigationPreferenceDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
+
+data LocalePreferencesDTO = LocalePreferencesDTO
+  { lpLocaleId :: UUID
+  , lpLocale :: Text
+  , lpCurrencyId :: UUID
+  , lpCurrency :: Text
+  , lpTimezone :: Text
+  , lpCountryId :: Maybe UUID
+  , lpCountryCode :: Maybe Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON LocalePreferencesDTO where
+  toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 2 }
+
+data LocalePreferencesUpdate = LocalePreferencesUpdate
+  { lpuLocaleId :: UUID
+  , lpuCurrencyId :: UUID
+  , lpuTimezone :: Text
+  , lpuCountryId :: Maybe UUID
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON LocalePreferencesUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+    { fieldLabelModifier = \field ->
+        case drop 3 field of
+          [] -> field
+          first : rest -> toLower first : rest
+    }
+
+data CurrencyConversionAuditCreate = CurrencyConversionAuditCreate
+  { ccaSourceCurrency :: Text
+  , ccaTargetCurrency :: Text
+  , ccaSourceMinorUnits :: Int64
+  , ccaTargetMinorUnits :: Int64
+  , ccaExchangeRate :: Double
+  , ccaRateSource :: Text
+  } deriving (Eq, Show, Generic)
+
+instance FromJSON CurrencyConversionAuditCreate where
+  parseJSON = genericParseJSON strictDecodeOptions
+    { fieldLabelModifier = dtoCamelDrop 3 }
+
+-- ============================================================================
+-- FAN CLUB DTOs
+-- ============================================================================
+
+data FanClubDTO = FanClubDTO
+  { fcId          :: Int64
+  , fcArtistId    :: Int64
+  , fcName        :: Text
+  , fcDescription :: Maybe Text
+  , fcOfficers    :: [FanClubOfficerDTO]
+  , fcFollowerCount :: Int
+  , fcArtistImageUrl :: Maybe Text
+  } deriving (Show, Generic)
+instance ToJSON FanClubDTO
+
+data FanClubOfficerDTO = FanClubOfficerDTO
+  { fcoPartyId    :: Int64
+  , fcoFanName    :: Text
+  , fcoAvatarUrl  :: Maybe Text
+  , fcoRole       :: Text
+  , fcoElectedAt  :: Maybe UTCTime
+  , fcoTermEndsAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubOfficerDTO
+
+data FanClubPostDTO = FanClubPostDTO
+  { fcpId          :: Int64
+  , fcpParentId    :: Maybe Int64
+  , fcpTitle       :: Maybe Text
+  , fcpContent     :: Text
+  , fcpMediaUrls   :: [Text]
+  , fcpAuthorId    :: Int64
+  , fcpAuthorName  :: Text
+  , fcpAvatarUrl   :: Maybe Text
+  , fcpIsPinned    :: Bool
+  , fcpIsHidden    :: Bool
+  , fcpReplies     :: Int
+  , fcpReactions   :: ReactionSummaryDTO
+  , fcpCreatedAt   :: UTCTime
+  , fcpUpdatedAt   :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubPostDTO
+
+data FanClubEventDTO = FanClubEventDTO
+  { fceId            :: Int64
+  , fceTitle         :: Text
+  , fceDescription   :: Maybe Text
+  , fceStartsAt      :: Maybe UTCTime
+  , fceEndsAt        :: Maybe UTCTime
+  , fceLocation      :: Maybe Text
+  , fceIsArtistConcert :: Bool
+  , fceCreatedBy     :: Maybe Int64
+  } deriving (Show, Generic)
+instance ToJSON FanClubEventDTO
+
+data FanClubElectionDTO = FanClubElectionDTO
+  { fceElectionId     :: Int64
+  , fceYear           :: Int
+  , fceStatus         :: Text
+  , fceCandidacyStartsAt :: Maybe UTCTime
+  , fceCandidacyEndsAt   :: Maybe UTCTime
+  , fceVotingStartsAt    :: Maybe UTCTime
+  , fceVotingEndsAt      :: Maybe UTCTime
+  , fceMyCandidacies   :: [FanClubCandidacyDTO]
+  , fceMyVotes         :: [FanClubVoteDTO]
+  } deriving (Show, Generic)
+instance ToJSON FanClubElectionDTO
+
+data FanClubCandidacyDTO = FanClubCandidacyDTO
+  { fccCandidacyId :: Int64
+  , fccFanId       :: Int64
+  , fccFanName     :: Text
+  , fccAvatarUrl   :: Maybe Text
+  , fccRole        :: Text
+  , fccManifesto   :: Maybe Text
+  , fccVoteCount   :: Int
+  } deriving (Show, Generic)
+instance ToJSON FanClubCandidacyDTO
+
+data FanClubVoteDTO = FanClubVoteDTO
+  { fcvCandidacyId :: Int64
+  , fcvRole        :: Text
+  } deriving (Show, Generic)
+instance ToJSON FanClubVoteDTO
+
+data FanClubMemberProfileDTO = FanClubMemberProfileDTO
+  { fcmpId          :: Int64
+  , fcmpPartyId     :: Int64
+  , fcmpClubId      :: Int64
+  , fcmpHandle      :: Maybe Text
+  , fcmpBio         :: Maybe Text
+  , fcmpAvatarUrl   :: Maybe Text
+  , fcmpDisplayName :: Text
+  , fcmpJoinedAt    :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemberProfileDTO
+
+data FanClubMemoryDTO = FanClubMemoryDTO
+  { fcmId          :: Int64
+  , fcmMemberProfileId :: Int64
+  , fcmMemberName  :: Text
+  , fcmMemberAvatarUrl :: Maybe Text
+  , fcmTitle       :: Text
+  , fcmDescription :: Maybe Text
+  , fcmMediaUrls   :: [Text]
+  , fcmIsHidden    :: Bool
+  , fcmIsDeleted   :: Bool
+  , fcmReactions   :: ReactionSummaryDTO
+  , fcmCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemoryDTO
+
+data FanClubMemoryReportDTO = FanClubMemoryReportDTO
+  { fcmrId       :: Int64
+  , fcmrReporterId :: Int64
+  , fcmrMemoryId :: Int64
+  , fcmrReason   :: Text
+  , fcmrCreatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubMemoryReportDTO
+
+data FanClubFeedItemDTO = FanClubFeedItemDTO
+  { fcfId          :: Int64
+  , fcfKind        :: Text
+  , fcfTitle       :: Maybe Text
+  , fcfContent     :: Text
+  , fcfAuthorId    :: Int64
+  , fcfAuthorName  :: Text
+  , fcfAvatarUrl   :: Maybe Text
+  , fcfMediaUrls   :: [Text]
+  , fcfIsPinned    :: Bool
+  , fcfIsOfficer   :: Bool
+  , fcfIsHidden    :: Bool
+  , fcfReactions   :: ReactionSummaryDTO
+  , fcfCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubFeedItemDTO
+
+data FanClubCreateMemoryReq = FanClubCreateMemoryReq
+  { fcmReqTitle       :: Text
+  , fcmReqDescription :: Maybe Text
+  , fcmReqMediaUrls   :: [Text]
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateMemoryReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubMemoryReportReq = FanClubMemoryReportReq
+  { fcmrReqReason :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubMemoryReportReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubMemberProfileUpdate = FanClubMemberProfileUpdate
+  { fcmpuHandle    :: Maybe Text
+  , fcmpuBio       :: Maybe Text
+  , fcmpuAvatarUrl :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubMemberProfileUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreatePostReq = FanClubCreatePostReq
+  { fcpReqTitle    :: Maybe Text
+  , fcpReqContent  :: Text
+  , fcpReqParentId :: Maybe Int64
+  , fcpReqMediaUrls :: [Text]
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreatePostReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateEventReq = FanClubCreateEventReq
+  { fcevTitle       :: Text
+  , fcevDescription :: Maybe Text
+  , fcevStartsAt    :: Maybe UTCTime
+  , fcevEndsAt      :: Maybe UTCTime
+  , fcevLocation    :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateEventReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateElectionReq = FanClubCreateElectionReq
+  { fcelYear             :: Int
+  , fcelCandidacyStartsAt :: Maybe UTCTime
+  , fcelCandidacyEndsAt   :: Maybe UTCTime
+  , fcelVotingStartsAt    :: Maybe UTCTime
+  , fcelVotingEndsAt      :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateElectionReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubCreateCandidacyReq = FanClubCreateCandidacyReq
+  { fccrRole      :: Text
+  , fccrManifesto :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubCreateCandidacyReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubVoteReq = FanClubVoteReq
+  { fcvCandidacyIds :: [Int64]
+  } deriving (Show, Generic)
+instance FromJSON FanClubVoteReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxMessageDTO = FanClubInboxMessageDTO
+  { fcimId           :: Int64
+  , fcimFanId        :: Int64
+  , fcimFanName      :: Text
+  , fcimFanAvatarUrl :: Maybe Text
+  , fcimSubject      :: Maybe Text
+  , fcimBody         :: Text
+  , fcimStatus       :: Text
+  , fcimOfficerId    :: Maybe Int64
+  , fcimOfficerName  :: Maybe Text
+  , fcimReplyBody    :: Maybe Text
+  , fcimCreatedAt    :: UTCTime
+  , fcimUpdatedAt    :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON FanClubInboxMessageDTO
+
+data FanClubInboxSendReq = FanClubInboxSendReq
+  { fcisReqSubject :: Maybe Text
+  , fcisReqBody    :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxSendReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxReplyReq = FanClubInboxReplyReq
+  { fcirReqBody :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxReplyReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data FanClubInboxStatusReq = FanClubInboxStatusReq
+  { fcistReqStatus :: Text
+  } deriving (Show, Generic)
+instance FromJSON FanClubInboxStatusReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+-- ============================================================================
+-- Content Engagement DTOs
+-- ============================================================================
+
+data ReactionSummaryDTO = ReactionSummaryDTO
+  { rsItems            :: [ReactionSummaryItemDTO]
+  , rsTotal            :: Int
+  , rsMyReactionTypeId :: Maybe UUID
+  } deriving (Show, Generic)
+instance ToJSON ReactionSummaryDTO
+
+data ReactionSummaryItemDTO = ReactionSummaryItemDTO
+  { rsiReactionTypeId :: UUID
+  , rsiCode           :: Text
+  , rsiNameEs         :: Text
+  , rsiNameEn         :: Text
+  , rsiDisplaySymbol  :: Text
+  , rsiCount          :: Int
+  } deriving (Show, Generic)
+instance ToJSON ReactionSummaryItemDTO
+
+data ContentReactionReq = ContentReactionReq
+  { crrReactionTypeId :: UUID
+  } deriving (Show, Generic)
+instance FromJSON ContentReactionReq where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data NotificationDTO = NotificationDTO
+  { nId          :: Int64
+  , nType        :: Text
+  , nTitle       :: Text
+  , nBody        :: Text
+  , nTargetType  :: Maybe Text
+  , nTargetId    :: Maybe Int64
+  , nIsRead      :: Bool
+  , nCreatedAt   :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON NotificationDTO
+
+data NotificationCountDTO = NotificationCountDTO
+  { ncUnread :: Int
+  } deriving (Show, Generic)
+instance ToJSON NotificationCountDTO
+
+data LeaderboardEntryDTO = LeaderboardEntryDTO
+  { lbPartyId        :: Int64
+  , lbDisplayName    :: Text
+  , lbAvatarUrl      :: Maybe Text
+  , lbTotalReactions :: Int
+  , lbBadges         :: [CreatorBadgeDTO]
+  , lbRank           :: Int
+  } deriving (Show, Generic)
+instance ToJSON LeaderboardEntryDTO
+
+data CreatorBadgeDTO = CreatorBadgeDTO
+  { cbBadgeTypeId :: UUID
+  , cbCode        :: Text
+  , cbNameEs      :: Text
+  , cbNameEn      :: Text
+  , cbAwardedAt   :: UTCTime
+  , cbExpiresAt   :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance ToJSON CreatorBadgeDTO

@@ -48,7 +48,6 @@ const renderPage = async (container: HTMLElement, initialEntry = '/configuracion
     root?.render(
       <MemoryRouter
         initialEntries={[initialEntry]}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <UxOptionsPage />
@@ -199,8 +198,53 @@ describe('UxOptionsPage', () => {
         expect(container.textContent).toContain('No hay opciones aún para esta categoría.');
         expect(container.textContent).not.toContain('Filtrar opciones');
         expect(container.textContent).not.toContain('0 totales · 0 activas');
+        expect(container.textContent).not.toContain('Incluir inactivas');
+        expect(container.textContent).not.toContain('Recargar');
+        expect(getButtonsByText(container, 'Revisar inactivas')).toHaveLength(1);
         expect(getButtonsByText(container, 'Agregar opción')).toHaveLength(0);
         expect(getButtonsByText(container, 'Agregar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps first-run list controls hidden while still offering one inactive-options check', async () => {
+    listDropdownsMock.mockImplementation((category, includeInactive = false) => Promise.resolve(
+      includeInactive
+        ? [
+            buildOption({
+              optionId: `${category}-inactive`,
+              value: 'archived',
+              label: 'Archivada',
+              active: false,
+            }),
+          ]
+        : [],
+    ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(listDropdownsMock).toHaveBeenCalledWith('asset-category', false);
+        expect(container.textContent).toContain('Primera opción');
+        expect(container.textContent).toContain('No hay opciones aún para esta categoría.');
+        expect(container.textContent).not.toContain('Incluir inactivas');
+        expect(container.textContent).not.toContain('Recargar');
+        expect(getButtonsByText(container, 'Revisar inactivas')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Revisar inactivas')[0]!);
+
+      await waitForExpectation(() => {
+        expect(listDropdownsMock).toHaveBeenLastCalledWith('asset-category', true);
+        expect(container.textContent).toContain('Incluir inactivas');
+        expect(container.textContent).toContain('Recargar');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Revisar inactivas')).toHaveLength(0);
       });
     } finally {
       await cleanup();
@@ -258,7 +302,7 @@ describe('UxOptionsPage', () => {
       await clickButton(getButtonsByText(container, 'Revertir')[0]!);
 
       await waitForExpectation(() => {
-        expect((labelInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('Rock');
+        expect((labelInput).value).toBe('Rock');
         expect(getButtonsByText(container, 'Guardar')).toHaveLength(0);
         expect(getButtonsByText(container, 'Revertir')).toHaveLength(0);
       });
@@ -306,7 +350,7 @@ describe('UxOptionsPage', () => {
       await clickButton(getButtonByAriaLabel(container, 'Limpiar filtro')!);
 
       await waitForExpectation(() => {
-        expect((filterInput as HTMLInputElement | HTMLTextAreaElement).value).toBe('');
+        expect((filterInput).value).toBe('');
         expect(getButtonByAriaLabel(container, 'Limpiar filtro')).toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });

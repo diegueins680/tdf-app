@@ -194,9 +194,10 @@ cd tdf-hq && stack test
 
 ```bash
 npm run quality
+npm run verify:formal
 ```
 
-> Runs ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. Configure Stack/DB access first if you run it on a fresh machine.
+> `npm run quality` runs the formal verification gate, ESLint + TypeScript checks for UI/mobile, builds the Haskell executable (`stack build tdf-hq:exe:tdf-hq-exe`), and then runs `stack test` so regressions across TypeScript + Haskell are caught locally before pushing. `npm run verify:formal` runs the lightweight formal gate directly: model checks plus the formal-methods audit. Configure Stack/DB access first if you run full quality on a fresh machine.
 
 ### Continuous Improvement Loop
 
@@ -221,6 +222,8 @@ npm run loop:enable-ci-polling
 npm run loop:disable-ci-polling
 npm run loop:idea
 npm run audit:ui:static
+npm run audit:formal
+npm run verify:formal
 npm run verify:auto-loop
 npm run loop:improve -- --config scripts/continuous-improvement-loop.example.json
 npm run loop:start
@@ -263,11 +266,10 @@ cd tdf-hq && stack build --copy-bins
 
 | Target | Root Directory | Install Command | Build Command | Output | Notes |
 | --- | --- | --- | --- | --- | --- |
-| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil` (optional `VITE_API_DEMO_TOKEN`). |
+| **Cloudflare Pages** (`tdf-app.pages.dev`) | `.` | `npm install` | `npm run build:ui` | `tdf-hq-ui/dist` | Add env vars `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://<your-backend-domain>`, `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables. |
 | **Vercel** | `tdf-hq-ui` | `npm install` | `npm run build` | `dist` | Framework preset: Vite. Same env vars as above. |
-| **Koyeb (API)** | `tdf-hq` Docker | `stack build` via Dockerfile | – | – | Configure `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`) in the service settings. |
 
-> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with the Koyeb app URL so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
+> Tip: when deploying the UI, match the backend URL (`VITE_API_BASE`) with your API domain so CORS succeeds. For Cloudflare, the repo root stays `.` and the build script (`npm run build:ui`) emits the UI in `tdf-hq-ui/dist`.
 
 ## 🔐 Environment Variables
 
@@ -280,7 +282,11 @@ DB_PASS=your_password
 DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
-SEED_DB=true
+SEED_DB=false
+# Optional, local-only demo credential seeding. Supply through a secret store;
+# never commit values or configure them in hosted/production environments.
+TDF_SEED_DEMO_PASSWORD=
+TDF_SEED_TOKEN_PREFIX=
 HQ_APP_URL=http://localhost:5173
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -376,7 +382,7 @@ All sensitive files are now in `.gitignore`. Review `archives/` directory for an
 ### Specialized Documentation
 - **[UI_VISUAL_GUIDE.md](UI_VISUAL_GUIDE.md)** - UI components and design specs
 - **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing procedures
-- **[ARCHITECTURE_DIAGRAM.md](ARCHITECTURE_DIAGRAM.md)** - System architecture and data flows
+- **[Architecture docs](docs/)** - System architecture and data flows
 - **[FEATURES.md](FEATURES.md)** - Complete feature catalog
 - **[SECURITY_NOTICE.md](SECURITY_NOTICE.md)** - Security guidelines
 

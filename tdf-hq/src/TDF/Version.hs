@@ -8,7 +8,13 @@ module TDF.Version
   ) where
 
 import           Data.Aeson                   (ToJSON(..), object, (.=))
-import           Data.Char                    (isControl, isHexDigit, isSpace)
+import           Data.Char                    ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+                                                , generalCategory
+                                                , isControl
+                                                , isDigit
+                                                , isHexDigit
+                                                , isSpace
+                                                )
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Version                 (showVersion)
@@ -64,15 +70,45 @@ resolveCommit = do
 canonCommit :: Text -> Maybe Text
 canonCommit txt = do
   value <- canonRuntimeMetadata txt
-  if T.any isSpace value
-      || T.length value < 7
-      || T.length value > 64
-      || T.any (not . isHexDigit) value
+  let normalized = T.toLower value
+  if T.any isSpace normalized
+      || T.length normalized < 7
+      || T.length normalized > 64
+      || T.any (not . isHexDigit) normalized
     then Nothing
-    else Just value
+    else Just normalized
 
 canonBuildTime :: Text -> Maybe Text
-canonBuildTime = canonRuntimeMetadata
+canonBuildTime txt = do
+  value <- canonRuntimeMetadata txt
+  if isCanonicalBuildTime value
+    then Just value
+    else Nothing
+
+isCanonicalBuildTime :: Text -> Bool
+isCanonicalBuildTime value =
+  T.length value == 20
+    && T.index value 4 == '-'
+    && T.index value 7 == '-'
+    && T.index value 10 == 'T'
+    && T.index value 13 == ':'
+    && T.index value 16 == ':'
+    && T.index value 19 == 'Z'
+    && T.all isDigit
+      ( T.take 4 value
+        <> T.take 2 (T.drop 5 value)
+        <> T.take 2 (T.drop 8 value)
+        <> T.take 2 (T.drop 11 value)
+        <> T.take 2 (T.drop 14 value)
+        <> T.take 2 (T.drop 17 value)
+      )
+    && case parseCanonicalBuildTime value of
+         Just _  -> True
+         Nothing -> False
+
+parseCanonicalBuildTime :: Text -> Maybe Time.UTCTime
+parseCanonicalBuildTime =
+  Time.parseTimeM True Time.defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" . T.unpack
 
 canonRuntimeMetadata :: Text -> Maybe Text
 canonRuntimeMetadata txt =
@@ -80,9 +116,14 @@ canonRuntimeMetadata txt =
       upper   = T.toUpper trimmed
   in if T.null trimmed
         || upper `elem` runtimeMetadataSentinels
-        || T.any isControl trimmed
+        || T.any invalidRuntimeMetadataChar trimmed
        then Nothing
        else Just trimmed
+
+invalidRuntimeMetadataChar :: Char -> Bool
+invalidRuntimeMetadataChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 runtimeMetadataSentinels :: [Text]
 runtimeMetadataSentinels =
@@ -122,11 +163,6 @@ commitEnvVars =
   , "RENDER_GIT_COMMIT"
   , "RENDER_GIT_COMMIT_SHA"
   , "VERCEL_GIT_COMMIT_SHA"
-  , "KOYEB_GIT_SHA"
-  , "KOYEB_GIT_COMMIT"
-  , "KOYEB_GIT_COMMIT_SHA"
-  , "KOYEB_DEPLOYMENT_GIT_SHA"
-  , "KOYEB_DEPLOYMENT_GIT_COMMIT"
   , "FLY_GIT_SHA"
   ]
 

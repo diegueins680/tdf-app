@@ -1,0 +1,352 @@
+- generic [ref=f3e9]:
+  - generic [ref=f3e12]:
+    - link [ref=f3e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f3e22]
+    - generic [ref=f3e25]:
+      - link [ref=f3e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f3e35]
+      - link [ref=f3e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f3e45]
+      - link [ref=f3e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f3e57]
+      - link [ref=f3e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f3e67]
+      - link [ref=f3e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f3e222]
+      - link [ref=f3e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f3e90]
+      - link [ref=f3e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f3e100]
+      - link [ref=f3e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f3e112]:
+          - img "tdf.records.label's profile picture" [ref=f3e113]
+    - generic [ref=f3e114]:
+      - link [ref=f3e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f3e122]
+      - link [ref=f3e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f3e130]
+  - main [ref=f3e134]:
+    - generic [ref=f3e228]:
+      - navigation "Thread list" [ref=f3e229]:
+        - generic [ref=f3e230]:
+          - generic [ref=f3e231]:
+            - button [ref=f3e232] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f3e234]
+              - img "Down chevron icon" [ref=f3e237]
+            - button [ref=f3e241] [cursor=pointer]:
+              - img "New message" [ref=f3e243]
+          - tablist [ref=f3e248]:
+            - tab "Primary" [selected] [ref=f3e249] [cursor=pointer]
+            - tab "General" [ref=f3e252] [cursor=pointer]
+            - tab "From ads" [ref=f3e255] [cursor=pointer]
+            - tab "Requests" [ref=f3e259] [cursor=pointer]
+          - generic [ref=f3e265]:
+            - img "Search" [ref=f3e267]
+            - textbox "Search" [ref=f3e270]
+          - generic [ref=f3e271]:
+            - generic [ref=f3e273]:
+              - list [ref=f3e275]:
+                - listitem [ref=f3e276]
+                - listitem [ref=f3e277]:
+                  - button "Friday feeling... Your note" [ref=f3e279] [cursor=pointer]:
+                    - generic [ref=f3e280]:
+                      - generic [ref=f3e281]: Friday feeling...
+                      - generic [ref=f3e287]:
+                        - link [ref=f3e289]
+                        - generic [ref=f3e290]: Your note
+                - listitem [ref=f3e292]:
+                  - button "Note unavailable. Use the latest version of the Instagram app to see this note. _seereendipia_'s profile picture Julieta 💫" [ref=f3e295] [cursor=pointer]:
+                    - generic [ref=f3e296]:
+                      - generic [ref=f3e297]: Note unavailable. Use the latest version of the Instagram app to see this note.
+                      - generic [ref=f3e304]:
+                        - link [ref=f3e306]:
+                          - img "_seereendipia_'s profile picture" [ref=f3e307]
+                        - generic [ref=f3e308]: Julieta 💫
+                - listitem [ref=f3e311]:
+                  - button "No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥 strange_soul.col's profile picture Strange Soul Dj" [ref=f3e314] [cursor=pointer]:
+                    - generic [ref=f3e315]:
+                      - generic [ref=f3e316]: No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥
+                      - generic [ref=f3e323]:
+                        - link [ref=f3e325]:
+                          - img "strange_soul.col's profile picture" [ref=f3e326]
+                        - generic [ref=f3e327]: Strange Soul Dj
+                - listitem [ref=f3e330]:
+                  - button "Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa. fede.idrovo's profile picture Fede Ib" [ref=f3e333] [cursor=pointer]:
+                    - generic [ref=f3e334]:
+                      - generic [ref=f3e335]: Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa.
+                      - generic [ref=f3e342]:
+                        - link [ref=f3e344]:
+                          - img "fede.idrovo's profile picture" [ref=f3e345]
+                        - generic [ref=f3e346]: Fede Ib
+                - listitem [ref=f3e349]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Smile Groundation, Apple Gabriel, Don Carlos rakelovsky's profile picture Rakelovsky" [ref=f3e352] [cursor=pointer]:
+                    - generic [ref=f3e353]:
+                      - generic [ref=f3e359]:
+                        - generic [ref=f3e360]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f3e362]
+                          - generic [ref=f3e366]: Smile
+                        - generic [ref=f3e367]: Groundation, Apple Gabriel, Don Carlos
+                      - generic [ref=f3e368]:
+                        - link [ref=f3e370]:
+                          - img "rakelovsky's profile picture" [ref=f3e371]
+                        - generic [ref=f3e372]: Rakelovsky
+                - listitem [ref=f3e375]:
+                  - button "nunca confiarle a alguien más que gestione el viaje dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=f3e378] [cursor=pointer]:
+                    - generic [ref=f3e379]:
+                      - generic [ref=f3e380]: nunca confiarle a alguien más que gestione el viaje
+                      - generic [ref=f3e387]:
+                        - link [ref=f3e389]:
+                          - img "dimeabiluuu____'s profile picture" [ref=f3e390]
+                        - generic [ref=f3e391]: ✹ emilia ✹
+                - listitem [ref=f3e394]:
+                  - button "Si saben de una batalla de farmeo de aura, me avisan 🤑 isaac_erazo20's profile picture Isaac André" [ref=f3e397] [cursor=pointer]:
+                    - generic [ref=f3e398]:
+                      - generic [ref=f3e399]: Si saben de una batalla de farmeo de aura, me avisan 🤑
+                      - generic [ref=f3e406]:
+                        - link [ref=f3e408]:
+                          - img "isaac_erazo20's profile picture" [ref=f3e409]
+                        - generic [ref=f3e410]: Isaac André
+                - listitem [ref=f3e413]:
+                  - button "FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f3e416] [cursor=pointer]:
+                    - generic [ref=f3e417]:
+                      - generic [ref=f3e418]: FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️
+                      - generic [ref=f3e425]:
+                        - link [ref=f3e427]:
+                          - img "anajusegovia's profile picture" [ref=f3e428]
+                        - generic [ref=f3e429]: Ana Julia/ DJ JU🫧
+                - listitem [ref=f3e432]:
+                  - button "domo.pululahua's profile picture EL DOMO Pululahua" [ref=f3e435] [cursor=pointer]:
+                    - generic [ref=f3e442]:
+                      - link [ref=f3e444]:
+                        - img "domo.pululahua's profile picture" [ref=f3e445]
+                      - generic [ref=f3e446]: EL DOMO Pululahua
+              - button "Next" [ref=f3e449] [cursor=pointer]
+            - generic [ref=f3e454]:
+              - 'button "user-profile-picture Edmundo You: Sí, no hay problema 6 hours ago" [ref=f3e458] [cursor=pointer]':
+                - generic [ref=f3e460]:
+                  - img "user-profile-picture" [ref=f3e464]
+                  - generic [ref=f3e467]:
+                    - generic [ref=f3e468]: Edmundo
+                    - generic [ref=f3e474]:
+                      - generic [ref=f3e475]: "You: Sí, no hay problema"
+                      - generic [ref=f3e477]:
+                        - generic [ref=f3e478]: ·
+                        - generic "6 hours ago" [ref=f3e483]: 6h
+              - button "user-profile-picture Oldboy Liked a message 11 hours ago" [ref=f3e487] [cursor=pointer]:
+                - generic [ref=f3e489]:
+                  - img "user-profile-picture" [ref=f3e493]
+                  - generic [ref=f3e496]:
+                    - generic [ref=f3e497]: Oldboy
+                    - generic [ref=f3e503]:
+                      - generic [ref=f3e504]: Liked a message
+                      - generic [ref=f3e506]:
+                        - generic [ref=f3e507]: ·
+                        - generic "11 hours ago" [ref=f3e512]: 11h
+              - button "user-profile-picture EL DOMO Pululahua EL sent an attachment. 22 hours ago" [ref=f3e516] [cursor=pointer]:
+                - generic [ref=f3e518]:
+                  - img "user-profile-picture" [ref=f3e522]
+                  - generic [ref=f3e525]:
+                    - generic [ref=f3e526]: EL DOMO Pululahua
+                    - generic [ref=f3e532]:
+                      - generic [ref=f3e533]: EL sent an attachment.
+                      - generic [ref=f3e535]:
+                        - generic [ref=f3e536]: ·
+                        - generic "22 hours ago" [ref=f3e541]: 22h
+              - 'button "user-profile-picture Fabro Alomìa Torres You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso. 22 hours ago" [ref=f3e545] [cursor=pointer]':
+                - generic [ref=f3e547]:
+                  - img "user-profile-picture" [ref=f3e551]
+                  - generic [ref=f3e554]:
+                    - generic [ref=f3e555]: Fabro Alomìa Torres
+                    - generic [ref=f3e561]:
+                      - generic [ref=f3e562]: "You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso."
+                      - generic [ref=f3e564]:
+                        - generic [ref=f3e565]: ·
+                        - generic "22 hours ago" [ref=f3e570]: 22h
+              - button "user-profile-picture Carlos Pabón Recalde Carlos sent an attachment. 22 hours ago" [ref=f3e574] [cursor=pointer]:
+                - generic [ref=f3e576]:
+                  - img "user-profile-picture" [ref=f3e580]
+                  - generic [ref=f3e583]:
+                    - generic [ref=f3e584]: Carlos Pabón Recalde
+                    - generic [ref=f3e590]:
+                      - generic [ref=f3e591]: Carlos sent an attachment.
+                      - generic [ref=f3e593]:
+                        - generic [ref=f3e594]: ·
+                        - generic "22 hours ago" [ref=f3e599]: 22h
+              - button "user-profile-picture Diego Saa Diego sent an attachment. a day ago" [ref=f3e603] [cursor=pointer]:
+                - generic [ref=f3e605]:
+                  - img "user-profile-picture" [ref=f3e609]
+                  - generic [ref=f3e612]:
+                    - generic [ref=f3e613]: Diego Saa
+                    - generic [ref=f3e619]:
+                      - generic [ref=f3e620]: Diego sent an attachment.
+                      - generic [ref=f3e622]:
+                        - generic [ref=f3e623]: ·
+                        - generic "a day ago" [ref=f3e628]: 1d
+              - 'button "user-profile-picture Emanuele Pilo-Pais L. You: Increíble a day ago" [ref=f3e632] [cursor=pointer]':
+                - generic [ref=f3e634]:
+                  - img "user-profile-picture" [ref=f3e638]
+                  - generic [ref=f3e641]:
+                    - generic [ref=f3e642]: Emanuele Pilo-Pais L.
+                    - generic [ref=f3e648]:
+                      - generic [ref=f3e649]: "You: Increíble"
+                      - generic [ref=f3e651]:
+                        - generic [ref=f3e652]: ·
+                        - generic "a day ago" [ref=f3e657]: 1d
+              - button "user-profile-picture reemus Liked a message a day ago" [ref=f3e661] [cursor=pointer]:
+                - generic [ref=f3e663]:
+                  - img "user-profile-picture" [ref=f3e667]
+                  - generic [ref=f3e670]:
+                    - generic [ref=f3e671]: reemus
+                    - generic [ref=f3e677]:
+                      - generic [ref=f3e678]: Liked a message
+                      - generic [ref=f3e680]:
+                        - generic [ref=f3e681]: ·
+                        - generic "a day ago" [ref=f3e686]: 1d
+              - button [ref=f3e709] [cursor=pointer]:
+                - generic [ref=f3e711]:
+                  - status "Loading..." [ref=f3e714]
+                  - generic [ref=f3e717]:
+                    - status "Loading..." [ref=f3e719]
+                    - status "Loading..." [ref=f3e721]
+      - generic [ref=f3e726]:
+        - generic [ref=f3e730]:
+          - link "Open the profile page of hno613613" [ref=f3e731] [cursor=pointer]:
+            - /url: /hno613613/
+            - generic [ref=f3e732]:
+              - img "user-profile-picture" [ref=f3e736]
+              - generic [ref=f3e737]:
+                - heading "HNO" [level=2] [ref=f3e739]
+                - generic [ref=f3e741]: hno613613
+          - generic [ref=f3e745]:
+            - button [ref=f3e746] [cursor=pointer]:
+              - img "Audio call" [ref=f3e748]
+            - button [ref=f3e750] [cursor=pointer]:
+              - img "Video call" [ref=f3e752]
+            - button [ref=f3e755] [cursor=pointer]:
+              - img "Conversation information" [ref=f3e757]
+        - generic [ref=f3e761]:
+          - generic [ref=f3e766]:
+            - progressbar [ref=f3e769]:
+              - img "Loading..." [ref=f3e770]
+            - generic [ref=f3e813]:
+              - generic [ref=f3e814]: Aug 12, 2026, 7:25 PM
+              - group [ref=f3e817]:
+                - generic [ref=f3e818]:
+                  - generic [ref=f3e822]:
+                    - generic [ref=f3e825]:
+                      - text: Hola, HNO
+                      - img "👋" [ref=f3e827]
+                      - text: "Vimos que compartiste “Despertar” y tu proyecto de lo-fi, rap y boom bap desde Quito. Tu escena necesita un espacio propio: en TDF puedes crear tu perfil público, mostrar música y conectar con gente de la escena. Te invitamos a probarlo:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f3e829] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f3e830] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                  - button "❤️" [ref=f3e836] [cursor=pointer]
+            - group [ref=f3e842]:
+              - generic [ref=f3e843]:
+                - generic [ref=f3e844]:
+                  - link "Open the profile page of hno613613" [ref=f3e847] [cursor=pointer]:
+                    - /url: /hno613613
+                    - img "user-profile-picture" [ref=f3e850]
+                  - generic [ref=f3e851]: Ya le hago
+                - button "❤️" [ref=f3e858] [cursor=pointer]
+            - generic [ref=f3e863]:
+              - generic [ref=f3e864]: Sat 10:01 AM
+              - group [ref=f3e867]:
+                - generic [ref=f3e873]:
+                  - text: ¡Buenísimo!
+                  - img "🙌" [ref=f3e875]
+                  - text: ¿Alcanzaste a crear tu perfil? Si ya quedó listo, dinos únicamente con qué nombre aparece en TDF y revisamos que esté bien vinculado. Si te trabaste en algún paso, cuéntanos cuál y te ayudamos.
+            - generic [ref=f3e878]:
+              - generic [ref=f3e879]: Mon 4:25 PM
+              - group [ref=f3e882]:
+                - generic [ref=f3e884]:
+                  - link "Open the profile page of hno613613" [ref=f3e887] [cursor=pointer]:
+                    - /url: /hno613613
+                    - img "user-profile-picture" [ref=f3e890]
+                  - button [ref=f3e894] [cursor=pointer]:
+                    - link "juano_music" [ref=f3e898]:
+                      - /url: /juano_music/
+                    - img "Clip" [ref=f3e903]
+            - group [ref=f3e908]:
+              - generic [ref=f3e910]:
+                - link "Open the profile page of hno613613" [ref=f3e913] [cursor=pointer]:
+                  - /url: /hno613613
+                  - img "user-profile-picture" [ref=f3e916]
+                - generic [ref=f3e921]:
+                  - img "🎶" [ref=f3e923]
+                  - text: LA MÚSICA — Galaxy Club Un pequeño extracto de la grabación de “La Música”, una colaboración junto a Galaxy Club, Matico Pro, Edi Sound, Sapura MC, Gary Galáctico, Carrillo y Santi. Les compartimos un pedacito de esta sesión y de todo lo que se vivió durante la grabación.
+                  - img "🎙️" [ref=f3e925]
+                  - img "🔥" [ref=f3e927]
+                  - img "🎥" [ref=f3e929]
+                  - text: "Escucha/visualiza el track completo: YouTube — La Música #LaM"
+                  - 'link "usica #Ga" [ref=f3e931] [cursor=pointer]':
+                    - /url: /explore/tags/LaMusica/
+                  - text: l
+                  - 'link "axyClub #Ma" [ref=f3e933] [cursor=pointer]':
+                    - /url: /explore/tags/GalaxyClub/
+                  - text: t
+                  - 'link "icoPro #Ed" [ref=f3e935] [cursor=pointer]':
+                    - /url: /explore/tags/MaticoPro/
+                  - text: i
+                  - 'link "Sound #Sa" [ref=f3e937] [cursor=pointer]':
+                    - /url: /explore/tags/EdiSound/
+                  - text: p
+                  - 'link "uraMC #Ga" [ref=f3e939] [cursor=pointer]':
+                    - /url: /explore/tags/SapuraMC/
+                  - text: r
+                  - 'link "yGalactico #Ca" [ref=f3e941] [cursor=pointer]':
+                    - /url: /explore/tags/GaryGalactico/
+                  - text: r
+                  - 'link "rillo #Sa" [ref=f3e943] [cursor=pointer]':
+                    - /url: /explore/tags/Carrillo/
+                  - text: "n"
+                  - 'link "ti #Ec" [ref=f3e945] [cursor=pointer]':
+                    - /url: /explore/tags/Santi/
+                  - text: u
+                  - 'link "adorMusic #Hi" [ref=f3e947] [cursor=pointer]':
+                    - /url: /explore/tags/EcuadorMusic/
+                  - text: p
+                  - 'link "HopEcuador #Ur" [ref=f3e949] [cursor=pointer]':
+                    - /url: /explore/tags/HipHopEcuador/
+                  - text: b
+                  - 'link "anMusic #Un" [ref=f3e951] [cursor=pointer]':
+                    - /url: /explore/tags/UrbanMusic/
+                  - text: d
+                  - 'link "ergroundMusic #Qu" [ref=f3e953] [cursor=pointer]':
+                    - /url: /explore/tags/UndergroundMusic/
+                  - text: i
+                  - 'link "to #Ec" [ref=f3e955] [cursor=pointer]':
+                    - /url: /explore/tags/Quito/
+                  - text: u
+                  - 'link "ador #Mu" [ref=f3e957] [cursor=pointer]':
+                    - /url: /explore/tags/Ecuador/
+                  - text: s
+                  - link "icCollab" [ref=f3e959] [cursor=pointer]:
+                    - /url: /explore/tags/MusicCollab/
+          - generic [ref=f3e969]:
+            - button [ref=f3e972] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f3e974]
+            - generic [ref=f3e976]:
+              - textbox [active] [ref=f3e977]:
+                - paragraph [ref=f3e978]
+              - generic: Message...
+            - generic [ref=f3e979]:
+              - button [ref=f3e980] [cursor=pointer]:
+                - img "Voice Clip" [ref=f3e982]
+              - button [ref=f3e985] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f3e987]
+              - button [ref=f3e992] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f3e994]

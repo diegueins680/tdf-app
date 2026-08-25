@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Imagen de artista no disponible</title>
+  <desc id="description">Fondo abstracto de TDF con una nota musical.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="0.55" stop-color="#152a43"/>
+      <stop offset="1" stop-color="#4b1f55"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="48%">
+      <stop offset="0" stop-color="#6ee7f9" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#6ee7f9" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#background)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <g fill="none" stroke="#d8f7ff" stroke-linecap="round" stroke-linejoin="round" opacity=".8">
+    <path d="M875 252v350c0 83-73 146-162 146-73 0-128-43-128-101 0-64 66-116 147-116 35 0 67 9 92 25V323l281-62v272c0 83-73 146-162 146-73 0-128-43-128-101 0-64 66-116 147-116 35 0 67 9 92 25V201z" stroke-width="32"/>
+  </g>
+  <text x="90" y="812" fill="#f4fbff" font-family="system-ui, sans-serif" font-size="64" font-weight="700" letter-spacing="12">TDF</text>
+</svg>

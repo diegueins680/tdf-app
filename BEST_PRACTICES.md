@@ -17,6 +17,7 @@ This repo now ships with codified guardrails for both the TypeScript frontends a
 - **Compiler warnings** – Both the executable and the test suite compile with `-Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints`. Treat warning-free builds as a quality gate.
 - **Keep imports explicit** – Modules import only the functions they need, which keeps `-Wmissing-import-lists` eligible if we decide to flip it on later and makes future refactors less risky.
 - **Test harness** – `stack test` now runs an `hspec` suite (`test/Spec.hs`). Add real examples there as you touch backend code.
+- **Formal invariants** – For authorization, payments, ticketing, webhook signatures, normalization, and state-machine changes, add explicit invariants, property tests, or model checks. See `FORMAL_VERIFICATION.md`.
 - **Stack usage** – Run `stack test` (or `stack build`) from `tdf-hq/` before pushing backend changes. If you use Nix, keep Stack’s nix integration disabled or configure it explicitly.
 - **Email delivery** – Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, and optionally `SMTP_FROM_NAME`/`SMTP_TLS` so welcome emails go out when admins create new accounts. Set `HQ_APP_URL` to include a login link in those emails.
 - **CORS configuration** – Production instances read `ALLOW_ORIGINS`, `ALLOWED_ORIGINS`, or `CORS_ALLOW_ORIGINS` (plus the `*_ALL` variants). Always set these in Koyeb/Render so Cloudflare/Vercel deployments can reach the API.
@@ -30,7 +31,7 @@ This repo now ships with codified guardrails for both the TypeScript frontends a
 ## Suggested Workflow
 
 1. Edit code in the relevant workspace (`tdf-hq-ui/` for React, `tdf-hq/` for Haskell).
-2. Run the consolidated guardrail script from the repo root: `npm run quality`. It runs ESLint, TypeScript `--noEmit`, and `stack test` so both ecosystems stay green together. (If Stack is not configured on your workstation, run `npm run lint:ui`, `npm run typecheck:ui`, and `stack test` separately.)
+2. Run the consolidated guardrail script from the repo root: `npm run quality`. It runs formal verification, ESLint, TypeScript `--noEmit`, and `stack test` so both ecosystems stay green together. (If Stack is not configured on your workstation, run `npm run verify:formal`, `npm run lint:ui`, `npm run typecheck:ui`, and `stack test` separately.)
 3. Investigate and fix any failures (remember that the stricter TS compiler options generally mean you need better null checks instead of suppressing errors).
 4. Commit only after both linters/compilers pass to keep `feature-recovery` evergreen.
 

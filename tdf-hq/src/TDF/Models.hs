@@ -20,6 +20,7 @@ import           GHC.Generics (Generic)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime, Day, TimeOfDay)
+import           Data.Int (Int64)
 import           Data.UUID (UUID)
 import           Database.Persist.TH
 import           TDF.UUIDInstances ()
@@ -49,6 +50,7 @@ data RoleEnum
   | Promotor
   | Promoter
   | Producer
+  | Agency
   | Songwriter
   | DJ
   | Publicist
@@ -103,6 +105,14 @@ data StockTxnReason = Purchase | Consumption | Adjustment | Return | Transfer
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
 derivePersistField "StockTxnReason"
 
+data FanClubOfficerRole = President | VicePresident | Secretary | Treasurer | Coordinator
+  deriving (Show, Read, Eq, Enum, Bounded, Generic)
+derivePersistField "FanClubOfficerRole"
+
+data ElectionStatus = Upcoming | CandidacyOpen | VotingOpen | Closed
+  deriving (Show, Read, Eq, Enum, Bounded, Generic)
+derivePersistField "ElectionStatus"
+
 -- Provide JSON instances for enums (via Generic)
 instance ToJSON ServiceKind
 instance FromJSON ServiceKind
@@ -147,6 +157,7 @@ roleToText Webmaster     = "Webmaster"
 roleToText Promotor      = "Promotor"
 roleToText Promoter      = "Promoter"
 roleToText Producer      = "Producer"
+roleToText Agency        = "Agency"
 roleToText Songwriter    = "Songwriter"
 roleToText DJ            = "DJ"
 roleToText Publicist     = "Publicist"
@@ -190,6 +201,7 @@ roleFromText raw =
     "promotor"     -> Just Promotor
     "promoter"     -> Just Promoter
     "producer"     -> Just Producer
+    "agency"       -> Just Agency
     "songwriter"   -> Just Songwriter
     "dj"           -> Just DJ
     "publicist"    -> Just Publicist
@@ -208,8 +220,54 @@ roleFromText raw =
     "fan"          -> Just Fan
     "maintenance"  -> Just Maintenance
     _              -> Nothing
+
+-- Stable compile-time identifiers used only to bind exhaustive backend
+-- enforcement to the persisted security registry. Labels, ordering and grants
+-- remain database-authoritative.
+roleRegistryCode :: RoleEnum -> Text
+roleRegistryCode role = case role of
+  Admin -> "admin"
+  Manager -> "manager"
+  StudioManager -> "studio-manager"
+  Engineer -> "engineer"
+  Teacher -> "teacher"
+  Reception -> "reception"
+  Accounting -> "accounting"
+  LiveSessionsProducer -> "live-sessions-producer"
+  Intern -> "intern"
+  Artist -> "artist"
+  Artista -> "artista"
+  Webmaster -> "webmaster"
+  Promotor -> "promotor"
+  Promoter -> "promoter"
+  Producer -> "producer"
+  Agency -> "agency"
+  Songwriter -> "songwriter"
+  DJ -> "dj"
+  Publicist -> "publicist"
+  TourManager -> "tour-manager"
+  LabelRep -> "label-rep"
+  StageManager -> "stage-manager"
+  RoadCrew -> "road-crew"
+  Photographer -> "photographer"
+  AandR -> "a-and-r"
+  Student -> "student"
+  Vendor -> "vendor"
+  ReadOnly -> "read-only"
+  Customer -> "customer"
+  Fan -> "fan"
+  Maintenance -> "maintenance"
+
+roleFromRegistryCode :: Text -> Maybe RoleEnum
+roleFromRegistryCode code =
+  let normalized = T.toLower (T.strip code)
+  in lookup normalized [(roleRegistryCode role, role) | role <- [minBound .. maxBound]]
 instance ToJSON StockTxnReason
 instance FromJSON StockTxnReason
+instance ToJSON FanClubOfficerRole
+instance FromJSON FanClubOfficerRole
+instance ToJSON ElectionStatus
+instance FromJSON ElectionStatus
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 ApiToken
@@ -237,19 +295,46 @@ Party
     instagram        Text Maybe
     emergencyContact Text Maybe
     notes            Text Maybe
+    stripeCustomerId Text Maybe
+    -- Legacy import/display value. Catalog cutover backfills this into the
+    -- persisted country reference before the text column is retired.
+    countryCode      Text Maybe
+    countryId        UUID Maybe
     createdAt        UTCTime
     deriving Show Generic
-PartyRole
-    partyId          PartyId
-    role             RoleEnum
-    active           Bool
-    UniquePartyRole  partyId role
+UserLocalePreference sql=user_locale_preferences
+    userId           PartyId
+    -- Preserved migration evidence only. Runtime reads and writes localeId
+    -- and currencyId; new writes clear these copied codes.
+    locale           Text Maybe
+    currency         Text Maybe
+    timezone         Text
+    countryCode      Text Maybe
+    localeId         UUID Maybe
+    currencyId       UUID Maybe
+    countryId        UUID Maybe
+    updatedAt        UTCTime
+    UniqueUserLocalePreference userId
+    deriving Show Generic
+CurrencyConversionAudit sql=currency_conversion_audit
+    userId           PartyId Maybe
+    sourceCurrency   Text
+    targetCurrency   Text
+    sourceMinorUnits Int64
+    targetMinorUnits Int64
+    exchangeRate     Double
+    rateSource       Text
+    rateObservedAt   UTCTime
+    createdAt        UTCTime
     deriving Show Generic
 ArtistProfile
     artistPartyId    PartyId
     slug             Text Maybe
     bio              Text Maybe
     city             Text Maybe
+    -- Legacy import/display value; never accepted as a canonical catalog ID.
+    countryCode      Text Maybe
+    countryId        UUID Maybe
     heroImageUrl     Text Maybe
     spotifyArtistId  Text Maybe
     spotifyUrl       Text Maybe
@@ -259,19 +344,17 @@ ArtistProfile
     featuredVideoUrl Text Maybe
     genres           Text Maybe
     highlights       Text Maybe
+    stripeAccountId  Text Maybe
     createdAt        UTCTime
     updatedAt        UTCTime Maybe
     UniqueArtistProfile artistPartyId
     deriving Show Generic
-ArtistRelease
+ArtistProfileGenreMembership sql=artist_profile_genre_membership
     artistPartyId    PartyId
-    title            Text
-    releaseDate      Day Maybe
-    description      Text Maybe
-    coverImageUrl    Text Maybe
-    spotifyUrl       Text Maybe
-    youtubeUrl       Text Maybe
-    createdAt        UTCTime
+    genreId          UUID
+    sortOrder        Int default=0
+    createdAt        UTCTime default=CURRENT_TIMESTAMP
+    Primary artistPartyId genreId
     deriving Show Generic
 ArtistPromoSlot
     artistPartyId    PartyId
@@ -286,6 +369,153 @@ ArtistPromoSlot
     createdAt        UTCTime
     updatedAt        UTCTime
     deriving Show Generic
+ArtistRelease
+    artistPartyId    PartyId
+    title            Text
+    releaseDate      Day Maybe
+    description      Text Maybe
+    coverImageUrl    Text Maybe
+    spotifyUrl       Text Maybe
+    youtubeUrl       Text Maybe
+    createdAt        UTCTime
+    deriving Show Generic
+ArtistProfileEnrichment
+    artistPartyId    PartyId
+    officialName     Text Maybe
+    country          Text Maybe
+    instagramUrl     Text Maybe
+    socialLinks      Text Maybe
+    discography      Text Maybe
+    achievements     Text Maybe
+    heroOriginalUrl  Text Maybe
+    heroSquareUrl    Text Maybe
+    heroLandscapeUrl Text Maybe
+    heroResponsiveUrls Text Maybe
+    heroFocalPoint   Text Maybe
+    lastVerifiedAt   UTCTime Maybe
+    confidence       Double Maybe
+    reviewStatus     Text default='unverified'
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    UniqueArtistProfileEnrichment artistPartyId
+    deriving Show Generic
+ArtistInventoryReference
+    idempotencyKey   Text
+    sourceType       Text
+    sourceRecordId   Text
+    originalName     Text
+    normalizedName   Text
+    artistPartyId    PartyId Maybe
+    socialArtistId   Int64 Maybe
+    aliases          Text Maybe
+    evidence         Text Maybe
+    confidence       Double Maybe
+    disposition      Text default='discovered'
+    firstSeenAt      UTCTime
+    lastSeenAt       UTCTime
+    UniqueArtistInventoryReference idempotencyKey
+    deriving Show Generic
+ArtistResearchSource
+    artistPartyId    PartyId Maybe
+    inventoryReferenceId ArtistInventoryReferenceId Maybe
+    sourceUrl        Text
+    sourceType       Text
+    retrievedAt      UTCTime
+    supportedFields  Text
+    attribution      Text Maybe
+    contentHash      Text Maybe
+    idempotencyKey   Text
+    UniqueArtistResearchSource idempotencyKey
+    deriving Show Generic
+ArtistEnrichmentSuggestion
+    artistPartyId    PartyId Maybe
+    inventoryReferenceId ArtistInventoryReferenceId Maybe
+    fieldName        Text
+    currentValue     Text Maybe
+    proposedValue    Text Maybe
+    confidence       Double
+    status           Text default='pending'
+    autoPublish      Bool default=False
+    evidence         Text
+    idempotencyKey   Text
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    decidedAt        UTCTime Maybe
+    decidedBy        PartyId Maybe
+    decisionNote     Text Maybe
+    UniqueArtistEnrichmentSuggestion idempotencyKey
+    deriving Show Generic
+ArtistFieldChange
+    artistPartyId    PartyId
+    suggestionId     ArtistEnrichmentSuggestionId Maybe
+    fieldName        Text
+    previousValue    Text Maybe
+    newValue         Text Maybe
+    evidence         Text
+    confidence       Double
+    actor             Text
+    changedAt        UTCTime
+    idempotencyKey   Text
+    UniqueArtistFieldChange idempotencyKey
+    deriving Show Generic
+ArtistEnrichmentRun
+    runKey           Text
+    mode             Text
+    scope            Text
+    requestedArtistId PartyId Maybe
+    status           Text
+    phase            Text
+    checkpoint       Text Maybe
+    counters         Text Maybe
+    errorSummary     Text Maybe
+    startedAt        UTCTime
+    heartbeatAt      UTCTime
+    finishedAt       UTCTime Maybe
+    UniqueArtistEnrichmentRun runKey
+    deriving Show Generic
+ArtistIdentityCandidate
+    inventoryReferenceId ArtistInventoryReferenceId
+    artistPartyId    PartyId Maybe
+    provider         Text
+    externalId       Text Maybe
+    candidateUrl     Text Maybe
+    evidence         Text
+    confidence       Double
+    status           Text default='pending'
+    idempotencyKey   Text
+    createdAt        UTCTime
+    updatedAt        UTCTime
+    decidedAt        UTCTime Maybe
+    decidedBy        PartyId Maybe
+    decisionNote     Text Maybe
+    UniqueArtistIdentityCandidate idempotencyKey
+    deriving Show Generic
+ArtistMediaAsset
+    artistPartyId    PartyId
+    assetKind        Text
+    sourceUrl        Text
+    sourceAttribution Text
+    retrievedAt      UTCTime
+    sourceContentHash Text
+    sourceWidth      Int
+    sourceHeight     Int
+    sourceMimeType   Text
+    sourceByteSize   Int64
+    contentHash      Text
+    width            Int
+    height           Int
+    mimeType         Text
+    byteSize         Int64
+    rightsStatus     Text
+    driveFileId      Text
+    publicUrl        Text
+    parentAssetId    ArtistMediaAssetId Maybe
+    focalPoint       Text Maybe
+    idempotencyKey   Text
+    createdAt        UTCTime
+    UniqueArtistMediaAsset idempotencyKey
+    UniqueArtistMediaDriveFile driveFileId
+    deriving Show Generic
 FanProfile
     fanPartyId       PartyId
     displayName      Text Maybe
@@ -297,11 +527,29 @@ FanProfile
     updatedAt        UTCTime Maybe
     UniqueFanProfile fanPartyId
     deriving Show Generic
+FanProfileGenreMembership sql=fan_profile_genre_membership
+    fanPartyId       PartyId
+    genreId          UUID
+    sortOrder        Int default=0
+    createdAt        UTCTime default=CURRENT_TIMESTAMP
+    Primary fanPartyId genreId
+    deriving Show Generic
 FanFollow
     fanPartyId       PartyId
     artistPartyId    PartyId
     createdAt        UTCTime
     UniqueFanFollow  fanPartyId artistPartyId
+    deriving Show Generic
+EngagementEvent
+    actorPartyId     PartyId Maybe
+    targetArtistId   PartyId Maybe
+    entityType       Text
+    entityId         Int Maybe
+    eventType        Text
+    metadata         Text Maybe
+    createdAt        UTCTime
+    IndexEngagementArtistCreated targetArtistId createdAt !force
+    IndexEngagementActorCreated actorPartyId createdAt !force
     deriving Show Generic
 PartyFollow
     followerPartyId  PartyId
@@ -346,6 +594,7 @@ ServiceOrder
     customerId       PartyId
     artistId         PartyId Maybe
     catalogId        ServiceCatalogId
+    serviceOfferingId UUID Maybe
     serviceKind      ServiceKind
     title            Text Maybe
     description      Text Maybe
@@ -412,6 +661,9 @@ Booking
     serviceOrderId   ServiceOrderId Maybe
     partyId          PartyId Maybe
     serviceType      Text Maybe
+    serviceOfferingId UUID Maybe
+    bookingTypeId    UUID Maybe
+    workflowStateId  UUID Maybe
     engineerPartyId  PartyId Maybe
     engineerName     Text Maybe
     startsAt         UTCTime
@@ -516,6 +768,7 @@ Payment
     partyId          PartyId
     method           PaymentMethod
     amountCents      Int
+    currency         Text default='USD'
     receivedAt       UTCTime
     reference        Text Maybe
     concept          Text Maybe
@@ -588,6 +841,16 @@ SocialSyncPost
     createdAt        UTCTime
     updatedAt        UTCTime
     UniqueSocialSyncPost platform externalPostId
+    deriving Show Generic
+SocialDiscoveryReview
+    socialSyncPostId  SocialSyncPostId
+    status            Text
+    reviewNotes       Text Maybe
+    reviewedByPartyId PartyId Maybe
+    reviewedAt        UTCTime Maybe
+    createdAt         UTCTime
+    updatedAt         UTCTime
+    UniqueSocialDiscoveryReview socialSyncPostId
     deriving Show Generic
 SocialSyncRun
     platform         Text
@@ -663,12 +926,6 @@ ReferralClaim
     UniqueReferralClaim codeId email
     deriving Show Generic
 
-Country
-    code Text
-    name Text
-    UniqueCountryCode code
-    deriving Show Generic
-
 Cohort
     Id UUID default=gen_random_uuid()
     slug     Text
@@ -689,12 +946,220 @@ CohortEnrollment
 RadioStream
     streamUrl      Text
     name           Text Maybe
+    -- Preserved migration evidence only; runtime reads and writes countryId.
     country        Text Maybe
+    countryId      UUID Maybe
+    -- Preserved migration evidence and historical display fallback only.
     genre          Text Maybe
+    genreId        UUID Maybe
     isActive       Bool
     lastCheckedAt  UTCTime Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueRadioStreamUrl streamUrl
+    deriving Show Generic
+
+RadioStreamGenreObservation sql=radio_stream_genre_observation
+    streamId         RadioStreamId
+    originalValue    Text
+    normalizedValue  Text
+    genreId          UUID Maybe
+    status           Text
+    source            Text
+    firstObservedAt  UTCTime default=now()
+    lastObservedAt   UTCTime default=now()
+    observationCount Int default=1
+    UniqueRadioStreamGenreObservation streamId normalizedValue source
+    deriving Show Generic
+
+RadioStreamGenreObservationCandidate sql=radio_stream_genre_observation_candidate
+    observationId RadioStreamGenreObservationId
+    genreId       UUID
+    active        Bool default=True
+    firstMatchedAt UTCTime default=now()
+    lastMatchedAt  UTCTime default=now()
+    Primary observationId genreId
+    deriving Show Generic
+
+RadioStreamCountryObservation sql=radio_stream_country_observation
+    streamId         RadioStreamId
+    originalValue    Text
+    normalizedValue  Text
+    countryId        UUID Maybe
+    status           Text
+    source            Text
+    firstObservedAt  UTCTime default=now()
+    lastObservedAt   UTCTime default=now()
+    observationCount Int default=1
+    UniqueRadioStreamCountryObservation streamId normalizedValue source
+    deriving Show Generic
+
+RadioStreamCountryObservationCandidate sql=radio_stream_country_observation_candidate
+    observationId RadioStreamCountryObservationId
+    countryId     UUID
+    active        Bool default=True
+    firstMatchedAt UTCTime default=now()
+    lastMatchedAt  UTCTime default=now()
+    Primary observationId countryId
+    deriving Show Generic
+
+FanClub
+    artistPartyId  PartyId
+    name           Text
+    description    Text Maybe
+    createdAt      UTCTime default=now()
+    UniqueFanClubArtist artistPartyId
+    deriving Show Generic
+
+FanClubOfficer
+    clubId         FanClubId
+    fanPartyId     PartyId
+    role           FanClubOfficerRole
+    electedAt      UTCTime Maybe
+    termEndsAt     UTCTime Maybe
+    createdAt      UTCTime default=now()
+    UniqueFanClubOfficer clubId role
+    deriving Show Generic
+
+FanClubElection
+    clubId            FanClubId
+    year              Int
+    candidacyStartsAt UTCTime Maybe
+    candidacyEndsAt   UTCTime Maybe
+    votingStartsAt    UTCTime Maybe
+    votingEndsAt      UTCTime Maybe
+    status            ElectionStatus
+    createdAt         UTCTime default=now()
+    UniqueFanClubElection clubId year
+    deriving Show Generic
+
+FanClubCandidacy
+    electionId   FanClubElectionId
+    fanPartyId   PartyId
+    role         FanClubOfficerRole
+    manifesto    Text Maybe
+    createdAt    UTCTime default=now()
+    UniqueFanClubCandidacy electionId fanPartyId role
+    deriving Show Generic
+
+FanClubVote
+    electionId   FanClubElectionId
+    fanPartyId   PartyId
+    candidacyId  FanClubCandidacyId
+    role         FanClubOfficerRole
+    createdAt    UTCTime default=now()
+    UniqueFanClubVote electionId fanPartyId role
+    deriving Show Generic
+
+FanClubPost
+    clubId       FanClubId
+    fanPartyId   PartyId
+    parentId     FanClubPostId Maybe
+    title        Text Maybe
+    content      Text
+    mediaUrls    Text Maybe
+    isPinned     Bool default=False
+    isHidden     Bool default=False
+    createdAt    UTCTime default=now()
+    updatedAt    UTCTime Maybe
+    deriving Show Generic
+
+FanClubEvent
+    clubId            FanClubId
+    title             Text
+    description       Text Maybe
+    startsAt          UTCTime Maybe
+    endsAt            UTCTime Maybe
+    location          Text Maybe
+    isArtistConcert   Bool default=False
+    createdByPartyId  PartyId Maybe
+    createdAt         UTCTime default=now()
+    deriving Show Generic
+
+FanClubMemberProfile
+    partyId          PartyId
+    clubId           FanClubId
+    handle           Text Maybe
+    bio              Text Maybe
+    avatarUrl        Text Maybe
+    joinedAt         UTCTime default=now()
+    UniqueFanClubMemberProfile partyId clubId
+    deriving Show Generic
+
+FanClubMemory
+    memberProfileId  FanClubMemberProfileId
+    title            Text
+    description      Text Maybe
+    mediaUrls        Text Maybe
+    isHidden         Bool default=False
+    isDeleted        Bool default=False
+    createdAt        UTCTime default=now()
+    deriving Show Generic
+
+FanClubMemoryReport
+    reporterId       PartyId
+    memoryId         FanClubMemoryId
+    reason           Text
+    createdAt        UTCTime default=now()
+    deriving Show Generic
+
+FanClubInboxMessage
+    clubId           FanClubId
+    fanPartyId       PartyId
+    subject          Text Maybe
+    body             Text
+    status           Text default='unread'
+    officerPartyId   PartyId Maybe
+    replyBody        Text Maybe
+    createdAt        UTCTime default=now()
+    updatedAt        UTCTime Maybe
+    deriving Show Generic
+
+FanClubPostReaction sql=fan_club_post_reaction
+    Id UUID default=gen_random_uuid()
+    postId           FanClubPostId
+    reactorPartyId   PartyId
+    reactionTypeId   UUID
+    createdAt        UTCTime default=now()
+    UniqueFanClubPostReaction postId reactorPartyId
+    deriving Show Generic
+
+FanClubMemoryReaction sql=fan_club_memory_reaction
+    Id UUID default=gen_random_uuid()
+    memoryId         FanClubMemoryId
+    reactorPartyId   PartyId
+    reactionTypeId   UUID
+    createdAt        UTCTime default=now()
+    UniqueFanClubMemoryReaction memoryId reactorPartyId
+    deriving Show Generic
+
+Notification
+    recipientPartyId  PartyId
+    notifType         Text
+    title             Text
+    body              Text
+    targetType        Text Maybe
+    targetId          Int Maybe
+    isRead            Bool default=False
+    createdAt         UTCTime default=now()
+    deriving Show Generic
+
+CreatorBadge
+    partyId      PartyId
+    clubId       FanClubId
+    badgeTypeId  UUID
+    awardedAt    UTCTime default=now()
+    expiresAt    UTCTime Maybe
+    UniqueCreatorBadge partyId clubId badgeTypeId
+    deriving Show Generic
+
+BoostedContent
+    targetType       Text
+    targetId         Int
+    clubId           FanClubId
+    totalReactions   Int
+    boostedAt        UTCTime default=now()
+    surfacedToArtist Bool default=False
+    UniqueBoostedContent targetType targetId
     deriving Show Generic
 |]

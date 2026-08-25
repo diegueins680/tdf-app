@@ -1,0 +1,352 @@
+- generic [ref=f3e7]:
+  - generic [ref=f3e1856]:
+    - generic [ref=f3e1859]:
+      - link [ref=f3e1864] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f3e1869]
+      - generic [ref=f3e1872]:
+        - link [ref=f3e1877] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f3e1882]
+        - link [ref=f3e1887] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f3e1892]
+        - link [ref=f3e1899] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f3e1904]
+        - link [ref=f3e1910] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f3e1915]
+        - link [ref=f3e1922] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f3e1927]
+        - link [ref=f3e1933] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f3e1938]
+        - link [ref=f3e1943] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f3e1948]
+        - link [ref=f3e1954] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e1959]:
+            - img "tdf.records.label's profile picture" [ref=f3e1960]
+      - generic [ref=f3e1961]:
+        - link [ref=f3e1964] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f3e1969]
+        - link [ref=f3e1972] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f3e1977]
+    - generic [ref=f3e1980]:
+      - main [ref=f3e1981]:
+        - generic [ref=f3e1982]:
+          - generic [ref=f3e1983]:
+            - heading "Professional dashboard" [active] [level=2] [ref=f3e1985]
+            - generic [ref=f3e1987]:
+              - button "Insights Down chevron icon" [ref=f3e1990] [cursor=pointer]:
+                - generic [ref=f3e1992]:
+                  - generic [ref=f3e1993]: Insights
+                  - img "Down chevron icon" [ref=f3e1997]
+              - button "Ad tools" [ref=f3e1999] [cursor=pointer]
+            - separator [ref=f3e2001]
+          - generic [ref=f3e2004]:
+            - generic [ref=f3e2006]:
+              - img "Error" [ref=f3e2008]
+              - generic [ref=f3e2010]:
+                - generic [ref=f3e2011]:
+                  - text: "Ad account disabled:"
+                  - generic [ref=f3e2012]: We weren't able to process your payment. Pay the amount due to run ads again.
+                - link "Pay now" [ref=f3e2014] [cursor=pointer]:
+                  - /url: "#"
+            - generic [ref=f3e2016]:
+              - generic [ref=f3e2019]:
+                - generic [ref=f3e2021]:
+                  - heading "Manage ads" [level=4] [ref=f3e2023]
+                  - button [ref=f3e2024] [cursor=pointer]:
+                    - img "Info" [ref=f3e2026]
+                - generic [ref=f3e2031]:
+                  - button "Most recent Down chevron icon" [ref=f3e2034] [cursor=pointer]:
+                    - generic [ref=f3e2036]:
+                      - generic [ref=f3e2037]: Most recent
+                      - img "Down chevron icon" [ref=f3e2041]
+                  - button "Status Down chevron icon" [ref=f3e2045] [cursor=pointer]:
+                    - generic [ref=f3e2047]:
+                      - generic [ref=f3e2048]: Status
+                      - img "Down chevron icon" [ref=f3e2052]
+                  - button "Goal Down chevron icon" [ref=f3e2056] [cursor=pointer]:
+                    - generic [ref=f3e2058]:
+                      - generic [ref=f3e2059]: Goal
+                      - img "Down chevron icon" [ref=f3e2063]
+                - generic [ref=f3e2066]:
+                  - generic [ref=f3e2068]:
+                    - generic [ref=f3e2069]: Draft
+                    - generic [ref=f3e2075]:
+                      - generic [ref=f3e2076]:
+                        - generic [ref=f3e2077]: Website visits
+                        - generic [ref=f3e2079]: "0"
+                      - generic [ref=f3e2080]:
+                        - generic [ref=f3e2081]: Spend
+                        - generic [ref=f3e2083]: $0.00 of $30.00
+                      - generic [ref=f3e2084]: Audience
+                    - generic [ref=f3e2087]:
+                      - button "Discard" [ref=f3e2090] [cursor=pointer]
+                      - button "Finish boosting" [ref=f3e2094] [cursor=pointer]
+                  - generic [ref=f3e2096]:
+                    - generic [ref=f3e2097]:
+                      - generic [ref=f3e2098]: Completed
+                      - generic [ref=f3e2099]: •
+                      - generic [ref=f3e2101]: Nov 27, 2025
+                    - generic [ref=f3e2107]:
+                      - generic [ref=f3e2108]:
+                        - generic [ref=f3e2109]: Views
+                        - generic [ref=f3e2111]: "777"
+                      - generic [ref=f3e2112]:
+                        - generic [ref=f3e2113]: Website visits
+                        - generic [ref=f3e2115]: "43"
+                      - generic [ref=f3e2116]:
+                        - generic [ref=f3e2117]: Spend
+                        - generic [ref=f3e2119]: $2.87 of $63.00
+                      - generic [ref=f3e2120]:
+                        - generic [ref=f3e2121]: Audience
+                        - generic [ref=f3e2123]: TDF Records
+                      - link "View insights" [ref=f3e2125] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2128]:
+                      - button "Delete" [ref=f3e2130] [cursor=pointer]
+                      - button "Boost again" [ref=f3e2133] [cursor=pointer]
+                  - generic [ref=f3e2135]:
+                    - generic [ref=f3e2136]: Paused
+                    - generic [ref=f3e2143]:
+                      - generic [ref=f3e2144]:
+                        - generic [ref=f3e2145]: Views
+                        - generic [ref=f3e2147]: 74.2K
+                      - generic [ref=f3e2148]:
+                        - generic [ref=f3e2149]: Mix of actions
+                        - generic [ref=f3e2151]: 23448 engagements and more
+                      - generic [ref=f3e2152]:
+                        - generic [ref=f3e2153]: Spend
+                        - generic [ref=f3e2155]: $91.75
+                      - generic [ref=f3e2156]:
+                        - generic [ref=f3e2157]: Audience
+                        - generic [ref=f3e2159]: People you choose through targeting
+                      - link "View insights" [ref=f3e2161] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2164]:
+                      - button "Delete" [ref=f3e2166] [cursor=pointer]
+                      - button "Resume" [ref=f3e2168] [cursor=pointer]
+                  - generic [ref=f3e2170]:
+                    - generic [ref=f3e2171]:
+                      - generic [ref=f3e2172]: Completed
+                      - generic [ref=f3e2173]: •
+                      - generic [ref=f3e2175]: Nov 27, 2025
+                    - generic [ref=f3e2181]:
+                      - generic [ref=f3e2182]:
+                        - generic [ref=f3e2183]: Views
+                        - generic [ref=f3e2185]: 8,520
+                      - generic [ref=f3e2186]:
+                        - generic [ref=f3e2187]: Website visits
+                        - generic [ref=f3e2189]: "193"
+                      - generic [ref=f3e2190]:
+                        - generic [ref=f3e2191]: Spend
+                        - generic [ref=f3e2193]: $15.30 of $35.00
+                      - generic [ref=f3e2194]:
+                        - generic [ref=f3e2195]: Audience
+                        - generic [ref=f3e2197]: People most likely to engage
+                      - link "View insights" [ref=f3e2199] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2202]:
+                      - button "Delete" [ref=f3e2204] [cursor=pointer]
+                      - button "Run again" [ref=f3e2207] [cursor=pointer]
+                  - generic [ref=f3e2209]:
+                    - generic [ref=f3e2210]:
+                      - generic [ref=f3e2211]: Completed
+                      - generic [ref=f3e2212]: •
+                      - generic [ref=f3e2214]: May 12, 2025
+                    - generic [ref=f3e2220]:
+                      - generic [ref=f3e2221]:
+                        - generic [ref=f3e2222]: Views
+                        - generic [ref=f3e2224]: 25.7K
+                      - generic [ref=f3e2225]:
+                        - generic [ref=f3e2226]: Profile visits
+                        - generic [ref=f3e2228]: "178"
+                      - generic [ref=f3e2229]:
+                        - generic [ref=f3e2230]: Spend
+                        - generic [ref=f3e2232]: $30.00 of $30.00
+                      - generic [ref=f3e2233]:
+                        - generic [ref=f3e2234]: Audience
+                        - generic [ref=f3e2236]: Zona Nayón
+                      - link "View insights" [ref=f3e2238] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2241]:
+                      - button "Delete" [ref=f3e2243] [cursor=pointer]
+                      - button "Boost again" [ref=f3e2246] [cursor=pointer]
+                  - generic [ref=f3e2248]:
+                    - generic [ref=f3e2249]:
+                      - generic [ref=f3e2250]: Completed
+                      - generic [ref=f3e2251]: •
+                      - generic [ref=f3e2253]: Feb 21, 2025
+                    - generic [ref=f3e2259]:
+                      - generic [ref=f3e2260]:
+                        - generic [ref=f3e2261]: Views
+                        - generic [ref=f3e2263]: 77.3K
+                      - generic [ref=f3e2264]:
+                        - generic [ref=f3e2265]: Website visits
+                        - generic [ref=f3e2267]: "458"
+                      - generic [ref=f3e2268]:
+                        - generic [ref=f3e2269]: Spend
+                        - generic [ref=f3e2271]: $50.00 of $50.00
+                      - generic [ref=f3e2272]:
+                        - generic [ref=f3e2273]: Audience
+                        - generic [ref=f3e2275]: Molinari
+                      - link "View insights" [ref=f3e2277] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2280]:
+                      - button "Delete" [ref=f3e2282] [cursor=pointer]
+                      - button "Boost again" [ref=f3e2285] [cursor=pointer]
+                  - generic [ref=f3e2287]:
+                    - generic [ref=f3e2288]:
+                      - generic [ref=f3e2289]: Completed
+                      - generic [ref=f3e2290]: •
+                      - generic [ref=f3e2292]: Feb 22, 2025
+                    - generic [ref=f3e2298]:
+                      - generic [ref=f3e2299]:
+                        - generic [ref=f3e2300]: Views
+                        - generic [ref=f3e2302]: 84.4K
+                      - generic [ref=f3e2303]:
+                        - generic [ref=f3e2304]: Profile visits
+                        - generic [ref=f3e2306]: "841"
+                      - generic [ref=f3e2307]:
+                        - generic [ref=f3e2308]: Spend
+                        - generic [ref=f3e2310]: $68.60 of $69.00
+                      - generic [ref=f3e2311]:
+                        - generic [ref=f3e2312]: Audience
+                        - generic [ref=f3e2314]: People you choose through targeting
+                      - link "View insights" [ref=f3e2316] [cursor=pointer]:
+                        - /url: "#"
+                    - generic [ref=f3e2319]:
+                      - button "Delete" [ref=f3e2321] [cursor=pointer]
+                      - button "Boost again" [ref=f3e2324] [cursor=pointer]
+                  - progressbar [ref=f3e2327]:
+                    - img "Loading..." [ref=f3e2328]
+              - generic [ref=f3e2344]:
+                - generic [ref=f3e2346]:
+                  - heading "Create your next ad" [level=4] [ref=f3e2348]
+                  - button "This reel is getting likes Try boosting it so even more people can see it." [ref=f3e2350] [cursor=pointer]:
+                    - generic [ref=f3e2353]:
+                      - generic [ref=f3e2354]: This reel is getting likes
+                      - generic [ref=f3e2356]: Try boosting it so even more people can see it.
+                  - button "Create ad" [ref=f3e2363] [cursor=pointer]
+                - generic [ref=f3e2375]:
+                  - heading "Ad account" [level=4] [ref=f3e2377]
+                  - generic [ref=f3e2378]:
+                    - generic [ref=f3e2379]:
+                      - generic [ref=f3e2380]: TDF Estudio
+                      - generic [ref=f3e2381]:
+                        - text: "537762937420729"
+                        - generic [ref=f3e2382]: •
+                        - text: USD
+                    - link "Switch" [ref=f3e2384] [cursor=pointer]:
+                      - /url: "#"
+                - generic [ref=f3e2387]:
+                  - heading "Other tools" [level=4] [ref=f3e2389]
+                  - button [ref=f3e2391] [cursor=pointer]:
+                    - button "Billing & payments Billing & payments" [ref=f3e2394]:
+                      - generic [ref=f3e2395]:
+                        - generic [ref=f3e2400]: Billing & payments
+                        - img "Billing & payments" [ref=f3e2404]
+        - button "Meta AI business assistant" [ref=f3e2478] [cursor=pointer]
+      - contentinfo [ref=f3e2406]:
+        - generic [ref=f3e2407]:
+          - generic [ref=f3e2409]:
+            - link "Meta" [ref=f3e2411] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f3e2414] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f3e2417] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f3e2420] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f3e2423] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f3e2426] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f3e2429] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f3e2432] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f3e2435] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f3e2438] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f3e2441] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f3e2444] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f3e2447] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f3e2450] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f3e2453] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f3e2455]:
+            - generic [ref=f3e2456] [cursor=pointer]:
+              - generic [ref=f3e2457]:
+                - generic [ref=f3e2458]: English
+                - img "Down chevron icon" [ref=f3e2461]
+              - combobox "Switch Display Language" [ref=f3e2463]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f3e2464]: © 2026 Instagram from Meta
+  - button [ref=f3e2467] [cursor=pointer]:
+    - tooltip "See how your content is performing." [ref=f3e2469]

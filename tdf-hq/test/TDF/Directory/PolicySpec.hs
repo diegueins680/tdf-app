@@ -1,0 +1,100 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module TDF.Directory.PolicySpec (spec) where
+
+import qualified Data.Set as Set
+import qualified Data.Text as T
+import Test.Hspec
+import Test.QuickCheck
+
+import TDF.Directory.Policy
+
+spec :: Spec
+spec = describe "music directory formal invariants" $ do
+  it "I01: public professions grant no internal directory capability" $
+    property $ \labels ->
+      permissionsFromProfessions
+        (Set.fromList (map (PublicProfession . T.pack) (labels :: [String])))
+        == Set.empty
+
+  it "I03: repeated profession selections normalize to one membership" $
+    property $ \labels ->
+      let values = map (PublicProfession . T.pack) (labels :: [String])
+      in Set.size (Set.fromList (values <> values)) == Set.size (Set.fromList values)
+
+  it "I04: public search requires every publication predicate" $
+    property $ \published public allowed current ->
+      publicSearchEligible
+        (if published then "published" else "draft")
+        (if public then "public" else "private")
+        (if allowed then "allowed" else "blocked")
+        current
+        == (published && public && allowed && current)
+
+  it "I07: undeclared classified transitions are rejected" $ do
+    allowedClassifiedTransition Draft Published `shouldBe` True
+    allowedClassifiedTransition Published Filled `shouldBe` True
+    allowedClassifiedTransition Filled Published `shouldBe` False
+    allowedClassifiedTransition Withdrawn Draft `shouldBe` False
+
+  it "profile lifecycle changes also use the published transition table" $ do
+    allowedProfileTransition ProfileDraft ProfilePublished `shouldBe` True
+    allowedProfileTransition ProfilePublished ProfilePaused `shouldBe` True
+    allowedProfileTransition ProfileArchived ProfilePublished `shouldBe` False
+
+  it "I07: application and invitation state changes use declared relations" $ do
+    allowedApplicationTransition ApplicationSubmitted ApplicationShortlisted `shouldBe` True
+    allowedApplicationTransition ApplicationConversationOpen ApplicationConverted `shouldBe` True
+    allowedApplicationTransition ApplicationSubmitted ApplicationConversationOpen `shouldBe` False
+    allowedApplicationTransition ApplicationRejected ApplicationAccepted `shouldBe` False
+    allowedInvitationTransition InvitationPending InvitationAccepted `shouldBe` True
+    allowedInvitationTransition InvitationPending InvitationExpired `shouldBe` True
+    allowedInvitationTransition InvitationConversationOpen InvitationConverted `shouldBe` True
+    allowedInvitationTransition InvitationPending InvitationConversationOpen `shouldBe` False
+    allowedInvitationTransition InvitationDeclined InvitationAccepted `shouldBe` False
+
+  it "I08: an application is visible only to participants or an administrator" $
+    property $ \viewer applicant author adminIds ->
+      applicationVisibleTo viewer applicant author (Set.fromList adminIds)
+        == ((viewer :: Integer) == applicant || viewer == author || viewer `elem` adminIds)
+
+  it "I09: a review requires an explicitly managed author and the exact verified completed pair" $
+    property $ \verified managed author subject profileA profileB ->
+      verifiedReviewEligible "completed" verified managed author subject profileA profileB
+        == (verified && managed && author /= subject
+          && ((author == profileA && subject == profileB) || (author == profileB && subject == profileA)))
+
+  it "I09: pending, confirmed, cancelled, or disputed interactions never qualify" $ do
+    map (\status -> verifiedReviewEligible status True True 1 2 1 2)
+      ["pending","confirmed","cancelled","disputed"] `shouldBe` replicate 4 False
+
+  it "minor or unknown age assurance cannot publish or respond independently" $ do
+    minorMayPublishOrRespond "unknown" `shouldBe` False
+    minorMayPublishOrRespond "minor_restricted" `shouldBe` False
+    minorMayPublishOrRespond "guardian_pending" `shouldBe` False
+    minorMayPublishOrRespond "guardian_approved" `shouldBe` True
+    minorMayPublishOrRespond "adult_attested" `shouldBe` True
+
+  it "inactive grants never authorize a profile capability" $
+    property $ \editGranted publishGranted requestPublish ->
+      let capabilities = Set.fromList
+            ([Edit | editGranted] <> [Publish | publishGranted])
+          requested = if requestPublish then Publish else Edit
+      in not (capabilityAllows False capabilities requested)
+
+  it "I16: omitted profile fields preserve data and explicit replacements are exact" $
+    property $ \current next ->
+      applyProfileFieldUpdate (current :: String) PreserveProfileField == current
+        && applyProfileFieldUpdate current (ReplaceProfileField next) == next
+
+  it "I16: structured membership details accept one duplicate-free ID set" $
+    property $ \ids ->
+      detailIdsMatch (Set.toList (Set.fromList (ids :: [Int]))) (Set.toList (Set.fromList ids))
+
+  it "I16: structured membership details reject duplicates and unequal sets" $ do
+    detailIdsMatch [1 :: Int, 1] [1] `shouldBe` False
+    detailIdsMatch [1 :: Int, 2] [1] `shouldBe` False
+
+  it "I16: a nonempty explicit service-area set has exactly one primary" $
+    property $ \flags ->
+      serviceAreaPrimaryValid flags == (null flags || length (filter id flags) == 1)

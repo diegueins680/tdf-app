@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
@@ -32,6 +33,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { SocialInboxAPI, type SocialChannel, type SocialMessage } from '../api/socialInbox';
 import { assertNever } from '../utils/assertNever';
 import {
@@ -41,6 +43,7 @@ import {
   getStoredInstagramResult,
   type MetaReviewAssetSelection,
 } from '../services/instagramAuth';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 
 interface MessageStats {
   incoming: SocialMessage[];
@@ -53,6 +56,17 @@ type FilterKey = 'all' | 'pending' | 'replied' | 'failed';
 type RealFilterKey = Exclude<FilterKey, 'all'>;
 const LIMIT_OPTIONS = [50, 100, 200] as const;
 const DEFAULT_LIMIT = 100;
+const reviewSelectedAssetEmptyStateTitle = 'Waiting for the first inbound message.';
+const reviewSelectedAssetEmptyStateMessage =
+  'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.';
+const normalInboxReadySubtitle = 'Mensajes entrantes y respuestas por canal.';
+const normalInboxLoadingSubtitle = 'Preparando inbox social.';
+const normalInboxEmptySubtitle = 'Primer mensaje entrante pendiente.';
+const normalInboxErrorSubtitle = 'No se pudieron cargar los canales del inbox.';
+const META_REPLY_WINDOW_DAYS = 7;
+const META_REPLY_WINDOW_MS = META_REPLY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+// Invariant: Meta reply subcodes are matched as text because failures may arrive as prose or serialized JSON.
+const META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE = ['2', '5', '3', '4', '0', '4', '4'].join('');
 
 const parseInboxLimit = (value: string, fallback = DEFAULT_LIMIT): number => {
   const parsed = Number(value);
@@ -103,9 +117,23 @@ const formatTimestamp = (value?: string | null) => {
   return parsed.toLocaleString();
 };
 
+const isMetaReplyWindowExpired = (channel?: SocialChannel, createdAt?: string | null) => {
+  if (channel !== 'instagram' && channel !== 'facebook') return false;
+  if (!createdAt) return false;
+  const parsed = new Date(createdAt);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return Date.now() - parsed.getTime() > META_REPLY_WINDOW_MS;
+};
+
 const formatBody = (value?: string | null) => {
-  const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : '—';
+  const bodyText = value?.trim();
+  return bodyText && bodyText.length > 0 ? bodyText : '—';
+};
+
+const normalizeInitialReplyDraft = (value?: string | null) => {
+  const initialDraftText = value?.trim() ?? '';
+  if (/^HOLD:/i.test(initialDraftText)) return '';
+  return initialDraftText.replace(/^SEND:\s*/i, '').trim();
 };
 
 const parseJson = (value?: string | null) => {
@@ -151,17 +179,17 @@ const extractSenderNameFromMetadata = (metadata?: string | null) => {
 const looksLikeOpaqueSenderValue = (value: string) => /^[A-Za-z0-9+/=_-]{48,}$/.test(value);
 
 const normalizeSenderLabel = (value?: string | null) => {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  if (looksLikeOpaqueSenderValue(trimmed)) return null;
-  if (trimmed.length > 70 && !trimmed.includes(' ')) return null;
-  return trimmed;
+  const senderLabelText = value?.trim();
+  if (!senderLabelText) return null;
+  if (looksLikeOpaqueSenderValue(senderLabelText)) return null;
+  if (senderLabelText.length > 70 && !senderLabelText.includes(' ')) return null;
+  return senderLabelText;
 };
 
 const compactIdentifier = (value: string) => {
-  const trimmed = value.trim();
-  if (trimmed.length <= 22) return trimmed;
-  return `${trimmed.slice(0, 10)}…${trimmed.slice(-6)}`;
+  const compactSource = value.trim();
+  if (compactSource.length <= 22) return compactSource;
+  return `${compactSource.slice(0, 10)}…${compactSource.slice(-6)}`;
 };
 
 const resolveSenderName = (msg: SocialMessage) => {
@@ -171,8 +199,8 @@ const resolveSenderName = (msg: SocialMessage) => {
   const metaName = normalizeSenderLabel(extractSenderNameFromMetadata(msg.metadata));
   if (metaName) return metaName;
 
-  const senderId = msg.senderId?.trim();
-  if (senderId) return `ID ${compactIdentifier(senderId)}`;
+  const senderIdentifier = msg.senderId?.trim();
+  if (senderIdentifier) return `ID ${compactIdentifier(senderIdentifier)}`;
 
   return 'Sin nombre';
 };
@@ -213,8 +241,8 @@ const resolveNativeClientUrl = (channel: SocialChannel, senderId: string) => {
     case 'facebook':
       return 'https://www.facebook.com/messages';
     case 'whatsapp': {
-      const normalized = normalizePhoneForWa(senderId);
-      return normalized ? `https://wa.me/${normalized}` : 'https://web.whatsapp.com/';
+      const whatsappPhoneNumber = normalizePhoneForWa(senderId);
+      return whatsappPhoneNumber ? `https://wa.me/${whatsappPhoneNumber}` : 'https://web.whatsapp.com/';
     }
   }
 
@@ -299,12 +327,16 @@ interface InboxErrorSummary {
   technical: string;
 }
 
+/**
+ * @precondition value may be null, blank text, plain provider text, or serialized provider JSON.
+ * @postcondition blank input returns null; known Meta subcodes return specific remediation before generic fallbacks.
+ */
 const summarizeReplyError = (value: string | null | undefined, reviewMode: boolean): ReplyErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
-  const lower = technical.toLowerCase();
+  const replyErrorLowercase = technical.toLowerCase();
 
-  if (lower.includes('instagram_manage_messages') && lower.includes('advanced access')) {
+  if (replyErrorLowercase.includes('instagram_manage_messages') && replyErrorLowercase.includes('advanced access')) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: Meta app lacks Advanced Access for Instagram messaging.'
@@ -316,7 +348,7 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
-  if (lower.includes('recipient user does not have role on app') || lower.includes('2534048')) {
+  if (replyErrorLowercase.includes('recipient user does not have role on app') || replyErrorLowercase.includes('2534048')) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: recipient account has no role/tester access on this Meta app.'
@@ -328,7 +360,37 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
     };
   }
 
-  if (lower.includes('application does not have the capability to make this api call') || lower.includes('"code":3')) {
+  if (replyErrorLowercase.includes('outside of allowed window') || replyErrorLowercase.includes('2534022')) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: the Meta reply window is closed.'
+        : 'Envío bloqueado: la ventana de respuesta de Meta está cerrada.',
+      guidance: reviewMode
+        ? 'Ask the person to send a new DM before replying from the app, or copy the draft and reply in the native inbox if Meta still allows it there.'
+        : 'Pide a la persona que envíe un nuevo DM antes de responder desde la app, o copia el borrador y responde desde el inbox nativo si Meta todavía lo permite ahí.',
+      technical,
+    };
+  }
+
+  if (
+    replyErrorLowercase.includes("doesn't have human agent tag") ||
+    replyErrorLowercase.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+  ) {
+    return {
+      headline: reviewMode
+        ? 'Delivery blocked: app lacks Human Agent Tag access for Instagram messaging.'
+        : 'Envío bloqueado: la app no tiene acceso a Human Agent Tag para mensajería de Instagram.',
+      guidance: reviewMode
+        ? 'Enable Human Agent Tag in Meta App Settings > Instagram Settings, then reconnect the Instagram asset.'
+        : 'Activa Human Agent Tag en Configuración de la App de Meta > Instagram Settings y reconecta el asset de Instagram.',
+      technical,
+    };
+  }
+
+  if (
+    replyErrorLowercase.includes('application does not have the capability to make this api call') ||
+    replyErrorLowercase.includes('"code":3')
+  ) {
     return {
       headline: reviewMode
         ? 'Delivery blocked: app permissions/capabilities are missing for this channel.'
@@ -349,12 +411,28 @@ const summarizeReplyError = (value: string | null | undefined, reviewMode: boole
   };
 };
 
+const replyErrorBlocksAppSend = (value: string | null | undefined) => {
+  const normalizedReplyError = value?.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalizedReplyError) return false;
+  return (
+    (normalizedReplyError.includes('instagram_manage_messages') && normalizedReplyError.includes('advanced access'))
+    || normalizedReplyError.includes('recipient user does not have role on app')
+    || normalizedReplyError.includes('2534048')
+    || normalizedReplyError.includes('outside of allowed window')
+    || normalizedReplyError.includes('2534022')
+    || normalizedReplyError.includes("doesn't have human agent tag")
+    || normalizedReplyError.includes(META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE)
+    || normalizedReplyError.includes('application does not have the capability to make this api call')
+    || normalizedReplyError.includes('"code":3')
+  );
+};
+
 const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: boolean): InboxErrorSummary | null => {
   const technical = value?.replace(/\s+/g, ' ').trim();
   if (!technical) return null;
-  const lower = technical.toLowerCase();
+  const fetchErrorLowercase = technical.toLowerCase();
 
-  if (lower.includes('no se pudo contactar la api')) {
+  if (fetchErrorLowercase.includes('no se pudo contactar la api')) {
     return {
       headline: reviewMode
         ? 'Cannot load channel messages: backend is unreachable.'
@@ -366,7 +444,7 @@ const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: 
     };
   }
 
-  if (lower.includes('403') || lower.includes('forbidden')) {
+  if (fetchErrorLowercase.includes('403') || fetchErrorLowercase.includes('forbidden')) {
     return {
       headline: reviewMode
         ? 'Cannot load messages: insufficient permissions (403).'
@@ -378,7 +456,7 @@ const summarizeInboxFetchError = (value: string | null | undefined, reviewMode: 
     };
   }
 
-  if (lower.includes('401') || lower.includes('unauthorized')) {
+  if (fetchErrorLowercase.includes('401') || fetchErrorLowercase.includes('unauthorized')) {
     return {
       headline: reviewMode
         ? 'Cannot load messages: session/token is invalid (401).'
@@ -418,9 +496,15 @@ const copyText = async (value: string) => {
     await navigator.clipboard.writeText(value);
     return true;
   } catch (err) {
-    console.warn('No se pudo copiar al portapapeles', err);
+    logger.warn('No se pudo copiar al portapapeles', err);
     return false;
   }
+};
+
+const compactNoticeText = (value: string, maxChars = 160) => {
+  const normalizedNoticeText = value.replace(/\s+/g, ' ').trim();
+  if (normalizedNoticeText.length <= maxChars) return normalizedNoticeText;
+  return `${normalizedNoticeText.slice(0, maxChars - 1)}…`;
 };
 
 interface SelectedMessage {
@@ -455,12 +539,13 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const [providerMessageId, setProviderMessageId] = useState<string | null>(null);
   const [showReplyErrorDetails, setShowReplyErrorDetails] = useState(false);
   const [showSendErrorDetails, setShowSendErrorDetails] = useState(false);
+  const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [failedAttachmentUrls, setFailedAttachmentUrls] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open || !msg) return;
     setHint('');
-    setReplyDraft(msg.repliedAt ? '' : (msg.replyText ?? '').trim());
+    setReplyDraft(msg.repliedAt ? '' : normalizeInitialReplyDraft(msg.replyText));
     setAiLoading(false);
     setSendLoading(false);
     setError(null);
@@ -471,6 +556,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     setProviderMessageId(null);
     setShowReplyErrorDetails(false);
     setShowSendErrorDetails(false);
+    setShowFollowUpComposer(false);
     setFailedAttachmentUrls([]);
   }, [open, msg]);
 
@@ -486,9 +572,29 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
   const replyErrorValue = optimisticReplyError ?? msg?.replyError;
   const hasDeliveredReply = Boolean(repliedAtValue);
   const showAiDraftControls = showBody && !hasDeliveredReply;
-  const canGenerate = Boolean(channel && msg && showAiDraftControls && !aiLoading && !sendLoading);
-  const canSend = Boolean(channel && msg && replyDraft.trim().length > 0 && !sendLoading);
+  const replyWindowExpired = isMetaReplyWindowExpired(channel, msg?.createdAt);
+  const canGenerate = Boolean(channel && msg && showAiDraftControls && !replyWindowExpired && !aiLoading && !sendLoading);
+  const canSend = Boolean(
+    channel
+      && msg
+      && replyDraft.trim().length > 0
+      && !replyWindowExpired
+      && !replyErrorBlocksAppSend(replyErrorValue)
+      && !sendLoading,
+  );
   const hasReplyDraft = replyDraft.trim().length > 0;
+  const showReplyComposer = !hasDeliveredReply || showFollowUpComposer || hasReplyDraft || sendLoading;
+  const showFollowUpPrompt = hasDeliveredReply && !showReplyComposer;
+  const showSendAction = !hasDeliveredReply || hasReplyDraft || sendLoading;
+  const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
+  const reviewPendingReplyGuidance =
+    !reviewMode || hasDeliveredReply
+      ? ''
+      : showAiDraftControls
+        ? 'Step 2 of 3: keep this dialog visible, click Send message, then show the same delivered text in the native client.'
+        : attachments.length > 0
+          ? 'Step 2 of 3: explain the attachment, type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.'
+          : 'Step 2 of 3: type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.';
 
   const extractProviderMessageId = (payload: unknown): string | null => {
     if (!payload || typeof payload !== 'object') return null;
@@ -519,7 +625,24 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     setNotice(null);
     try {
       const suggestion = await SocialInboxAPI.suggestReply(channel, rawBody, hint);
-      setReplyDraft(suggestion);
+      if (suggestion.kind === 'hold') {
+        await SocialInboxAPI.askOperatorQuestion({
+          channel,
+          senderId: msg.senderId,
+          externalId: msg.externalId,
+          inboundMessage: rawBody,
+          holdReason: suggestion.reason,
+          neededInfo: suggestion.neededInfo,
+        });
+        setReplyDraft('');
+        setNotice(
+          reviewMode
+            ? `Asked Diego on WhatsApp: ${compactNoticeText(suggestion.neededInfo)}`
+            : `Le escribí a Diego por WhatsApp: ${compactNoticeText(suggestion.neededInfo)}`,
+        );
+        return;
+      }
+      setReplyDraft(suggestion.text);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo generar una respuesta.');
     } finally {
@@ -546,6 +669,7 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
       setOptimisticReplyText(outgoingMessage);
       setOptimisticReplyError(null);
       setReplyDraft('');
+      setShowFollowUpComposer(false);
       setNotice(reviewMode ? 'Message sent from app UI.' : 'Respuesta enviada.');
       onRefresh();
     } catch (err) {
@@ -603,7 +727,6 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
     [replyErrorValue, reviewMode],
   );
   const sendErrorSummary = useMemo(() => summarizeReplyError(error, reviewMode), [error, reviewMode]);
-  const attachments = useMemo(() => extractAttachments(msg?.metadata), [msg?.metadata]);
   const messageAsset = useMemo(() => extractMetaMessageAsset(msg?.metadata), [msg?.metadata]);
   const nativeClientUrl = msg && channel ? resolveNativeClientUrl(channel, msg.senderId) : '';
   const markAttachmentFailed = (url: string) => {
@@ -621,11 +744,11 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
             <Typography variant="caption" color="text.secondary" noWrap>
               {msg
                 ? `${formatTimestamp(msg.createdAt)} · ${
-                    msg.repliedAt
+                    repliedAtValue
                       ? reviewMode
                         ? 'Replied'
                         : 'Respondido'
-                      : msg.replyError
+                      : replyErrorValue
                         ? reviewMode
                           ? 'Failed'
                           : 'Fallido'
@@ -646,9 +769,9 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
           <Typography color="text.secondary">{reviewMode ? 'Select a message.' : 'Selecciona un mensaje.'}</Typography>
         ) : (
           <Stack spacing={2.5}>
-            {reviewMode && !hasDeliveredReply && (
+            {reviewPendingReplyGuidance && (
               <Alert severity="info" variant="outlined">
-                Step 2 of 3: keep this dialog visible, click <strong>Send</strong>, then show the same delivered text in the native client.
+                {reviewPendingReplyGuidance}
               </Alert>
             )}
             <Paper variant="outlined" sx={{ p: 2 }}>
@@ -677,25 +800,27 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       </Tooltip>
                     </Stack>
                   </Stack>
-                  <Stack spacing={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
-                    <Typography variant="overline" color="text.secondary">
-                      {reviewMode ? 'Message ID' : 'ID'}
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
-                        {msg.externalId}
+                  {reviewMode && (
+                    <Stack spacing={0.25} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
+                      <Typography variant="overline" color="text.secondary">
+                        Message ID
                       </Typography>
-                      <Tooltip title={reviewMode ? 'Copy ID' : 'Copiar ID'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => void handleCopyExternal()}
-                          aria-label={reviewMode ? 'Copy ID' : 'Copiar ID'}
-                        >
-                          <ContentCopyIcon fontSize="inherit" />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                          {msg.externalId}
+                        </Typography>
+                        <Tooltip title="Copy ID">
+                          <IconButton
+                            size="small"
+                            onClick={() => void handleCopyExternal()}
+                            aria-label="Copy ID"
+                          >
+                            <ContentCopyIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
                     </Stack>
-                  </Stack>
+                  )}
                 </Stack>
 
                 <Divider />
@@ -833,12 +958,36 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       {repliedAtValue && (
                         <Alert severity="success">
                           {reviewMode ? 'Sent from app UI:' : 'Respondido:'} {formatTimestamp(repliedAtValue)}
-                          {replyTextValue ? ` · ${replyTextValue}` : ''}
+                          {!reviewMode && replyTextValue ? ` · ${replyTextValue}` : ''}
                         </Alert>
                       )}
                       {providerMessageId && (
                         <Alert severity="info" variant="outlined">
                           {reviewMode ? 'Provider message ID:' : 'ID de mensaje en proveedor:'} {providerMessageId}
+                        </Alert>
+                      )}
+                      {replyWindowExpired && !hasDeliveredReply && (
+                        <Alert
+                          severity="warning"
+                          variant="outlined"
+                          action={
+                            nativeClientUrl ? (
+                              <Button
+                                color="inherit"
+                                size="small"
+                                component="a"
+                                href={nativeClientUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {reviewMode ? 'Open native inbox' : 'Abrir inbox'}
+                              </Button>
+                            ) : undefined
+                          }
+                        >
+                          {reviewMode
+                            ? `Meta's ${META_REPLY_WINDOW_DAYS}-day reply window is closed for this conversation.`
+                            : `La ventana de respuesta de Meta de ${META_REPLY_WINDOW_DAYS} días ya se cerró para esta conversación.`}
                         </Alert>
                       )}
                       {messageAsset && (
@@ -875,9 +1024,15 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
               <Stack spacing={1.5}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                   <Typography variant="subtitle1" fontWeight={800}>
-                    {reviewMode ? 'Reply from app UI' : 'Responder'}
+                    {hasDeliveredReply
+                      ? reviewMode
+                        ? 'Delivered proof'
+                        : 'Respuesta enviada'
+                      : reviewMode
+                        ? 'Reply from app UI'
+                        : 'Responder'}
                   </Typography>
-                  {hasReplyDraft && (
+                  {showReplyComposer && hasReplyDraft && (
                     <Stack direction="row" spacing={1}>
                       <Button
                         variant="outlined"
@@ -887,20 +1042,19 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       >
                         {reviewMode ? 'Copy' : 'Copiar'}
                       </Button>
-                      <Button variant="outlined" size="small" onClick={() => setReplyDraft('')}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setReplyDraft('');
+                          if (hasDeliveredReply) setShowFollowUpComposer(false);
+                        }}
+                      >
                         {reviewMode ? 'Clear' : 'Limpiar'}
                       </Button>
                     </Stack>
                   )}
                 </Stack>
-
-                {reviewMode && !hasDeliveredReply && (
-                  <Alert severity="info" variant="outlined">
-                    {showAiDraftControls
-                      ? 'Explain each button while recording: AI draft (optional), message textarea, and Send action.'
-                      : 'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.'}
-                  </Alert>
-                )}
 
                 {notice && (
                   <Alert severity="success" onClose={() => setNotice(null)}>
@@ -964,7 +1118,18 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                   </Alert>
                 )}
 
-                {showAiDraftControls ? (
+                {showFollowUpPrompt && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowFollowUpComposer(true)}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    {reviewMode ? 'Write follow-up' : 'Escribir seguimiento'}
+                  </Button>
+                )}
+
+                {showReplyComposer && showAiDraftControls ? (
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
                     <TextField
                       label={reviewMode ? 'AI instructions (optional)' : 'Instrucciones para IA (opcional)'}
@@ -988,48 +1153,56 @@ export const SocialMessageDialog = ({ selection, reviewMode, activeAsset, onClos
                       {aiLoading ? (reviewMode ? 'Generating…' : 'Generando…') : reviewMode ? 'Generate with AI' : 'Generar con IA'}
                     </Button>
                   </Stack>
-                ) : !reviewMode && !hasDeliveredReply ? (
+                ) : showReplyComposer && !reviewMode && !hasDeliveredReply ? (
                   <Alert severity="info" variant="outlined">
                     La IA se oculta porque este mensaje no tiene texto. Revisa el adjunto, escribe la respuesta y enviala.
                   </Alert>
                 ) : null}
 
-                <TextField
-                  label={replyInputLabel}
-                  placeholder={replyInputPlaceholder}
-                  helperText={replyInputHelper}
-                  value={replyDraft}
-                  onChange={(e) => setReplyDraft(e.target.value)}
-                  disabled={sendLoading}
-                  multiline
-                  minRows={6}
-                  fullWidth
-                />
+                {showReplyComposer && (
+                  <TextField
+                    label={replyInputLabel}
+                    placeholder={replyInputPlaceholder}
+                    helperText={replyInputHelper}
+                    value={replyDraft}
+                    onChange={(e) => setReplyDraft(e.target.value)}
+                    disabled={sendLoading}
+                    multiline
+                    minRows={6}
+                    fullWidth
+                  />
+                )}
               </Stack>
             </Paper>
           </Stack>
         )}
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Tooltip
-          title={
-            reviewMode
-              ? 'Click to send from app UI. Keep this on screen before switching to native client.'
-              : 'Enviar respuesta'
-          }
-        >
-          <span>
-            <Button
-              onClick={() => void handleSend()}
-              variant="contained"
-              startIcon={<SendIcon />}
-              disabled={!canSend}
-            >
-              {sendLoading ? (reviewMode ? 'Sending…' : 'Enviando…') : reviewMode ? 'Send message' : 'Enviar'}
-            </Button>
-          </span>
-        </Tooltip>
-      </DialogActions>
+      {showSendAction && (
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Tooltip
+            title={
+              replyWindowExpired
+                ? reviewMode
+                  ? 'Reply window closed. Ask for a new DM or use the native inbox.'
+                  : 'La ventana de respuesta está cerrada. Pide un nuevo DM o usa Instagram.'
+                : reviewMode
+                  ? 'Click to send from app UI. Keep this on screen before switching to native client.'
+                  : 'Enviar respuesta'
+            }
+          >
+            <span>
+              <Button
+                onClick={() => void handleSend()}
+                variant="contained"
+                startIcon={<SendIcon />}
+                disabled={!canSend}
+              >
+                {sendLoading ? (reviewMode ? 'Sending…' : 'Enviando…') : reviewMode ? 'Send message' : 'Enviar'}
+              </Button>
+            </span>
+          </Tooltip>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };
@@ -1041,6 +1214,8 @@ interface ChannelPanelProps {
   messages: SocialMessage[];
   loading: boolean;
   reviewMode: boolean;
+  activeFilterLabel: string;
+  useNeutralCountLabel: boolean;
   showStatusChips: boolean;
   onSelect: (selection: SelectedMessage) => void;
 }
@@ -1052,6 +1227,8 @@ const ChannelPanel = ({
   messages,
   loading,
   reviewMode,
+  activeFilterLabel,
+  useNeutralCountLabel,
   showStatusChips,
   onSelect,
 }: ChannelPanelProps) => {
@@ -1080,6 +1257,13 @@ const ChannelPanel = ({
     (msg) => Boolean(msg.replyError?.trim()) || Boolean(msg.replyText?.trim()),
   );
   const visibleColumnCount = 3 + (showRepliedAtColumn ? 1 : 0) + (showReplyOutcomeColumn ? 1 : 0);
+  const channelCountLabel = loading
+    ? (reviewMode ? 'Loading' : 'Cargando')
+    : useNeutralCountLabel
+      ? `${reviewMode ? 'Messages' : 'Mensajes'}: ${messages.length}`
+    : showStatusChips
+      ? `${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`
+      : `${activeFilterLabel}: ${messages.length}`;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, flex: 1, minWidth: 0 }}>
@@ -1088,7 +1272,7 @@ const ChannelPanel = ({
           <Typography variant="subtitle1" fontWeight={700}>
             {label}
           </Typography>
-          <Chip label={`${reviewMode ? 'Inbound' : 'Entrantes'}: ${stats.incoming.length}`} size="small" variant="outlined" />
+          <Chip label={channelCountLabel} size="small" variant="outlined" />
         </Stack>
         {showStatusChips && visibleStatusChips.length > 0 && (
           <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -1097,95 +1281,107 @@ const ChannelPanel = ({
             ))}
           </Stack>
         )}
-        <TableContainer sx={{ maxHeight: 440 }}>
-          <Table size="small" stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
-                {showRepliedAtColumn && (
-                  <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
-                )}
-                <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
-                <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
-                {showReplyOutcomeColumn && (
-                  <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && (
-                <TableRow>
-                  <TableCell colSpan={visibleColumnCount} align="center">
-                    <CircularProgress size={22} />
-                  </TableCell>
-                </TableRow>
-              )}
-              {!loading && messages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={visibleColumnCount} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {!loading &&
-                messages.map((msg) => {
-                  const senderLabel = resolveSenderName(msg);
-                  const attachments = extractAttachments(msg.metadata);
-                  const rawBody = (msg.text ?? '').trim();
-                  const previewText =
-                    rawBody && rawBody.toLowerCase() !== '[attachment]'
-                      ? rawBody
-                      : attachments.length > 0
-                        ? 'Adjunto'
-                        : '';
-                  return (
-                    <TableRow
-                      key={msg.externalId}
-                      hover
-                      onClick={() => onSelect({ channel, message: msg })}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell>
-                        <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
+        <LazyPaginatedList
+          items={messages}
+          pagination={{
+            itemLabel: reviewMode ? 'messages' : 'mensajes',
+            initialRowsPerPage: 10,
+            resetKey: `${channel}|${activeFilterLabel}`,
+            labelRowsPerPage: reviewMode ? 'Per page' : 'Por página',
+          }}
+          renderItems={(visibleMessages) => (
+            <TableContainer sx={{ maxHeight: 440 }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 160 }}>{reviewMode ? 'Received' : 'Recibido'}</TableCell>
+                    {showRepliedAtColumn && (
+                      <TableCell sx={{ width: 160 }}>{reviewMode ? 'Replied' : 'Respondido'}</TableCell>
+                    )}
+                    <TableCell sx={{ width: 200 }}>{reviewMode ? 'Sender' : 'Remitente'}</TableCell>
+                    <TableCell>{reviewMode ? 'Message' : 'Mensaje'}</TableCell>
+                    {showReplyOutcomeColumn && (
+                      <TableCell>{reviewMode ? 'Reply / Error' : 'Respuesta / Error'}</TableCell>
+                    )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading && (
+                    <TableRow>
+                      <TableCell colSpan={visibleColumnCount} align="center">
+                        <CircularProgress size={22} />
                       </TableCell>
-                      {showRepliedAtColumn && (
-                        <TableCell>
-                          <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
-                        </TableCell>
-                      )}
-                      <TableCell>
-                        <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
-                          {senderLabel}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                          {previewText ? formatBody(previewText) : '—'}
-                        </Typography>
-                      </TableCell>
-                      {showReplyOutcomeColumn && (
-                        <TableCell>
-                          <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                            {msg.replyError
-                              ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
-                              : formatBody(msg.replyText)}
-                          </Typography>
-                        </TableCell>
-                      )}
                     </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  )}
+                  {!loading && messages.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={visibleColumnCount} align="center">
+                        <Typography variant="body2" color="text.secondary">
+                          {reviewMode ? 'No messages for this filter.' : 'Sin mensajes para este filtro.'}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!loading &&
+                    visibleMessages.map((msg) => {
+                      const senderLabel = resolveSenderName(msg);
+                      const attachments = extractAttachments(msg.metadata);
+                      const rawBody = (msg.text ?? '').trim();
+                      const previewText =
+                        rawBody && rawBody.toLowerCase() !== '[attachment]'
+                          ? rawBody
+                          : attachments.length > 0
+                            ? 'Adjunto'
+                            : '';
+                      return (
+                        <TableRow
+                          key={msg.externalId}
+                          hover
+                          onClick={() => onSelect({ channel, message: msg })}
+                          sx={{ cursor: 'pointer' }}
+                        >
+                          <TableCell>
+                            <Typography variant="body2">{formatTimestamp(msg.createdAt)}</Typography>
+                          </TableCell>
+                          {showRepliedAtColumn && (
+                            <TableCell>
+                              <Typography variant="body2">{formatTimestamp(msg.repliedAt)}</Typography>
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                              {senderLabel}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                              {previewText ? formatBody(previewText) : '—'}
+                            </Typography>
+                          </TableCell>
+                          {showReplyOutcomeColumn && (
+                            <TableCell>
+                              <Typography variant="body2" sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                {msg.replyError
+                                  ? (summarizeReplyError(msg.replyError, reviewMode)?.headline ?? formatBody(msg.replyError))
+                                  : formatBody(msg.replyText)}
+                              </Typography>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        />
       </Stack>
     </Paper>
   );
 };
 
 export default function SocialInboxPage() {
+  useDocumentTitle('Social / Bandeja');
   const location = useLocation();
   const reviewMode = useMemo(() => new URLSearchParams(location.search).get('review') === '1', [location.search]);
   const [filter, setFilter] = useState<FilterKey>('pending');
@@ -1269,6 +1465,7 @@ export default function SocialInboxPage() {
   const displayFilter = singleVisibleFilter ?? activeFilter;
   const showSingleFilterSummary = Boolean(singleVisibleFilter);
   const singleVisibleFilterLabel = singleVisibleFilter ? getFilterLabel(singleVisibleFilter, reviewMode) : '';
+  const showStatusFilterHeading = !showSingleFilterSummary;
   const showChannelStatusChips = displayFilter === 'all' && !showSingleFilterSummary;
   const instagramMessages = useMemo(() => selectMessages(instagramStats, displayFilter), [instagramStats, displayFilter]);
   const facebookMessages = useMemo(() => selectMessages(facebookStats, displayFilter), [facebookStats, displayFilter]);
@@ -1315,13 +1512,13 @@ export default function SocialInboxPage() {
       whatsappStats,
     ],
   );
-  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.stats.incoming.length > 0);
+  const hasVisibleChannelMessages = channelPanels.some((panel) => panel.messages.length > 0);
   const visibleChannelPanels = hasVisibleChannelMessages
-    ? channelPanels.filter((panel) => panel.loading || panel.stats.incoming.length > 0)
+    ? channelPanels.filter((panel) => panel.loading || panel.messages.length > 0)
     : channelPanels;
   const hiddenEmptyChannelLabels = hasVisibleChannelMessages
     ? channelPanels
-        .filter((panel) => !panel.loading && !panel.hasError && panel.stats.incoming.length === 0)
+        .filter((panel) => !panel.loading && !panel.hasError && panel.messages.length === 0)
         .map((panel) => panel.label)
     : [];
   const allChannelsLoaded = !instagramQuery.isLoading && !facebookQuery.isLoading && !whatsappQuery.isLoading;
@@ -1329,13 +1526,16 @@ export default function SocialInboxPage() {
   const hasAnyInboundMessage = filterCounts.all > 0;
   const hasEmptyInbox = !repliedOnly && allChannelsLoaded && !hasChannelLoadErrors && filterCounts.all === 0;
   const showChannelErrorOnlyState = allChannelsLoaded && hasChannelLoadErrors && filterCounts.all === 0;
-  const showReviewSetupOnlyState = reviewMode && !activeAsset && hasEmptyInbox;
+  const showReviewSetupOnlyState = reviewMode && !activeAsset && !hasAnyInboundMessage && !hasChannelLoadErrors;
+  const showInboxLoadingState = !allChannelsLoaded && !hasAnyInboundMessage && !hasChannelLoadErrors;
   const showUnifiedEmptyState = hasEmptyInbox && !showReviewSetupOnlyState;
   const showReviewMessageProofGuidance = reviewMode && Boolean(activeAsset) && hasAnyInboundMessage;
+  const showReviewAssetSetupAction = !activeAsset;
   const viewHitsCurrentLimit = channelPanels.some((panel) => panel.stats.incoming.length >= limit);
   const showLimitControl = limit !== DEFAULT_LIMIT || (!showUnifiedEmptyState && viewHitsCurrentLimit);
   const showEmptyStateRefresh = !reviewMode && showUnifiedEmptyState;
-  const showManualRefresh = !reviewMode && !showUnifiedEmptyState;
+  const showChannelErrorRetry = !reviewMode && showChannelErrorOnlyState;
+  const showManualRefresh = !reviewMode && !showUnifiedEmptyState && !showInboxLoadingState && !showChannelErrorOnlyState;
   const showHeaderControls = showLimitControl || showManualRefresh;
   const activeFilterLabel = getFilterLabel(displayFilter, reviewMode);
   const showStatusFilterEmptyState =
@@ -1344,6 +1544,19 @@ export default function SocialInboxPage() {
     && displayFilter !== 'all'
     && filterCounts.all > 0
     && filterCounts[displayFilter] === 0;
+  const pageSubtitle = reviewMode
+    ? activeAsset
+      ? hasAnyInboundMessage
+        ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
+        : 'Step 1/3 complete: send one inbound test message to the selected professional/business account.'
+      : 'Step 1/3: select the exact Page + professional/business account for this review run.'
+    : showInboxLoadingState
+      ? normalInboxLoadingSubtitle
+      : showUnifiedEmptyState
+        ? normalInboxEmptySubtitle
+        : showChannelErrorOnlyState
+          ? normalInboxErrorSubtitle
+          : normalInboxReadySubtitle;
   const refetch = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -1399,13 +1612,7 @@ export default function SocialInboxPage() {
             {reviewMode ? 'Meta App Review: Messaging Inbox' : 'Inbox social'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {reviewMode
-              ? activeAsset
-                ? hasAnyInboundMessage
-                  ? 'Step 2/3: send a live reply from app UI, then show the same message in native client.'
-                  : 'Step 1/3 complete: send one inbound test message to the selected professional/business account.'
-                : 'Step 1/3: select the exact Page + professional/business account for this review run.'
-              : 'Auto respuestas registradas por el cron diario.'}
+            {pageSubtitle}
           </Typography>
         </Stack>
         {showHeaderControls && (
@@ -1449,10 +1656,17 @@ export default function SocialInboxPage() {
                 </Typography>
                 <Typography variant="body2">Requested scopes: {reviewScopes.join(', ')}</Typography>
                 {showReviewMessageProofGuidance && (
-                  <Typography variant="body2">
-                    Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
-                    Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
-                  </Typography>
+                  <>
+                    <Typography variant="body2">
+                      Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native
+                      Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Keep this panel visible while recording. It already shows the selected account, inbound message,
+                      send action, native-client confirmation, and deleted-message refresh. App Review mode auto-refreshes
+                      every 5 seconds.
+                    </Typography>
+                  </>
                 )}
               </Stack>
             </Alert>
@@ -1467,22 +1681,10 @@ export default function SocialInboxPage() {
                 No asset selected yet. Go to Instagram setup and select the exact Page + professional/business account first.
               </Alert>
             )}
-            <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
-              {activeAsset ? 'Change selected asset' : 'Select asset in Instagram setup'}
-            </Button>
-            {showReviewMessageProofGuidance && (
-              <>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Recording checklist
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Keep this panel visible and narrate: the selected professional/business account, the inbound message, the send
-                  action, the native-client delivery confirmation, and the deleted-message refresh.
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.
-                </Typography>
-              </>
+            {showReviewAssetSetupAction && (
+              <Button component={RouterLink} to="/social/instagram?review=1" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
+                Select asset in Instagram setup
+              </Button>
             )}
           </Stack>
         </Paper>
@@ -1506,14 +1708,29 @@ export default function SocialInboxPage() {
         >
           <Stack spacing={0.5}>
             <Typography variant="body2" fontWeight={700}>
-              {reviewMode ? 'No inbound messages yet.' : 'Todavia no hay mensajes entrantes.'}
+              {reviewMode
+                ? activeAsset
+                  ? reviewSelectedAssetEmptyStateTitle
+                  : 'No inbound messages yet.'
+                : 'Todavia no hay mensajes entrantes.'}
             </Typography>
             <Typography variant="body2">
               {reviewMode
                 ? activeAsset
-                  ? 'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.'
+                  ? reviewSelectedAssetEmptyStateMessage
                   : 'Select the review asset, send one test message, and wait a few seconds. The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.'
-                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.'}
+                : 'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.'}
+            </Typography>
+          </Stack>
+        </Alert>
+      ) : showInboxLoadingState ? (
+        <Alert severity="info" variant="outlined">
+          <Stack direction="row" spacing={1.25} alignItems="center">
+            <CircularProgress size={18} />
+            <Typography variant="body2">
+              {reviewMode
+                ? 'Loading inbound messages. Filters and channel panels will appear after messages load.'
+                : 'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.'}
             </Typography>
           </Stack>
         </Alert>
@@ -1521,9 +1738,11 @@ export default function SocialInboxPage() {
         <>
           <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             <Stack spacing={1.5}>
-              <Typography variant="subtitle2" color="text.secondary">
-                {reviewMode ? 'Filter' : 'Filtro'}
-              </Typography>
+              {showStatusFilterHeading && (
+                <Typography variant="subtitle2" color="text.secondary">
+                  {reviewMode ? 'Filter' : 'Filtro'}
+                </Typography>
+              )}
               {showSingleFilterSummary ? (
                 <Stack
                   spacing={0.5}
@@ -1611,6 +1830,8 @@ export default function SocialInboxPage() {
                   messages={panel.messages}
                   loading={panel.loading}
                   reviewMode={reviewMode}
+                  activeFilterLabel={activeFilterLabel}
+                  useNeutralCountLabel={showSingleFilterSummary}
                   showStatusChips={showChannelStatusChips}
                   onSelect={(next) => setSelection(next)}
                 />
@@ -1621,6 +1842,24 @@ export default function SocialInboxPage() {
       )}
       {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
         <Stack spacing={1}>
+          {showChannelErrorRetry && (
+            <Alert
+              severity="error"
+              variant="outlined"
+              action={(
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={refetch}
+                  disabled={instagramQuery.isFetching || facebookQuery.isFetching || whatsappQuery.isFetching}
+                >
+                  Reintentar inbox
+                </Button>
+              )}
+            >
+              Reintenta desde aqui; el detalle por canal queda abajo.
+            </Alert>
+          )}
           {instagramQuery.isError && renderChannelLoadError('instagram', instagramQuery.error)}
           {facebookQuery.isError && renderChannelLoadError('facebook', facebookQuery.error)}
           {whatsappQuery.isError && renderChannelLoadError('whatsapp', whatsappQuery.error)}

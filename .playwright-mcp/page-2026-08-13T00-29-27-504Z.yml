@@ -1,0 +1,91 @@
+- generic [ref=f43e1]:
+  - generic [ref=f43e2]:
+    - generic [ref=f43e3]:
+      - link [ref=f43e1111] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - generic [ref=f43e5]:
+        - banner [ref=f43e6]:
+          - generic [ref=f43e7]:
+            - button [ref=f43e1112] [cursor=pointer]
+            - link [ref=f43e1113] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f43e1114] [cursor=pointer]:
+              - generic [ref=f43e17]: Buscar sección
+              - generic [ref=f43e18]: ⌘K
+            - generic [ref=f43e19]:
+              - button [ref=f43e1115] [cursor=pointer]:
+                - generic [ref=f43e24]: Crear
+              - button [ref=f43e1116] [cursor=pointer]
+              - button [ref=f43e1117] [cursor=pointer]:
+                - generic [ref=f43e31]: D
+        - status [ref=f43e32]
+        - main [ref=f43e35]:
+          - generic [ref=f43e37]:
+            - generic [ref=f43e39]:
+              - generic [ref=f43e40]:
+                - heading [level=3] [ref=f43e1118]: Contactos
+                - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=f43e1119] [cursor=pointer]: Nuevo contacto
+            - generic [ref=f43e50]:
+              - generic [ref=f43e93]:
+                - textbox [ref=f43e1121]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: La T de Teez
+                - button [ref=f43e1122] [cursor=pointer]
+                - group
+              - generic [ref=f43e1099]:
+                - generic [ref=f43e1100]:
+                  - heading [level=6] [ref=f43e1123]: 1 coincidencia para "La T de Teez"
+                  - paragraph [ref=f43e1102]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=f43e1103]:
+                  - button [ref=f43e1124] [cursor=pointer]:
+                    - paragraph [ref=f43e1106]: La T de Teez
+                  - paragraph [ref=f43e1107]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=f43e1108]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=f43e1125] [cursor=pointer]: Completar contacto
+          - generic [ref=f43e57]:
+            - status [ref=f43e58]:
+              - generic [ref=f43e62]: "API: online"
+            - button [ref=f43e1126] [cursor=pointer]
+    - generic [ref=f43e66]:
+      - button [ref=f43e1127] [cursor=pointer]
+      - button [ref=f43e1129] [cursor=pointer]
+      - button [ref=f43e1131] [cursor=pointer]
+      - button [ref=f43e1132] [cursor=pointer]
+      - button [ref=f43e1133] [cursor=pointer]
+      - button [ref=f43e1134] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - dialog [ref=f43e1143]:
+    - heading "Editar La T de Teez" [level=2] [ref=f43e1144]
+    - generic [ref=f43e1146]:
+      - generic [ref=f43e1147]:
+        - generic [ref=f43e1148]: Display
+        - generic [ref=f43e1149]:
+          - textbox "Display" [ref=f43e1150]: La T de Teez
+          - group:
+            - generic: Display
+      - generic [ref=f43e1151]:
+        - generic: Email
+        - generic [ref=f43e1152]:
+          - textbox "Email" [ref=f43e1153]
+          - group:
+            - generic: Email
+        - paragraph [ref=f43e1154]: Se usa como contacto principal y para crear accesos de usuario. Guarda un correo aquí y luego aparecerá Crear usuario en Acciones.
+      - generic [ref=f43e1155]:
+        - generic: Instagram
+        - generic [ref=f43e1156]:
+          - textbox "Instagram" [ref=f43e1157]
+          - group:
+            - generic: Instagram
+      - generic [ref=f43e1158]:
+        - generic: Teléfono
+        - generic [ref=f43e1159]:
+          - textbox "Teléfono" [ref=f43e1160]
+          - group:
+            - generic: Teléfono
+    - generic [ref=f43e1161]:
+      - button "Cancelar" [ref=f43e1162] [cursor=pointer]
+      - button "Guardar" [ref=f43e1163] [cursor=pointer]

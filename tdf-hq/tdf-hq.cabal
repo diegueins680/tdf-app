@@ -19,6 +19,7 @@ executable tdf-hq-exe
     TDF.API.Instagram
     TDF.API.InstagramOAuth
     TDF.API.Internships
+    TDF.API.InternAudit
     TDF.API.Future
     TDF.API.LiveSessions
     TDF.API.Feedback
@@ -34,25 +35,53 @@ executable tdf-hq-exe
     TDF.API.Services
     TDF.API.Sessions
     TDF.API.Radio
+    TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.Contracts.API
     TDF.Contracts.Server
     TDF.Contracts.Types
+    TDF.Courses.Production
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
+    TDF.API.DDEX
+    TDF.API.Directory
+    TDF.API.Reviews
+    TDF.API.Catalog
+    TDF.API.ServiceStorefront
+    TDF.API.ServiceStorefrontTypes
+    TDF.API.CommerceOperations
     TDF.Artists.Promotion
+    TDF.Artists.Enrichment
     TDF.Auth
+    TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
+    TDF.Commerce.DomoQuotes
+    TDF.Commerce.EventTickets
+    TDF.Commerce.MarketplaceSales
+    TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.ServiceBookings
+    TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.RefundStore
+    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
     TDF.Cors
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
+    TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Handlers.InputList
     TDF.Invoice.SRI
+    TDF.Internationalization
     TDF.LogBuffer
     TDF.Meta
     TDF.Models
@@ -61,28 +90,53 @@ executable tdf-hq-exe
     TDF.UUIDInstances
     TDF.Leads.Model
     TDF.Email.Service
+    TDF.FeatureRegistry
+    TDF.Operations.API
+    TDF.Operations.Model
+    TDF.Operations.Server
+    TDF.Operations.Types
+    TDF.Operations.Worker
     TDF.Services
     TDF.Services.InstagramSync
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
-    TDF.Pipelines
+    TDF.Services.EventDiscovery
+    TDF.SocialEventLifecycle
+    TDF.Services.EventLogisticsRoutes
+    TDF.Services.Stripe
     TDF.RagStore
+    TDF.UserActivity
     TDF.Routes.Academy
     TDF.Seed
     TDF.Server
+    TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
+    TDF.Server.DomoQuoteCheckout
+    TDF.Server.EventTicketCheckout
     TDF.ServerAuth
     TDF.ServerAdmin
+    TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.ServerExtra
     TDF.ServerInstagramOAuth
     TDF.ServerProposals
     TDF.ServerInternships
+    TDF.ServerInternAudit
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
+    TDF.Server.DDEX
+    TDF.Server.Directory
+    TDF.Server.Reviews
+    TDF.Server.Catalog
+    TDF.Server.ServiceStorefront
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
+    TDF.ServerFanClub
     TDF.ServerFuture
     TDF.Routes.Courses
+    TDF.Routes.DomoQuotes
+    TDF.Routes.EventTickets
     TDF.Trials.API
     TDF.Trials.DTO
     TDF.Trials.Models
@@ -90,6 +144,28 @@ executable tdf-hq-exe
     TDF.Trials.Server
     TDF.Calendar.Models
     TDF.CMS.Models
+      TDF.Catalog.Models
+      TDF.Catalog.CountryReferenceSeed
+      TDF.Catalog.Integrity
+      TDF.Catalog.Security
+      TDF.Catalog.Seed
+    TDF.Catalog.Types
+    TDF.Directory.Policy
+    TDF.DDEX.Types
+    TDF.DDEX.Models
+    TDF.DDEX.DB
+    TDF.DDEX.Storage
+    TDF.DDEX.Detect
+    TDF.DDEX.Security
+    TDF.DDEX.Validation
+    TDF.DDEX.ERN.V432.Types
+    TDF.DDEX.ERN.V432.Parse
+    TDF.DDEX.ERN.V432.Normalize
+    TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ERN.V432.Render
+    TDF.DDEX.ERN.V432.Convert
+    TDF.DDEX.Observability
+    TDF.DDEX.TestFixtures
     TDF.Version
     TDF.WhatsApp.Client
     TDF.WhatsApp.History
@@ -142,16 +218,20 @@ executable tdf-hq-exe
     , scientific
     , safe-exceptions
     , base64-bytestring
+    , base16-bytestring
     , directory
     , process
     , temporary
     , bcrypt
     , path-pieces
     , uuid
+    , xml
     , template-haskell
     , file-embed
     , smtp-mail
     , tagged
+    , crypton
+    , memory
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
@@ -171,8 +251,11 @@ test-suite tdf-hq-test
     TDF.API.Instagram
     TDF.API.InstagramOAuth
     TDF.API.Internships
+    TDF.API.InternAudit
+    TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.API.Calendar
+    TDF.API.CommerceOperations
     TDF.API.Label
     TDF.API.Services
     TDF.Contracts.API
@@ -188,50 +271,99 @@ test-suite tdf-hq-test
     TDF.API.Rooms
     TDF.API.Sessions
     TDF.API.SocialEventsAPI
+    TDF.API.EventResearchAPI
     TDF.API.Types
     TDF.API.WhatsApp
+    TDF.API.Directory
     TDF.APITypesSpec
     TDF.Artists.Promotion
     TDF.Artists.PromotionSpec
+    TDF.Artists.Enrichment
+    TDF.Artists.EnrichmentSpec
     TDF.Auth
+    TDF.CampaignAutomation
+    TDF.Commerce.CheckoutStore
+    TDF.Commerce.CourseCheckout
+    TDF.Commerce.DomoQuotes
+    TDF.Commerce.EventTickets
+    TDF.Commerce.MarketplaceSales
+    TDF.Commerce.MarketplaceRentals
+    TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.ServiceBookings
+    TDF.Commerce.ProviderEventStore
+    TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.RefundStore
+    TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cors
     TDF.Cron
+    TDF.Courses.Production
     TDF.DB
     TDF.DTO
     TDF.DTO.SocialEventsDTO
+    TDF.DTO.EventResearchDTO
+    TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Service
     TDF.Handlers.InputList
     TDF.Invoice.SRI
+    TDF.Internationalization
     TDF.Leads.Model
     TDF.Meta
     TDF.Models
     TDF.ModelsExtra
     TDF.Models.SocialEventsModels
     TDF.CMS.Models
-    TDF.Pipelines
+      TDF.Catalog.Models
+      TDF.Catalog.CountryReferenceSeed
+      TDF.Catalog.Integrity
+      TDF.Catalog.Security
+      TDF.Catalog.Seed
+    TDF.Catalog.SecuritySpec
+    TDF.Catalog.RecordsSpec
+    TDF.Catalog.PipelineSpec
+    TDF.Catalog.Types
+    TDF.Directory.Policy
+    TDF.Directory.PolicySpec
     TDF.Profiles.Artist
     TDF.Profiles.ArtistSpec
     TDF.RagStore
     TDF.Routes.Academy
     TDF.Routes.Courses
+    TDF.Routes.DomoQuotes
+    TDF.Routes.EventTickets
     TDF.Seed
     TDF.Server
+    TDF.Server.Catalog
+    TDF.Server.CommerceOperations
+    TDF.Server.CourseCheckout
+    TDF.Server.DomoQuoteCheckout
+    TDF.Server.EventTicketCheckout
+    TDF.Server.DDEX
+    TDF.Server.Directory
+    TDF.Server.ServiceStorefront
     TDF.ServerAuth
+    TDF.ServerAuthSpec
     TDF.ServerAdmin
     TDF.ServerExtra
     TDF.ServerExtraSpec
     TDF.ServerInstagramOAuth
     TDF.ServerInternships
+    TDF.ServerInternAudit
     TDF.ServerProposals
+    TDF.Server.SocialDiscovery
     TDF.Server.SocialSync
     TDF.Server.SocialEventsHandlers
+    TDF.Server.EventResearch
+    TDF.SocialEventLifecycle
     TDF.ServerFuture
     TDF.ServerLiveSessions
     TDF.ServerFeedback
     TDF.ServerRadio
+    TDF.ServerFanClub
+    TDF.ServerFanClubSpec
     TDF.ServerSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
@@ -240,13 +372,28 @@ test-suite tdf-hq-test
     TDF.Services
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
+    TDF.Services.EventDiscovery
+    TDF.Services.EventLogisticsRoutes
+    TDF.Services.EventDiscoverySpec
+    TDF.Server.EventResearchSpec
     TDF.Services.InstagramSync
+    TDF.Services.Stripe
     TDF.Trials.API
     TDF.Trials.DTO
     TDF.Trials.Models
     TDF.Trials.Server
     TDF.Trials.PublicLeadSpec
+    TDF.DDEX.ERN.V432.ParseSpec
+    TDF.DDEX.ERN.V432.BusinessRulesSpec
+    TDF.DDEX.DB
+    TDF.DDEX.Models
+    TDF.DDEX.Types
+    TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ERN.V432.Normalize
+    TDF.DDEX.ERN.V432.Parse
+    TDF.DDEX.ERN.V432.Types
     TDF.UUIDInstances
+    TDF.UserActivity
     TDF.Version
     TDF.LogBuffer
     TDF.WhatsApp.Types
@@ -300,12 +447,17 @@ test-suite tdf-hq-test
     , scientific
     , safe-exceptions
     , base64-bytestring
+    , base16-bytestring
     , temporary
     , process
     , bcrypt
     , path-pieces
     , uuid
+    , xml
     , template-haskell
     , file-embed
     , hspec                >=2.7
+    , QuickCheck           >=2.14
     , smtp-mail
+    , crypton
+    , memory

@@ -179,7 +179,7 @@ export default function ResetPasswordPage() {
     <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 2, md: 6 } }}>
       <Card sx={{ width: '100%', maxWidth: 640, borderRadius: 4, boxShadow: 8 }}>
         <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack component="form" spacing={2.5} onSubmit={handleSubmit}>
+          <Stack component="form" spacing={2.5} onSubmit={(event) => { void handleSubmit(event); }}>
             <Stack spacing={1}>
               <Typography variant="overline" color="text.secondary">
                 Recuperar acceso

@@ -1,0 +1,304 @@
+- generic [ref=f12e2617]:
+  - generic [ref=f12e2620]:
+    - link [ref=f12e3753] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f12e3754]
+    - generic [ref=f12e2633]:
+      - link [ref=f12e3755] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f12e3756]
+      - link [ref=f12e3757] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f12e3758]
+      - link [ref=f12e3759] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f12e3760]
+      - link [ref=f12e3761] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f12e3762]
+      - link [ref=f12e3763] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f12e3764]
+      - link [ref=f12e3765] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f12e3766]
+      - link [ref=f12e3767] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f12e3768]
+      - link [ref=f12e3769] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f12e3770]:
+          - img "tdf.records.label's profile picture" [ref=f12e3771]
+    - generic [ref=f12e2722]:
+      - link [ref=f12e3772] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f12e3773]
+      - link [ref=f12e3774] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f12e3775]
+  - main [ref=f12e2742]:
+    - generic [ref=f12e2747]:
+      - navigation "Thread list" [ref=f12e3776]:
+        - generic [ref=f12e2749]:
+          - generic [ref=f12e2750]:
+            - button [ref=f12e3777] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f12e3778]
+              - img "Down chevron icon" [ref=f12e3779]
+            - button [ref=f12e3780] [cursor=pointer]:
+              - img "New message" [ref=f12e3781]
+          - tablist [ref=f12e2767]:
+            - tab "Primary" [ref=f12e3782] [cursor=pointer]
+            - tab "General" [active] [selected] [ref=f12e3783] [cursor=pointer]
+            - tab "From ads" [ref=f12e3784] [cursor=pointer]
+            - tab "Requests" [ref=f12e3785] [cursor=pointer]
+          - generic [ref=f12e2784]:
+            - img "Search" [ref=f12e3786]
+            - textbox "Search" [ref=f12e3787]
+          - generic [ref=f12e2790]:
+            - generic [ref=f12e2792]:
+              - list [ref=f12e2794]:
+                - listitem [ref=f12e2795]
+                - listitem [ref=f12e2796]:
+                  - button "Try a fun fact... Your note" [ref=f12e3788] [cursor=pointer]:
+                    - generic [ref=f12e2799]:
+                      - generic [ref=f12e2800]: Try a fun fact...
+                      - generic [ref=f12e2806]:
+                        - link [ref=f12e2808]
+                        - generic [ref=f12e2809]: Your note
+                - listitem [ref=f12e2811]:
+                  - button "No dormí ni vrg:( naoenpatines's profile picture nao✨" [ref=f12e3789] [cursor=pointer]:
+                    - generic [ref=f12e2815]:
+                      - generic [ref=f12e2816]: No dormí ni vrg:(
+                      - generic [ref=f12e2823]:
+                        - link [ref=f12e3790]:
+                          - img "naoenpatines's profile picture" [ref=f12e3791]
+                        - generic [ref=f12e2827]: nao✨
+                - listitem [ref=f12e2830]:
+                  - button "Hic et nunc danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=f12e3792] [cursor=pointer]:
+                    - generic [ref=f12e2834]:
+                      - generic [ref=f12e2835]: Hic et nunc
+                      - generic [ref=f12e2842]:
+                        - link [ref=f12e3793]:
+                          - img "danyrivadeneira7's profile picture" [ref=f12e3794]
+                        - generic [ref=f12e2846]: Dany Rivadeneira López
+                - listitem [ref=f12e2849]:
+                  - button "Mi casa, en el centro, está disponible para quien necesite de algo, strange_soul.col's profile picture Strange Soul Dj" [ref=f12e3795] [cursor=pointer]:
+                    - generic [ref=f12e2853]:
+                      - generic [ref=f12e2854]: Mi casa, en el centro, está disponible para quien necesite de algo,
+                      - generic [ref=f12e2861]:
+                        - link [ref=f12e3796]:
+                          - img "strange_soul.col's profile picture" [ref=f12e3797]
+                        - generic [ref=f12e2865]: Strange Soul Dj
+                - listitem [ref=f12e2868]:
+                  - button "🌀 gabunogabriela's profile picture Gabu Córdova (NO Gabriela)" [ref=f12e3798] [cursor=pointer]:
+                    - generic [ref=f12e2872]:
+                      - generic [ref=f12e2873]: 🌀
+                      - generic [ref=f12e2880]:
+                        - link [ref=f12e3799]:
+                          - img "gabunogabriela's profile picture" [ref=f12e3800]
+                        - generic [ref=f12e2884]: Gabu Córdova (NO Gabriela)
+                - listitem [ref=f12e2887]:
+                  - button "😮‍💨😍🎸 stevelopezok's profile picture Steve Lopez" [ref=f12e3801] [cursor=pointer]:
+                    - generic [ref=f12e2891]:
+                      - generic [ref=f12e2892]: 😮‍💨😍🎸
+                      - generic [ref=f12e2899]:
+                        - link [ref=f12e3802]:
+                          - img "stevelopezok's profile picture" [ref=f12e3803]
+                        - generic [ref=f12e2903]: Steve Lopez
+                - listitem [ref=f12e2906]:
+                  - button "Mañana barra libre en @collide.party de 8 a 10! Ven a previar😋⭐️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f12e3804] [cursor=pointer]:
+                    - generic [ref=f12e2910]:
+                      - generic [ref=f12e2918]:
+                        - text: Mañana barra libre en
+                        - link "@collide.party" [ref=f12e3805]:
+                          - /url: /collide.party/
+                        - text: de 8 a 10! Ven a previar😋⭐️
+                      - generic [ref=f12e2920]:
+                        - link [ref=f12e3806]:
+                          - img "anajusegovia's profile picture" [ref=f12e3807]
+                        - generic [ref=f12e2924]: Ana Julia/ DJ JU🫧
+                - listitem [ref=f12e2927]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Perro Fiel (feat. Nicky Jam) Shakira 😅 soley.fino's profile picture Soley Fino" [ref=f12e3808] [cursor=pointer]:
+                    - generic [ref=f12e2931]:
+                      - generic [ref=f12e2937]:
+                        - generic [ref=f12e2938]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f12e3809]
+                          - generic [ref=f12e2944]: Perro Fiel (feat. Nicky Jam)
+                        - generic [ref=f12e2945]: Shakira
+                        - generic [ref=f12e2946]: 😅
+                      - generic [ref=f12e2947]:
+                        - link [ref=f12e3810]:
+                          - img "soley.fino's profile picture" [ref=f12e3811]
+                        - generic [ref=f12e2951]: Soley Fino
+                - listitem [ref=f12e2954]:
+                  - button "🇪🇨 green.house_music's profile picture Green House Music | Sello Discográfico" [ref=f12e3812] [cursor=pointer]:
+                    - generic [ref=f12e2958]:
+                      - generic [ref=f12e2959]: 🇪🇨
+                      - generic [ref=f12e2966]:
+                        - link [ref=f12e3813]:
+                          - img "green.house_music's profile picture" [ref=f12e3814]
+                        - generic [ref=f12e2970]: Green House Music | Sello Discográfico
+              - button "Next" [ref=f12e3815] [cursor=pointer]
+            - generic [ref=f12e2978]:
+              - button "user-profile-picture Instagram User Liked a message a year ago" [ref=f12e3897] [cursor=pointer]:
+                - generic [ref=f12e3899]:
+                  - img "user-profile-picture" [ref=f12e3903]
+                  - generic [ref=f12e3906]:
+                    - generic [ref=f12e3907]: Instagram User
+                    - generic [ref=f12e3913]:
+                      - generic [ref=f12e3914]: Liked a message
+                      - generic [ref=f12e3916]:
+                        - generic [ref=f12e3917]: ·
+                        - generic "a year ago" [ref=f12e3922]: 1y
+              - button "user-profile-picture Jofiel.arch.music Liked a message a year ago" [ref=f12e3926] [cursor=pointer]:
+                - generic [ref=f12e3928]:
+                  - img "user-profile-picture" [ref=f12e3932]
+                  - generic [ref=f12e3935]:
+                    - generic [ref=f12e3936]: Jofiel.arch.music
+                    - generic [ref=f12e3942]:
+                      - generic [ref=f12e3943]: Liked a message
+                      - generic [ref=f12e3945]:
+                        - generic [ref=f12e3946]: ·
+                        - generic "a year ago" [ref=f12e3951]: 1y
+              - button "user-profile-picture Active Everaldho Everaldho sent an attachment. a year ago" [ref=f12e3955] [cursor=pointer]:
+                - generic [ref=f12e3957]:
+                  - generic [ref=f12e3959]:
+                    - img "user-profile-picture" [ref=f12e3961]
+                    - generic [ref=f12e3962]: Active
+                  - generic [ref=f12e3968]:
+                    - generic [ref=f12e3969]: Everaldho
+                    - generic [ref=f12e3975]:
+                      - generic [ref=f12e3976]: Everaldho sent an attachment.
+                      - generic [ref=f12e3978]:
+                        - generic [ref=f12e3979]: ·
+                        - generic "a year ago" [ref=f12e3984]: 1y
+              - 'button "user-profile-picture Renato Goyes García You: Primero empiezas con teoría obvio jeje a year ago" [ref=f12e3988] [cursor=pointer]':
+                - generic [ref=f12e3990]:
+                  - img "user-profile-picture" [ref=f12e3994]
+                  - generic [ref=f12e3997]:
+                    - generic [ref=f12e3998]: Renato Goyes García
+                    - generic [ref=f12e4004]:
+                      - generic [ref=f12e4005]: "You: Primero empiezas con teoría obvio jeje"
+                      - generic [ref=f12e4007]:
+                        - generic [ref=f12e4008]: ·
+                        - generic "a year ago" [ref=f12e4013]: 1y
+              - button "user-profile-picture Diego Jaramillo Diego sent an attachment. a year ago" [ref=f12e4017] [cursor=pointer]:
+                - generic [ref=f12e4019]:
+                  - img "user-profile-picture" [ref=f12e4023]
+                  - generic [ref=f12e4026]:
+                    - generic [ref=f12e4027]: Diego Jaramillo
+                    - generic [ref=f12e4033]:
+                      - generic [ref=f12e4034]: Diego sent an attachment.
+                      - generic [ref=f12e4036]:
+                        - generic [ref=f12e4037]: ·
+                        - generic "a year ago" [ref=f12e4042]: 1y
+              - button "user-profile-picture Julio DÍaz Julio sent an attachment. a year ago" [ref=f12e4046] [cursor=pointer]:
+                - generic [ref=f12e4048]:
+                  - img "user-profile-picture" [ref=f12e4052]
+                  - generic [ref=f12e4055]:
+                    - generic [ref=f12e4056]: Julio DÍaz
+                    - generic [ref=f12e4062]:
+                      - generic [ref=f12e4063]: Julio sent an attachment.
+                      - generic [ref=f12e4065]:
+                        - generic [ref=f12e4066]: ·
+                        - generic "a year ago" [ref=f12e4071]: 1y
+              - button "user-profile-picture WE ARE MOVING GATHERING WE sent an attachment. 2 years ago" [ref=f12e4075] [cursor=pointer]:
+                - generic [ref=f12e4077]:
+                  - img "user-profile-picture" [ref=f12e4081]
+                  - generic [ref=f12e4084]:
+                    - generic [ref=f12e4085]: WE ARE MOVING GATHERING
+                    - generic [ref=f12e4091]:
+                      - generic [ref=f12e4092]: WE sent an attachment.
+                      - generic [ref=f12e4094]:
+                        - generic [ref=f12e4095]: ·
+                        - generic "2 years ago" [ref=f12e4100]: 2y
+              - button "user-profile-picture Labii Labii sent an attachment. 2 years ago" [ref=f12e4104] [cursor=pointer]:
+                - generic [ref=f12e4106]:
+                  - img "user-profile-picture" [ref=f12e4110]
+                  - generic [ref=f12e4113]:
+                    - generic [ref=f12e4114]: Labii
+                    - generic [ref=f12e4120]:
+                      - generic [ref=f12e4121]: Labii sent an attachment.
+                      - generic [ref=f12e4123]:
+                        - generic [ref=f12e4124]: ·
+                        - generic "2 years ago" [ref=f12e4129]: 2y
+              - button [ref=f12e3840] [cursor=pointer]:
+                - generic [ref=f12e3244]:
+                  - status "Loading..." [ref=f12e3841]
+                  - generic [ref=f12e3250]:
+                    - status "Loading..." [ref=f12e3842]
+                    - status "Loading..." [ref=f12e3843]
+      - generic [ref=f12e3391]:
+        - generic [ref=f12e3395]:
+          - link "Open the profile page of oximoron_tu_tentaculo" [ref=f12e3844] [cursor=pointer]:
+            - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f12e3397]:
+              - img "user-profile-picture" [ref=f12e3845]
+              - generic [ref=f12e3402]:
+                - heading "Tentáculos" [level=2] [ref=f12e3846]
+                - generic [ref=f12e3406]: oximoron_tu_tentaculo
+          - generic [ref=f12e3410]:
+            - button [ref=f12e3847] [cursor=pointer]:
+              - img "Audio call" [ref=f12e3848]
+            - button [ref=f12e3849] [cursor=pointer]:
+              - img "Video call" [ref=f12e3850]
+            - button [ref=f12e3851] [cursor=pointer]:
+              - img "Conversation information" [ref=f12e3852]
+        - generic [ref=f12e3426]:
+          - generic [ref=f12e3430]:
+            - generic [ref=f12e3431]:
+              - img "user-profile-picture" [ref=f12e3853]
+              - generic [ref=f12e3436]:
+                - heading "Tentáculos" [level=2] [ref=f12e3854]
+                - generic [ref=f12e3441]: oximoron_tu_tentaculo · Instagram
+                - link "View profile" [ref=f12e3855] [cursor=pointer]:
+                  - /url: /oximoron_tu_tentaculo/
+            - generic [ref=f12e3445]:
+              - generic [ref=f12e3448]:
+                - generic [ref=f12e3449]: 7/11/23, 6:27 PM
+                - group [ref=f12e3452]:
+                  - generic [ref=f12e3454]:
+                    - link "Open the profile page of oximoron_tu_tentaculo" [ref=f12e3856] [cursor=pointer]:
+                      - /url: /oximoron_tu_tentaculo
+                      - img "user-profile-picture" [ref=f12e3857]
+                    - generic [ref=f12e3464]:
+                      - generic [ref=f12e3465]: Unsupported message
+                      - generic [ref=f12e3467]: Use the Instagram mobile app to view this message.
+              - generic [ref=f12e3470]:
+                - generic [ref=f12e3471]: Fri 10:09 AM
+                - group [ref=f12e3474]:
+                  - generic [ref=f12e3479]:
+                    - generic [ref=f12e3482]:
+                      - text: Hola, Tentáculos
+                      - img "👋" [ref=f12e3858]
+                      - text: "Vimos su comentario en TDF y la agenda de encuentros electrónicos que mueven en Quito. En TDF pueden reunir perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b" [ref=f12e3859] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+                      - text: "Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f12e3860] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=Promotor&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b
+              - group [ref=f12e3495]:
+                - generic [ref=f12e3496]: Hola
+              - group [ref=f12e3506]:
+                - generic [ref=f12e3507]:
+                  - generic [ref=f12e3508]:
+                    - link "Open the profile page of oximoron_tu_tentaculo" [ref=f12e3861] [cursor=pointer]:
+                      - /url: /oximoron_tu_tentaculo
+                      - img "user-profile-picture" [ref=f12e3862]
+                    - button [ref=f12e3517] [cursor=pointer]
+                  - button "❤️" [ref=f12e3885] [cursor=pointer]
+            - generic [ref=f12e3528]: Seen 19h ago
+          - generic [ref=f12e3539]:
+            - button [ref=f12e3886] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f12e3887]
+            - generic [ref=f12e3546]:
+              - textbox [ref=f12e3547]:
+                - paragraph [ref=f12e3548]
+              - generic: Message...
+            - generic [ref=f12e3549]:
+              - button [ref=f12e3888] [cursor=pointer]:
+                - img "Voice Clip" [ref=f12e3889]
+              - button [ref=f12e3890] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f12e3891]
+              - button [ref=f12e3892] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f12e3893]

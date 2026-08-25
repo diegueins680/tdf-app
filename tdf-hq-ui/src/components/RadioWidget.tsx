@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { logger } from '../utils/logger';
+import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -48,8 +49,19 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Countries } from '../api/countries';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
+import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
+import {
+  createTorrentAudioSession,
+  isMagnetLink,
+  isTorrentFile,
+  magnetDisplayName,
+  MAX_TORRENT_FILE_BYTES,
+  type TorrentAudioSession,
+  type TorrentPlaybackProgress,
+} from '../utils/torrentAudio';
+import LazyPaginatedList from './LazyPaginatedList';
 
 interface Prompt {
   text: string;
@@ -70,84 +82,30 @@ interface Station {
   streamUrl: string;
   region?: string;
   stationId?: string;
+  countryId?: string;
   country?: string;
+  genreId?: string;
   genre?: string;
   mood: string;
   prompts: Prompt[];
-  source?: 'curated' | 'custom' | 'db' | 'shared';
+  source?: 'custom' | 'db' | 'shared' | 'torrent';
+  torrentFile?: File;
 }
 
-const CURATED_STATIONS: Station[] = [
-  {
-    id: 'cosmic-cycles',
-    name: 'Cosmic Cycles',
-    mood: 'Downtempo / Ambient',
-    streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3', // reliable FIP stream
-    country: 'FR',
-    genre: 'Downtempo / Ambient',
-    source: 'curated',
-    prompts: [
-      { text: 'Paisajes sonoros nocturnos con sintes lentos', author: 'Agente', createdAt: '2025-12-01' },
-      { text: 'Texturas granulares inspiradas en lluvia en Quito', createdAt: '2025-12-02' },
-    ],
-  },
-  {
-    id: 'kexp',
-    name: 'KEXP Seattle',
-    region: 'US / Alt',
-    mood: 'Indie / Live Sessions',
-    streamUrl: 'https://kexp-mp3-128.streamguys1.com/kexp128.mp3',
-    country: 'US',
-    genre: 'Indie / Live Sessions',
-    source: 'curated',
-    prompts: [],
-  },
-  {
-    id: 'wnyc',
-    name: 'WNYC FM',
-    region: 'US / News',
-    mood: 'News / Talk',
-    streamUrl: 'https://fm939.wnyc.org/wnycfm-web',
-    country: 'US',
-    genre: 'News / Talk',
-    source: 'curated',
-    prompts: [],
-  },
-];
+const RADIO_STATION_INITIAL_ROWS_PER_PAGE: number = 3 * 8;
+const RADIO_STATION_ROWS_PER_PAGE_OPTIONS = [
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE * 2,
+  RADIO_STATION_INITIAL_ROWS_PER_PAGE * 4,
+] as const satisfies readonly number[];
 
-const RADIO_COUNTRIES = [
-  'AR',
-  'BR',
-  'CA',
-  'CL',
-  'CO',
-  'CR',
-  'DE',
-  'EC',
-  'ES',
-  'FR',
-  'MX',
-  'PE',
-  'PT',
-  'UK',
-  'US',
-  'VE',
-];
-
-const HIDDEN_RADIO_PATH_PREFIXES = [
-  '/login',
-  '/reservar',
-  '/marketplace',
-  '/inscripcion',
-  '/whatsapp/consentimiento',
-  '/whatsapp/ok',
-];
-
-const RADIO_ON_DEMAND_PATH_PREFIXES = [
-  '/inicio',
-  '/fans',
-  '/records',
-];
+const EMPTY_STATION: Station = {
+  id: 'radio-empty',
+  name: 'Sin emisoras disponibles',
+  mood: 'Radio',
+  streamUrl: '',
+  prompts: [],
+};
 
 function PromptList({ prompts }: { prompts: Prompt[] }) {
   if (prompts.length === 0) {
@@ -192,7 +150,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
                         if (navigator?.clipboard?.writeText) {
                           navigator.clipboard
                             .writeText(p.code ?? '')
-                            .catch((err) => console.warn('No se pudo copiar las instrucciones Tidal', err));
+                            .catch((err) => logger.warn('No se pudo copiar las instrucciones Tidal', err));
                         }
                       }}
                     >
@@ -212,13 +170,7 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const requestedRadioView = location.hash === '#radio';
-  const hideRadioForRoute =
-    HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
-    || (
-      RADIO_ON_DEMAND_PATH_PREFIXES.some((prefix) => location.pathname.startsWith(prefix))
-      && !requestedRadioView
-    );
+  const hideRadioForRoute = shouldHideRadioForRoute(location.pathname, location.hash);
   const radioEnabled = !hideRadioForRoute;
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -233,10 +185,10 @@ export default function RadioWidget() {
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
-  const [newStationCountry, setNewStationCountry] = useState('');
-  const [newStationGenre, setNewStationGenre] = useState('');
-  const [searchCountry, setSearchCountry] = useState('');
-  const [searchGenre, setSearchGenre] = useState('');
+  const [newStationCountryId, setNewStationCountryId] = useState('');
+  const [newStationGenreId, setNewStationGenreId] = useState('');
+  const [searchCountryId, setSearchCountryId] = useState('');
+  const [searchGenreId, setSearchGenreId] = useState('');
   const [favoriteKeys, setFavoriteKeys] = useState<string[]>([]);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -249,8 +201,8 @@ export default function RadioWidget() {
   });
   const [importing, setImporting] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editCountry, setEditCountry] = useState('');
-  const [editGenre, setEditGenre] = useState('');
+  const [editCountryId, setEditCountryId] = useState('');
+  const [editGenreId, setEditGenreId] = useState('');
   const [lastUpdatedTs, setLastUpdatedTs] = useState<number | null>(null);
   const [autoSkipOnError, setAutoSkipOnError] = useState(false);
   // Start minimized by default; respect previous user choice if stored.
@@ -279,7 +231,7 @@ export default function RadioWidget() {
   const [broadcastInfo, setBroadcastInfo] = useState<RadioTransmissionInfo | null>(null);
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastError, setBroadcastError] = useState<string | null>(null);
-  const [broadcastForm, setBroadcastForm] = useState({ name: '', genre: '', country: '' });
+  const [broadcastForm, setBroadcastForm] = useState({ name: '', genreId: '', countryId: '' });
   const [inputLevel, setInputLevel] = useState(0);
   const meterRafRef = useRef<number | null>(null);
   const meterContextRef = useRef<AudioContext | null>(null);
@@ -292,13 +244,7 @@ export default function RadioWidget() {
   const [customPreviewError, setCustomPreviewError] = useState<string | null>(null);
   const [liveStartedAt, setLiveStartedAt] = useState<number | null>(null);
   const [liveElapsedMs, setLiveElapsedMs] = useState(0);
-  const [autoStopMinutes, setAutoStopMinutes] = useState(120);
-  const autoStopOptions = [0, 30, 60, 90, 120, 180] as const;
-  const parseAutoStopMinutes = (raw: string): number => {
-    const parsed = Number(raw);
-    if (!Number.isSafeInteger(parsed)) return 120;
-    return autoStopOptions.some((opt) => opt === parsed) ? parsed : 120;
-  };
+  const [autoStopOptionId, setAutoStopOptionId] = useState('');
   const [audioInputs, setAudioInputs] = useState<MediaDeviceInfo[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>(() => {
     if (typeof window === 'undefined') return '';
@@ -353,25 +299,18 @@ export default function RadioWidget() {
       // ignore
     }
   }, [panelSize]);
-  const defaultStation = useMemo<Station>(
-    () =>
-      CURATED_STATIONS[0] ?? {
-        id: 'fallback',
-        name: 'Radio',
-        mood: 'Live',
-        streamUrl: '',
-        prompts: [],
-      },
-    [],
-  );
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const torrentSessionRef = useRef<TorrentAudioSession | null>(null);
+  const torrentAbortRef = useRef<AbortController | null>(null);
+  const torrentLoadRequestRef = useRef(0);
   const [expanded, setExpanded] = useState(false);
   const [activeId, setActiveId] = useState<string>(() => {
-    if (typeof window === 'undefined') return defaultStation.id;
+    if (typeof window === 'undefined') return EMPTY_STATION.id;
     const stored = window.localStorage.getItem('radio-active-id');
-    return stored ?? defaultStation.id;
+    return stored ?? EMPTY_STATION.id;
   });
   const [isPlaying, setIsPlaying] = useState(false);
+  const isPlayingRef = useRef(false);
   const [muted, setMuted] = useState(false);
   const [nowPlayingTitle, setNowPlayingTitle] = useState<string | null>(null);
   const [volume, setVolume] = useState<number>(() => {
@@ -382,22 +321,60 @@ export default function RadioWidget() {
     return 0.8;
   });
   const [playbackWarning, setPlaybackWarning] = useState<string | null>(null);
+  const [torrentLoadAttempt, setTorrentLoadAttempt] = useState(0);
+  const [torrentStatus, setTorrentStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [torrentProgress, setTorrentProgress] = useState<TorrentPlaybackProgress | null>(null);
   const [promptDraft, setPromptDraft] = useState('');
   const promptInputRef = useRef<HTMLInputElement | null>(null);
-  const [promptState, setPromptState] = useState<Record<string, Prompt[]>>(() =>
-    Object.fromEntries(CURATED_STATIONS.map((s) => [s.id, [...s.prompts]])),
-  );
+  const [promptState, setPromptState] = useState<Record<string, Prompt[]>>({});
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
   const keyFor = useCallback((station: Station) => station.streamUrl.toLowerCase(), []);
-  const countryQuery = searchCountry.trim();
-  const genreQuery = searchGenre.trim();
+  const countryIdQuery = searchCountryId.trim();
+  const genreIdQuery = searchGenreId.trim();
   const countriesQuery = useQuery({
-    queryKey: ['countries'],
-    queryFn: Countries.list,
-    staleTime: 12 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    queryKey: ['catalog', 'countries', 'es', 'radio'],
+    queryFn: () => Catalogs.listItems('countries', { locale: 'es', page: 1, pageSize: 500 }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     retry: false,
     enabled: radioEnabled,
   });
+  const genresQuery = useQuery({
+    queryKey: ['catalog', 'genres', 'es', 'radio'],
+    queryFn: () => Catalogs.listItems('genres', { locale: 'es', page: 1, pageSize: 500 }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    enabled: radioEnabled,
+  });
+  const autoStopOptionsQuery = useQuery({
+    queryKey: ['radio-auto-stop-options', 'es'],
+    queryFn: () => RadioAPI.listAutoStopOptions('es'),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: false,
+    enabled: radioEnabled,
+  });
+  const autoStopOptions = useMemo(
+    () => autoStopOptionsQuery.data?.options ?? [],
+    [autoStopOptionsQuery.data?.options],
+  );
+  const selectedAutoStopOption = useMemo(
+    () => autoStopOptions.find((option) => option.id === autoStopOptionId) ?? null,
+    [autoStopOptionId, autoStopOptions],
+  );
+  const autoStopMinutes = selectedAutoStopOption?.durationMinutes ?? 0;
+  useEffect(() => {
+    if (autoStopOptions.length === 0) {
+      setAutoStopOptionId('');
+      return;
+    }
+    if (autoStopOptions.some((option) => option.id === autoStopOptionId)) return;
+    const persistedDefault = autoStopOptions.find((option) => option.defaultForBroadcast);
+    setAutoStopOptionId(persistedDefault?.id ?? '');
+  }, [autoStopOptionId, autoStopOptions]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -510,8 +487,8 @@ export default function RadioWidget() {
   }, [mediaDevicesSupported, refreshAudioInputs]);
 
   const radioSearch = useQuery<RadioStreamDTO[], Error>({
-    queryKey: ['radio-streams', countryQuery.toLowerCase(), genreQuery.toLowerCase()],
-    queryFn: () => RadioAPI.search({ country: countryQuery, genre: genreQuery }),
+    queryKey: ['radio-streams', countryIdQuery, genreIdQuery],
+    queryFn: () => RadioAPI.search({ countryId: countryIdQuery, genreId: genreIdQuery }),
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
@@ -579,7 +556,9 @@ export default function RadioWidget() {
       id: `db-${dto.rsId}`,
       name: dto.rsName ?? 'Radio',
       streamUrl: dto.rsStreamUrl,
+      countryId: dto.rsCountryId ?? undefined,
       country: dto.rsCountry ?? undefined,
+      genreId: dto.rsGenreId ?? undefined,
       genre: dto.rsGenre ?? undefined,
       mood: dto.rsGenre ?? 'Live',
       prompts: [],
@@ -587,7 +566,7 @@ export default function RadioWidget() {
     }));
   }, [radioSearch.data]);
   const allStations = useMemo<Station[]>(() => {
-    const merged = [...CURATED_STATIONS, ...dbStations, ...customStations];
+    const merged = [...dbStations, ...customStations];
     const map = new Map<string, Station>();
     merged.forEach((station) => {
       const key = station.streamUrl.toLowerCase();
@@ -600,6 +579,12 @@ export default function RadioWidget() {
     });
     return Array.from(map.values());
   }, [customStations, dbStations]);
+  const defaultStation = allStations[0] ?? EMPTY_STATION;
+  useEffect(() => {
+    if (allStations.length > 0 && !allStations.some((station) => station.id === activeId)) {
+      setActiveId(allStations[0]!.id);
+    }
+  }, [activeId, allStations]);
   const availableStations = allStations;
   const visibleStations = useMemo(
     () =>
@@ -629,25 +614,35 @@ export default function RadioWidget() {
     () => allStations.find((s) => s.id === activeId) ?? defaultStation,
     [activeId, allStations, defaultStation],
   );
-  const countryOptions = useMemo(() => {
-    const fromApi = countriesQuery.data?.map((c) => c.countryName || c.countryCode).filter(Boolean) ?? [];
-    const trimmed = fromApi.map((c) => c.trim()).filter((c) => c.length > 0);
-    if (trimmed.length > 0) return trimmed;
-    return RADIO_COUNTRIES;
-  }, [countriesQuery.data]);
-  const genreOptions = useMemo(() => {
-    const opts = new Set<string>();
-    allStations.forEach((s) => {
-      if (s.genre) opts.add(s.genre);
-      else if (s.mood) opts.add(s.mood);
-    });
-    return Array.from(opts).slice(0, 16);
-  }, [allStations]);
+  const activeTorrentSource = activeStation.torrentFile ?? (
+    isMagnetLink(activeStation.streamUrl) ? activeStation.streamUrl : null
+  );
+  const isActiveTorrent = activeTorrentSource !== null;
+  const countryOptions = useMemo<CatalogItem[]>(
+    () => (countriesQuery.data?.items ?? [])
+      .filter((country) => country.active)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'es')),
+    [countriesQuery.data?.items],
+  );
+  const countryLabels = useMemo(
+    () => new Map(countryOptions.map((country) => [country.id, country.name])),
+    [countryOptions],
+  );
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => (genresQuery.data?.items ?? [])
+      .filter((genre) => genre.active && genre.workflowState === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'es')),
+    [genresQuery.data?.items],
+  );
+  const genreLabels = useMemo(
+    () => new Map(genreOptions.map((genre) => [genre.id, genre.name])),
+    [genreOptions],
+  );
   const stationPrompts = promptState[activeStation.id] ?? activeStation.prompts;
   useEffect(() => {
     setEditName(activeStation.name);
-    setEditCountry(activeStation.country ?? '');
-    setEditGenre(activeStation.genre ?? activeStation.mood ?? '');
+    setEditCountryId(activeStation.countryId ?? '');
+    setEditGenreId(activeStation.genreId ?? '');
   }, [activeStation]);
   useEffect(() => {
     setRecentStations((prev) => {
@@ -717,7 +712,11 @@ export default function RadioWidget() {
     ? `Quitar ${activeStation.name || 'esta estación'} de favoritos`
     : `Agregar ${activeStation.name || 'esta estación'} a favoritos`;
   const canSkipStations = sortedVisibleStations.length > 1;
-  const nowPlayingStatus = isPlaying ? 'Reproduciendo' : 'En pausa';
+  const nowPlayingStatus = isActiveTorrent && torrentStatus === 'loading'
+    ? 'Preparando'
+    : isPlaying
+      ? 'Reproduciendo'
+      : 'En pausa';
   const normalizedNowPlayingTitle = nowPlayingTitle?.trim() ?? '';
   const hasNowPlayingTitle =
     normalizedNowPlayingTitle.length > 0 &&
@@ -725,6 +724,10 @@ export default function RadioWidget() {
   const stationDescriptor = [activeStation.name, activeStation.mood].filter(Boolean).join(' · ');
   const nowPlayingLabel = hasNowPlayingTitle ? normalizedNowPlayingTitle : activeStation.name;
   const nowPlayingSubtitle = hasNowPlayingTitle ? stationDescriptor : activeStation.genre ?? activeStation.mood;
+  const torrentProgressPercent = Math.round((torrentProgress?.progress ?? 0) * 100);
+  const torrentDownloadSpeed = torrentProgress
+    ? `${(torrentProgress.downloadSpeed / 1024).toFixed(torrentProgress.downloadSpeed >= 1024 * 100 ? 0 : 1)} KB/s`
+    : '0 KB/s';
 
   const clampPosition = useCallback(
     (x: number, y: number) => {
@@ -895,7 +898,8 @@ export default function RadioWidget() {
         muted,
       };
       window.localStorage.setItem('radio-settings', JSON.stringify(settings));
-      window.localStorage.setItem('radio-stations', JSON.stringify(customStations));
+      const persistentStations = customStations.filter((station) => !station.torrentFile);
+      window.localStorage.setItem('radio-stations', JSON.stringify(persistentStations));
     } catch {
       // ignore
     }
@@ -903,20 +907,109 @@ export default function RadioWidget() {
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) return undefined;
+
+    const requestId = torrentLoadRequestRef.current + 1;
+    torrentLoadRequestRef.current = requestId;
+    torrentAbortRef.current?.abort();
+    torrentAbortRef.current = null;
+    torrentSessionRef.current?.destroy();
+    torrentSessionRef.current = null;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    setTorrentProgress(null);
+
     if (!activeStation.streamUrl) {
+      setTorrentStatus('idle');
       setIsPlaying(false);
       setPlaybackWarning('La emisora no tiene un stream disponible. Elige otra estación.');
-      audio.removeAttribute('src');
+      return undefined;
+    }
+
+    if (!activeTorrentSource) {
+      setTorrentStatus('idle');
+      audio.src = activeStation.streamUrl;
       audio.load();
+      return undefined;
+    }
+
+    setTorrentStatus('loading');
+    setPlaybackWarning('Buscando peers y metadata del torrent…');
+    const torrentAbort = new AbortController();
+    torrentAbortRef.current = torrentAbort;
+    void createTorrentAudioSession({
+      source: activeTorrentSource,
+      audio,
+      signal: torrentAbort.signal,
+      onProgress: (progress) => {
+        if (torrentLoadRequestRef.current !== requestId) return;
+        setTorrentProgress(progress);
+      },
+      onWarning: (message) => {
+        if (torrentLoadRequestRef.current !== requestId) return;
+        logger.warn('Aviso de WebTorrent', message);
+      },
+    })
+      .then((session) => {
+        if (torrentLoadRequestRef.current !== requestId) {
+          session.destroy();
+          return;
+        }
+        torrentSessionRef.current = session;
+        setTorrentStatus('ready');
+        setPlaybackWarning(null);
+        if (audioRef.current && isPlayingRef.current) {
+          void audioRef.current.play().catch(() => {
+            setIsPlaying(false);
+            setPlaybackWarning('El torrent está listo. Pulsa reproducir para iniciar el audio.');
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        if (torrentLoadRequestRef.current !== requestId) return;
+        const message = error instanceof Error ? error.message : 'No pudimos abrir este torrent.';
+        setTorrentStatus('error');
+        setIsPlaying(false);
+        setPlaybackWarning(message);
+      });
+
+    return () => {
+      if (torrentLoadRequestRef.current === requestId) {
+        torrentLoadRequestRef.current += 1;
+      }
+      torrentAbort.abort();
+      if (torrentAbortRef.current === torrentAbort) {
+        torrentAbortRef.current = null;
+      }
+      torrentSessionRef.current?.destroy();
+      torrentSessionRef.current = null;
+    };
+  }, [
+    activeStation.id,
+    activeStation.streamUrl,
+    activeTorrentSource,
+    torrentLoadAttempt,
+  ]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = muted;
+    if (!isPlaying) {
+      audio.pause();
       return;
     }
-    audio.src = activeStation.streamUrl;
-    audio.muted = muted;
-    if (isPlaying) {
-      void audio.play().catch(() => setIsPlaying(false));
-    }
-  }, [activeStation.streamUrl, isPlaying, muted]);
+    if (isActiveTorrent && torrentStatus !== 'ready') return;
+    void audio.play().catch(() => {
+      setIsPlaying(false);
+      setPlaybackWarning(
+        isActiveTorrent
+          ? 'El torrent está listo. Pulsa reproducir otra vez para iniciar el audio.'
+          : 'No se pudo reproducir este stream. Intenta con otra estación o revisa la URL.',
+      );
+    });
+  }, [activeStation.streamUrl, isActiveTorrent, isPlaying, muted, torrentStatus]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -924,9 +1017,11 @@ export default function RadioWidget() {
     let clearTimer: number | undefined;
     const handleError = () => {
       setIsPlaying(false);
-      const fallbackToDefault = activeStation.id !== defaultStation.id;
+      const fallbackToDefault = !isActiveTorrent && activeStation.id !== defaultStation.id;
       setPlaybackWarning(
-        fallbackToDefault
+        isActiveTorrent
+          ? `No pudimos reproducir ${torrentProgress?.fileName ?? 'el audio de este torrent'}.`
+          : fallbackToDefault
           ? `No pudimos reproducir ${activeStation.name || 'esta emisora'}. Cambiamos a ${defaultStation.name}.`
           : 'No pudimos reproducir esta emisora. Revisa el stream o prueba con otra.',
       );
@@ -951,12 +1046,20 @@ export default function RadioWidget() {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [activeStation.id, activeStation.name, defaultStation.id, defaultStation.name, playbackWarning]);
+  }, [
+    activeStation.id,
+    activeStation.name,
+    defaultStation.id,
+    defaultStation.name,
+    isActiveTorrent,
+    playbackWarning,
+    torrentProgress?.fileName,
+  ]);
 
   // Publish presence so other perfiles can see current stream.
   useEffect(() => {
     if (!radioEnabled) return undefined;
-    if (!isPlaying || !activeStation.streamUrl) {
+    if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       void RadioAPI.clearPresence().catch(() => undefined);
       return undefined;
     }
@@ -972,10 +1075,10 @@ export default function RadioWidget() {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isPlaying, radioEnabled]);
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying, radioEnabled]);
 
   const fetchNowPlaying = useCallback(async () => {
-    if (!activeStation.streamUrl) {
+    if (!activeStation.streamUrl || isActiveTorrent) {
       setNowPlayingTitle(null);
       return;
     }
@@ -989,14 +1092,14 @@ export default function RadioWidget() {
     } catch {
       setNowPlayingTitle(null);
     }
-  }, [activeStation.streamUrl]);
+  }, [activeStation.streamUrl, isActiveTorrent]);
 
   useEffect(() => {
     if (!radioEnabled) {
       setNowPlayingTitle(null);
       return;
     }
-    if (!isPlaying || !activeStation.streamUrl) {
+    if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       setNowPlayingTitle(null);
       return;
     }
@@ -1006,7 +1109,7 @@ export default function RadioWidget() {
       void fetchNowPlaying();
     }, 30000);
     return () => window.clearInterval(interval);
-  }, [activeStation.streamUrl, fetchNowPlaying, isPlaying, radioEnabled]);
+  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying, radioEnabled]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {
@@ -1050,6 +1153,20 @@ export default function RadioWidget() {
       setPlaybackWarning(null);
     } else {
       if (muted) setMuted(false);
+      if (
+        isActiveTorrent
+        && (torrentStatus === 'error' || torrentStatus === 'idle' || !torrentSessionRef.current)
+      ) {
+        setPlaybackWarning('Reintentando conexión con el torrent…');
+        setIsPlaying(true);
+        setTorrentLoadAttempt((attempt) => attempt + 1);
+        return;
+      }
+      if (isActiveTorrent && torrentStatus !== 'ready') {
+        setPlaybackWarning('Buscando peers y preparando el audio del torrent…');
+        setIsPlaying(true);
+        return;
+      }
       void audio
         .play()
         .then(() => {
@@ -1075,13 +1192,17 @@ export default function RadioWidget() {
 
   const handleShare = useCallback(async () => {
     if (!activeStation.streamUrl) return;
-    const message = `Escuchando ${activeStation.name} (${activeStation.mood || 'Radio'})\n${activeStation.streamUrl}`;
+    const shareableUrl = activeStation.torrentFile ? null : activeStation.streamUrl;
+    const message = [
+      `Escuchando ${activeStation.name} (${activeStation.mood || 'Radio'})`,
+      shareableUrl,
+    ].filter(Boolean).join('\n');
     try {
       if (navigator.share) {
         await navigator.share({
           title: activeStation.name,
           text: message,
-          url: activeStation.streamUrl,
+          ...(shareableUrl ? { url: shareableUrl } : {}),
         });
         setShareNotice('Enviado para compartir');
       } else if (navigator.clipboard?.writeText) {
@@ -1097,13 +1218,14 @@ export default function RadioWidget() {
 
   const [newStationName, setNewStationName] = useState('');
   const [newStationUrl, setNewStationUrl] = useState('');
+  const newStationIsMagnet = isMagnetLink(newStationUrl);
   const normalizeField = useCallback((value?: string | null) => {
     const trimmed = (value ?? '').trim();
     return trimmed === '' ? undefined : trimmed;
   }, []);
   const clearFilters = useCallback(() => {
-    setSearchCountry('');
-    setSearchGenre('');
+    setSearchCountryId('');
+    setSearchGenreId('');
     void refetchStreams();
   }, [refetchStreams]);
   const handleImportClick = useCallback(() => {
@@ -1131,8 +1253,8 @@ export default function RadioWidget() {
     try {
       const resp = await RadioAPI.createTransmission({
         name: broadcastForm.name || undefined,
-        genre: broadcastForm.genre || undefined,
-        country: broadcastForm.country || undefined,
+        genreId: broadcastForm.genreId || undefined,
+        countryId: broadcastForm.countryId || undefined,
       });
       setBroadcastInfo(resp);
       setApiError(null);
@@ -1145,7 +1267,7 @@ export default function RadioWidget() {
     } finally {
       setBroadcastLoading(false);
     }
-  }, [broadcastForm.country, broadcastForm.genre, broadcastForm.name]);
+  }, [broadcastForm.countryId, broadcastForm.genreId, broadcastForm.name]);
 
   const handleCreateBroadcast = useCallback(() => {
     void createBroadcast().catch(() => undefined);
@@ -1226,6 +1348,13 @@ export default function RadioWidget() {
     if (customPreviewAudioRef.current) {
       customPreviewAudioRef.current.pause();
     }
+    torrentSessionRef.current?.destroy();
+    torrentSessionRef.current = null;
+    torrentLoadRequestRef.current += 1;
+    torrentAbortRef.current?.abort();
+    torrentAbortRef.current = null;
+    setTorrentStatus('idle');
+    setTorrentProgress(null);
     void RadioAPI.clearPresence().catch(() => undefined);
     stopInputTest();
     stopBrowserBroadcast();
@@ -1335,6 +1464,10 @@ export default function RadioWidget() {
       stopBrowserBroadcast();
       return;
     }
+    if (!selectedAutoStopOption) {
+      setBrowserBroadcastError('No se pudo validar la política de auto-stop publicada. Recarga el catálogo antes de transmitir.');
+      return;
+    }
     stopInputTest();
     setBrowserBroadcastError(null);
     setBrowserBroadcastState('starting');
@@ -1405,6 +1538,7 @@ export default function RadioWidget() {
     stopBrowserBroadcast,
     stopInputTest,
     liveStartedAt,
+    selectedAutoStopOption,
     waitForIceGathering,
   ]);
 
@@ -1454,20 +1588,22 @@ export default function RadioWidget() {
     return `${m}:${s}`;
   }, [autoStopMinutes, browserBroadcastState, liveElapsedMs, liveStartedAt]);
   const persistActiveStream = useCallback(
-    async (url: string, name?: string, country?: string, genre?: string) => {
+    async (url: string, name?: string, countryId?: string, genreId?: string) => {
       try {
         const payload = {
           rsuStreamUrl: url,
           rsuName: normalizeField(name),
-          rsuCountry: normalizeField(country),
-          rsuGenre: normalizeField(genre),
+          rsuCountryId: normalizeField(countryId),
+          rsuClearCountry: !normalizeField(countryId),
+          rsuGenreId: normalizeField(genreId),
+          rsuClearGenre: !normalizeField(genreId),
         };
         const saved = await RadioAPI.upsertActive(payload);
         void refetchStreams();
         setApiError(null);
         return saved;
       } catch (err) {
-        console.warn('No se pudo guardar metadata del stream', err);
+        logger.warn('No se pudo guardar metadata del stream', err);
         const msg = err instanceof Error ? err.message : 'No se pudo guardar metadata del stream.';
         setApiError(msg);
         return null;
@@ -1476,24 +1612,29 @@ export default function RadioWidget() {
     [normalizeField, refetchStreams],
   );
   const addCustomStation = () => {
-    const name = newStationName.trim();
     const url = newStationUrl.trim();
+    const torrentSource = isMagnetLink(url);
+    const name = newStationName.trim() || (torrentSource ? magnetDisplayName(url) ?? 'Torrent' : '');
     if (!name || !url) {
-      setTestResult('Ingresa nombre y URL de la radio.');
+      setTestResult('Ingresa un nombre y una URL, o pega un magnet válido.');
       return;
     }
-    const id = `custom-${Math.random().toString(36).slice(2, 8)}`;
-    const country = normalizeField(newStationCountry);
-    const genre = normalizeField(newStationGenre);
+    const id = `${torrentSource ? 'torrent' : 'custom'}-${Math.random().toString(36).slice(2, 8)}`;
+    const countryId = normalizeField(newStationCountryId);
+    const country = countryId ? countryLabels.get(countryId) : undefined;
+    const genreId = normalizeField(newStationGenreId);
+    const genre = genreId ? genreLabels.get(genreId) : undefined;
     const station: Station = {
       id,
       name,
       streamUrl: url,
+      countryId,
       country,
+      genreId,
       genre,
-      mood: genre ?? 'Custom',
+      mood: genre ?? (torrentSource ? 'Torrent P2P' : 'Custom'),
       prompts: [],
-      source: 'custom',
+      source: torrentSource ? 'torrent' : 'custom',
     };
     setCustomStations((prev) => [...prev, station]);
     setPromptState((prev) => ({ ...prev, [id]: [] }));
@@ -1501,8 +1642,49 @@ export default function RadioWidget() {
     setPlaybackWarning(null);
     setNewStationName('');
     setNewStationUrl('');
-    setNewStationCountry('');
-    setNewStationGenre('');
+    setNewStationCountryId('');
+    setNewStationGenreId('');
+    if (torrentSource) {
+      setIsPlaying(true);
+      setTestResult('Magnet agregado. Buscando peers WebRTC…');
+    }
+  };
+
+  const handleTorrentFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!isTorrentFile(file)) {
+      const maxMb = Math.round(MAX_TORRENT_FILE_BYTES / (1024 * 1024));
+      setTestResult(`Selecciona un archivo .torrent válido de hasta ${maxMb} MB.`);
+      return;
+    }
+
+    const id = `torrent-file-${Math.random().toString(36).slice(2, 8)}`;
+    const countryId = normalizeField(newStationCountryId);
+    const country = countryId ? countryLabels.get(countryId) : undefined;
+    const genreId = normalizeField(newStationGenreId);
+    const genre = genreId ? genreLabels.get(genreId) : undefined;
+    const station: Station = {
+      id,
+      name: newStationName.trim() || file.name.replace(/\.torrent$/i, '') || 'Torrent',
+      streamUrl: `torrent-file:${id}`,
+      torrentFile: file,
+      countryId,
+      country,
+      genreId,
+      genre,
+      mood: genre ?? 'Torrent P2P',
+      prompts: [],
+      source: 'torrent',
+    };
+
+    setCustomStations((prev) => [...prev, station]);
+    setPromptState((prev) => ({ ...prev, [id]: [] }));
+    setActiveId(id);
+    setPlaybackWarning(null);
+    setTestResult('Archivo .torrent cargado. Buscando peers WebRTC…');
+    setIsPlaying(true);
   };
 
   const removeCustomStation = (id: string) => {
@@ -1524,13 +1706,17 @@ export default function RadioWidget() {
       setTestResult('Ingresa una URL para probar.');
       return;
     }
+    if (isMagnetLink(url)) {
+      setTestResult('Los magnets se verifican al reproducirlos porque necesitan peers WebRTC.');
+      return;
+    }
     setPlaybackWarning(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     try {
       const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
       if (res.ok) {
-        const saved = await persistActiveStream(url, newStationName, newStationCountry, newStationGenre);
+        const saved = await persistActiveStream(url, newStationName, newStationCountryId, newStationGenreId);
         setTestResult(saved ? 'Stream disponible ✅ · guardado en catálogo' : 'Stream disponible ✅');
       } else {
         setTestResult('No pudimos validar el stream. Verifica la URL.');
@@ -1555,6 +1741,11 @@ export default function RadioWidget() {
     if (!url) {
       setCustomPreviewStatus('error');
       setCustomPreviewError('Ingresa una URL para previsualizar.');
+      return;
+    }
+    if (isMagnetLink(url)) {
+      setCustomPreviewStatus('error');
+      setCustomPreviewError('Guarda el magnet para reproducirlo en el player principal.');
       return;
     }
     setCustomPreviewError(null);
@@ -1675,14 +1866,14 @@ export default function RadioWidget() {
         ref={miniContainerRef}
       >
         <Tooltip title={isPlaying ? 'Pausar' : 'Reproducir'}>
-          <IconButton size="small" onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>
+          <IconButton sx={{ minWidth: 44, minHeight: 44 }} onClick={togglePlay} data-no-drag aria-label={isPlaying ? 'Pausar radio' : 'Reproducir radio'}>
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
         <Tooltip title="Saltar al anterior">
           <span>
             <IconButton
-              size="small"
+              sx={{ minWidth: 44, minHeight: 44 }}
               onClick={jumpToPreviousStation}
               data-no-drag
               aria-label="Saltar a la estación anterior"
@@ -1695,7 +1886,7 @@ export default function RadioWidget() {
         <Tooltip title="Saltar al siguiente">
           <span>
             <IconButton
-              size="small"
+              sx={{ minWidth: 44, minHeight: 44 }}
               onClick={jumpToNextStation}
               data-no-drag
               aria-label="Saltar a la siguiente estación"
@@ -1707,7 +1898,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={() => setMuted((m) => !m)}
             data-no-drag
             aria-label={muted ? 'Quitar silencio' : 'Silenciar radio'}
@@ -1717,7 +1908,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title="Ocultar la barra">
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={(e) => {
               e.stopPropagation();
               setMiniBarDismissed(true);
@@ -1730,7 +1921,7 @@ export default function RadioWidget() {
         </Tooltip>
         <Tooltip title="Mostrar radio">
           <IconButton
-            size="small"
+            sx={{ minWidth: 44, minHeight: 44 }}
             onClick={() => {
               setMiniBarVisible(false);
               setExpanded(true);
@@ -2146,6 +2337,33 @@ export default function RadioWidget() {
               )}
             </Stack>
           </Collapse>
+          {isActiveTorrent && torrentStatus !== 'idle' && (
+            <Stack spacing={0.5} sx={{ mt: 1 }} data-no-drag>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {torrentStatus === 'loading'
+                    ? 'Torrent P2P · buscando peers y metadata…'
+                    : torrentStatus === 'error'
+                      ? 'Torrent P2P · conexión fallida'
+                      : `${torrentProgress?.fileName ?? 'Audio'} · ${torrentProgress?.peers ?? 0} peers · ${torrentDownloadSpeed}`}
+                </Typography>
+                {torrentStatus === 'ready' && (
+                  <Typography variant="caption" color="text.secondary">
+                    {torrentProgressPercent}%
+                  </Typography>
+                )}
+              </Stack>
+              <LinearProgress
+                variant={torrentStatus === 'ready' ? 'determinate' : 'indeterminate'}
+                value={torrentStatus === 'ready' ? torrentProgressPercent : undefined}
+                color={torrentStatus === 'error' ? 'warning' : 'secondary'}
+                sx={{ height: 4, borderRadius: 999 }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                WebTorrent comparte las piezas descargadas con otros peers mientras esta fuente esté abierta.
+              </Typography>
+            </Stack>
+          )}
           {playbackWarning && (
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
               <WarningAmberIcon fontSize="small" color="warning" />
@@ -2228,23 +2446,31 @@ export default function RadioWidget() {
                     </Typography>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                       <TextField
+                        select
                         size="small"
                         label="País"
-                        value={searchCountry}
-                        onChange={(e) => setSearchCountry(e.target.value)}
-                        placeholder="Ecuador, US, MX..."
+                        value={searchCountryId}
+                        onChange={(e) => setSearchCountryId(e.target.value)}
                         fullWidth
-                        inputProps={{ list: 'radio-country-options' }}
-                      />
+                      >
+                        <MenuItem value="">Todos los países</MenuItem>
+                        {countryOptions.map((country) => (
+                          <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                        ))}
+                      </TextField>
                       <TextField
+                        select
                         size="small"
                         label="Género"
-                        value={searchGenre}
-                        onChange={(e) => setSearchGenre(e.target.value)}
-                        placeholder="Ambient, Dembow, Jazz..."
+                        value={searchGenreId}
+                        onChange={(e) => setSearchGenreId(e.target.value)}
                         fullWidth
-                        inputProps={{ list: 'radio-genre-options' }}
-                      />
+                      >
+                        <MenuItem value="">Todos los géneros</MenuItem>
+                        {genreOptions.map((genre) => (
+                          <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                        ))}
+                      </TextField>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: { sm: 220 } }}>
                         <Button
                           variant="contained"
@@ -2257,7 +2483,7 @@ export default function RadioWidget() {
                         >
                           {streamsFetching ? 'Buscando...' : 'Buscar'}
                         </Button>
-                        {(countryQuery || genreQuery) && (
+                        {(countryIdQuery || genreIdQuery) && (
                           <Button variant="text" size="small" onClick={clearFilters} data-no-drag>
                             Limpiar
                           </Button>
@@ -2353,7 +2579,10 @@ export default function RadioWidget() {
                                     void startBrowserBroadcast();
                                   }}
                                   disabled={
-                                    !mediaDevicesSupported || browserBroadcastState === 'starting' || broadcastLoading
+                                    !mediaDevicesSupported ||
+                                    browserBroadcastState === 'starting' ||
+                                    broadcastLoading ||
+                                    !selectedAutoStopOption
                                   }
                                   startIcon={<FiberManualRecordIcon color="error" fontSize="small" />}
                                 >
@@ -2395,14 +2624,19 @@ export default function RadioWidget() {
                                 select
                                 label="Auto-stop"
                                 size="small"
-                                value={autoStopMinutes}
-                                onChange={(e) => setAutoStopMinutes(parseAutoStopMinutes(e.target.value))}
+                                value={autoStopOptionId}
+                                onChange={(e) => setAutoStopOptionId(e.target.value)}
                                 sx={{ minWidth: 140 }}
+                                disabled={autoStopOptionsQuery.isPending || autoStopOptionsQuery.isError}
+                                helperText={
+                                  autoStopOptionsQuery.isError
+                                    ? 'No se pudo cargar la política publicada.'
+                                    : undefined
+                                }
                               >
-                                <MenuItem value={0}>Sin límite</MenuItem>
-                                {autoStopOptions.filter((mins) => mins > 0).map((mins) => (
-                                  <MenuItem key={mins} value={mins}>
-                                    {mins} min
+                                {autoStopOptions.map((option) => (
+                                  <MenuItem key={option.id} value={option.id}>
+                                    {option.label}
                                   </MenuItem>
                                 ))}
                               </TextField>
@@ -2455,19 +2689,31 @@ export default function RadioWidget() {
                               size="small"
                             />
                             <TextField
+                              select
                               label="Género"
-                              value={broadcastForm.genre}
-                              onChange={(e) => setBroadcastForm((p) => ({ ...p, genre: e.target.value }))}
+                              value={broadcastForm.genreId}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, genreId: e.target.value }))}
                               fullWidth
                               size="small"
-                            />
+                            >
+                              <MenuItem value="">Sin género</MenuItem>
+                              {genreOptions.map((genre) => (
+                                <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                              ))}
+                            </TextField>
                             <TextField
+                              select
                               label="País"
-                              value={broadcastForm.country}
-                              onChange={(e) => setBroadcastForm((p) => ({ ...p, country: e.target.value }))}
+                              value={broadcastForm.countryId}
+                              onChange={(e) => setBroadcastForm((p) => ({ ...p, countryId: e.target.value }))}
                               fullWidth
                               size="small"
-                            />
+                            >
+                              <MenuItem value="">Sin país</MenuItem>
+                              {countryOptions.map((country) => (
+                                <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                              ))}
+                            </TextField>
                           </Stack>
                           {broadcastError && <Typography color="error">{broadcastError}</Typography>}
                           <Button
@@ -2611,38 +2857,34 @@ export default function RadioWidget() {
                           Sugerencias rápidas:
                         </Typography>
                         {countryOptions.length > 0 && (
-                          <>
-                            <datalist id="radio-country-options">
-                              {countryOptions.map((c) => (
-                                <option key={`country-opt-${c}`} value={c} />
-                              ))}
-                            </datalist>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                              <Typography variant="caption" color="text.secondary">
-                                País:
-                              </Typography>
-                              {countryOptions.map((c) => (
-                                <Chip key={`country-${c}`} size="small" label={c} onClick={() => setSearchCountry(c)} />
-                              ))}
-                            </Stack>
-                          </>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                            <Typography variant="caption" color="text.secondary">
+                              País:
+                            </Typography>
+                            {countryOptions.slice(0, 16).map((country) => (
+                              <Chip
+                                key={`country-${country.id}`}
+                                size="small"
+                                label={country.name}
+                                onClick={() => setSearchCountryId(country.id)}
+                              />
+                            ))}
+                          </Stack>
                         )}
                         {genreOptions.length > 0 && (
-                          <>
-                            <datalist id="radio-genre-options">
-                              {genreOptions.map((g) => (
-                                <option key={`genre-opt-${g}`} value={g} />
-                              ))}
-                            </datalist>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
-                              <Typography variant="caption" color="text.secondary">
-                                Género:
-                              </Typography>
-                              {genreOptions.map((g) => (
-                                <Chip key={`genre-${g}`} size="small" label={g} onClick={() => setSearchGenre(g)} />
-                              ))}
-                            </Stack>
-                          </>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                            <Typography variant="caption" color="text.secondary">
+                              Género:
+                            </Typography>
+                            {genreOptions.slice(0, 16).map((genre) => (
+                              <Chip
+                                key={`genre-${genre.id}`}
+                                size="small"
+                                label={genre.name}
+                                onClick={() => setSearchGenreId(genre.id)}
+                              />
+                            ))}
+                          </Stack>
                         )}
                       </Stack>
                     )}
@@ -2670,9 +2912,9 @@ export default function RadioWidget() {
                       <Typography variant="caption" color="text.secondary">
                         {streamsFetching
                           ? 'Buscando estaciones...'
-                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryQuery || genreQuery ? ' (filtrado)' : ''}`}
+                          : `Catálogo: ${sortedVisibleStations.length} coincidencias${countryIdQuery || genreIdQuery ? ' (filtrado)' : ''}`}
                       </Typography>
-                      {(countryQuery || genreQuery) && sortedVisibleStations.length === 0 ? (
+                      {(countryIdQuery || genreIdQuery) && sortedVisibleStations.length === 0 ? (
                         <Typography variant="caption" color="text.secondary">
                           Sin resultados con estos filtros.
                         </Typography>
@@ -2691,59 +2933,84 @@ export default function RadioWidget() {
                         </Tooltip>
                       )}
                     </Stack>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {sortedVisibleStations.map((station) => (
-                        <Chip
-                          key={station.id}
-                          label={
-                            station.country || station.region || station.genre
-                              ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
-                              : station.name
-                          }
-                          color={station.id === activeId ? 'primary' : 'default'}
-                          onClick={() => {
-                            setPlaybackWarning(null);
-                            setActiveId(station.id);
-                          }}
-                          variant={station.id === activeId ? 'filled' : 'outlined'}
-                          onDelete={
-                            station.id.startsWith('custom-')
-                              ? () => removeCustomStation(station.id)
-                              : () => hideStation(station)
-                          }
-                          deleteIcon={
-                            station.id.startsWith('custom-') ? undefined : <VisibilityOffIcon fontSize="small" />
-                          }
-                          icon={
-                            station.id === activeId ? (
-                              <FiberManualRecordIcon fontSize="small" color="success" />
-                            ) : favoriteSet.has(keyFor(station)) ? (
-                              <StarIcon fontSize="small" />
-                            ) : undefined
-                          }
-                        />
-                      ))}
-                    </Stack>
-                    {showHidden && hiddenStations.length > 0 && (
-                      <Stack spacing={0.5}>
-                        <Typography variant="caption" color="text.secondary">
-                          Ocultas ({hiddenStations.length})
-                        </Typography>
+                    <LazyPaginatedList
+                      items={sortedVisibleStations}
+                      loading={streamsFetching}
+                      pagination={{
+                        itemLabel: 'estaciones',
+                        initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+                        rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
+                        resetKey: [countryIdQuery, genreIdQuery, showHidden, showFavoritesOnly].join('|'),
+                      }}
+                      renderItems={(visibleStationsPage) => (
                         <Stack direction="row" spacing={1} flexWrap="wrap">
-                          {hiddenStations.map((station) => (
+                          {visibleStationsPage.map((station) => (
                             <Chip
-                              key={`hidden-${station.id}`}
+                              key={station.id}
                               label={
                                 station.country || station.region || station.genre
                                   ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
                                   : station.name
                               }
-                              variant="outlined"
-                              onDelete={() => unhideStation(station)}
-                              deleteIcon={<RestartAltIcon fontSize="small" />}
+                              color={station.id === activeId ? 'primary' : 'default'}
+                              onClick={() => {
+                                setPlaybackWarning(null);
+                                setActiveId(station.id);
+                              }}
+                              variant={station.id === activeId ? 'filled' : 'outlined'}
+                              onDelete={
+                                station.source === 'custom' || station.source === 'torrent'
+                                  ? () => removeCustomStation(station.id)
+                                  : () => hideStation(station)
+                              }
+                              deleteIcon={
+                                station.source === 'custom' || station.source === 'torrent'
+                                  ? undefined
+                                  : <VisibilityOffIcon fontSize="small" />
+                              }
+                              icon={
+                                station.id === activeId ? (
+                                  <FiberManualRecordIcon fontSize="small" color="success" />
+                                ) : favoriteSet.has(keyFor(station)) ? (
+                                  <StarIcon fontSize="small" />
+                                ) : undefined
+                              }
                             />
                           ))}
                         </Stack>
+                      )}
+                    />
+                    {showHidden && hiddenStations.length > 0 && (
+                      <Stack spacing={0.5}>
+                        <Typography variant="caption" color="text.secondary">
+                          Ocultas ({hiddenStations.length})
+                        </Typography>
+                        <LazyPaginatedList
+                          items={hiddenStations}
+                          pagination={{
+                            itemLabel: 'ocultas',
+                            initialRowsPerPage: RADIO_STATION_INITIAL_ROWS_PER_PAGE,
+                            rowsPerPageOptions: RADIO_STATION_ROWS_PER_PAGE_OPTIONS,
+                            resetKey: hiddenStations.length,
+                          }}
+                          renderItems={(visibleHiddenStations) => (
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {visibleHiddenStations.map((station) => (
+                                <Chip
+                                  key={`hidden-${station.id}`}
+                                  label={
+                                    station.country || station.region || station.genre
+                                      ? `${station.name} · ${station.country ?? station.region ?? station.genre}`
+                                      : station.name
+                                  }
+                                  variant="outlined"
+                                  onDelete={() => unhideStation(station)}
+                                  deleteIcon={<RestartAltIcon fontSize="small" />}
+                                />
+                              ))}
+                            </Stack>
+                          )}
+                        />
                       </Stack>
                     )}
                   </Stack>
@@ -2753,10 +3020,10 @@ export default function RadioWidget() {
               <Collapse in={showAdvanced && showAddSection} timeout="auto">
                 <Stack spacing={1}>
                   <Typography variant="caption" color="text.secondary">
-                    Pega una URL de radio (ej. onlineradiobox.com) y guárdala para escucharla aquí.
+                    Pega una URL de radio o un magnet, o abre un archivo .torrent para escucharlo aquí.
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    También puedes editar la metadata de la estación activa y guardarla en el catálogo.
+                    Los torrents usan peers WebRTC y reproducen automáticamente el archivo de audio compatible más grande.
                   </Typography>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     <TextField
@@ -2767,26 +3034,37 @@ export default function RadioWidget() {
                       fullWidth
                     />
                     <TextField
+                      select
                       size="small"
                       label="País"
-                      value={editCountry}
-                      onChange={(e) => setEditCountry(e.target.value)}
+                      value={editCountryId}
+                      onChange={(e) => setEditCountryId(e.target.value)}
                       fullWidth
-                      inputProps={{ list: 'radio-country-options' }}
-                    />
+                    >
+                      <MenuItem value="">Sin país</MenuItem>
+                      {countryOptions.map((country) => (
+                        <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
+                      select
                       size="small"
                       label="Género"
-                      value={editGenre}
-                      onChange={(e) => setEditGenre(e.target.value)}
+                      value={editGenreId}
+                      onChange={(e) => setEditGenreId(e.target.value)}
                       fullWidth
-                      inputProps={{ list: 'radio-genre-options' }}
-                    />
+                    >
+                      <MenuItem value="">Sin género</MenuItem>
+                      {genreOptions.map((genre) => (
+                        <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        void persistActiveStream(activeStation.streamUrl, editName, editCountry, editGenre);
+                        void persistActiveStream(activeStation.streamUrl, editName, editCountryId, editGenreId);
                       }}
+                      disabled={isActiveTorrent}
                       data-no-drag
                     >
                       Guardar metadata
@@ -2802,28 +3080,38 @@ export default function RadioWidget() {
                     />
                     <TextField
                       size="small"
-                      label="URL del stream"
+                      label="URL del stream o magnet"
                       value={newStationUrl}
                       onChange={(e) => setNewStationUrl(e.target.value)}
-                      placeholder="https://"
+                      placeholder="https://… o magnet:?xt=urn:btih:…"
                       fullWidth
                     />
                     <TextField
+                      select
                       size="small"
                       label="País"
-                      value={newStationCountry}
-                      onChange={(e) => setNewStationCountry(e.target.value)}
-                      placeholder="Ecuador, México, UK..."
+                      value={newStationCountryId}
+                      onChange={(e) => setNewStationCountryId(e.target.value)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">Sin país</MenuItem>
+                      {countryOptions.map((country) => (
+                        <MenuItem key={country.id} value={country.id}>{country.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <TextField
+                      select
                       size="small"
                       label="Género"
-                      value={newStationGenre}
-                      onChange={(e) => setNewStationGenre(e.target.value)}
-                      placeholder="Afro, Ambient, Indie..."
+                      value={newStationGenreId}
+                      onChange={(e) => setNewStationGenreId(e.target.value)}
                       fullWidth
-                    />
+                    >
+                      <MenuItem value="">Sin género</MenuItem>
+                      {genreOptions.map((genre) => (
+                        <MenuItem key={genre.id} value={genre.id}>{genre.name}</MenuItem>
+                      ))}
+                    </TextField>
                     <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1} sx={{ minWidth: { sm: 160 } }}>
                       <Button
                         variant="outlined"
@@ -2831,6 +3119,7 @@ export default function RadioWidget() {
                           void testStream();
                         }}
                         data-no-drag
+                        disabled={newStationIsMagnet}
                       >
                         Probar stream
                       </Button>
@@ -2840,16 +3129,26 @@ export default function RadioWidget() {
                           void previewCustomStream();
                         }}
                         data-no-drag
+                        disabled={newStationIsMagnet}
                       >
                         {customPreviewStatus === 'playing' ? 'Detener preview' : 'Escuchar preview'}
                       </Button>
                       <Button
                         variant="contained"
                         onClick={addCustomStation}
-                        disabled={!newStationName.trim() || !newStationUrl.trim()}
+                        disabled={!newStationUrl.trim() || (!newStationName.trim() && !newStationIsMagnet)}
                         data-no-drag
                       >
                         Guardar
+                      </Button>
+                      <Button component="label" variant="outlined" data-no-drag>
+                        Abrir .torrent
+                        <input
+                          hidden
+                          type="file"
+                          accept=".torrent,application/x-bittorrent"
+                          onChange={handleTorrentFileUpload}
+                        />
                       </Button>
                     </Stack>
                   </Stack>

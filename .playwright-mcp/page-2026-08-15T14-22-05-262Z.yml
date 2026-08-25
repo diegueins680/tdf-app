@@ -1,0 +1,167 @@
+- generic [ref=f15e9]:
+  - generic [ref=f15e12]:
+    - link [ref=f15e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f15e22]
+    - generic [ref=f15e25]:
+      - link "Home Home" [ref=f15e1493] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f15e31]:
+          - img "Home" [ref=f15e35]
+          - generic [ref=f15e1494]: Home
+      - link "Reels Reels" [ref=f15e1499] [cursor=pointer]:
+        - /url: /reels/
+        - generic [ref=f15e41]:
+          - img "Reels" [ref=f15e45]
+          - generic [ref=f15e1500]: Reels
+      - link "Messages Messages" [ref=f15e1501] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f15e53]:
+          - img "Messages" [ref=f15e57]
+          - generic [ref=f15e1502]: Messages
+      - link "Search Search" [ref=f15e1503] [cursor=pointer]:
+        - /url: /explore/
+        - generic [ref=f15e63]:
+          - img "Search" [ref=f15e67]
+          - generic [ref=f15e1504]: Search
+      - link "Notifications Notifications" [ref=f15e1505] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f15e220]:
+          - img "Notifications" [ref=f15e224]
+          - generic [ref=f15e1506]: Notifications
+      - link "New post Create" [ref=f15e1507] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f15e88]:
+          - img "New post" [ref=f15e92]
+          - generic [ref=f15e1508]: Create
+      - link "Professional dashboard Dashboard" [ref=f15e1513] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f15e98]:
+          - img "Professional dashboard" [ref=f15e102]
+          - generic [ref=f15e1514]: Dashboard
+      - link "tdf.records.label's profile picture Profile" [ref=f15e1515] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - generic [ref=f15e110]:
+          - link [ref=f15e114]:
+            - img "tdf.records.label's profile picture" [ref=f15e115]
+          - generic [ref=f15e1516]: Profile
+    - generic [ref=f15e116]:
+      - link "Settings More" [ref=f15e1517] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f15e120]:
+          - img "Settings" [ref=f15e124]
+          - generic [ref=f15e1518]: More
+      - link "Also from Meta Also from Meta" [ref=f15e1519] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f15e128]:
+          - img "Also from Meta" [ref=f15e132]
+          - generic [ref=f15e1520]: Also from Meta
+  - main [ref=f15e136]:
+    - generic [ref=f15e232]:
+      - navigation "Thread list" [ref=f15e233]:
+        - generic [ref=f15e234]:
+          - generic [ref=f15e235]:
+            - button [ref=f15e236] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f15e238]
+              - img "Down chevron icon" [ref=f15e241]
+            - button [ref=f15e245] [cursor=pointer]:
+              - img "New message" [ref=f15e247]
+          - tablist [ref=f15e252]:
+            - tab "Primary" [selected] [ref=f15e253] [cursor=pointer]
+            - tab "General" [ref=f15e256] [cursor=pointer]
+            - tab "From ads" [ref=f15e259] [cursor=pointer]
+            - tab "Requests" [ref=f15e263] [cursor=pointer]
+          - generic [ref=f15e266]:
+            - generic [ref=f15e267]:
+              - button "Back" [ref=f15e1553] [cursor=pointer]:
+                - img "Back" [ref=f15e1556]
+              - generic [ref=f15e1559]:
+                - textbox "Clear search" [active] [ref=f15e1560]:
+                  - /placeholder: Search
+                  - text: hno613613
+                - button "Clear search" [ref=f15e1561] [cursor=pointer]:
+                  - img "Clear search" [ref=f15e1563]
+            - generic [ref=f15e1565]:
+              - generic [ref=f15e1566]:
+                - generic:
+                  - heading "Messages" [level=2]
+                - button "User avatar J ...un vistazo a mi nueva cuenta, hno613613 33 weeks ago" [ref=f15e1567] [cursor=pointer]:
+                  - generic [ref=f15e1568]:
+                    - img "User avatar" [ref=f15e1573]
+                    - generic [ref=f15e1576]:
+                      - generic [ref=f15e1577]: J
+                      - generic [ref=f15e1583]:
+                        - generic [ref=f15e1584]: ...un vistazo a mi nueva cuenta, hno613613
+                        - generic [ref=f15e1586]: ·
+                        - generic "33 weeks ago" [ref=f15e1589]: 33w
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar HNO hno613613" [ref=f15e1590] [cursor=pointer]:
+                - generic [ref=f15e1591]:
+                  - img "User avatar" [ref=f15e1596]
+                  - generic [ref=f15e1599]:
+                    - generic [ref=f15e1600]: HNO
+                    - generic [ref=f15e1604]: hno613613
+      - generic [ref=f15e1295]:
+        - generic [ref=f15e1299]:
+          - link "Open the profile page of blue_records333" [ref=f15e1300] [cursor=pointer]:
+            - /url: /blue_records333/
+            - generic [ref=f15e1301]:
+              - img "user-profile-picture" [ref=f15e1305]
+              - generic [ref=f15e1306]:
+                - heading "Blue Records" [level=2] [ref=f15e1308]
+                - generic [ref=f15e1310]: blue_records333
+          - generic [ref=f15e1314]:
+            - button [ref=f15e1315] [cursor=pointer]:
+              - img "Audio call" [ref=f15e1317]
+            - button [ref=f15e1319] [cursor=pointer]:
+              - img "Video call" [ref=f15e1321]
+            - button [ref=f15e1324] [cursor=pointer]:
+              - img "Conversation information" [ref=f15e1326]
+        - generic [ref=f15e1330]:
+          - generic [ref=f15e1334]:
+            - generic [ref=f15e1335]:
+              - progressbar [ref=f15e1338]:
+                - img "Loading..." [ref=f15e1339]
+              - generic [ref=f15e1386]:
+                - generic [ref=f15e1387]: Wed 4:36 PM
+                - group [ref=f15e1390]:
+                  - generic [ref=f15e1391]:
+                    - generic [ref=f15e1395]:
+                      - generic [ref=f15e1398]:
+                        - text: Hola, Blue Records
+                        - img "👋" [ref=f15e1400]
+                        - text: "Vimos el envío reciente y sus lanzamientos de minimal y micro house desde Quito. Tu escena necesita un espacio propio: en TDF pueden explorar perfiles, lanzamientos y experiencias de la comunidad en un mismo punto. Les invitamos a conocerla:"
+                        - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a" [ref=f15e1402] [cursor=pointer]:
+                          - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                        - text: "Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - link "TDF Records" [ref=f15e1403] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                    - button "❤️" [ref=f15e1409] [cursor=pointer]
+              - group [ref=f15e1415]:
+                - button [ref=f15e1420] [cursor=pointer]
+              - group [ref=f15e1429]:
+                - generic [ref=f15e1430]:
+                  - generic [ref=f15e1431]:
+                    - link "Open the profile page of blue_records333" [ref=f15e1434] [cursor=pointer]:
+                      - /url: /blue_records333
+                      - img "user-profile-picture" [ref=f15e1437]
+                    - generic [ref=f15e1442]:
+                      - text: Listo
+                      - img "🙂" [ref=f15e1444]
+                  - button "❤️" [ref=f15e1447] [cursor=pointer]
+            - generic [ref=f15e1450]: Seen
+          - generic [ref=f15e1461]:
+            - button [ref=f15e1464] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f15e1466]
+            - generic [ref=f15e1468]:
+              - textbox [ref=f15e1469]:
+                - paragraph [ref=f15e1470]
+              - generic: Message...
+            - generic [ref=f15e1471]:
+              - button [ref=f15e1472] [cursor=pointer]:
+                - img "Voice Clip" [ref=f15e1474]
+              - button [ref=f15e1477] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f15e1479]
+              - button [ref=f15e1484] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f15e1486]

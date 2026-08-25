@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
-const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
+const postMock = jest.fn<(path: string, body: unknown, init?: RequestInit) => Promise<unknown>>();
 const patchMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const delMock = jest.fn<(path: string) => Promise<unknown>>();
@@ -20,6 +20,7 @@ const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
 const { Bookings } = await import('./bookings');
+const { encodeLegacyServiceOfferingId } = await import('./services');
 const { ChatAPI } = await import('./chat');
 const { Label } = await import('./label');
 const { Courses } = await import('./courses');
@@ -69,14 +70,10 @@ describe('API query/id validation', () => {
     await Parties.update(8, { uDisplayName: 'Nombre actualizado' });
     expect(putMock).toHaveBeenCalledWith('/parties/8', { uDisplayName: 'Nombre actualizado' });
 
-    await Parties.addRole(9, 'teacher');
-    expect(postMock).toHaveBeenCalledWith('/parties/9/roles', 'teacher');
-
     expect(() => Payments.getOne(0)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.getOne(0)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.related(-3)).toThrow('id debe ser un entero positivo.');
     expect(() => Parties.update(0, {})).toThrow('id debe ser un entero positivo.');
-    expect(() => Parties.addRole(0, 'teacher')).toThrow('id debe ser un entero positivo.');
   });
 
   it('validates social profile ids before requesting profile lookups', async () => {
@@ -185,11 +182,13 @@ describe('API query/id validation', () => {
   });
 
   it('validates optional booking payload party references', async () => {
+    const serviceOfferingId = '11111111-1111-4111-8111-111111111111';
     await Bookings.create({
       cbTitle: 'Grabacion de demo',
       cbStartsAt: '2026-03-01T10:00:00Z',
       cbEndsAt: '2026-03-01T12:00:00Z',
       cbStatus: 'Confirmed',
+      cbServiceOfferingId: serviceOfferingId,
       cbPartyId: 7,
       cbEngineerPartyId: 9,
     });
@@ -198,6 +197,7 @@ describe('API query/id validation', () => {
       cbStartsAt: '2026-03-01T10:00:00Z',
       cbEndsAt: '2026-03-01T12:00:00Z',
       cbStatus: 'Confirmed',
+      cbServiceOfferingId: serviceOfferingId,
       cbPartyId: 7,
       cbEngineerPartyId: 9,
     });
@@ -205,16 +205,30 @@ describe('API query/id validation', () => {
     await Bookings.createPublic({
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
-      pbServiceType: 'Mixing',
+      pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
     });
     expect(postMock).toHaveBeenCalledWith('/bookings/public', {
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
-      pbServiceType: 'Mixing',
+      pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
+    });
+
+    await Bookings.createPublic({
+      pbFullName: 'Ana Perez',
+      pbEmail: 'ana@example.com',
+      pbServiceOfferingId: encodeLegacyServiceOfferingId('Producción de eventos'),
+      pbStartsAt: '2026-03-01T10:00:00Z',
+    });
+    expect(postMock).toHaveBeenCalledWith('/bookings/public', {
+      pbFullName: 'Ana Perez',
+      pbEmail: 'ana@example.com',
+      pbServiceType: 'Producción de eventos',
+      pbStartsAt: '2026-03-01T10:00:00Z',
+      pbEngineerPartyId: undefined,
     });
 
     expect(() =>
@@ -223,6 +237,7 @@ describe('API query/id validation', () => {
         cbStartsAt: '2026-03-01T10:00:00Z',
         cbEndsAt: '2026-03-01T12:00:00Z',
         cbStatus: 'Confirmed',
+        cbServiceOfferingId: serviceOfferingId,
         cbPartyId: 0,
       }),
     ).toThrow('cbPartyId debe ser un entero positivo.');
@@ -231,11 +246,104 @@ describe('API query/id validation', () => {
       Bookings.createPublic({
         pbFullName: 'Ana Perez',
         pbEmail: 'ana@example.com',
-        pbServiceType: 'Mixing',
+        pbServiceOfferingId: serviceOfferingId,
         pbStartsAt: '2026-03-01T10:00:00Z',
         pbEngineerPartyId: -3,
       }),
     ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
+  });
+
+  it('uses canonical public booking availability, idempotency, and lookup headers', async () => {
+    const serviceOfferingId = '11111111-1111-4111-8111-111111111111';
+    const startsAt = '2026-03-01T10:00:00Z';
+
+    await Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 120 });
+    expect(getMock).toHaveBeenCalledWith(
+      `/bookings/public/availability?serviceOfferingId=${serviceOfferingId}&startsAt=2026-03-01T10%3A00%3A00Z&durationMinutes=120`,
+    );
+
+    const checkoutPayload = {
+      pbcFullName: 'Ana Perez',
+      pbcEmail: 'ana@example.com',
+      pbcPhone: '+593999999999',
+      pbcServiceOfferingId: serviceOfferingId,
+      pbcStartsAt: startsAt,
+      pbcDurationMinutes: 120,
+      pbcEngineerPartyId: 9,
+      pbcResourceIds: null,
+      pbcTermsAccepted: true,
+    };
+    await Bookings.createPublicCheckout(checkoutPayload, 'service-booking-test-key');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/checkout',
+      checkoutPayload,
+      { headers: { 'Idempotency-Key': 'service-booking-test-key' } },
+    );
+
+    await Bookings.getPublicCheckout(42, 'lookup-secret');
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.createPublicDatafastCheckout(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/checkout',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.confirmPublicDatafastStatus(
+      42,
+      '/v1/checkouts/provider-checkout/payment',
+      'lookup-secret',
+    );
+    expect(getMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/datafast/status?resourcePath=%2Fv1%2Fcheckouts%2Fprovider-checkout%2Fpayment',
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.createPublicPaypalOrder(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/create',
+      {},
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.capturePublicPaypalOrder(42, 'PAYPAL-ORDER-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/paypal/capture',
+      { paypalOrderId: 'PAYPAL-ORDER-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.selectPublicManualPayment(42, 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment',
+      { paymentMethod: 'bank_transfer' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.submitPublicManualEvidence(42, 'BANK-REFERENCE-1', 'lookup-secret');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/public/orders/42/manual-payment/evidence',
+      { customerReference: 'BANK-REFERENCE-1' },
+      { headers: { 'X-Order-Lookup-Token': 'lookup-secret' } },
+    );
+
+    await Bookings.getCommerce(42);
+    expect(getMock).toHaveBeenCalledWith('/bookings/42/commerce');
+
+    await Bookings.reviewManualPayment(42, 'approve', 'Matched bank statement.');
+    expect(postMock).toHaveBeenCalledWith(
+      '/bookings/42/manual-payment/review',
+      { action: 'approve', reviewNotes: 'Matched bank statement.' },
+    );
+
+    expect(() => Bookings.publicAvailability({ serviceOfferingId, startsAt, durationMinutes: 0 }))
+      .toThrow('durationMinutes debe ser un entero positivo.');
+    expect(() => Bookings.getPublicCheckout(0, 'lookup-secret'))
+      .toThrow('bookingId debe ser un entero positivo.');
   });
 
   it('validates chat ids and sanitizes optional list query params', async () => {
@@ -283,10 +391,32 @@ describe('API query/id validation', () => {
     await Label.deleteTrack(' track alpha ');
     expect(delMock).toHaveBeenCalledWith('/label/tracks/track%20alpha');
 
+    await Label.listProjectNotes();
+    expect(getMock).toHaveBeenCalledWith('/label/project-notes');
+
+    await Label.createProjectNote('Distribuir master');
+    expect(postMock).toHaveBeenCalledWith('/label/project-notes', { lpncText: 'Distribuir master' });
+
+    await Label.updateProjectNote(' note/alpha ', {
+      lpnuCompleted: true,
+      lpnuExpectedVersion: 3,
+    });
+    expect(patchMock).toHaveBeenCalledWith('/label/project-notes/note%2Falpha', {
+      lpnuCompleted: true,
+      lpnuExpectedVersion: 3,
+    });
+
+    await Label.deactivateProjectNote(' note alpha ');
+    expect(delMock).toHaveBeenCalledWith('/label/project-notes/note%20alpha');
+
     expect(() => Label.listTracks(0)).toThrow('ownerId debe ser un entero positivo.');
     expect(() => Label.createTrack({ ltcTitle: 'Pendiente' }, -2)).toThrow('ownerId debe ser un entero positivo.');
     expect(() => Label.updateTrack('   ', { ltuStatus: 'open' })).toThrow('id no puede estar vacío.');
     expect(() => Label.deleteTrack('')).toThrow('id no puede estar vacío.');
+    expect(() => Label.updateProjectNote(' ', { lpnuCompleted: true, lpnuExpectedVersion: 1 })).toThrow(
+      'id no puede estar vacío.',
+    );
+    expect(() => Label.deactivateProjectNote('')).toThrow('id no puede estar vacío.');
   });
 
   it('normalizes course registration params and validates registration ids', async () => {

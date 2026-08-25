@@ -130,7 +130,7 @@ async function callModel(userPrompt) {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.6,
+    temperature: 1,
     max_tokens: 300,
   };
   const resp = await fetch(API_URL, {

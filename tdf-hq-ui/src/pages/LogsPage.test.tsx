@@ -71,6 +71,9 @@ const buildLog = (overrides: Partial<LogEntry> = {}): LogEntry => ({
   ...overrides,
 });
 
+const hasTableHeader = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
 const getButtonByAriaLabel = (root: ParentNode, labelText: string) => {
   const button = root.querySelector(`button[aria-label="${labelText}"]`);
   if (!(button instanceof HTMLButtonElement)) throw new Error(`Button not found: ${labelText}`);
@@ -121,13 +124,13 @@ describe('LogsPage', () => {
         expect(getLogsMock).toHaveBeenCalledWith(100);
         expect(container.textContent).toContain('Logs del servidor');
         expect(container.textContent).toContain(
-          'Todavia no hay logs disponibles. Esta vista se actualiza automaticamente y mostrara filtros cuando exista el primer registro.',
+          'Todavía no hay logs disponibles. Esta vista se actualiza automáticamente y mostrará filtros cuando exista el primer registro.',
         );
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).not.toBeNull();
         expect(container.querySelector('table')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
-        expect(container.textContent).not.toContain('Limite');
+        expect(container.textContent).not.toContain('Límite');
         expect(container.textContent).not.toContain('No logs available');
         expect(container.textContent).not.toContain('Timestamp');
         expect(container.textContent).not.toContain('Level');
@@ -139,7 +142,13 @@ describe('LogsPage', () => {
   });
 
   it('keeps the clear action available once there are logs to remove', async () => {
-    getLogsMock.mockResolvedValue([buildLog()]);
+    getLogsMock.mockResolvedValue([
+      buildLog(),
+      buildLog({
+        logLevel: 'error',
+        logMessage: 'Disco lleno',
+      }),
+    ]);
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -149,11 +158,20 @@ describe('LogsPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(container.textContent).toContain('Servidor listo');
-        expect(container.textContent).toContain('Actualizacion automatica cada 5 segundos.');
+        expect(container.textContent).toContain('Disco lleno');
+        expect(container.textContent).toContain('Actualización automática cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
-        expect(container.textContent).toContain('Limite');
+        expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')).toBeNull();
+        expect(container.textContent).toContain('Límite');
+        expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
+        expect(hasTableHeader(container, 'Nivel')).toBe(true);
+        expect(hasTableHeader(container, 'Mensaje')).toBe(true);
+        expect(hasTableHeader(container, 'Timestamp')).toBe(false);
+        expect(hasTableHeader(container, 'Level')).toBe(false);
         expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
+        expect(container.textContent).toContain('Info');
+        expect(container.textContent).toContain('Error');
       });
 
       await clickButton(getButtonByAriaLabel(container, 'Vaciar logs'));
@@ -166,7 +184,94 @@ describe('LogsPage', () => {
     }
   });
 
-  it('keeps refresh available when the log request fails', async () => {
+  it('summarizes the first log level instead of showing a one-chip level column', async () => {
+    getLogsMock.mockResolvedValue([buildLog()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')?.textContent?.trim()).toBe(
+          'Mostrando un solo nivel: Info. La columna aparecerá cuando esta vista mezcle niveles distintos.',
+        );
+        expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
+        expect(hasTableHeader(container, 'Nivel')).toBe(false);
+        expect(hasTableHeader(container, 'Mensaje')).toBe(true);
+        expect(container.textContent).toContain('Servidor listo');
+        expect(container.querySelector('button[aria-label="Vaciar logs"]')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes one shared level once and restores the level column when logs diverge again', async () => {
+    getLogsMock.mockResolvedValue([
+      buildLog({
+        logTimestamp: '2030-01-02T03:04:05.000Z',
+        logMessage: 'Servidor listo',
+      }),
+      buildLog({
+        logTimestamp: '2030-01-02T03:05:05.000Z',
+        logMessage: 'Worker conectado',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('[data-testid="server-logs-shared-level-summary"]')?.textContent?.trim()).toBe(
+          'Mostrando un solo nivel: Info. La columna aparecerá cuando esta vista mezcle niveles distintos.',
+        );
+        expect(hasTableHeader(container, 'Fecha y hora')).toBe(true);
+        expect(hasTableHeader(container, 'Nivel')).toBe(false);
+        expect(hasTableHeader(container, 'Mensaje')).toBe(true);
+        expect(container.textContent).toContain('Servidor listo');
+        expect(container.textContent).toContain('Worker conectado');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    getLogsMock.mockResolvedValue([
+      buildLog({
+        logTimestamp: '2030-01-02T03:04:05.000Z',
+        logLevel: 'info',
+        logMessage: 'Servidor listo',
+      }),
+      buildLog({
+        logTimestamp: '2030-01-02T03:06:05.000Z',
+        logLevel: 'error',
+        logMessage: 'Disco lleno',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        expect(secondContainer.querySelector('table')).not.toBeNull();
+        expect(secondContainer.querySelector('[data-testid="server-logs-shared-level-summary"]')).toBeNull();
+        expect(hasTableHeader(secondContainer, 'Nivel')).toBe(true);
+        expect(secondContainer.textContent).toContain('Info');
+        expect(secondContainer.textContent).toContain('Error');
+        expect(secondContainer.textContent).toContain('Disco lleno');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('keeps retry with the failed log request instead of adding a detached header icon', async () => {
     getLogsMock.mockRejectedValue(new Error('logs unavailable'));
 
     const container = document.createElement('div');
@@ -175,11 +280,12 @@ describe('LogsPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain('Failed to load logs: logs unavailable');
-        expect(container.textContent).not.toContain('Actualizacion automatica cada 5 segundos.');
+        expect(container.textContent).toContain('No se pudieron cargar los logs: logs unavailable');
+        expect(container.textContent).not.toContain('Actualización automática cada 5 segundos.');
         expect(container.querySelector('[data-testid="server-logs-empty-state"]')).toBeNull();
-        expect(container.textContent).toContain('Limite');
-        expect(container.querySelector('button[aria-label="Refrescar logs"]')).not.toBeNull();
+        expect(container.textContent).toContain('Límite');
+        expect(container.querySelector('button[aria-label="Refrescar logs"]')).toBeNull();
+        expect(container.textContent).toContain('Reintentar logs');
         expect(container.querySelector('button[aria-label="Vaciar logs"]')).toBeNull();
       });
     } finally {

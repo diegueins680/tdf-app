@@ -12,7 +12,7 @@ data SocialEventGeneric backend = SocialEvent
   , socialEventTitle :: Text
   , socialEventDescription :: Maybe Text
   , socialEventStartDateTime :: UTCTime
-  , socialEventEndDateTime :: UTCTime
+  , socialEventEndDateTime :: Maybe UTCTime -- Nothing until an official end is confirmed
   , socialEventVenueId :: VenueId
   , socialEventCreatedBy :: PartyId
   , socialEventTicketPrice :: Maybe Int64 -- in cents
@@ -106,7 +106,7 @@ data SocialEventDTO = SocialEventDTO
   , title :: Text
   , description :: Maybe Text
   , startDateTime :: UTCTime
-  , endDateTime :: UTCTime
+  , endDateTime :: Maybe UTCTime
   , venue :: VenueDTO
   , artists :: [ArtistProfileDTO]
   , ticketPrice :: Maybe Int64
@@ -119,7 +119,7 @@ data SocialEventCreatePayload = SocialEventCreatePayload
   { title :: Text
   , description :: Maybe Text
   , startDateTime :: UTCTime
-  , endDateTime :: UTCTime
+  , endDateTime :: Maybe UTCTime
   , venueId :: Text
   , artistIds :: [Text]
   , ticketPrice :: Maybe Int64

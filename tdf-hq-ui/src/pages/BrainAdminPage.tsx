@@ -22,8 +22,9 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { Brain, RagAdmin, type BrainEntryDTO } from '../api/brain';
-import ApiErrorNotice from '../components/ApiErrorNotice';
+import { Brain, RagAdmin, type BrainEntryCreate, type BrainEntryDTO, type BrainEntryUpdate } from '../api/brain';
+import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { SessionGate } from '../components/SessionGate';
 import { useSession } from '../session/SessionContext';
 
@@ -43,6 +44,18 @@ const emptyForm: BrainFormState = {
   active: true,
 };
 
+type BrainAdminPageDisplayContract = Readonly<{
+  singleEntryBodyPreviewChars: number;
+  entryListBodyPreviewChars: number;
+}>;
+
+// Invariant: Brain entry previews are bounded by view density; the single-entry
+// view can be more verbose than cards in a multi-entry list.
+const BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS = {
+  singleEntryBodyPreviewChars: 2 * 100 + 2 * 10,
+  entryListBodyPreviewChars: 2 * 100 - 2 * 10,
+} as const satisfies BrainAdminPageDisplayContract;
+
 const formatTimestamp = (value?: string | null) => {
   if (!value) return '-';
   const parsed = new Date(value);
@@ -56,16 +69,174 @@ const parseTags = (raw: string) =>
     .map((tag) => tag.trim())
     .filter(Boolean);
 
+const summarizeEntryBody = (
+  value: string,
+  maxLength = BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS.singleEntryBodyPreviewChars,
+) => {
+  const trimmed = value.trim();
+  if (maxLength >= trimmed.length) return trimmed;
+  return `${trimmed.slice(0, maxLength)}...`;
+};
+
+const formatEntryTagsSummary = (tags?: string[] | null) =>
+  (tags ?? [])
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .join(', ');
+
+interface SingleBrainEntryCardProps {
+  entry: BrainEntryDTO;
+  tagsSummary: string;
+  bodyPreview: string;
+  onEdit: (entry: BrainEntryDTO) => void;
+}
+
+function SingleBrainEntryCard(props: SingleBrainEntryCardProps) {
+  const { entry, tagsSummary, bodyPreview, onEdit } = props;
+
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={1.5}>
+          <Stack spacing={0.5}>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Primera entrada del Brain
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Revisa esta entrada desde un resumen simple. Cuando exista la segunda, volvera la lista
+              completa para comparar titulo, categoria y actualizacion.
+            </Typography>
+          </Stack>
+          <Stack spacing={0.75}>
+            <Typography variant="h6" fontWeight={700}>
+              {entry.bedTitle}
+            </Typography>
+            {entry.bedCategory && (
+              <Typography variant="body2" color="text.secondary">
+                Categoria: {entry.bedCategory}
+              </Typography>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {bodyPreview}
+            </Typography>
+            {tagsSummary && (
+              <Typography variant="body2" color="text.secondary">
+                Tags: {tagsSummary}
+              </Typography>
+            )}
+            <Typography variant="caption" color="text.secondary">
+              {`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
+            </Typography>
+          </Stack>
+          <Button
+            startIcon={<EditIcon />}
+            size="small"
+            variant="outlined"
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              onEdit(entry);
+            }}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Editar entrada
+          </Button>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface BrainEntryCardProps {
+  entry: BrainEntryDTO;
+  includeInactive: boolean;
+  onEdit: (entry: BrainEntryDTO) => void;
+}
+
+function BrainEntryCard(props: BrainEntryCardProps) {
+  const { entry, includeInactive, onEdit } = props;
+  const bodyPreviewMaxLength = BRAIN_ADMIN_PAGE_DISPLAY_CONTRACTS.entryListBodyPreviewChars;
+  const bodyPreview = entry.bedBody.length > bodyPreviewMaxLength
+    ? `${entry.bedBody.slice(0, bodyPreviewMaxLength)}...`
+    : entry.bedBody;
+
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={1}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+            <Typography variant="h6" fontWeight={700}>
+              {entry.bedTitle}
+            </Typography>
+            {(includeInactive || !entry.bedActive) && (
+              <Chip label={entry.bedActive ? 'Activa' : 'Inactiva'} color={entry.bedActive ? 'success' : 'default'} size="small" />
+            )}
+            {entry.bedCategory && <Chip label={entry.bedCategory} variant="outlined" size="small" />}
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {bodyPreview}
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            {(entry.bedTags ?? []).map((tag) => (
+              <Chip key={tag} label={tag} size="small" variant="outlined" />
+            ))}
+            <Chip label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`} size="small" />
+          </Stack>
+        </Stack>
+      </CardContent>
+      <CardActions>
+        <Button
+          startIcon={<EditIcon />}
+          size="small"
+          tabIndex={0}
+          onClick={(event) => {
+            event.currentTarget.focus();
+            onEdit(entry);
+          }}
+        >
+          Editar
+        </Button>
+      </CardActions>
+    </Card>
+  );
+}
+
+interface BrainEntriesListProps {
+  entries: readonly BrainEntryDTO[];
+  loading: boolean;
+  includeInactive: boolean;
+  onEdit: (entry: BrainEntryDTO) => void;
+}
+
+function BrainEntriesList(props: BrainEntriesListProps) {
+  const { entries, loading, includeInactive, onEdit } = props;
+
+  return (
+    <LazyPaginatedList
+      items={entries}
+      loading={loading}
+      pagination={{ itemLabel: 'entradas', initialRowsPerPage: 10, resetKey: includeInactive }}
+      renderItems={(visibleEntries) => (
+        <Stack spacing={2}>
+          {visibleEntries.map((entry) => (
+            <BrainEntryCard key={entry.bedId} entry={entry} includeInactive={includeInactive} onEdit={onEdit} />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
 export default function BrainAdminPage() {
   const { session } = useSession();
   const qc = useQueryClient();
   const hasToken = Boolean(session);
   const [includeInactive, setIncludeInactive] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState(null as number | null);
   const [form, setForm] = useState<BrainFormState>(emptyForm);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [refreshNotice, setRefreshNotice] = useState<string | null>(null);
+  const [formError, setFormError] = useState(null as string | null);
+  const [refreshNotice, setRefreshNotice] = useState(null as string | null);
 
   const ragStatusQuery = useQuery({
     queryKey: ['admin', 'rag', 'status'],
@@ -80,7 +251,7 @@ export default function BrainAdminPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: Parameters<typeof Brain.createEntry>[0]) => Brain.createEntry(payload),
+    mutationFn: (payload: BrainEntryCreate) => Brain.createEntry(payload),
     onSuccess: () => {
       setDialogOpen(false);
       setForm(emptyForm);
@@ -91,7 +262,7 @@ export default function BrainAdminPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ entryId, payload }: { entryId: number; payload: Parameters<typeof Brain.updateEntry>[1] }) =>
+    mutationFn: ({ entryId, payload }: { entryId: number; payload: BrainEntryUpdate }) =>
       Brain.updateEntry(entryId, payload),
     onSuccess: () => {
       setDialogOpen(false);
@@ -109,11 +280,29 @@ export default function BrainAdminPage() {
     },
   });
 
-  const entries = useMemo<BrainEntryDTO[]>(() => entriesQuery.data ?? [], [entriesQuery.data]);
+  const entries: BrainEntryDTO[] = useMemo(() => entriesQuery.data ?? [], [entriesQuery.data]);
+  const showEmptyEntriesState = !entriesQuery.isLoading && !entriesQuery.isError && entries.length === 0;
   const showInactiveToggle = includeInactive || entries.length > 0;
   const emptyEntriesMessage = includeInactive
     ? 'No hay entradas cargadas, incluyendo inactivas.'
     : 'No hay entradas activas. Crea la primera entrada del Brain o revisa inactivas si esperabas contenido archivado.';
+  const showRagFirstEntryGuidance = showEmptyEntriesState;
+  const hasBuiltRagIndex = Boolean(
+    ragStatusQuery.data
+      && (ragStatusQuery.data.risCount > 0 || ragStatusQuery.data.risUpdatedAt),
+  );
+  const showRagIndexPendingState = Boolean(
+    ragStatusQuery.data && !showRagFirstEntryGuidance && !hasBuiltRagIndex,
+  );
+  const singleActiveEntry = !entriesQuery.isLoading
+    && !entriesQuery.isError
+    && !includeInactive
+    && entries.length === 1
+    && (entries[0]?.bedActive ?? false)
+      ? (entries[0] ?? null)
+      : null;
+  const singleEntryTagsSummary = singleActiveEntry ? formatEntryTagsSummary(singleActiveEntry.bedTags) : '';
+  const singleEntryBodyPreview = singleActiveEntry ? summarizeEntryBody(singleActiveEntry.bedBody) : '';
 
   const openCreate = () => {
     setEditingId(null);
@@ -135,7 +324,7 @@ export default function BrainAdminPage() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const saveEntry = async () => {
     const title = form.title.trim();
     const body = form.body.trim();
     if (!title) {
@@ -205,24 +394,36 @@ export default function BrainAdminPage() {
                   Estado del indice RAG
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Ultima actualizacion y total de chunks indexados.
+                  {showRagFirstEntryGuidance
+                    ? 'Crea la primera entrada del Brain para activar este resumen. El refresco del indice aparecera cuando exista contenido para reindexar.'
+                    : 'Ultima actualizacion y total de chunks indexados.'}
                 </Typography>
               </Box>
               <Box flex={1} />
-              <Button
-                variant="outlined"
-                startIcon={<RefreshIcon />}
-                onClick={() => {
-                  setRefreshNotice(null);
-                  refreshMutation.mutate();
-                }}
-                disabled={refreshMutation.isPending}
-              >
-                {refreshMutation.isPending ? 'Actualizando...' : 'Refrescar indice'}
-              </Button>
+              {!showRagFirstEntryGuidance && (
+                <Button
+                  variant="outlined"
+                  startIcon={<RefreshIcon />}
+                  tabIndex={0}
+                  onClick={(event) => {
+                    event.currentTarget.focus();
+                    setRefreshNotice(null);
+                    refreshMutation.mutate();
+                  }}
+                  disabled={refreshMutation.isPending}
+                >
+                  {refreshMutation.isPending ? 'Actualizando...' : 'Refrescar indice'}
+                </Button>
+              )}
             </Stack>
             {ragStatusQuery.isError && (
               <ApiErrorNotice error={ragStatusQuery.error} title="Error cargando RAG" />
+            )}
+            {ragStatusQuery.isLoading && (
+              <ApiLoadingNotice
+                title="Cargando estado RAG"
+                message="Consultando el indice antes de mostrar acciones."
+              />
             )}
             {refreshMutation.isError && (
               <Alert severity="error">
@@ -230,7 +431,12 @@ export default function BrainAdminPage() {
               </Alert>
             )}
             {refreshNotice && <Alert severity="success">{refreshNotice}</Alert>}
-            {ragStatusQuery.data && (
+            {showRagIndexPendingState && (
+              <Alert severity="info" variant="outlined" data-testid="brain-admin-rag-index-pending">
+                El indice todavia no tiene chunks. Usa Refrescar indice cuando termines de revisar entradas.
+              </Alert>
+            )}
+            {ragStatusQuery.data && !showRagFirstEntryGuidance && hasBuiltRagIndex && (
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                 <Chip label={`Chunks: ${ragStatusQuery.data.risCount}`} color="primary" />
                 <Chip
@@ -267,7 +473,11 @@ export default function BrainAdminPage() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={openCreate}
+                tabIndex={0}
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  openCreate();
+                }}
               >
                 Nueva entrada
               </Button>
@@ -276,8 +486,14 @@ export default function BrainAdminPage() {
             {entriesQuery.isError && (
               <ApiErrorNotice error={entriesQuery.error} title="Error cargando entradas" />
             )}
+            {entriesQuery.isLoading && (
+              <ApiLoadingNotice
+                title="Cargando entradas"
+                message="Estamos preparando las entradas del Brain."
+              />
+            )}
 
-            {!entriesQuery.isLoading && entries.length === 0 && (
+            {showEmptyEntriesState && (
               <Alert
                 severity="info"
                 action={
@@ -285,7 +501,11 @@ export default function BrainAdminPage() {
                     <Button
                       color="inherit"
                       size="small"
-                      onClick={() => setIncludeInactive(true)}
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        setIncludeInactive(true);
+                      }}
                     >
                       Revisar inactivas
                     </Button>
@@ -296,52 +516,24 @@ export default function BrainAdminPage() {
               </Alert>
             )}
 
-            <Stack spacing={2}>
-              {entries.map((entry) => (
-                <Card key={entry.bedId} variant="outlined">
-                  <CardContent>
-                    <Stack spacing={1}>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                        <Typography variant="h6" fontWeight={700}>
-                          {entry.bedTitle}
-                        </Typography>
-                        <Chip
-                          label={entry.bedActive ? 'Activa' : 'Inactiva'}
-                          color={entry.bedActive ? 'success' : 'default'}
-                          size="small"
-                        />
-                        {entry.bedCategory && (
-                          <Chip label={entry.bedCategory} variant="outlined" size="small" />
-                        )}
-                      </Stack>
-                      <Typography variant="body2" color="text.secondary">
-                        {entry.bedBody.length > 180 ? `${entry.bedBody.slice(0, 180)}...` : entry.bedBody}
-                      </Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {(entry.bedTags ?? []).map((tag) => (
-                          <Chip key={tag} label={tag} size="small" variant="outlined" />
-                        ))}
-                        <Chip
-                          label={`Actualizado: ${formatTimestamp(entry.bedUpdatedAt)}`}
-                          size="small"
-                        />
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      startIcon={<EditIcon />}
-                      size="small"
-                      onClick={() => {
-                        openEdit(entry);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  </CardActions>
-                </Card>
-              ))}
-            </Stack>
+            {singleActiveEntry ? (
+              <SingleBrainEntryCard
+                entry={singleActiveEntry}
+                tagsSummary={singleEntryTagsSummary}
+                bodyPreview={singleEntryBodyPreview}
+                onEdit={openEdit}
+              />
+            ) : (
+              <BrainEntriesList
+                entries={entries}
+                // Suppress the list's own progress bar during the very first
+                // load: the dedicated "Cargando entradas" notice already covers
+                // it. The bar still shows for refetches over existing entries.
+                loading={entriesQuery.isFetching && !entriesQuery.isLoading}
+                includeInactive={includeInactive}
+                onEdit={openEdit}
+              />
+            )}
           </Stack>
         </Paper>
       </Stack>
@@ -393,13 +585,22 @@ export default function BrainAdminPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} color="inherit">
+          <Button
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              setDialogOpen(false);
+            }}
+            color="inherit"
+          >
             Cancelar
           </Button>
           <Button
             variant="contained"
-            onClick={() => {
-              void handleSave();
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              void saveEntry();
             }}
             disabled={createMutation.isPending || updateMutation.isPending}
           >

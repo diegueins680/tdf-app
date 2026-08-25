@@ -9,8 +9,16 @@ import Network.Wai (Middleware, Request, requestHeaders)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
-import Data.Char (isDigit, isSpace, toLower)
-import Data.List (dropWhileEnd, intercalate, nub)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isDigit
+  , isSpace
+  , ord
+  , toLower
+  )
+import Data.List (dropWhileEnd, intercalate, isInfixOf, isSuffixOf, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
 
@@ -43,10 +51,13 @@ corsPolicy = do
         ]
       hqBaseCandidates = filter (not . null . trim) (maybe [] pure hqBaseEnv)
       parsed = maybe [] splitComma originsEnv
+      configuredOrigins = parsed
   hqBaseDefaults <- either (ioError . userError) pure $
     traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
-    traverse normalizeConfiguredCorsOrigin (filter (not . null) parsed)
+    validateConfiguredCorsOriginList allowAllFlag configuredOrigins
+      >>= traverse normalizeConfiguredCorsOrigin
+      >>= validateUniqueConfiguredCorsOrigins
   let
       defaults = defaultsCore ++ hqBaseDefaults
       includeDefaults = not disableDefaultsFlag
@@ -101,7 +112,15 @@ isTrustedPreviewOrigin origin =
         ]
   where
     matchesTrustedPagesHost host root =
-      host == root || ("." <> root) `BS.isSuffixOf` host
+      host == root || hasSinglePreviewLabel host root
+
+    hasSinglePreviewLabel host root =
+      let suffix = "." <> root
+          prefixLength = BS.length host - BS.length suffix
+          prefix = BS.take prefixLength host
+      in suffix `BS.isSuffixOf` host
+           && not (BS.null prefix)
+           && not (BS.any (== '.') prefix)
 
 parseHttpsOriginHost :: BS.ByteString -> Maybe BS.ByteString
 parseHttpsOriginHost origin = do
@@ -113,17 +132,61 @@ parseHttpsOriginHost origin = do
 
 normalizeConfiguredCorsOrigin :: String -> Either String String
 normalizeConfiguredCorsOrigin raw =
-  let normalized = normalizeOrigin raw
-  in case normalized of
+  let rawTrimmed = trim raw
+      normalized = normalizeOrigin raw
+  in case rawTrimmed of
     "*" -> Right "*"
     _ ->
-      case parseHttpOrigin normalized of
-        Just origin -> Right origin
-        Nothing ->
+      if "//" `isSuffixOf` rawTrimmed
+        then
           Left $
             "Configured CORS origins must be absolute http(s) origins "
               <> "without path, query, or fragment: "
               <> raw
+        else if containsUnsupportedCorsUrlChar rawTrimmed
+        then
+          Left $
+            "Configured CORS origins must contain only ASCII URL characters "
+              <> "without whitespace, control, or hidden formatting characters: "
+              <> raw
+        else if hasExplicitDefaultHttpPort rawTrimmed
+        then
+          Left $
+            "Configured CORS origins must omit default ports "
+              <> "(:80 for http, :443 for https): "
+              <> raw
+        else
+          case parseHttpOrigin normalized of
+            Just origin -> Right origin
+            Nothing ->
+              Left $
+                "Configured CORS origins must be absolute http(s) origins "
+                  <> "without path, query, or fragment: "
+                  <> raw
+
+validateConfiguredCorsOriginList :: Bool -> [String] -> Either String [String]
+validateConfiguredCorsOriginList allowAll origins
+  | any (null . trim) origins =
+      Left
+        "Configured CORS origins must not contain blank entries; \
+        \remove extra commas from the origin allowlist."
+  | allowAll && not (null origins) =
+      Left
+        "ALLOW_ALL_ORIGINS=true must not be combined with configured CORS origins; \
+        \unset the origin allowlist or disable allow-all."
+  | "*" `elem` map trim origins && length origins > 1 =
+      Left
+        "Configured CORS origins must not mix wildcard '*' with explicit origins; \
+        \set ALLOW_ALL_ORIGINS=true for allow-all or remove '*'."
+  | otherwise = Right origins
+
+validateUniqueConfiguredCorsOrigins :: [String] -> Either String [String]
+validateUniqueConfiguredCorsOrigins origins
+  | length origins /= length (nub origins) =
+      Left
+        "Configured CORS origins must not contain duplicate entries after normalization; \
+        \remove repeated origins from the allowlist."
+  | otherwise = Right origins
 
 parseHttpOrigin :: String -> Maybe String
 parseHttpOrigin origin =
@@ -137,20 +200,44 @@ parseHttpOrigin origin =
   where
     parseWithScheme scheme remainder =
       let (host, suffix) = BS.break (`elem` (":/?#" :: String)) remainder
-      in if BS.null host || not (validOriginHost host) || not (validOriginSuffix suffix)
+      in if BS.null host
+          || not (validOriginHost host)
+          || not (validOriginSuffix scheme suffix)
         then Nothing
         else Just (BS.unpack (scheme <> host <> suffix))
 
 -- | Convert a configured app base URL into the origin shape required by CORS.
 deriveCorsOriginFromAppBase :: String -> Either String String
 deriveCorsOriginFromAppBase raw =
-  case parseHttpBaseOrigin (trim raw) of
-    Just origin -> Right origin
-    Nothing ->
-      Left $
-        "HQ_APP_URL CORS fallback must be an absolute http(s) URL "
-          <> "with a valid origin and no query or fragment: "
-          <> raw
+  let trimmed = trim raw
+  in if containsUnsupportedCorsUrlChar trimmed
+       then
+         Left $
+           "HQ_APP_URL CORS fallback must contain only ASCII URL characters "
+             <> "without whitespace, control, or hidden formatting characters: "
+             <> raw
+       else if hasExplicitDefaultHttpPort trimmed
+       then
+         Left $
+           "HQ_APP_URL CORS fallback must omit default ports "
+             <> "(:80 for http, :443 for https): "
+             <> raw
+       else
+         case parseHttpBaseOrigin trimmed of
+           Just origin -> Right origin
+           Nothing ->
+             Left $
+               "HQ_APP_URL CORS fallback must be an absolute http(s) URL "
+                 <> "with a valid origin and no query or fragment: "
+                 <> raw
+
+containsUnsupportedCorsUrlChar :: String -> Bool
+containsUnsupportedCorsUrlChar =
+  any $ \ch ->
+    isSpace ch
+      || isControl ch
+      || ord ch > 127
+      || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 parseHttpBaseOrigin :: String -> Maybe String
 parseHttpBaseOrigin raw
@@ -173,14 +260,39 @@ parseHttpBaseOrigin raw
 
     validBaseSuffix suffix =
       BS.null suffix
-        || ("/" `BS.isPrefixOf` suffix && not (BS.any (\c -> c == '?' || c == '#') suffix))
+        || ( "/" `BS.isPrefixOf` suffix
+             && not (hasAmbiguousBasePath suffix)
+             && not (hasEncodedAmbiguousBasePath suffix)
+             && not (BS.any (\c -> c == '?' || c == '#' || c == '\\') suffix)
+           )
+
+    hasAmbiguousBasePath suffix =
+      hasRepeatedPathSeparator suffix
+        || any (`elem` ["..", "."]) (BS.split '/' (BS.drop 1 suffix))
+
+    hasEncodedAmbiguousBasePath suffix =
+      let lowered = BS.unpack (BS.map toLower suffix)
+      in any (`isInfixOf` lowered) ["%2e", "%2f", "%5c"]
+
+    hasRepeatedPathSeparator suffix =
+      BS.length suffix >= 2
+        && (BS.take 2 suffix == "//" || hasRepeatedPathSeparator (BS.drop 1 suffix))
 
 validOriginHost :: BS.ByteString -> Bool
 validOriginHost host =
   BS.length host <= 253
+    && hasPublicOrLocalhostShape host
     && not (isAmbiguousNumericHost host)
     && all validLabel (BS.split '.' host)
   where
+    hasPublicOrLocalhostShape candidate =
+      candidate == "localhost"
+        || ".localhost" `BS.isSuffixOf` candidate
+        || BS.any (== '.') candidate
+        || case parseIpv4Octets candidate of
+             Just _ -> True
+             Nothing -> False
+
     isAmbiguousNumericHost candidate =
       BS.all (\ch -> isDigit ch || ch == '.') candidate
         && isNothing (parseIpv4Octets candidate)
@@ -213,16 +325,40 @@ validOriginHost host =
     isHostnameChar c =
       (c >= 'a' && c <= 'z') || isDigit c || c == '-'
 
-validOriginSuffix :: BS.ByteString -> Bool
-validOriginSuffix suffix
+validOriginSuffix :: BS.ByteString -> BS.ByteString -> Bool
+validOriginSuffix _ suffix
   | BS.null suffix = True
+validOriginSuffix scheme suffix
   | ":" `BS.isPrefixOf` suffix =
       let port = BS.drop 1 suffix
       in not (BS.null port)
         && BS.all isDigit port
+        && not (BS.length port > 1 && BS.head port == '0')
+        && Just port /= defaultPortForScheme scheme
         && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
             (readMaybe (BS.unpack port))
   | otherwise = False
+
+defaultPortForScheme :: BS.ByteString -> Maybe BS.ByteString
+defaultPortForScheme "http://" = Just "80"
+defaultPortForScheme "https://" = Just "443"
+defaultPortForScheme _ = Nothing
+
+hasExplicitDefaultHttpPort :: String -> Bool
+hasExplicitDefaultHttpPort raw =
+  case BS.stripPrefix "https://" lowered of
+    Just remainder -> hasDefaultPort "443" remainder
+    Nothing ->
+      case BS.stripPrefix "http://" lowered of
+        Just remainder -> hasDefaultPort "80" remainder
+        Nothing -> False
+  where
+    lowered = BS.map toLower (BS.pack raw)
+
+    hasDefaultPort defaultPort remainder =
+      let (authority, _) = BS.break (`elem` ("/?#" :: String)) remainder
+          (_, portSuffix) = BS.break (== ':') authority
+      in portSuffix == ":" <> defaultPort
 
 -- | Split a comma-separated list into trimmed entries.
 splitComma :: String -> [String]
@@ -264,9 +400,28 @@ parseBoolFlag name raw =
           <> value
 
 lookupFirstNonEmptyEnv :: [String] -> IO (Maybe String)
-lookupFirstNonEmptyEnv [] = pure Nothing
-lookupFirstNonEmptyEnv (key:rest) = do
-  value <- lookupEnv key
-  case value of
-    Just raw | not (null (trim raw)) -> pure (Just raw)
-    _ -> lookupFirstNonEmptyEnv rest
+lookupFirstNonEmptyEnv keys = do
+  values <- traverse lookupNamed keys
+  case nonEmptyValues values of
+    [] -> pure Nothing
+    (primaryKey, primaryRaw, primaryTrimmed):rest ->
+      case filter (\(_, _, trimmed) -> trimmed /= primaryTrimmed) rest of
+        (conflictKey, _, _):_ ->
+          ioError . userError $
+            "CORS fallback aliases "
+              <> primaryKey
+              <> " and "
+              <> conflictKey
+              <> " must not be set to different values"
+        [] -> pure (Just primaryRaw)
+  where
+    lookupNamed key = do
+      value <- lookupEnv key
+      pure (key, value)
+
+    nonEmptyValues values =
+      [ (key, raw, trimmed)
+      | (key, Just raw) <- values
+      , let trimmed = trim raw
+      , not (null trimmed)
+      ]

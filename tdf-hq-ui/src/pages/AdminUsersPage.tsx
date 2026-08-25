@@ -2,14 +2,13 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Checkbox,
   Chip,
   FormControlLabel,
   IconButton,
   InputAdornment,
   Link,
+  Paper,
   Stack,
   TextField,
   Tooltip,
@@ -22,14 +21,175 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
 import { Admin, type AdminUser } from '../api/admin';
 import AdminUserCommunicationDialog from '../components/AdminUserCommunicationDialog';
+import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+
+const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n a',
+  'na',
+  'correo pendiente',
+  'email pendiente',
+  'ninguna',
+  'ninguno',
+  'no datos de contacto',
+  'no e-mail',
+  'no email',
+  'no facilita',
+  'no facilita correo',
+  'no facilita telefono',
+  'no facilito',
+  'no facilito correo',
+  'no facilito telefono',
+  'no informado',
+  'no informada',
+  'no tiene celular',
+  'no tiene correo',
+  'no tiene email',
+  'no tiene numero',
+  'no tiene telefono',
+  'no tiene numero de whatsapp',
+  'no tiene whatsapp',
+  'no aplica',
+  'no disponible',
+  'no phone',
+  'no proporcionada',
+  'no proporcionado',
+  'no proporciono',
+  'no proporciono correo',
+  'no proporciono telefono',
+  'no registra',
+  'no registra celular',
+  'no registra correo',
+  'no registra email',
+  'no registra numero',
+  'no registra telefono',
+  'no registra whatsapp',
+  'no registrado',
+  'no registrada',
+  'no reportado',
+  'no telephone',
+  'none',
+  'none provided',
+  'not available',
+  'not provided',
+  'not specified',
+  'pendiente',
+  'pendiente de correo',
+  'pendiente de email',
+  'pendiente de numero',
+  'pendiente de telefono',
+  'pendiente de whatsapp',
+  'por actualizar',
+  'por completar',
+  'pendiente por validar',
+  'por validar',
+  'por confirmar',
+  'por definir',
+  'desconocido',
+  'desconocida',
+  'sin definir',
+  'sin celular',
+  'sin correo',
+  'sin datos',
+  'sin datos de contacto',
+  'sin email',
+  'sin numero',
+  'sin telefono',
+  'sin whatsapp',
+  'sin informacion',
+  'sin actualizar',
+  'telefono pendiente',
+  'tbd',
+  'whatsapp pendiente',
+]);
+
+const normalizeContactPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderContactValue = (value: string) =>
+  CONTACT_PLACEHOLDER_VALUE_KEYS.has(normalizeContactPlaceholderKey(value));
 
 const normalizeContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
   if (trimmed == null || trimmed === '') return null;
+  if (isPlaceholderContactValue(trimmed)) return null;
   return trimmed;
 };
 
-const normalizeAccessKey = (value: string) => value.trim().toLocaleLowerCase('es');
+const normalizeIdentityDisplayName = (value?: string | null) => normalizeContactValue(value);
+
+const normalizeAccessKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const ACCESS_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n/a',
+  'na',
+  'desconocido',
+  'desconocida',
+  'no aplica',
+  'no asignado',
+  'no asignada',
+  'no informado',
+  'no informada',
+  'no proporcionado',
+  'no proporcionada',
+  'no registra',
+  'no registra modulo',
+  'no registra modulos',
+  'no registra permiso',
+  'no registra permisos',
+  'no registra rol',
+  'no registra roles',
+  'no registrado',
+  'no registrada',
+  'not assigned',
+  'not provided',
+  'not specified',
+  'none',
+  'pendiente',
+  'pendiente por validar',
+  'por actualizar',
+  'por completar',
+  'por confirmar',
+  'por definir',
+  'por validar',
+  'sin actualizar',
+  'sin acceso',
+  'sin acceso asignado',
+  'sin asignar',
+  'sin datos',
+  'sin modulo',
+  'sin modulo asignado',
+  'sin modulos',
+  'sin modulos asignados',
+  'sin permiso',
+  'sin permisos',
+  'sin rol',
+  'sin rol asignado',
+  'sin roles',
+  'sin roles asignados',
+  'tbd',
+  'unassigned',
+]);
+
+const isPlaceholderAccessValue = (value: string) => {
+  const accessKey = normalizeAccessKey(value).replace(/[.!?:;]+$/g, '').trim();
+  return ACCESS_PLACEHOLDER_VALUE_KEYS.has(accessKey);
+};
 
 const normalizeAccessValues = (values: readonly string[]) => {
   const valuesByKey = new Map<string, string>();
@@ -37,6 +197,7 @@ const normalizeAccessValues = (values: readonly string[]) => {
   values.forEach((value) => {
     const trimmedValue = value.trim();
     if (!trimmedValue) return;
+    if (isPlaceholderAccessValue(trimmedValue)) return;
 
     const accessKey = normalizeAccessKey(trimmedValue);
     if (!valuesByKey.has(accessKey)) {
@@ -74,7 +235,7 @@ const mergeAdminUserRecords = (primary: AdminUser, fallback: AdminUser): AdminUs
 });
 
 const getUserContactSummary = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>) => {
-  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const preferredPhone = getUserWhatsAppChannel(user);
   const email = normalizeContactValue(user.primaryEmail);
 
   if (preferredPhone && email) return `${preferredPhone} · ${email}`;
@@ -92,13 +253,37 @@ const normalizePhoneComparisonValue = (value?: string | null) => {
   return digits.length >= 7 ? digits : null;
 };
 
+const getPhoneComparisonCandidates = (value?: string | null) => {
+  const digits = normalizePhoneComparisonValue(value);
+  if (!digits) return [];
+
+  const candidates = [digits];
+  if (digits.startsWith('0') && digits.length > 7) {
+    candidates.push(digits.slice(1));
+    candidates.push(`593${digits.slice(1)}`);
+  }
+  if (digits.startsWith('593') && digits.length > 9) {
+    candidates.push(`0${digits.slice(3)}`);
+  }
+
+  return candidates.filter((candidate, index) => (
+    candidate.length >= 7 && candidates.indexOf(candidate) === index
+  ));
+};
+
 const phoneComparisonValuesMatch = (left?: string | null, right?: string | null) => {
-  const leftDigits = normalizePhoneComparisonValue(left);
-  const rightDigits = normalizePhoneComparisonValue(right);
+  const leftCandidates = getPhoneComparisonCandidates(left);
+  const rightCandidates = getPhoneComparisonCandidates(right);
 
-  if (!leftDigits || !rightDigits) return false;
+  if (leftCandidates.length === 0 || rightCandidates.length === 0) return false;
 
-  return leftDigits === rightDigits || leftDigits.endsWith(rightDigits) || rightDigits.endsWith(leftDigits);
+  return leftCandidates.some((leftDigits) => (
+    rightCandidates.some((rightDigits) => (
+      leftDigits === rightDigits
+      || leftDigits.endsWith(rightDigits)
+      || rightDigits.endsWith(leftDigits)
+    ))
+  ));
 };
 
 const contactComparisonValuesMatch = (left?: string | null, right?: string | null) => {
@@ -123,11 +308,13 @@ const matchesVisibleIdentityValue = (
 const getVisibleUserContactSummary = (
   user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail' | 'partyName' | 'username'>,
 ) => {
-  const identityValues = [user.partyName, user.username];
-  const preferredPhone = normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  const identityValues = [normalizeIdentityDisplayName(user.partyName), user.username];
+  const preferredPhone = getUserWhatsAppChannel(user);
   const email = normalizeContactValue(user.primaryEmail);
-  const visiblePhone = matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone;
   const visibleEmail = matchesVisibleIdentityValue(email, identityValues) ? null : email;
+  const visiblePhone = preferredPhone && visibleEmail ? null : (
+    matchesVisibleIdentityValue(preferredPhone, identityValues) ? null : preferredPhone
+  );
 
   if (visiblePhone && visibleEmail) return `${visiblePhone} · ${visibleEmail}`;
   return visiblePhone ?? visibleEmail;
@@ -141,12 +328,17 @@ const getUserContactSearchValues = (
     .filter((value): value is string => value != null)
     .flatMap((value) => {
       const phoneDigits = normalizePhoneComparisonValue(value);
-      return phoneDigits ? [value, phoneDigits] : [value];
+      return phoneDigits ? [value, ...getPhoneComparisonCandidates(value)] : [value];
     })
 );
 
+const normalizeWhatsAppChannel = (value?: string | null) => {
+  const normalizedValue = normalizeContactValue(value);
+  return normalizedValue && normalizePhoneComparisonValue(normalizedValue) ? normalizedValue : null;
+};
+
 const getUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
-  normalizeContactValue(user.whatsapp) ?? normalizeContactValue(user.primaryPhone);
+  normalizeWhatsAppChannel(user.whatsapp) ?? normalizeWhatsAppChannel(user.primaryPhone);
 
 const hasUserWhatsAppChannel = (user: Pick<AdminUser, 'whatsapp' | 'primaryPhone'>) =>
   Boolean(getUserWhatsAppChannel(user));
@@ -157,6 +349,37 @@ const getUserContactReadiness = (
   if (hasUserWhatsAppChannel(user)) return 'whatsapp-ready' as const;
   if (getUserContactSummary(user)) return 'contact-ready' as const;
   return 'missing-contact' as const;
+};
+
+const getUserContactReadinessSearchValues = (
+  user: Pick<AdminUser, 'whatsapp' | 'primaryPhone' | 'primaryEmail'>,
+) => {
+  const readiness = getUserContactReadiness(user);
+
+  if (readiness === 'whatsapp-ready') {
+    return ['listo para WhatsApp', 'listos para WhatsApp', 'WhatsApp listo'];
+  }
+
+  if (readiness === 'contact-ready') {
+    return [
+      'pendiente de WhatsApp',
+      'pendientes de WhatsApp',
+      'pendiente WhatsApp',
+      'pendientes WhatsApp',
+      'WhatsApp pendiente',
+      'sin WhatsApp',
+    ];
+  }
+
+  return [
+    'pendiente de contacto',
+    'pendientes de contacto',
+    'pendiente contacto',
+    'pendientes contacto',
+    'contacto pendiente',
+    'sin contacto',
+    'sin WhatsApp',
+  ];
 };
 
 const joinSpanishSummaryParts = (parts: readonly string[]) => {
@@ -198,11 +421,11 @@ const buildPendingProfileSummary = (count: number) => (
 );
 
 const buildCollapsedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
-  if (users.length !== 1) {
-    return `Ver ${formatInactiveUserCountLabel(users.length)}`;
-  }
+  return `Ver ${formatInactiveUserCountLabel(users.length)}`;
+};
 
-  return `Ver inactivo: ${summarizeUserIdentity(users[0]!).primary}`;
+const buildExpandedInactiveUsersToggleLabel = (users: readonly AdminUser[]) => {
+  return `Ocultar ${formatInactiveUserCountLabel(users.length)}`;
 };
 
 const getUserAccessSummary = (values: string[]) =>
@@ -220,6 +443,20 @@ const getSharedAccessSummary = (values: string[]) => {
 
 const isSameAccessSummary = (left: string, right: string) =>
   normalizeAccessKey(left) === normalizeAccessKey(right);
+
+const getSharedAccessValues = (valuesByUser: readonly string[][]) => {
+  if (valuesByUser.length < 2) return [];
+
+  const normalizedValuesByUser = valuesByUser.map(normalizeAccessValues);
+  if (normalizedValuesByUser.some((values) => values.length === 0)) return [];
+
+  const [firstValues = [], ...restValues] = normalizedValuesByUser;
+  const firstSummary = getUserAccessSummary(firstValues);
+
+  return restValues.every((values) => isSameAccessSummary(getUserAccessSummary(values), firstSummary))
+    ? firstValues
+    : [];
+};
 
 const formatAccessSummaryParts = ({
   modulesSummary,
@@ -283,8 +520,9 @@ const getSearchValueVariants = (value?: string | null) => {
 };
 const normalizeVisibleSearchInput = (value: string) => (value.trim().length === 0 ? '' : value);
 const MAX_SEARCH_QUERY_SUMMARY_LENGTH = 64;
+const normalizeSearchQuerySummary = (value: string) => value.trim().replace(/\s+/g, ' ');
 const formatSearchQuerySummary = (value: string) => {
-  const normalizedValue = value.trim().replace(/\s+/g, ' ');
+  const normalizedValue = normalizeSearchQuerySummary(value);
 
   if (normalizedValue.length <= MAX_SEARCH_QUERY_SUMMARY_LENGTH) {
     return normalizedValue;
@@ -304,17 +542,26 @@ const hasLinkedAdminUserProfile = (user: Pick<AdminUser, 'partyId'>) =>
   typeof user.partyId === 'number' && Number.isInteger(user.partyId) && user.partyId > 0;
 
 const formatUserCountLabel = (count: number) => `${count} usuario${count === 1 ? '' : 's'}`;
+const formatActiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} activo${count === 1 ? '' : 's'}`;
 const formatInactiveUserCountLabel = (count: number) => `${formatUserCountLabel(count)} inactivo${count === 1 ? '' : 's'}`;
 const MIN_USERS_FOR_SEARCH = 3;
-const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto, rol o módulo';
+const MIN_USERS_FOR_REFRESH = 4;
+const SEARCH_INPUT_PLACEHOLDER = 'Nombre, usuario, contacto o acceso';
+const ACCOUNT_SEARCH_PLACEHOLDER = 'Cuenta';
 const ADMIN_USERS_PAGE_TITLE = 'Usuarios admin';
 const ADMIN_USERS_EMPTY_STATE =
-  'Todavía no hay cuentas admin. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
+  'No hay cuentas admin activas. Cuando exista la primera cuenta activa, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
 const ADMIN_USERS_EMPTY_WITH_INACTIVE_STATE =
   'No hay cuentas admin activas ni inactivas. Cuando exista la primera, esta vista mostrará perfil, contacto y WhatsApp si está disponible.';
-const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Revisar inactivos';
+const ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION = 'Ver si hay cuentas inactivas';
+const ADMIN_USERS_REVIEW_INACTIVE_SINGLE_USER_ACTION = ADMIN_USERS_REVIEW_INACTIVE_EMPTY_ACTION;
+const ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION = 'Buscar también en cuentas inactivas';
+const ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION = 'Buscar cuentas inactivas';
 const INCLUDE_INACTIVE_FILTER_LABEL = 'Incluir inactivos';
 const INACTIVE_FILTER_ACTIVE_LABEL = 'Inactivos incluidos';
+const INCLUDE_INACTIVE_SEARCH_FILTER_LABEL = 'Buscar también en inactivos';
+const INACTIVE_SEARCH_FILTER_ACTIVE_LABEL = 'Buscando en inactivos';
+const RETURN_TO_ACTIVE_USERS_ACTION = 'Volver a usuarios activos';
 const DEFAULT_SHARED_ADMIN_ROLES_SUMMARY = 'Admin';
 const DEFAULT_SHARED_ADMIN_MODULES_SUMMARY = 'admin';
 const ADMIN_USERS_PAGE_INTRO =
@@ -329,23 +576,34 @@ const ADMIN_USERS_PAGE_CONTACT_SETUP_INTRO =
   'Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
 const ADMIN_USERS_PAGE_PROFILE_PENDING_CONTACT_SETUP_INTRO =
   'Estos usuarios todavía no tienen un perfil vinculado. Cuando lo tengan, podrás abrirlos desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const NO_ACCESS_ASSIGNED_SUMMARY = 'Sin acceso asignado';
 const SINGLE_USER_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre y usa WhatsApp si ya tiene un número disponible.';
 const SINGLE_USER_NUMBER_SETUP_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para agregar o corregir un número. Cuando tenga un número disponible, WhatsApp aparecerá aquí.';
 const SINGLE_USER_CONTACT_SETUP_GUIDANCE =
-  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí. Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.';
+  'Solo hay un usuario por ahora. Abre su perfil desde el nombre para completar el contacto pendiente. Cuando tenga un número disponible, WhatsApp aparecerá aquí.';
 const SINGLE_SEARCH_RESULT_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre y usa WhatsApp si ya está disponible.';
 const SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.';
 const SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE =
   'Resultado único. Abre el perfil desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.';
+const makeSingleUserInactiveGuidance = (guidance: string) =>
+  guidance
+    .replace('Solo hay un usuario por ahora.', 'Solo hay un usuario inactivo por ahora.');
+const makeSingleSearchResultInactiveGuidance = (guidance: string) =>
+  guidance
+    .replace('Resultado único.', 'Resultado único inactivo.');
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 
-const formatSearchPlaceholderTerms = (terms: readonly string[]) => {
-  if (terms.length <= 1) return terms[0] ?? SEARCH_INPUT_PLACEHOLDER;
+const formatSearchPlaceholderTerms = (
+  terms: readonly string[],
+  emptyFallback = SEARCH_INPUT_PLACEHOLDER,
+) => {
+  if (terms.length === 0) return emptyFallback;
+  if (terms.length === 1) return terms[0] ?? emptyFallback;
 
   const lastTerm = terms[terms.length - 1] ?? '';
   const connector = spanishOrConnector(lastTerm);
@@ -369,22 +627,18 @@ const buildPendingProfileGuidance = ({
   readiness: UserContactReadiness;
 }) => {
   const scopePrefix = scope === 'single-user' ? 'Solo hay un usuario por ahora.' : 'Resultado único.';
-  const scopeSuffix =
-    scope === 'single-user'
-      ? ' Cuando la lista crezca, aquí aparecerán búsqueda y resumen de resultados.'
-      : '';
   const missingProfileMessage =
     ' Este usuario todavía no tiene un perfil vinculado, así que el nombre no abre un perfil.';
 
   if (readiness === 'whatsapp-ready') {
-    return `${scopePrefix}${missingProfileMessage} Usa WhatsApp si ya tiene un número disponible.${scopeSuffix}`;
+    return `${scopePrefix}${missingProfileMessage} Usa WhatsApp si ya tiene un número disponible.`;
   }
 
   if (readiness === 'contact-ready') {
-    return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+    return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para agregar o corregir un número. WhatsApp aparecerá cuando haya un número disponible.`;
   }
 
-  return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.${scopeSuffix}`;
+  return `${scopePrefix}${missingProfileMessage} Cuando se vincule, podrás abrirlo desde el nombre para completar el contacto pendiente. WhatsApp aparecerá cuando haya un número disponible.`;
 };
 
 const buildUserAccessSummary = ({
@@ -400,8 +654,17 @@ const buildUserAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
-  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
-  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
+
+  if (!rolesSummary && !modulesSummary) {
+    return NO_ACCESS_ASSIGNED_SUMMARY;
+  }
+
+  const showRolesSummary = Boolean(rolesSummary)
+    && !isSameAccessSummary(rolesSummary, sharedRolesSummary)
+    && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+  const showModulesSummary = Boolean(modulesSummary)
+    && !isSameAccessSummary(modulesSummary, sharedModulesSummary)
+    && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
 
   return formatAccessSummaryParts({
     rolesSummary: showRolesSummary ? rolesSummary : '',
@@ -422,8 +685,21 @@ const buildUserRowAccessSummary = ({
 }) => {
   const rolesSummary = getUserAccessSummary(roles);
   const modulesSummary = getUserAccessSummary(modules);
-  const showRolesSummary = Boolean(rolesSummary) && !isSameAccessSummary(rolesSummary, sharedRolesSummary);
-  const showModulesSummary = Boolean(modulesSummary) && !isSameAccessSummary(modulesSummary, sharedModulesSummary);
+
+  if (!rolesSummary && !modulesSummary) {
+    return NO_ACCESS_ASSIGNED_SUMMARY;
+  }
+
+  if (isDefaultAdminAccessSummary({ rolesSummary, modulesSummary })) {
+    return '';
+  }
+
+  const showRolesSummary = Boolean(rolesSummary)
+    && !isSameAccessSummary(rolesSummary, sharedRolesSummary)
+    && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+  const showModulesSummary = Boolean(modulesSummary)
+    && !isSameAccessSummary(modulesSummary, sharedModulesSummary)
+    && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
   const compactRolesSummary = formatCompactAccessValues(roles, 'rol', 'roles');
   const compactModulesSummary = formatCompactAccessValues(modules, 'módulo', 'módulos');
 
@@ -435,6 +711,92 @@ const buildUserRowAccessSummary = ({
     rolesSummary: showRolesSummary ? compactRolesSummary : '',
     modulesSummary: showModulesSummary ? compactModulesSummary : '',
   });
+};
+
+const hasNoAccessAssigned = (user: Pick<AdminUser, 'modules' | 'roles'>) =>
+  getUserAccessSummary(user.roles) === '' && getUserAccessSummary(user.modules) === '';
+
+const buildHiddenInactiveAccessSummary = (users: readonly AdminUser[]) => {
+  if (users.length < 2) return '';
+
+  const sharedRolesValues = getSharedAccessValues(users.map((user) => user.roles));
+  const sharedModulesValues = getSharedAccessValues(users.map((user) => user.modules));
+  if (sharedRolesValues.length === 0 && sharedModulesValues.length === 0) return '';
+
+  const compactAccessSummary = buildUserRowAccessSummary({
+    roles: sharedRolesValues,
+    modules: sharedModulesValues,
+  });
+
+  return compactAccessSummary ? `acceso compartido (${compactAccessSummary})` : '';
+};
+
+const buildCollapsedInactiveUsersToggleTitle = (users: readonly AdminUser[]) => {
+  const noAccessCount = users.filter(hasNoAccessAssigned).length;
+  const pendingProfileCount = users.filter((user) => !hasLinkedAdminUserProfile(user)).length;
+  const readyForWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'whatsapp-ready').length;
+  const pendingWhatsAppCount = users.filter((user) => getUserContactReadiness(user) === 'contact-ready').length;
+  const pendingContactCount = users.filter((user) => getUserContactReadiness(user) === 'missing-contact').length;
+  const hiddenAccessSummary = noAccessCount === 0 ? buildHiddenInactiveAccessSummary(users) : '';
+  const contactStateSummary = buildContactStateSummary({
+    readyForWhatsAppCount,
+    pendingWhatsAppCount,
+    pendingContactCount,
+  });
+  const parts = [
+    noAccessCount > 0 ? `${noAccessCount} sin acceso asignado` : '',
+    hiddenAccessSummary,
+    pendingProfileCount > 0 ? `${pendingProfileCount} sin perfil vinculado` : '',
+    contactStateSummary,
+  ].filter(Boolean);
+
+  return parts.length > 0
+    ? `Usuarios inactivos ocultos: ${joinSpanishSummaryParts(parts)}.`
+    : undefined;
+};
+
+const getUserAccessStateSearchValues = (user: Pick<AdminUser, 'modules' | 'roles'>) => (
+  hasNoAccessAssigned(user)
+    ? ['sin acceso', 'sin acceso asignado', 'sin permisos', 'acceso pendiente']
+    : []
+);
+
+const getUserProfileStateSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? []
+    : ['perfil pendiente', 'sin perfil', 'sin perfil vinculado', 'perfil no vinculado']
+);
+
+const getLinkedProfileLabelSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? [
+        `perfil ${user.partyId}`,
+        `perfil #${user.partyId}`,
+      ]
+    : []
+);
+
+const getLinkedProfileSearchValues = (user: Pick<AdminUser, 'partyId'>) => (
+  hasLinkedAdminUserProfile(user)
+    ? [
+        String(user.partyId),
+        `id ${user.partyId}`,
+        ...getLinkedProfileLabelSearchValues(user),
+      ]
+    : []
+);
+
+const matchesLinkedProfileLabelSearchQuery = (user: Pick<AdminUser, 'partyId'>, rawQuery: string) => {
+  const queryVariants = getSearchValueVariants(rawQuery);
+  if (queryVariants.length === 0) return false;
+
+  const profileSearchSpace = getLinkedProfileLabelSearchValues(user)
+    .flatMap(getSearchValueVariants)
+    .filter(Boolean);
+
+  return queryVariants.some((query) => (
+    profileSearchSpace.some((value) => value.includes(query))
+  ));
 };
 
 const isDefaultAdminAccessSummary = ({
@@ -464,44 +826,102 @@ const buildNonDefaultUserAccessSummary = (user: Pick<AdminUser, 'modules' | 'rol
   });
 };
 
+const buildNonDefaultUserAccessSummaryCopy = (user: Pick<AdminUser, 'modules' | 'roles'> | null) => {
+  const fullSummary = buildNonDefaultUserAccessSummary(user);
+
+  if (!user || !fullSummary) {
+    return { text: '', title: undefined as string | undefined };
+  }
+
+  const compactSummary = buildUserRowAccessSummary({
+    roles: user.roles,
+    modules: user.modules,
+  });
+
+  return {
+    text: compactSummary,
+    title: compactSummary === fullSummary ? undefined : fullSummary,
+  };
+};
+
 const buildAdminUsersSearchPlaceholder = (users: readonly AdminUser[]) => {
   let hasNameIdentity = false;
   let hasDistinctUsername = false;
   let hasContact = false;
-  let hasNonDefaultRoles = false;
-  let hasNonDefaultModules = false;
+  let hasActiveUsers = false;
+  let hasInactiveUsers = false;
+  let hasNoAccessAssignedUsers = false;
+  const roleSummaries: string[] = [];
+  const moduleSummaries: string[] = [];
 
   users.forEach((user) => {
-    const partyName = user.partyName.trim();
+    const partyName = normalizeIdentityDisplayName(user.partyName) ?? '';
     const username = user.username.trim();
     const rolesSummary = getUserAccessSummary(user.roles);
     const modulesSummary = getUserAccessSummary(user.modules);
+    if (!rolesSummary && !modulesSummary) hasNoAccessAssignedUsers = true;
 
     if (partyName) hasNameIdentity = true;
     if (username && normalizeIdentityComparison(username) !== normalizeIdentityComparison(partyName)) {
       hasDistinctUsername = true;
     }
     if (getVisibleUserContactSummary(user)) hasContact = true;
-    if (rolesSummary && !isSameAccessSummary(rolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY)) {
-      hasNonDefaultRoles = true;
+    if (user.active) {
+      hasActiveUsers = true;
+    } else {
+      hasInactiveUsers = true;
     }
-    if (modulesSummary && !isSameAccessSummary(modulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY)) {
-      hasNonDefaultModules = true;
-    }
+
+    roleSummaries.push(rolesSummary);
+    moduleSummaries.push(modulesSummary);
+  });
+
+  const hasNonDefaultRoles = users.length > 1
+    && roleSummaries.some((summary) => summary && !isSameAccessSummary(summary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY))
+    && getSharedAccessSummary(roleSummaries) === '';
+  const hasNonDefaultModules = users.length > 1
+    && moduleSummaries.some((summary) => summary && !isSameAccessSummary(summary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY))
+    && getSharedAccessSummary(moduleSummaries) === '';
+  const modulesAddDistinctSearchValue = !hasNonDefaultRoles || moduleSummaries.some((moduleSummary, index) => {
+    if (!moduleSummary.trim()) return false;
+
+    const roleSummary = roleSummaries[index]?.trim() ?? '';
+    return roleSummary === '' || !isSameAccessSummary(moduleSummary, roleSummary);
   });
 
   const terms: string[] = [];
   if (hasNameIdentity) terms.push('Nombre');
   if (hasDistinctUsername) terms.push(hasNameIdentity ? 'usuario' : 'Usuario');
   if (hasContact) terms.push(terms.length === 0 ? 'Contacto' : 'contacto');
-  if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
-  if (hasNonDefaultModules) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  const shouldUseAccessUmbrellaTerm =
+    hasNonDefaultRoles
+    && hasNonDefaultModules
+    && modulesAddDistinctSearchValue;
 
-  return formatSearchPlaceholderTerms(terms);
+  if (shouldUseAccessUmbrellaTerm) {
+    terms.push(terms.length === 0 ? 'Acceso' : 'acceso');
+  } else {
+    if (hasNonDefaultRoles) terms.push(terms.length === 0 ? 'Rol' : 'rol');
+    if (hasNonDefaultModules && modulesAddDistinctSearchValue) terms.push(terms.length === 0 ? 'Módulo' : 'módulo');
+  }
+  if (
+    hasNoAccessAssignedUsers
+    && !hasNonDefaultRoles
+    && !hasNonDefaultModules
+    && terms.length > 0
+  ) {
+    terms.push('acceso');
+  }
+  if (hasActiveUsers && hasInactiveUsers && terms.length > 0) terms.push('estado');
+
+  return formatSearchPlaceholderTerms(
+    terms,
+    users.length > 0 ? ACCOUNT_SEARCH_PLACEHOLDER : SEARCH_INPUT_PLACEHOLDER,
+  );
 };
 
 const summarizeUserIdentity = (user: Pick<AdminUser, 'partyName' | 'username' | 'userId'>) => {
-  const displayName = user.partyName.trim();
+  const displayName = normalizeIdentityDisplayName(user.partyName) ?? '';
   const username = user.username.trim();
   const primary = displayName || username || `Cuenta #${user.userId}`;
   const showUsername = displayName !== ''
@@ -575,32 +995,129 @@ const dedupeAdminUsers = (users: readonly AdminUser[]) => {
   return [...usersById.values()];
 };
 
-const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
-  const queryVariants = getSearchValueVariants(rawQuery);
-  if (queryVariants.length === 0) return true;
-  const partyIdSearchSpace = hasLinkedAdminUserProfile(user)
-    ? [String(user.partyId), `id ${user.partyId}`]
-    : [];
-  const statusSearchValue = normalizeSearchValue(user.active ? 'activo' : 'inactivo');
+const ACTIVE_STATUS_SEARCH_VALUES = [
+  'activo',
+  'activa',
+  'activos',
+  'activas',
+  'habilitado',
+  'habilitada',
+  'habilitados',
+  'habilitadas',
+].map(normalizeSearchValue);
 
-  const searchSpace = [
+const INACTIVE_STATUS_SEARCH_VALUES = [
+  'inactivo',
+  'inactiva',
+  'inactivos',
+  'inactivas',
+  'desactivado',
+  'desactivada',
+  'desactivados',
+  'desactivadas',
+  'archivado',
+  'archivada',
+  'archivados',
+  'archivadas',
+  'suspendido',
+  'suspendida',
+  'suspendidos',
+  'suspendidas',
+].map(normalizeSearchValue);
+
+const getUserStatusSearchValues = (active: boolean) => (
+  active ? ACTIVE_STATUS_SEARCH_VALUES : INACTIVE_STATUS_SEARCH_VALUES
+);
+
+const getUserConcreteSearchValues = (user: AdminUser) => {
+  const identity = summarizeUserIdentity(user);
+
+  return [
     user.username,
-    user.partyName,
+    normalizeIdentityDisplayName(user.partyName) ?? '',
+    identity.primary,
     String(user.userId),
-    ...partyIdSearchSpace,
+    ...getLinkedProfileSearchValues(user),
     ...getUserContactSearchValues(user),
     getUserAccessSummary(user.roles),
     getUserAccessSummary(user.modules),
   ]
     .flatMap(getSearchValueVariants)
     .filter(Boolean);
+};
 
-  return queryVariants.some((query) => (
-    searchSpace.some((value) => value.includes(query)) || statusSearchValue === query
+const getUserStateSearchValues = (user: AdminUser) => [
+  ...getUserContactReadinessSearchValues(user),
+  ...getUserAccessStateSearchValues(user),
+  ...getUserProfileStateSearchValues(user),
+]
+  .flatMap(getSearchValueVariants)
+  .filter(Boolean);
+
+const getSearchTokens = (value: string) =>
+  normalizeSearchValue(value)
+    .split(' ')
+    .filter(Boolean);
+
+const matchesSearchTokenAcrossValues = (
+  token: string,
+  concreteSearchSpace: readonly string[],
+  statusSearchValues: readonly string[],
+) => (
+  concreteSearchSpace.some((value) => value.includes(token))
+  || statusSearchValues.includes(token)
+);
+
+const isActiveStatusSearchQuery = (value: string) => {
+  const queryVariants = getSearchValueVariants(value);
+
+  return queryVariants.length > 0
+    && queryVariants.every((query) => ACTIVE_STATUS_SEARCH_VALUES.includes(query));
+};
+
+const isInactiveStatusSearchQuery = (value: string) => {
+  const queryVariants = getSearchValueVariants(value);
+
+  return queryVariants.length > 0
+    && queryVariants.every((query) => INACTIVE_STATUS_SEARCH_VALUES.includes(query));
+};
+
+const hasInactiveStatusSearchToken = (value: string) => {
+  const queryTokens = getSearchTokens(value);
+
+  return queryTokens.some((token) => INACTIVE_STATUS_SEARCH_VALUES.includes(token))
+    && !queryTokens.some((token) => ACTIVE_STATUS_SEARCH_VALUES.includes(token));
+};
+
+const isStatusOnlySearchQuery = (value: string) =>
+  isActiveStatusSearchQuery(value) || isInactiveStatusSearchQuery(value);
+
+const matchesUserQuery = (user: AdminUser, rawQuery: string) => {
+  const queryVariants = getSearchValueVariants(rawQuery);
+  if (queryVariants.length === 0) return true;
+  const statusSearchValues = getUserStatusSearchValues(user.active);
+  if (isStatusOnlySearchQuery(rawQuery)) {
+    return queryVariants.some((query) => statusSearchValues.includes(query));
+  }
+  const concreteSearchSpace = getUserConcreteSearchValues(user);
+  const stateSearchSpace = getUserStateSearchValues(user);
+  const searchSpace = [...concreteSearchSpace, ...stateSearchSpace];
+  const matchesExactQuery = queryVariants.some((query) => (
+    searchSpace.some((value) => value.includes(query)) || statusSearchValues.includes(query)
+  ));
+
+  if (matchesExactQuery) return true;
+
+  const queryTokens = getSearchTokens(rawQuery);
+  if (queryTokens.length <= 1) return false;
+
+  return queryTokens.every((token) => (
+    matchesSearchTokenAcrossValues(token, concreteSearchSpace, statusSearchValues)
   ));
 };
 
 export default function AdminUsersPage() {
+  useDocumentTitle('Configuración / Usuarios');
   const qc = useQueryClient();
   const [includeInactive, setIncludeInactive] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -615,10 +1132,6 @@ export default function AdminUsersPage() {
   const users = useMemo(
     () => dedupeAdminUsers(usersQuery.data ?? []),
     [usersQuery.data],
-  );
-  const searchInputPlaceholder = useMemo(
-    () => buildAdminUsersSearchPlaceholder(users),
-    [users],
   );
 
   const handleRefresh = () => {
@@ -642,6 +1155,7 @@ export default function AdminUsersPage() {
   const totalUsersCount = users.length;
   const hasUsers = totalUsersCount > 0;
   const hasActiveSearch = normalizeSearchValue(searchQuery).length > 0;
+  const fullSearchSummary = normalizeSearchQuerySummary(searchQuery);
   const activeSearchSummary = formatSearchQuerySummary(searchQuery);
   const hasMultipleUsers = totalUsersCount > 1;
   const showGeneralIntro = hasMultipleUsers && !hasActiveSearch;
@@ -649,7 +1163,6 @@ export default function AdminUsersPage() {
   const singleVisibleUser = showSingleUserGuidance ? (visibleUsers[0] ?? null) : null;
   const singleVisibleUserReadiness = singleVisibleUser ? getUserContactReadiness(singleVisibleUser) : null;
   const isFiltered = hasActiveSearch && visibleUsers.length !== totalUsersCount;
-  const showSearchField = totalUsersCount >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
   const showSingleSearchResultGuidance = hasActiveSearch && visibleUsers.length === 1;
   const singleSearchResult = showSingleSearchResultGuidance ? (visibleUsers[0] ?? null) : null;
   const singleSearchResultReadiness = singleSearchResult ? getUserContactReadiness(singleSearchResult) : null;
@@ -657,6 +1170,11 @@ export default function AdminUsersPage() {
     && includeInactive
     && visibleUsers.length > 0
     && visibleInactiveUsersCount === visibleUsers.length;
+  const showOnlyInactiveSearchResults = hasActiveSearch
+    && includeInactive
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === visibleUsers.length;
+  const showInactiveOnlyScopeSummary = showOnlyInactiveUsers || showOnlyInactiveSearchResults;
   const showInactiveUsersGroup =
     includeInactive
     && visibleInactiveUsersCount > 0
@@ -669,12 +1187,21 @@ export default function AdminUsersPage() {
     () => (showInactiveUsersGroup ? visibleUsers.filter((user) => !user.active) : []),
     [showInactiveUsersGroup, visibleUsers],
   );
+  const inactiveVisibleUsersSignature = useMemo(
+    () => inactiveVisibleUsers.map((user) => `${user.userId}:${user.active}`).join('|'),
+    [inactiveVisibleUsers],
+  );
   const shouldCollapseInactiveUsers =
     showInactiveUsersGroup && !hasActiveSearch && activeVisibleUsers.length > 0;
   const showInactiveUsersList = showInactiveUsersGroup && (!shouldCollapseInactiveUsers || showInactiveUsers);
   const usersInCurrentSummary = shouldCollapseInactiveUsers && !showInactiveUsersList
     ? activeVisibleUsers
     : visibleUsers;
+  const showSearchField = usersInCurrentSummary.length >= MIN_USERS_FOR_SEARCH || hasActiveSearch;
+  const searchInputPlaceholder = useMemo(
+    () => buildAdminUsersSearchPlaceholder(usersInCurrentSummary),
+    [usersInCurrentSummary],
+  );
   const currentSummaryPendingProfileCount = usersInCurrentSummary.filter(
     (user) => !hasLinkedAdminUserProfile(user),
   ).length;
@@ -687,12 +1214,21 @@ export default function AdminUsersPage() {
     () => getSharedAccessSummary(usersInCurrentSummary.map((user) => getUserAccessSummary(user.modules))),
     [usersInCurrentSummary],
   );
+  const sharedRolesValues = useMemo(
+    () => getSharedAccessValues(usersInCurrentSummary.map((user) => user.roles)),
+    [usersInCurrentSummary],
+  );
+  const sharedModulesValues = useMemo(
+    () => getSharedAccessValues(usersInCurrentSummary.map((user) => user.modules)),
+    [usersInCurrentSummary],
+  );
   const currentSummaryMissingWhatsAppCount = usersInCurrentSummary.filter((user) => !hasUserWhatsAppChannel(user)).length;
   const currentSummaryMissingContactCount = usersInCurrentSummary.filter(
     (user) => !hasUserWhatsAppChannel(user) && !getUserContactSummary(user),
   ).length;
   const currentSummaryPendingWhatsAppCount = currentSummaryMissingWhatsAppCount - currentSummaryMissingContactCount;
   const currentSummaryWithWhatsAppCount = usersInCurrentSummary.length - currentSummaryMissingWhatsAppCount;
+  const showExplicitWhatsAppAction = currentSummaryWithWhatsAppCount === 1;
   const currentSummaryHasMixedPendingContactStates =
     currentSummaryPendingWhatsAppCount > 0 && currentSummaryMissingContactCount > 0;
   const currentSummaryAllNeedContact =
@@ -704,13 +1240,18 @@ export default function AdminUsersPage() {
     (hasCurrentSummaryWhatsAppAction || currentSummaryHasMixedPendingContactStates)
     && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
   const showSharedPendingProfileGuidance = usersInCurrentSummary.length > 1
-    && currentSummaryPendingProfileCount > 1
+    && currentSummaryPendingProfileCount > 0
     && (hasCurrentSummaryLinkedProfile || hasActiveSearch);
   const showSharedContactStateGuidance = usersInCurrentSummary.length > 1
     && (showMixedContactStateGuidance || currentSummaryAllNeedContact || currentSummaryAllNeedWhatsApp);
   const showCurrentSummaryContactState =
     usersInCurrentSummary.length > 1
-    && (currentSummaryWithWhatsAppCount > 0 || currentSummaryHasMixedPendingContactStates)
+    && (
+      currentSummaryWithWhatsAppCount > 0
+      || currentSummaryHasMixedPendingContactStates
+      || currentSummaryAllNeedContact
+      || currentSummaryAllNeedWhatsApp
+    )
     && (currentSummaryPendingWhatsAppCount > 0 || currentSummaryMissingContactCount > 0);
   const hideRepeatedPendingStateChips = showSharedContactStateGuidance;
   const hideSingleRowPendingState =
@@ -728,19 +1269,82 @@ export default function AdminUsersPage() {
     );
   const hideRowAccessSummary = showSingleSearchResultGuidance || showSingleUserGuidance;
   const showSearchEmptyState = hasUsers && visibleUsers.length === 0;
-  const showInactiveFilterAction = hasMultipleUsers || (includeInactive && hasUsers);
+  const hasActiveStatusSearch = hasActiveSearch && isActiveStatusSearchQuery(searchQuery);
+  const hasInactiveStatusSearch = hasActiveSearch && isInactiveStatusSearchQuery(searchQuery);
+  const hasInactiveStatusSearchIntent = hasActiveSearch
+    && (hasInactiveStatusSearch || hasInactiveStatusSearchToken(searchQuery));
+  const hasStatusSearch = hasActiveStatusSearch || hasInactiveStatusSearch;
+  const showReviewInactiveSearchEmptyAction =
+    showSearchEmptyState && !includeInactive && !hasActiveStatusSearch;
+  const reviewInactiveSearchEmptyActionLabel = hasInactiveStatusSearchIntent
+    ? ADMIN_USERS_SEARCH_INACTIVE_STATUS_ACTION
+    : ADMIN_USERS_SEARCH_EMPTY_INACTIVE_ACTION;
+  const hasConfirmedNoInactiveUsers =
+    includeInactive
+    && hasUsers
+    && !hasActiveSearch
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === 0;
+  const hasConfirmedNoInactiveSearchMatches =
+    includeInactive
+    && hasActiveSearch
+    && !hasActiveStatusSearch
+    && hasUsers
+    && visibleUsers.length > 0
+    && visibleInactiveUsersCount === 0;
+  const showInactiveFilterAction = !showSearchEmptyState
+    && !hasStatusSearch
+    && !hasConfirmedNoInactiveUsers
+    && !hasConfirmedNoInactiveSearchMatches
+    && !showOnlyInactiveUsers
+    && (hasMultipleUsers || (includeInactive && hasUsers));
+  const showReturnToActiveUsersAction = showOnlyInactiveUsers;
   const showReviewInactiveEmptyAction =
     !includeInactive && !usersQuery.isLoading && !usersQuery.error && users.length === 0;
-  const showInlineErrorRetryAction = Boolean(usersQuery.error) && !hasUsers;
-  const showRefreshAction = (Boolean(usersQuery.error) && hasUsers)
-    || (!hasActiveSearch && hasUsers && !showSearchEmptyState && (showSearchField || includeInactive));
-  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showSearchEmptyState;
+  const singleUserPrimarySetupComplete = Boolean(
+    singleVisibleUser
+    && hasLinkedAdminUserProfile(singleVisibleUser)
+    && getUserContactReadiness(singleVisibleUser) === 'whatsapp-ready'
+    && !hasNoAccessAssigned(singleVisibleUser),
+  );
+  const showReviewInactiveSingleUserAction =
+    showSingleUserGuidance
+    && singleUserPrimarySetupComplete
+    && !includeInactive
+    && !usersQuery.isLoading
+    && !usersQuery.error;
+  const showInlineErrorRetryAction = Boolean(usersQuery.error);
+  const showRefreshAction = !usersQuery.error
+    && !hasActiveSearch
+    && hasUsers
+    && !showSearchEmptyState
+    && !showOnlyInactiveUsers
+    && usersInCurrentSummary.length >= MIN_USERS_FOR_REFRESH;
+  const refreshActionTitle = includeInactive
+    ? 'Refrescar usuarios activos e inactivos'
+    : 'Refrescar usuarios activos';
+  const showHeaderActions = !usersQuery.error
+    && (showInactiveFilterAction || showRefreshAction || showReturnToActiveUsersAction);
+  const showEmptySearchClearAction = showSearchEmptyState && hasActiveSearch;
+  const showInlineClearSearchAction = showSearchField && hasActiveSearch && !showEmptySearchClearAction;
   const showActiveScopeSummary = hasMultipleUsers && !includeInactive && !hasActiveSearch;
   const inactiveUsersToggleTarget = formatInactiveUserCountLabel(visibleInactiveUsersCount);
   const collapsedInactiveUsersToggleLabel = useMemo(
     () => buildCollapsedInactiveUsersToggleLabel(inactiveVisibleUsers),
     [inactiveVisibleUsers],
   );
+  const collapsedInactiveUsersToggleTitle = useMemo(
+    () => buildCollapsedInactiveUsersToggleTitle(inactiveVisibleUsers),
+    [inactiveVisibleUsers],
+  );
+  const expandedInactiveUsersToggleLabel = useMemo(
+    () => buildExpandedInactiveUsersToggleLabel(inactiveVisibleUsers),
+    [inactiveVisibleUsers],
+  );
+  const showInactiveUsersGroupLabel = showInactiveUsersList
+    && !shouldCollapseInactiveUsers
+    && !showInactiveOnlyScopeSummary;
+  const showInactiveUsersGroupHeader = showInactiveUsersGroupLabel || shouldCollapseInactiveUsers;
   const usersVisibleForIdentityDisambiguation = useMemo(
     () => (showInactiveUsersList ? visibleUsers : activeVisibleUsers),
     [activeVisibleUsers, showInactiveUsersList, visibleUsers],
@@ -749,42 +1353,86 @@ export default function AdminUsersPage() {
     () => getUserIdsRequiringIdentityDisambiguator(usersVisibleForIdentityDisambiguation),
     [usersVisibleForIdentityDisambiguation],
   );
+  const userIdsMatchingProfileSearch = useMemo(
+    () => (
+      hasActiveSearch
+        ? new Set(
+            visibleUsers
+              .filter((user) => matchesLinkedProfileLabelSearchQuery(user, searchQuery))
+              .map((user) => user.userId),
+          )
+        : new Set<number>()
+    ),
+    [hasActiveSearch, searchQuery, visibleUsers],
+  );
+  const currentSummaryNoAccessCount = useMemo(
+    () => usersInCurrentSummary.filter(hasNoAccessAssigned).length,
+    [usersInCurrentSummary],
+  );
+  const showSharedNoAccessGuidance = usersInCurrentSummary.length > 1
+    && currentSummaryNoAccessCount === usersInCurrentSummary.length;
   useEffect(() => {
     if (!showInactiveUsersGroup || hasActiveSearch) {
       setShowInactiveUsers(false);
     }
   }, [hasActiveSearch, showInactiveUsersGroup]);
+  useEffect(() => {
+    setShowInactiveUsers((current) => (current ? false : current));
+  }, [inactiveVisibleUsersSignature]);
   const activeScopeSummary = showActiveScopeSummary
     ? 'Vista actual: solo usuarios activos.'
     : '';
-  const showNoInactiveScopeSummary =
-    includeInactive
-    && hasMultipleUsers
-    && !hasActiveSearch
-    && visibleUsers.length > 0
-    && visibleInactiveUsersCount === 0;
+  const showNoInactiveScopeSummary = hasConfirmedNoInactiveUsers;
   const usersErrorMessage = usersQuery.error instanceof Error ? usersQuery.error.message : '';
+  const inactiveFilterLabel = hasActiveSearch
+    ? includeInactive
+      ? INACTIVE_SEARCH_FILTER_ACTIVE_LABEL
+      : INCLUDE_INACTIVE_SEARCH_FILTER_LABEL
+    : includeInactive
+      ? INACTIVE_FILTER_ACTIVE_LABEL
+      : INCLUDE_INACTIVE_FILTER_LABEL;
   const inactiveScopeSummary = showNoInactiveScopeSummary
-    ? 'No hay usuarios inactivos en esta vista.'
+    ? 'No hay usuarios inactivos.'
+    : '';
+  const inactiveOnlyScopeSummary = (
+    showInactiveOnlyScopeSummary
+    && !showSingleUserGuidance
+    && !showSingleSearchResultGuidance
+  )
+    ? 'Vista actual: solo usuarios inactivos.'
+    : '';
+  const inactiveSearchScopeSummary = hasConfirmedNoInactiveSearchMatches
+    ? 'Sin coincidencias inactivas para esta búsqueda.'
     : '';
   const searchEmptyStateMessage = showSearchEmptyState
     ? (
       !includeInactive
-        ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos. Activa Incluir inactivos si necesitas revisar cuentas deshabilitadas.`
-        : `No hay coincidencias para "${activeSearchSummary}".`
+        ? `No hay coincidencias para "${activeSearchSummary}" entre los usuarios activos.`
+        : `No hay coincidencias para "${activeSearchSummary}" entre usuarios activos e inactivos.`
     )
     : '';
+  const searchEmptyStateTitle = showSearchEmptyState && activeSearchSummary !== fullSearchSummary
+    ? (
+      !includeInactive
+        ? `No hay coincidencias para "${fullSearchSummary}" entre los usuarios activos.`
+        : `No hay coincidencias para "${fullSearchSummary}" entre usuarios activos e inactivos.`
+    )
+    : undefined;
   const visibleUsersSummary = useMemo(() => {
     if (!hasUsers || showSingleUserGuidance || showSingleSearchResultGuidance || usersInCurrentSummary.length === 0) return '';
 
     const parts: string[] = [];
+    const countLabel =
+      (shouldCollapseInactiveUsers && !showInactiveUsersList) || showNoInactiveScopeSummary
+        ? formatActiveUserCountLabel(usersInCurrentSummary.length)
+        : formatUserCountLabel(usersInCurrentSummary.length);
 
     if (isFiltered) {
       parts.push(`Mostrando ${usersInCurrentSummary.length} de ${totalUsersCount} usuarios.`);
     } else if (hasActiveSearch && hasMultipleUsers) {
-      parts.push(`La búsqueda coincide con los ${formatUserCountLabel(usersInCurrentSummary.length)} de esta vista.`);
+      parts.push(`La búsqueda coincide con los ${countLabel} de esta vista.`);
     } else if (hasMultipleUsers) {
-      parts.push(`${formatUserCountLabel(usersInCurrentSummary.length)} en esta vista.`);
+      parts.push(`${countLabel} en esta vista.`);
     }
 
     if (showSharedPendingProfileGuidance) {
@@ -812,40 +1460,102 @@ export default function AdminUsersPage() {
     showSharedPendingProfileGuidance,
     showSingleSearchResultGuidance,
     showSingleUserGuidance,
+    showNoInactiveScopeSummary,
+    shouldCollapseInactiveUsers,
+    showInactiveUsersList,
     totalUsersCount,
     currentSummaryPendingProfileCount,
     usersInCurrentSummary.length,
   ]);
-  const sharedAccessGuidance = useMemo(() => {
-    if (showSingleUserGuidance) return '';
+  const sharedAccessGuidanceCopy = useMemo(() => {
+    const emptyGuidance = { text: '', title: undefined as string | undefined };
+
+    if (showSingleUserGuidance) return emptyGuidance;
+    if (showSharedNoAccessGuidance) {
+      return {
+        text: `Acceso compartido en esta vista: ${NO_ACCESS_ASSIGNED_SUMMARY}.`,
+        title: undefined,
+      };
+    }
 
     const isDefaultSharedAdminAccess = isDefaultAdminAccessSummary({
       rolesSummary: sharedRolesSummary,
       modulesSummary: sharedModulesSummary,
     });
-    if (isDefaultSharedAdminAccess) return '';
+    if (isDefaultSharedAdminAccess) return emptyGuidance;
 
-    const sharedAccessSummary = formatAccessSummaryParts({
-      rolesSummary: sharedRolesSummary && sharedRolesSummary !== DEFAULT_SHARED_ADMIN_ROLES_SUMMARY
-        ? sharedRolesSummary
-        : '',
-      modulesSummary: sharedModulesSummary && sharedModulesSummary !== DEFAULT_SHARED_ADMIN_MODULES_SUMMARY
-        ? sharedModulesSummary
-        : '',
+    const showSharedRolesSummary = Boolean(sharedRolesSummary)
+      && !isSameAccessSummary(sharedRolesSummary, DEFAULT_SHARED_ADMIN_ROLES_SUMMARY);
+    const showSharedModulesSummary = Boolean(sharedModulesSummary)
+      && !isSameAccessSummary(sharedModulesSummary, DEFAULT_SHARED_ADMIN_MODULES_SUMMARY);
+    const fullSharedAccessSummary = formatAccessSummaryParts({
+      rolesSummary: showSharedRolesSummary ? sharedRolesSummary : '',
+      modulesSummary: showSharedModulesSummary ? sharedModulesSummary : '',
     });
-    return sharedAccessSummary
-      ? `Acceso compartido en esta vista: ${sharedAccessSummary}.`
-      : '';
-  }, [sharedModulesSummary, sharedRolesSummary, showSingleUserGuidance]);
+
+    if (!fullSharedAccessSummary) return emptyGuidance;
+
+    const compactSharedAccessSummary = (
+      showSharedRolesSummary
+      && showSharedModulesSummary
+      && isSameAccessSummary(sharedRolesSummary, sharedModulesSummary)
+    )
+      ? `Roles y módulos: ${
+        sharedRolesValues.length > 0
+          ? formatCompactAccessValues(sharedRolesValues, 'acceso', 'accesos')
+          : sharedRolesSummary
+      }`
+      : formatAccessSummaryParts({
+        rolesSummary: showSharedRolesSummary
+          ? (
+            sharedRolesValues.length > 0
+              ? formatCompactAccessValues(sharedRolesValues, 'rol', 'roles')
+              : sharedRolesSummary
+          )
+          : '',
+        modulesSummary: showSharedModulesSummary
+          ? (
+            sharedModulesValues.length > 0
+              ? formatCompactAccessValues(sharedModulesValues, 'módulo', 'módulos')
+              : sharedModulesSummary
+          )
+          : '',
+      });
+    const text = `Acceso compartido en esta vista: ${compactSharedAccessSummary}.`;
+
+    return {
+      text,
+      title: compactSharedAccessSummary === fullSharedAccessSummary
+        ? undefined
+        : `Acceso compartido en esta vista: ${fullSharedAccessSummary}.`,
+    };
+  }, [
+    sharedModulesSummary,
+    sharedModulesValues,
+    sharedRolesSummary,
+    sharedRolesValues,
+    showSharedNoAccessGuidance,
+    showSingleUserGuidance,
+  ]);
+  const sharedAccessGuidance = sharedAccessGuidanceCopy.text;
+  const hideAccessSummaryForCurrentRows = hideRowAccessSummary || showSharedNoAccessGuidance;
   const viewGuidance = useMemo(
     () => [
       visibleUsersSummary,
       activeScopeSummary,
       inactiveScopeSummary,
+      inactiveOnlyScopeSummary,
+      inactiveSearchScopeSummary,
     ]
       .filter(Boolean)
       .join(' '),
-    [activeScopeSummary, inactiveScopeSummary, visibleUsersSummary],
+    [
+      activeScopeSummary,
+      inactiveOnlyScopeSummary,
+      inactiveScopeSummary,
+      inactiveSearchScopeSummary,
+      visibleUsersSummary,
+    ],
   );
   const generalIntro = hasCurrentSummaryWhatsAppAction
     ? hasCurrentSummaryLinkedProfile
@@ -858,7 +1568,7 @@ export default function AdminUsersPage() {
       : hasCurrentSummaryLinkedProfile
         ? ADMIN_USERS_PAGE_NUMBER_SETUP_INTRO
         : ADMIN_USERS_PAGE_PROFILE_PENDING_NUMBER_SETUP_INTRO;
-  const singleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
+  const baseSingleUserGuidance = singleVisibleUser && !hasLinkedAdminUserProfile(singleVisibleUser)
     ? buildPendingProfileGuidance({
         scope: 'single-user',
         readiness: singleVisibleUserReadiness ?? 'missing-contact',
@@ -868,26 +1578,30 @@ export default function AdminUsersPage() {
       : singleVisibleUserReadiness === 'contact-ready'
         ? SINGLE_USER_NUMBER_SETUP_GUIDANCE
         : SINGLE_USER_CONTACT_SETUP_GUIDANCE;
+  const singleUserGuidance = showOnlyInactiveUsers
+    ? makeSingleUserInactiveGuidance(baseSingleUserGuidance)
+    : baseSingleUserGuidance;
+  const baseSingleSearchResultGuidance = singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
+    ? buildPendingProfileGuidance({
+        scope: 'single-result',
+        readiness: singleSearchResultReadiness ?? 'missing-contact',
+      })
+    : singleSearchResultReadiness === 'whatsapp-ready'
+      ? SINGLE_SEARCH_RESULT_GUIDANCE
+      : singleSearchResultReadiness === 'contact-ready'
+        ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
+        : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE;
   const singleSearchResultGuidance = showSingleSearchResultGuidance
-    ? (
-      singleSearchResult && !hasLinkedAdminUserProfile(singleSearchResult)
-        ? buildPendingProfileGuidance({
-            scope: 'single-result',
-            readiness: singleSearchResultReadiness ?? 'missing-contact',
-          })
-        : singleSearchResultReadiness === 'whatsapp-ready'
-          ? SINGLE_SEARCH_RESULT_GUIDANCE
-          : singleSearchResultReadiness === 'contact-ready'
-            ? SINGLE_SEARCH_RESULT_NUMBER_SETUP_GUIDANCE
-            : SINGLE_SEARCH_RESULT_CONTACT_SETUP_GUIDANCE
-    )
+    ? showOnlyInactiveSearchResults
+      ? makeSingleSearchResultInactiveGuidance(baseSingleSearchResultGuidance)
+      : baseSingleSearchResultGuidance
     : '';
   const singleSearchResultAccessSummary = useMemo(
-    () => buildNonDefaultUserAccessSummary(singleSearchResult),
+    () => buildNonDefaultUserAccessSummaryCopy(singleSearchResult),
     [singleSearchResult],
   );
   const singleUserAccessSummary = useMemo(
-    () => buildNonDefaultUserAccessSummary(singleVisibleUser),
+    () => buildNonDefaultUserAccessSummaryCopy(singleVisibleUser),
     [singleVisibleUser],
   );
   const primaryGuidance = showSingleUserGuidance
@@ -897,13 +1611,32 @@ export default function AdminUsersPage() {
     : showGeneralIntro
       ? generalIntro
       : '';
-  const pageGuidance = [
+  const pageGuidanceParts = [
     primaryGuidance,
     viewGuidance,
-    singleUserAccessSummary ? `Acceso de este usuario: ${singleUserAccessSummary}.` : '',
-    singleSearchResultAccessSummary ? `Acceso en este resultado: ${singleSearchResultAccessSummary}.` : '',
+    singleUserAccessSummary.text ? `Acceso de este usuario: ${singleUserAccessSummary.text}.` : '',
+    singleSearchResultAccessSummary.text ? `Acceso en este resultado: ${singleSearchResultAccessSummary.text}.` : '',
     sharedAccessGuidance,
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean);
+  const pageGuidance = pageGuidanceParts.join(' ');
+  const hasExpandedGuidanceTitle = Boolean(
+    singleUserAccessSummary.title
+    || singleSearchResultAccessSummary.title
+    || sharedAccessGuidanceCopy.title,
+  );
+  const pageGuidanceTitle = hasExpandedGuidanceTitle
+    ? [
+        primaryGuidance,
+        viewGuidance,
+        singleUserAccessSummary.text
+          ? `Acceso de este usuario: ${singleUserAccessSummary.title ?? singleUserAccessSummary.text}.`
+          : '',
+        singleSearchResultAccessSummary.text
+          ? `Acceso en este resultado: ${singleSearchResultAccessSummary.title ?? singleSearchResultAccessSummary.text}.`
+          : '',
+        sharedAccessGuidanceCopy.title ?? sharedAccessGuidance,
+      ].filter(Boolean).join(' ')
+    : undefined;
 
   return (
     <>
@@ -925,6 +1658,8 @@ export default function AdminUsersPage() {
                   size="small"
                   fullWidth
                   placeholder={searchInputPlaceholder}
+                  autoComplete="off"
+                  inputProps={{ spellCheck: false }}
                   InputProps={{
                     endAdornment: showInlineClearSearchAction ? (
                       <InputAdornment position="end">
@@ -943,15 +1678,36 @@ export default function AdminUsersPage() {
                   }}
                 />
               )}
-              {pageGuidance && (
-                <Typography data-testid="admin-users-page-guidance" variant="body2" color="text.secondary">
-                  {pageGuidance}
-                </Typography>
+              {(pageGuidance || showReviewInactiveSingleUserAction) && (
+                <Stack spacing={0.75} alignItems="flex-start">
+                  {pageGuidance && (
+                    <Typography
+                      data-testid="admin-users-page-guidance"
+                      variant="body2"
+                      color="text.secondary"
+                      title={pageGuidanceTitle}
+                    >
+                      {pageGuidance}
+                    </Typography>
+                  )}
+                  {showReviewInactiveSingleUserAction && (
+                    <Button size="small" variant="text" onClick={() => setIncludeInactive(true)}>
+                      {ADMIN_USERS_REVIEW_INACTIVE_SINGLE_USER_ACTION}
+                    </Button>
+                  )}
+                </Stack>
               )}
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              {showInactiveFilterAction && (
-                <>
+            {showHeaderActions && (
+              <Stack
+                data-testid="admin-users-header-actions"
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+                useFlexGap
+              >
+                {showInactiveFilterAction && (
                   <FormControlLabel
                     control={(
                       <Checkbox
@@ -959,29 +1715,38 @@ export default function AdminUsersPage() {
                         onChange={(event) => setIncludeInactive(event.target.checked)}
                       />
                     )}
-                    label={includeInactive ? INACTIVE_FILTER_ACTIVE_LABEL : INCLUDE_INACTIVE_FILTER_LABEL}
+                    label={inactiveFilterLabel}
                   />
-                </>
-              )}
-              {showRefreshAction && (
-                <Tooltip title="Refrescar">
-                  <span>
-                    <IconButton
-                      aria-label="Refrescar lista de usuarios"
-                      onClick={handleRefresh}
-                      disabled={usersQuery.isFetching}
-                    >
-                      <RefreshIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-            </Stack>
+                )}
+                {showReturnToActiveUsersAction && (
+                  <Button size="small" variant="outlined" onClick={() => setIncludeInactive(false)}>
+                    {RETURN_TO_ACTIVE_USERS_ACTION}
+                  </Button>
+                )}
+                {showRefreshAction && (
+                  <Tooltip title={refreshActionTitle}>
+                    <span>
+                      <IconButton
+                        aria-label="Refrescar lista de usuarios"
+                        title={refreshActionTitle}
+                        onClick={handleRefresh}
+                        disabled={usersQuery.isFetching}
+                      >
+                        <RefreshIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Stack>
+            )}
           </Stack>
         </Stack>
 
-        <Card>
-          <CardContent>
+        <Paper
+          variant="outlined"
+          data-testid="admin-users-list-panel"
+          sx={{ p: 2, borderRadius: 1 }}
+        >
             {usersQuery.isLoading && <Typography>Cargando usuarios…</Typography>}
             {usersQuery.error && (
               <Stack spacing={1} alignItems="flex-start">
@@ -1009,93 +1774,136 @@ export default function AdminUsersPage() {
             )}
             {showSearchEmptyState ? (
               <Stack spacing={1} alignItems="flex-start">
-                <Typography color="text.secondary">
+                <Typography color="text.secondary" title={searchEmptyStateTitle}>
                   {searchEmptyStateMessage}
                 </Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={handleClearSearch}
-                  data-testid="admin-users-empty-search-clear"
-                >
-                  Limpiar búsqueda
-                </Button>
+                {(showEmptySearchClearAction || showReviewInactiveSearchEmptyAction) && (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {showEmptySearchClearAction && (
+                      <Button size="small" variant="outlined" onClick={handleClearSearch}>
+                        Limpiar búsqueda
+                      </Button>
+                    )}
+                    {showReviewInactiveSearchEmptyAction && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setIncludeInactive(true)}
+                      >
+                        {reviewInactiveSearchEmptyActionLabel}
+                      </Button>
+                    )}
+                  </Stack>
+                )}
               </Stack>
             ) : null}
             {visibleUsers.length ? (
               <Stack spacing={1.5}>
-                {activeVisibleUsers.map((user) => (
-                  <UserRow
-                    key={user.userId}
-                    user={user}
-                    showInactiveStatusChip={includeInactive && !user.active}
-                    onOpenCommunications={() => setSelectedUser(user)}
-                    sharedModulesSummary={sharedModulesSummary}
-                    sharedRolesSummary={sharedRolesSummary}
-                    hideAccessSummary={hideRowAccessSummary}
-                    hidePendingStateChip={hideSingleRowPendingState}
-                    hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                    showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
-                  />
-                ))}
+                <LazyPaginatedList
+                  items={activeVisibleUsers}
+                  pagination={{
+                    itemLabel: 'usuarios',
+                    initialRowsPerPage: 25,
+                    resetKey: `${includeInactive ? 'with-inactive' : 'active'}|${deferredSearchQuery}`,
+                  }}
+                  renderItems={(visibleActiveUsers) => (
+                    <Stack spacing={1.5}>
+                      {visibleActiveUsers.map((user) => (
+                        <UserRow
+                          key={user.userId}
+                          user={user}
+                          showInactiveStatusChip={includeInactive && !user.active && !showInactiveOnlyScopeSummary}
+                          onOpenCommunications={() => setSelectedUser(user)}
+                          sharedModulesSummary={sharedModulesSummary}
+                          sharedRolesSummary={sharedRolesSummary}
+                          hideAccessSummary={hideAccessSummaryForCurrentRows}
+                          hidePendingStateChip={hideSingleRowPendingState}
+                          hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                          showIdentityDisambiguator={
+                            userIdsRequiringIdentityDisambiguator.has(user.userId)
+                            || userIdsMatchingProfileSearch.has(user.userId)
+                          }
+                          showExplicitWhatsAppAction={showExplicitWhatsAppAction}
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                />
                 {showInactiveUsersGroup ? (
                   <>
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={1}
-                      justifyContent="space-between"
-                      alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    >
-                      {showInactiveUsersList && (
-                        <Typography
-                          data-testid="admin-users-inactive-group-label"
-                          variant="overline"
-                          color="text.secondary"
-                        >
-                          {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
-                        </Typography>
-                      )}
-                      {shouldCollapseInactiveUsers && (
-                        <Button
-                          size="small"
-                          variant="text"
-                          onClick={() => setShowInactiveUsers((current) => !current)}
-                          aria-controls="admin-users-inactive-list"
-                          aria-expanded={showInactiveUsers}
-                          aria-label={showInactiveUsers
-                            ? `Ocultar ${inactiveUsersToggleTarget}`
-                            : `Ver ${inactiveUsersToggleTarget}`}
-                        >
-                          {showInactiveUsers
-                            ? 'Ocultar'
-                            : collapsedInactiveUsersToggleLabel}
-                        </Button>
-                      )}
-                    </Stack>
-                    {showInactiveUsersList && (
-                      <Stack id="admin-users-inactive-list" spacing={1.5}>
-                        {inactiveVisibleUsers.map((user) => (
-                          <UserRow
-                            key={user.userId}
-                            user={user}
-                            showInactiveStatusChip={false}
-                            onOpenCommunications={() => setSelectedUser(user)}
-                            sharedModulesSummary={sharedModulesSummary}
-                            sharedRolesSummary={sharedRolesSummary}
-                            hideAccessSummary={hideRowAccessSummary}
-                            hidePendingStateChip={hideSingleRowPendingState}
-                            hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
-                            showIdentityDisambiguator={userIdsRequiringIdentityDisambiguator.has(user.userId)}
-                          />
-                        ))}
+                    {showInactiveUsersGroupHeader && (
+                      <Stack
+                        data-testid="admin-users-inactive-group-header"
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        justifyContent="space-between"
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      >
+                        {showInactiveUsersGroupLabel && (
+                          <Typography
+                            data-testid="admin-users-inactive-group-label"
+                            variant="overline"
+                            color="text.secondary"
+                          >
+                            {formatInactiveUserCountLabel(visibleInactiveUsersCount)}
+                          </Typography>
+                        )}
+                        {shouldCollapseInactiveUsers && (
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setShowInactiveUsers((current) => !current)}
+                            aria-controls="admin-users-inactive-list"
+                            aria-expanded={showInactiveUsers}
+                            aria-label={showInactiveUsers
+                              ? `Ocultar ${inactiveUsersToggleTarget}`
+                              : `Ver ${inactiveUsersToggleTarget}`}
+                            title={showInactiveUsers ? undefined : collapsedInactiveUsersToggleTitle}
+                          >
+                            {showInactiveUsers
+                              ? expandedInactiveUsersToggleLabel
+                              : collapsedInactiveUsersToggleLabel}
+                          </Button>
+                        )}
                       </Stack>
+                    )}
+                    {showInactiveUsersList && (
+                      <LazyPaginatedList
+                        items={inactiveVisibleUsers}
+                        pagination={{
+                          itemLabel: 'usuarios inactivos',
+                          initialRowsPerPage: 10,
+                          resetKey: `inactive|${deferredSearchQuery}|${showInactiveUsers ? 'open' : 'closed'}`,
+                        }}
+                        renderItems={(visibleInactiveUsersPage) => (
+                          <Stack id="admin-users-inactive-list" spacing={1.5}>
+                            {visibleInactiveUsersPage.map((user) => (
+                              <UserRow
+                                key={user.userId}
+                                user={user}
+                                showInactiveStatusChip={false}
+                                onOpenCommunications={() => setSelectedUser(user)}
+                                sharedModulesSummary={sharedModulesSummary}
+                                sharedRolesSummary={sharedRolesSummary}
+                                hideAccessSummary={hideAccessSummaryForCurrentRows}
+                                hidePendingStateChip={hideSingleRowPendingState}
+                                hidePendingProfileLabel={hideRepeatedPendingProfileLabel}
+                                showIdentityDisambiguator={
+                                  userIdsRequiringIdentityDisambiguator.has(user.userId)
+                                  || userIdsMatchingProfileSearch.has(user.userId)
+                                }
+                                showExplicitWhatsAppAction={showExplicitWhatsAppAction}
+                              />
+                            ))}
+                          </Stack>
+                        )}
+                      />
                     )}
                   </>
                 ) : null}
               </Stack>
             ) : null}
-          </CardContent>
-        </Card>
+        </Paper>
       </Stack>
       <AdminUserCommunicationDialog
         open={Boolean(selectedUser)}
@@ -1116,6 +1924,7 @@ function UserRow({
   hidePendingStateChip,
   hidePendingProfileLabel,
   showIdentityDisambiguator,
+  showExplicitWhatsAppAction,
 }: {
   user: AdminUser;
   showInactiveStatusChip: boolean;
@@ -1126,6 +1935,7 @@ function UserRow({
   hidePendingStateChip: boolean;
   hidePendingProfileLabel: boolean;
   showIdentityDisambiguator: boolean;
+  showExplicitWhatsAppAction: boolean;
 }) {
   const contactSummary = getUserContactSummary(user);
   const visibleContactSummary = getVisibleUserContactSummary(user);
@@ -1144,12 +1954,22 @@ function UserRow({
     sharedModulesSummary,
   });
   const identity = summarizeUserIdentity(user);
-  const communicationTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
-  const whatsappActionLabel = `Abrir WhatsApp para ${communicationTarget}`;
   const hasLinkedProfile = hasLinkedAdminUserProfile(user);
+  const identityDisambiguator = hasLinkedProfile ? `Perfil #${user.partyId}` : `Cuenta #${user.userId}`;
+  const visibleIdentityDisambiguator = showIdentityDisambiguator ? identityDisambiguator : '';
+  const identityTarget = identity.secondary ? `${identity.primary} (${identity.secondary})` : identity.primary;
+  const communicationTarget = visibleIdentityDisambiguator
+    ? `${identityTarget} · ${visibleIdentityDisambiguator}`
+    : identityTarget;
+  const whatsappActionLabel = `Abrir WhatsApp para ${communicationTarget}`;
+  const whatsappChannel = getUserWhatsAppChannel(user);
+  const whatsappActionTitle = whatsappChannel ? `${whatsappActionLabel} · ${whatsappChannel}` : whatsappActionLabel;
   const profilePath = hasLinkedProfile ? `/perfil/${user.partyId}` : null;
   const missingChannelLabel = hasContactInfo ? 'WhatsApp pendiente' : 'Contacto pendiente';
-  const identityDisambiguator = hasLinkedProfile ? `Perfil #${user.partyId}` : `Cuenta #${user.userId}`;
+  const profileActionLabel = visibleIdentityDisambiguator
+    ? `Abrir perfil de ${identity.primary} (${visibleIdentityDisambiguator})`
+    : `Abrir perfil de ${identity.primary}`;
+  const showCommunicationActions = hasWhatsAppChannel || !hidePendingStateChip;
 
   return (
     <Box
@@ -1172,7 +1992,7 @@ function UserRow({
             underline="hover"
             color="primary"
             variant="subtitle1"
-            aria-label={`Abrir perfil de ${identity.primary}`}
+            aria-label={profileActionLabel}
             sx={{ display: 'inline-flex', width: 'fit-content', fontWeight: 700 }}
           >
             {identity.primary}
@@ -1217,26 +2037,47 @@ function UserRow({
           </Typography>
         </Box>
       )}
-      <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-        {hasWhatsAppChannel ? (
-          <Tooltip title={whatsappActionLabel}>
-            <IconButton
-              size="small"
-              color="primary"
-              aria-label={whatsappActionLabel}
-              onClick={onOpenCommunications}
-              sx={{
-                border: '1px solid',
-                borderColor: 'primary.main',
-              }}
-            >
-              <WhatsAppIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        ) : !hidePendingStateChip ? (
-          <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
-        ) : null}
-      </Stack>
+      {showCommunicationActions && (
+        <Stack
+          data-testid={`admin-user-actions-${user.userId}`}
+          direction="row"
+          spacing={1}
+          sx={{ ml: 'auto' }}
+        >
+          {hasWhatsAppChannel ? (
+            showExplicitWhatsAppAction ? (
+              <Button
+                size="small"
+                variant="outlined"
+                color="primary"
+                aria-label={whatsappActionLabel}
+                title={whatsappActionTitle}
+                startIcon={<WhatsAppIcon fontSize="small" />}
+                onClick={onOpenCommunications}
+              >
+                WhatsApp
+              </Button>
+            ) : (
+              <Tooltip title={whatsappActionTitle} describeChild>
+                <IconButton
+                  size="small"
+                  color="primary"
+                  aria-label={whatsappActionLabel}
+                  onClick={onOpenCommunications}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'primary.main',
+                  }}
+                >
+                  <WhatsAppIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )
+          ) : (
+            <Chip label={missingChannelLabel} color="warning" variant="outlined" size="small" />
+          )}
+        </Stack>
+      )}
     </Box>
   );
 }

@@ -49,7 +49,7 @@ export default function PublicWhatsAppConsentPage() {
       return;
     }
     if (!phone.trim()) {
-      setError('Ingresa un número en formato E.164 (ej. +593999999999).');
+      setError('Ingresa un número internacional en formato E.164 (ej. +14155552671).');
       return;
     }
     setLoading(true);
@@ -127,10 +127,11 @@ export default function PublicWhatsAppConsentPage() {
       <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
         <Stack spacing={2}>
           <TextField
+            type="tel"
             label="Número WhatsApp (E.164)"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="+593999999999"
+            placeholder="+14155552671"
             fullWidth
           />
           <TextField

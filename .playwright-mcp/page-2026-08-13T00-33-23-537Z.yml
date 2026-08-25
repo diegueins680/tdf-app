@@ -1,0 +1,55 @@
+- generic [ref=f43e2]:
+  - generic [ref=f43e3]:
+    - link "Saltar al contenido principal" [ref=f43e1428] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=f43e5]:
+      - banner [ref=f43e6]:
+        - generic [ref=f43e7]:
+          - button "Mostrar menú lateral" [ref=f43e1429] [cursor=pointer]
+          - link "Ir al inicio" [ref=f43e1430] [cursor=pointer]:
+            - /url: /inicio
+            - img "TDF Records logo"
+          - button "Buscar sección" [ref=f43e1431] [cursor=pointer]:
+            - generic [ref=f43e18]: ⌘K
+          - generic [ref=f43e19]:
+            - button "Creación rápida" [ref=f43e1432] [cursor=pointer]:
+              - generic [ref=f43e24]: Crear
+            - button "Notificaciones" [ref=f43e1433] [cursor=pointer]:
+              - generic [ref=f43e26]: "0"
+            - button "Abrir menú de sesión" [ref=f43e1434] [cursor=pointer]:
+              - generic [ref=f43e31]: D
+      - status [ref=f43e32]
+      - main [ref=f43e35]:
+        - generic [ref=f43e37]:
+          - generic [ref=f43e39]:
+            - generic [ref=f43e40]:
+              - heading "Contactos" [level=3] [ref=f43e1437]
+              - paragraph [ref=f43e42]: Gestiona personas, empresas y roles en un solo lugar.
+            - button [ref=f43e1438] [cursor=pointer]
+          - generic [ref=f43e50]:
+            - generic "Buscar contactos" [ref=f43e1439]:
+              - generic [ref=f43e93]:
+                - textbox "Buscar contactos" [active] [ref=f43e1440]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Fabro Alomìa Torres
+                - button "Limpiar búsqueda" [ref=f43e1441] [cursor=pointer]
+                - group
+            - alert [ref=f43e1454]:
+              - generic [ref=f43e1458]: No hay contactos que coincidan con "Fabro Alomìa Torres". Limpia la búsqueda desde el buscador para volver a ver toda la lista.
+        - generic [ref=f43e57]:
+          - status [ref=f43e58]:
+            - generic [ref=f43e62]: "API: online"
+          - button "Abrir ChatKit" [ref=f43e1445] [cursor=pointer]
+  - generic "Control de radio":
+    - generic [ref=f43e66]:
+      - button "Reproducir radio" [ref=f43e1446] [cursor=pointer]
+      - generic "Saltar al anterior" [ref=f43e1447]:
+        - button "Saltar a la estación anterior" [ref=f43e1448] [cursor=pointer]
+      - generic "Saltar al siguiente" [ref=f43e1449]:
+        - button "Saltar a la siguiente estación" [ref=f43e1450] [cursor=pointer]
+      - button "Silenciar radio" [ref=f43e1451] [cursor=pointer]
+      - button "Ocultar barra de radio" [ref=f43e1452] [cursor=pointer]
+      - button "Expandir radio" [ref=f43e1453] [cursor=pointer]
+      - generic [ref=f43e87]:
+        - generic [ref=f43e88]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient

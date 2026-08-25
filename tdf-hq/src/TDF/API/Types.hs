@@ -6,8 +6,20 @@
 
 module TDF.API.Types where
 
-import           Data.Char    (isDigit, toLower)
-import           Data.Aeson   (FromJSON(..), Options, ToJSON(..), Value(..), defaultOptions, eitherDecode, fieldLabelModifier, genericParseJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator, Space)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  , toLower
+  )
+import           Data.Aeson   (FromJSON(..), Object, Options, ToJSON(..), Value(..), defaultOptions, fieldLabelModifier, genericParseJSON, genericToJSON, object, rejectUnknownFields, withObject, (.:), (.:!), (.:?), (.=))
+import           Data.Aeson.Types (Parser)
 import           Data.Int     (Int64)
 import           Data.Text    (Text)
 import qualified Data.Text    as T
@@ -16,12 +28,18 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Aeson.Key as AKey
 import qualified Data.Aeson.KeyMap as AKM
 import           Data.Time    (UTCTime, Day)
+import           Data.UUID    (UUID)
+import qualified Data.UUID as UUID
 import           Data.Maybe   (fromMaybe)
 import           GHC.Generics (Generic)
 import           Network.HTTP.Media ((//))
-import           Servant.API  (Accept(..), MimeUnrender(..), OctetStream, PlainText)
+import           Servant
 
-import           TDF.Models   (PricingModel, RoleEnum, ServiceKind)
+import           Crypto.Hash.Algorithms (SHA256)
+import           Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
+import           Data.ByteArray (constEq)
+
+import           TDF.Models   (RoleEnum)
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
@@ -32,6 +50,129 @@ prefixedStrictObjectOptions prefixLen =
     { fieldLabelModifier = camelDrop prefixLen
     , rejectUnknownFields = True
     }
+
+rejectNullOptionalFields :: String -> [Text] -> Value -> Parser ()
+rejectNullOptionalFields objectName fieldNames =
+  withObject objectName $ \o ->
+    let rejectNullField fieldName =
+          case AKM.lookup (AKey.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullField fieldNames
+
+rejectNullRequiredFields :: String -> [Text] -> Value -> Parser ()
+rejectNullRequiredFields objectName fieldNames =
+  withObject objectName $ \o ->
+    let rejectNullField fieldName =
+          case AKM.lookup (AKey.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be provided instead of null")
+            _         -> pure ()
+    in mapM_ rejectNullField fieldNames
+
+parseMetaReplySenderId :: Text -> Object -> Parser Text
+parseMetaReplySenderId fieldName obj = do
+  rawSenderId <- obj .: AKey.fromText fieldName
+  case normalizeMetaReplySenderId rawSenderId of
+    Left err -> fail (T.unpack err)
+    Right senderId -> pure senderId
+
+parseMetaReplyMessage :: Text -> Object -> Parser Text
+parseMetaReplyMessage fieldName obj = do
+  rawMessage <- obj .: AKey.fromText fieldName
+  case normalizeMetaReplyMessage rawMessage of
+    Left err -> fail (T.unpack err)
+    Right message -> pure message
+
+parseMetaReplyExternalId :: Text -> Object -> Parser (Maybe Text)
+parseMetaReplyExternalId fieldName obj = do
+  mRawExternalId <- obj .:? AKey.fromText fieldName
+  case mRawExternalId of
+    Nothing -> pure Nothing
+    Just rawExternalId ->
+      case normalizeMetaReplyExternalId rawExternalId of
+        Left err -> fail (T.unpack err)
+        Right externalId -> pure (Just externalId)
+
+normalizeMetaReplySenderId :: Text -> Either Text Text
+normalizeMetaReplySenderId rawSenderId =
+  let senderId = T.strip rawSenderId
+  in if T.null senderId
+       then Left "senderId is required"
+       else do
+         identifier <- validateMetaReplyIdentifier "senderId" senderId
+         validateMetaReplyGraphNodeId identifier
+
+normalizeMetaReplyExternalId :: Text -> Either Text Text
+normalizeMetaReplyExternalId rawExternalId =
+  let externalId = T.strip rawExternalId
+  in if T.null externalId
+       then Left "externalId must be omitted or a non-empty string"
+       else validateMetaReplyIdentifier "externalId" externalId
+
+normalizeMetaReplyMessage :: Text -> Either Text Text
+normalizeMetaReplyMessage rawMessage =
+  let message = T.strip rawMessage
+  in if T.null message
+       then Left "message is required"
+       else if T.length message > maxMetaReplyMessageChars
+       then Left "message must be 4096 characters or fewer"
+       else if T.any isUnsupportedMetaReplyControl message
+       then Left "message must not contain unsupported control characters"
+       else if T.any isHiddenMetaReplyTextChar message
+       then Left "message must not contain hidden formatting characters"
+       else Right message
+
+validateMetaReplyIdentifier :: Text -> Text -> Either Text Text
+validateMetaReplyIdentifier fieldName value
+  | T.any isSpace value =
+      Left (fieldName <> " must not contain whitespace")
+  | T.any isControl value =
+      Left (fieldName <> " must not contain control characters")
+  | T.any isHiddenMetaReplyTextChar value =
+      Left (fieldName <> " must not contain hidden formatting characters")
+  | T.any (not . isAsciiMetaReplyIdentifierChar) value =
+      Left (fieldName <> " must contain only ASCII characters")
+  | T.length value > maxMetaReplyIdentifierChars =
+      Left (fieldName <> " must be 256 characters or fewer")
+  | otherwise =
+      Right value
+
+validateMetaReplyGraphNodeId :: Text -> Either Text Text
+validateMetaReplyGraphNodeId senderId
+  | not (T.any isMetaReplyGraphNodeIdAtom senderId)
+      || T.any (not . isMetaReplyGraphNodeIdChar) senderId =
+      Left
+        ( "senderId must be a Graph node id using only ASCII letters, numbers, "
+            <> "'.', '_' or '-' with at least one letter or number"
+        )
+  | otherwise =
+      Right senderId
+
+isMetaReplyGraphNodeIdChar :: Char -> Bool
+isMetaReplyGraphNodeIdChar ch =
+  isMetaReplyGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+isMetaReplyGraphNodeIdAtom :: Char -> Bool
+isMetaReplyGraphNodeIdAtom ch =
+  isAsciiLower ch || isAsciiUpper ch || isDigit ch
+
+isAsciiMetaReplyIdentifierChar :: Char -> Bool
+isAsciiMetaReplyIdentifierChar ch =
+  ch <= '\x7f'
+
+isUnsupportedMetaReplyControl :: Char -> Bool
+isUnsupportedMetaReplyControl ch =
+  isControl ch && ch `notElem` ("\n\r\t" :: String)
+
+isHiddenMetaReplyTextChar :: Char -> Bool
+isHiddenMetaReplyTextChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+maxMetaReplyIdentifierChars :: Int
+maxMetaReplyIdentifierChars = 256
+
+maxMetaReplyMessageChars :: Int
+maxMetaReplyMessageChars = 4096
 
 camelDrop :: Int -> String -> String
 camelDrop prefixLen fieldName =
@@ -70,7 +211,9 @@ data DropdownOptionCreate = DropdownOptionCreate
 
 instance ToJSON DropdownOptionCreate
 instance FromJSON DropdownOptionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "DropdownOptionCreate" ["docActive"] value
+    genericParseJSON strictObjectOptions value
 
 data DropdownOptionUpdate = DropdownOptionUpdate
   { douValue     :: Maybe Text
@@ -92,21 +235,21 @@ instance FromJSON DropdownOptionUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in DropdownOptionUpdate: " <> T.unpack key)
-      [] ->
-        DropdownOptionUpdate
-          <$> o .:? "douValue"
-          <*> o .:! "douLabel"
-          <*> o .:! "douSortOrder"
-          <*> o .:? "douActive"
-
-data RoleDetailDTO = RoleDetailDTO
-  { role    :: RoleEnum
-  , label   :: Text
-  , modules :: [Text]
-  } deriving (Show, Generic)
-
-instance ToJSON RoleDetailDTO
-instance FromJSON RoleDetailDTO
+      [] -> do
+        valueValue <- o .:? "douValue"
+        labelValue <- o .:! "douLabel"
+        sortOrderValue <- o .:! "douSortOrder"
+        activeValue <- o .:? "douActive"
+        case (valueValue, labelValue, sortOrderValue, activeValue) of
+          (Nothing, Nothing, Nothing, Nothing) ->
+            fail "DropdownOptionUpdate must include at least one field"
+          _ ->
+            pure DropdownOptionUpdate
+              { douValue = valueValue
+              , douLabel = labelValue
+              , douSortOrder = sortOrderValue
+              , douActive = activeValue
+              }
 
 data UserAccountDTO = UserAccountDTO
   { userId    :: Int64
@@ -129,23 +272,37 @@ data UserAccountCreate = UserAccountCreate
   , uacUsername :: Maybe Text
   , uacPassword :: Maybe Text
   , uacActive   :: Maybe Bool
-  , uacRoles    :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountCreate
 instance FromJSON UserAccountCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "UserAccountCreate"
+      ["uacUsername", "uacPassword", "uacActive"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data UserAccountUpdate = UserAccountUpdate
   { uauUsername :: Maybe Text
   , uauPassword :: Maybe Text
   , uauActive   :: Maybe Bool
-  , uauRoles    :: Maybe [RoleEnum]
   } deriving (Show, Generic)
 
 instance ToJSON UserAccountUpdate
 instance FromJSON UserAccountUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "UserAccountUpdate"
+      ["uauUsername", "uauPassword", "uauActive"]
+      value
+    payload@UserAccountUpdate{uauUsername, uauPassword, uauActive} <-
+      genericParseJSON strictObjectOptions value
+    case (uauUsername, uauPassword, uauActive) of
+      (Nothing, Nothing, Nothing) ->
+        fail "UserAccountUpdate must include at least one field"
+      _ ->
+        pure payload
 
 data AccountStatusDTO = AccountStatusActive | AccountStatusInactive
   deriving (Show, Read, Eq, Enum, Bounded, Generic)
@@ -155,6 +312,7 @@ instance FromJSON AccountStatusDTO
 
 data UserRoleSummaryDTO = UserRoleSummaryDTO
   { id        :: Int64
+  , partyId   :: Int64
   , name      :: Text
   , email     :: Maybe Text
   , phone     :: Maybe Text
@@ -166,82 +324,52 @@ data UserRoleSummaryDTO = UserRoleSummaryDTO
 instance ToJSON UserRoleSummaryDTO
 instance FromJSON UserRoleSummaryDTO
 
-data UserRoleUpdatePayload = UserRoleUpdatePayload
-  { roles :: [RoleEnum]
-  } deriving (Show, Generic)
-
-instance ToJSON UserRoleUpdatePayload
-instance FromJSON UserRoleUpdatePayload where
-  parseJSON = genericParseJSON strictObjectOptions
-
 data ServiceCatalogDTO = ServiceCatalogDTO
-  { scId            :: Int64
+  { scId            :: UUID
+  , scCode          :: Text
   , scName          :: Text
-  , scKind          :: ServiceKind
-  , scPricingModel  :: PricingModel
+  , scNameEs        :: Text
+  , scNameEn        :: Text
+  , scCategoryId    :: UUID
+  , scKind          :: Text
+  , scPricingModelId :: UUID
+  , scPricingModel  :: Text
   , scRateCents     :: Maybe Int
   , scCurrency      :: Text
+  , scCurrencyId    :: UUID
   , scBillingUnit   :: Maybe Text
-  , scTaxBps        :: Maybe Int
+  , scTaxRateCode   :: Maybe Text
+  , scTaxRateId     :: Maybe UUID
+  , scDefaultDurationMinutes :: Maybe Int
+  , scRequiresEngineer :: Bool
+  , scDefaultResources :: [ServiceDefaultResourceDTO]
+  , scSortOrder     :: Int
   , scActive        :: Bool
   } deriving (Show, Generic)
 
 instance ToJSON ServiceCatalogDTO
 instance FromJSON ServiceCatalogDTO
 
-data ServiceCatalogCreate = ServiceCatalogCreate
-  { sccName         :: Text
-  , sccKind         :: Maybe ServiceKind
-  , sccPricingModel :: Maybe PricingModel
-  , sccRateCents    :: Maybe Int
-  , sccCurrency     :: Maybe Text
-  , sccBillingUnit  :: Maybe Text
-  , sccTaxBps       :: Maybe Int
-  , sccActive       :: Maybe Bool
+data ServiceDefaultResourceDTO = ServiceDefaultResourceDTO
+  { sdrResourceId    :: Text
+  , sdrResourceName  :: Text
+  , sdrSelectionModeId :: UUID
+  , sdrSelectionMode :: Text
+  , sdrSortOrder     :: Int
   } deriving (Show, Generic)
 
-instance ToJSON ServiceCatalogCreate
-instance FromJSON ServiceCatalogCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+instance ToJSON ServiceDefaultResourceDTO
+instance FromJSON ServiceDefaultResourceDTO
 
-data ServiceCatalogUpdate = ServiceCatalogUpdate
-  { scuName         :: Maybe Text
-  , scuKind         :: Maybe ServiceKind
-  , scuPricingModel :: Maybe PricingModel
-  , scuRateCents    :: Maybe (Maybe Int)
-  , scuCurrency     :: Maybe Text
-  , scuBillingUnit  :: Maybe (Maybe Text)
-  , scuTaxBps       :: Maybe (Maybe Int)
-  , scuActive       :: Maybe Bool
+data ServiceCatalogEnvelopeDTO = ServiceCatalogEnvelopeDTO
+  { sceSchemaVersion :: Int
+  , sceRevision      :: Int64
+  , sceLocale        :: Text
+  , sceItems         :: [ServiceCatalogDTO]
   } deriving (Show, Generic)
 
-instance ToJSON ServiceCatalogUpdate
-instance FromJSON ServiceCatalogUpdate where
-  parseJSON = withObject "ServiceCatalogUpdate" $ \o -> do
-    let allowedKeys =
-          [ "scuName"
-          , "scuKind"
-          , "scuPricingModel"
-          , "scuRateCents"
-          , "scuCurrency"
-          , "scuBillingUnit"
-          , "scuTaxBps"
-          , "scuActive"
-          ]
-        unknownKeys =
-          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
-    case unknownKeys of
-      key:_ -> fail ("Unknown field in ServiceCatalogUpdate: " <> T.unpack key)
-      [] ->
-        ServiceCatalogUpdate
-          <$> o .:? "scuName"
-          <*> o .:? "scuKind"
-          <*> o .:? "scuPricingModel"
-          <*> o .:! "scuRateCents"
-          <*> o .:? "scuCurrency"
-          <*> o .:! "scuBillingUnit"
-          <*> o .:! "scuTaxBps"
-          <*> o .:? "scuActive"
+instance ToJSON ServiceCatalogEnvelopeDTO
+instance FromJSON ServiceCatalogEnvelopeDTO
 
 data BandOptionsDTO = BandOptionsDTO
   { roles  :: [DropdownOptionDTO]
@@ -286,6 +414,9 @@ data AssetDTO = AssetDTO
   , currentCheckoutDueAt :: Maybe UTCTime
   , currentCheckoutPaymentType :: Maybe Text
   , currentCheckoutPaymentInstallments :: Maybe Int
+  , currentCheckoutPaymentAmountCents :: Maybe Int
+  , currentCheckoutPaymentCurrency :: Maybe Text
+  , currentCheckoutPaymentOutstandingCents :: Maybe Int
   , currentCheckoutPhotoUrl :: Maybe Text
   } deriving (Show, Generic)
 
@@ -307,6 +438,18 @@ data MarketplaceItemDTO = MarketplaceItemDTO
   , miPriceDisplay   :: Text
   , miMarkupPct      :: Int
   , miCurrency       :: Text
+  , miRentalWeeklyPriceUsdCents :: Maybe Int
+  , miRentalWeeklyPriceDisplay :: Maybe Text
+  , miRentalSecurityDepositUsdCents :: Maybe Int
+  , miRentalSecurityDepositDisplay :: Maybe Text
+  , miRentalMinDays :: Maybe Int
+  , miRentalMaxDays :: Maybe Int
+  , miRentalLateFeeUsdCents :: Maybe Int
+  , miRentalLateFeeDisplay :: Maybe Text
+  , miRentalCancellationWindowHours :: Maybe Int
+  , miRentalTermsVersion :: Maybe Text
+  , miRentalTermsSummary :: Maybe Text
+  , miRentalTimezone :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceItemDTO
@@ -323,6 +466,14 @@ data MarketplaceCartItemDTO = MarketplaceCartItemDTO
   , mciSubtotalCents     :: Int
   , mciUnitPriceDisplay  :: Text
   , mciSubtotalDisplay   :: Text
+  , mciPurpose           :: Text
+  , mciRentalStartDate   :: Maybe Day
+  , mciRentalEndDate     :: Maybe Day
+  , mciRentalDurationDays :: Maybe Int
+  , mciRentalChargeCents :: Maybe Int
+  , mciRentalChargeDisplay :: Maybe Text
+  , mciSecurityDepositCents :: Maybe Int
+  , mciSecurityDepositDisplay :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON MarketplaceCartItemDTO
@@ -342,13 +493,17 @@ instance FromJSON MarketplaceCartDTO
 data MarketplaceCartItemUpdate = MarketplaceCartItemUpdate
   { mciuListingId :: Text
   , mciuQuantity  :: Int
+  , mciuRentalStartDate :: Maybe Day
+  , mciuRentalEndDate :: Maybe Day
   } deriving (Show, Generic)
 
 maxMarketplaceCartItemQuantity :: Int
-maxMarketplaceCartItemQuantity = 99
+maxMarketplaceCartItemQuantity = 1
 
 instance FromJSON MarketplaceCartItemUpdate where
   parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCartItemUpdate"
+      ["mciuRentalStartDate", "mciuRentalEndDate"] value
     payload <- genericParseJSON strictObjectOptions value
     listingId <-
       either fail pure $
@@ -363,32 +518,232 @@ instance FromJSON MarketplaceCartItemUpdate where
               "mciuQuantity must be "
                 <> show maxMarketplaceCartItemQuantity
                 <> " or fewer"
-          else pure payload { mciuListingId = listingId }
+          else case (mciuRentalStartDate payload, mciuRentalEndDate payload) of
+            (Nothing, Nothing) -> pure payload { mciuListingId = listingId }
+            (Just _, Just _) -> pure payload { mciuListingId = listingId }
+            _ -> fail "mciuRentalStartDate and mciuRentalEndDate must be provided together"
 instance ToJSON MarketplaceCartItemUpdate
 
 normalizeMarketplaceCartListingId :: Text -> Either String Text
 normalizeMarketplaceCartListingId rawListingId =
-  let listingId = T.strip rawListingId
-  in if isPositiveDecimalId listingId
-       then Right listingId
-       else Left "mciuListingId must be a positive decimal id"
+  normalizeMarketplaceUuid "mciuListingId" rawListingId
+
+normalizeMarketplaceUuid :: Text -> Text -> Either String Text
+normalizeMarketplaceUuid fieldName rawValue =
+  case UUID.fromText (T.strip rawValue) of
+    Just value -> Right (UUID.toText value)
+    Nothing -> Left (T.unpack fieldName <> " must be a UUID")
+
+normalizeMarketplacePositiveDecimalId :: Text -> Text -> Either String Text
+normalizeMarketplacePositiveDecimalId fieldName rawValue =
+  let normalized = T.strip rawValue
+  in if isPositiveDecimalId normalized
+       then Right normalized
+       else Left (T.unpack fieldName <> " must be a positive decimal id")
   where
     isPositiveDecimalId candidate =
       not (T.null candidate)
         && T.all isDigit candidate
+        && not (hasLeadingZero candidate)
         && case reads (T.unpack candidate) :: [(Integer, String)] of
              [(n, "")] -> n > 0 && n <= fromIntegral (maxBound :: Int64)
              _         -> False
+    hasLeadingZero candidate =
+      T.length candidate > 1 && T.head candidate == '0'
 
 data MarketplaceCheckoutReq = MarketplaceCheckoutReq
   { mcrBuyerName  :: Text
   , mcrBuyerEmail :: Text
   , mcrBuyerPhone :: Maybe Text
+  , mcrFulfillmentMethod :: Maybe Text
+  , mcrShippingAddress :: Maybe MarketplaceShippingAddress
+  , mcrRentalTermsAccepted :: Maybe Bool
+  , mcrIdentityDocumentType :: Maybe Text
+  , mcrIdentityDocumentNumber :: Maybe Text
   } deriving (Show, Generic)
 
+data MarketplaceShippingAddress = MarketplaceShippingAddress
+  { msaAddressLine1 :: Text
+  , msaAddressLine2 :: Maybe Text
+  , msaCity         :: Text
+  , msaProvince     :: Text
+  , msaPostalCode   :: Maybe Text
+  , msaCountryCode  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceShippingAddress where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceShippingAddress"
+      ["msaAddressLine2", "msaPostalCode"] value
+    address <- genericParseJSON strictObjectOptions value
+    addressLine1 <- requiredAddressField "msaAddressLine1" (msaAddressLine1 address)
+    city <- requiredAddressField "msaCity" (msaCity address)
+    province <- requiredAddressField "msaProvince" (msaProvince address)
+    let country = T.toUpper (T.strip (msaCountryCode address))
+    if T.length country /= 2 || not (T.all isAsciiUpper country)
+      then fail "msaCountryCode must be an ISO 3166-1 alpha-2 code"
+      else pure address
+        { msaAddressLine1 = addressLine1
+        , msaAddressLine2 = normalizeMarketplaceOptionalField (msaAddressLine2 address)
+        , msaCity = city
+        , msaProvince = province
+        , msaPostalCode = normalizeMarketplaceOptionalField (msaPostalCode address)
+        , msaCountryCode = country
+        }
+    where
+      requiredAddressField label rawValue =
+        let normalized = T.strip rawValue
+        in if T.null normalized || T.length normalized > 200
+             then fail (label <> " must contain 1 to 200 characters")
+             else pure normalized
+
+instance ToJSON MarketplaceShippingAddress
+
 instance FromJSON MarketplaceCheckoutReq where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCheckoutReq"
+      [ "mcrBuyerPhone"
+      , "mcrFulfillmentMethod"
+      , "mcrShippingAddress"
+      , "mcrRentalTermsAccepted"
+      , "mcrIdentityDocumentType"
+      , "mcrIdentityDocumentNumber"
+      ] value
+    payload <- genericParseJSON strictObjectOptions value
+    buyerName <- normalizeMarketplaceBuyerNameField (mcrBuyerName payload)
+    buyerEmail <- normalizeMarketplaceBuyerEmailField (mcrBuyerEmail payload)
+    buyerPhone <- normalizeMarketplaceOptionalPhoneField (mcrBuyerPhone payload)
+    pure payload
+      { mcrBuyerName = buyerName
+      , mcrBuyerEmail = buyerEmail
+      , mcrBuyerPhone = buyerPhone
+      , mcrFulfillmentMethod = normalizeMarketplaceOptionalField (mcrFulfillmentMethod payload)
+      , mcrIdentityDocumentType = normalizeMarketplaceOptionalField (mcrIdentityDocumentType payload)
+      , mcrIdentityDocumentNumber = normalizeMarketplaceOptionalField (mcrIdentityDocumentNumber payload)
+      }
 instance ToJSON MarketplaceCheckoutReq
+
+normalizeMarketplaceBuyerNameField :: Text -> Parser Text
+normalizeMarketplaceBuyerNameField rawName
+  | T.null trimmed =
+      fail "mcrBuyerName is required"
+  | T.length trimmed > 160 =
+      fail "mcrBuyerName must be 160 characters or fewer"
+  | T.any isUnsafeMarketplaceBuyerNameChar trimmed =
+      fail "mcrBuyerName must not contain control characters, hidden formatting characters, or Unicode separator spaces"
+  | not (T.any isAlphaNum trimmed) =
+      fail "mcrBuyerName must include letters or numbers"
+  | otherwise =
+      pure trimmed
+  where
+    trimmed = T.strip rawName
+
+isUnsafeMarketplaceBuyerNameChar :: Char -> Bool
+isUnsafeMarketplaceBuyerNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
+normalizeMarketplaceBuyerEmailField :: Text -> Parser Text
+normalizeMarketplaceBuyerEmailField rawEmail
+  | T.null normalized =
+      fail "mcrBuyerEmail is required"
+  | isValidMarketplaceBuyerEmail normalized =
+      pure normalized
+  | otherwise =
+      fail "mcrBuyerEmail must be a valid email address"
+  where
+    normalized = T.toLower (T.strip rawEmail)
+
+normalizeMarketplaceOptionalField :: Maybe Text -> Maybe Text
+normalizeMarketplaceOptionalField Nothing = Nothing
+normalizeMarketplaceOptionalField (Just rawValue) =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed then Nothing else Just trimmed
+
+normalizeMarketplaceOptionalPhoneField :: Maybe Text -> Parser (Maybe Text)
+normalizeMarketplaceOptionalPhoneField rawPhone =
+  case normalizeMarketplaceOptionalField rawPhone of
+    Nothing -> pure Nothing
+    Just phone ->
+      case normalizeMarketplacePhone phone of
+        Just phoneVal -> pure (Just phoneVal)
+        Nothing -> fail "mcrBuyerPhone must be a valid phone number"
+
+normalizeMarketplacePhone :: Text -> Maybe Text
+normalizeMarketplacePhone raw =
+  let trimmed = T.strip raw
+      onlyDigits = T.filter isMarketplacePhoneDigit trimmed
+      digitCount = T.length onlyDigits
+      plusCount = T.count "+" trimmed
+      plusIndex = T.findIndex (== '+') trimmed
+      firstDigitIndex = T.findIndex isMarketplacePhoneDigit trimmed
+      allowedPhoneChar ch =
+        isMarketplacePhoneDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
+      hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
+      plusIsValid =
+        case plusIndex of
+          Nothing -> True
+          Just idx ->
+            case firstDigitIndex of
+              Nothing -> False
+              Just digitIdx -> plusCount == 1 && idx < digitIdx
+  in
+    if T.null onlyDigits
+        || digitCount < 8
+        || digitCount > 15
+        || hasInvalidChars
+        || not plusIsValid
+      then Nothing
+      else Just ("+" <> onlyDigits)
+
+isMarketplacePhoneDigit :: Char -> Bool
+isMarketplacePhoneDigit ch = ch >= '0' && ch <= '9'
+
+isValidMarketplaceBuyerEmail :: Text -> Bool
+isValidMarketplaceBuyerEmail candidate =
+  case T.splitOn "@" candidate of
+    [localPart, domain] ->
+      T.length candidate <= 254
+        && isValidMarketplaceEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any isSpace candidate)
+        && T.isInfixOf "." domain
+        && hasValidMarketplaceEmailTopLevelLabel domain
+        && all isValidMarketplaceEmailDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+hasValidMarketplaceEmailTopLevelLabel :: Text -> Bool
+hasValidMarketplaceEmailTopLevelLabel domain =
+  case reverse (T.splitOn "." domain) of
+    topLevelLabel : _ ->
+      T.length topLevelLabel >= 2
+        && T.any isAsciiLower topLevelLabel
+    _ -> False
+
+isValidMarketplaceEmailLocalPart :: Text -> Bool
+isValidMarketplaceEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= 64
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (T.isInfixOf ".." localPart)
+    && T.all isValidMarketplaceEmailLocalChar localPart
+
+isValidMarketplaceEmailLocalChar :: Char -> Bool
+isValidMarketplaceEmailLocalChar c =
+  isAsciiLower c || isAsciiDigitChar c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidMarketplaceEmailDomainLabel :: Text -> Bool
+isValidMarketplaceEmailDomainLabel label =
+  not (T.null label)
+    && T.length label <= 63
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidMarketplaceEmailDomainChar label
+
+isValidMarketplaceEmailDomainChar :: Char -> Bool
+isValidMarketplaceEmailDomainChar c = isAsciiLower c || isAsciiDigitChar c || c == '-'
 
 data MarketplaceOrderItemDTO = MarketplaceOrderItemDTO
   { moiListingId         :: Text
@@ -418,6 +773,27 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
   , moPaypalOrderId :: Maybe Text
   , moPaypalPayerEmail :: Maybe Text
   , moPaidAt        :: Maybe UTCTime
+  , moLookupToken   :: Maybe Text
+  , moCheckoutStatus :: Maybe Text
+  , moManualPaymentStatus :: Maybe Text
+  , moManualPaymentSubmittedAt :: Maybe UTCTime
+  , moFulfillmentMethod :: Maybe Text
+  , moFulfillmentStatus :: Maybe Text
+  , moHoldExpiresAt :: Maybe UTCTime
+  , moTrackingReference :: Maybe Text
+  , moFulfillmentHistory :: [(Text, UTCTime)]
+  , moOrderKind :: Maybe Text
+  , moRentalStartDate :: Maybe Day
+  , moRentalEndDate :: Maybe Day
+  , moRentalDurationDays :: Maybe Int
+  , moRentalChargeUsdCents :: Maybe Int
+  , moSecurityDepositUsdCents :: Maybe Int
+  , moDepositStatus :: Maybe Text
+  , moDepositDeductionUsdCents :: Maybe Int
+  , moRentalTermsVersion :: Maybe Text
+  , moRentalTimezone :: Maybe Text
+  , moConditionOut :: Maybe Text
+  , moConditionIn :: Maybe Text
   , moCreatedAt     :: UTCTime
   , moUpdatedAt     :: UTCTime
   , moItems         :: [MarketplaceOrderItemDTO]
@@ -425,6 +801,133 @@ data MarketplaceOrderDTO = MarketplaceOrderDTO
 
 instance ToJSON MarketplaceOrderDTO
 instance FromJSON MarketplaceOrderDTO
+
+data MarketplaceManualEvidenceSubmit = MarketplaceManualEvidenceSubmit
+  { mmesCustomerReference :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceSubmit
+instance FromJSON MarketplaceManualEvidenceSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceManualPaymentReview = MarketplaceManualPaymentReview
+  { mmprAction      :: Text
+  , mmprReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualPaymentReview
+instance FromJSON MarketplaceManualPaymentReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceCustomerRequestSubmit = MarketplaceCustomerRequestSubmit
+  { mcrsRequestType      :: Text
+  , mcrsReason           :: Text
+  , mcrsRequestedEndDate :: Maybe Day
+  , mcrsEvidenceUrl      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestSubmit
+instance FromJSON MarketplaceCustomerRequestSubmit where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceCustomerRequestSubmit"
+      ["mcrsRequestedEndDate", "mcrsEvidenceUrl"] value
+    genericParseJSON strictObjectOptions value
+
+data MarketplaceCustomerRequestReview = MarketplaceCustomerRequestReview
+  { mcrrAction      :: Text
+  , mcrrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestReview
+instance FromJSON MarketplaceCustomerRequestReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceCustomerRequestDTO = MarketplaceCustomerRequestDTO
+  { mcrRequestId        :: Text
+  , mcrOrderId          :: Text
+  , mcrOrderKind        :: Text
+  , mcrRequestType      :: Text
+  , mcrStatus           :: Text
+  , mcrReason           :: Text
+  , mcrRequestedEndDate :: Maybe Day
+  , mcrEvidenceUrl      :: Maybe Text
+  , mcrRequestedAt      :: UTCTime
+  , mcrReviewedAt       :: Maybe UTCTime
+  , mcrReviewNotes      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCustomerRequestDTO
+instance FromJSON MarketplaceCustomerRequestDTO
+
+data MarketplaceDepositSettlementSubmit = MarketplaceDepositSettlementSubmit
+  { mdssSettlementMethod :: Text
+  , mdssExternalReference :: Text
+  , mdssEvidenceUrl       :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementSubmit
+instance FromJSON MarketplaceDepositSettlementSubmit where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementReview = MarketplaceDepositSettlementReview
+  { mdsrAction      :: Text
+  , mdsrReviewNotes :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementReview
+instance FromJSON MarketplaceDepositSettlementReview where
+  parseJSON = genericParseJSON strictObjectOptions
+
+data MarketplaceDepositSettlementDTO = MarketplaceDepositSettlementDTO
+  { mdsSettlementId         :: Text
+  , mdsOrderId              :: Text
+  , mdsCheckoutId           :: Text
+  , mdsCurrency             :: Text
+  , mdsDepositAmountMinor   :: Int64
+  , mdsDeductionAmountMinor :: Int64
+  , mdsRefundAmountMinor    :: Int64
+  , mdsSettlementMethod     :: Text
+  , mdsExternalReference    :: Text
+  , mdsEvidenceUrl          :: Text
+  , mdsStatus               :: Text
+  , mdsSubmittedBy          :: Int64
+  , mdsSubmittedAt          :: UTCTime
+  , mdsReviewedBy           :: Maybe Int64
+  , mdsReviewedAt           :: Maybe UTCTime
+  , mdsReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceDepositSettlementDTO
+instance FromJSON MarketplaceDepositSettlementDTO
+
+data MarketplaceManualEvidenceDTO = MarketplaceManualEvidenceDTO
+  { mmeEvidenceId           :: Text
+  , mmePaymentMethod        :: Text
+  , mmeStatus               :: Text
+  , mmeCustomerReference    :: Maybe Text
+  , mmeSubmittedAmountMinor :: Maybe Int64
+  , mmeCurrency             :: Maybe Text
+  , mmeSubmittedBy          :: Maybe Int64
+  , mmeSubmittedAt          :: Maybe UTCTime
+  , mmeReviewedBy           :: Maybe Int64
+  , mmeReviewedAt           :: Maybe UTCTime
+  , mmeReviewNotes          :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceManualEvidenceDTO
+instance FromJSON MarketplaceManualEvidenceDTO
+
+data MarketplaceCommerceDTO = MarketplaceCommerceDTO
+  { mpcOrderId       :: Text
+  , mpcCheckoutId    :: Text
+  , mpcPaymentStatus :: Text
+  , mpcHoldExpiresAt :: UTCTime
+  , mpcOrderKind     :: Text
+  , mpcManualEvidence :: Maybe MarketplaceManualEvidenceDTO
+  } deriving (Show, Generic)
+
+instance ToJSON MarketplaceCommerceDTO
+instance FromJSON MarketplaceCommerceDTO
 
 data MarketplaceOrderUpdate = MarketplaceOrderUpdate
   { mouStatus          :: Maybe Text
@@ -435,16 +938,23 @@ data MarketplaceOrderUpdate = MarketplaceOrderUpdate
 instance ToJSON MarketplaceOrderUpdate
 instance FromJSON MarketplaceOrderUpdate where
   parseJSON value@(Object o) = do
+    case AKM.lookup (AKey.fromText "mouStatus") o of
+      Just Null -> fail "mouStatus must be omitted instead of null"
+      _ -> pure ()
     MarketplaceOrderUpdateParsed
       { mouStatus = statusVal
       } <- genericParseJSON strictObjectOptions value
     paymentProviderVal <- o .:! "mouPaymentProvider"
     paidAtVal <- o .:! "mouPaidAt"
-    pure MarketplaceOrderUpdate
-      { mouStatus = statusVal
-      , mouPaymentProvider = paymentProviderVal
-      , mouPaidAt = paidAtVal
-      }
+    case (statusVal, paymentProviderVal, paidAtVal) of
+      (Nothing, Nothing, Nothing) ->
+        fail "MarketplaceOrderUpdate must include at least one field"
+      _ ->
+        pure MarketplaceOrderUpdate
+          { mouStatus = statusVal
+          , mouPaymentProvider = paymentProviderVal
+          , mouPaidAt = paidAtVal
+          }
   parseJSON _ = fail "MarketplaceOrderUpdate must be an object"
 
 data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed
@@ -456,12 +966,72 @@ data MarketplaceOrderUpdateParsed = MarketplaceOrderUpdateParsed
 instance FromJSON MarketplaceOrderUpdateParsed where
   parseJSON = genericParseJSON strictObjectOptions
 
+data MarketplaceFulfillmentUpdate = MarketplaceFulfillmentUpdate
+  { mfuStatus :: Text
+  , mfuCarrier :: Maybe Text
+  , mfuTrackingReference :: Maybe Text
+  , mfuReasonCode :: Maybe Text
+  , mfuNotes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceFulfillmentUpdate where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceFulfillmentUpdate"
+      ["mfuCarrier", "mfuTrackingReference", "mfuReasonCode", "mfuNotes"] value
+    genericParseJSON strictObjectOptions value
+
+instance ToJSON MarketplaceFulfillmentUpdate
+
+data MarketplaceRentalUpdate = MarketplaceRentalUpdate
+  { mruStatus :: Text
+  , mruConditionOut :: Maybe Text
+  , mruConditionIn :: Maybe Text
+  , mruEvidenceUrl :: Maybe Text
+  , mruDepositDeductionUsdCents :: Maybe Int
+  , mruReasonCode :: Maybe Text
+  , mruNotes :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceRentalUpdate where
+  parseJSON value = do
+    rejectNullOptionalFields "MarketplaceRentalUpdate"
+      [ "mruConditionOut"
+      , "mruConditionIn"
+      , "mruEvidenceUrl"
+      , "mruDepositDeductionUsdCents"
+      , "mruReasonCode"
+      , "mruNotes"
+      ] value
+    genericParseJSON strictObjectOptions value
+
+instance ToJSON MarketplaceRentalUpdate
+
+data MarketplaceRentalTermsUpdate = MarketplaceRentalTermsUpdate
+  { mrtuDailyRateUsdCents :: Int
+  , mrtuWeeklyRateUsdCents :: Maybe Int
+  , mrtuSecurityDepositUsdCents :: Int
+  , mrtuLateFeeUsdCents :: Int
+  , mrtuMinDays :: Int
+  , mrtuMaxDays :: Int
+  , mrtuCancellationWindowHours :: Int
+  , mrtuTimezone :: Text
+  , mrtuTermsVersion :: Text
+  , mrtuTermsSummary :: Text
+  , mrtuActive :: Bool
+  } deriving (Show, Generic)
+
+instance FromJSON MarketplaceRentalTermsUpdate where
+  parseJSON = genericParseJSON strictObjectOptions
+
+instance ToJSON MarketplaceRentalTermsUpdate
+
 data DatafastCheckoutDTO = DatafastCheckoutDTO
   { dcOrderId     :: Text
   , dcCheckoutId  :: Text
   , dcWidgetUrl   :: Text
   , dcAmount      :: Text
   , dcCurrency    :: Text
+  , dcLookupToken :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON DatafastCheckoutDTO
@@ -471,6 +1041,7 @@ data PaypalCreateDTO = PaypalCreateDTO
   { pcOrderId       :: Text
   , pcPaypalOrderId :: Text
   , pcApprovalUrl   :: Maybe Text
+  , pcLookupToken   :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON PaypalCreateDTO
@@ -483,7 +1054,48 @@ data PaypalCaptureReq = PaypalCaptureReq
 
 instance ToJSON PaypalCaptureReq
 instance FromJSON PaypalCaptureReq where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    payload <- genericParseJSON strictObjectOptions value
+    orderId <-
+      either fail pure $
+        normalizeMarketplaceUuid
+          "pcCaptureOrderId"
+          (pcCaptureOrderId payload)
+    paypalId <-
+      either fail pure $
+        normalizePayPalCapturePaypalId (pcCapturePaypalId payload)
+    pure payload
+      { pcCaptureOrderId = orderId
+      , pcCapturePaypalId = paypalId
+      }
+
+normalizePayPalCapturePaypalId :: Text -> Either String Text
+normalizePayPalCapturePaypalId rawPaypalId =
+  let paypalId = T.strip rawPaypalId
+  in if isValidPayPalCapturePaypalId paypalId
+       then Right paypalId
+       else
+         Left
+           "pcCapturePaypalId must contain only ASCII letters, digits, hyphen, or underscore"
+
+isValidPayPalCapturePaypalId :: Text -> Bool
+isValidPayPalCapturePaypalId paypalId =
+  not (T.null paypalId)
+    && T.length paypalId <= 128
+    && T.any isPayPalCapturePaypalIdAtom paypalId
+    && T.all isPayPalCapturePaypalIdChar paypalId
+
+isPayPalCapturePaypalIdAtom :: Char -> Bool
+isPayPalCapturePaypalIdAtom c =
+  isAsciiDigitChar c || isAsciiLower c || isAsciiUpper c
+
+isPayPalCapturePaypalIdChar :: Char -> Bool
+isPayPalCapturePaypalIdChar c =
+  isPayPalCapturePaypalIdAtom c || c == '-' || c == '_'
+
+isAsciiDigitChar :: Char -> Bool
+isAsciiDigitChar c =
+  c >= '0' && c <= '9'
 
 data LabelTrackDTO = LabelTrackDTO
   { ltId        :: Text
@@ -507,7 +1119,9 @@ data LabelTrackCreate = LabelTrackCreate
 
 instance ToJSON LabelTrackCreate
 instance FromJSON LabelTrackCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "LabelTrackCreate" ["ltcNote", "ltcOwnerId"] value
+    genericParseJSON strictObjectOptions value
 
 data LabelTrackUpdate = LabelTrackUpdate
   { ltuTitle  :: Maybe Text
@@ -517,7 +1131,80 @@ data LabelTrackUpdate = LabelTrackUpdate
 
 instance ToJSON LabelTrackUpdate
 instance FromJSON LabelTrackUpdate where
+  parseJSON = withObject "LabelTrackUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ltuTitle"
+          , "ltuNote"
+          , "ltuStatus"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in LabelTrackUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "LabelTrackUpdate must include at least one field"
+            else
+              LabelTrackUpdate
+                <$> o .:? "ltuTitle"
+                <*> o .:? "ltuNote"
+                <*> o .:? "ltuStatus"
+
+data LabelProjectNoteDTO = LabelProjectNoteDTO
+  { lpnId        :: Text
+  , lpnText      :: Text
+  , lpnCompleted :: Bool
+  , lpnCreatedAt :: UTCTime
+  , lpnUpdatedAt :: UTCTime
+  , lpnVersion   :: Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteDTO
+instance FromJSON LabelProjectNoteDTO
+
+data LabelProjectNoteCreate = LabelProjectNoteCreate
+  { lpncText :: Text
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteCreate
+instance FromJSON LabelProjectNoteCreate where
   parseJSON = genericParseJSON strictObjectOptions
+
+data LabelProjectNoteUpdate = LabelProjectNoteUpdate
+  { lpnuText      :: Maybe Text
+  , lpnuCompleted :: Maybe Bool
+  , lpnuExpectedVersion :: Int
+  } deriving (Show, Eq, Generic)
+
+instance ToJSON LabelProjectNoteUpdate
+instance FromJSON LabelProjectNoteUpdate where
+  parseJSON = withObject "LabelProjectNoteUpdate" $ \o -> do
+    let allowedKeys = ["lpnuText", "lpnuCompleted", "lpnuExpectedVersion"]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in LabelProjectNoteUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if not ("lpnuText" `elem` providedKeys || "lpnuCompleted" `elem` providedKeys)
+            then fail "LabelProjectNoteUpdate must include text or completed"
+            else LabelProjectNoteUpdate
+              <$> o .:? "lpnuText"
+              <*> o .:? "lpnuCompleted"
+              <*> o .: "lpnuExpectedVersion"
 
 data AssetCreate = AssetCreate
   { cName     :: Text
@@ -527,7 +1214,9 @@ data AssetCreate = AssetCreate
 
 instance ToJSON AssetCreate
 instance FromJSON AssetCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "AssetCreate" ["cPhotoUrl"] value
+    genericParseJSON strictObjectOptions value
 
 data AssetUpdate = AssetUpdate
   { uName       :: Maybe Text
@@ -539,7 +1228,37 @@ data AssetUpdate = AssetUpdate
   } deriving (Show, Generic)
 
 instance FromJSON AssetUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "AssetUpdate" $ \o -> do
+    let allowedKeys =
+          [ "uName"
+          , "uCategory"
+          , "uStatus"
+          , "uLocationId"
+          , "uNotes"
+          , "uPhotoUrl"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in AssetUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "AssetUpdate must include at least one field"
+            else
+              AssetUpdate
+                <$> o .:? "uName"
+                <*> o .:? "uCategory"
+                <*> o .:? "uStatus"
+                <*> o .:? "uLocationId"
+                <*> o .:? "uNotes"
+                <*> o .:? "uPhotoUrl"
 instance ToJSON AssetUpdate
 
 data AssetCheckoutDTO = AssetCheckoutDTO
@@ -556,6 +1275,9 @@ data AssetCheckoutDTO = AssetCheckoutDTO
   , paymentType    :: Maybe Text
   , paymentInstallments :: Maybe Int
   , paymentReference :: Maybe Text
+  , paymentAmountCents :: Maybe Int
+  , paymentCurrency :: Maybe Text
+  , paymentOutstandingCents :: Maybe Int
   , checkedOutBy   :: Text
   , checkedOutAt   :: UTCTime
   , dueAt          :: Maybe UTCTime
@@ -593,14 +1315,91 @@ data DriveTokenExchangeRequest = DriveTokenExchangeRequest
   } deriving (Show, Generic)
 instance ToJSON DriveTokenExchangeRequest
 instance FromJSON DriveTokenExchangeRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "DriveTokenExchangeRequest"
+      ["redirectUri"]
+      value
+    payload <- genericParseJSON strictObjectOptions value
+    codeVal <- parseDriveOAuthTokenField "code" (code payload)
+    codeVerifierVal <- parseDriveCodeVerifierField (codeVerifier payload)
+    redirectUriVal <- parseDriveOptionalRedirectUriField (redirectUri payload)
+    pure payload
+      { code = codeVal
+      , codeVerifier = codeVerifierVal
+      , redirectUri = redirectUriVal
+      }
 
 data DriveTokenRefreshRequest = DriveTokenRefreshRequest
   { refreshToken :: Text
   } deriving (Show, Generic)
 instance ToJSON DriveTokenRefreshRequest
 instance FromJSON DriveTokenRefreshRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    DriveTokenRefreshRequest rawToken <- genericParseJSON strictObjectOptions value
+    tokenVal <- parseDriveOAuthTokenField "refreshToken" rawToken
+    pure (DriveTokenRefreshRequest tokenVal)
+
+parseDriveOAuthTokenField :: String -> Text -> Parser Text
+parseDriveOAuthTokenField fieldName rawValue
+  | T.null cleanValue =
+      fail (fieldName <> " must not be blank")
+  | T.any (\ch -> isSpace ch || isControl ch) cleanValue =
+      fail (fieldName <> " must not contain whitespace or control characters")
+  | T.any isHiddenDriveOAuthRequestTokenChar cleanValue =
+      fail (fieldName <> " must not contain hidden formatting characters")
+  | T.any (not . isAscii) cleanValue =
+      fail (fieldName <> " must contain only ASCII characters")
+  | T.length cleanValue > maxDriveOAuthRequestTokenChars =
+      fail (fieldName <> " must be 4096 characters or fewer")
+  | otherwise =
+      pure cleanValue
+  where
+    cleanValue = T.strip rawValue
+
+isHiddenDriveOAuthRequestTokenChar :: Char -> Bool
+isHiddenDriveOAuthRequestTokenChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+parseDriveCodeVerifierField :: Text -> Parser Text
+parseDriveCodeVerifierField rawValue =
+  let verifier = T.strip rawValue
+      verifierLength = T.length verifier
+      isPkceVerifierChar ch =
+        isAsciiLower ch
+          || isAsciiUpper ch
+          || isDigit ch
+          || ch `elem` ("-._~" :: String)
+  in if verifierLength < 43
+        || verifierLength > 128
+        || not (T.all isPkceVerifierChar verifier)
+       then
+         fail "codeVerifier must be a PKCE verifier (43-128 chars: A-Z a-z 0-9 - . _ ~)"
+       else pure verifier
+
+parseDriveOptionalRedirectUriField :: Maybe Text -> Parser (Maybe Text)
+parseDriveOptionalRedirectUriField Nothing = pure Nothing
+parseDriveOptionalRedirectUriField (Just rawValue)
+  | T.null redirectUriVal =
+      fail "redirectUri must be omitted instead of blank"
+  | T.any isControl redirectUriVal =
+      fail "redirectUri must not contain control characters"
+  | T.any isHiddenDriveOAuthRequestTokenChar redirectUriVal =
+      fail "redirectUri must not contain hidden formatting characters"
+  | T.any isSpace redirectUriVal =
+      fail "redirectUri must not contain whitespace"
+  | T.length redirectUriVal > maxDriveOAuthRedirectUriChars =
+      fail "redirectUri must be 2048 characters or fewer"
+  | otherwise =
+      pure (Just redirectUriVal)
+  where
+    redirectUriVal = T.strip rawValue
+
+maxDriveOAuthRequestTokenChars :: Int
+maxDriveOAuthRequestTokenChars = 4096
+
+maxDriveOAuthRedirectUriChars :: Int
+maxDriveOAuthRedirectUriChars = 2048
 
 data DriveTokenResponse = DriveTokenResponse
   { accessToken  :: Text
@@ -623,13 +1422,41 @@ data AssetCheckoutRequest = AssetCheckoutRequest
   , coPaymentType   :: Maybe Text
   , coPaymentInstallments :: Maybe Int
   , coPaymentReference :: Maybe Text
+  , coPaymentAmount :: Maybe Text
+  , coPaymentCurrency :: Maybe Text
+  , coPaymentOutstanding :: Maybe Text
   , coPhotoUrl      :: Maybe Text
   , coDueAt         :: Maybe UTCTime
   , coConditionOut  :: Maybe Text
   , coNotes         :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AssetCheckoutRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullRequiredFields
+      "AssetCheckoutRequest"
+      ["coTargetKind", "coDisposition"]
+      value
+    rejectNullOptionalFields
+      "AssetCheckoutRequest"
+      [ "coTargetSession"
+      , "coTargetParty"
+      , "coTargetRoom"
+      , "coTermsAndConditions"
+      , "coHolderEmail"
+      , "coHolderPhone"
+      , "coPaymentType"
+      , "coPaymentInstallments"
+      , "coPaymentReference"
+      , "coPaymentAmount"
+      , "coPaymentCurrency"
+      , "coPaymentOutstanding"
+      , "coPhotoUrl"
+      , "coDueAt"
+      , "coConditionOut"
+      , "coNotes"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON AssetCheckoutRequest
 
 data AssetCheckinRequest = AssetCheckinRequest
@@ -638,7 +1465,12 @@ data AssetCheckinRequest = AssetCheckinRequest
   , ciPhotoUrl    :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON AssetCheckinRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "AssetCheckinRequest"
+      ["ciConditionIn", "ciNotes", "ciPhotoUrl"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON AssetCheckinRequest
 
 data AssetQrDTO = AssetQrDTO
@@ -672,25 +1504,57 @@ data RoomUpdate = RoomUpdate
 
 instance ToJSON RoomUpdate
 instance FromJSON RoomUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "RoomUpdate" $ \o -> do
+    let allowedKeys =
+          [ "ruName"
+          , "ruIsBookable"
+          ]
+        providedKeys = map AKey.toText (AKM.keys o)
+        unknownKeys = filter (`notElem` allowedKeys) providedKeys
+        nullKeys =
+          [ key
+          | key <- allowedKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in RoomUpdate: " <> T.unpack key)
+      [] -> case nullKeys of
+        key:_ -> fail (T.unpack key <> " must be omitted instead of null")
+        [] ->
+          if null providedKeys
+            then fail "RoomUpdate must include at least one of ruName or ruIsBookable"
+            else
+              RoomUpdate
+                <$> o .:? "ruName"
+                <*> o .:? "ruIsBookable"
 
 data PipelineCardDTO = PipelineCardDTO
-  { pcId        :: Text
-  , pcTitle     :: Text
-  , pcArtist    :: Maybe Text
-  , pcType      :: Text
-  , pcStage     :: Text
-  , pcSortOrder :: Int
-  , pcNotes     :: Maybe Text
-  } deriving (Show, Generic)
+  { pcId                  :: Text
+  , pcTitle               :: Text
+  , pcArtist              :: Maybe Text
+  , pcServiceOfferingId   :: Text
+  , pcServiceOfferingCode :: Text
+  , pcWorkflowId          :: Text
+  , pcWorkflowStateId     :: Text
+  , pcWorkflowStateCode   :: Text
+  , pcWorkflowStateNameEs :: Text
+  , pcWorkflowStateNameEn :: Text
+  , pcSortOrder           :: Int
+  , pcNotes               :: Maybe Text
+  } deriving (Eq, Show, Generic)
 
 instance ToJSON PipelineCardDTO where
   toJSON dto = object
     [ "id"        .= pcId dto
     , "title"     .= pcTitle dto
     , "artist"    .= pcArtist dto
-    , "type"      .= pcType dto
-    , "stage"     .= pcStage dto
+    , "serviceOfferingId" .= pcServiceOfferingId dto
+    , "serviceOfferingCode" .= pcServiceOfferingCode dto
+    , "workflowId" .= pcWorkflowId dto
+    , "workflowStateId" .= pcWorkflowStateId dto
+    , "workflowStateCode" .= pcWorkflowStateCode dto
+    , "workflowStateNameEs" .= pcWorkflowStateNameEs dto
+    , "workflowStateNameEn" .= pcWorkflowStateNameEn dto
     , "sortOrder" .= pcSortOrder dto
     , "notes"     .= pcNotes dto
     ]
@@ -702,54 +1566,177 @@ instance FromJSON PipelineCardDTO where
       <$> o .:  "id"
       <*> o .:  "title"
       <*> o .:? "artist"
-      <*> o .:  "type"
-      <*> o .:  "stage"
+      <*> o .:  "serviceOfferingId"
+      <*> o .:  "serviceOfferingCode"
+      <*> o .:  "workflowId"
+      <*> o .:  "workflowStateId"
+      <*> o .:  "workflowStateCode"
+      <*> o .:  "workflowStateNameEs"
+      <*> o .:  "workflowStateNameEn"
       <*> pure (fromMaybe 0 sortOrder)
       <*> o .:? "notes"
 
+data PipelineStageDTO = PipelineStageDTO
+  { psId        :: Text
+  , psCode      :: Text
+  , psNameEs    :: Text
+  , psNameEn    :: Text
+  , psSortOrder :: Int
+  , psTerminal  :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineStageDTO where
+  toJSON dto = object
+    [ "id" .= psId dto
+    , "code" .= psCode dto
+    , "nameEs" .= psNameEs dto
+    , "nameEn" .= psNameEn dto
+    , "sortOrder" .= psSortOrder dto
+    , "terminal" .= psTerminal dto
+    ]
+
+instance FromJSON PipelineStageDTO where
+  parseJSON = withObject "PipelineStageDTO" $ \o ->
+    PipelineStageDTO
+      <$> o .: "id"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+      <*> o .: "sortOrder"
+      <*> o .: "terminal"
+
+data PipelineServiceOfferingDTO = PipelineServiceOfferingDTO
+  { psoId     :: Text
+  , psoCode   :: Text
+  , psoNameEs :: Text
+  , psoNameEn :: Text
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineServiceOfferingDTO where
+  toJSON dto = object
+    [ "id" .= psoId dto
+    , "code" .= psoCode dto
+    , "nameEs" .= psoNameEs dto
+    , "nameEn" .= psoNameEn dto
+    ]
+
+instance FromJSON PipelineServiceOfferingDTO where
+  parseJSON = withObject "PipelineServiceOfferingDTO" $ \o ->
+    PipelineServiceOfferingDTO
+      <$> o .: "id"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+
+data PipelineDefinitionDTO = PipelineDefinitionDTO
+  { pdWorkflowId      :: Text
+  , pdCode            :: Text
+  , pdNameEs          :: Text
+  , pdNameEn          :: Text
+  , pdRevision        :: Int64
+  , pdServiceOfferings :: [PipelineServiceOfferingDTO]
+  , pdStages          :: [PipelineStageDTO]
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineDefinitionDTO where
+  toJSON dto = object
+    [ "workflowId" .= pdWorkflowId dto
+    , "code" .= pdCode dto
+    , "nameEs" .= pdNameEs dto
+    , "nameEn" .= pdNameEn dto
+    , "revision" .= pdRevision dto
+    , "serviceOfferings" .= pdServiceOfferings dto
+    , "stages" .= pdStages dto
+    ]
+
+instance FromJSON PipelineDefinitionDTO where
+  parseJSON = withObject "PipelineDefinitionDTO" $ \o ->
+    PipelineDefinitionDTO
+      <$> o .: "workflowId"
+      <*> o .: "code"
+      <*> o .: "nameEs"
+      <*> o .: "nameEn"
+      <*> o .: "revision"
+      <*> o .: "serviceOfferings"
+      <*> o .: "stages"
+
+data PipelineSnapshotDTO = PipelineSnapshotDTO
+  { pspRevision    :: Int64
+  , pspDefinitions :: [PipelineDefinitionDTO]
+  , pspCards       :: [PipelineCardDTO]
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PipelineSnapshotDTO where
+  toJSON dto = object
+    [ "revision" .= pspRevision dto
+    , "definitions" .= pspDefinitions dto
+    , "cards" .= pspCards dto
+    ]
+
+instance FromJSON PipelineSnapshotDTO where
+  parseJSON = withObject "PipelineSnapshotDTO" $ \o ->
+    PipelineSnapshotDTO
+      <$> o .: "revision"
+      <*> o .: "definitions"
+      <*> o .: "cards"
+
 data PipelineCardCreate = PipelineCardCreate
-  { pccTitle     :: Text
-  , pccArtist    :: Maybe Text
-  , pccStage     :: Maybe Text
-  , pccSortOrder :: Maybe Int
-  , pccNotes     :: Maybe Text
+  { pccTitle             :: Text
+  , pccArtist            :: Maybe Text
+  , pccServiceOfferingId :: Text
+  , pccWorkflowStateId   :: Maybe Text
+  , pccSortOrder         :: Maybe Int
+  , pccNotes             :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardCreate where
-  parseJSON = genericParseJSON (prefixedStrictObjectOptions 3)
+  parseJSON value = do
+    rejectNullOptionalFields
+      "PipelineCardCreate"
+      ["artist", "workflowStateId", "sortOrder", "notes"]
+      value
+    genericParseJSON (prefixedStrictObjectOptions 3) value
 
 data PipelineCardUpdate = PipelineCardUpdate
-  { pcuTitle     :: Maybe Text
-  , pcuArtist    :: Maybe (Maybe Text)
-  , pcuStage     :: Maybe Text
-  , pcuSortOrder :: Maybe Int
-  , pcuNotes     :: Maybe (Maybe Text)
+  { pcuTitle           :: Maybe Text
+  , pcuArtist          :: Maybe (Maybe Text)
+  , pcuWorkflowStateId :: Maybe Text
+  , pcuSortOrder       :: Maybe Int
+  , pcuNotes           :: Maybe (Maybe Text)
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardUpdate where
   parseJSON value@(Object o) = do
+    rejectNullOptionalFields
+      "PipelineCardUpdate"
+      ["title", "workflowStateId", "sortOrder"]
+      value
     PipelineCardUpdateParsed
       { pcupTitle = titleValue
-      , pcupStage = stageValue
+      , pcupWorkflowStateId = stateValue
       , pcupSortOrder = sortOrderValue
       } <- genericParseJSON (prefixedStrictObjectOptions 4) value
     artistValue <- o .:! "artist"
     notesValue <- o .:! "notes"
-    pure PipelineCardUpdate
-      { pcuTitle = titleValue
-      , pcuArtist = artistValue
-      , pcuStage = stageValue
-      , pcuSortOrder = sortOrderValue
-      , pcuNotes = notesValue
-      }
+    case (titleValue, artistValue, stateValue, sortOrderValue, notesValue) of
+      (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+        fail "PipelineCardUpdate must include at least one field"
+      _ ->
+        pure PipelineCardUpdate
+          { pcuTitle = titleValue
+          , pcuArtist = artistValue
+          , pcuWorkflowStateId = stateValue
+          , pcuSortOrder = sortOrderValue
+          , pcuNotes = notesValue
+          }
   parseJSON _ = fail "PipelineCardUpdate must be an object"
 
 data PipelineCardUpdateParsed = PipelineCardUpdateParsed
-  { pcupTitle     :: Maybe Text
-  , pcupArtist    :: Maybe Text
-  , pcupStage     :: Maybe Text
-  , pcupSortOrder :: Maybe Int
-  , pcupNotes     :: Maybe Text
+  { pcupTitle           :: Maybe Text
+  , pcupArtist          :: Maybe Text
+  , pcupWorkflowStateId :: Maybe Text
+  , pcupSortOrder       :: Maybe Int
+  , pcupNotes           :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON PipelineCardUpdateParsed where
@@ -758,7 +1745,8 @@ instance FromJSON PipelineCardUpdateParsed where
 data SessionInputRow = SessionInputRow
   { channelNumber    :: Int
   , trackName        :: Maybe Text
-  , instrument       :: Maybe Text
+  , instrumentId     :: Maybe Text
+  , instrumentName   :: Maybe Text
   , micId            :: Maybe Text
   , standId          :: Maybe Text
   , cableId          :: Maybe Text
@@ -820,7 +1808,12 @@ data SessionCreate = SessionCreate
 
 instance ToJSON SessionCreate
 instance FromJSON SessionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "SessionCreate"
+      ["scInputListRows", "scStatus"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data SessionUpdate = SessionUpdate
   { suBookingRef          :: Maybe (Maybe Text)
@@ -864,26 +1857,46 @@ instance FromJSON SessionUpdate where
           ]
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        providedKeys = map AKey.toText (AKM.keys o)
+        nonClearableKeys =
+          [ "suService"
+          , "suStartAt"
+          , "suEndAt"
+          , "suEngineerRef"
+          , "suRoomIds"
+          , "suInputListRows"
+          , "suStatus"
+          ]
+        nullNonClearableKeys =
+          [ key
+          | key <- nonClearableKeys
+          , AKM.lookup (AKey.fromText key) o == Just Null
+          ]
     case unknownKeys of
       key:_ -> fail ("Unknown field in SessionUpdate: " <> T.unpack key)
-      [] ->
-        SessionUpdate
-          <$> o .:! "suBookingRef"
-          <*> o .:! "suBandId"
-          <*> o .:! "suClientPartyRef"
-          <*> o .:? "suService"
-          <*> o .:? "suStartAt"
-          <*> o .:? "suEndAt"
-          <*> o .:? "suEngineerRef"
-          <*> o .:! "suAssistantRef"
-          <*> o .:? "suRoomIds"
-          <*> o .:! "suSampleRate"
-          <*> o .:! "suBitDepth"
-          <*> o .:! "suDaw"
-          <*> o .:! "suSessionFolderDriveId"
-          <*> o .:! "suNotes"
-          <*> o .:? "suInputListRows"
-          <*> o .:? "suStatus"
+      []
+        | null providedKeys ->
+            fail "SessionUpdate must include at least one field"
+        | key:_ <- nullNonClearableKeys ->
+            fail (T.unpack key <> " must be omitted instead of null")
+        | otherwise ->
+            SessionUpdate
+              <$> o .:! "suBookingRef"
+              <*> o .:! "suBandId"
+              <*> o .:! "suClientPartyRef"
+              <*> o .:? "suService"
+              <*> o .:? "suStartAt"
+              <*> o .:? "suEndAt"
+              <*> o .:? "suEngineerRef"
+              <*> o .:! "suAssistantRef"
+              <*> o .:? "suRoomIds"
+              <*> o .:! "suSampleRate"
+              <*> o .:! "suBitDepth"
+              <*> o .:! "suDaw"
+              <*> o .:! "suSessionFolderDriveId"
+              <*> o .:! "suNotes"
+              <*> o .:? "suInputListRows"
+              <*> o .:? "suStatus"
 
 data PartyRelatedBooking = PartyRelatedBooking
   { prbBookingId  :: Int64
@@ -937,73 +1950,10 @@ data PartyRelatedDTO = PartyRelatedDTO
 instance ToJSON PartyRelatedDTO
 instance FromJSON PartyRelatedDTO
 
-newtype RolePayload = RolePayload { rolePayloadValue :: Text }
-  deriving (Show, Eq, Generic)
-
-instance FromJSON RolePayload where
-  parseJSON v =
-    case v of
-      String t -> pure (RolePayload t)
-      Object o -> do
-        let allowedKeys = ["role", "value"]
-            unknownKeys =
-              filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
-        case unknownKeys of
-          key:_ -> fail ("Unknown field in RolePayload: " <> T.unpack key)
-          [] -> pure ()
-        mRole <- o .:? "role"
-        mValue <- o .:? "value"
-        case (mRole, mValue) of
-          (Just role, Nothing) -> pure (RolePayload role)
-          (Nothing, Just value) -> pure (RolePayload value)
-          (Nothing, Nothing) -> fail "Expected role object with either 'role' or 'value'"
-          (Just _, Just _) -> fail "Expected role object with exactly one of 'role' or 'value'"
-      _        -> fail "Expected role string or object with exactly one of 'role' or 'value'"
-
-instance MimeUnrender PlainText RolePayload where
-  mimeUnrender _ = decodeUtf8RolePayload
-
-instance MimeUnrender OctetStream RolePayload where
-  mimeUnrender _ = decodeUtf8RolePayload
-
 data LooseJSON
 
 instance Accept LooseJSON where
   contentType _ = "application" // "json"
-
-instance MimeUnrender LooseJSON RolePayload where
-  mimeUnrender _ bs =
-    case eitherDecode bs of
-      Right rp -> Right rp
-      Left decodeErr ->
-        case decodeUtf8RolePayloadText bs of
-          Left utf8Err -> Left utf8Err
-          Right rawText ->
-            let trimmed = T.strip rawText
-            in if T.null trimmed
-                 then Left "Expected non-empty role payload"
-                 else if looksLikeStructuredJson trimmed
-                   then Left decodeErr
-                   else Right (RolePayload rawText)
-
-decodeUtf8RolePayload :: BL.ByteString -> Either String RolePayload
-decodeUtf8RolePayload = fmap RolePayload . decodeUtf8RolePayloadText
-
-decodeUtf8RolePayloadText :: BL.ByteString -> Either String Text
-decodeUtf8RolePayloadText raw =
-  case TE.decodeUtf8' (BL.toStrict raw) of
-    Left _ -> Left "Role payload must be valid UTF-8"
-    Right txt -> Right txt
-
-looksLikeStructuredJson :: Text -> Bool
-looksLikeStructuredJson raw =
-  case T.uncons raw of
-    Nothing -> False
-    Just (firstChar, _) ->
-      firstChar `elem` ['{', '[', '"'] ||
-      firstChar == '-' ||
-      isDigit firstChar ||
-      T.toLower raw `elem` ["true", "false", "null"]
 
 data BandMemberDTO = BandMemberDTO
   { bmId         :: Text
@@ -1051,10 +2001,38 @@ instance FromJSON BandMemberInput where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in BandMemberInput: " <> T.unpack key)
-      [] ->
-        BandMemberInput
-          <$> o .:  "bmPartyId"
-          <*> o .:? "bmRole"
+      [] -> do
+        partyIdValue <- o .: "bmPartyId"
+        roleValue <- normalizeBandMemberRoleField =<< o .:? "bmRole"
+        if partyIdValue <= 0
+          then fail "bmPartyId must be a positive integer"
+          else
+            pure BandMemberInput
+              { bmiPartyId = partyIdValue
+              , bmiRole = roleValue
+              }
+
+maxBandMemberRoleChars :: Int
+maxBandMemberRoleChars = 80
+
+normalizeBandMemberRoleField :: Maybe Text -> Parser (Maybe Text)
+normalizeBandMemberRoleField Nothing = pure Nothing
+normalizeBandMemberRoleField (Just rawRole)
+  | T.null role =
+      pure Nothing
+  | T.length role > maxBandMemberRoleChars =
+      fail "bmRole must be 80 characters or fewer"
+  | T.any isUnsafeBandMemberRoleChar role =
+      fail "bmRole must not contain control characters or hidden formatting characters"
+  | otherwise =
+      pure (Just role)
+  where
+    role = T.strip rawRole
+
+isUnsafeBandMemberRoleChar :: Char -> Bool
+isUnsafeBandMemberRoleChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 -- Minimal Payment DTO for UI/backend bridging
 data SimplePaymentDTO = SimplePaymentDTO
@@ -1085,13 +2063,25 @@ data BandCreate = BandCreate
 
 instance ToJSON BandCreate
 instance FromJSON BandCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "BandCreate"
+      [ "bcLabelArtist"
+      , "bcPrimaryGenre"
+      , "bcHomeCity"
+      , "bcPhotoUrl"
+      , "bcContractFlags"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 
 data RadioStreamDTO = RadioStreamDTO
   { rsId            :: Int64
   , rsName          :: Maybe Text
   , rsStreamUrl     :: Text
+  , rsCountryId     :: Maybe UUID
   , rsCountry       :: Maybe Text
+  , rsGenreId       :: Maybe UUID
   , rsGenre         :: Maybe Text
   , rsActive        :: Bool
   , rsLastCheckedAt :: Maybe UTCTime
@@ -1099,15 +2089,43 @@ data RadioStreamDTO = RadioStreamDTO
 instance ToJSON RadioStreamDTO
 instance FromJSON RadioStreamDTO
 
+data RadioAutoStopOptionDTO = RadioAutoStopOptionDTO
+  { rasoId :: UUID
+  , rasoCode :: Text
+  , rasoLabel :: Text
+  , rasoDescription :: Maybe Text
+  , rasoDurationMinutes :: Int
+  , rasoDefaultForBroadcast :: Bool
+  , rasoVersion :: Int
+  } deriving (Show, Generic)
+instance ToJSON RadioAutoStopOptionDTO where
+  toJSON = genericToJSON (prefixedStrictObjectOptions 4)
+instance FromJSON RadioAutoStopOptionDTO where
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 4)
+
+data RadioAutoStopOptionsDTO = RadioAutoStopOptionsDTO
+  { raocCatalogId :: UUID
+  , raocRevision :: Int64
+  , raocOptions :: [RadioAutoStopOptionDTO]
+  } deriving (Show, Generic)
+instance ToJSON RadioAutoStopOptionsDTO where
+  toJSON = genericToJSON (prefixedStrictObjectOptions 4)
+instance FromJSON RadioAutoStopOptionsDTO where
+  parseJSON = genericParseJSON (prefixedStrictObjectOptions 4)
+
 data RadioStreamUpsert = RadioStreamUpsert
   { rsuStreamUrl :: Text
   , rsuName      :: Maybe Text
-  , rsuCountry   :: Maybe Text
-  , rsuGenre     :: Maybe Text
+  , rsuCountryId :: Maybe UUID
+  , rsuClearCountry :: Maybe Bool
+  , rsuGenreId   :: Maybe UUID
+  , rsuClearGenre :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON RadioStreamUpsert
 instance FromJSON RadioStreamUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioStreamUpsert" ["rsuName", "rsuCountryId", "rsuClearCountry", "rsuGenreId", "rsuClearGenre"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioImportRequest = RadioImportRequest
   { rirSources :: Maybe [Text]
@@ -1115,7 +2133,9 @@ data RadioImportRequest = RadioImportRequest
   } deriving (Show, Generic)
 instance ToJSON RadioImportRequest
 instance FromJSON RadioImportRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioImportRequest" ["rirSources", "rirLimit"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioImportResult = RadioImportResult
   { rirProcessed :: Int
@@ -1134,7 +2154,9 @@ data RadioMetadataRefreshRequest = RadioMetadataRefreshRequest
   } deriving (Show, Generic)
 instance ToJSON RadioMetadataRefreshRequest
 instance FromJSON RadioMetadataRefreshRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioMetadataRefreshRequest" ["rmrLimit", "rmrOnlyMissing"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioMetadataRefreshResult = RadioMetadataRefreshResult
   { rmrProcessed :: Int
@@ -1161,12 +2183,14 @@ instance FromJSON RadioNowPlayingResult
 
 data RadioTransmissionRequest = RadioTransmissionRequest
   { rtrName    :: Maybe Text
-  , rtrGenre   :: Maybe Text
-  , rtrCountry :: Maybe Text
+  , rtrGenreId :: Maybe UUID
+  , rtrCountryId :: Maybe UUID
   } deriving (Show, Generic)
 instance ToJSON RadioTransmissionRequest
 instance FromJSON RadioTransmissionRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioTransmissionRequest" ["rtrName", "rtrGenreId", "rtrCountryId"] value
+    genericParseJSON strictObjectOptions value
 
 data RadioTransmissionInfo = RadioTransmissionInfo
   { rtiStreamId  :: Int64
@@ -1195,7 +2219,9 @@ data RadioPresenceUpsert = RadioPresenceUpsert
   } deriving (Show, Generic)
 instance ToJSON RadioPresenceUpsert
 instance FromJSON RadioPresenceUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "RadioPresenceUpsert" ["rpuStationName", "rpuStationId"] value
+    genericParseJSON strictObjectOptions value
 
 data InternProfileDTO = InternProfileDTO
   { ipPartyId  :: Int64
@@ -1229,15 +2255,19 @@ instance FromJSON InternProfileUpdate where
           ]
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        providedKeys = map AKey.toText (AKM.keys o)
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternProfileUpdate: " <> T.unpack key)
-      [] ->
-        InternProfileUpdate
-          <$> o .:! "ipuStartAt"
-          <*> o .:! "ipuEndAt"
-          <*> o .:! "ipuRequiredHours"
-          <*> o .:! "ipuSkills"
-          <*> o .:! "ipuAreas"
+      []
+        | null providedKeys ->
+            fail "InternProfileUpdate must include at least one field"
+        | otherwise ->
+            InternProfileUpdate
+              <$> o .:! "ipuStartAt"
+              <*> o .:! "ipuEndAt"
+              <*> o .:! "ipuRequiredHours"
+              <*> o .:! "ipuSkills"
+              <*> o .:! "ipuAreas"
 
 data InternSummaryDTO = InternSummaryDTO
   { isPartyId :: Int64
@@ -1253,6 +2283,7 @@ data InternProjectDTO = InternProjectDTO
   , ipTitle     :: Text
   , ipDescription :: Maybe Text
   , ipStatus    :: Text
+  , ipActivationStatus :: Text
   , ipStartAt   :: Maybe Day
   , ipDueAt     :: Maybe Day
   , ipCreatedAt :: UTCTime
@@ -1265,12 +2296,18 @@ data InternProjectCreate = InternProjectCreate
   { ipcTitle       :: Text
   , ipcDescription :: Maybe Text
   , ipcStatus      :: Maybe Text
+  , ipcActivationStatus :: Maybe Text
   , ipcStartAt     :: Maybe Day
   , ipcDueAt       :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternProjectCreate
 instance FromJSON InternProjectCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "InternProjectCreate"
+      ["ipcDescription", "ipcStatus", "ipcActivationStatus", "ipcStartAt", "ipcDueAt"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data InternProjectUpdate = InternProjectUpdate
   { ipuTitle       :: Maybe Text
@@ -1293,13 +2330,23 @@ instance FromJSON InternProjectUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternProjectUpdate: " <> T.unpack key)
-      [] ->
-        InternProjectUpdate
-          <$> o .:? "ipuTitle"
-          <*> o .:! "ipuDescription"
-          <*> o .:? "ipuStatus"
-          <*> o .:! "ipuStartAt"
-          <*> o .:! "ipuDueAt"
+      [] -> do
+        titleValue <- o .:? "ipuTitle"
+        descriptionValue <- o .:! "ipuDescription"
+        statusValue <- o .:? "ipuStatus"
+        startAtValue <- o .:! "ipuStartAt"
+        dueAtValue <- o .:! "ipuDueAt"
+        case (titleValue, descriptionValue, statusValue, startAtValue, dueAtValue) of
+          (Nothing, Nothing, Nothing, Nothing, Nothing) ->
+            fail "InternProjectUpdate must include at least one field"
+          _ ->
+            pure InternProjectUpdate
+              { ipuTitle = titleValue
+              , ipuDescription = descriptionValue
+              , ipuStatus = statusValue
+              , ipuStartAt = startAtValue
+              , ipuDueAt = dueAtValue
+              }
 
 data InternTaskDTO = InternTaskDTO
   { itId          :: Text
@@ -1308,9 +2355,11 @@ data InternTaskDTO = InternTaskDTO
   , itTitle       :: Text
   , itDescription :: Maybe Text
   , itStatus      :: Text
+  , itActivationStatus :: Text
   , itProgress    :: Int
   , itAssignedTo  :: Maybe Int64
   , itAssignedName :: Maybe Text
+  , itProposedAssignee :: Maybe Int64
   , itDueAt       :: Maybe Day
   , itCreatedAt   :: UTCTime
   , itUpdatedAt   :: UTCTime
@@ -1323,14 +2372,22 @@ data InternTaskCreate = InternTaskCreate
   , itcTitle      :: Text
   , itcDescription :: Maybe Text
   , itcAssignedTo :: Maybe Int64
+  , itcProposedAssignee :: Maybe Int64
+  , itcActivationStatus :: Maybe Text
   , itcDueAt      :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternTaskCreate
 instance FromJSON InternTaskCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "InternTaskCreate"
+      ["itcDescription", "itcAssignedTo", "itcProposedAssignee", "itcActivationStatus", "itcDueAt"]
+      value
+    genericParseJSON strictObjectOptions value
 
 data InternTaskUpdate = InternTaskUpdate
-  { ituTitle       :: Maybe Text
+  { ituProjectId   :: Maybe Text
+  , ituTitle       :: Maybe Text
   , ituDescription :: Maybe (Maybe Text)
   , ituStatus      :: Maybe Text
   , ituProgress    :: Maybe Int
@@ -1341,7 +2398,8 @@ instance ToJSON InternTaskUpdate
 instance FromJSON InternTaskUpdate where
   parseJSON = withObject "InternTaskUpdate" $ \o -> do
     let allowedKeys =
-          [ "ituTitle"
+          [ "ituProjectId"
+          , "ituTitle"
           , "ituDescription"
           , "ituStatus"
           , "ituProgress"
@@ -1350,16 +2408,21 @@ instance FromJSON InternTaskUpdate where
           ]
         unknownKeys =
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+        providedKeys = map AKey.toText (AKM.keys o)
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternTaskUpdate: " <> T.unpack key)
-      [] ->
-        InternTaskUpdate
-          <$> o .:? "ituTitle"
-          <*> o .:! "ituDescription"
-          <*> o .:? "ituStatus"
-          <*> o .:? "ituProgress"
-          <*> o .:! "ituAssignedTo"
-          <*> o .:! "ituDueAt"
+      []
+        | null providedKeys ->
+            fail "InternTaskUpdate must include at least one field"
+        | otherwise ->
+            InternTaskUpdate
+              <$> o .:? "ituProjectId"
+              <*> o .:? "ituTitle"
+              <*> o .:! "ituDescription"
+              <*> o .:? "ituStatus"
+              <*> o .:? "ituProgress"
+              <*> o .:! "ituAssignedTo"
+              <*> o .:! "ituDueAt"
 
 data InternTodoDTO = InternTodoDTO
   { itdId        :: Text
@@ -1384,21 +2447,48 @@ data InternTodoUpdate = InternTodoUpdate
   } deriving (Show, Generic)
 instance ToJSON InternTodoUpdate
 instance FromJSON InternTodoUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON = withObject "InternTodoUpdate" $ \o -> do
+    let allowedKeys =
+          [ "itduText"
+          , "itduDone"
+          ]
+        unknownKeys =
+          filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
+    case unknownKeys of
+      key:_ -> fail ("Unknown field in InternTodoUpdate: " <> T.unpack key)
+      [] -> do
+        textValue <- o .:? "itduText"
+        doneValue <- o .:? "itduDone"
+        case (textValue, doneValue) of
+          (Nothing, Nothing) ->
+            fail "InternTodoUpdate must include at least one field"
+          _ ->
+            pure InternTodoUpdate
+              { itduText = textValue
+              , itduDone = doneValue
+              }
 
 data ClockInRequest = ClockInRequest
   { cirNotes :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClockInRequest
 instance FromJSON ClockInRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "ClockInRequest" ["cirNotes"] value
+    request <- genericParseJSON strictObjectOptions value
+    notes <- normalizeTimeEntryNotesField "cirNotes" (cirNotes request)
+    pure request { cirNotes = notes }
 
 data ClockOutRequest = ClockOutRequest
   { corNotes :: Maybe Text
   } deriving (Show, Generic)
 instance ToJSON ClockOutRequest
 instance FromJSON ClockOutRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "ClockOutRequest" ["corNotes"] value
+    request <- genericParseJSON strictObjectOptions value
+    notes <- normalizeTimeEntryNotesField "corNotes" (corNotes request)
+    pure request { corNotes = notes }
 
 data InternTimeEntryDTO = InternTimeEntryDTO
   { iteId       :: Text
@@ -1411,6 +2501,32 @@ data InternTimeEntryDTO = InternTimeEntryDTO
   } deriving (Show, Generic)
 instance ToJSON InternTimeEntryDTO
 instance FromJSON InternTimeEntryDTO
+
+timeEntryNotesMaxLength :: Int
+timeEntryNotesMaxLength = 1000
+
+normalizeTimeEntryNotesField :: String -> Maybe Text -> Parser (Maybe Text)
+normalizeTimeEntryNotesField _ Nothing = pure Nothing
+normalizeTimeEntryNotesField fieldName (Just rawValue)
+  | T.null trimmed =
+      pure Nothing
+  | T.length trimmed > timeEntryNotesMaxLength =
+      fail (fieldName <> " must be 1000 characters or fewer")
+  | T.any isUnsafeTimeEntryNotesChar trimmed =
+      fail
+        ( fieldName
+            <> " must not contain control characters other than tabs or line breaks, "
+            <> "or hidden formatting characters"
+        )
+  | otherwise =
+      pure (Just trimmed)
+  where
+    trimmed = T.strip rawValue
+
+isUnsafeTimeEntryNotesChar :: Char -> Bool
+isUnsafeTimeEntryNotesChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 data InternPermissionDTO = InternPermissionDTO
   { iprId          :: Text
@@ -1456,7 +2572,198 @@ instance FromJSON InternPermissionUpdate where
           filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o))
     case unknownKeys of
       key:_ -> fail ("Unknown field in InternPermissionUpdate: " <> T.unpack key)
-      [] ->
-        InternPermissionUpdate
-          <$> o .:? "ipuStatus"
-          <*> o .:! "ipuDecisionNotes"
+      [] -> do
+        statusValue <- o .:? "ipuStatus"
+        decisionNotesValue <- o .:! "ipuDecisionNotes"
+        case (statusValue, decisionNotesValue) of
+          (Nothing, Nothing) ->
+            fail "InternPermissionUpdate must include at least one field"
+          _ ->
+            pure InternPermissionUpdate
+              { ipuStatus = statusValue
+              , ipuDecisionNotes = decisionNotesValue
+              }
+
+-- | A content type that accepts @application/json@ but returns the raw body bytes.
+-- Used for webhook signature verification where the original byte sequence is needed.
+data RawJSON
+
+instance Accept RawJSON where
+    contentType _ = "application" // "json"
+
+instance MimeUnrender RawJSON BL.ByteString where
+    mimeUnrender _ = Right
+
+-- | Verify the HMAC-SHA256 signature of a Meta webhook payload.
+-- When no app secret is configured the check is skipped (useful for local dev).
+verifyMetaWebhookSignature :: Maybe Text -> Maybe Text -> BL.ByteString -> Either ServerError ()
+verifyMetaWebhookSignature mAppSecret mSigHeader body =
+  case mAppSecret of
+    Nothing -> Right ()
+    Just appSecret ->
+      case mSigHeader of
+        Nothing -> Left err401 { errBody = "Missing X-Hub-Signature-256 header" }
+        Just sigRaw ->
+          let expected =
+                TE.encodeUtf8 $
+                  T.pack $
+                    show
+                      ( hmacGetDigest
+                          (hmac (TE.encodeUtf8 appSecret) (BL.toStrict body) :: HMAC SHA256)
+                      )
+              matchesExpected digest =
+                TE.encodeUtf8 digest `constEq` expected
+          in case parseMetaWebhookSignature sigRaw of
+               Just digest | matchesExpected digest -> Right ()
+               _ -> Left err401 { errBody = "Invalid webhook signature" }
+
+parseMetaWebhookSignature :: Text -> Maybe Text
+parseMetaWebhookSignature rawSignature =
+  let prefix = "sha256="
+  in if rawSignature == T.strip rawSignature && prefix `T.isPrefixOf` rawSignature
+       then
+         let digest = T.drop (T.length prefix) rawSignature
+         in if T.length digest == 64 && T.all isAsciiHexDigit digest
+              then Just (T.toLower digest)
+              else Nothing
+       else Nothing
+
+isAsciiHexDigit :: Char -> Bool
+isAsciiHexDigit ch =
+  isDigit ch
+    || (ch >= 'a' && ch <= 'f')
+    || (ch >= 'A' && ch <= 'F')
+
+-- =============================================================================
+-- ARTIST TIPPING (Stripe destination charges)
+-- =============================================================================
+
+-- | Body for `POST /artists/:artistId/tips`. Currency is the ISO 4217 code
+-- (e.g. "usd", "eur"); this DTO performs no IO and acquires no resources.
+--
+-- Contract:
+-- * @amountCents@ is positive and within Stripe's integer amount envelope.
+-- * @currency@ is normalized to a lowercase three-letter ASCII code.
+-- * optional text fields reject explicit nulls; blank strings normalize to
+--   absence.
+-- * the Stripe HTTP resource lifetime is owned by @TDF.Services.Stripe@ via
+--   its bracketed manager helper, never by this JSON type.
+data ArtistTipRequest = ArtistTipRequest
+  { atrAmountCents  :: Int
+  , atrCurrency     :: Text
+  , atrTipperName   :: Maybe Text
+  , atrTipperEmail  :: Maybe Text
+  , atrMessage      :: Maybe Text
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistTipRequest where
+  toJSON (ArtistTipRequest amount cur name email msg) = object $
+    [ "amountCents" .= amount
+    , "currency"    .= cur
+    ]
+    <> maybe [] (\nameVal -> ["tipperName" .= nameVal]) name
+    <> maybe [] (\emailVal -> ["tipperEmail" .= emailVal]) email
+    <> maybe [] (\msgVal -> ["message" .= msgVal]) msg
+
+instance FromJSON ArtistTipRequest where
+  parseJSON value = do
+    rejectNullRequiredFields "ArtistTipRequest" ["amountCents", "currency"] value
+    rejectNullOptionalFields "ArtistTipRequest" ["tipperName", "tipperEmail", "message"] value
+    withObject "ArtistTipRequest" parseArtistTipRequestObject value
+
+parseArtistTipRequestObject :: Object -> Parser ArtistTipRequest
+parseArtistTipRequestObject o = do
+  rejectUnknownArtistTipRequestKeys o
+  amount <- o .: "amountCents" >>= validateArtistTipAmountCents
+  cur <- o .: "currency" >>= validateArtistTipCurrency
+  name <- o .:? "tipperName" >>= validateOptionalArtistTipText "tipperName" 160
+  email <- o .:? "tipperEmail" >>= validateOptionalArtistTipEmail
+  msg <- o .:? "message" >>= validateOptionalArtistTipText "message" 1000
+  pure (ArtistTipRequest amount cur name email msg)
+
+rejectUnknownArtistTipRequestKeys :: Object -> Parser ()
+rejectUnknownArtistTipRequestKeys o =
+  case filter (`notElem` allowedKeys) (map AKey.toText (AKM.keys o)) of
+    key:_ -> fail ("Unknown field in ArtistTipRequest: " <> T.unpack key)
+    [] -> pure ()
+  where
+    allowedKeys =
+      [ "amountCents"
+      , "currency"
+      , "tipperName"
+      , "tipperEmail"
+      , "message"
+      ]
+
+maxArtistTipAmountCents :: Int
+maxArtistTipAmountCents = 99999999
+
+validateArtistTipAmountCents :: Int -> Parser Int
+validateArtistTipAmountCents amount
+  | amount <= 0 =
+      fail "amountCents must be greater than zero"
+  | amount > maxArtistTipAmountCents =
+      fail "amountCents exceeds Stripe's maximum integer amount"
+  | otherwise =
+      pure amount
+
+validateArtistTipCurrency :: Text -> Parser Text
+validateArtistTipCurrency rawCurrency =
+  let currency = T.toLower (T.strip rawCurrency)
+  in if T.length currency == 3 && T.all isAsciiLower currency
+       then pure currency
+       else fail "currency must be a 3-letter ISO code"
+
+validateOptionalArtistTipText :: String -> Int -> Maybe Text -> Parser (Maybe Text)
+validateOptionalArtistTipText _ _ Nothing =
+  pure Nothing
+validateOptionalArtistTipText fieldName maxLength (Just rawValue) =
+  let value = T.strip rawValue
+  in if T.null value
+       then pure Nothing
+       else if T.length value > maxLength
+         then fail (fieldName <> " must be " <> show maxLength <> " characters or fewer")
+         else if T.any isUnsafeArtistTipTextChar value
+           then fail (fieldName <> " must not contain control characters, hidden formatting characters, or Unicode separator spaces")
+           else pure (Just value)
+
+validateOptionalArtistTipEmail :: Maybe Text -> Parser (Maybe Text)
+validateOptionalArtistTipEmail Nothing =
+  pure Nothing
+validateOptionalArtistTipEmail (Just rawEmail) = do
+  mEmail <- validateOptionalArtistTipText "tipperEmail" 254 (Just rawEmail)
+  case mEmail of
+    Nothing -> pure Nothing
+    Just email ->
+      let normalized = T.toLower email
+      in if isValidMarketplaceBuyerEmail normalized
+           then pure (Just normalized)
+           else fail "tipperEmail must be a valid email address"
+
+isUnsafeArtistTipTextChar :: Char -> Bool
+isUnsafeArtistTipTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
+data ArtistTipResponse = ArtistTipResponse
+  { atrespTipId        :: Int64
+  , atrespClientSecret :: Text
+  , atrespAmountCents  :: Int
+  , atrespCurrency     :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON ArtistTipResponse where
+  toJSON (ArtistTipResponse tid sec amount cur) = object
+    [ "tipId"        .= tid
+    , "clientSecret" .= sec
+    , "amountCents"  .= amount
+    , "currency"     .= cur
+    ]
+instance FromJSON ArtistTipResponse where
+  parseJSON = withObject "ArtistTipResponse" $ \o ->
+    ArtistTipResponse
+      <$> o .: "tipId"
+      <*> o .: "clientSecret"
+      <*> o .: "amountCents"
+      <*> o .: "currency"

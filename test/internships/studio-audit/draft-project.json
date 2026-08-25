@@ -1,0 +1,101 @@
+{
+  "title": "Auditoría funcional y de experiencia del manejo del estudio",
+  "activationStatus": "draft",
+  "assignmentStatus": "draft",
+  "notificationsEnabled": false,
+  "assignee": {
+    "status": "production-identity-verified-runtime-only",
+    "partyId": null,
+    "email": null,
+    "displayName": "Stewart Moreira",
+    "repositoryStoresProductionIdentifiers": false,
+    "runtimeExactMatchRequired": true
+  },
+  "environment": "staging",
+  "durationDaysFromActivation": 14,
+  "expectedEffortHours": {
+    "minimum": 20,
+    "maximum": 30
+  },
+  "midpointPercent": 50,
+  "finalReviewAndDemonstrationRequired": true,
+  "principalAssignment": {
+    "title": "Ejecutar la auditoría funcional y de experiencia del manejo del estudio",
+    "descriptionMarkdown": "# Auditoría funcional y de experiencia del manejo del estudio\n\nDurante dos semanas ejecutarás el plan estructurado de auditoría del estudio en **staging**, con una dedicación estimada de **20–30 horas**. El objetivo es comprobar todas las funciones aplicables, registrar el resultado de cada caso y convertir cada hallazgo en un reporte trazable dentro de TDF App.\n\n## Forma de trabajo\n\n1. Registra entrada en Prácticas antes de cada jornada.\n2. Abre **Plan de pruebas** y ejecuta los casos del módulo asignado para ese día.\n3. Usa sólo cuentas, datos y proveedores ficticios de staging.\n4. Comprueba tanto lo visible como lo que queda guardado después de recargar.\n5. Registra cada caso como Pendiente, En progreso, Aprobado, Fallido, Bloqueado, No aplicable, Listo para retest o Verificado.\n6. Todo caso fallido debe tener un reporte vinculado. Cada hallazgo no relacionado va en un reporte separado.\n7. Añade evidencia fuerte en casos críticos, fallos, permisos, integridad de datos, pagos e intermitencias.\n8. Registra salida y completa el resumen de la jornada.\n\nEn la primera semana harás onboarding, validarás el entorno y probarás los flujos operativos principales. Al llegar aproximadamente al 50% tendremos una revisión de punto medio. En la segunda semana completarás cobertura, casos límite, móvil, idiomas, accesibilidad y retests. Terminarás con un informe y una demostración.\n\nLa guía completa **“Guía para Stewart: auditoría funcional y de experiencia del manejo del estudio”** forma parte de esta tarea. Léela antes de empezar; explica cómo solicitar permisos, reportar, adjuntar evidencia, responder aclaraciones, hacer retesting y preparar el informe final.\n\nAl preparar el borrador dentro de TDF App, el sistema añade el contenido completo de esa guía debajo de esta introducción. Así las instrucciones permanecen visibles dentro de la tarea y también existen como documento reutilizable.\n\n## Criterios de finalización\n\nLa tarea sólo puede cerrarse cuando todos los casos aplicables tengan resultado; los fallos tengan reporte; exista evidencia suficiente; los bloqueos y no aplicables estén justificados; los retests solicitados estén completos o diferidos por un administrador; existan resúmenes diarios e informe final; y Manager/Admin apruebe la finalización.\n\n## Regla de seguridad\n\nDetente y contacta a Diego si ves producción o datos reales, si puede existir un cobro o comunicación real, si falta una credencial sandbox, si aparece una advertencia de seguridad o si la prueba requiere borrar datos, generar carga o ampliar mucho tus permisos. No intentes reparar el sistema ni alterar datos para ocultar un fallo.\n\n---\n\n# Guía para Stewart: auditoría funcional y de experiencia del manejo del estudio\n\n## Antes de comenzar\n\nEsta tarea busca mejorar TDF App con observaciones honestas, claras y comprobables. No se mide por cuántos errores encuentres. Se mide por la cobertura, el cuidado, la evidencia y la utilidad de lo que registres.\n\nUna función puede cumplir técnicamente y aun así ser confusa, lenta o difícil de encontrar. Una idea también es valiosa aunque no exista un error. No encontrar una función es un resultado importante. También es válido no encontrar errores cuando la prueba se hizo con atención.\n\n## 1. Objetivo de la tarea\n\nProbar de principio a fin las funciones que permiten operar el estudio de grabación: clientes, reservas, salas, recursos, órdenes, sesiones, participantes, paquetes, cotizaciones, facturas, pagos de prueba, inventario, equipos, mantenimiento, reportes, Live Sessions y dependencias necesarias.\n\nPor cada caso debes registrar un resultado. Por cada hallazgo no relacionado debes crear un reporte separado dentro de TDF App.\n\n## 2. Qué debes y qué no debes probar\n\nDebes probar únicamente los casos visibles en el plan, en el entorno de **staging**, con las cuentas y los datos ficticios indicados.\n\nNo debes:\n\n- Usar producción para crear, editar o borrar datos.\n- Usar nombres, correos, teléfonos, tarjetas o archivos de personas reales.\n- Cobrar, reembolsar o autorizar dinero real.\n- Enviar emails, WhatsApp u otras comunicaciones a destinatarios reales.\n- Cambiar permisos por tu cuenta.\n- Publicar contenido, distribuir música o modificar inventario operativo.\n- Intentar reparar el sistema o cambiar datos para ocultar un fallo.\n- Compartir contraseñas, tokens, datos personales o secretos en una captura.\n\n## 3. Cómo ingresar al sistema\n\n1. Abre la dirección de staging entregada por Diego.\n2. Comprueba que la pantalla indique **staging**. Si dice producción o no puedes reconocer el entorno, detente.\n3. Inicia sesión sólo con la cuenta de pruebas indicada.\n4. Verifica el nombre y el rol antes de ejecutar cada caso.\n5. Nunca copies la contraseña en un reporte o captura.\n\n## 4. Cómo abrir Prácticas\n\n1. Abre el menú principal.\n2. Busca **Panel de pasantes** o **Prácticas**.\n3. Si no aparece, intenta el buscador de funciones.\n4. Si tampoco la encuentras, no pruebes URLs al azar: registra el bloqueo o solicita el permiso necesario.\n\n## 5. Cómo encontrar el proyecto y la tarea\n\n1. En Prácticas, abre el proyecto **Auditoría funcional y de experiencia del manejo del estudio**.\n2. Abre la asignación principal.\n3. Pulsa **Abrir plan de pruebas**.\n4. Comprueba que el plan diga staging, dos semanas, 20–30 horas y que esté asignado a tu identidad.\n5. Si ves el nombre de otra persona, detente y avisa a Diego.\n\n## 6. Cómo registrar entrada y salida\n\n1. Antes de trabajar, abre Prácticas y pulsa **Registrar entrada**.\n2. En la nota escribe brevemente lo que planeas probar.\n3. Al terminar, pulsa **Registrar salida**.\n4. Comprueba el tiempo registrado.\n5. No dejes una entrada abierta al terminar la jornada.\n\n## 7. Cómo acceder a staging\n\nUsa únicamente el enlace aprobado. Antes de modificar algo, revisa:\n\n- El entorno dice staging.\n- Los proveedores dicen sandbox o mock.\n- Los correos terminan en `@persona.test` o `@invalid.example`.\n- Los registros de la auditoría muestran `AUDIT-2026`.\n\nSi cualquiera de estas señales falta, detente antes de guardar.\n\n## 8. Cómo usar las cuentas y datos ficticios\n\nCada caso indica el rol y los datos que debes usar. No sustituyas esos datos por información real.\n\n- Cliente: `CUST-STUDIO-001`\n- Artista: `ART-STUDIO-001`\n- Ingeniero: `ENG-STUDIO-001`\n- Sala: `ROOM-AUDIT-A` o `ROOM-AUDIT-B`\n- Recurso: `RES-MIC-001`\n- Reserva, orden, sesión o pago: siempre con prefijo `AUDIT-2026`\n\nNo cambies la identidad de una cuenta. Para probar otro rol, usa únicamente la persona de staging autorizada para ese caso.\n\n## 9. Cómo seguir la lista de casos\n\n1. Filtra por módulo o resultado.\n2. Abre un caso y lee objetivo, propósito, condiciones previas y datos.\n3. Sigue los pasos en orden.\n4. Compara lo visible con el resultado esperado.\n5. Recarga para comprobar qué quedó guardado.\n6. Revisa notificaciones o efectos esperados.\n7. Limpia sólo los datos que creaste con el prefijo de auditoría.\n\nEstados disponibles: **Pendiente, En progreso, Aprobado, Fallido, Bloqueado, No aplicable, Listo para retest y Verificado**.\n\n## 10. Cómo registrar un caso aprobado\n\nUsa **Aprobado** cuando el resultado visible, el estado guardado y los efectos coincidan con lo esperado.\n\nEscribe una confirmación breve, por ejemplo: “Se creó una sola reserva; conservó cliente, sala y horario después de recargar. El buzón de pruebas recibió una confirmación”. En casos críticos añade una captura, video externo seguro o referencia verificable.\n\n## 11. Cómo registrar un caso fallido\n\n1. Marca **Fallido**.\n2. Describe exactamente qué ocurrió.\n3. Indica qué estado quedó guardado y qué efectos observaste.\n4. Guarda evidencia suficiente.\n5. Crea un reporte vinculado desde el mismo caso.\n\nUn caso fallido sin reporte vinculado impide terminar la tarea.\n\n## 12. Cómo marcar un bloqueo\n\nUsa **Bloqueado** cuando no puedes continuar por permiso, entorno, credencial, proveedor, dato o riesgo de seguridad. Explica qué falta, qué intentaste y quién puede desbloquearlo. No inventes un resultado.\n\n## 13. Cómo solicitar permisos\n\n1. Abre Prácticas.\n2. Busca **Solicitudes de permiso**.\n3. Elige la categoría necesaria.\n4. Explica qué caso vas a ejecutar y por qué necesitas el acceso.\n5. Pide el periodo mínimo necesario.\n6. Espera la aprobación de Manager/Admin.\n\nNo uses la cuenta de otra persona para evitar este proceso. Un pasante nunca puede aprobar su propia solicitud ni darse roles.\n\n## 14. Cómo crear un reporte\n\n1. Desde un caso, pulsa **Crear reporte vinculado**, o abre **Reportes de pruebas**.\n2. Elige el tipo correcto.\n3. Escribe un título específico.\n4. Completa módulo, función, entorno, pantalla, plataforma, dispositivo, navegador, idioma y rol.\n5. Si es un error, incluye pasos, resultado esperado, resultado real y frecuencia.\n6. Propón la gravedad con honestidad.\n7. Guarda el borrador, revisa posibles duplicados y luego envíalo.\n\nNo mezcles problemas no relacionados. Crea un reporte por hallazgo.\n\n## 15. Cómo adjuntar evidencia\n\n- Captura la pantalla completa necesaria para entender el contexto.\n- Oculta o recorta secretos, tokens y datos personales.\n- Usa PNG, JPG, WebP, PDF o texto pequeño permitido.\n- Los videos pesados se guardan externamente y se enlazan con HTTPS.\n- Escribe una leyenda que explique qué demuestra la evidencia.\n- No cambies el nombre de un archivo para intentar superar una validación.\n\n## 16. Cómo distinguir los tipos de reporte\n\n- **Error:** el sistema hace algo distinto de lo esperado, pierde datos, permite algo indebido o impide un flujo válido.\n- **Sugerencia:** el flujo funciona, pero podría ser más claro, rápido, consistente o cómodo.\n- **Idea:** una capacidad nueva que podría aportar valor.\n- **Pregunta:** necesitas entender una regla, palabra o decisión del producto.\n- **Accesibilidad:** barrera de teclado, foco, lector, contraste, escala, movimiento o comprensión.\n- **Permisos:** acceso ausente, excesivo o diferente entre interfaz y API.\n- **Rendimiento:** espera excesiva, bloqueo, repetición o respuesta lenta.\n- **Contenido o traducción:** etiqueta, ayuda, mensaje o idioma incorrecto/inconsistente.\n\n## 17. Cómo comprobar si ya fue reportado\n\nAntes de enviar, revisa las sugerencias de posibles duplicados y busca por título, módulo y función. Si el mismo problema ya existe, añade evidencia o comentario al reporte permitido. No borres tu borrador hasta entender si realmente es el mismo hallazgo.\n\nEl equipo puede marcar un reporte como duplicado; seguirá enlazado al reporte principal y conservará su historial.\n\n## 18. Cómo responder cuando pidan más información\n\n1. Abre **Mis reportes**.\n2. Filtra **Necesita información**.\n3. Lee la pregunta completa.\n4. Responde con datos concretos y añade evidencia si ayuda.\n5. No repitas pruebas riesgosas sin autorización.\n\nTu respuesta devuelve el reporte a la cola de revisión sin borrar la conversación anterior.\n\n## 19. Cómo hacer retesting\n\n1. Espera el estado **Listo para retest**.\n2. Usa el mismo caso, entorno y datos, salvo que el equipo indique otro cambio.\n3. Crea una nueva ejecución; no edites la ejecución original.\n4. Registra **Aprobado, Fallido o Bloqueado** y explica qué comprobaste.\n5. Añade evidencia nueva y vincúlala al reporte.\n\n## 20. Cómo actualizar el avance\n\nEl avance se calcula automáticamente a partir de la ejecución más reciente de cada caso aplicable. No escribas un porcentaje para hacerlo coincidir. Si el número parece incorrecto, crea un reporte; no cambies resultados sólo para aumentar el avance.\n\n## 21. Cómo escribir el resumen de cada jornada\n\nDespués de registrar salida, completa:\n\n- Fecha\n- Tiempo trabajado\n- Módulos probados\n- Casos completados\n- Reportes creados\n- Bloqueos\n- Próximo paso\n\nEjemplo: “21/08/2026 · 2 h 15 min · Calendario y salas · 11 casos · 2 reportes · Bloqueado pago PayPal por credencial sandbox · Mañana: conflictos y retest de reserva”.\n\n## 22. Cómo preparar el informe final\n\nLa app genera totales con los datos estructurados. Tú debes añadir conclusiones:\n\n- Módulos y funciones probados\n- Casos aprobados, fallidos, bloqueados y no aplicables\n- Reportes por tipo y gravedad\n- Errores y problemas de uso más importantes\n- Mejores ideas\n- Funciones que no encontraste o entendiste\n- Diferencias entre móvil y web\n- Observaciones de accesibilidad\n- Riesgos que quedan\n- Tus tres recomendaciones de mayor prioridad\n\n## 23. Acciones prohibidas\n\nEstá prohibido probar con producción, personas o pagos reales; evadir permisos; compartir secretos; publicar; distribuir música; alterar reservas, sesiones, permisos o inventario real; hacer pruebas destructivas o de carga; y modificar datos para que una prueba parezca aprobada.\n\n## 24. Cuándo detenerte y contactar a Diego\n\nDetente inmediatamente si:\n\n- Ves producción o datos personales reales.\n- Puede existir un cobro, reembolso o comunicación real.\n- Aparece CAPTCHA, advertencia de seguridad o restricción de cuenta.\n- Falta una credencial o verificación de proveedor.\n- La prueba requiere borrar datos, generar alta carga o ampliar mucho tus permisos.\n- No puedes confirmar qué cuenta, entorno o persona estás usando.\n\nMarca el caso **Bloqueado**, conserva evidencia segura y contacta a Diego.\n\n## Ejemplo completo de error bien escrito\n\n**Título:** La segunda reserva puede confirmar la misma sala y horario\n\n**Tipo:** Error\n\n**Módulo / función:** Calendario / Conflicto de sala\n\n**Entorno:** Staging\n\n**Pantalla:** `/estudio/calendario`\n\n**Rol:** Reception de pruebas\n\n**Caso:** `STU-SCH-010`\n\n**Qué intentaba hacer:** Comprobar que dos recepcionistas no puedan confirmar la misma sala a la misma hora.\n\n**Pasos:**\n\n1. Abrí `ROOM-AUDIT-A` el 27/08/2026 de 15:00 a 17:00 en dos perfiles de Chrome.\n2. En el primero confirmé la reserva `AUDIT-2026-CONFLICT-A`.\n3. Sin recargar el segundo, confirmé `AUDIT-2026-CONFLICT-B`.\n4. Recargué el calendario.\n\n**Esperaba:** La segunda confirmación debía mostrar un conflicto y no crear otra reserva.\n\n**Ocurrió:** Las dos reservas quedaron confirmadas y aparecen después de recargar.\n\n**Frecuencia:** Ocurrió 2 de 2 veces en staging.\n\n**Gravedad propuesta:** Crítica, porque puede causar una reserva doble. La decisión final corresponde al equipo.\n\n**Evidencia:** Captura del calendario y video externo de 28 segundos sin datos personales.\n\n## Ejemplo de sugerencia útil\n\n**Título:** Mostrar el saldo de horas antes de confirmar una reserva con paquete\n\nEl flujo funciona, pero el saldo aparece sólo después de guardar. Mostrar “8 h disponibles; esta reserva usará 2 h” antes de confirmar reduciría dudas y cancelaciones. Lo observé con `PKG-AUDIT-10H` en el caso `STU-PAY-002`.\n\n## Ejemplo de idea de producto\n\n**Título:** Lista de preparación automática para el ingeniero\n\nCuando una sesión se confirma, la app podría generar una lista con sala, lista de entradas, micrófonos reservados, participantes y archivos pendientes. Ayudaría a preparar la sesión y evitar olvidos. Es una idea; no significa que la función actual esté dañada.\n\n## Ejemplo de caso bloqueado\n\n**Caso:** `STU-PAY-008`\n\n**Estado:** Bloqueado\n\n**Motivo:** PayPal muestra una cuenta real y no aparece la palabra sandbox. No hice clic en aprobar. Necesito confirmación del entorno o una credencial sandbox de Diego.\n\n**Evidencia:** Captura recortada sin correo ni token.\n\n## Ejemplo de retest aprobado\n\n**Reporte:** “La segunda reserva puede confirmar la misma sala y horario”\n\n**Estado anterior:** Listo para retest\n\n**Resultado:** Aprobado\n\n**Comprobación:** Repetí `STU-SCH-010` dos veces. La primera reserva se confirmó; la segunda recibió “La sala ya no está disponible” y no creó otra fila. Recargué y consulté desde el segundo perfil.\n\n**Evidencia:** Captura posterior y referencia `AUDIT-2026-RETEST-SCH-010`.\n\n**Acción:** Registré una nueva ejecución; no edité el fallo original.\n",
+    "reusableGuide": "docs/internships/studio-audit/STUART-GUIDE.es.md"
+  },
+  "testCaseCount": 174,
+  "applicableFeatureCount": 125,
+  "inventoryCount": 130,
+  "schedule": [
+    {
+      "day": 1,
+      "week": 1,
+      "focus": "Onboarding, prohibiciones, staging, cuentas, entrada/salida y acceso.",
+      "hours": "2–3"
+    },
+    {
+      "day": 2,
+      "week": 1,
+      "focus": "CRM, clientes, leads y pipelines de servicios de estudio.",
+      "hours": "2–3"
+    },
+    {
+      "day": 3,
+      "week": 1,
+      "focus": "Calendario, salas, recursos, disponibilidad y reservas.",
+      "hours": "2–3"
+    },
+    {
+      "day": 4,
+      "week": 1,
+      "focus": "Órdenes, sesiones, participantes, listas de entradas y equipos.",
+      "hours": "2–3"
+    },
+    {
+      "day": 5,
+      "week": 1,
+      "focus": "Paquetes, cotizaciones, facturas y pagos sandbox. Revisión de punto medio.",
+      "hours": "2–3"
+    },
+    {
+      "day": 6,
+      "week": 2,
+      "focus": "Inventario, mantenimiento, operación y reportes.",
+      "hours": "2–3"
+    },
+    {
+      "day": 7,
+      "week": 2,
+      "focus": "Live Sessions, notificaciones e integraciones simuladas.",
+      "hours": "2–3"
+    },
+    {
+      "day": 8,
+      "week": 2,
+      "focus": "Dependencias Domo, Escuela y DDEX; límites de alcance.",
+      "hours": "2–3"
+    },
+    {
+      "day": 9,
+      "week": 2,
+      "focus": "Móvil, accesibilidad, idiomas, permisos, casos límite y retests.",
+      "hours": "2–3"
+    },
+    {
+      "day": 10,
+      "week": 2,
+      "focus": "Cerrar cobertura, responder aclaraciones, informe final y demostración.",
+      "hours": "2–3"
+    }
+  ],
+  "completionCriteria": [
+    "Todos los casos aplicables tienen resultado registrado.",
+    "Cada caso fallido tiene un reporte vinculado.",
+    "Casos críticos y fallidos tienen evidencia suficiente.",
+    "Bloqueos, retests solicitados y no aplicables están documentados.",
+    "Cada jornada tiene resumen y registro de entrada/salida.",
+    "El informe final está enviado.",
+    "Manager/Admin autoriza la finalización o registra una excepción justificada."
+  ]
+}

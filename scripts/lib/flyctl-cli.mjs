@@ -1,66 +1,55 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const PREFERRED_LINUX_TARBALL_PATTERNS = [
-  /linux.*amd64.*\.tar\.gz$/i,
-  /linux.*x86_64.*\.tar\.gz$/i,
-  /Linux_x86_64\.tar\.gz$/i,
-  /linux-amd64\.tar\.gz$/i,
-  /linux-x86_64\.tar\.gz$/i,
-];
-const FALLBACK_LINUX_TARBALL_PATTERN = /linux.*\.tar\.gz$/i;
+function scoreFlyctlDownloadUrl(value) {
+  const url = String(value ?? '').trim();
+  if (!url || url === 'null') return -Infinity;
+  if (!/^https?:\/\//i.test(url)) return -Infinity;
+  if (!/flyctl/i.test(url)) return -Infinity;
+  if (/checksum|sha256|\.txt$/i.test(url)) return -Infinity;
 
-function normalizeCandidate(candidate) {
-  return String(candidate ?? '').trim();
+  let score = 0;
+  if (/\.tar\.gz$/i.test(url)) score += 20;
+  if (/linux/i.test(url)) score += 20;
+  if (/(x86_64|amd64)/i.test(url)) score += 20;
+  if (/arm64|aarch64/i.test(url)) score += 5;
+  return score;
 }
 
-function compareByName(left, right) {
-  return left.name.localeCompare(right.name);
+export function selectFlyctlDownloadUrl(urls) {
+  const candidates = [...urls]
+    .map((url) => ({ url: String(url ?? '').trim(), score: scoreFlyctlDownloadUrl(url) }))
+    .filter((candidate) => candidate.score > -Infinity)
+    .sort((left, right) => right.score - left.score || left.url.localeCompare(right.url));
+
+  return candidates[0]?.url ?? '';
 }
 
-export function isExecutableMode(mode) {
-  return (mode & 0o111) !== 0;
-}
-
-export function selectFlyctlDownloadUrl(candidates) {
-  const urls = [...new Set(candidates.map(normalizeCandidate).filter((url) => url !== '' && url !== 'null'))];
-
-  for (const pattern of PREFERRED_LINUX_TARBALL_PATTERNS) {
-    const match = urls.find((url) => pattern.test(url));
-    if (match) {
-      return match;
-    }
+async function isExecutableFile(filePath) {
+  try {
+    const stats = await fs.stat(filePath);
+    return stats.isFile() && (stats.mode & 0o111) !== 0;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false;
+    throw error;
   }
-
-  return urls.find((url) => FALLBACK_LINUX_TARBALL_PATTERN.test(url)) ?? null;
 }
 
 export async function findExtractedFlyctlBinary(rootDir) {
-  const pendingDirs = [rootDir];
+  const entries = await fs.readdir(rootDir, { withFileTypes: true });
 
-  while (pendingDirs.length > 0) {
-    const currentDir = pendingDirs.shift();
-    const entries = await fs.readdir(currentDir, { withFileTypes: true });
-    entries.sort(compareByName);
+  for (const entry of entries) {
+    const entryPath = path.join(rootDir, entry.name);
+    if (entry.isDirectory()) {
+      const nested = await findExtractedFlyctlBinary(entryPath);
+      if (nested) return nested;
+      continue;
+    }
 
-    for (const entry of entries) {
-      const entryPath = path.join(currentDir, entry.name);
-
-      if (entry.isDirectory()) {
-        pendingDirs.push(entryPath);
-        continue;
-      }
-
-      if (!entry.isFile() || entry.name !== 'flyctl') {
-        continue;
-      }
-
-      const stats = await fs.stat(entryPath);
-      if (isExecutableMode(stats.mode)) {
-        return entryPath;
-      }
+    if ((entry.name === 'flyctl' || entry.name === 'flyctl.exe') && (await isExecutableFile(entryPath))) {
+      return entryPath;
     }
   }
 
-  return null;
+  return '';
 }

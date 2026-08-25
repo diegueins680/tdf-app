@@ -1,0 +1,510 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module TDF.ServerFanClubSpec (spec) where
+
+import Control.Monad.Trans.Reader (runReaderT)
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Int (Int64)
+import qualified Data.Text as T
+import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Database.Persist (Entity (..), Key)
+import Database.Persist.Sql (fromSqlKey, toSqlKey)
+import Servant (ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant.Server.Internal.Handler (runHandler)
+import Test.Hspec
+
+import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Models
+  ( ElectionStatus (Upcoming)
+  , FanClubCandidacy (..)
+  , FanClubElection (..)
+  , FanFollow (..)
+  , FanClubMemberProfile (..)
+  , FanClubMemory (..)
+  , FanClubOfficerRole (Coordinator, Secretary)
+  , FanClubPost (..)
+  , RoleEnum (Customer, Fan)
+  )
+import TDF.ServerFanClub
+  ( fanClubSecureArtistHandlers
+  , validateFanClubArtistPathId
+  , validateFanClubCandidacyPathId
+  , validateFanClubElectionMutationTarget
+  , validateFanClubElectionPathId
+  , validateFanClubInboxBodyInput
+  , validateFanClubInboxReplyBodyInput
+  , validateFanClubOfficerRoleInput
+  , validateFanClubPostAccess
+  , validateFanClubPostContentInput
+  , validateFanClubMediaUrlsInput
+  , validateFanClubPostTitleInput
+  , validateFanClubInboxSubjectInput
+  , validateFanClubInboxStatusInput
+  , validateFanClubMemoryMutationTarget
+  , validateFanClubMemoryPathId
+  , validateFanClubMemoryReportReason
+  , validateFanClubMemoryDescriptionInput
+  , validateFanClubMemoryTitleInput
+  , validateFanClubEventDescriptionInput
+  , validateFanClubEventLocationInput
+  , validateFanClubEventTimeRange
+  , validateFanClubEventTitleInput
+  , validateFanClubReplyParentTarget
+  , validateFanClubVoteCandidacyTargets
+  , validateFanClubVoteCandidacyTarget
+  , validateFanClubVoteSelectionIds
+  )
+
+spec :: Spec
+spec = do
+  describe "fan club artist path validation" $
+    it "rejects malformed artist ids before public club lookups can look like missing clubs" $ do
+      case validateFanClubArtistPathId 42 of
+        Right artistId -> fromSqlKey artistId `shouldBe` 42
+        Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "Invalid fan club artist id" $
+        validateFanClubArtistPathId 0
+      assertRejected 400 "Invalid fan club artist id" $
+        validateFanClubArtistPathId (-7)
+
+  describe "secure fan club artist routes" $
+    it "rejects malformed artist ids before authorization or DB fallback" $ do
+      let getClubDetail :<|> _ =
+            fanClubSecureArtistHandlers fanClubUser 0
+      result <-
+        runHandler $
+          runReaderT
+            getClubDetail
+            (error "fan club artist id validation should not read Env")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid fan club artist id"
+        Right _ ->
+          expectationFailure "Expected malformed secure fan club artist id to be rejected"
+
+  describe "fan club election path validation" $ do
+    it "rejects malformed election and candidacy ids before DB fallback lookup" $ do
+      case validateFanClubElectionPathId 17 of
+        Right electionId -> fromSqlKey electionId `shouldBe` 17
+        Left err -> expectationFailure (unexpectedRejection err)
+      case validateFanClubCandidacyPathId 23 of
+        Right candidacyId -> fromSqlKey candidacyId `shouldBe` 23
+        Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "Invalid fan club election id" $
+        validateFanClubElectionPathId 0
+      assertRejected 400 "Invalid fan club candidacy id" $
+        validateFanClubCandidacyPathId (-1)
+
+  describe "fan club memory mutation target validation" $ do
+    it "requires memories to resolve through a member profile in the requested club" $ do
+      case validateFanClubMemoryPathId 70 of
+        Right memoryId -> fromSqlKey memoryId `shouldBe` 70
+        Left err -> expectationFailure (unexpectedRejection err)
+      case validateFanClubMemoryMutationTarget
+        (toSqlKey 10)
+        (Entity (toSqlKey 70) (mkMemory 60))
+        (Just (Entity (toSqlKey 60) (mkMemberProfile 10))) of
+          Right memoryId -> fromSqlKey memoryId `shouldBe` 70
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "Invalid fan club memory id" $
+        validateFanClubMemoryPathId 0
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          Nothing
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          (Just (Entity (toSqlKey 61) (mkMemberProfile 10)))
+      assertRejected 404 "Fan club memory not found" $
+        validateFanClubMemoryMutationTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 70) (mkMemory 60))
+          (Just (Entity (toSqlKey 60) (mkMemberProfile 11)))
+
+  describe "fan club memory report reason validation" $
+    it "normalizes required reasons and rejects unsafe report text before persistence" $ do
+      validateFanClubMemoryReportReason "  Datos privados\nsin consentimiento  "
+        `shouldBe` Right "Datos privados\nsin consentimiento"
+
+      assertRejected 400 "reason is required" $
+        validateFanClubMemoryReportReason "   "
+      assertRejected 400 "reason must be 500 characters or fewer" $
+        validateFanClubMemoryReportReason (T.replicate 501 "a")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubMemoryReportReason ("spam" <> "\x202E" <> "visible")
+      assertRejected 400 "unsupported control" $
+        validateFanClubMemoryReportReason ("spam" <> "\NUL" <> "visible")
+
+  describe "fan club memory text validation" $ do
+    it "normalizes required titles and optional descriptions before memory persistence" $ do
+      validateFanClubMemoryTitleInput "  Ensayo general  "
+        `shouldBe` Right "Ensayo general"
+      validateFanClubMemoryDescriptionInput (Just "  Primera linea\nsegunda linea  ")
+        `shouldBe` Right (Just "Primera linea\nsegunda linea")
+      validateFanClubMemoryDescriptionInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubMemoryDescriptionInput Nothing
+        `shouldBe` Right Nothing
+
+    it "rejects blank, oversized, or unsafe memory text before DB fallback writes" $ do
+      assertRejected 400 "title is required" $
+        validateFanClubMemoryTitleInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubMemoryTitleInput (T.replicate 161 "a")
+      assertRejected 400 "description must be 4096 characters or fewer" $
+        validateFanClubMemoryDescriptionInput (Just (T.replicate 4097 "a"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubMemoryTitleInput "Recuerdo\nprivado"
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubMemoryTitleInput ("Recuerdo" <> "\x00A0" <> "privado")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubMemoryDescriptionInput (Just ("Hola" <> "\x202E" <> "club"))
+
+  describe "validateFanClubElectionMutationTarget" $ do
+    it "requires URL artist-club ownership before mutating an election" $ do
+      case validateFanClubElectionMutationTarget
+        (toSqlKey 10)
+        (Entity (toSqlKey 20) (mkElection 10)) of
+          Right electionId -> fromSqlKey electionId `shouldBe` 20
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 404 "Fan club election not found" $
+        validateFanClubElectionMutationTarget
+          (toSqlKey 11)
+          (Entity (toSqlKey 20) (mkElection 10))
+
+  describe "validateFanClubVoteCandidacyTarget" $ do
+    it "requires vote candidates to belong to the targeted election" $ do
+      case validateFanClubVoteCandidacyTarget
+        (toSqlKey 20)
+        (Entity (toSqlKey 30) (mkCandidacy 20)) of
+          Right candidacyId -> fromSqlKey candidacyId `shouldBe` 30
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 404 "Fan club candidacy not found" $
+        validateFanClubVoteCandidacyTarget
+          (toSqlKey 21)
+          (Entity (toSqlKey 30) (mkCandidacy 20))
+
+  describe "fan club vote ballot validation" $ do
+    it "requires a non-empty, deduplicated candidacy list before vote fallback inserts" $ do
+      fmap (map fromSqlKey) (validateFanClubVoteSelectionIds [30, 31])
+        `shouldBe` Right ([30, 31] :: [Int64])
+
+      assertRejected 400 "requires at least one candidacy id" $
+        validateFanClubVoteSelectionIds []
+      assertRejected 400 "duplicate candidacy ids" $
+        validateFanClubVoteSelectionIds [30, 30]
+      assertRejected 400 "at most 5 candidacy ids" $
+        validateFanClubVoteSelectionIds [1, 2, 3, 4, 5, 6]
+
+    it "rejects same-role ballot collisions before insertUnique can hide intent" $ do
+      let target :: Int64 -> FanClubOfficerRole -> (Key FanClubCandidacy, FanClubCandidacy)
+          target candidacyId role =
+            (toSqlKey candidacyId, mkCandidacyWithRole 20 role)
+      case validateFanClubVoteCandidacyTargets
+        [ target 30 Coordinator
+        , target 31 Secretary
+        ] of
+          Right targets ->
+            map (fromSqlKey . fst) targets `shouldBe` ([30, 31] :: [Int64])
+          Left err ->
+            expectationFailure (unexpectedRejection err)
+
+      assertRejected 400 "at most one candidacy per officer role" $
+        validateFanClubVoteCandidacyTargets
+          [ target 30 Coordinator
+          , target 31 Coordinator
+          ]
+
+  describe "validateFanClubReplyParentTarget" $ do
+    it "requires reply parents to be top-level posts in the requested club" $ do
+      case validateFanClubReplyParentTarget
+        (toSqlKey 10)
+        (Entity (toSqlKey 50) (mkPost 10 Nothing)) of
+          Right postId -> fromSqlKey postId `shouldBe` 50
+          Left err -> expectationFailure (unexpectedRejection err)
+
+      assertRejected 404 "Fan club post not found" $
+        validateFanClubReplyParentTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 51) (mkPost 11 Nothing))
+      assertRejected 400 "top-level post" $
+        validateFanClubReplyParentTarget
+          (toSqlKey 10)
+          (Entity (toSqlKey 52) (mkPost 10 (Just 50)))
+
+  describe "validateFanClubOfficerRoleInput" $ do
+    it "rejects typoed candidacy roles instead of falling back to coordinator" $ do
+      case validateFanClubOfficerRoleInput "  Secretario  " of
+        Right Secretary -> pure ()
+        Right role -> expectationFailure ("Expected Secretary, got " <> show role)
+        Left err -> expectationFailure (unexpectedRejection err)
+      assertRejected 400 "role is required" $
+        validateFanClubOfficerRoleInput "  "
+      assertRejected 400 "role must be one of" $
+        validateFanClubOfficerRoleInput "secretary"
+
+  describe "fan club post text validation" $ do
+    it "normalizes optional titles and required content before post persistence" $ do
+      validateFanClubPostTitleInput (Just "  Ensayo general  ")
+        `shouldBe` Right (Just "Ensayo general")
+      validateFanClubPostTitleInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubPostContentInput "  Primera linea\nsegunda linea  "
+        `shouldBe` Right "Primera linea\nsegunda linea"
+
+    it "rejects blank, oversized, or unsafe post text before DB fallback writes" $ do
+      assertRejected 400 "content is required" $
+        validateFanClubPostContentInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubPostTitleInput (Just (T.replicate 161 "a"))
+      assertRejected 400 "content must be 4096 characters or fewer" $
+        validateFanClubPostContentInput (T.replicate 4097 "a")
+      assertRejected 400 "unsupported control" $
+        validateFanClubPostTitleInput (Just "Hola\nClub")
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubPostTitleInput (Just ("Hola" <> "\x00A0" <> "club"))
+      assertRejected 400 "hidden formatting" $
+        validateFanClubPostContentInput ("Hola" <> "\x202E" <> "club")
+
+  describe "fan club media URL validation" $ do
+    it "normalizes media lists before comma-delimited storage" $
+      validateFanClubMediaUrlsInput
+        "mediaUrls"
+        [ " https://cdn.tdf.app/fans/uno.jpg "
+        , "https://cdn.tdf.app/fans/dos.png"
+        ]
+        `shouldBe` Right
+          [ "https://cdn.tdf.app/fans/uno.jpg"
+          , "https://cdn.tdf.app/fans/dos.png"
+          ]
+
+    it "rejects media URLs that would split ambiguously in storage" $ do
+      assertRejected 400 "must not include blank URLs" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a.jpg", "   "]
+      assertRejected 400 "must not contain commas" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a,b.jpg"]
+      assertRejected 400 "must not contain hidden formatting" $
+        validateFanClubMediaUrlsInput "mediaUrls" ["https://cdn.tdf.app/a.jpg" <> "\x202E"]
+      assertRejected 400 "must include at most 10 URLs" $
+        validateFanClubMediaUrlsInput
+          "mediaUrls"
+          (replicate 11 "https://cdn.tdf.app/a.jpg")
+
+  describe "fan club post access validation" $
+    it "requires followers or officers before creating fan-club posts" $ do
+      let artistKey = toSqlKey 42
+          follower = mkFollow 99 42
+          wrongArtistFollow = mkFollow 99 43
+          wrongFanFollow = mkFollow 100 42
+
+      validateFanClubPostAccess
+        artistKey
+        fanClubUser
+        False
+        (Just (Entity (toSqlKey 1) follower))
+        `shouldBe` Right ()
+      validateFanClubPostAccess artistKey fanClubUser True Nothing
+        `shouldBe` Right ()
+
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess artistKey fanClubUser False Nothing
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess
+          artistKey
+          fanClubUser
+          False
+          (Just (Entity (toSqlKey 2) wrongArtistFollow))
+      assertRejected 403 "Debes seguir al artista" $
+        validateFanClubPostAccess
+          artistKey
+          fanClubUser
+          False
+          (Just (Entity (toSqlKey 3) wrongFanFollow))
+
+  describe "fan club inbox text validation" $ do
+    it "normalizes optional subjects and required bodies before inbox persistence" $ do
+      validateFanClubInboxSubjectInput (Just "  Hola directiva  ")
+        `shouldBe` Right (Just "Hola directiva")
+      validateFanClubInboxSubjectInput (Just "   ")
+        `shouldBe` Right Nothing
+      validateFanClubInboxBodyInput "  Primera linea\nsegunda linea  "
+        `shouldBe` Right "Primera linea\nsegunda linea"
+      validateFanClubInboxReplyBodyInput "  Respondido  "
+        `shouldBe` Right "Respondido"
+
+    it "rejects blank, oversized, or unsafe inbox text before DB fallback writes" $ do
+      assertRejected 400 "body is required" $
+        validateFanClubInboxBodyInput "   "
+      assertRejected 400 "subject must be 160 characters or fewer" $
+        validateFanClubInboxSubjectInput (Just (T.replicate 161 "a"))
+      assertRejected 400 "replyBody must be 4096 characters or fewer" $
+        validateFanClubInboxReplyBodyInput (T.replicate 4097 "a")
+      assertRejected 400 "hidden formatting" $
+        validateFanClubInboxBodyInput ("Hola" <> "\x202E" <> "ops")
+      assertRejected 400 "unsupported control" $
+        validateFanClubInboxSubjectInput (Just "Hola\nDirectiva")
+      assertRejected 400 "non-ASCII whitespace" $
+        validateFanClubInboxSubjectInput (Just ("Hola" <> "\x00A0" <> "directiva"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubInboxReplyBodyInput ("Hola" <> "\NUL" <> "ops")
+
+  describe "fan club event input validation" $ do
+    it "normalizes event text and rejects unsafe fields before event persistence" $ do
+      validateFanClubEventTitleInput "  Reunión del club  "
+        `shouldBe` Right "Reunión del club"
+      validateFanClubEventDescriptionInput (Just "  Linea uno\nlinea dos  ")
+        `shouldBe` Right (Just "Linea uno\nlinea dos")
+      validateFanClubEventLocationInput (Just "  Sala A  ")
+        `shouldBe` Right (Just "Sala A")
+      validateFanClubEventLocationInput (Just "   ")
+        `shouldBe` Right Nothing
+
+      assertRejected 400 "title is required" $
+        validateFanClubEventTitleInput "   "
+      assertRejected 400 "title must be 160 characters or fewer" $
+        validateFanClubEventTitleInput (T.replicate 161 "a")
+      assertRejected 400 "description must be 4096 characters or fewer" $
+        validateFanClubEventDescriptionInput (Just (T.replicate 4097 "a"))
+      assertRejected 400 "location must be 240 characters or fewer" $
+        validateFanClubEventLocationInput (Just (T.replicate 241 "a"))
+      assertRejected 400 "unsupported control" $
+        validateFanClubEventTitleInput "Reunión\nclub"
+      assertRejected 400 "hidden formatting" $
+        validateFanClubEventDescriptionInput (Just ("Agenda" <> "\x202E" <> "oculta"))
+
+    it "rejects event end times that are not after start times" $ do
+      let startsAt = testTime
+          endsAt = UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 3600)
+      validateFanClubEventTimeRange (Just startsAt) (Just endsAt)
+        `shouldBe` Right ()
+
+      assertRejected 400 "endsAt must be after startsAt" $
+        validateFanClubEventTimeRange (Just startsAt) (Just startsAt)
+      assertRejected 400 "endsAt must be after startsAt" $
+        validateFanClubEventTimeRange (Just endsAt) (Just startsAt)
+
+  describe "validateFanClubInboxStatusInput" $ do
+    it "normalizes supported inbox statuses before persistence" $ do
+      validateFanClubInboxStatusInput " Archived "
+        `shouldBe` Right "archived"
+      validateFanClubInboxStatusInput "OPENED"
+        `shouldBe` Right "opened"
+
+    it "rejects blank, unknown, or unsafe inbox status tokens before persistence" $ do
+      assertRejected 400 "status is required" $
+        validateFanClubInboxStatusInput "   "
+      assertRejected 400 "status must be one of" $
+        validateFanClubInboxStatusInput "deleted"
+      assertRejected 400 "status must not contain control" $
+        validateFanClubInboxStatusInput "opened\n"
+      assertRejected 400 "hidden formatting" $
+        validateFanClubInboxStatusInput ("open" <> "\x202E" <> "ed")
+
+mkElection :: Int64 -> FanClubElection
+mkElection clubId =
+  FanClubElection
+    { fanClubElectionClubId = toSqlKey clubId
+    , fanClubElectionYear = 2026
+    , fanClubElectionCandidacyStartsAt = Nothing
+    , fanClubElectionCandidacyEndsAt = Nothing
+    , fanClubElectionVotingStartsAt = Nothing
+    , fanClubElectionVotingEndsAt = Nothing
+    , fanClubElectionStatus = Upcoming
+    , fanClubElectionCreatedAt = testTime
+    }
+
+mkCandidacy :: Int64 -> FanClubCandidacy
+mkCandidacy electionId =
+  mkCandidacyWithRole electionId Coordinator
+
+mkCandidacyWithRole :: Int64 -> FanClubOfficerRole -> FanClubCandidacy
+mkCandidacyWithRole electionId role =
+  FanClubCandidacy
+    { fanClubCandidacyElectionId = toSqlKey electionId
+    , fanClubCandidacyFanPartyId = toSqlKey 40
+    , fanClubCandidacyRole = role
+    , fanClubCandidacyManifesto = Nothing
+    , fanClubCandidacyCreatedAt = testTime
+    }
+
+mkPost :: Int64 -> Maybe Int64 -> FanClubPost
+mkPost clubId parentId =
+  FanClubPost
+    { fanClubPostClubId = toSqlKey clubId
+    , fanClubPostFanPartyId = toSqlKey 40
+    , fanClubPostParentId = fmap toSqlKey parentId
+    , fanClubPostTitle = Just "Club note"
+    , fanClubPostContent = "Visible to club members"
+    , fanClubPostMediaUrls = Nothing
+    , fanClubPostIsPinned = False
+    , fanClubPostIsHidden = False
+    , fanClubPostCreatedAt = testTime
+    , fanClubPostUpdatedAt = Nothing
+    }
+
+mkFollow :: Int64 -> Int64 -> FanFollow
+mkFollow fanId artistId =
+  FanFollow
+    { fanFollowFanPartyId = toSqlKey fanId
+    , fanFollowArtistPartyId = toSqlKey artistId
+    , fanFollowCreatedAt = testTime
+    }
+
+mkMemberProfile :: Int64 -> FanClubMemberProfile
+mkMemberProfile clubId =
+  FanClubMemberProfile
+    { fanClubMemberProfilePartyId = toSqlKey 40
+    , fanClubMemberProfileClubId = toSqlKey clubId
+    , fanClubMemberProfileHandle = Nothing
+    , fanClubMemberProfileBio = Nothing
+    , fanClubMemberProfileAvatarUrl = Nothing
+    , fanClubMemberProfileJoinedAt = testTime
+    }
+
+mkMemory :: Int64 -> FanClubMemory
+mkMemory memberProfileId =
+  FanClubMemory
+    { fanClubMemoryMemberProfileId = toSqlKey memberProfileId
+    , fanClubMemoryTitle = "Mi recuerdo"
+    , fanClubMemoryDescription = Just "Ensayo general"
+    , fanClubMemoryMediaUrls = Nothing
+    , fanClubMemoryIsHidden = False
+    , fanClubMemoryIsDeleted = False
+    , fanClubMemoryCreatedAt = testTime
+    }
+
+testTime :: UTCTime
+testTime = UTCTime (fromGregorian 2026 5 12) (secondsToDiffTime 0)
+
+assertRejected :: Int -> String -> Either ServerError a -> Expectation
+assertRejected expectedStatus expectedBody result =
+  case result of
+    Left err -> do
+      errHTTPCode err `shouldBe` expectedStatus
+      BL8.unpack (errBody err) `shouldContain` expectedBody
+    Right _ ->
+      expectationFailure "Expected validation to reject the fan-club target"
+
+unexpectedRejection :: ServerError -> String
+unexpectedRejection err =
+  "Unexpected rejection: "
+    <> show (errHTTPCode err)
+    <> " "
+    <> BL8.unpack (errBody err)
+
+fanClubUser :: AuthedUser
+fanClubUser =
+  AuthedUser
+    { auPartyId = toSqlKey 99
+    , auRoles = [Fan, Customer]
+    , auModules = modulesForRoles [Fan, Customer]
+    }

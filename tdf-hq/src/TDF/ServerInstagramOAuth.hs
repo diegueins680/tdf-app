@@ -6,7 +6,18 @@
 
 module TDF.ServerInstagramOAuth
   ( instagramOAuthServer
+  , FacebookAccessToken(..)
+  , FacebookPage(..)
+  , FacebookPageList(..)
   , resolveInstagramRedirectUri
+  , parseInstagramMediaTimestamp
+  , sanitizeFacebookGraphErrorMessage
+  , shouldFallbackToShortInstagramToken
+  , selectPrimaryInstagramCandidate
+  , validateInstagramMediaPermalink
+  , validateInstagramMediaUrl
+  , validateInstagramRedirectUri
+  , validateInstagramUsername
   ) where
 
 import           Control.Exception          (SomeException, displayException, try)
@@ -15,24 +26,33 @@ import           Control.Monad.Except       (MonadError, catchError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Data.Aeson                 (FromJSON(..), eitherDecode, withObject, (.:), (.:?), (.!=))
+import           Data.Aeson.Types           (Parser, parseEither)
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy       as BL
-import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.List                  (find)
-import           Data.Maybe                 (fromMaybe, listToMaybe)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isControl
+  , isSpace
+  )
+import           Data.List                  (find, nub)
+import           Data.Maybe                 (fromMaybe)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (getCurrentTime)
+import           Data.Text.Encoding.Error   (lenientDecode)
+import           Data.Time                  (UTCTime, getCurrentTime)
+import           Data.Time.Format           (defaultTimeLocale, parseTimeM)
 import           Data.Time.Format.ISO8601   (iso8601ParseM)
 import           Database.Persist           (Entity(..), SelectOpt(Desc), selectList, upsert, (=.), (==.))
 import           Database.Persist.Sql       (runSqlPool)
 import           GHC.Generics               (Generic)
-import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Client        (Manager, Request, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (renderSimpleQuery)
 import           Servant
+import           Text.Read                  (readMaybe)
 
 import           TDF.API.InstagramOAuth
 import           TDF.Auth                   (AuthedUser(..), hasSocialInboxAccess)
@@ -41,7 +61,7 @@ import           TDF.Config
   , normalizeConfiguredBaseUrl
   , resolveConfiguredAppBase
   )
-import           TDF.DB                     (Env(..))
+import           TDF.DB                     (Env(..), sharedTlsManager)
 import           TDF.Models                 (EntityField(SocialSyncAccountAccessToken, SocialSyncAccountHandle, SocialSyncAccountPartyId, SocialSyncAccountPlatform, SocialSyncAccountStatus, SocialSyncAccountTokenExpiresAt, SocialSyncAccountUpdatedAt), SocialSyncAccount(..))
 
 data FacebookAccessToken = FacebookAccessToken
@@ -51,10 +71,102 @@ data FacebookAccessToken = FacebookAccessToken
   } deriving (Show, Generic)
 
 instance FromJSON FacebookAccessToken where
-  parseJSON = withObject "FacebookAccessToken" $ \o ->
-    FacebookAccessToken <$> o .: "access_token"
-                       <*> o .:? "token_type" .!= "bearer"
-                       <*> o .:? "expires_in"
+  parseJSON = withObject "FacebookAccessToken" $ \o -> do
+    accessToken <- normalizeFacebookAccessToken =<< o .: "access_token"
+    tokenType <- normalizeFacebookTokenType =<< o .:? "token_type"
+    expiresIn <- traverse validateFacebookExpiresIn =<< o .:? "expires_in"
+    pure FacebookAccessToken
+      { fatAccessToken = accessToken
+      , fatTokenType = tokenType
+      , fatExpiresIn = expiresIn
+      }
+
+normalizeFacebookAccessToken :: Text -> Parser Text
+normalizeFacebookAccessToken =
+  normalizeFacebookAccessTokenField "Facebook access_token"
+
+normalizeFacebookAccessTokenField :: Text -> Text -> Parser Text
+normalizeFacebookAccessTokenField fieldName rawToken =
+  let tokenValue = T.strip rawToken
+      fieldLabel = T.unpack fieldName
+  in if T.null tokenValue
+       then fail (fieldLabel <> " must not be blank")
+       else if T.any isUnsafeFacebookAccessTokenChar tokenValue
+         then fail $
+           fieldLabel
+             <> " must not contain whitespace or control characters "
+             <> "or hidden formatting characters"
+         else if T.length tokenValue > maxFacebookAccessTokenChars
+           then fail (fieldLabel <> " must be 4096 characters or fewer")
+         else pure tokenValue
+
+maxFacebookAccessTokenChars :: Int
+maxFacebookAccessTokenChars = 4096
+
+isUnsafeFacebookAccessTokenChar :: Char -> Bool
+isUnsafeFacebookAccessTokenChar ch =
+  isSpace ch || isControl ch || generalCategory ch == Format
+
+normalizeFacebookGraphId :: Text -> Text -> Parser Text
+normalizeFacebookGraphId fieldName rawId =
+  let graphId = T.strip rawId
+      fieldLabel = T.unpack fieldName
+  in if T.null graphId
+       then fail (fieldLabel <> " must not be blank")
+       else if T.any isUnsafeFacebookAccessTokenChar graphId
+         then fail $
+           fieldLabel
+             <> " must not contain whitespace or control characters "
+             <> "or hidden formatting characters"
+       else if T.length graphId > maxFacebookGraphIdChars
+         then fail (fieldLabel <> " must be 256 characters or fewer")
+       else if not (T.all isFacebookGraphIdChar graphId)
+         then fail $
+           fieldLabel
+             <> " must contain only ASCII letters, digits, '-' or '_'"
+       else pure graphId
+
+maxFacebookGraphIdChars :: Int
+maxFacebookGraphIdChars = 256
+
+isFacebookGraphIdChar :: Char -> Bool
+isFacebookGraphIdChar ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
+    || ch == '-'
+    || ch == '_'
+
+normalizeFacebookRequiredText :: Text -> Int -> Text -> Parser Text
+normalizeFacebookRequiredText fieldName maxChars rawText =
+  let textValue = T.strip rawText
+      fieldLabel = T.unpack fieldName
+  in if T.null textValue
+       then fail (fieldLabel <> " must not be blank")
+       else if T.any isUnsafeFacebookGraphTextChar textValue
+         then fail $
+           fieldLabel
+             <> " must not contain control, separator, or hidden formatting characters"
+       else if T.length textValue > maxChars
+         then fail (fieldLabel <> " must be " <> show maxChars <> " characters or fewer")
+       else pure textValue
+
+isUnsafeFacebookGraphTextChar :: Char -> Bool
+isUnsafeFacebookGraphTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+normalizeFacebookTokenType :: Maybe Text -> Parser Text
+normalizeFacebookTokenType Nothing = pure "bearer"
+normalizeFacebookTokenType (Just rawTokenType) =
+  let tokenType = T.toLower (T.strip rawTokenType)
+  in if tokenType == "bearer"
+       then pure tokenType
+       else fail "Facebook token_type must be Bearer"
+
+validateFacebookExpiresIn :: Int -> Parser Int
+validateFacebookExpiresIn expiresIn
+  | expiresIn > 0 = pure expiresIn
+  | otherwise = fail "Facebook expires_in must be positive"
 
 data FacebookUser = FacebookUser
   { fuId   :: Text
@@ -63,7 +175,7 @@ data FacebookUser = FacebookUser
 
 instance FromJSON FacebookUser where
   parseJSON = withObject "FacebookUser" $ \o ->
-    FacebookUser <$> o .: "id"
+    FacebookUser <$> (normalizeFacebookGraphId "Facebook user id" =<< o .: "id")
                  <*> o .:? "name"
 
 data FacebookPage = FacebookPage
@@ -74,22 +186,29 @@ data FacebookPage = FacebookPage
 
 instance FromJSON FacebookPage where
   parseJSON = withObject "FacebookPage" $ \o ->
-    FacebookPage <$> o .: "id"
-                 <*> o .: "name"
-                 <*> o .: "access_token"
+    FacebookPage
+      <$> (normalizeFacebookGraphId "Facebook page id" =<< o .: "id")
+      <*> (normalizeFacebookRequiredText "Facebook page name" 200 =<< o .: "name")
+      <*> (normalizeFacebookAccessTokenField "Facebook page access_token" =<< o .: "access_token")
 
 newtype FacebookPageList = FacebookPageList { fplData :: [FacebookPage] }
+  deriving (Show)
 
 instance FromJSON FacebookPageList where
-  parseJSON = withObject "FacebookPageList" $ \o ->
-    FacebookPageList <$> o .:? "data" .!= []
+  parseJSON = withObject "FacebookPageList" $ \o -> do
+    pages <- o .: "data"
+    let pageIds = map fpId pages
+    when (length pageIds /= length (nub pageIds)) $
+      fail "Facebook page list must not contain duplicate page ids"
+    pure (FacebookPageList pages)
 
 newtype InstagramBusinessAccount = InstagramBusinessAccount { ibaId :: Text }
   deriving (Show)
 
 instance FromJSON InstagramBusinessAccount where
   parseJSON = withObject "InstagramBusinessAccount" $ \o ->
-    InstagramBusinessAccount <$> o .: "id"
+    InstagramBusinessAccount <$>
+      (normalizeFacebookGraphId "Instagram business account id" =<< o .: "id")
 
 data PageInstagramAccount = PageInstagramAccount
   { piaInstagramBusinessAccount :: Maybe InstagramBusinessAccount
@@ -106,8 +225,57 @@ data InstagramUser = InstagramUser
 
 instance FromJSON InstagramUser where
   parseJSON = withObject "InstagramUser" $ \o ->
-    InstagramUser <$> o .: "id"
-                  <*> o .:? "username"
+    InstagramUser <$> (normalizeFacebookGraphId "Instagram user id" =<< o .: "id")
+                  <*> ((o .:? "username") >>= traverse parseInstagramUsername)
+
+parseInstagramUsername :: Text -> Parser Text
+parseInstagramUsername rawUsername =
+  either (fail . T.unpack) pure (validateInstagramUsername rawUsername)
+
+validateInstagramUsername :: Text -> Either Text Text
+validateInstagramUsername rawUsername
+  | T.null username =
+      Left "Instagram username must not be blank"
+  | T.length username > maxInstagramUsernameChars =
+      Left $
+        "Instagram username must be "
+          <> T.pack (show maxInstagramUsernameChars)
+          <> " characters or fewer"
+  | T.any isUnsafeInstagramUsernameChar username =
+      Left $
+        "Instagram username must not contain whitespace, control, "
+          <> "or hidden formatting characters"
+  | not (T.any isInstagramUsernameAtom username) =
+      Left "Instagram username must contain at least one ASCII letter or digit"
+  | not (T.all isInstagramUsernameChar username) =
+      Left "Instagram username must contain only ASCII letters, digits, '.', or '_'"
+  | hasAmbiguousInstagramUsernameDots username =
+      Left "Instagram username dots must be internal and non-repeating"
+  | otherwise =
+      Right username
+  where
+    username = T.toLower (T.strip rawUsername)
+
+maxInstagramUsernameChars :: Int
+maxInstagramUsernameChars = 64
+
+isUnsafeInstagramUsernameChar :: Char -> Bool
+isUnsafeInstagramUsernameChar ch =
+  isSpace ch || isControl ch || generalCategory ch == Format
+
+isInstagramUsernameAtom :: Char -> Bool
+isInstagramUsernameAtom ch =
+  (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
+
+isInstagramUsernameChar :: Char -> Bool
+isInstagramUsernameChar ch =
+  isInstagramUsernameAtom ch || ch == '.' || ch == '_'
+
+hasAmbiguousInstagramUsernameDots :: Text -> Bool
+hasAmbiguousInstagramUsernameDots username =
+  "." `T.isPrefixOf` username
+    || "." `T.isSuffixOf` username
+    || ".." `T.isInfixOf` username
 
 data InstagramMedia = InstagramMedia
   { imId        :: Text
@@ -115,17 +283,18 @@ data InstagramMedia = InstagramMedia
   , imMediaUrl  :: Maybe Text
   , imPermalink :: Maybe Text
   , imTimestamp :: Maybe Text
-  } deriving (Show, Generic)
+  } deriving (Eq, Show, Generic)
 
 instance FromJSON InstagramMedia where
   parseJSON = withObject "InstagramMedia" $ \o ->
-    InstagramMedia <$> o .: "id"
+    InstagramMedia <$> (normalizeFacebookGraphId "Instagram media id" =<< o .: "id")
                    <*> o .:? "caption"
                    <*> o .:? "media_url"
                    <*> o .:? "permalink"
                    <*> o .:? "timestamp"
 
 newtype InstagramMediaList = InstagramMediaList { imlData :: [InstagramMedia] }
+  deriving (Eq, Show)
 
 instance FromJSON InstagramMediaList where
   parseJSON = withObject "InstagramMediaList" $ \o ->
@@ -154,7 +323,7 @@ instagramOAuthServer user = exchangeHandler
       Env{envConfig, envPool} <- asks id
       (appId, appSecret) <- loadFacebookCreds envConfig
       redirectUri <- either throwError pure (resolveInstagramRedirectUri envConfig ioeRedirectUri)
-      manager <- liftIO $ newManager tlsManagerSettings
+      manager <- pure sharedTlsManager
 
       shortToken <- requestFacebookToken manager envConfig appId appSecret redirectUri ioeCode
       longToken <- requestLongLivedToken manager envConfig appId appSecret (fatAccessToken shortToken)
@@ -188,6 +357,9 @@ instagramOAuthServer user = exchangeHandler
           , pcInstagramHandle = mHandle
           }
 
+      primary <-
+        either throwError pure (selectPrimaryInstagramPage preferredIds pageContexts)
+
       now <- liftIO getCurrentTime
       liftIO $ flip runSqlPool envPool $ do
         forM_ pageContexts $ \ctx ->
@@ -216,7 +388,6 @@ instagramOAuthServer user = exchangeHandler
             pure ()
 
       let pagesDto = map toPageDTO pageContexts
-          primary = selectPrimary preferredIds pageContexts
       (mPrimaryId, mPrimaryHandle, media) <-
         case primary of
           Nothing -> pure (Nothing, Nothing, [])
@@ -225,7 +396,7 @@ instagramOAuthServer user = exchangeHandler
               Nothing -> pure (Nothing, Nothing, [])
               Just igId -> do
                 mediaList <- requestInstagramMedia manager envConfig (pcAccessToken ctx) igId
-                let mediaDto = map toMediaDTO mediaList
+                mediaDto <- either throwError pure (traverse instagramMediaToDTO mediaList)
                 pure (Just igId, pcInstagramHandle ctx, mediaDto)
 
       pure InstagramOAuthExchangeResponse
@@ -239,19 +410,6 @@ instagramOAuthServer user = exchangeHandler
         , ioeMedia = media
         }
 
-    hasInstagram PageContext{..} = pcInstagramUserId /= Nothing
-
-    selectPrimary preferredIds contexts =
-      case go preferredIds of
-        Just ctx -> Just ctx
-        Nothing -> listToMaybe (filter hasInstagram contexts)
-      where
-        go [] = Nothing
-        go (pid:rest) =
-          case find (\ctx -> pcInstagramUserId ctx == Just pid) contexts of
-            Just ctx -> Just ctx
-            Nothing -> go rest
-
     toPageDTO PageContext{..} =
       InstagramOAuthPage
         { iopPageId = pcPageId
@@ -260,14 +418,181 @@ instagramOAuthServer user = exchangeHandler
         , iopInstagramUsername = pcInstagramHandle
         }
 
-    toMediaDTO InstagramMedia{..} =
+instagramMediaToDTO :: InstagramMedia -> Either ServerError InstagramMediaDTO
+instagramMediaToDTO InstagramMedia{..} = do
+  timestamp <- parseInstagramMediaTimestamp imTimestamp
+  mediaUrl <- validateInstagramMediaUrl imMediaUrl
+  permalink <- validateInstagramMediaPermalink imPermalink
+  pure
       InstagramMediaDTO
         { imdId = imId
         , imdCaption = imCaption
-        , imdMediaUrl = imMediaUrl
-        , imdPermalink = imPermalink
-        , imdTimestamp = imTimestamp >>= (iso8601ParseM . T.unpack)
+        , imdMediaUrl = mediaUrl
+        , imdPermalink = permalink
+        , imdTimestamp = timestamp
         }
+
+validateInstagramMediaUrl :: Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaUrl =
+  validateInstagramMediaHttpsUrl "Instagram media_url"
+
+validateInstagramMediaPermalink :: Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaPermalink =
+  validateInstagramMediaHttpsUrl "Instagram permalink"
+
+validateInstagramMediaHttpsUrl :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateInstagramMediaHttpsUrl _ Nothing = Right Nothing
+validateInstagramMediaHttpsUrl fieldName (Just rawUrl)
+  | T.null mediaUrl =
+      invalidUrl (fieldName <> " must not be blank when present")
+  | rawUrl /= mediaUrl =
+      invalidUrl (fieldName <> " must not include surrounding whitespace")
+  | T.length mediaUrl > maxInstagramMediaUrlChars =
+      invalidUrl (fieldName <> " must be 2048 characters or fewer")
+  | T.any isUnsafeInstagramMediaUrlChar mediaUrl =
+      invalidUrl (fieldName <> " must contain only visible ASCII URL characters")
+  | not ("https://" `T.isPrefixOf` T.toLower mediaUrl) =
+      invalidUrl (fieldName <> " must be an absolute https URL")
+  | T.null mediaUrlHost || "@" `T.isInfixOf` mediaUrlHost =
+      invalidUrl (fieldName <> " must include a plain host")
+  | otherwise =
+      Right (Just mediaUrl)
+  where
+    mediaUrl = T.strip rawUrl
+    mediaUrlHost =
+      T.takeWhile
+        (\ch -> ch /= '/' && ch /= '?' && ch /= '#')
+        (T.drop (T.length ("https://" :: Text)) mediaUrl)
+    invalidUrl message =
+      Left err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+maxInstagramMediaUrlChars :: Int
+maxInstagramMediaUrlChars = 2048
+
+isUnsafeInstagramMediaUrlChar :: Char -> Bool
+isUnsafeInstagramMediaUrlChar ch =
+  ch <= ' ' || ch > '~' || isControl ch || generalCategory ch == Format
+
+parseInstagramMediaTimestamp :: Maybe Text -> Either ServerError (Maybe UTCTime)
+parseInstagramMediaTimestamp Nothing = Right Nothing
+parseInstagramMediaTimestamp (Just rawTimestamp)
+  | T.null timestamp =
+      invalidTimestamp "Instagram media timestamp must not be blank when present"
+  | rawTimestamp /= timestamp =
+      invalidTimestamp "Instagram media timestamp must not include surrounding whitespace"
+  | T.length timestamp > maxInstagramMediaTimestampChars =
+      invalidTimestamp "Instagram media timestamp must be 64 characters or fewer"
+  | T.any isUnsafeInstagramMediaTimestampChar timestamp =
+      invalidTimestamp
+        "Instagram media timestamp must not contain whitespace, control, or hidden formatting characters"
+  | otherwise =
+      case parseInstagramMediaTimestampText timestamp of
+        Just parsed -> Right (Just parsed)
+        Nothing ->
+          invalidTimestamp "Instagram media timestamp is not a valid ISO-8601 timestamp"
+  where
+    timestamp = T.strip rawTimestamp
+    invalidTimestamp message =
+      Left err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+maxInstagramMediaTimestampChars :: Int
+maxInstagramMediaTimestampChars = 64
+
+parseInstagramMediaTimestampText :: Text -> Maybe UTCTime
+parseInstagramMediaTimestampText timestamp =
+  case parseIso timestamp of
+    Just parsed -> Just parsed
+    Nothing -> parseGraphTimestamp timestamp
+  where
+    parseIso value = iso8601ParseM (T.unpack value)
+    parseGraphTimestamp value =
+      parseTimeM True defaultTimeLocale "%Y-%m-%dT%H:%M:%S%Q%z" (T.unpack value)
+
+isUnsafeInstagramMediaTimestampChar :: Char -> Bool
+isUnsafeInstagramMediaTimestampChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+selectPrimaryInstagramPage :: [Text] -> [PageContext] -> Either ServerError (Maybe PageContext)
+selectPrimaryInstagramPage preferredIds contexts =
+  selectPrimaryInstagramCandidate
+    preferredIds
+    [ (igUserId, ctx) | ctx <- contexts, Just igUserId <- [pcInstagramUserId ctx] ]
+
+selectPrimaryInstagramCandidate :: [Text] -> [(Text, a)] -> Either ServerError (Maybe a)
+selectPrimaryInstagramCandidate preferredIds candidates = do
+  preferredIdsClean <- validatePreferredInstagramCandidateIds preferredIds
+  candidatesClean <- validateInstagramCandidateIds candidates
+  let candidateIds = map fst candidatesClean
+      hasDuplicateCandidateIds =
+        length candidateIds /= length (nub candidateIds)
+      go [] = Nothing
+      go (pid:rest) =
+        case find (\(candidateId, _) -> candidateId == pid) candidatesClean of
+          Just (_, candidate) -> Just candidate
+          Nothing -> go rest
+  if hasDuplicateCandidateIds
+    then
+      Left err409
+        { errBody =
+            "Instagram OAuth candidate pages contain duplicate Instagram user ids; reconnect "
+              <> "from an existing account or remove duplicate page links."
+        }
+    else
+      case go preferredIdsClean of
+        Just candidate -> Right (Just candidate)
+        Nothing ->
+          case candidatesClean of
+            [] -> Right Nothing
+            [(_, candidate)] -> Right (Just candidate)
+            _ ->
+              Left err409
+                { errBody =
+                    "Instagram OAuth primary page fallback is ambiguous; reconnect from an existing "
+                      <> "account or keep only one Instagram page connected."
+                }
+
+validateInstagramCandidateIds :: [(Text, a)] -> Either ServerError [(Text, a)]
+validateInstagramCandidateIds candidates =
+  case traverse validateCandidate candidates of
+    Left _ ->
+      Left err409
+        { errBody =
+            "Instagram OAuth candidate page ids are malformed; reconnect "
+              <> "from Facebook and try again."
+        }
+    Right cleanCandidates -> Right cleanCandidates
+  where
+    validateCandidate (rawId, candidate) =
+      case parseEither (normalizeFacebookGraphId "Instagram candidate account id") rawId of
+        Right cleanId
+          | cleanId == rawId -> Right (cleanId, candidate)
+        _ -> Left ("invalid Instagram candidate account id" :: String)
+
+validatePreferredInstagramCandidateIds :: [Text] -> Either ServerError [Text]
+validatePreferredInstagramCandidateIds preferredIds =
+  case traverse validatePreferredId preferredIds of
+    Left _ ->
+      Left err409
+        { errBody =
+            "Instagram OAuth stored preferred page ids are malformed; reconnect "
+              <> "from an existing account."
+        }
+    Right ids
+      | length ids /= length (nub ids) ->
+          Left err409
+            { errBody =
+                "Instagram OAuth stored preferred page ids contain duplicates; reconnect "
+                  <> "from an existing account."
+            }
+      | otherwise -> Right ids
+  where
+    validatePreferredId rawId =
+      case parseEither (normalizeFacebookGraphId "Instagram preferred account id") rawId of
+        Right cleanId
+          | cleanId == rawId -> Right cleanId
+        _ -> Left ("invalid preferred Instagram account id" :: String)
 
 loadFacebookCreds :: MonadError ServerError m => AppConfig -> m (Text, Text)
 loadFacebookCreds cfg =
@@ -278,29 +603,97 @@ loadFacebookCreds cfg =
         { errBody = "Facebook app credentials not configured (FACEBOOK_APP_ID / FACEBOOK_APP_SECRET)." }
 
 resolveInstagramRedirectUri :: AppConfig -> Maybe Text -> Either ServerError Text
-resolveInstagramRedirectUri cfg mProvided =
+resolveInstagramRedirectUri cfg mProvided = do
+  configuredRedirectUri <-
+    validateConfiguredInstagramRedirectUri
+      (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback")
   maybe
-    (Right (resolveConfiguredAppBase cfg <> "/oauth/instagram/callback"))
-    validateInstagramRedirectUri
-    (mProvided >>= cleanRedirectText)
+    (Right configuredRedirectUri)
+    (validateProvidedRedirectUri configuredRedirectUri)
+    mProvided
   where
-    cleanRedirectText txt =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
+    validateProvidedRedirectUri configuredRedirectUri rawRedirect = do
+      redirectUri <- validateInstagramRedirectUri rawRedirect
+      if redirectUri == configuredRedirectUri
+        then Right redirectUri
+        else
+          Left err400
+            { errBody = "redirectUri must match the configured Instagram OAuth callback URL" }
+
+validateConfiguredInstagramRedirectUri :: Text -> Either ServerError Text
+validateConfiguredInstagramRedirectUri rawRedirect =
+  case validateInstagramRedirectUri rawRedirect of
+    Right redirectUri -> Right redirectUri
+    Left _ ->
+      Left err503
+        { errBody =
+            "Configured Instagram OAuth callback URL must be an absolute https URL ending "
+              <> "in /oauth/instagram/callback, or http://localhost for local development, "
+              <> "without query or fragment"
+        }
 
 validateInstagramRedirectUri :: Text -> Either ServerError Text
 validateInstagramRedirectUri rawRedirect =
   case normalizeConfiguredBaseUrl "redirectUri" (T.unpack rawRedirect) of
     Right (Just uri)
-      | instagramOAuthCallbackPath `T.isSuffixOf` uri -> Right uri
+      | isSafeInstagramRedirectUri uri -> Right uri
       | otherwise -> invalidRedirect
     _ ->
       invalidRedirect
   where
-    instagramOAuthCallbackPath = "/oauth/instagram/callback"
     invalidRedirect =
       Left err400
-        { errBody = "redirectUri must be an absolute http(s) Instagram OAuth callback URL without query or fragment" }
+        { errBody =
+            "redirectUri must be an absolute https Instagram OAuth callback URL ending "
+              <> "in /oauth/instagram/callback, or http://localhost for local development, "
+              <> "without query or fragment"
+        }
+
+isSafeInstagramRedirectUri :: Text -> Bool
+isSafeInstagramRedirectUri uri
+  | not (instagramOAuthCallbackPath `T.isSuffixOf` uri) = False
+  | "https://" `T.isPrefixOf` lowerUri =
+      maybe False (not . isLocalInstagramRedirectHost) (instagramRedirectHost (T.drop 8 uri))
+  | "http://" `T.isPrefixOf` lowerUri =
+      maybe False isLocalInstagramRedirectHost (instagramRedirectHost (T.drop 7 uri))
+  | otherwise = False
+  where
+    instagramOAuthCallbackPath = "/oauth/instagram/callback"
+    lowerUri = T.toLower uri
+
+instagramRedirectHost :: Text -> Maybe Text
+instagramRedirectHost remainder =
+  let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
+  in if T.null authority
+       then Nothing
+       else if "[" `T.isPrefixOf` authority
+         then
+           let (hostPart, rest) = T.breakOn "]" authority
+           in if T.null rest
+                then Nothing
+                else Just (T.toLower (T.drop 1 hostPart))
+         else
+           let (host, _) = T.breakOn ":" authority
+           in if T.null host then Nothing else Just (T.toLower host)
+
+isLocalInstagramRedirectHost :: Text -> Bool
+isLocalInstagramRedirectHost host =
+  host == "localhost"
+    || ".localhost" `T.isSuffixOf` host
+    || host == "::1"
+    || isLoopbackIpv4Host host
+
+isLoopbackIpv4Host :: Text -> Bool
+isLoopbackIpv4Host host =
+  case traverse parseOctet (T.splitOn "." host) of
+    Just [first, _, _, _] -> first == (127 :: Int)
+    _ -> False
+  where
+    parseOctet segment = do
+      value <- readMaybe (T.unpack segment)
+      if value >= (0 :: Int) && value <= 255
+        then Just value
+        else Nothing
 
 requestFacebookToken
   :: (MonadError ServerError m, MonadIO m)
@@ -333,7 +726,62 @@ requestLongLivedToken manager cfg appId secret shortToken =
       , ("client_secret", secret)
       , ("grant_type", "fb_exchange_token")
       , ("fb_exchange_token", shortToken)
-      ]) `catchError` \_ -> pure Nothing
+      ]) `catchError` \err ->
+        if shouldFallbackToShortInstagramToken err
+          then pure Nothing
+          else throwError err
+
+shouldFallbackToShortInstagramToken :: ServerError -> Bool
+shouldFallbackToShortInstagramToken err =
+  errHTTPCode err == 502
+    && isRecoverableFacebookRequestFailure (errBody err)
+
+isRecoverableFacebookRequestFailure :: ByteString -> Bool
+isRecoverableFacebookRequestFailure body =
+  case facebookRequestFailureStatus body of
+    Just status -> status == 429 || status >= 500
+    Nothing -> "Facebook request failed: " `BL.isPrefixOf` body
+
+facebookRequestFailureStatus :: ByteString -> Maybe Int
+facebookRequestFailureStatus body =
+  case facebookRequestFailureParenthesizedStatus bodyText of
+    Just status -> Just status
+    Nothing -> facebookRequestFailureExceptionStatus bodyText
+  where
+    bodyText = TE.decodeUtf8With lenientDecode (BL.toStrict body)
+
+facebookRequestFailureParenthesizedStatus :: Text -> Maybe Int
+facebookRequestFailureParenthesizedStatus body = do
+  rest <-
+    T.stripPrefix
+      "Facebook request failed ("
+      body
+  let (statusText, suffix) = T.breakOn ")" rest
+  case T.stripPrefix "):" suffix of
+    Nothing -> Nothing
+    Just _ -> parseFacebookHttpStatus statusText
+
+facebookRequestFailureExceptionStatus :: Text -> Maybe Int
+facebookRequestFailureExceptionStatus body = do
+  rest <- T.stripPrefix "Facebook request failed: " body
+  let (_, statusMarker) = T.breakOn "statusCode" rest
+  if T.null statusMarker
+    then Nothing
+    else do
+      let afterMarker = T.drop (T.length ("statusCode" :: Text)) statusMarker
+          afterSpaces = T.dropWhile (== ' ') afterMarker
+      afterEquals <- T.stripPrefix "=" afterSpaces
+      let statusText = T.takeWhile isAsciiDigit (T.dropWhile (== ' ') afterEquals)
+      parseFacebookHttpStatus statusText
+
+parseFacebookHttpStatus :: Text -> Maybe Int
+parseFacebookHttpStatus statusText =
+  case readMaybe (T.unpack statusText) of
+    Just status | status >= 100 && status <= 599 -> Just status
+    _ -> Nothing
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 requestFacebookUser
   :: (MonadError ServerError m, MonadIO m)
@@ -414,16 +862,33 @@ requestFacebookJson manager cfg path params = do
   respOrErr <- liftIO $ (try (httpLbs req manager) :: IO (Either SomeException (Response ByteString)))
   resp <- case respOrErr of
     Left err ->
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+      throwError err502
+        { errBody =
+            textBody $
+              "Facebook request failed: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack (displayException err))
+        }
     Right ok -> pure ok
   let status = statusCode (responseStatus resp)
   when (status >= 400) $ do
-    let bodySnippet = take 2000 (BL8.unpack (responseBody resp))
+    let bodySnippet =
+          TE.decodeUtf8With lenientDecode (BL.toStrict (responseBody resp))
     throwError err502
-      { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook request failed (" <> T.pack (show status) <> ") " <> T.pack bodySnippet)) }
+      { errBody =
+          textBody $
+            "Facebook request failed ("
+              <> T.pack (show status)
+              <> "): "
+              <> sanitizeFacebookGraphErrorMessage bodySnippet
+      }
   case eitherDecode (responseBody resp) of
     Left err ->
-      throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Facebook parse error: " <> T.pack err)) }
+      throwError err502
+        { errBody =
+            textBody $
+              "Facebook parse error: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack err)
+        }
     Right val -> pure val
 
 buildRequest
@@ -438,7 +903,114 @@ buildRequest cfg path params = do
       url = T.unpack (base <> path <> TE.decodeUtf8 query)
   reqE <- liftIO (try (parseRequest url) :: IO (Either SomeException Request))
   case reqE of
-    Left err -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 (T.pack (displayException err))) }
+    Left err ->
+      throwError err500
+        { errBody =
+            textBody $
+              "Facebook request configuration invalid: "
+                <> sanitizeFacebookGraphErrorMessage (T.pack (displayException err))
+        }
     Right req -> pure req
   where
     toParam (k, v) = (TE.encodeUtf8 k, TE.encodeUtf8 v)
+
+textBody :: Text -> BL.ByteString
+textBody =
+  BL.fromStrict . TE.encodeUtf8
+
+maxFacebookGraphErrorChars :: Int
+maxFacebookGraphErrorChars = 500
+
+sanitizeFacebookGraphErrorMessage :: Text -> Text
+sanitizeFacebookGraphErrorMessage raw =
+  let compacted = T.unwords . T.words . redactFacebookGraphSecrets . T.map safeChar $ raw
+  in if T.length compacted > maxFacebookGraphErrorChars
+       then T.take maxFacebookGraphErrorChars compacted <> " [truncated]"
+       else compacted
+  where
+    safeChar ch
+      | isControl ch = ' '
+      | generalCategory ch == Format = ' '
+      | otherwise = ch
+
+redactFacebookGraphSecrets :: Text -> Text
+redactFacebookGraphSecrets = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveField previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveFacebookGraphFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+isSecretFieldBoundary :: Maybe Char -> Bool
+isSecretFieldBoundary Nothing = True
+isSecretFieldBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+sensitiveFacebookGraphFields :: [Text]
+sensitiveFacebookGraphFields =
+  [ "access_token"
+  , "fb_exchange_token"
+  , "client_secret"
+  , "code"
+  ]
+
+parseSensitiveField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || (separator == ':' && fieldName /= "code")
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+consumeOptionalQuote :: Text -> (Text, Text)
+consumeOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSecretValueEnd)
+
+isUnquotedSecretValueEnd :: Char -> Bool
+isUnquotedSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,}]" :: String)

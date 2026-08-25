@@ -3,14 +3,27 @@ module TDF.Config where
 
 import           Control.Applicative ((<|>))
 import           Control.Monad      ((>=>), filterM, when)
-import           Data.Char          (isControl, isDigit, isSpace, toLower)
-import           Data.List          (isPrefixOf)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isHexDigit
+  , isSpace
+  , toLower
+  )
+import           Data.List          (isPrefixOf, nub)
 import           Data.Maybe         (fromMaybe, isNothing, listToMaybe)
 import           Data.Text          (Text)
 import qualified Data.Text          as T
 import           System.Directory  (doesDirectoryExist)
 import           System.Environment (lookupEnv)
 import           Text.Read          (readMaybe)
+
+import           TDF.Internationalization
+  ( normalizeCurrencyCode
+  , normalizeLocaleCode
+  , normalizeTimeZone
+  )
 
 data EmailConfig = EmailConfig
   { emailFromName    :: Text
@@ -73,7 +86,67 @@ data AppConfig = AppConfig
   , sessionCookieSecure :: Bool
   , sessionCookieSameSite :: Text
   , sessionCookieMaxAgeSeconds :: Maybe Int
+  , stripeSecretKey :: Maybe Text
+  , stripePublishableKey :: Maybe Text
+  , stripeWebhookSecret :: Maybe Text
+  , eventDiscoveryEnabled :: Bool
+  , eventDiscoveryAutoPublish :: Bool
+  , eventDiscoveryPilotLimit :: Int
+  , ticketmasterApiKey :: Maybe Text
+  , ticketmasterApiBase :: Text
+  , eventDiscoveryLookaheadDays :: Int
+  , eventDiscoveryMaxPagesPerCity :: Int
+  , eventDiscoveryHourLocal :: Int
+  , eventDiscoveryCountryCode :: Maybe Text
+  , googleRoutesApiKey :: Maybe Text
+  , googleRoutesApiBase :: Text
+  , eventLogisticsRecheckEnabled :: Bool
+  , artistEnrichmentEnabled :: Bool
+  , artistEnrichmentAutoPublish :: Bool
+  , artistEnrichmentHourLocal :: Int
+  , artistEnrichmentBatchSize :: Int
+  , artistEnrichmentStaleDays :: Int
+  , defaultCurrency :: Text
+  , supportedCurrencies :: [Text]
+  , defaultTimezone :: Text
+  , supportedLocales :: [Text]
+  , defaultLocale :: Text
+  , enableGdprCompliance :: Bool
   } deriving (Show)
+
+data LlmProviderConfig = LlmProviderConfig
+  { llmProviderName :: Text
+  , llmProviderApiBase :: Text
+  , llmProviderDefaultChatModel :: Text
+  , llmProviderChatFallbackModels :: [Text]
+  , llmProviderDefaultEmbedModel :: Text
+  } deriving (Eq, Show)
+
+llmProvider :: LlmProviderConfig
+llmProvider =
+  LlmProviderConfig
+    { llmProviderName = "openai"
+    , llmProviderApiBase = "https://api.openai.com"
+    , llmProviderDefaultChatModel = "gpt-4.1-mini"
+    , llmProviderChatFallbackModels =
+        [ "gpt-4.1-mini"
+        , "gpt-4o-mini"
+        , "gpt-4.1"
+        , "gpt-4o"
+        ]
+    , llmProviderDefaultEmbedModel = "text-embedding-3-small"
+    }
+
+llmChatModelCandidates :: Text -> [Text]
+llmChatModelCandidates primaryModel =
+  nub $
+    filter (not . T.null) $
+      T.strip primaryModel : llmProviderChatFallbackModels llmProvider
+
+normalizeLlmApiBase :: Text -> Text
+normalizeLlmApiBase base =
+  let trimmed = T.dropWhileEnd (== '/') (T.strip base)
+  in if T.null trimmed then llmProviderApiBase llmProvider else trimmed
 
 openAiEmbedDimensions :: Text -> Maybe Int
 openAiEmbedDimensions model =
@@ -88,7 +161,8 @@ ragEmbeddingDim cfg = fromMaybe 1536 (openAiEmbedDimensions (openAiEmbedModel cf
 
 dbConnString :: AppConfig -> String
 dbConnString cfg =
-  ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
+  ensureReadWriteSessionOptions $
+    ensureReadWriteTargetSession (fromMaybe keywordStyle (dbConnUrl cfg))
   where
     keywordStyle =
       appendKeywordOption "sslmode" (dbSslMode cfg) $
@@ -118,7 +192,7 @@ validateFallbackConnUrl envName raw
   | "://" `T.isInfixOf` value =
       Left (envName <> " must use postgres:// or postgresql://")
   | otherwise =
-      Right raw
+      Left (envName <> " must use postgres:// or postgresql://")
   where
     value = T.strip (T.pack raw)
     lowerValue = T.toLower value
@@ -128,6 +202,10 @@ validateFallbackConnUrl envName raw
     validateAuthority scheme
       | T.any isSpace value =
           Left (envName <> " must not contain whitespace")
+      | T.any isControl value =
+          Left (envName <> " must not contain control characters")
+      | T.any isHiddenConnectionUrlChar value =
+          Left (envName <> " must not contain hidden formatting characters")
       | "#" `T.isInfixOf` value =
           Left (envName <> " must not include a fragment")
       | otherwise =
@@ -144,10 +222,22 @@ validateFallbackConnUrl envName raw
                else if atCount > 1
                  then Left (envName <> " must not contain multiple @ separators")
                else
-                 validateConnectionHostPort hostPort
+                 validateConnectionUserInfo authority
+                   *> validateConnectionHostPort hostPort
                    *> validateConnectionDatabasePath databasePath
                    *> validateConnectionQueryParams databasePath
-                   *> Right raw
+                   *> rejectPercentEncodedUnsafeConnectionUrlChar value
+                   *> Right (T.unpack value)
+
+    validateConnectionUserInfo :: Text -> Either String ()
+    validateConnectionUserInfo authority =
+      case T.breakOn "@" authority of
+        (_, "") -> Right ()
+        (userinfo, _) ->
+          let username = T.takeWhile (/= ':') userinfo
+          in if T.null username
+               then Left (envName <> " userinfo must include a username")
+               else Right ()
 
     validateConnectionHostPort :: Text -> Either String ()
     validateConnectionHostPort hostPort
@@ -163,12 +253,62 @@ validateFallbackConnUrl envName raw
           let (host, suffix) = T.breakOn ":" hostPort
           in if T.null host
                then Left (envName <> " must include a PostgreSQL host")
+               else if not (isValidConnectionHost host)
+                 then Left (envName <> " must include a valid PostgreSQL host")
                else validateConnectionPortSuffix suffix
+
+    isValidConnectionHost :: Text -> Bool
+    isValidConnectionHost rawHost =
+      let host = T.toLower rawHost
+      in T.length host <= 253
+        && not (T.isPrefixOf "." host)
+        && not (T.isSuffixOf "." host)
+        && not (isAmbiguousNumericConnectionHost host)
+        && all isValidConnectionHostLabel (T.splitOn "." host)
+
+    isValidConnectionHostLabel :: Text -> Bool
+    isValidConnectionHostLabel label =
+      not (T.null label)
+        && T.length label <= 63
+        && not (T.isPrefixOf "-" label)
+        && not (T.isSuffixOf "-" label)
+        && T.all isConnectionHostChar label
+
+    isConnectionHostChar :: Char -> Bool
+    isConnectionHostChar ch =
+      (ch >= 'a' && ch <= 'z') || isAsciiDigit ch || ch == '-'
+
+    isAmbiguousNumericConnectionHost :: Text -> Bool
+    isAmbiguousNumericConnectionHost host =
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
+        && isNothing (parseIpv4Octets host)
+
+    parseIpv4Octets :: Text -> Maybe (Int, Int, Int, Int)
+    parseIpv4Octets host =
+      case T.splitOn "." host of
+        [a, b, c, d] -> do
+          oa <- parseOctet a
+          ob <- parseOctet b
+          oc <- parseOctet c
+          od <- parseOctet d
+          pure (oa, ob, oc, od)
+        _ -> Nothing
+
+    parseOctet :: Text -> Maybe Int
+    parseOctet octet
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
+      | T.length octet > 1 && T.head octet == '0' = Nothing
+      | otherwise = do
+          octetNumber <- readMaybe (T.unpack octet)
+          if octetNumber >= (0 :: Int) && octetNumber <= 255
+            then Just octetNumber
+            else Nothing
 
     isValidBracketedConnectionHost :: Text -> Bool
     isValidBracketedConnectionHost host =
       T.any (== ':') host
         && not (":::" `T.isInfixOf` host)
+        && T.count "::" host <= 1
         && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
 
     validateConnectionPortSuffix :: Text -> Either String ()
@@ -176,8 +316,10 @@ validateFallbackConnUrl envName raw
       | T.null suffix = Right ()
       | ":" `T.isPrefixOf` suffix =
           let port = T.drop 1 suffix
-          in if T.null port || T.any (not . isDigit) port
+          in if T.null port || T.any (not . isAsciiDigit) port
                then Left (envName <> " port must be numeric")
+               else if T.length port > 1 && T.head port == '0'
+                 then Left (envName <> " port must not contain leading zeros")
                else case readMaybe (T.unpack port) :: Maybe Int of
                  Just portNumber | portNumber >= 1 && portNumber <= 65535 -> Right ()
                  _ -> Left (envName <> " port must be between 1 and 65535")
@@ -223,6 +365,11 @@ validateFallbackConnUrl envName raw
               validateRecognizedParams =
                 if T.null query || any T.null queryParamNames
                   then Left (envName <> " query parameters must include names")
+                  else if any (not . isValidConnectionQueryParamName) queryParamNames
+                    then Left $
+                      envName
+                        <> " query parameter names must use only ASCII letters, "
+                        <> "numbers, and underscores"
                   else if any T.null targetSessionAttrs
                     then Left (envName <> " target_session_attrs must not be blank")
                   else if any (/= "read-write") (map (T.toLower . T.strip) targetSessionAttrs)
@@ -235,6 +382,23 @@ validateFallbackConnUrl envName raw
           in rejectDuplicate "target_session_attrs" targetSessionAttrs
                *> rejectDuplicate "sslmode" sslModes
                *> validateRecognizedParams
+
+    isValidConnectionQueryParamName :: Text -> Bool
+    isValidConnectionQueryParamName name =
+      T.all isConnectionQueryParamNameChar name
+
+    isConnectionQueryParamNameChar :: Char -> Bool
+    isConnectionQueryParamNameChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || isAsciiDigit ch
+        || ch == '_'
+
+    rejectPercentEncodedUnsafeConnectionUrlChar :: Text -> Either String ()
+    rejectPercentEncodedUnsafeConnectionUrlChar url =
+      if hasPercentEncodedUnsafeConnectionUrlChar url
+        then Left (envName <> " must not contain percent-encoded whitespace or control bytes")
+        else Right ()
 
 isValidConnectionSslMode :: Text -> Bool
 isValidConnectionSslMode rawMode =
@@ -250,6 +414,39 @@ isValidConnectionSslMode rawMode =
 invalidConnectionSslModeMessage :: String -> String
 invalidConnectionSslModeMessage envName =
   envName <> " sslmode must be one of: disable, allow, prefer, require, verify-ca, verify-full"
+
+isHiddenConnectionUrlChar :: Char -> Bool
+isHiddenConnectionUrlChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+hasPercentEncodedUnsafeConnectionUrlChar :: Text -> Bool
+hasPercentEncodedUnsafeConnectionUrlChar value =
+  case T.uncons value of
+    Nothing -> False
+    Just ('%', rest) ->
+      case T.unpack (T.take 2 rest) of
+        [hi, lo] | isHexDigit hi && isHexDigit lo ->
+          isUnsafePercentDecodedConnectionByte (hexValue hi * 16 + hexValue lo)
+            || hasPercentEncodedUnsafeConnectionUrlChar (T.drop 2 rest)
+        _ ->
+          hasPercentEncodedUnsafeConnectionUrlChar rest
+    Just (_, rest) ->
+      hasPercentEncodedUnsafeConnectionUrlChar rest
+
+isUnsafePercentDecodedConnectionByte :: Int -> Bool
+isUnsafePercentDecodedConnectionByte byte =
+  byte <= 32 || byte == 127
+
+hexValue :: Char -> Int
+hexValue ch
+  | ch >= '0' && ch <= '9' = fromEnum ch - fromEnum '0'
+  | ch >= 'a' && ch <= 'f' = 10 + fromEnum ch - fromEnum 'a'
+  | ch >= 'A' && ch <= 'F' = 10 + fromEnum ch - fromEnum 'A'
+  | otherwise = 0
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch =
+  ch >= '0' && ch <= '9'
 
 validateDbSslMode :: String -> String -> Either String String
 validateDbSslMode envName rawMode
@@ -312,6 +509,119 @@ validateNonNegativeIntEnv envName defaultValue (Just rawValue)
   where
     normalized = T.strip (T.pack rawValue)
 
+validateBoundedIntEnv :: String -> Int -> Int -> Int -> Maybe String -> IO Int
+validateBoundedIntEnv _ defaultValue _ _ Nothing = pure defaultValue
+validateBoundedIntEnv envName defaultValue minimumValue maximumValue (Just rawValue)
+  | T.null normalized = pure defaultValue
+  | otherwise =
+      case readMaybe (T.unpack normalized) of
+        Just parsed | parsed >= minimumValue && parsed <= maximumValue -> pure parsed
+        _ ->
+          fail
+            ( envName
+                <> " must be an integer between "
+                <> show minimumValue
+                <> " and "
+                <> show maximumValue
+            )
+  where
+    normalized = T.strip (T.pack rawValue)
+
+validateTicketmasterApiKey :: Maybe String -> IO (Maybe Text)
+validateTicketmasterApiKey Nothing = pure Nothing
+validateTicketmasterApiKey (Just rawValue)
+  | T.null value = pure Nothing
+  | T.length value > 512 = fail "TICKETMASTER_API_KEY must be 512 characters or fewer"
+  | T.any (\ch -> isSpace ch || isControl ch) value =
+      fail "TICKETMASTER_API_KEY must not contain whitespace or control characters"
+  | T.any isHiddenConnectionUrlChar value =
+      fail "TICKETMASTER_API_KEY must not contain hidden formatting characters"
+  | T.any (\ch -> ch < '!' || ch > '~') value =
+      fail "TICKETMASTER_API_KEY must contain visible ASCII characters only"
+  | otherwise = pure (Just value)
+  where
+    value = T.strip (T.pack rawValue)
+
+validateEventDiscoveryCountryCode :: Maybe String -> IO (Maybe Text)
+validateEventDiscoveryCountryCode Nothing = pure Nothing
+validateEventDiscoveryCountryCode (Just rawValue)
+  | T.null value = pure Nothing
+  | T.length value == 2 && T.all isAsciiLetter value = pure (Just (T.toUpper value))
+  | otherwise = fail "EVENT_DISCOVERY_COUNTRY_CODE must be a two-letter ISO country code"
+  where
+    value = T.strip (T.pack rawValue)
+    isAsciiLetter ch =
+      (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')
+
+validateSupportedCurrencies :: Maybe String -> IO [Text]
+validateSupportedCurrencies rawValue =
+  validateConfiguredList
+    "SUPPORTED_CURRENCIES"
+    ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "BRL"]
+    normalizeCurrencyCode
+    rawValue
+
+validateDefaultCurrency :: [Text] -> Maybe String -> IO Text
+validateDefaultCurrency supported rawValue = do
+  let configured = T.pack (fromMaybe "USD" rawValue)
+  normalized <-
+    maybe
+      (fail "DEFAULT_CURRENCY must be a valid ISO 4217 currency code")
+      pure
+      (normalizeCurrencyCode configured)
+  if normalized `elem` supported
+    then pure normalized
+    else fail "DEFAULT_CURRENCY must also be listed in SUPPORTED_CURRENCIES"
+
+validateSupportedLocales :: Maybe String -> IO [Text]
+validateSupportedLocales rawValue =
+  validateConfiguredList
+    "SUPPORTED_LOCALES"
+    ["en", "es", "fr", "de", "pt"]
+    normalizeLocaleCode
+    rawValue
+
+validateDefaultLocale :: [Text] -> Maybe String -> IO Text
+validateDefaultLocale supported rawValue = do
+  let configured = T.pack (fromMaybe "en" rawValue)
+  normalized <-
+    maybe
+      (fail "DEFAULT_LOCALE must start with a two- or three-letter language code")
+      pure
+      (normalizeLocaleCode configured)
+  if normalized `elem` supported
+    then pure normalized
+    else fail "DEFAULT_LOCALE must also be listed in SUPPORTED_LOCALES"
+
+validateDefaultTimezone :: Maybe String -> IO Text
+validateDefaultTimezone rawValue =
+  maybe
+    (fail "DEFAULT_TIMEZONE must be UTC or a valid IANA area/location name")
+    pure
+    (normalizeTimeZone (T.pack (fromMaybe "UTC" rawValue)))
+
+validateConfiguredList
+  :: String
+  -> [Text]
+  -> (Text -> Maybe Text)
+  -> Maybe String
+  -> IO [Text]
+validateConfiguredList envName fallback normalizeValue rawValue = do
+  let configured =
+        case rawValue of
+          Nothing -> fallback
+          Just raw -> map T.strip (T.splitOn "," (T.pack raw))
+      normalized = traverse normalizeValue configured
+  values <-
+    maybe
+      (fail (envName <> " contains an unsupported or malformed value"))
+      pure
+      normalized
+  let uniqueValues = nub values
+  if null uniqueValues
+    then fail (envName <> " must contain at least one value")
+    else pure uniqueValues
+
 extractConnUrlParam :: String -> String -> Maybe String
 extractConnUrlParam rawKey connUrl =
   case dropWhile (/= '?') connUrl of
@@ -356,10 +666,31 @@ ensureReadWriteTargetSession rawConn
     isPostgresUrl conn =
       "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
 
+ensureReadWriteSessionOptions :: String -> String
+ensureReadWriteSessionOptions rawConn
+  | isPostgresUrl normalized && hasOptionsUrlParam rawConn = rawConn
+  | isPostgresUrl normalized =
+      rawConn
+        <> if '?' `elem` rawConn
+             then "&options=-c%20default_transaction_read_only%3Doff"
+             else "?options=-c%20default_transaction_read_only%3Doff"
+  | hasOptionsKeyword normalized = rawConn
+  | otherwise = rawConn <> " options='-c default_transaction_read_only=off'"
+  where
+    normalized = map toLower rawConn
+    hasOptionsUrlParam conn =
+      case extractConnUrlParam "options" conn of
+        Just _ -> True
+        Nothing -> False
+    hasOptionsKeyword conn =
+      any ("options=" `isPrefixOf`) (words conn)
+    isPostgresUrl conn =
+      "postgresql://" `isPrefixOf` conn || "postgres://" `isPrefixOf` conn
+
 loadConfig :: IO AppConfig
 loadConfig = do
   -- Prefer a connection URL unless every keyword-style field is present.
-  -- Fly/Koyeb environments can expose partial PG* variables alongside DATABASE_URL.
+  -- Fly environments can expose partial PG* variables alongside DATABASE_URL.
   keywordDbEnvConfigured <- allEnvPresent
     [ ["DB_HOST", "PGHOST"]
     , ["DB_PORT", "PGPORT"]
@@ -367,43 +698,47 @@ loadConfig = do
     , ["DB_PASS", "PGPASSWORD"]
     , ["DB_NAME", "PGDATABASE"]
     ]
-  fallbackConnUrl <- lookupFirstConnUrlEnv (not keywordDbEnvConfigured)
-    ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
-  connUrl    <- if keywordDbEnvConfigured then pure Nothing else pure fallbackConnUrl
-  rawHost    <- getWithFallback ["DB_HOST", "PGHOST"] "127.0.0.1"
-  rawPort    <- getWithFallback ["DB_PORT", "PGPORT"] "5432"
-  rawUser    <- getWithFallback ["DB_USER", "PGUSER"] "postgres"
-  rawPass    <- getWithFallback ["DB_PASS", "PGPASSWORD"] "postgres"
-  rawName    <- getWithFallback ["DB_NAME", "PGDATABASE"] "tdf_hq"
-  let usingKeywordConn = isNothing connUrl
+  rawConnUrlEnv <-
+    if keywordDbEnvConfigured
+      then pure Nothing
+      else lookupUniqueConnUrlEnv
+        ["DATABASE_URL", "DATABASE_PRIVATE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"]
+  let usingKeywordConn = isNothing rawConnUrlEnv
+  rawHost    <- getWithFallback usingKeywordConn ["DB_HOST", "PGHOST"] "127.0.0.1"
+  rawPort    <- getWithFallback usingKeywordConn ["DB_PORT", "PGPORT"] "5432"
+  rawUser    <- getWithFallback usingKeywordConn ["DB_USER", "PGUSER"] "postgres"
+  rawPass    <- getWithFallback usingKeywordConn ["DB_PASS", "PGPASSWORD"] "postgres"
+  rawName    <- getWithFallback usingKeywordConn ["DB_NAME", "PGDATABASE"] "tdf_hq"
   h          <- validateKeywordDbConnField usingKeywordConn "DB_HOST/PGHOST" rawHost
   p          <- validateKeywordDbPort usingKeywordConn "DB_PORT/PGPORT" rawPort
   u          <- validateKeywordDbConnField usingKeywordConn "DB_USER/PGUSER" rawUser
   w          <- validateKeywordDbConnField usingKeywordConn "DB_PASS/PGPASSWORD" rawPass
   d          <- validateKeywordDbConnField usingKeywordConn "DB_NAME/PGDATABASE" rawName
-  sslModeEnvRaw <- lookupFirstNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
+  sslModeEnvRaw <- lookupUniqueNamedEnv ["DB_SSLMODE", "PGSSLMODE"]
   sslModeEnv <-
     case sslModeEnvRaw of
       Nothing -> pure Nothing
       Just (envName, rawMode) ->
         case validateDbSslMode envName rawMode of
           Left msg -> fail msg
-          Right mode -> pure (Just mode)
-  appPortVal <- lookupEnv "APP_PORT" >>= validatePositiveIntEnv "APP_PORT" 8080
+          Right mode -> pure (Just (envName, mode))
+  connUrl <- reconcileConnUrlSslMode sslModeEnv rawConnUrlEnv
+  appPortVal <- lookupEnv "APP_PORT" >>= validatePortEnv "APP_PORT" 8080
   rdbEnv     <- lookupEnv "RESET_DB"
   sdbEnv     <- lookupEnv "SEED_DB"
   migEnv     <- lookupEnv "RUN_MIGRATIONS"
   seedEnv    <- lookupEnv "SEED_TRIGGER_TOKEN"
+  seedRuntimeEnv <- lookupSeedRuntimeEnv
   baseUrlEnv <- lookupEnv "HQ_APP_URL"
   assetsBaseEnv <- lookupEnv "HQ_ASSETS_BASE_URL"
   assetsDirEnv <- lookupEnv "HQ_ASSETS_DIR"
   googleClientIdEnv <- lookupEnv "GOOGLE_CLIENT_ID"
-  fbAppIdEnv <- lookupFirstEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
-  fbAppSecretEnv <- lookupFirstEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
+  fbAppIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_ID", "META_APP_ID"]
+  fbAppSecretEnv <- lookupUniqueNamedEnv ["FACEBOOK_APP_SECRET", "META_APP_SECRET"]
   fbGraphBaseEnv <- lookupEnv "FACEBOOK_GRAPH_BASE"
-  fbMsgTokenEnv <- lookupFirstEnv
+  fbMsgTokenEnv <- lookupUniqueNamedEnv
     ["FACEBOOK_MESSAGING_TOKEN", "FACEBOOK_PAGE_ACCESS_TOKEN"]
-  fbMsgPageIdEnv <- lookupFirstNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
+  fbMsgPageIdEnv <- lookupUniqueNamedEnv ["FACEBOOK_MESSAGING_PAGE_ID", "FACEBOOK_PAGE_ID"]
   fbMsgBaseEnv <- lookupEnv "FACEBOOK_MESSAGING_API_BASE"
   courseSlugEnv <- lookupEnv "COURSE_DEFAULT_SLUG"
   courseMapEnv <- lookupEnv "COURSE_DEFAULT_MAP_URL"
@@ -411,7 +746,7 @@ loadConfig = do
   openAiKeyEnv <- lookupEnv "OPENAI_API_KEY"
   openAiModelEnv <- lookupEnv "OPENAI_MODEL"
   openAiEmbedModelEnv <- lookupEnv "OPENAI_EMBED_MODEL"
-  chatKitWorkflowEnv <- lookupFirstNamedEnv
+  chatKitWorkflowEnv <- lookupUniqueNamedEnv
     ["CHATKIT_WORKFLOW_ID", "VITE_CHATKIT_WORKFLOW_ID"]
   chatKitApiBaseEnv <- lookupEnv "CHATKIT_API_BASE"
   ragTopKEnv <- lookupEnv "RAG_TOP_K"
@@ -423,8 +758,10 @@ loadConfig = do
   ragEmbedBatchSizeEnv <- lookupEnv "RAG_EMBED_BATCH_SIZE"
   smtpHostEnv <- lookupEnv "SMTP_HOST"
   smtpPortEnv <- lookupEnv "SMTP_PORT"
-  smtpUserEnv <- lookupFirstEnv ["SMTP_USERNAME", "SMTP_USER"]
-  smtpPassEnv <- lookupFirstEnv ["SMTP_PASSWORD", "SMTP_PASS"]
+  smtpUserEnv <- fmap (fmap snd) $
+    lookupUniqueNamedEnv ["SMTP_USERNAME", "SMTP_USER"]
+  smtpPassEnv <- fmap (fmap snd) $
+    lookupUniqueNamedEnv ["SMTP_PASSWORD", "SMTP_PASS"]
   smtpFromEnv <- lookupEnv "SMTP_FROM"
   smtpFromNameEnv <- lookupEnv "SMTP_FROM_NAME"
   smtpTlsEnv  <- lookupEnv "SMTP_TLS"
@@ -433,13 +770,39 @@ loadConfig = do
   igMsgTokenEnv <- lookupEnv "INSTAGRAM_MESSAGING_TOKEN"
   igMsgAccountEnv <- lookupEnv "INSTAGRAM_MESSAGING_ACCOUNT_ID"
   igMsgBaseEnv <- lookupEnv "INSTAGRAM_MESSAGING_API_BASE"
-  igVerifyEnv <- lookupFirstEnv ["INSTAGRAM_VERIFY_TOKEN", "IG_VERIFY_TOKEN"]
+  igVerifyEnv <- lookupUniqueNamedEnv ["INSTAGRAM_VERIFY_TOKEN", "IG_VERIFY_TOKEN"]
   sessionCookieNameEnv <- lookupEnv "SESSION_COOKIE_NAME"
   sessionCookieDomainEnv <- lookupEnv "SESSION_COOKIE_DOMAIN"
   sessionCookiePathEnv <- lookupEnv "SESSION_COOKIE_PATH"
   sessionCookieSecureEnv <- lookupEnv "SESSION_COOKIE_SECURE"
   sessionCookieSameSiteEnv <- lookupEnv "SESSION_COOKIE_SAMESITE"
   sessionCookieMaxAgeEnv <- lookupEnv "SESSION_COOKIE_MAX_AGE"
+  stripeSecretKeyEnv <- lookupEnv "STRIPE_SECRET_KEY"
+  stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
+  stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
+  eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
+  eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
+  eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
+  ticketmasterApiKeyEnv <- lookupEnv "TICKETMASTER_API_KEY"
+  ticketmasterApiBaseEnv <- lookupEnv "TICKETMASTER_API_BASE"
+  eventDiscoveryLookaheadDaysEnv <- lookupEnv "EVENT_DISCOVERY_LOOKAHEAD_DAYS"
+  eventDiscoveryMaxPagesEnv <- lookupEnv "EVENT_DISCOVERY_MAX_PAGES_PER_CITY"
+  eventDiscoveryHourEnv <- lookupEnv "EVENT_DISCOVERY_HOUR_LOCAL"
+  eventDiscoveryCountryCodeEnv <- lookupEnv "EVENT_DISCOVERY_COUNTRY_CODE"
+  googleRoutesApiKeyEnv <- lookupEnv "GOOGLE_ROUTES_API_KEY"
+  googleRoutesApiBaseEnv <- lookupEnv "GOOGLE_ROUTES_API_BASE"
+  eventLogisticsRecheckEnabledEnv <- lookupEnv "EVENT_LOGISTICS_RECHECK_ENABLED"
+  artistEnrichmentEnabledEnv <- lookupEnv "ARTIST_ENRICHMENT_ENABLED"
+  artistEnrichmentAutoPublishEnv <- lookupEnv "ARTIST_ENRICHMENT_AUTO_PUBLISH"
+  artistEnrichmentHourEnv <- lookupEnv "ARTIST_ENRICHMENT_HOUR_LOCAL"
+  artistEnrichmentBatchSizeEnv <- lookupEnv "ARTIST_ENRICHMENT_BATCH_SIZE"
+  artistEnrichmentStaleDaysEnv <- lookupEnv "ARTIST_ENRICHMENT_STALE_DAYS"
+  defaultCurrencyEnv <- lookupEnv "DEFAULT_CURRENCY"
+  supportedCurrenciesEnv <- lookupEnv "SUPPORTED_CURRENCIES"
+  defaultTimezoneEnv <- lookupEnv "DEFAULT_TIMEZONE"
+  supportedLocalesEnv <- lookupEnv "SUPPORTED_LOCALES"
+  defaultLocaleEnv <- lookupEnv "DEFAULT_LOCALE"
+  enableGdprComplianceEnv <- lookupEnv "ENABLE_GDPR_COMPLIANCE"
   assetsRoot <- resolveAssetsRootDir (assetsDirEnv >>= nonEmptyPath)
   appBaseUrlVal <- validateConfiguredBaseUrl "HQ_APP_URL" baseUrlEnv
   assetsBaseUrlVal <- validateConfiguredBaseUrl "HQ_ASSETS_BASE_URL" assetsBaseEnv
@@ -449,14 +812,18 @@ loadConfig = do
   chatKitApiBaseVal <-
     validateConfiguredApiBaseUrl
       "CHATKIT_API_BASE"
-      "https://api.openai.com"
+      (llmProviderApiBase llmProvider)
       chatKitApiBaseEnv
   chatKitWorkflowIdVal <-
     validateConfiguredChatKitWorkflowId chatKitWorkflowEnv
+  googleClientIdVal <-
+    validateConfiguredGoogleClientId googleClientIdEnv
   openAiModelVal <-
     validateConfiguredOpenAiModel openAiModelEnv
   openAiEmbedModelVal <-
     validateConfiguredOpenAiEmbedModel openAiEmbedModelEnv
+  openAiApiKeyVal <-
+    validateConfiguredOpenAiApiKey openAiKeyEnv
   ragTopKVal <- validatePositiveIntEnv "RAG_TOP_K" 8 ragTopKEnv
   ragChunkWordsVal <- validatePositiveIntEnv "RAG_CHUNK_WORDS" 220 ragChunkWordsEnv
   let ragChunkOverlapDefault = min 40 (ragChunkWordsVal - 1)
@@ -476,6 +843,105 @@ loadConfig = do
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
+  eventDiscoveryEnabledVal <-
+    validateStartupBooleanFlag
+      "EVENT_DISCOVERY_ENABLED"
+      True
+      eventDiscoveryEnabledEnv
+  eventDiscoveryAutoPublishVal <-
+    validateStartupBooleanFlag
+      "EVENT_DISCOVERY_AUTO_PUBLISH"
+      False
+      eventDiscoveryAutoPublishEnv
+  eventDiscoveryPilotLimitVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_PILOT_LIMIT"
+      20
+      1
+      1000
+      eventDiscoveryPilotLimitEnv
+  ticketmasterApiKeyVal <- validateTicketmasterApiKey ticketmasterApiKeyEnv
+  ticketmasterApiBaseVal <-
+    validateConfiguredApiBaseUrl
+      "TICKETMASTER_API_BASE"
+      "https://app.ticketmaster.com/discovery/v2"
+      ticketmasterApiBaseEnv
+  eventDiscoveryLookaheadDaysVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_LOOKAHEAD_DAYS"
+      90
+      1
+      365
+      eventDiscoveryLookaheadDaysEnv
+  eventDiscoveryMaxPagesVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_MAX_PAGES_PER_CITY"
+      5
+      1
+      10
+      eventDiscoveryMaxPagesEnv
+  eventDiscoveryHourVal <-
+    validateBoundedIntEnv
+      "EVENT_DISCOVERY_HOUR_LOCAL"
+      3
+      0
+      23
+      eventDiscoveryHourEnv
+  eventDiscoveryCountryCodeVal <-
+    validateEventDiscoveryCountryCode eventDiscoveryCountryCodeEnv
+  googleRoutesApiKeyVal <-
+    either fail pure (normalizeConfiguredOpenAiApiKey "GOOGLE_ROUTES_API_KEY" (fromMaybe "" googleRoutesApiKeyEnv))
+  googleRoutesApiBaseVal <-
+    validateConfiguredApiBaseUrl
+      "GOOGLE_ROUTES_API_BASE"
+      "https://routes.googleapis.com"
+      googleRoutesApiBaseEnv
+  eventLogisticsRecheckEnabledVal <-
+    validateStartupBooleanFlag
+      "EVENT_LOGISTICS_RECHECK_ENABLED"
+      False
+      eventLogisticsRecheckEnabledEnv
+  artistEnrichmentEnabledVal <-
+    validateStartupBooleanFlag
+      "ARTIST_ENRICHMENT_ENABLED"
+      False
+      artistEnrichmentEnabledEnv
+  artistEnrichmentAutoPublishVal <-
+    validateStartupBooleanFlag
+      "ARTIST_ENRICHMENT_AUTO_PUBLISH"
+      False
+      artistEnrichmentAutoPublishEnv
+  artistEnrichmentHourVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_HOUR_LOCAL"
+      4
+      0
+      23
+      artistEnrichmentHourEnv
+  artistEnrichmentBatchSizeVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_BATCH_SIZE"
+      500
+      1
+      500
+      artistEnrichmentBatchSizeEnv
+  artistEnrichmentStaleDaysVal <-
+    validateBoundedIntEnv
+      "ARTIST_ENRICHMENT_STALE_DAYS"
+      90
+      7
+      730
+      artistEnrichmentStaleDaysEnv
+  supportedCurrenciesVal <- validateSupportedCurrencies supportedCurrenciesEnv
+  defaultCurrencyVal <- validateDefaultCurrency supportedCurrenciesVal defaultCurrencyEnv
+  defaultTimezoneVal <- validateDefaultTimezone defaultTimezoneEnv
+  supportedLocalesVal <- validateSupportedLocales supportedLocalesEnv
+  defaultLocaleVal <- validateDefaultLocale supportedLocalesVal defaultLocaleEnv
+  enableGdprComplianceVal <-
+    validateStartupBooleanFlag
+      "ENABLE_GDPR_COMPLIANCE"
+      True
+      enableGdprComplianceEnv
   fbGraphBase <-
     validateConfiguredApiBaseUrl
       "FACEBOOK_GRAPH_BASE"
@@ -486,7 +952,10 @@ loadConfig = do
       "FACEBOOK_MESSAGING_API_BASE"
       fbGraphBase
       fbMsgBaseEnv
+  fbAppId <- validateConfiguredGraphNodeId fbAppIdEnv
+  fbAppSecret <- validateConfiguredFacebookAppSecret fbAppSecretEnv
   fbMsgPageId <- validateConfiguredGraphNodeId fbMsgPageIdEnv
+  fbMsgToken <- validateConfiguredNamedGraphAccessToken fbMsgTokenEnv
   igGraphBase <-
     validateConfiguredApiBaseUrl
       "INSTAGRAM_GRAPH_BASE"
@@ -497,9 +966,14 @@ loadConfig = do
       "INSTAGRAM_MESSAGING_API_BASE"
       "https://graph.facebook.com/v20.0"
       igMsgBaseEnv
+  igAppToken <-
+    validateConfiguredGraphAccessToken "INSTAGRAM_APP_TOKEN" igTokenEnv
+  igMsgToken <-
+    validateConfiguredGraphAccessToken "INSTAGRAM_MESSAGING_TOKEN" igMsgTokenEnv
   igMsgAccountId <-
     validateConfiguredGraphNodeId
       (fmap (\value -> ("INSTAGRAM_MESSAGING_ACCOUNT_ID", value)) igMsgAccountEnv)
+  igVerifyTokenVal <- validateConfiguredMetaVerifyToken igVerifyEnv
   cookieName <- validateSessionCookieName sessionCookieNameEnv
   cookieDomain <- validateSessionCookieDomain sessionCookieDomainEnv
   cookiePath <- validateSessionCookiePath sessionCookiePathEnv
@@ -515,7 +989,7 @@ loadConfig = do
   cookieSameSite <- validateSessionCookieSameSite cookieSecure sessionCookieSameSiteEnv
   cookieMaxAge <- validateSessionCookieMaxAge sessionCookieMaxAgeEnv
   validateSessionCookiePolicy cookieSecure cookieSameSite
-  seedToken <- validateSeedTriggerToken seedEnv
+  seedToken <- validateSeedTriggerToken seedRuntimeEnv seedEnv
   pure AppConfig
     { dbHost = h
     , dbPort = p
@@ -523,7 +997,7 @@ loadConfig = do
     , dbPass = w
     , dbName = d
     , dbConnUrl = connUrl
-    , dbSslMode = sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
+    , dbSslMode = fmap snd sslModeEnv <|> (connUrl >>= extractConnUrlParam "sslmode")
     , appPort = appPortVal
     , resetDb = resetDbVal
     , seedDatabase = seedDatabaseVal
@@ -535,7 +1009,7 @@ loadConfig = do
     , courseDefaultSlug = courseDefaultSlugVal
     , courseDefaultMapUrl = courseMapUrl
     , courseDefaultInstructorAvatar = courseInstructorAvatar
-    , openAiApiKey = openAiKeyEnv >>= nonEmpty . T.pack
+    , openAiApiKey = openAiApiKeyVal
     , openAiModel = openAiModelVal
     , openAiEmbedModel = openAiEmbedModelVal
     , chatKitWorkflowId = chatKitWorkflowIdVal
@@ -548,31 +1022,59 @@ loadConfig = do
     , ragRefreshHours = ragRefreshHoursVal
     , ragEmbedBatchSize = ragEmbedBatchSizeVal
     , emailConfig = emailCfg
-    , googleClientId = fmap (T.strip . T.pack) googleClientIdEnv
-    , facebookAppId = fbAppIdEnv >>= nonEmpty . T.pack
-    , facebookAppSecret = fbAppSecretEnv >>= nonEmpty . T.pack
+    , googleClientId = googleClientIdVal
+    , facebookAppId = fbAppId
+    , facebookAppSecret = fbAppSecret
     , facebookGraphBase = fbGraphBase
-    , facebookMessagingToken = fmap (T.strip . T.pack) fbMsgTokenEnv >>= nonEmpty
+    , facebookMessagingToken = fbMsgToken
     , facebookMessagingPageId = fbMsgPageId
     , facebookMessagingApiBase = fbMsgBase
-    , instagramAppToken = fmap (T.strip . T.pack) igTokenEnv
+    , instagramAppToken = igAppToken
     , instagramGraphBase = igGraphBase
     , instagramMessagingToken =
-        case fmap (T.strip . T.pack) igMsgTokenEnv of
-          Just val | not (T.null val) -> Just val
-          _ -> fmap (T.strip . T.pack) igTokenEnv
+        igMsgToken <|> igAppToken
     , instagramMessagingAccountId = igMsgAccountId
     , instagramMessagingApiBase = igMsgBase
-    , instagramVerifyToken = fmap (T.strip . T.pack) igVerifyEnv >>= nonEmpty
+    , instagramVerifyToken = igVerifyTokenVal
     , sessionCookieName = cookieName
     , sessionCookieDomain = cookieDomain
     , sessionCookiePath = cookiePath
     , sessionCookieSecure = cookieSecure
     , sessionCookieSameSite = cookieSameSite
     , sessionCookieMaxAgeSeconds = cookieMaxAge
+    , stripeSecretKey = fmap T.pack stripeSecretKeyEnv
+    , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
+    , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
+    , eventDiscoveryEnabled = eventDiscoveryEnabledVal
+    , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
+    , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal
+    , ticketmasterApiKey = ticketmasterApiKeyVal
+    , ticketmasterApiBase = ticketmasterApiBaseVal
+    , eventDiscoveryLookaheadDays = eventDiscoveryLookaheadDaysVal
+    , eventDiscoveryMaxPagesPerCity = eventDiscoveryMaxPagesVal
+    , eventDiscoveryHourLocal = eventDiscoveryHourVal
+    , eventDiscoveryCountryCode = eventDiscoveryCountryCodeVal
+    , googleRoutesApiKey = googleRoutesApiKeyVal
+    , googleRoutesApiBase = googleRoutesApiBaseVal
+    , eventLogisticsRecheckEnabled = eventLogisticsRecheckEnabledVal
+    , artistEnrichmentEnabled = artistEnrichmentEnabledVal
+    , artistEnrichmentAutoPublish = artistEnrichmentAutoPublishVal
+    , artistEnrichmentHourLocal = artistEnrichmentHourVal
+    , artistEnrichmentBatchSize = artistEnrichmentBatchSizeVal
+    , artistEnrichmentStaleDays = artistEnrichmentStaleDaysVal
+    , defaultCurrency = defaultCurrencyVal
+    , supportedCurrencies = supportedCurrenciesVal
+    , defaultTimezone = defaultTimezoneVal
+    , supportedLocales = supportedLocalesVal
+    , defaultLocale = defaultLocaleVal
+    , enableGdprCompliance = enableGdprComplianceVal
     }
   where
-    getWithFallback keys def = fmap (fromMaybe def) (lookupFirstEnv keys)
+    getWithFallback requireUnique keys def =
+      fmap (fromMaybe def) $
+        if requireUnique
+          then lookupUniqueEnv keys
+          else lookupFirstEnv keys
     allEnvPresent [] = pure True
     allEnvPresent (keys:rest) = do
       value <- lookupFirstEnv keys
@@ -585,43 +1087,127 @@ loadConfig = do
       case value >>= normalizeEnvString of
         Just normalized -> pure (Just normalized)
         Nothing -> lookupFirstEnv rest
-    lookupFirstNamedEnv [] = pure Nothing
-    lookupFirstNamedEnv (key:rest) = do
+    lookupUniqueNamedEnv keys = do
+      values <- lookupNamedEnvValues keys
+      case values of
+        [] -> pure Nothing
+        firstValue:rest ->
+          case filter ((/= snd firstValue) . snd) rest of
+            [] -> pure (Just firstValue)
+            conflict:_ ->
+              fail
+                ( fst firstValue
+                    <> " and "
+                    <> fst conflict
+                    <> " must not be set to different values"
+                )
+    lookupUniqueEnv keys = fmap (fmap snd) (lookupUniqueNamedEnv keys)
+    lookupNamedEnvValues [] = pure []
+    lookupNamedEnvValues (key:rest) = do
       value <- lookupEnv key
-      case value >>= normalizeEnvString of
-        Just normalized -> pure (Just (key, normalized))
-        Nothing -> lookupFirstNamedEnv rest
-    lookupFirstConnUrlEnv _ [] = pure Nothing
-    lookupFirstConnUrlEnv requireValid (key:rest) = do
-      value <- lookupEnv key
-      case value >>= normalizeEnvString of
-        Nothing -> lookupFirstConnUrlEnv requireValid rest
-        Just normalized ->
-          case validateFallbackConnUrl key normalized of
-            Right conn -> pure (Just conn)
-            Left msg
-              | requireValid -> fail msg
-              | otherwise -> lookupFirstConnUrlEnv requireValid rest
+      values <- lookupNamedEnvValues rest
+      pure $
+        case value >>= normalizeEnvString of
+          Just normalized -> (key, normalized) : values
+          Nothing -> values
+    lookupUniqueConnUrlEnv keys = do
+      values <- lookupNamedEnvValues keys
+      validatedValues <- traverse validateNamedConnUrl values
+      case validatedValues of
+        [] -> pure Nothing
+        firstValue:rest ->
+          case filter ((/= snd firstValue) . snd) rest of
+            [] -> pure (Just firstValue)
+            conflict:_ ->
+              fail
+                ( fst firstValue
+                    <> " and "
+                    <> fst conflict
+                    <> " must not be set to different values"
+                )
+    validateNamedConnUrl (key, normalized) =
+      case validateFallbackConnUrl key normalized of
+        Right conn -> pure (key, conn)
+        Left msg -> fail msg
+    reconcileConnUrlSslMode Nothing Nothing = pure Nothing
+    reconcileConnUrlSslMode Nothing (Just (_, url)) = pure (Just url)
+    reconcileConnUrlSslMode (Just _) Nothing = pure Nothing
+    reconcileConnUrlSslMode (Just (sslEnvName, sslMode)) (Just (urlEnvName, url)) =
+      case extractConnUrlParam "sslmode" url of
+        Nothing -> pure (Just (appendConnUrlParam "sslmode" sslMode url))
+        Just urlMode
+          | T.toLower (T.strip (T.pack urlMode)) == T.toLower (T.strip (T.pack sslMode)) ->
+              pure (Just url)
+          | otherwise ->
+              fail (sslEnvName <> " conflicts with " <> urlEnvName <> " sslmode")
+    appendConnUrlParam key value url =
+      url <> (if '?' `elem` url then "&" else "?") <> key <> "=" <> value
     normalizeEnvString raw =
       let trimmed = T.unpack (T.strip (T.pack raw))
       in if null trimmed then Nothing else Just trimmed
-    asBool v = case fmap toLower v of
-      "true"  -> True
-      "1"     -> True
-      "yes"   -> True
-      "on"    -> True
-      _       -> False
-    validateSeedTriggerToken mVal =
+    lookupSeedRuntimeEnv =
+      mapM
+        (\key -> do
+          value <- lookupEnv key
+          pure (key, value))
+        seedRuntimeEnvKeys
+    seedRuntimeEnvKeys =
+      [ "FLY_APP_NAME"
+      , "RENDER"
+      , "RAILWAY_ENVIRONMENT"
+      , "HEROKU_APP_NAME"
+      , "VERCEL"
+      , "CF_PAGES"
+      , "K_SERVICE"
+      , "APP_ENV"
+      , "ENVIRONMENT"
+      , "NODE_ENV"
+      , "RUNTIME_ENV"
+      ]
+    seedTriggerAllowedInRuntime runtimeEnv =
+      not (hasHostedRuntimeEnv || hasProductionEnv)
+      where
+        hasHostedRuntimeEnv =
+          any
+            hasNonEmptyEnv
+            [ "FLY_APP_NAME"
+            , "RENDER"
+            , "RAILWAY_ENVIRONMENT"
+            , "HEROKU_APP_NAME"
+            , "VERCEL"
+            , "CF_PAGES"
+            , "K_SERVICE"
+            ]
+        hasProductionEnv =
+          any
+            (maybe False isProductionValue . lookupNonEmptyEnv)
+            [ "APP_ENV"
+            , "ENVIRONMENT"
+            , "NODE_ENV"
+            , "RUNTIME_ENV"
+            ]
+        hasNonEmptyEnv key = maybe False (const True) (lookupNonEmptyEnv key)
+        lookupNonEmptyEnv key =
+          case lookup key runtimeEnv of
+            Just (Just raw) | not (T.null (T.strip (T.pack raw))) -> Just raw
+            _ -> Nothing
+        isProductionValue raw =
+          T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
+    validateSeedTriggerToken runtimeEnv mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> pure Nothing
         Just txt
           | T.null txt -> pure Nothing
           | T.any (\ch -> isSpace ch || isControl ch) txt ->
               fail "SEED_TRIGGER_TOKEN must not contain whitespace or control characters"
+          | T.any isHiddenConnectionUrlChar txt ->
+              fail "SEED_TRIGGER_TOKEN must not contain hidden formatting characters"
           | T.length txt < 16 ->
               fail "SEED_TRIGGER_TOKEN must be at least 16 characters"
           | T.length txt > 512 ->
               fail "SEED_TRIGGER_TOKEN must be 512 characters or fewer"
+          | not (seedTriggerAllowedInRuntime runtimeEnv) ->
+              fail "SEED_TRIGGER_TOKEN must be unset in hosted or production runtimes"
           | otherwise -> pure (Just txt)
     mkEmailConfig mHost mUser mPass mFrom mFromName mPort mTls = do
       let host = normalizeRequiredSmtpValue mHost
@@ -646,12 +1232,12 @@ loadConfig = do
             normalizedFrom <- case normalizeConfiguredEmailAddress rawFromAddr of
               Just email -> pure email
               Nothing -> fail "SMTP_FROM must be a valid email address"
-            let name = maybe "TDF Records" (T.strip . T.pack) mFromName
-                useTls = maybe True asBool mTls
+            name <- normalizeSmtpFromName mFromName
+            useTls <- validateStartupBooleanFlag "SMTP_TLS" True mTls
             portVal <- validatePortEnv "SMTP_PORT" 587 mPort
             pure $
               Just EmailConfig
-                { emailFromName = if T.null name then "TDF Records" else name
+                { emailFromName = name
                 , emailFromAddress = normalizedFrom
                 , smtpHost = hostVal
                 , smtpPort = portVal
@@ -666,6 +1252,19 @@ loadConfig = do
 
     normalizeRequiredSmtpValue =
       fmap (T.strip . T.pack) >=> nonEmpty
+
+    normalizeSmtpFromName Nothing = pure "TDF Records"
+    normalizeSmtpFromName (Just rawName) =
+      let name = T.strip (T.pack rawName)
+      in if T.null name
+           then pure "TDF Records"
+           else if T.length name > 120
+             then fail "SMTP_FROM_NAME must be 120 characters or fewer"
+             else if T.any isControl name || T.any (`elem` ['\n', '\r']) name
+               then fail "SMTP_FROM_NAME must not contain control characters"
+               else if T.any isHiddenConnectionUrlChar name
+                 then fail "SMTP_FROM_NAME must not contain hidden formatting characters"
+                 else pure name
 
     normalizeConfiguredEmailAddress rawEmail =
       let normalized = T.toLower (T.strip rawEmail)
@@ -782,7 +1381,11 @@ normalizeSessionCookieDomain (Just rawDomain)
       invalid
   | T.isPrefixOf "." canonical || T.isSuffixOf "." canonical =
       invalid
-  | any (not . isValidDomainLabel) (T.splitOn "." canonical) =
+  | length domainLabels < 2 =
+      invalid
+  | any (not . isValidDomainLabel) domainLabels =
+      invalid
+  | not (isValidCookieDomainTopLabel (last domainLabels)) =
       invalid
   | otherwise =
       Right (Just canonical)
@@ -793,6 +1396,7 @@ normalizeSessionCookieDomain (Just rawDomain)
       case T.stripPrefix "." lowered of
         Just rest -> rest
         Nothing -> lowered
+    domainLabels = T.splitOn "." canonical
     invalid =
       Left
         "SESSION_COOKIE_DOMAIN must be a cookie domain without scheme, port, path, whitespace, separators, or control characters"
@@ -807,6 +1411,10 @@ normalizeSessionCookieDomain (Just rawDomain)
         && T.all isDomainChar label
     isDomainChar ch =
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
+    isValidCookieDomainTopLabel label =
+      T.length label >= 2 && T.any isDomainLetter label
+    isDomainLetter ch =
+      ch >= 'a' && ch <= 'z'
 
 validateSessionCookieName :: Maybe String -> IO Text
 validateSessionCookieName rawName =
@@ -847,15 +1455,27 @@ normalizeSessionCookiePath (Just rawPath)
       Right path
   where
     path = T.strip (T.pack rawPath)
-    invalid = Left "SESSION_COOKIE_PATH must start with / and contain no whitespace, semicolons, commas, or control characters"
+    invalid =
+      Left
+        ( "SESSION_COOKIE_PATH must start with / and contain no whitespace, "
+            <> "semicolons, commas, or control characters; hidden formatting "
+            <> "characters are also rejected"
+        )
     invalidPathChar ch =
-      isControl ch || isSpace ch || ch == ';' || ch == ','
+      isControl ch
+        || isSpace ch
+        || isHiddenConnectionUrlChar ch
+        || ch == ';'
+        || ch == ','
 
 validateConfiguredHttpsUrl :: String -> Maybe String -> IO (Maybe Text)
 validateConfiguredHttpsUrl _ Nothing = pure Nothing
 validateConfiguredHttpsUrl envName (Just rawUrl) =
   case normalizeConfiguredHttpsUrl envName rawUrl of
     Left msg -> fail msg
+    Right (Just urlVal)
+      | "#" `T.isInfixOf` urlVal ->
+          fail (envName <> " must not include a URL fragment")
     Right urlVal -> pure urlVal
 
 validateConfiguredBaseUrl :: String -> Maybe String -> IO (Maybe Text)
@@ -867,8 +1487,9 @@ validateConfiguredBaseUrl envName (Just rawUrl) =
 
 validateConfiguredApiBaseUrl :: String -> Text -> Maybe String -> IO Text
 validateConfiguredApiBaseUrl _ defaultUrl Nothing = pure defaultUrl
-validateConfiguredApiBaseUrl envName defaultUrl (Just rawUrl)
-  | T.null trimmed = pure defaultUrl
+validateConfiguredApiBaseUrl envName _ (Just rawUrl)
+  | T.null trimmed =
+      fail (envName <> " is configured but blank; unset it to use the default")
   | otherwise =
       case normalizeConfiguredApiBaseUrl envName (T.unpack trimmed) of
         Left msg -> fail msg
@@ -883,12 +1504,45 @@ validateConfiguredChatKitWorkflowId (Just (envName, rawWorkflowId)) =
     Left msg -> fail msg
     Right workflowId -> pure workflowId
 
+validateConfiguredGoogleClientId :: Maybe String -> IO (Maybe Text)
+validateConfiguredGoogleClientId Nothing = pure Nothing
+validateConfiguredGoogleClientId (Just rawClientId) =
+  case normalizeConfiguredGoogleClientId "GOOGLE_CLIENT_ID" rawClientId of
+    Left msg -> fail msg
+    Right clientId -> pure clientId
+
 validateConfiguredGraphNodeId :: Maybe (String, String) -> IO (Maybe Text)
 validateConfiguredGraphNodeId Nothing = pure Nothing
 validateConfiguredGraphNodeId (Just (envName, rawNodeId)) =
   case normalizeConfiguredGraphNodeId envName rawNodeId of
     Left msg -> fail msg
     Right nodeId -> pure nodeId
+
+validateConfiguredFacebookAppSecret :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredFacebookAppSecret Nothing = pure Nothing
+validateConfiguredFacebookAppSecret (Just (envName, rawSecret)) =
+  case normalizeConfiguredFacebookAppSecret envName rawSecret of
+    Left msg -> fail msg
+    Right secret -> pure secret
+
+validateConfiguredMetaVerifyToken :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredMetaVerifyToken Nothing = pure Nothing
+validateConfiguredMetaVerifyToken (Just (envName, rawToken)) =
+  case normalizeConfiguredMetaVerifyToken envName rawToken of
+    Left msg -> fail msg
+    Right token -> pure token
+
+validateConfiguredGraphAccessToken :: String -> Maybe String -> IO (Maybe Text)
+validateConfiguredGraphAccessToken _ Nothing = pure Nothing
+validateConfiguredGraphAccessToken envName (Just rawToken) =
+  case normalizeConfiguredGraphAccessToken envName rawToken of
+    Left msg -> fail msg
+    Right token -> pure token
+
+validateConfiguredNamedGraphAccessToken :: Maybe (String, String) -> IO (Maybe Text)
+validateConfiguredNamedGraphAccessToken Nothing = pure Nothing
+validateConfiguredNamedGraphAccessToken (Just (envName, rawToken)) =
+  validateConfiguredGraphAccessToken envName (Just rawToken)
 
 validateConfiguredOpenAiModel :: Maybe String -> IO Text
 validateConfiguredOpenAiModel Nothing = pure defaultOpenAiModel
@@ -900,24 +1554,48 @@ validateConfiguredOpenAiModel (Just rawModel) =
 
 validateConfiguredOpenAiEmbedModel :: Maybe String -> IO Text
 validateConfiguredOpenAiEmbedModel Nothing = pure defaultOpenAiEmbedModel
-validateConfiguredOpenAiEmbedModel (Just rawModel)
-  | T.null model = pure defaultOpenAiEmbedModel
-  | otherwise =
-      case openAiEmbedDimensions model of
+validateConfiguredOpenAiEmbedModel (Just rawModel) =
+  case normalizeConfiguredOpenAiModel "OPENAI_EMBED_MODEL" rawModel of
+    Left msg -> fail msg
+    Right Nothing -> pure defaultOpenAiEmbedModel
+    Right (Just rawModelId) ->
+      let model = T.toLower rawModelId
+      in case openAiEmbedDimensions model of
         Just _ -> pure model
         Nothing ->
           fail
             ( "OPENAI_EMBED_MODEL must be one of: text-embedding-3-small, "
               <> "text-embedding-3-large, text-embedding-ada-002"
             )
-  where
-    model = T.toLower (T.strip (T.pack rawModel))
+
+validateConfiguredOpenAiApiKey :: Maybe String -> IO (Maybe Text)
+validateConfiguredOpenAiApiKey Nothing = pure Nothing
+validateConfiguredOpenAiApiKey (Just rawKey) =
+  case normalizeConfiguredOpenAiApiKey "OPENAI_API_KEY" rawKey of
+    Left msg -> fail msg
+    Right apiKey -> pure apiKey
 
 defaultOpenAiEmbedModel :: Text
-defaultOpenAiEmbedModel = "text-embedding-3-small"
+defaultOpenAiEmbedModel = llmProviderDefaultEmbedModel llmProvider
 
 defaultOpenAiModel :: Text
-defaultOpenAiModel = "gpt-5-chat-latest"
+defaultOpenAiModel = llmProviderDefaultChatModel llmProvider
+
+normalizeConfiguredOpenAiApiKey :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredOpenAiApiKey envName rawKey
+  | T.null apiKey = Right Nothing
+  | T.length apiKey > 4096 =
+      Left (envName <> " must be 4096 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) apiKey =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar apiKey =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) apiKey =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just apiKey)
+  where
+    apiKey = T.strip (T.pack rawKey)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
 
 normalizeConfiguredOpenAiModel :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredOpenAiModel envName rawModel
@@ -963,11 +1641,37 @@ normalizeConfiguredChatKitWorkflowId envName rawWorkflowId
         || (ch >= '0' && ch <= '9')
         || ch `elem` ("._-" :: String)
 
+normalizeConfiguredGoogleClientId :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredGoogleClientId envName rawClientId
+  | T.null clientId = Right Nothing
+  | T.length clientId > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any isSpace clientId =
+      Left (envName <> " must not contain whitespace")
+  | T.any isControl clientId =
+      Left (envName <> " must not contain control characters")
+  | T.any (`elem` ("/?#" :: String)) clientId =
+      Left (envName <> " must not contain path, query, or fragment characters")
+  | T.any (not . isGoogleClientIdChar) clientId =
+      Left
+        ( envName
+            <> " must use only ASCII letters, digits, '.', '_' or '-'"
+        )
+  | otherwise = Right (Just clientId)
+  where
+    clientId = T.strip (T.pack rawClientId)
+    isGoogleClientIdChar ch =
+      (ch >= 'a' && ch <= 'z')
+        || (ch >= 'A' && ch <= 'Z')
+        || (ch >= '0' && ch <= '9')
+        || ch `elem` ("._-" :: String)
+
 normalizeConfiguredGraphNodeId :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredGraphNodeId envName rawNodeId
   | T.null nodeId = Right Nothing
   | T.length nodeId > 128 = invalid
   | not (T.any isGraphNodeIdAtom nodeId) = invalid
+  | not (isGraphNodeIdAtom (T.head nodeId) && isGraphNodeIdAtom (T.last nodeId)) = invalid
   | T.any (not . isGraphNodeIdChar) nodeId = invalid
   | otherwise = Right (Just nodeId)
   where
@@ -976,7 +1680,7 @@ normalizeConfiguredGraphNodeId envName rawNodeId
       Left
         ( envName
             <> " must be a Graph node id using only ASCII letters, numbers, "
-            <> "'.', '_' or '-' with at least one letter or number (128 chars max)"
+            <> "'.', '_' or '-' starting and ending with a letter or number (128 chars max)"
         )
     isGraphNodeIdAtom ch =
       (ch >= 'a' && ch <= 'z')
@@ -984,6 +1688,51 @@ normalizeConfiguredGraphNodeId envName rawNodeId
         || (ch >= '0' && ch <= '9')
     isGraphNodeIdChar ch =
       isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+normalizeConfiguredFacebookAppSecret :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredFacebookAppSecret envName rawSecret
+  | T.null secret = Right Nothing
+  | T.length secret > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) secret =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar secret =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) secret =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just secret)
+  where
+    secret = T.strip (T.pack rawSecret)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
+
+normalizeConfiguredMetaVerifyToken :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredMetaVerifyToken envName rawToken
+  | T.null token = Right Nothing
+  | T.length token > 512 =
+      Left (envName <> " must be 512 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) token =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar token =
+      Left (envName <> " must not contain hidden formatting characters")
+  | otherwise = Right (Just token)
+  where
+    token = T.strip (T.pack rawToken)
+
+normalizeConfiguredGraphAccessToken :: String -> String -> Either String (Maybe Text)
+normalizeConfiguredGraphAccessToken envName rawToken
+  | T.null token = Right Nothing
+  | T.length token > 4096 =
+      Left (envName <> " must be 4096 characters or fewer")
+  | T.any (\ch -> isSpace ch || isControl ch) token =
+      Left (envName <> " must not contain whitespace or control characters")
+  | T.any isHiddenConnectionUrlChar token =
+      Left (envName <> " must not contain hidden formatting characters")
+  | T.any (not . isVisibleAscii) token =
+      Left (envName <> " must contain visible ASCII characters only")
+  | otherwise = Right (Just token)
+  where
+    token = T.strip (T.pack rawToken)
+    isVisibleAscii ch = ch >= '!' && ch <= '~'
 
 normalizeConfiguredApiBaseUrl :: String -> String -> Either String Text
 normalizeConfiguredApiBaseUrl envName rawUrl
@@ -997,8 +1746,22 @@ normalizeConfiguredApiBaseUrl envName rawUrl
         Just urlVal
           | T.any (`elem` ("?#" :: String)) urlVal ->
               Left (envName <> " must be an absolute https URL without query or fragment")
+          | not (validApiBasePathSuffix (apiBasePathSuffix urlVal)) ->
+              Left (ambiguousUrlPathMessage envName)
           | otherwise ->
               Right (T.dropWhileEnd (== '/') urlVal)
+  where
+    apiBasePathSuffix urlVal =
+      let remainder = T.drop 8 urlVal
+      in snd (T.break (== '/') remainder)
+
+    validApiBasePathSuffix suffix =
+      T.null suffix
+        || ( "/" `T.isPrefixOf` suffix
+             && not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+             && not (hasAmbiguousUrlPathSuffix suffix)
+           )
 
 validateConfiguredCourseSlug :: Maybe String -> IO Text
 validateConfiguredCourseSlug rawSlug =
@@ -1022,21 +1785,23 @@ normalizeConfiguredCourseSlug (Just rawSlug)
         "COURSE_DEFAULT_SLUG must use only ASCII letters, numbers, and hyphens (96 chars max)"
 
 defaultCourseSlug :: Text
-defaultCourseSlug = "produccion-musical-abr-2026"
+defaultCourseSlug = "produccion-musical-jun-2026"
 
 normalizeConfiguredBaseUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredBaseUrl envName rawUrl
   | T.null trimmed = Right Nothing
   | T.any isControl trimmed =
       Left (envName <> " must not contain control characters")
+  | T.any isHiddenConnectionUrlChar trimmed =
+      Left (envName <> " must not contain hidden formatting characters")
   | T.any isSpace trimmed =
       invalid
   | T.any (`elem` ("?#" :: String)) trimmed =
       Left (envName <> " must be an absolute http(s) URL without query or fragment")
   | "https://" `T.isPrefixOf` lowerUrl =
-      validateRemainder (T.drop 8 trimmed)
+      validateRemainder "https" "443" (T.drop 8 trimmed)
   | "http://" `T.isPrefixOf` lowerUrl =
-      validateRemainder (T.drop 7 trimmed)
+      validateRemainder "http" "80" (T.drop 7 trimmed)
   | otherwise =
       invalid
   where
@@ -1044,14 +1809,24 @@ normalizeConfiguredBaseUrl envName rawUrl
     lowerUrl = T.toLower trimmed
     invalid = Left (envName <> " must be an absolute http(s) URL")
 
-    validateRemainder remainder =
-      if hasValidAuthority remainder
-        then Right (Just trimmed)
-        else invalid
+    validateRemainder scheme defaultPort remainder =
+      let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
+      in if not (validateAuthority authority)
+           then invalid
+           else if hasExplicitDefaultPort defaultPort authority
+             then Left (envName <> " must omit default port for " <> scheme)
+           else if not (validateBasePathSuffix pathSuffix)
+             then
+               Left (ambiguousUrlPathMessage envName)
+             else Right (Just trimmed)
 
-    hasValidAuthority remainder =
-      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
-      in validateAuthority authority
+    validateBasePathSuffix suffix =
+      T.null suffix
+        || ( "/" `T.isPrefixOf` suffix
+             && not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+             && not (hasAmbiguousUrlPathSuffix suffix)
+           )
 
     validateAuthority rawAuthority
       | T.null rawAuthority = False
@@ -1066,6 +1841,15 @@ normalizeConfiguredBaseUrl envName rawUrl
       | otherwise =
           let (host, portSuffix) = T.breakOn ":" rawAuthority
           in validateHost host && validatePortSuffix portSuffix
+
+    hasExplicitDefaultPort defaultPort rawAuthority =
+      let portSuffix =
+            if "[" `T.isPrefixOf` rawAuthority
+              then
+                let (_, rest) = T.breakOn "]" rawAuthority
+                in T.drop 1 rest
+              else snd (T.breakOn ":" rawAuthority)
+      in portSuffix == ":" <> defaultPort
 
     validateHost host =
       let normalizedHost = T.toLower host
@@ -1095,6 +1879,7 @@ normalizeConfiguredBaseUrl envName rawUrl
           let port = T.drop 1 suffix
           in not (T.null port)
             && T.all (\ch -> ch >= '0' && ch <= '9') port
+            && not (T.length port > 1 && T.head port == '0')
             && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
                 (readMaybe (T.unpack port))
       | otherwise = False
@@ -1109,7 +1894,7 @@ normalizeConfiguredBaseUrl envName rawUrl
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
 
     isAmbiguousNumericHost host =
-      T.all (\ch -> isDigit ch || ch == '.') host
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
         && isNothing (parseIpv4Octets host)
 
     parseIpv4Octets host =
@@ -1123,7 +1908,7 @@ normalizeConfiguredBaseUrl envName rawUrl
         _ -> Nothing
 
     parseOctet octet
-      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
       | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
@@ -1131,30 +1916,64 @@ normalizeConfiguredBaseUrl envName rawUrl
             then Just value
             else Nothing
 
+hasAmbiguousUrlPathSuffix :: Text -> Bool
+hasAmbiguousUrlPathSuffix rawSuffix =
+  any isAmbiguousSegment pathSegments
+  where
+    path = T.dropWhileEnd (== '/') rawSuffix
+    pathSegments =
+      if T.null path
+        then []
+        else T.splitOn "/" (T.drop 1 path)
+    isAmbiguousSegment segment =
+      T.null segment || segment == "." || segment == ".."
+
+ambiguousUrlPathMessage :: String -> String
+ambiguousUrlPathMessage envName =
+  envName
+    <> " path must not start with // or contain backslashes, "
+    <> "empty, dot, or dot-dot segments"
+
 normalizeConfiguredHttpsUrl :: String -> String -> Either String (Maybe Text)
 normalizeConfiguredHttpsUrl envName rawUrl
   | T.null trimmed = Right Nothing
   | T.any isControl trimmed =
       Left (envName <> " must not contain control characters")
+  | T.any isHiddenConnectionUrlChar trimmed =
+      Left (envName <> " must not contain hidden formatting characters")
   | T.any isSpace trimmed =
       invalid
   | not ("https://" `T.isPrefixOf` lowerUrl) =
       invalid
-  | not (hasValidAuthority (T.drop 8 trimmed)) =
-      invalid
   | otherwise =
-      Right (Just trimmed)
+      validateRemainder (T.drop 8 trimmed)
   where
     trimmed = T.strip (T.pack rawUrl)
     lowerUrl = T.toLower trimmed
     invalid = Left (envName <> " must be an absolute https URL")
 
-    hasValidAuthority remainder =
-      let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
-          (host, portSuffix) = T.breakOn ":" authority
+    validateRemainder remainder =
+      let (authority, pathSuffix) = T.break (`elem` ("/?#" :: String)) remainder
+      in if not (hasValidAuthority authority)
+           then invalid
+           else if not (validateHttpsPathCharacters pathSuffix)
+             then
+               Left (envName <> " path must not start with // or contain backslashes")
+           else if hasAmbiguousUrlPathSuffix pathSuffix
+             then Left (ambiguousUrlPathMessage envName)
+             else Right (Just trimmed)
+
+    hasValidAuthority authority =
+      let (host, portSuffix) = T.breakOn ":" authority
       in not (T.null authority)
         && validateHost host
         && validatePortSuffix portSuffix
+
+    validateHttpsPathCharacters suffix =
+      T.null suffix
+        || ( not ("//" `T.isPrefixOf` suffix)
+             && not (T.any (== '\\') suffix)
+           )
 
     validateHost host =
       let normalizedHost = T.toLower host
@@ -1175,7 +1994,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
       (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '-'
 
     isAmbiguousNumericHost host =
-      T.all (\ch -> isDigit ch || ch == '.') host
+      T.all (\ch -> isAsciiDigit ch || ch == '.') host
         && isNothing (parseIpv4Octets host)
 
     validatePortSuffix suffix
@@ -1184,6 +2003,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
           let port = T.drop 1 suffix
           in not (T.null port)
             && T.all (\ch -> ch >= '0' && ch <= '9') port
+            && not (T.length port > 1 && T.head port == '0')
             && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
                 (readMaybe (T.unpack port))
       | otherwise = False
@@ -1217,7 +2037,7 @@ normalizeConfiguredHttpsUrl envName rawUrl
         _ -> Nothing
 
     parseOctet octet
-      | T.null octet || T.any (not . isDigit) octet = Nothing
+      | T.null octet || T.any (not . isAsciiDigit) octet = Nothing
       | T.length octet > 1 && T.head octet == '0' = Nothing
       | otherwise = do
           value <- readMaybe (T.unpack octet)
@@ -1265,7 +2085,7 @@ courseMapFallback cfg = fromMaybe "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6" (c
 courseInstructorAvatarFallback :: AppConfig -> Text
 courseInstructorAvatarFallback cfg =
   let base = resolveConfiguredAppBase cfg
-  in fromMaybe (base <> "/assets/esteban-munoz.jpg") (courseDefaultInstructorAvatar cfg >>= nonEmpty)
+  in fromMaybe (base <> "/assets/tdf-ui/esteban-munoz.jpg") (courseDefaultInstructorAvatar cfg >>= nonEmpty)
 
 nonEmpty :: Text -> Maybe Text
 nonEmpty txt =

@@ -17,16 +17,23 @@ import Database.Persist.Sql (SqlPersistT, rawExecute)
 import Database.Persist.Sqlite (runSqlite)
 import Test.Hspec
 
+import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
 import TDF.WhatsApp.Client
   ( SendTextResult (..)
   , normalizeGraphApiVersion
   , normalizeWhatsAppAccessToken
+  , normalizeWhatsAppMessageBody
   , normalizeWhatsAppPhoneNumberId
+  , normalizeWhatsAppRecipientPhone
+  , normalizeWhatsAppVerifyToken
   )
 import TDF.WhatsApp.History
   ( IncomingWhatsAppRecord (..)
   , OutgoingWhatsAppRecord (..)
+  , WhatsAppDeliveryUpdate (..)
+  , applyWhatsAppDeliveryUpdate
+  , normalizeWhatsAppDeliveryStatus
   , normalizeWhatsAppPhone
   , recordIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
@@ -40,10 +47,38 @@ spec = do
       normalizeWhatsAppPhone "(02) 555-0123" `shouldBe` Just "+025550123"
 
     it "rejects mixed-text or implausible phone inputs instead of deriving misleading matches" $ do
+      let arabicIndicPhone =
+            T.pack
+              [ '+'
+              , '\x0665'
+              , '\x0669'
+              , '\x0663'
+              , '\x0669'
+              , '\x0669'
+              , '\x0661'
+              , '\x0662'
+              , '\x0663'
+              , '\x0664'
+              , '\x0665'
+              ]
       normalizeWhatsAppPhone "call me at 099 123 4567" `shouldBe` Nothing
       normalizeWhatsAppPhone "12345" `shouldBe` Nothing
       normalizeWhatsAppPhone "+1234567890123456" `shouldBe` Nothing
       normalizeWhatsAppPhone "593+991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone "+-593991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone "+593\n991234567" `shouldBe` Nothing
+      normalizeWhatsAppPhone ("+593" <> T.singleton '\x00A0' <> "991234567") `shouldBe` Nothing
+      normalizeWhatsAppPhone ("+593" <> T.singleton '\x200B' <> "991234567") `shouldBe` Nothing
+      normalizeWhatsAppPhone arabicIndicPhone `shouldBe` Nothing
+
+  describe "TDF.WhatsApp.History.normalizeWhatsAppDeliveryStatus" $ do
+    it "keeps delivery statuses as bounded safe tokens before persistence" $ do
+      normalizeWhatsAppDeliveryStatus " Delivered " `shouldBe` "delivered"
+      normalizeWhatsAppDeliveryStatus "read_legacy" `shouldBe` "read_legacy"
+      normalizeWhatsAppDeliveryStatus "   " `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus "delivered\nX-Injected: yes" `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus ("read" <> T.singleton '\x200B') `shouldBe` "unknown"
+      normalizeWhatsAppDeliveryStatus (T.replicate 65 "a") `shouldBe` "unknown"
 
   describe "TDF.WhatsApp.Client.normalizeGraphApiVersion" $ do
     it "defaults blank versions and canonicalizes supported Graph API versions" $ do
@@ -63,6 +98,9 @@ spec = do
       assertInvalid "v20.0?fields=id"
       assertInvalid "latest"
       assertInvalid "v20 beta"
+      assertInvalid "v0"
+      assertInvalid "v00.0"
+      assertInvalid "v21.00"
 
   describe "TDF.WhatsApp.Client provider credential normalization" $ do
     it "trims send credentials before request construction" $ do
@@ -76,14 +114,130 @@ spec = do
         `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
       normalizeWhatsAppAccessToken "token\nX-Extra: value"
         `shouldBe` Left "Invalid WhatsApp access token: must not contain whitespace or control characters"
+      normalizeWhatsAppAccessToken ("token" <> T.singleton '\x202E' <> "value")
+        `shouldBe` Left "Invalid WhatsApp access token: must not contain hidden formatting characters"
+      normalizeWhatsAppAccessToken "tokén"
+        `shouldBe` Left "Invalid WhatsApp access token: must contain visible ASCII characters only"
+      normalizeWhatsAppAccessToken (T.replicate 4097 "a")
+        `shouldBe` Left "Invalid WhatsApp access token: token must be 4096 characters or fewer"
+      normalizeWhatsAppVerifyToken ("webhook" <> T.singleton '\x202E' <> "secret")
+        `shouldBe` Left "Invalid WhatsApp verify token: must not contain hidden formatting characters"
+      normalizeWhatsAppVerifyToken ("secr" <> T.singleton '\x00E9' <> "t")
+        `shouldBe` Left "Invalid WhatsApp verify token: must contain visible ASCII characters only"
+      normalizeWhatsAppVerifyToken (T.replicate 513 "a")
+        `shouldBe` Left "Invalid WhatsApp verify token: token must be 512 characters or fewer"
       normalizeWhatsAppPhoneNumberId "   "
         `shouldBe` Left "Invalid WhatsApp phone number id: id is required"
       normalizeWhatsAppPhoneNumberId "123/messages"
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
       normalizeWhatsAppPhoneNumberId "123?fields=id"
         `shouldBe` Left "Invalid WhatsApp phone number id: expected digits only"
+      normalizeWhatsAppPhoneNumberId (T.replicate 65 "1")
+        `shouldBe` Left "Invalid WhatsApp phone number id: id must be 64 digits or fewer"
+
+  describe "TDF.WhatsApp.Client outbound payload normalization" $ do
+    it "normalizes recipient phones and message bodies before Graph request construction" $ do
+      normalizeWhatsAppRecipientPhone " +593 99 123 4567 "
+        `shouldBe` Right "+593991234567"
+      normalizeWhatsAppRecipientPhone "(02) 555-0123"
+        `shouldBe` Right "+025550123"
+      normalizeWhatsAppMessageBody "  Hola\nSeguimos por aqui.  "
+        `shouldBe` Right "Hola\nSeguimos por aqui."
+
+    it "rejects malformed recipients and text bodies before provider fallback handling" $ do
+      let recipientShapeMessage =
+            "Invalid WhatsApp recipient phone: expected 8-15 digits with optional "
+              <> "leading + and phone separators"
+          bodyControlMessage =
+            "Invalid WhatsApp message body: message must not contain "
+              <> "unsupported control characters"
+          bodyFormatMessage =
+            "Invalid WhatsApp message body: message must not contain "
+              <> "hidden formatting or separator characters"
+      normalizeWhatsAppRecipientPhone "   "
+        `shouldBe` Left "Invalid WhatsApp recipient phone: phone is required"
+      normalizeWhatsAppRecipientPhone "call me at 099 123 4567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "12345"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+1234567890123456"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "593+991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+-593991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone "+593\n991234567"
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone ("+593" <> T.singleton '\x00A0' <> "991234567")
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppRecipientPhone ("+593" <> T.singleton '\x2028' <> "991234567")
+        `shouldBe` Left recipientShapeMessage
+      normalizeWhatsAppMessageBody "   "
+        `shouldBe` Left "Invalid WhatsApp message body: message is required"
+      normalizeWhatsAppMessageBody (T.replicate 4097 "a")
+        `shouldBe` Left "Invalid WhatsApp message body: message must be 4096 characters or fewer"
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\NUL')
+        `shouldBe` Left bodyControlMessage
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\x202E' <> "ops")
+        `shouldBe` Left bodyFormatMessage
+      normalizeWhatsAppMessageBody ("hola" <> T.singleton '\x2028' <> "ops")
+        `shouldBe` Left bodyFormatMessage
 
   describe "recordIncomingWhatsAppMessage" $ do
+    it "allocates safe distinct fallback external ids for malformed inbound ids" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incoming rawExternalId body = IncomingWhatsAppRecord
+            { iwrExternalId = rawExternalId
+            , iwrSenderId = " +593 99 123 4567 "
+            , iwrSenderName = Just "Ada"
+            , iwrText = body
+            , iwrAdExternalId = Nothing
+            , iwrAdName = Nothing
+            , iwrCampaignExternalId = Nothing
+            , iwrCampaignName = Nothing
+            , iwrMetadata = Nothing
+            , iwrTransportPayload = Nothing
+            , iwrSource = Just "history_spec"
+            }
+      ( firstExternalId
+        , secondExternalId
+        , thirdExternalId
+        , firstText
+        , secondText
+        , thirdText
+        ) <- runWhatsAppHistorySql $ do
+        first <-
+          recordIncomingWhatsAppMessage now (incoming "   " "Primer mensaje")
+        second <-
+          recordIncomingWhatsAppMessage now
+            (incoming "wamid with spaces" "Segundo mensaje")
+        third <-
+          recordIncomingWhatsAppMessage now
+            ( incoming
+                ("wamid" <> T.singleton '\x200B' <> "hidden")
+                "Tercer mensaje"
+            )
+        pure
+          ( ME.whatsAppMessageExternalId (entityVal first)
+          , ME.whatsAppMessageExternalId (entityVal second)
+          , ME.whatsAppMessageExternalId (entityVal third)
+          , ME.whatsAppMessageText (entityVal first)
+          , ME.whatsAppMessageText (entityVal second)
+          , ME.whatsAppMessageText (entityVal third)
+          )
+
+      firstExternalId
+        `shouldSatisfy`
+          (\val -> ("+593991234567-in-" :: Text) `T.isPrefixOf` val)
+      secondExternalId `shouldBe` firstExternalId <> "-2"
+      thirdExternalId `shouldBe` firstExternalId <> "-3"
+      T.any isSpace firstExternalId `shouldBe` False
+      T.any isSpace secondExternalId `shouldBe` False
+      T.isInfixOf (T.singleton '\x200B') thirdExternalId `shouldBe` False
+      firstText `shouldBe` Just "Primer mensaje"
+      secondText `shouldBe` Just "Segundo mensaje"
+      thirdText `shouldBe` Just "Tercer mensaje"
+
     it "does not overwrite immutable inbound content on duplicate webhook delivery" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
           incoming body adName metadata payload = IncomingWhatsAppRecord
@@ -129,8 +283,91 @@ spec = do
       storedMetadata `shouldBe` Just "original-metadata"
       storedPayload `shouldBe` Just "original-payload"
 
+    it "leaves party ownership unset when phone-only lookup matches multiple parties" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          incoming = IncomingWhatsAppRecord
+            { iwrExternalId = "wamid.ambiguous-phone"
+            , iwrSenderId = " +593 99 123 4567 "
+            , iwrSenderName = Just "WhatsApp Sender"
+            , iwrText = "Hola"
+            , iwrAdExternalId = Nothing
+            , iwrAdName = Nothing
+            , iwrCampaignExternalId = Nothing
+            , iwrCampaignName = Nothing
+            , iwrMetadata = Nothing
+            , iwrTransportPayload = Nothing
+            , iwrSource = Just "history_spec"
+            }
+      (partyId, phoneE164) <- runWhatsAppHistorySql $ do
+        _ <- insert (seedParty now "Ada" (Just "+593991234567") Nothing)
+        _ <- insert (seedParty now "Bea" Nothing (Just "593991234567"))
+        stored <- recordIncomingWhatsAppMessage now incoming
+        pure
+          ( ME.whatsAppMessagePartyId (entityVal stored)
+          , ME.whatsAppMessagePhoneE164 (entityVal stored)
+          )
+
+      partyId `shouldBe` Nothing
+      phoneE164 `shouldBe` Just "+593991234567"
+
+  describe "applyWhatsAppDeliveryUpdate" $ do
+    it "sanitizes provider status tokens before persisting delivery fallback updates" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          deliveryUpdate rawStatus = WhatsAppDeliveryUpdate
+            { wduExternalId = "wamid.delivery-status"
+            , wduStatus = rawStatus
+            , wduRecipientId = Nothing
+            , wduOccurredAt = Nothing
+            , wduDeliveryError = Nothing
+            , wduStatusPayload = Nothing
+            }
+      (firstStatus, secondStatus) <- runWhatsAppHistorySql $ do
+        _ <- insert (seedWhatsAppMessage now "wamid.delivery-status" "outgoing")
+        first <- applyWhatsAppDeliveryUpdate now
+          (deliveryUpdate "delivered\nX-Injected: yes")
+        second <- applyWhatsAppDeliveryUpdate now (deliveryUpdate " READ ")
+        pure
+          ( fmap (ME.whatsAppMessageDeliveryStatus . entityVal) first
+          , fmap (ME.whatsAppMessageDeliveryStatus . entityVal) second
+          )
+
+      firstStatus `shouldBe` Just "unknown"
+      secondStatus `shouldBe` Just "read"
+
+    it "rejects malformed delivery external ids before status lookup" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          unsafeExternalId = "wamid.delivery" <> T.singleton '\n' <> "X-Injected"
+          deliveryUpdate externalId = WhatsAppDeliveryUpdate
+            { wduExternalId = externalId
+            , wduStatus = "read"
+            , wduRecipientId = Nothing
+            , wduOccurredAt = Nothing
+            , wduDeliveryError = Nothing
+            , wduStatusPayload = Nothing
+            }
+      (mMalformedUpdateKey, unsafeStatus, mSafeUpdateKey, safeMessageKey, safeStatus) <-
+        runWhatsAppHistorySql $ do
+          unsafeKey <- insert (seedWhatsAppMessage now unsafeExternalId "outgoing")
+          safeKey <- insert (seedWhatsAppMessage now "wamid.delivery-safe" "outgoing")
+          malformed <- applyWhatsAppDeliveryUpdate now (deliveryUpdate unsafeExternalId)
+          safe <- applyWhatsAppDeliveryUpdate now (deliveryUpdate " wamid.delivery-safe ")
+          unsafeStored <- get unsafeKey
+          safeStored <- get safeKey
+          pure
+            ( entityKey <$> malformed
+            , ME.whatsAppMessageDeliveryStatus <$> unsafeStored
+            , entityKey <$> safe
+            , safeKey
+            , ME.whatsAppMessageDeliveryStatus <$> safeStored
+            )
+
+      mMalformedUpdateKey `shouldBe` Nothing
+      unsafeStatus `shouldBe` Just "sent"
+      mSafeUpdateKey `shouldBe` Just safeMessageKey
+      safeStatus `shouldBe` Just "read"
+
   describe "recordOutgoingWhatsAppMessage" $ do
-    it "falls back to a generated external id when a transport success returns a blank message id" $ do
+    it "records blank provider message ids as failed while allocating a safe fallback id" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
           sendResult =
             Right SendTextResult
@@ -157,6 +394,42 @@ spec = do
       externalId `shouldSatisfy` (\val -> not (T.null (T.strip val)))
       externalId `shouldSatisfy` (\val -> ("+593991234567-out-" :: Text) `T.isPrefixOf` val)
       externalId `shouldSatisfy` (T.all (not . isSpace))
+      ME.whatsAppMessageDeliveryStatus (entityVal stored) `shouldBe` "failed"
+      ME.whatsAppMessageReplyStatus (entityVal stored) `shouldBe` "error"
+      ME.whatsAppMessageDeliveryError (entityVal stored)
+        `shouldBe` Just "WhatsApp provider response did not include a usable message id"
+
+    it "does not echo malformed recipient text into generated fallback external ids" $ do
+      let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
+          sendResult =
+            Right SendTextResult
+              { sendTextPayload = object []
+              , sendTextMessageId = Just "   "
+              }
+      stored <- runWhatsAppHistorySql $
+        recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord
+          { owrRecipientPhone = "call me at 099 123 4567"
+          , owrRecipientPartyId = Nothing
+          , owrRecipientName = Just "Ada"
+          , owrRecipientEmail = Nothing
+          , owrActorPartyId = Nothing
+          , owrBody = "Hola"
+          , owrSource = Just "history_spec"
+          , owrReplyToMessageId = Nothing
+          , owrReplyToExternalId = Nothing
+          , owrResendOfMessageId = Nothing
+          , owrMetadata = Nothing
+          }
+          sendResult
+
+      let storedMessage = entityVal stored
+          externalId = ME.whatsAppMessageExternalId storedMessage
+      externalId `shouldSatisfy` ("unknown-out-" `T.isPrefixOf`)
+      externalId `shouldSatisfy` (T.all (not . isSpace))
+      externalId `shouldSatisfy` (not . ("call me" `T.isInfixOf`))
+      ME.whatsAppMessageSenderId storedMessage `shouldBe` "unknown"
+      ME.whatsAppMessagePhoneE164 storedMessage `shouldBe` Nothing
+      ME.whatsAppMessageDeliveryStatus storedMessage `shouldBe` "failed"
 
     it "allocates distinct fallback external ids for repeated blank-id sends at the same timestamp" $ do
       let now = UTCTime (fromGregorian 2026 4 12) (secondsToDiffTime 0)
@@ -275,6 +548,9 @@ initializeWhatsAppHistorySchema = do
     \\"instagram\" VARCHAR NULL,\
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -359,4 +635,23 @@ seedWhatsAppMessage now externalId direction =
     , ME.whatsAppMessageSource = Just "history_spec_seed"
     , ME.whatsAppMessageResendOfMessageId = Nothing
     , ME.whatsAppMessageCreatedAt = now
+    }
+
+seedParty :: UTCTime -> Text -> Maybe Text -> Maybe Text -> M.Party
+seedParty now displayName whatsapp primaryPhone =
+  M.Party
+    { M.partyLegalName = Nothing
+    , M.partyDisplayName = displayName
+    , M.partyIsOrg = False
+    , M.partyTaxId = Nothing
+    , M.partyPrimaryEmail = Nothing
+    , M.partyPrimaryPhone = primaryPhone
+    , M.partyWhatsapp = whatsapp
+    , M.partyInstagram = Nothing
+    , M.partyEmergencyContact = Nothing
+    , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
+    , M.partyCreatedAt = now
     }

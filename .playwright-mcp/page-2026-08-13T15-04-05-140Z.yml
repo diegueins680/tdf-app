@@ -1,0 +1,462 @@
+- generic [ref=f52e4]:
+  - generic [ref=f52e18]:
+    - generic [ref=f52e21]:
+      - link [ref=f52e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f52e31]
+      - generic [ref=f52e34]:
+        - link [ref=f52e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f52e44]
+        - link [ref=f52e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f52e54]
+        - link [ref=f52e61] [cursor=pointer]:
+          - /url: /direct/t/117863112941491
+          - generic [ref=f52e64]:
+            - img "Messages" [ref=f52e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f52e69]: "3"
+        - link [ref=f52e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f52e80]
+        - link [ref=f52e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f52e92]
+        - link [ref=f52e100] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f52e105]
+        - link [ref=f52e110] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f52e115]
+        - link [ref=f52e122] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f52e127]:
+            - img "tdf.records.label's profile picture" [ref=f52e128]
+      - generic [ref=f52e129]:
+        - link [ref=f52e132] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f52e137]
+        - link [ref=f52e140] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f52e145]
+    - generic [ref=f52e148]:
+      - main [ref=f52e149]:
+        - generic [ref=f52e151]:
+          - generic [ref=f52e152]:
+            - generic [ref=f52e153]:
+              - button [ref=f52e158] [cursor=pointer]:
+                - link [ref=f52e160]:
+                  - img "69segundosofficial's profile picture" [ref=f52e161]
+              - generic [ref=f52e163]:
+                - generic [ref=f52e164]:
+                  - link [ref=f52e166] [cursor=pointer]:
+                    - /url: "#"
+                    - heading "69segundosofficial" [level=2] [ref=f52e167]
+                  - button [ref=f52e169] [cursor=pointer]:
+                    - img "Options" [ref=f52e171]
+                - generic [ref=f52e175]: 69 Segundos
+                - generic [ref=f52e177]:
+                  - generic [ref=f52e179]:
+                    - generic [ref=f52e180]: "642"
+                    - text: posts
+                  - link "3,534 followers" [ref=f52e182] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=f52e183]:
+                      - generic "3,534" [ref=f52e184]
+                      - text: followers
+                  - link "722 following" [ref=f52e186] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=f52e187]:
+                      - generic [ref=f52e188]: "722"
+                      - text: following
+            - generic [ref=f52e190]:
+              - generic [ref=f52e191]:
+                - generic [ref=f52e192]: Musician/band
+                - button "Pioneers of Melodic Hardcore Punk in Ecuador, since 1998, mixing with Thrash and Metal." [ref=f52e195] [cursor=pointer]
+                - generic [ref=f52e197]:
+                  - img "Link icon" [ref=f52e199]
+                  - link "open.spotify.com/track/4faz4UACko2uvxOojQtUBp?si=OgDtmdqMROGnTUpe5Z_Ylg&context=spotify%253Aalbum%253A6WN4MJrlt5RFX8VGEXedDD" [ref=f52e203] [cursor=pointer]:
+                    - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Ftrack%2F4faz4UACko2uvxOojQtUBp%3Fsi%3DOgDtmdqMROGnTUpe5Z_Ylg%26context%3Dspotify%25253Aalbum%25253A6WN4MJrlt5RFX8VGEXedDD%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafadPXSzWYNz8naq3gSugR7C-bOUHwSW01Kf0hUh5EI2agc8-RWSAGDb0FIKw_aem_CzZu3N3szXwuvwiDkOs5xg&e=AUAEoUA35Z1przvVPOlccjDlUHlMXiil9L5Pega0bqvAVEt06MKm4nLUd53U8alYQa2qYTQy8ibezlDN6p-U5yBncpodHnebT9IzCeULIhveyOa-rew40g4uweyq7Yq_tek9rpzaK1GC
+              - link "Followed by ludovico_rock, colecciondemusica_ecuatoriana + 17 more" [ref=f52e205] [cursor=pointer]:
+                - /url: /69segundosofficial/followers/mutualOnly
+                - generic [ref=f52e207]:
+                  - generic [ref=f52e209]:
+                    - button [ref=f52e210]:
+                      - link [ref=f52e211]
+                    - button [ref=f52e212]:
+                      - link [ref=f52e213]
+                    - button [ref=f52e214]:
+                      - link [ref=f52e215]
+                  - generic [ref=f52e216]: Followed by ludovico_rock, colecciondemusica_ecuatoriana + 17 more
+            - generic [ref=f52e221]:
+              - button "Following Down chevron icon" [ref=f52e223] [cursor=pointer]:
+                - generic [ref=f52e224]:
+                  - generic [ref=f52e225]: Following
+                  - img "Down chevron icon" [ref=f52e228]
+              - button "Message" [ref=f52e231] [cursor=pointer]
+              - button [ref=f52e233] [cursor=pointer]:
+                - img "Similar accounts" [ref=f52e235]
+            - menu [ref=f52e239]:
+              - generic [ref=f52e241]:
+                - list [ref=f52e243]:
+                  - listitem [ref=f52e244]
+                  - listitem [ref=f52e245]
+                  - listitem [ref=f52e246]:
+                    - link "View Testimonios 2 highlight" [ref=f52e249] [cursor=pointer]:
+                      - /url: /stories/highlights/18099755659865688/
+                      - button "69segundosofficial's highlight story picture Testimonios 2" [ref=f52e250]:
+                        - button [ref=f52e251]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e254]
+                        - generic [ref=f52e255]: Testimonios 2
+                  - listitem [ref=f52e258]:
+                    - link "View Montañita Tour highlight" [ref=f52e261] [cursor=pointer]:
+                      - /url: /stories/highlights/18053948444722908/
+                      - button "69segundosofficial's highlight story picture Montañita Tour" [ref=f52e262]:
+                        - button [ref=f52e263]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e266]
+                        - generic [ref=f52e267]: Montañita Tour
+                  - listitem [ref=f52e270]:
+                    - link "View Fanzine highlight" [ref=f52e273] [cursor=pointer]:
+                      - /url: /stories/highlights/18095167909785427/
+                      - button "69segundosofficial's highlight story picture Fanzine" [ref=f52e274]:
+                        - button [ref=f52e275]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e278]
+                        - generic [ref=f52e279]: Fanzine
+                  - listitem [ref=f52e282]:
+                    - link "View 69” & Lagwagon highlight" [ref=f52e285] [cursor=pointer]:
+                      - /url: /stories/highlights/18529058341041852/
+                      - button "69segundosofficial's highlight story picture 69” & Lagwagon" [ref=f52e286]:
+                        - button [ref=f52e287]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e290]
+                        - generic [ref=f52e291]: 69” & Lagwagon
+                  - listitem [ref=f52e294]:
+                    - link "View Sesión Oficial highlight" [ref=f52e297] [cursor=pointer]:
+                      - /url: /stories/highlights/18026682047732192/
+                      - button "69segundosofficial's highlight story picture Sesión Oficial" [ref=f52e298]:
+                        - button [ref=f52e299]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e302]
+                        - generic [ref=f52e303]: Sesión Oficial
+                  - listitem [ref=f52e306]:
+                    - link "View Tocadas highlight" [ref=f52e309] [cursor=pointer]:
+                      - /url: /stories/highlights/17936040596931396/
+                      - button "69segundosofficial's highlight story picture Tocadas" [ref=f52e310]:
+                        - button [ref=f52e311]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e314]
+                        - generic [ref=f52e315]: Tocadas
+                  - listitem [ref=f52e318]:
+                    - link "View Testimonios bros highlight" [ref=f52e321] [cursor=pointer]:
+                      - /url: /stories/highlights/18470105014008702/
+                      - button "69segundosofficial's highlight story picture Testimonios bros" [ref=f52e322]:
+                        - button [ref=f52e323]:
+                          - img "69segundosofficial's highlight story picture" [ref=f52e326]
+                        - generic [ref=f52e327]: Testimonios bros
+                - button "Next" [ref=f52e330] [cursor=pointer]
+          - generic [ref=f52e332]:
+            - tablist [ref=f52e333]:
+              - link [ref=f52e335] [cursor=pointer]:
+                - /url: /69segundosofficial/
+                - img "Posts" [ref=f52e337]
+              - link [ref=f52e348] [cursor=pointer]:
+                - /url: /69segundosofficial/reels/
+                - img "Reels" [ref=f52e350]
+              - link [ref=f52e353] [cursor=pointer]:
+                - /url: /69segundosofficial/reposts/
+                - img "Reposts" [ref=f52e355]
+              - link [ref=f52e358] [cursor=pointer]:
+                - /url: /69segundosofficial/tagged/
+                - img "Tagged" [ref=f52e360]
+            - tabpanel
+          - generic [ref=f52e367]:
+            - generic [ref=f52e368]:
+              - link [ref=f52e370] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DWz6BoEEXXY/
+                - img "Photo by 69 Segundos in Ecuador with @robertomorlap, @luto89, @artivancasanova, @espiritudel98, @la_bomb_, @7vidascrew, @cjwalls11, @gardeniasdiy, and @unionpunk25." [ref=f52e373]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f52e376] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DPebwukEXf4/
+                - img "Photo shared by 69 Segundos on October 06, 2025 tagging @robertomorlap, @luto89, @festivalskatepunk, @artivancasanova, and @cjwalls11." [ref=f52e379]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f52e382] [cursor=pointer]:
+                - /url: /unionpunk25/reel/CzeUXrBRMLu/
+                - img [ref=f52e385]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f52e387]:
+              - link [ref=f52e389] [cursor=pointer]:
+                - /url: /surfacing.04/p/Db4nE9OjZZG/
+                - img "Photo shared by Bryan Ruiz on August 10, 2026 tagging @69segundosofficial, and @istrionico_records. May be an image of guitar and text." [ref=f52e392]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f52e395] [cursor=pointer]:
+                - /url: /69segundosofficial/p/Db4QLT0RLCS/
+                - img "Photo shared by 69 Segundos on August 10, 2026 tagging @robertomorlap, @fun__forever, @luto89, @gosh88c, @artivancasanova, @130.db, @espiritudel98, @la_bomb_, @cjwalls11, and @unionpunk25. May be an image of one or more people and text." [ref=f52e398]
+              - link [ref=f52e401] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DbtFbjyRNR4/
+                - img "Photo by 69 Segundos in AtrakoRec. Estudio de Grabación Y Sala de ensayo. with @artivancasanova, @lareservauio, @espiritudel98, @notokenhc, and @unionpunk25. May be an image of one or more people and text." [ref=f52e404]
+            - generic [ref=f52e406]:
+              - link [ref=f52e408] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/Dbn7vnPRczw/
+                - img "¡HOLA QUITO Y OTAVALO! 👋🏼 Nos vemos este viernes y sábado en @lareservauio e @istrionico_records para dos noches de puro hardcore melódico y punk rock, celebrando nuestros 28 años como banda activa, junto a nuestros brothers de @la_bomb_ @laescuela_official @gordonz_punk y @lagen_tesemuere 🤙🏼🔥 🎟️ Entradas todavía disponibles en precio preventa. Escríbele a @la_bomb_ e @istrionico_records ¡Nos vemos amig@s! ❤️🤘🏼" [ref=f52e411]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e414] [cursor=pointer]:
+                - /url: /la_bomb_/reel/DbTNEfgP4Mb/
+                - 'img "‼️ Se viene @69segundosofficial con la @la_bomb_ ‼️ #Quito 7 de agosto @lareservauio 🍻 @laescuela_official #Otavalo 8 de agosto @istrionico_records 🍻 @gordonz_punk @lagen_tesemuere Música: @69segundosofficial #labomb #punkrockshow" [ref=f52e417]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e420] [cursor=pointer]:
+                - /url: /la_bomb_/reel/DbBEC9nvyF8/
+                - 'img "Esto fue #guayaquil 🔥🔥🔥🔥 Se viene @69segundosofficial con la @la_bomb_ #Quito 7 de agosto @lareservauio 🍻 @laescuela_official #Otavalo 8 de agosto @istrionico_records 🍻 @gordonz_punk @lagen_tesemuere Música: pre producciones #labomb #punkrockshow" [ref=f52e423]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f52e425]:
+              - link [ref=f52e427] [cursor=pointer]:
+                - /url: /la_bomb_/reel/Da0L7M2vInz/
+                - 'img "Show en #Guayaquil festejando a nuestros broders de @69segundosofficial en @galeriaivancasanovagiler Proximos shows en #Quito y #otavalo 🚨🎫 entradas DM!!! 🚨 #labomb #punkrock" [ref=f52e430]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e433] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DagzlZFRb9l/
+                - img "Photo by 69 Segundos in Otavalo, Ecuador with @robertomorlap, @fun__forever, @luto89, @morras182, @gosh88c, @artivancasanova, @130.db, @la_bomb_, @lagen_tesemuere, @cjwalls11, @istrionico_records, @unionpunk25, and @gordonz_punk. May be pop art of poster and text that says 'Jardin Atómico Tresenta SECUNOS 28 años de Metodias Hardcore ETOUT nacional በበበበበስ CA3AMTa-иE IZE Bomb MORAL AbAJO INE 食ば BANDAS INVITADAS LA BOMB. GORDONZ. LA GENTE SE MUERE 19H00 OTAVALO PREVENTA $5 08/08/2026. ISTRIÓNICO RECORDS. PUERTA $7'." [ref=f52e436]
+              - link [ref=f52e439] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DaeNnSOxu2a/
+                - img "Photo by 69 Segundos in Quito, Ecuador with @lareservauio, @laescuela_official, @espiritudel98, @la_bomb_, and @unionpunk25. May be an illustration of ‎poster and ‎text that says '‎69SECUNOS SEGUNDOS 28 años de Jardin Metodias MetadiasHardore Hardcore Atómico ETOUT nacional Presenta 000 معی CASAMECA26 เอรษลรอท ce a 美 หซซ่ HOF BANDAS INVITADAS LA BOMB. LA ESCUELA. 20H0 LA RESERVA. Q UITO U 07/08/2026. $10 PREVENTA $15 EN PUERTA‎'‎‎." [ref=f52e442]
+            - generic [ref=f52e548]:
+              - link [ref=f52e550] [cursor=pointer]:
+                - /url: /la_bomb_/p/DaQntBQFkti/
+                - img "Photo shared by LA BOMB on July 01, 2026 tagging @felipe_cordero3, @basstasoy, @69segundosofficial, and @galeriaivancasanovagiler. May be an image of ‎guitar, tambourine and ‎text that says '‎AROS ע/ of ርዮ D7 ያምካ 90‎'‎‎." [ref=f52e553]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f52e556] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DaQOb2ER2CD/
+                - img "¡Gracias Guayaquil! Fue increíble…. Nos veremos para los 30 años en el 2028 🤙🏼🤘🏼 ¡Atención Quito y Otavalo! Estaremos el viernes 07 y sábado 08 de agosto, respectivamente, en sus ciudades, llevando nuestro repertorio por nuestros 28 años de vida musical. ¡La próxima semana anunciamos toda la info completa! 🕺🏻❤️" [ref=f52e559]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e562] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DZ80BlZRx89/
+                - img "Perdiendo el mismo juego en vivo este sábado por nuestros 28 años… Hasta mañana las entradas en $15 🔋🤘🏼❤️" [ref=f52e565]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f52e567]:
+              - link [ref=f52e569] [cursor=pointer]:
+                - /url: /la_bomb_/reel/DZ4z70cvn2V/
+                - 'img "Nos vemos este sábado 27 en #guayaquil Celebrando los 28 años de @69segundosofficial Nos vemos@en el pogo 🔥 #punkrock #labomb #ecuador Edición y video @felipe_cordero3 🏅" [ref=f52e572]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e575] [cursor=pointer]:
+                - /url: /artivancasanova/reel/DZ0XZAfSRYI/
+                - img [ref=f52e578]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e581] [cursor=pointer]:
+                - /url: /69segundosofficial/p/DZu6jUARk8B/
+                - img "Photo by 69 Segundos in Guayaquil, Ecuador with @artivancasanova, @heeltoerecords, @espiritudel98, and @unionpunk25. May be an image of one or more people, beard, poster, crossword puzzle and text that says '69 seyjundos MIRANDO ATRAS DEbIL IN INCUMPLETO MPLE to ¿POR QUE? EL MISMO JUE PERDIENDO VR iLLON Μι VERSION 込込力 solo ៤ ٢٫to VEZ FIN AL Horizonte PARÓJITO ULTRAVIOLGJA ULTRA DoLon IN7RA የቢፍች6 เผก EL STATUJS SOcIAl STATUJ CAD'." [ref=f52e584]
+            - generic [ref=f52e586]:
+              - link [ref=f52e588] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DZrITGREUAp/
+                - img "Conversando un rato con Gregorio y Álvaro de la banda Quiteña @la_bomb_ Ellos nos acompañarán en nuestra celebración por los 28 años de melodías hardcore. Se viene un fiestón! Recuerden que aún hay preventas disponibles. Gracias amigos por la buena onda siempre y nos estamos viendo muy pronto. Lo que se viene será histórico!" [ref=f52e591]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e594] [cursor=pointer]:
+                - /url: /la_bomb_/reel/DZlsgHhN3kv/
+                - 'img "Sábado 27 de junio en #guayaquil junto a @69segundosofficial celebrando con todo el poder!! Tremenda trayectoria !! #unionpunk #labomb #punkrock" [ref=f52e597]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e600] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DZfYz-uxoH2/
+                - 'img "28 años de melodías hardcore se resumen en una sola noche destructiva. Este Sábado 27 de Junio, 69 Segundos se toma la @galeriaivancasanovagiler. Será nuestro único show en la ciudad antes de arrancar la gira nacional y encerrarnos en el estudio a terminar el nuevo disco. Si te lo pierdes, nos vemos en 2028. Para reventar la casa, nos acompañan desde la capital los panas de @la_bomb_ con todo el poder del skatepunk.🔥 ⚠️ CUIDADO TE QUEDAS FUERA. CAPACIDAD LIMITADA A SOLO 100 PERSONAS. Precios de Preventa Exclusiva (Solo con reserva): $15 (Hasta el miércoles 24 de junio) $20 (Jueves 25 y viernes 26 de junio) 🛑 Sábado 27: TAQUILLA CERRADA. No se venderán entradas el día del evento. No dejes que te lo cuenten. Escribe ahora mismo a @artivancasanova por interno y asegura tu preventa antes de que hagamos Sold Out. 🐜🔥👽" [ref=f52e603]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f52e605]:
+              - link [ref=f52e607] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DZXz7u4R4AU/
+                - 'img "🔥 ¡28 AÑOS DE 69 SEGUNDOS! 🔥 Amigos, los esperamos este sábado 27 de junio para celebrar junto a ustedes nuestros 28 años de vida musical. 🎸 Tocaremos más de 17 canciones recorriendo toda nuestra discografía, desde los primeros años hasta nuestros temas más recientes. Las entradas están en $15 hasta el miércoles 24 de junio. Jueves 25 y viernes 26 pasan a valer $20 y el sábado 27 de junio ya no venderemos más entradas. Capacidad limitada para 100 personas. 📩 Escríbele a @artivancasanova y asegura tu entrada de inmediato. No te quedes fuera de esta celebración. 🚨 Importante: después de este show no volveremos a tocar en Guayaquil hasta el 2028, cuando celebremos nuestros 30 años como banda. Gracias por acompañarnos durante todos estos años. Ahora nos toca celebrar juntos. ¡Nos vemos el 27 de junio! 🤘" [ref=f52e610]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e613] [cursor=pointer]:
+                - /url: /69segundosofficial/reel/DZTiWm0RhP5/
+                - img [ref=f52e616]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f52e619] [cursor=pointer]:
+                - /url: /bynicocadena/reel/DZLp3Supkf5/
+                - img [ref=f52e622]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f52e459]:
+        - generic [ref=f52e460]:
+          - generic [ref=f52e462]:
+            - link "Meta" [ref=f52e464] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f52e467] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f52e470] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f52e473] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f52e476] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f52e479] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f52e482] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f52e485] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f52e488] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f52e491] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f52e494] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f52e497] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f52e500] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f52e503] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f52e506] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f52e508]:
+            - generic [ref=f52e509] [cursor=pointer]:
+              - generic [ref=f52e510]:
+                - generic [ref=f52e511]: English
+                - img "Down chevron icon" [ref=f52e514]
+              - combobox "Switch Display Language" [ref=f52e516]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f52e517]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f52e520] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f52e521]:
+                - generic [ref=f52e522]:
+                  - generic [ref=f52e524]:
+                    - img "Messages" [ref=f52e525]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f52e528]: "3"
+                  - generic [ref=f52e531]: Messages
+                - generic [ref=f52e532]:
+                  - button "User avatar Santiii" [ref=f52e534]:
+                    - img "User avatar" [ref=f52e537]
+                  - button "User avatar Diego Saa" [ref=f52e539]:
+                    - img "User avatar" [ref=f52e542]
+                  - button "User avatar Martini 🍸" [ref=f52e544]:
+                    - img "User avatar" [ref=f52e547]
+            - generic [ref=f52e624]:
+              - generic [ref=f52e625]:
+                - generic [ref=f52e626]:
+                  - generic [ref=f52e628]:
+                    - status "Loading..." [ref=f52e630]
+                    - status "Loading..." [ref=f52e632]
+                  - button [active] [ref=f52e634] [cursor=pointer]:
+                    - img "Close" [ref=f52e636]
+                - separator [ref=f52e639]
+              - generic [ref=f52e640]:
+                - generic [ref=f52e641]:
+                  - status "Loading..." [ref=f52e643]
+                  - status "Loading..." [ref=f52e645]
+                - status "Loading..." [ref=f52e648]
+                - generic [ref=f52e649]:
+                  - status "Loading..." [ref=f52e651]
+                  - status "Loading..." [ref=f52e653]
+                - generic [ref=f52e654]:
+                  - status "Loading..." [ref=f52e656]
+                  - status "Loading..." [ref=f52e658]
+                - status "Loading..." [ref=f52e661]
+                - generic [ref=f52e662]:
+                  - status "Loading..." [ref=f52e664]
+                  - status "Loading..." [ref=f52e666]
+                - status "Loading..." [ref=f52e668]

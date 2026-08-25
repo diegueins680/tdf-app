@@ -8,6 +8,9 @@ import { pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { discoverImprovementIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
+import { collectLogicalFindings, summarizeLogicalFindings } from './lib/logical-correctness-audit.mjs';
+import { collectFailingFormalFindings, collectFormalFindings, summarizeFormalFindings } from './lib/formal-methods-audit.mjs';
+import { collectUxFindings, summarizeUxFindings } from './lib/ux-quality-audit.mjs';
 import {
   buildCommitContext,
   expandTemplate,
@@ -156,8 +159,10 @@ function buildContext(repoRoot, contextDir, iteration) {
     context_dir: contextDir,
     iteration: String(iteration),
     idea_file: path.join(contextDir, 'idea.md'),
-    ui_report_file: path.join(contextDir, 'ui-report.json'),
+    logical_report_file: path.join(contextDir, 'logical-report.json'),
     formal_report_file: path.join(contextDir, 'formal-report.json'),
+    ux_report_file: path.join(contextDir, 'ux-report.json'),
+    ui_report_file: path.join(contextDir, 'ui-report.json'),
     ci_report_file: path.join(contextDir, 'ci-report.json'),
   };
 }
@@ -169,10 +174,31 @@ function loopEnvironment(context) {
     CONTINUOUS_LOOP_CONTEXT_DIR: context.context_dir,
     CONTINUOUS_LOOP_ITERATION: context.iteration,
     CONTINUOUS_LOOP_IDEA_FILE: context.idea_file,
-    CONTINUOUS_LOOP_UI_REPORT_FILE: context.ui_report_file,
+    CONTINUOUS_LOOP_LOGICAL_REPORT_FILE: context.logical_report_file,
     CONTINUOUS_LOOP_FORMAL_REPORT_FILE: context.formal_report_file,
+    CONTINUOUS_LOOP_UX_REPORT_FILE: context.ux_report_file,
+    CONTINUOUS_LOOP_UI_REPORT_FILE: context.ui_report_file,
     CONTINUOUS_LOOP_CI_REPORT_FILE: context.ci_report_file,
   };
+}
+
+async function shutdownBootedSimulators() {
+  try {
+    const { stdout } = await execFileAsync('sh', ['-c', 'xcrun simctl list devices | grep Booted | grep -oE "[A-F0-9]{8}-([A-F0-9]{4}-){3}[A-F0-9]{12}" || true'], { maxBuffer: 1024 * 1024 });
+    const uuids = stdout.trim().split('\n').filter(Boolean);
+    if (uuids.length === 0) return;
+    console.log(`Shutting down ${uuids.length} booted simulator(s) before build…`);
+    for (const udid of uuids) {
+      try {
+        await execFileAsync('xcrun', ['simctl', 'shutdown', udid]);
+        console.log(`  shutdown ${udid}`);
+      } catch (e) {
+        console.warn(`  failed to shutdown ${udid}: ${e.message}`);
+      }
+    }
+  } catch (e) {
+    // simctl not available or other error — ignore
+  }
 }
 
 async function readConfig(configPath) {
@@ -360,7 +386,7 @@ async function getCurrentBranch(repoRoot) {
   return stdout.trim();
 }
 
-export async function resolveLoopPushBranch(repoRoot, config = {}) {
+async function resolveLoopPushBranch(repoRoot, config = {}) {
   const configuredBranch = normalizeGitBranchShortName(config.pushBranch);
   if (configuredBranch) {
     return configuredBranch;
@@ -373,7 +399,7 @@ function isPushToMainOverrideEnabled(config = {}) {
   return Boolean(config.allowPushToMain) || isTruthyFlag(process.env[ALLOW_PUSH_TO_MAIN_ENV]);
 }
 
-export async function validateLoopConfig(repoRoot, config = {}) {
+async function validateLoopConfig(repoRoot, config = {}) {
   const pushBranch = await resolveLoopPushBranch(repoRoot, config);
   const pushingEnabled = !config.dryRun;
   const allowPushToMain = isPushToMainOverrideEnabled(config);
@@ -738,12 +764,12 @@ function filterTrackedChanges(lines, baselineTrackedPaths) {
 }
 
 async function listTrackedChanges(repoRoot) {
-  const { stdout } = await execText('git', ['status', '--porcelain', '--untracked-files=no'], repoRoot);
+  const { stdout } = await execText('git', ['-c', 'core.quotePath=false', 'status', '--porcelain', '--untracked-files=no'], repoRoot);
   return splitLines(stdout);
 }
 
 async function listUntrackedFiles(repoRoot) {
-  const { stdout } = await execText('git', ['ls-files', '--others', '--exclude-standard'], repoRoot);
+  const { stdout } = await execText('git', ['-c', 'core.quotePath=false', 'ls-files', '--others', '--exclude-standard'], repoRoot);
   return splitLines(stdout);
 }
 
@@ -843,6 +869,34 @@ async function generateUiReport(repoRoot, context, config) {
   return report;
 }
 
+async function generateLogicalReport(repoRoot, context, config) {
+  if (config.logicalAuditCommand) {
+    const result = await runShellCommand(config.logicalAuditCommand, repoRoot, context, {
+      stepName: 'Logical correctness audit',
+      allowFailure: true,
+    });
+    const report = parseReportOutput(result, 'custom-logical-audit');
+    report.generatedAt = new Date().toISOString();
+    await writeJson(context.logical_report_file, report);
+    return report;
+  }
+
+  const allFindings = await collectLogicalFindings(repoRoot);
+  const baseline = config.logicalBaselineFindingKeys ?? new Set();
+  const findings = allFindings.filter((finding) => !baseline.has(findingKey(finding)));
+  const report = {
+    ok: findings.length === 0,
+    findings,
+    summary: summarizeLogicalFindings(findings),
+    baselineSuppressedCount: allFindings.length - findings.length,
+    baselineTotal: baseline.size,
+    tool: 'builtin-logical-correctness-audit',
+    generatedAt: new Date().toISOString(),
+  };
+  await writeJson(context.logical_report_file, report);
+  return report;
+}
+
 async function generateFormalReport(repoRoot, context, config) {
   if (config.formalVerifyCommand) {
     const result = await runShellCommand(config.formalVerifyCommand, repoRoot, context, {
@@ -855,12 +909,57 @@ async function generateFormalReport(repoRoot, context, config) {
     return report;
   }
 
+  const allFindings = await collectFormalFindings(repoRoot);
+  const baseline = config.formalBaselineFindingKeys ?? new Set();
+  const findings = allFindings.filter((finding) => !baseline.has(findingKey(finding)));
+  const blockingFindings = collectFailingFormalFindings(findings, 'error');
+  const loopModelCheck = verifyImprovementLoopModel();
   const report = {
-    ...verifyImprovementLoopModel(),
-    tool: 'builtin-loop-model-check',
+    ok: blockingFindings.length === 0 && loopModelCheck.ok,
+    findings,
+    blockingFindings,
+    loopModelCheck,
+    summary: summarizeFormalFindings(findings),
+    baselineSuppressedCount: allFindings.length - findings.length,
+    baselineTotal: baseline.size,
+    tool: 'builtin-formal-methods-audit',
     generatedAt: new Date().toISOString(),
   };
   await writeJson(context.formal_report_file, report);
+  return report;
+}
+
+async function generateUxReport(repoRoot, context, config) {
+  if (config.uxAuditCommand) {
+    const result = await runShellCommand(config.uxAuditCommand, repoRoot, context, {
+      stepName: 'UX quality audit',
+      allowFailure: true,
+    });
+    const report = parseReportOutput(result, 'custom-ux-audit');
+    report.generatedAt = new Date().toISOString();
+    await writeJson(context.ux_report_file, report);
+    return report;
+  }
+
+  const uxRoot = path.join(repoRoot, 'tdf-hq-ui', 'src');
+  let allFindings = [];
+  try {
+    allFindings = await collectUxFindings(uxRoot);
+  } catch {
+    // UX audit is best-effort if the UI source tree is absent.
+  }
+  const baseline = config.uxBaselineFindingKeys ?? new Set();
+  const findings = allFindings.filter((finding) => !baseline.has(findingKey(finding)));
+  const report = {
+    ok: findings.length === 0,
+    findings,
+    summary: summarizeUxFindings(findings),
+    baselineSuppressedCount: allFindings.length - findings.length,
+    baselineTotal: baseline.size,
+    tool: 'builtin-ux-quality-audit',
+    generatedAt: new Date().toISOString(),
+  };
+  await writeJson(context.ux_report_file, report);
   return report;
 }
 
@@ -897,7 +996,7 @@ async function pushHead(repoRoot, remoteName, branchName) {
   await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
 }
 
-export async function syncSubmodulesRecursively(repoRoot) {
+async function syncSubmodulesRecursively(repoRoot) {
   await execText('git', ['submodule', 'sync', '--recursive'], repoRoot);
   await execText('git', ['submodule', 'update', '--init', '--recursive'], repoRoot);
 }
@@ -1177,7 +1276,7 @@ async function fetchFailedWorkflowDiagnosticsSafely(owner, repo, workflowRun) {
   }
 }
 
-export async function waitForGreenCi(repoRoot, config, sha) {
+async function waitForGreenCi(repoRoot, config, sha) {
   const deadline = Date.now() + Number(config.ciTimeoutMinutes) * 60_000;
   const remote = await getGitHubRemote(repoRoot, config.pushRemote);
   let sawChecks = false;
@@ -1482,48 +1581,30 @@ async function runIteration(repoRoot, config, iteration) {
     }
   }
 
-  if (!repairLatestCommitOnly) {
-    await emitLoopStatus({ state: 'running', phase: 'idea-discovery', currentIteration: iteration, contextDir });
-    logStep(`Iteration ${iteration}: idea discovery`);
-    const idea = await generateIdea(repoRoot, context, config);
-    context.idea_source = idea.source ?? '';
-    context.idea_title = idea.title ?? '';
-    context.idea_target = idea.target ?? '';
-    context.idea_reason = idea.reason ?? '';
-
-    if (!config.implementationCommand) {
-      throw new Error('implementationCommand is required to run the loop unattended.');
+  // Phase 1: Logical correctness audit (whole codebase) — highest priority
+  await emitLoopStatus({ state: 'running', phase: 'logical-audit', currentIteration: iteration, ideaTitle: context.idea_title });
+  logStep(`Iteration ${iteration}: logical correctness audit`);
+  let logicalReport = await generateLogicalReport(repoRoot, context, config);
+  if (reportNeedsAttention(logicalReport)) {
+    if (!config.logicalFixCommand) {
+      throw new Error(`Logical correctness audit did not pass. Configure logicalFixCommand or inspect ${context.logical_report_file}.`);
     }
 
-    await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
-    logStep(`Iteration ${iteration}: implementation`);
-    await runShellCommand(config.implementationCommand, repoRoot, context, {
-      stepName: 'Implementation',
-    });
-  }
-
-  await emitLoopStatus({ state: 'running', phase: 'ui-audit', currentIteration: iteration, ideaTitle: context.idea_title });
-  logStep(`Iteration ${iteration}: UI audit`);
-  let uiReport = await generateUiReport(repoRoot, context, config);
-  if (reportNeedsAttention(uiReport)) {
-    if (!config.uiFixCommand) {
-      throw new Error(`UI audit did not pass. Configure uiFixCommand or inspect ${context.ui_report_file}.`);
-    }
-
-    await emitLoopStatus({ state: 'running', phase: 'ui-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
-    logStep(`Iteration ${iteration}: UI fixes`);
-    await runShellCommand(config.uiFixCommand, repoRoot, context, {
-      stepName: 'UI fixes',
+    await emitLoopStatus({ state: 'running', phase: 'logical-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
+    logStep(`Iteration ${iteration}: logical fixes`);
+    await runShellCommand(config.logicalFixCommand, repoRoot, context, {
+      stepName: 'Logical fixes',
     });
 
-    uiReport = await generateUiReport(repoRoot, context, config);
-    if (reportNeedsAttention(uiReport)) {
-      throw new Error(`UI audit still does not pass after uiFixCommand. See ${context.ui_report_file}.`);
+    logicalReport = await generateLogicalReport(repoRoot, context, config);
+    if (reportNeedsAttention(logicalReport)) {
+      throw new Error(`Logical correctness audit still does not pass after logicalFixCommand. See ${context.logical_report_file}.`);
     }
   }
 
-  await emitLoopStatus({ state: 'running', phase: 'formal-verification', currentIteration: iteration, ideaTitle: context.idea_title });
-  logStep(`Iteration ${iteration}: formal verification`);
+  // Phase 2: Formal methods audit (invariants, preconditions, type contracts)
+  await emitLoopStatus({ state: 'running', phase: 'formal-audit', currentIteration: iteration, ideaTitle: context.idea_title });
+  logStep(`Iteration ${iteration}: formal methods audit`);
   let formalReport = await generateFormalReport(repoRoot, context, config);
   if (reportNeedsAttention(formalReport)) {
     if (!config.formalFixCommand) {
@@ -1541,6 +1622,70 @@ async function runIteration(repoRoot, config, iteration) {
     formalReport = await generateFormalReport(repoRoot, context, config);
     if (reportNeedsAttention(formalReport)) {
       throw new Error(`Formal verification still does not pass after formalFixCommand. See ${context.formal_report_file}.`);
+    }
+  }
+
+  // Phase 3: Idea discovery and implementation (only if we are not in CI-repair-only mode)
+  if (!repairLatestCommitOnly) {
+    await emitLoopStatus({ state: 'running', phase: 'idea-discovery', currentIteration: iteration, contextDir });
+    logStep(`Iteration ${iteration}: idea discovery`);
+    const idea = await generateIdea(repoRoot, context, config);
+    context.idea_source = idea.source ?? '';
+    context.idea_title = idea.title ?? '';
+    context.idea_target = idea.target ?? '';
+    context.idea_reason = idea.reason ?? '';
+
+    if (!config.implementationCommand) {
+      throw new Error('implementationCommand is required to run the loop unattended.');
+    }
+
+    await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
+    logStep(`Iteration ${iteration}: implementation`);
+    await shutdownBootedSimulators();
+    await runShellCommand(config.implementationCommand, repoRoot, context, {
+      stepName: 'Implementation',
+    });
+  }
+
+  // Phase 4: UX quality audit (simplicity, minimalism, intuitiveness, engagement)
+  await emitLoopStatus({ state: 'running', phase: 'ux-audit', currentIteration: iteration, ideaTitle: context.idea_title });
+  logStep(`Iteration ${iteration}: UX quality audit`);
+  let uxReport = await generateUxReport(repoRoot, context, config);
+  if (reportNeedsAttention(uxReport)) {
+    if (!config.uxFixCommand) {
+      throw new Error(`UX quality audit did not pass. Configure uxFixCommand or inspect ${context.ux_report_file}.`);
+    }
+
+    await emitLoopStatus({ state: 'running', phase: 'ux-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
+    logStep(`Iteration ${iteration}: UX fixes`);
+    await runShellCommand(config.uxFixCommand, repoRoot, context, {
+      stepName: 'UX fixes',
+    });
+
+    uxReport = await generateUxReport(repoRoot, context, config);
+    if (reportNeedsAttention(uxReport)) {
+      throw new Error(`UX quality audit still does not pass after uxFixCommand. See ${context.ux_report_file}.`);
+    }
+  }
+
+  // Phase 5: Legacy UI accessibility audit (kept as a safety net)
+  await emitLoopStatus({ state: 'running', phase: 'ui-audit', currentIteration: iteration, ideaTitle: context.idea_title });
+  logStep(`Iteration ${iteration}: UI accessibility audit`);
+  let uiReport = await generateUiReport(repoRoot, context, config);
+  if (reportNeedsAttention(uiReport)) {
+    if (!config.uiFixCommand) {
+      throw new Error(`UI audit did not pass. Configure uiFixCommand or inspect ${context.ui_report_file}.`);
+    }
+
+    await emitLoopStatus({ state: 'running', phase: 'ui-fixes', currentIteration: iteration, ideaTitle: context.idea_title });
+    logStep(`Iteration ${iteration}: UI fixes`);
+    await runShellCommand(config.uiFixCommand, repoRoot, context, {
+      stepName: 'UI fixes',
+    });
+
+    uiReport = await generateUiReport(repoRoot, context, config);
+    if (reportNeedsAttention(uiReport)) {
+      throw new Error(`UI audit still does not pass after uiFixCommand. See ${context.ui_report_file}.`);
     }
   }
 
@@ -1564,7 +1709,7 @@ Options:
 
 Placeholders available inside command hooks:
   {repo_root} {context_dir} {iteration}
-  {idea_file} {ui_report_file} {formal_report_file} {ci_report_file}
+  {idea_file} {logical_report_file} {formal_report_file} {ux_report_file} {ui_report_file} {ci_report_file}
 
 Commit message templates can also use:
   {commit_message} {commit_type} {commit_summary}
@@ -1623,7 +1768,47 @@ async function main() {
   const startState = await ensureStartState(repoRoot, config.allowDirty);
   config.initialTrackedPaths = startState.initialTrackedPaths;
   config.initialUntracked = startState.initialUntracked;
+  config.logicalBaselineFindingKeys = new Set();
+  config.formalBaselineFindingKeys = new Set();
+  config.uxBaselineFindingKeys = new Set();
   config.uiBaselineFindingKeys = new Set();
+
+  try {
+    const logicalFindings = await collectLogicalFindings(repoRoot);
+    for (const finding of logicalFindings) {
+      config.logicalBaselineFindingKeys.add(findingKey(finding));
+    }
+    if (config.logicalBaselineFindingKeys.size > 0) {
+      console.log(`Recorded ${config.logicalBaselineFindingKeys.size} baseline logical finding(s) to avoid re-fixing the existing backlog in one iteration.`);
+    }
+  } catch (error) {
+    console.warn(`Skipping logical baseline capture: ${error.message}`);
+  }
+
+  try {
+    const formalFindings = await collectFormalFindings(repoRoot);
+    for (const finding of formalFindings) {
+      config.formalBaselineFindingKeys.add(findingKey(finding));
+    }
+    if (config.formalBaselineFindingKeys.size > 0) {
+      console.log(`Recorded ${config.formalBaselineFindingKeys.size} baseline formal finding(s) to avoid re-fixing the existing backlog in one iteration.`);
+    }
+  } catch (error) {
+    console.warn(`Skipping formal baseline capture: ${error.message}`);
+  }
+
+  try {
+    const uxFindings = await collectUxFindings(path.join(repoRoot, 'tdf-hq-ui', 'src'));
+    for (const finding of uxFindings) {
+      config.uxBaselineFindingKeys.add(findingKey(finding));
+    }
+    if (config.uxBaselineFindingKeys.size > 0) {
+      console.log(`Recorded ${config.uxBaselineFindingKeys.size} baseline UX finding(s) to avoid re-fixing the existing backlog in one iteration.`);
+    }
+  } catch (error) {
+    console.warn(`Skipping UX baseline capture: ${error.message}`);
+  }
+
   try {
     const baselineFindings = await collectUiFindings(path.join(repoRoot, 'tdf-hq-ui', 'src'));
     for (const finding of baselineFindings) {
@@ -1649,10 +1834,20 @@ async function main() {
       await sleep(Number(config.iterationDelaySeconds) * 1000);
     }
     iteration += 1;
+    await emitLoopStatus({ state: 'running', phase: 'iteration-start', currentIteration: iteration });
   }
 
   await emitLoopStatus({ state: 'exited', phase: 'completed', currentIteration: iteration - 1 });
 }
+
+export {
+  main,
+  discoverImprovementIdea,
+  resolveLoopPushBranch,
+  validateLoopConfig,
+  syncSubmodulesRecursively,
+  waitForGreenCi,
+};
 
 function isCliEntry() {
   if (!process.argv[1]) {

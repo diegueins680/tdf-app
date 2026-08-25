@@ -30,6 +30,8 @@ spec = describe "ArtistFollow insertUnique" $ do
                         , artistProfileAvatarUrl = Nothing
                         , artistProfileGenres = Nothing
                         , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
                         , artistProfileCreatedAt = now
                         , artistProfileUpdatedAt = now
                         }
@@ -61,6 +63,8 @@ initializeSocialSchema = do
         \\"avatar_url\" VARCHAR NULL,\
         \\"genres\" VARCHAR NULL,\
         \\"social_links\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"

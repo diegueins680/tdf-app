@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
 import { Navigate, Route } from 'react-router-dom';
 
 import PublicBranding from '../components/PublicBranding';
@@ -6,9 +6,15 @@ import PublicBranding from '../components/PublicBranding';
 const ArtistOnboardingPage = lazy(() => import('../pages/ArtistOnboardingPage'));
 const ArtistPublicPage = lazy(() => import('../pages/ArtistPublicPage'));
 const CourseProductionLandingPage = lazy(() => import('../pages/CourseProductionLandingPage'));
+const CommerceHubPage = lazy(() => import('../pages/CommerceHubPage'));
 const DatafastReturnPage = lazy(() => import('../pages/DatafastReturnPage'));
 const DonationPage = lazy(() => import('../pages/DonationPage'));
+const DistributionLandingPage = lazy(() => import('../pages/DistributionLandingPage'));
 const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
+const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
+const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
+const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
+const FanClubPage = lazy(() => import('../pages/FanClubPage'));
 const FanHubPage = lazy(() => import('../pages/FanHubPage'));
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'));
 const GoogleDriveCallbackPage = lazy(() => import('../pages/GoogleDriveCallbackPage'));
@@ -19,28 +25,59 @@ const LiveSessionPublicPage = lazy(() => import('../pages/LiveSessionPublicPage'
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
+const MixingMasteringPage = lazy(() => import('../pages/MixingMasteringPage'));
+const ServiceDatafastReturnPage = lazy(() => import('../pages/ServiceDatafastReturnPage'));
+const ServiceOrderTrackingPage = lazy(() => import('../pages/ServiceOrderTrackingPage'));
 const MusicMakerPage = lazy(() => import('../pages/MusicMakerPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
+const PublicBookingOrderTrackingPage = lazy(() => import('../pages/PublicBookingOrderTrackingPage'));
+const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
+const TdfPlatformPage = lazy(() => import('../pages/TdfPlatformPage'));
 
 export function renderPublicRoutes() {
   return (
     <>
+      <Route path="/" element={<Navigate to="/inicio" replace />} />
+      <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
+      <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
+      <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />
+      <Route path="/comercio" element={<PublicBranding><CommerceHubPage /></PublicBranding>} />
+      <Route path="/commerce" element={<Navigate to="/comercio" replace />} />
+      <Route path="/distribucion" element={<PublicBranding><DistributionLandingPage /></PublicBranding>} />
+      <Route path="/distribution" element={<Navigate to="/distribucion" replace />} />
+      <Route path="/sobre-tdf" element={<Navigate to="/tdf" replace />} />
+      <Route path="/inicio" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
+      <Route path="/buscar" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
+      <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
+      <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
+      <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
+      <Route path="/fans/clubs/:artistId" element={<PublicBranding><FanClubPage /></PublicBranding>} />
       <Route path="/mi-artista" element={<PublicBranding><FanHubPage focusArtist /></PublicBranding>} />
       <Route path="/artista/crear" element={<PublicBranding><ArtistOnboardingPage /></PublicBranding>} />
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
+      <Route path="/a/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
       <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
+      <Route path="/mezcla-mastering" element={<PublicBranding><MixingMasteringPage /></PublicBranding>} />
+      <Route path="/mezcla-mastering/pago-datafast" element={<PublicBranding><ServiceDatafastReturnPage /></PublicBranding>} />
+      <Route path="/mezcla-mastering/pedido/:orderNumber" element={<PublicBranding><ServiceOrderTrackingPage /></PublicBranding>} />
+      <Route path="/services/mixing-mastering" element={<Navigate to="/mezcla-mastering" replace />} />
       <Route path="/marketplace/pago-datafast" element={<PublicBranding><DatafastReturnPage /></PublicBranding>} />
       <Route path="/oauth/google-drive/callback" element={<PublicBranding><GoogleDriveCallbackPage /></PublicBranding>} />
       <Route path="/oauth/instagram/callback" element={<PublicBranding><InstagramCallbackPage /></PublicBranding>} />
-      <Route path="/curso/produccion-musical-dic-2025" element={<Navigate to="/curso/produccion-musical-abr-2026" replace />} />
+      <Route path="/curso/produccion-musical-dic-2025" element={<Navigate to="/curso/produccion-musical-jun-2026" replace />} />
+      <Route path="/curso/produccion-musical-abr-2026" element={<Navigate to="/curso/produccion-musical-jun-2026" replace />} />
+      <Route path="/curso/:slug/orden/:registrationId" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/curso/:slug" element={<PublicBranding><CourseProductionLandingPage /></PublicBranding>} />
       <Route path="/inscripcion/:slug" element={<PublicBranding><InscripcionPage /></PublicBranding>} />
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
@@ -52,7 +89,11 @@ export function renderPublicRoutes() {
       <Route path="/inventario/scan/:token" element={<PublicBranding><InventoryScanPage /></PublicBranding>} />
       <Route path="/donar" element={<PublicBranding><DonationPage /></PublicBranding>} />
       <Route path="/reservar" element={<PublicBranding><PublicBookingPage /></PublicBranding>} />
+      <Route path="/reservas/orden/:bookingId" element={<PublicBranding><PublicBookingOrderTrackingPage /></PublicBranding>} />
+      <Route path="/dj-booth" element={<PublicBranding><PublicBookingPage preset="dj-booth" /></PublicBranding>} />
+      <Route path="/reservar/dj-booth" element={<Navigate to="/dj-booth" replace />} />
       <Route path="/domo-del-pululahua" element={<PublicBranding><DomoVenuePage /></PublicBranding>} />
+      <Route path="/domo-del-pululahua/cotizaciones/:quoteId" element={<PublicBranding><DomoQuoteCheckoutPage /></PublicBranding>} />
       <Route path="/venues/domo-del-pululahua" element={<Navigate to="/domo-del-pululahua" replace />} />
       <Route path="/login" element={<PublicBranding showHeader showLoginButton={false}><LoginPage /></PublicBranding>} />
       <Route path="/reset" element={<PublicBranding showHeader showLoginButton={false}><ResetPasswordPage /></PublicBranding>} />

@@ -1,24 +1,18 @@
 # -------- Stage 1: build with Stack (no GHCR) ----------
-ARG SOURCE_COMMIT=dev
-ARG BUILD_TIME=unknown
-
-# Use the exact GHC version required by the resolver to avoid Stack re-downloading it.
-FROM haskell:9.6.6-bullseye AS builder
-ARG SOURCE_COMMIT
-ARG BUILD_TIME
+# Use the exact GHC version required by lts-24.42 to avoid Stack re-downloading it.
+FROM haskell:9.10.3-bookworm AS builder
 WORKDIR /app
 
 # OS deps for building persistent-postgresql + basic tools
 # Some CI networks inject MITM proxies that break apt signature checks; allow insecure
 # repositories only during image build (no secrets involved).
-RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
     libpq-dev pkg-config git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-ENV SOURCE_COMMIT=${SOURCE_COMMIT}
-ENV GIT_SHA=${SOURCE_COMMIT}
-ENV BUILD_TIME=${BUILD_TIME}
 ENV STACK_ROOT=/root/.stack
 ENV STACK_SETUP_PATH=/tmp/stack-setup-2.yaml
 ENV STACK_SYSTEM_GHC=true
@@ -31,7 +25,7 @@ ENV STACK_SETUP_URL_PRIMARY=https://raw.githubusercontent.com/commercialhaskell/
 ENV STACK_SETUP_URL_FALLBACK=https://api.github.com/repos/commercialhaskell/stackage-content/contents/stack/stack-setup-2.yaml?ref=master
 
 # Pre-fetch stack setup info with simple retries to avoid GitHub rate limits during stack setup
-RUN set -e; \
+RUN --mount=type=cache,target=/tmp/curl-cache,sharing=locked set -e; \
     for i in $(seq 1 8); do \
       if curl -fsSL "$STACK_SETUP_URL_PRIMARY" -o "$STACK_SETUP_PATH"; then break; fi; \
       if curl -fsSL -H "Accept: application/vnd.github.v3.raw" "$STACK_SETUP_URL_FALLBACK" -o "$STACK_SETUP_PATH"; then break; fi; \
@@ -46,13 +40,12 @@ RUN stack --version || true
 
 # Copy project definition first for better layer caching (context: repo root)
 COPY tdf-hq/stack.yaml stack.yaml
-COPY tdf-hq/stack-snapshot.yaml stack-snapshot.yaml
+COPY tdf-hq/stack.yaml.lock stack.yaml.lock
 COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
 # COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
-# Make sure Stack installs the correct compiler for the resolver
-# Also, be explicit and avoid any global "system-ghc" config
-RUN set -e; \
+# Build dependencies with the system compiler that matches the resolver.
+RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \
     retry() { \
       for i in 1 2 3 4 5 6 7 8; do \
         "$@" && return 0; \
@@ -72,40 +65,56 @@ COPY tdf-hq/config/default.env.example config/default.env
 COPY tdf-hq/docs docs
 COPY tdf-hq/assets assets
 
-# Capture commit and build time inside the image for the /version endpoint.
-# Prefer the actual repo metadata when it's available; otherwise, fall back to
-# the provided build args (which default to dev/unknown).
+# Build and export the binary
+RUN --mount=type=cache,target=/root/.stack,sharing=locked \
+    stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
+
+# Release metadata changes for every commit. Introduce it only after compilation
+# so a new SHA cannot invalidate dependency or source build layers.
+ARG SOURCE_COMMIT=dev
+ARG BUILD_TIME=unknown
 RUN set -eu; \
     COMMIT_VAL="${SOURCE_COMMIT:-}"; \
     if [ -z "$COMMIT_VAL" ] || [ "$COMMIT_VAL" = "dev" ] || [ "$COMMIT_VAL" = "unknown" ]; then \
-      if git rev-parse --verify HEAD >/dev/null 2>&1; then \
-        COMMIT_VAL="$(git rev-parse --short=12 HEAD)"; \
-      fi; \
+      COMMIT_VAL="dev"; \
     fi; \
-    if [ -z "$COMMIT_VAL" ]; then COMMIT_VAL="dev"; fi; \
-    echo "$COMMIT_VAL" > /app/COMMIT; \
+    printf '%s\n' "$COMMIT_VAL" > /app/COMMIT; \
     BUILD_TS="${BUILD_TIME:-}"; \
     if [ -z "$BUILD_TS" ] || [ "$BUILD_TS" = "unknown" ]; then \
       BUILD_TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"; \
     fi; \
-    echo "$BUILD_TS" > /app/BUILD_TIME
+    printf '%s\n' "$BUILD_TS" > /app/BUILD_TIME
 
-# Build and export the binary
-RUN stack --no-terminal --setup-info-yaml "$STACK_SETUP_PATH" --system-ghc --no-install-ghc --skip-ghc-check build --copy-bins --local-bin-path /out
-
-# -------- Stage 2: slim runtime ----------
-FROM debian:bookworm-slim
+# -------- Stage 2: render reviewed migration bundle ----------
+FROM node:22-bookworm-slim AS migration-bundle
 ARG SOURCE_COMMIT=dev
-ARG BUILD_TIME=unknown
+WORKDIR /repo
+COPY scripts/production-migrations.json scripts/production-migrations.json
+COPY scripts/render-production-migration-batch.mjs scripts/render-production-migration-batch.mjs
+COPY scripts/lib/production-release.mjs scripts/lib/production-release.mjs
+COPY tdf-hq/sql tdf-hq/sql
+RUN set -eu; \
+    case "$SOURCE_COMMIT" in \
+      [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) migration_source_commit="$SOURCE_COMMIT" ;; \
+      *) migration_source_commit=0000000000000000000000000000000000000000 ;; \
+    esac; \
+    SOURCE_COMMIT="$migration_source_commit" node scripts/render-production-migration-batch.mjs > /production-migrations.sql
+
+# -------- Stage 3: slim runtime ----------
+FROM debian:bookworm-slim
+ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# Runtime libs for Postgres + CA certs for Neon TLS
-RUN apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
+# Runtime libs for Postgres + CA certs for Neon TLS + xmllint for DDEX validation
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get -o Acquire::AllowInsecureRepositories=true -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::AllowInsecureRepositories=true --allow-unauthenticated install -y --no-install-recommends \
-    libpq5 ca-certificates && \
+    libpq5 postgresql-client ca-certificates tzdata libxml2-utils && \
     rm -rf /var/lib/apt/lists/*
 
-ARG SOURCE_COMMIT=UNKNOWN
+ARG SOURCE_COMMIT=dev
+ARG BUILD_TIME=unknown
 ENV SOURCE_COMMIT=${SOURCE_COMMIT}
 ENV GIT_SHA=${SOURCE_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
@@ -114,9 +123,18 @@ COPY --from=builder /app/docs /app/docs
 COPY --from=builder /app/COMMIT /app/COMMIT
 COPY --from=builder /app/BUILD_TIME /app/BUILD_TIME
 COPY --from=builder /app/assets /app/assets
+COPY --from=migration-bundle /production-migrations.sql /app/production-migrations.sql
+COPY tdf-hq/production-entrypoint.sh /app/production-entrypoint.sh
 
 # Render provides PORT; map it to the app's APP_PORT
 ENV APP_PORT=8080
 # Production Docker/Fly deploys use the pre-initialized schema path.
 ENV RUN_MIGRATIONS=false
-CMD ["/bin/sh","-c","APP_PORT=${PORT:-8080} /app/tdf-hq-exe"]
+ENV AUTO_APPLY_PRODUCTION_MIGRATIONS=true
+
+# Non-root user for better security
+RUN chmod 0755 /app/production-entrypoint.sh && \
+    useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+CMD ["/app/production-entrypoint.sh"]

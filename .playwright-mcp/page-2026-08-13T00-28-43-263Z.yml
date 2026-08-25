@@ -1,0 +1,394 @@
+- generic [ref=f20e4]:
+  - generic [ref=f20e18]:
+    - generic [ref=f20e21]:
+      - link [ref=f20e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f20e31]
+      - generic [ref=f20e34]:
+        - link [ref=f20e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f20e44]
+        - link [ref=f20e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f20e54]
+        - link [ref=f20e61] [cursor=pointer]:
+          - /url: /direct/t/124242552300515
+          - generic [ref=f20e64]:
+            - img "Messages" [ref=f20e66]
+            - generic "Direct messaging - 3 new notifications link" [ref=f20e69]: "3"
+        - link [ref=f20e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f20e80]
+        - link [ref=f20e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f20e92]
+        - link [ref=f20e100] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f20e105]
+        - link [ref=f20e110] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f20e115]
+        - link [ref=f20e122] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f20e127]:
+            - img "tdf.records.label's profile picture" [ref=f20e128]
+      - generic [ref=f20e129]:
+        - link [ref=f20e132] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f20e137]
+        - link [ref=f20e140] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f20e145]
+    - generic [ref=f20e148]:
+      - main [ref=f20e149]:
+        - generic [ref=f20e151]:
+          - generic [ref=f20e152]:
+            - generic [ref=f20e153]:
+              - link [ref=f20e159] [cursor=pointer]:
+                - /url: /teez__t/
+                - img "teez__t's profile picture" [ref=f20e160]
+              - generic [ref=f20e161]:
+                - generic [ref=f20e162]:
+                  - generic [ref=f20e163]:
+                    - link [ref=f20e165] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "teez__t" [level=2] [ref=f20e166]
+                    - button [ref=f20e168] [cursor=pointer]:
+                      - img "Options" [ref=f20e170]
+                  - generic [ref=f20e174]: La T de Teez
+                  - generic [ref=f20e176]:
+                    - generic [ref=f20e178]:
+                      - generic [ref=f20e179]: "10"
+                      - text: posts
+                    - link "941 followers" [ref=f20e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f20e182]:
+                        - generic "941" [ref=f20e183]
+                        - text: followers
+                    - link "487 following" [ref=f20e185] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f20e186]:
+                        - generic [ref=f20e187]: "487"
+                        - text: following
+                - generic [ref=f20e189]:
+                  - generic [ref=f20e190]: Artist
+                  - generic [ref=f20e192]:
+                    - button [ref=f20e193] [cursor=pointer]:
+                      - generic [ref=f20e194]: 𝟏𝟏𝟏🥷𝐓𝐄𝐄𝐙🧊#Quitumbecity#laTSiempre en la portada🫗🧊🧊🧊🧊🧊🧊🧊🧊
+                    - generic [ref=f20e195]:
+                      - text: ...
+                      - button "more" [ref=f20e196] [cursor=pointer]
+                  - generic [ref=f20e199]:
+                    - img "Link icon" [ref=f20e201]
+                    - link "www.atom.bio/teez_lat" [ref=f20e205] [cursor=pointer]:
+                      - /url: https://l.instagram.com/?u=https%3A%2F%2Fwww.atom.bio%2Fteez_lat%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadebMFvz-xXaAZlN--ARrMxq1f9q8a9U0GxB_fMiPx-bEYI1a7jQCZVMcXIJQ_aem_hQiVPZ0yUEd4i5MN1k7NWw&e=AUB0VC8su6sPtbvIso0JsjG5P1xndZdEYerd5RBZ_yEfUX2hm582nsSUPD4zIn-lE4dlb1oVy4YzIhwAcB2BKHYQFTQPLBFfUeSzQ0V5R9LSASYxFkOXotQ__cM_hhP8y3TPNGBs4eF-
+            - generic [ref=f20e211]:
+              - button "Follow" [ref=f20e213] [cursor=pointer]
+              - button "Message" [ref=f20e217] [cursor=pointer]
+              - button [ref=f20e219] [cursor=pointer]:
+                - img "Similar accounts" [ref=f20e221]
+            - menu [ref=f20e225]:
+              - generic [ref=f20e227]:
+                - list [ref=f20e229]:
+                  - listitem [ref=f20e230]
+                  - listitem [ref=f20e231]
+                  - listitem [ref=f20e232]:
+                    - link "View 𝙇𝙖 𝙝𝙥 𝙏🧊 highlight" [ref=f20e235] [cursor=pointer]:
+                      - /url: /stories/highlights/18252969895037089/
+                      - button "teez__t's highlight story picture 𝙇𝙖 𝙝𝙥 𝙏🧊" [ref=f20e236]:
+                        - button [ref=f20e237]:
+                          - img "teez__t's highlight story picture" [ref=f20e240]
+                        - generic [ref=f20e241]: 𝙇𝙖 𝙝𝙥 𝙏🧊
+                  - listitem [ref=f20e244]:
+                    - link "View 𝙇𝙖 𝙏 highlight" [ref=f20e247] [cursor=pointer]:
+                      - /url: /stories/highlights/17924723993881199/
+                      - button "teez__t's highlight story picture 𝙇𝙖 𝙏" [ref=f20e248]:
+                        - button [ref=f20e249]:
+                          - img "teez__t's highlight story picture" [ref=f20e252]
+                        - generic [ref=f20e253]: 𝙇𝙖 𝙏
+                  - listitem [ref=f20e256]:
+                    - link "View Diamantes highlight" [ref=f20e259] [cursor=pointer]:
+                      - /url: /stories/highlights/17988882161835621/
+                      - button "teez__t's highlight story picture Diamantes" [ref=f20e260]:
+                        - button [ref=f20e261]:
+                          - img "teez__t's highlight story picture" [ref=f20e264]
+                        - generic [ref=f20e265]: Diamantes
+                  - listitem [ref=f20e268]:
+                    - link "View 💜 highlight" [ref=f20e271] [cursor=pointer]:
+                      - /url: /stories/highlights/18552064870032085/
+                      - button "teez__t's highlight story picture 💜" [ref=f20e272]:
+                        - button [ref=f20e273]:
+                          - img "teez__t's highlight story picture" [ref=f20e276]
+                        - generic [ref=f20e277]: 💜
+                  - listitem [ref=f20e280]:
+                    - link "View 𝙇𝙖 𝙇𝙪𝙣𝙖 🌑 highlight" [ref=f20e283] [cursor=pointer]:
+                      - /url: /stories/highlights/17905017042117291/
+                      - button "teez__t's highlight story picture 𝙇𝙖 𝙇𝙪𝙣𝙖 🌑" [ref=f20e284]:
+                        - button [ref=f20e285]:
+                          - img "teez__t's highlight story picture" [ref=f20e288]
+                        - generic [ref=f20e289]: 𝙇𝙖 𝙇𝙪𝙣𝙖 🌑
+                  - listitem [ref=f20e292]:
+                    - link "View 𝘿𝙤𝙣𝙙𝙚 𝙚𝙨𝙩𝙖𝙨 highlight" [ref=f20e295] [cursor=pointer]:
+                      - /url: /stories/highlights/18027506672441881/
+                      - button "teez__t's highlight story picture 𝘿𝙤𝙣𝙙𝙚 𝙚𝙨𝙩𝙖𝙨" [ref=f20e296]:
+                        - button [ref=f20e297]:
+                          - img "teez__t's highlight story picture" [ref=f20e300]
+                        - generic [ref=f20e301]: 𝘿𝙤𝙣𝙙𝙚 𝙚𝙨𝙩𝙖𝙨
+                  - listitem [ref=f20e304]:
+                    - link "View ⚽️ highlight" [ref=f20e307] [cursor=pointer]:
+                      - /url: /stories/highlights/18005557799566597/
+                      - button "teez__t's highlight story picture ⚽️" [ref=f20e308]:
+                        - button [ref=f20e309]:
+                          - img "teez__t's highlight story picture" [ref=f20e312]
+                        - generic [ref=f20e313]: ⚽️
+                - button "Next" [ref=f20e316] [cursor=pointer]
+          - generic [ref=f20e318]:
+            - tablist [ref=f20e319]:
+              - link [ref=f20e321] [cursor=pointer]:
+                - /url: /teez__t/
+                - img "Posts" [ref=f20e323]
+              - link [ref=f20e334] [cursor=pointer]:
+                - /url: /teez__t/reels/
+                - img "Reels" [ref=f20e336]
+              - link [ref=f20e339] [cursor=pointer]:
+                - /url: /teez__t/reposts/
+                - img "Reposts" [ref=f20e341]
+              - link [ref=f20e344] [cursor=pointer]:
+                - /url: /teez__t/tagged/
+                - img "Tagged" [ref=f20e346]
+            - tabpanel
+          - generic [ref=f20e353]:
+            - generic [ref=f20e354]:
+              - link [ref=f20e356] [cursor=pointer]:
+                - /url: /artecallejero.ec/p/Dbeszv7Muaa/
+                - img "Photo by Street Art Ec in Av Amazonas Y Roca with @ginosalsasur, @ke_sao_, and @teez__t. May be an image of text that says 'ESTÉTICA Y CÓDIGOS DE LA LA CITY @ GANOSALSASUR @KE_SAO_ @TEEZT A FRESH* 9_80s 80s Mix THEBEATISON ZAPATITOROTO ROTO SONIDO Y DEMBOW EN EL SPOT ขา'." [ref=f20e359]
+              - link [ref=f20e362] [cursor=pointer]:
+                - /url: /artecallejero.ec/p/DbesjddDMsp/
+                - img "Photo shared by Street Art Ec on July 31, 2026 tagging @ginosalsasur, @ke_sao_, and @teez__t. May be pop art of poster, portable cassette player and text that says 'APOYA EL PRODUCTO + QO PRODUCTO PRODUCTOLOCAL LOCAL ITIEMENQUEESCUCHARESTO!! ワク 福路 GEZ preme pr eme'." [ref=f20e365]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f20e368] [cursor=pointer]:
+                - /url: /ecuad_music/p/DbUvT5ElWmm/
+                - img "Photo shared by ECUAD MUSIC🇪🇨🌎 on July 27, 2026 tagging @ginosalsasur, @ke_sao_, @teez__t, and @ecuadmusic. May be an image of one or more people and text." [ref=f20e371]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f20e373]:
+              - link [ref=f20e375] [cursor=pointer]:
+                - /url: /ginosalsasur/reel/DbTXRHSsa6g/
+                - img "Hoy sale Mi Amor Despierta banda con los muchachos 6pm gi gi gi 🎶🔥🫶🏻👽😈 @ke_sao_ @teez__t" [ref=f20e378]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f20e381] [cursor=pointer]:
+                - /url: /teez__t/reel/Da1bUHQPd2a/
+                - 'img "MI AMOR DESPIERTA💔🥀👠#Miamordespierta #musica#elpalodelaño" [ref=f20e384]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f20e387] [cursor=pointer]:
+                - /url: /teez__t/p/DWows-oDjp_/
+                - img "Photo by La T de Teez on April 02, 2026." [ref=f20e390]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f20e392]:
+              - link [ref=f20e394] [cursor=pointer]:
+                - /url: /teez__t/p/DSazI5vkeVH/
+                - img "Photo by La T de Teez on December 18, 2025." [ref=f20e397]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f20e400] [cursor=pointer]:
+                - /url: /teez__t/p/DPtxF6XjuAO/
+                - img "Photo by La T de Teez on October 12, 2025." [ref=f20e403]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f20e406] [cursor=pointer]:
+                - /url: /teez__t/reel/DNWWjyUxMzN/
+                - 'img "🌑💎 No todos soportan el brillo… DIAMANTES ya está en la calle… 🎤 📲 Escúchalo aquí → https://spotify.openinapp.co/asty0 [link YouTube] #TrapOscuro #Diamantes #StreetVibes #RealTrap #eslatdeteez #viral #teez #nuevoartista" [ref=f20e409]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - link [ref=f20e413] [cursor=pointer]:
+              - /url: /teez__t/p/C-fwOeEOkVD/
+              - img "Photo by La T de Teez on August 10, 2024." [ref=f20e416]
+              - generic:
+                - generic:
+                  - generic:
+                    - img "Carousel"
+      - contentinfo [ref=f20e420]:
+        - generic [ref=f20e421]:
+          - generic [ref=f20e423]:
+            - link "Meta" [ref=f20e425] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f20e428] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f20e431] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f20e434] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f20e437] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f20e440] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f20e443] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f20e446] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f20e449] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f20e452] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f20e455] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f20e458] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f20e461] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f20e464] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f20e467] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f20e469]:
+            - generic [ref=f20e470] [cursor=pointer]:
+              - generic [ref=f20e471]:
+                - generic [ref=f20e472]: English
+                - img "Down chevron icon" [ref=f20e475]
+              - combobox "Switch Display Language" [ref=f20e477]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f20e478]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f20e481] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=f20e482]:
+                - generic [ref=f20e483]:
+                  - generic [ref=f20e485]:
+                    - img "Messages" [ref=f20e486]
+                    - generic "Direct messaging - 3 new notifications link" [ref=f20e489]: "3"
+                  - generic [ref=f20e492]: Messages
+                - generic [ref=f20e493]:
+                  - button "User avatar Santiii" [ref=f20e495]:
+                    - img "User avatar" [ref=f20e498]
+                  - button "User avatar Diego Saa" [ref=f20e500]:
+                    - img "User avatar" [ref=f20e503]
+                  - button "User avatar Martini 🍸" [ref=f20e505]:
+                    - img "User avatar" [ref=f20e508]
+            - generic [ref=f20e554]:
+              - generic [ref=f20e556]:
+                - generic [ref=f20e557]:
+                  - button [ref=f20e559] [cursor=pointer]:
+                    - img "Go back" [ref=f20e561]
+                  - link "Open the profile page of teez__t" [ref=f20e564] [cursor=pointer]:
+                    - /url: /teez__t/
+                    - generic [ref=f20e565]:
+                      - img "user-profile-picture" [ref=f20e568]
+                      - heading "La T de Teez" [level=2] [ref=f20e572]
+                  - generic [ref=f20e574]:
+                    - button [ref=f20e575] [cursor=pointer]:
+                      - img "Expand" [ref=f20e577]
+                    - button [ref=f20e579] [cursor=pointer]:
+                      - img "Close" [ref=f20e581]
+                - separator [ref=f20e584]
+              - generic "La T de Teez" [ref=f20e585]:
+                - generic [ref=f20e587]:
+                  - generic [ref=f20e591]:
+                    - generic [ref=f20e592]:
+                      - img "user-profile-picture" [ref=f20e596]
+                      - generic [ref=f20e597]:
+                        - heading "La T de Teez" [level=2] [ref=f20e600]
+                        - generic [ref=f20e602]: teez__t · Instagram
+                        - link "View profile" [ref=f20e605] [cursor=pointer]:
+                          - /url: /teez__t/
+                    - generic [ref=f20e606]:
+                      - generic [ref=f20e609]:
+                        - generic [ref=f20e610]: Aug 3, 2026, 1:04 PM
+                        - group [ref=f20e613]:
+                          - generic [ref=f20e615]:
+                            - link "Open the profile page of teez__t" [ref=f20e618] [cursor=pointer]:
+                              - /url: /teez__t
+                              - img "user-profile-picture" [ref=f20e621]
+                            - generic [ref=f20e622]: ¿Puedes contarme algo más sobre tu anuncio?
+                      - generic [ref=f20e630]:
+                        - text: La T de Teez replied to an ad.
+                        - link "View ad" [ref=f20e631] [cursor=pointer]:
+                          - /url: https://www.instagram.com/p/DL57XEtgmwh/
+                  - generic [ref=f20e640]:
+                    - button [ref=f20e643] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f20e645]
+                    - generic [ref=f20e647]:
+                      - textbox [active] [ref=f20e648]:
+                        - paragraph [ref=f20e649]
+                      - generic: Message...
+                    - generic [ref=f20e650]:
+                      - button [ref=f20e651] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f20e653]
+                      - button [ref=f20e656] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f20e658]
+                      - button [ref=f20e663] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f20e665]

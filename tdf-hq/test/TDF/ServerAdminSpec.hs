@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.ServerAdminSpec (spec) where
 
@@ -13,9 +14,17 @@ import Data.Int (Int64)
 import qualified Data.Text as T
 import Data.Time (Day, UTCTime (..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..), get, insert, selectList)
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (Header, Headers, NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant
+    ( Header
+    , Headers
+    , NoContent (..)
+    , ServerError (errBody, errHTTPCode)
+    , (:<|>) (..)
+    )
+import System.IO (hClose)
+import System.IO.Temp (withSystemTempFile)
 import Test.Hspec
 
 import TDF.API.Admin
@@ -26,13 +35,23 @@ import TDF.API.Admin
     , AdminWhatsAppResendRequest (..)
     , AdminWhatsAppSendRequest (..)
     , AdminWhatsAppSendResponse
+    , ConnectOnboardingLinkRequest
+    , ConnectOnboardingLinkResponse
     , EmailTestRequest (..)
+    , ArtistEnrichmentOverviewDTO
     , SocialUnholdRequest (..)
     , UserCommunicationHistoryDTO
     )
-import TDF.API.Types (UserAccountCreate (..), UserAccountDTO, UserAccountUpdate (..))
+import TDF.API.Types
+    ( DropdownOptionCreate
+    , DropdownOptionDTO
+    , DropdownOptionUpdate (..)
+    , UserAccountCreate (..)
+    , UserAccountDTO
+    , UserAccountUpdate (..)
+    )
 import TDF.Auth (AuthedUser (..), modulesForRoles)
-import TDF.Config (loadConfig)
+import TDF.Config (defaultLocale, defaultTimezone, loadConfig, seedTriggerToken)
 import TDF.DB (Env (..))
 import TDF.DTO
     ( ArtistProfileDTO
@@ -52,18 +71,30 @@ import TDF.ServerAdmin (
     dedupeAdminEmailRecipients,
     normalizeAdminEmailAddress,
     normalizeAdminEmailBodyLines,
+    resolveAdminEmailTestBody,
+    validateAdminEmailBodyLines,
     normalizeAdminUsername,
     SocialUnholdLookup (..),
     validateSocialUnholdLookup,
     validateSocialUnholdNote,
     validateAdminWhatsAppSendMode,
+    validateAdminWhatsAppMessageBody,
+    resolveAdminWhatsAppSendPhone,
+    resolveAdminWhatsAppResendPhone,
     validateAdminEmailSubject,
+    validateOptionalAdminEmailName,
     validateAdminEmailCtaUrl,
     validateAdminEmailBroadcastLimit,
     validateAdminLogsLimit,
     validateUserCommunicationHistoryLimit,
     validateOptionalAdminUsername,
     validateAdminPassword,
+    validateDropdownOptionCategory,
+    validateDropdownOptionValue,
+    validateDropdownOptionLabel,
+    validateBrainEntryId,
+    validateBrainEntryBody,
+    validateBrainEntryCategory,
     normalizeBrainEntryTags,
   )
 
@@ -86,10 +117,76 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             normalizeAdminEmailAddress "ada@-example.com" `shouldBe` Nothing
             normalizeAdminEmailAddress "ada@example-.com" `shouldBe` Nothing
 
+        it "rejects oversized admin email parts before SMTP or user-account fallbacks use them" $ do
+            normalizeAdminEmailAddress (T.replicate 65 "a" <> "@example.com")
+                `shouldBe` Nothing
+            normalizeAdminEmailAddress ("ada@" <> T.replicate 64 "b" <> ".com")
+                `shouldBe` Nothing
+            normalizeAdminEmailAddress
+                ( T.replicate 64 "a"
+                    <> "@"
+                    <> T.intercalate
+                        "."
+                        [ T.replicate 63 "b"
+                        , T.replicate 63 "c"
+                        , T.replicate 62 "d"
+                        ]
+                )
+                `shouldBe` Nothing
+
     describe "normalizeAdminEmailBodyLines" $ do
         it "trims lines and drops blanks" $
             normalizeAdminEmailBodyLines ["  Hola  ", "", "   ", " Link: https://example.com  "]
                 `shouldBe` ["Hola", "Link: https://example.com"]
+
+    describe "validateAdminEmailBodyLines" $ do
+        it "returns normalized non-empty body lines for broadcast rendering" $
+            validateAdminEmailBodyLines ["  Hola  ", "", " Linea 2  "]
+                `shouldBe` Right ["Hola", "Linea 2"]
+
+        it "rejects empty or control-character broadcast body lines before SMTP work" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin email body lines, got " <> show value)
+            assertInvalid
+                "At least one non-empty body line is required"
+                (validateAdminEmailBodyLines ["   ", ""])
+            assertInvalid
+                "at most 50 non-empty lines"
+                (validateAdminEmailBodyLines (replicate 51 "Linea"))
+            assertInvalid
+                "1000 characters or fewer"
+                (validateAdminEmailBodyLines [T.replicate 1001 "A"])
+            assertInvalid
+                "Body lines must not contain control characters"
+                (validateAdminEmailBodyLines ["Hola\nBcc: ops@example.com"])
+            assertInvalid
+                "Body lines must not contain hidden format characters"
+                (validateAdminEmailBodyLines ["Hola\x202EHidden"])
+
+    describe "resolveAdminEmailTestBody" $ do
+        it "uses a stable default for omitted test bodies and trims explicit bodies" $ do
+            resolveAdminEmailTestBody Nothing
+                `shouldBe` Right ["Correo de prueba desde TDF HQ."]
+            resolveAdminEmailTestBody (Just "  Prueba desde HQ  ")
+                `shouldBe` Right ["Prueba desde HQ"]
+
+        it "rejects blank or multiline test bodies before SMTP work" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid email-test body, got " <> show value)
+            assertInvalid
+                "At least one non-empty body line is required"
+                (resolveAdminEmailTestBody (Just "   "))
+            assertInvalid
+                "Body lines must not contain control characters"
+                (resolveAdminEmailTestBody (Just "Hola\nBcc: ops@example.com"))
 
     describe "validateAdminEmailSubject" $ do
         it "trims valid single-line subjects before they are used as email headers" $
@@ -122,30 +219,65 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "Subject must not contain control characters"
                 (validateAdminEmailSubject "Launch\NULHidden")
+            assertInvalid
+                "Subject must not contain hidden format characters"
+                (validateAdminEmailSubject "Launch\x202EHidden")
+
+    describe "validateOptionalAdminEmailName" $ do
+        it "trims optional display names and treats blanks as omitted" $ do
+            validateOptionalAdminEmailName Nothing `shouldBe` Right ""
+            validateOptionalAdminEmailName (Just "   ") `shouldBe` Right ""
+            validateOptionalAdminEmailName (Just "  Ada Lovelace  ")
+                `shouldBe` Right "Ada Lovelace"
+
+        it "rejects unsafe display names before they are used in email headers" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid admin email name, got " <> show value)
+            assertInvalid
+                "Name must be a single line"
+                (validateOptionalAdminEmailName (Just "Ada\nBcc: ops@example.com"))
+            assertInvalid
+                "Name must not contain control or hidden format characters"
+                (validateOptionalAdminEmailName (Just "Ada\NULHidden"))
+            assertInvalid
+                "Name must not contain control or hidden format characters"
+                (validateOptionalAdminEmailName (Just "Ada\x202EHidden"))
+            assertInvalid
+                "Name must be 120 characters or fewer"
+                (validateOptionalAdminEmailName (Just (T.replicate 121 "A")))
 
     describe "validateAdminEmailCtaUrl" $ do
-        it "trims valid http(s) CTA URLs and treats blanks as omitted" $ do
+        it "trims valid public https CTA URLs and treats blanks as omitted" $ do
             validateAdminEmailCtaUrl Nothing `shouldBe` Right Nothing
             validateAdminEmailCtaUrl (Just "   ") `shouldBe` Right Nothing
             validateAdminEmailCtaUrl (Just " https://example.com/course?utm=admin ")
                 `shouldBe` Right (Just "https://example.com/course?utm=admin")
 
-        it "rejects unsafe or ambiguous CTA URLs before email rendering" $ do
+        it "rejects insecure or ambiguous CTA URLs before email rendering" $ do
             let assertInvalid expectedMessage result = case result of
                     Left err -> do
                         errHTTPCode err `shouldBe` 400
                         BL8.unpack (errBody err) `shouldContain` expectedMessage
                     Right value ->
                         expectationFailure ("Expected invalid admin CTA URL, got " <> show value)
-            assertInvalid "http(s)" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
+                hiddenFormatUrl = "https://example.com/course" <> T.singleton '\x202E'
+            assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "javascript:alert(1)"))
+            assertInvalid "absolute https URL" (validateAdminEmailCtaUrl (Just "http://example.com/course"))
             assertInvalid "include a host" (validateAdminEmailCtaUrl (Just "https:///course"))
             assertInvalid "whitespace" (validateAdminEmailCtaUrl (Just "https://example.com/a path"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "https://example.com/\nBcc"))
             assertInvalid "control characters" (validateAdminEmailCtaUrl (Just "\nhttps://example.com/course"))
+            assertInvalid
+                "hidden formatting characters"
+                (validateAdminEmailCtaUrl (Just hiddenFormatUrl))
             assertInvalid "user info" (validateAdminEmailCtaUrl (Just "https://user@example.com/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
-            assertInvalid "absolute public http(s)" (validateAdminEmailCtaUrl (Just "https://example.com:70000/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://example..com/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://localhost/course"))
+            assertInvalid "absolute public https" (validateAdminEmailCtaUrl (Just "https://example.com:70000/course"))
 
     describe "normalizeAdminUsername" $ do
         it "canonicalizes explicit usernames when they are already in the supported login shape" $ do
@@ -197,7 +329,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "trims valid explicit admin passwords before hashing or emailing them" $
             validateAdminPassword "  TempPass123!  " `shouldBe` Right "TempPass123!"
 
-        it "rejects blank, short, or control-character admin passwords" $ do
+        it "rejects blank, short, control-character, or hidden-format admin passwords" $ do
             let assertInvalid expectedMessage rawPassword =
                     case validateAdminPassword rawPassword of
                         Left err -> do
@@ -207,7 +339,72 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             expectationFailure ("Expected invalid admin password to be rejected, got " <> show value)
             assertInvalid "Password must not be empty" "   "
             assertInvalid "Password must be at least 8 characters" "short"
+            assertInvalid "Password must be 72 bytes or fewer" (T.replicate 73 "a")
             assertInvalid "Password must not contain control characters" "Long\nPass123"
+            assertInvalid "Password must not contain control characters" "\nTempPass123!"
+            assertInvalid "Password must not contain control characters" "TempPass123!\t"
+            assertInvalid
+                "Password must not contain hidden formatting characters"
+                ("TempPass" <> T.singleton '\x202E' <> "123!")
+
+    describe "dropdown option validation" $ do
+        it "normalizes valid dropdown categories, values, and labels before persistence" $ do
+            validateDropdownOptionCategory "  Asset-Category  "
+                `shouldBe` Right "asset-category"
+            validateDropdownOptionCategory "band_role"
+                `shouldBe` Right "band_role"
+            validateDropdownOptionValue "  open  " `shouldBe` Right "open"
+            validateDropdownOptionLabel (Just "  Open for booking  ")
+                `shouldBe` Right (Just "Open for booking")
+            validateDropdownOptionLabel (Just "   ") `shouldBe` Right Nothing
+
+        it
+            ( "rejects control-character dropdown option writes instead of storing "
+                <> "ambiguous admin metadata"
+            )
+            $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected invalid dropdown option field, got " <> show value)
+            assertInvalid "Dropdown category is required" (validateDropdownOptionCategory "   ")
+            assertInvalid
+                "Dropdown category must use only ASCII letters, numbers, hyphens, or underscores"
+                (validateDropdownOptionCategory "asset category")
+            assertInvalid
+                "Dropdown category must start and end with an ASCII letter or number"
+                (validateDropdownOptionCategory "-asset-category")
+            assertInvalid
+                "Dropdown category must be 64 characters or fewer"
+                (validateDropdownOptionCategory (T.replicate 65 "a"))
+            assertInvalid
+                "Value must be 160 characters or fewer"
+                (validateDropdownOptionValue (T.replicate 161 "a"))
+            assertInvalid
+                "Label must be 160 characters or fewer"
+                (validateDropdownOptionLabel (Just (T.replicate 161 "a")))
+            assertInvalid
+                "Dropdown category must not contain control characters"
+                (validateDropdownOptionCategory "asset\ncategory")
+            assertInvalid
+                "Dropdown category must not contain hidden format characters"
+                (validateDropdownOptionCategory ("asset" <> "\x200B" <> "category"))
+            assertInvalid "Value is required" (validateDropdownOptionValue "   ")
+            assertInvalid
+                "Value must not contain control characters"
+                (validateDropdownOptionValue "open\nnow")
+            assertInvalid
+                "Label must not contain control characters"
+                (validateDropdownOptionLabel (Just "Open\nnow"))
+            assertInvalid
+                "Value must not contain hidden format characters"
+                (validateDropdownOptionValue ("open" <> "\x200B" <> "now"))
+            assertInvalid
+                "Label must not contain hidden format characters"
+                (validateDropdownOptionLabel (Just ("Open" <> "\x202E" <> "now")))
 
     describe "dedupeAdminEmailRecipients" $ do
         it "keeps the first valid recipient for duplicate emails and drops malformed addresses" $
@@ -243,10 +440,19 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeEmailTest "{\"etrEmail\":\"ada@example.com\"}" `shouldSatisfy` isLeft
             decodeEmailTest "{\"email\":\"ada@example.com\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback fields so email-test defaults require omission" $ do
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"subject\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"body\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"name\":null}" `shouldSatisfy` isLeft
+            decodeEmailTest "{\"email\":\"ada@example.com\",\"ctaUrl\":null}" `shouldSatisfy` isLeft
+
     describe "SocialUnholdRequest FromJSON" $ do
         it "accepts canonical admin wire keys for social unhold lookups" $
             case eitherDecode
-                "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"note\":\"retry latest reply\"}" of
+                ( "{\"channel\":\" WhatsApp \","
+                    <> "\"senderId\":\"  wa:+593999000111  \","
+                    <> "\"note\":\"retry latest reply\"}"
+                ) of
                 Left err ->
                     expectationFailure ("Expected canonical social unhold payload to decode, got: " <> err)
                 Right payload -> do
@@ -258,6 +464,36 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
         it "rejects prefixed or unexpected keys instead of silently accepting malformed admin payloads" $ do
             decodeSocialUnhold "{\"surChannel\":\"whatsapp\",\"surSenderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
             decodeSocialUnhold "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
+        it "rejects malformed channels before the handler chooses a social backend" $ do
+            decodeSocialUnhold
+                "{\"channel\":\"   \",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"telegram\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\\n\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whats\\u202eapp\",\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects missing or ambiguous lookup keys before the unhold handler chooses a fallback path" $ do
+            decodeSocialUnhold "{\"channel\":\"whatsapp\"}" `shouldSatisfy` isLeft
+            decodeSocialUnhold "{\"channel\":\"whatsapp\",\"externalId\":\"   \",\"senderId\":\"\"}" `shouldSatisfy` isLeft
+            decodeSocialUnhold "{\"channel\":\"whatsapp\",\"externalId\":\"wa-incoming-1\",\"senderId\":\"wa:+593999000111\"}" `shouldSatisfy` isLeft
+
+        it "rejects explicit null fallback fields so lookup mode requires omission" $ do
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"externalId\":null,\"senderId\":\"wa:+593999000111\"}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"externalId\":\"wa-incoming-1\",\"senderId\":null}"
+                `shouldSatisfy` isLeft
+            decodeSocialUnhold
+                "{\"channel\":\"whatsapp\",\"senderId\":\"wa:+593999000111\",\"note\":null}"
+                `shouldSatisfy` isLeft
 
     describe "AdminWhatsAppSendRequest FromJSON" $ do
         it "accepts canonical admin wire keys for WhatsApp sends" $
@@ -277,23 +513,37 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeWhatsAppSend
                 "{\"message\":\"Hola\",\"mode\":\"notify\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            case decodeWhatsAppSend
+                "{\"message\":\"Hola\",\"mode\":\"notify\",\"replyToMessageId\":null}" of
+                Left err ->
+                    err `shouldContain` "replyToMessageId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null reply target to be rejected, got: " <> show payload)
 
     describe "AdminWhatsAppResendRequest FromJSON" $ do
         it "accepts canonical admin wire keys for WhatsApp resends" $
-            case eitherDecode "{\"message\":\"Reintentando\"}" of
+            case eitherDecode "{\"message\":\"  Reintentando  \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical WhatsApp resend payload to decode, got: " <> err)
                 Right payload ->
                     awrrMessage payload `shouldBe` Just "Reintentando"
 
-        it "rejects prefixed or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
+        it "rejects blank, prefixed, or unexpected keys so malformed WhatsApp resend bodies fail explicitly" $ do
+            decodeWhatsAppResend "{\"message\":\"   \"}" `shouldSatisfy` isLeft
+            case decodeWhatsAppResend "{\"message\":null}" of
+                Left err ->
+                    err `shouldContain` "message must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected explicit null resend message to be rejected, got: " <> show payload)
             decodeWhatsAppResend "{\"awrrMessage\":\"Hola\"}" `shouldSatisfy` isLeft
             decodeWhatsAppResend "{\"message\":\"Hola\",\"unexpected\":true}" `shouldSatisfy` isLeft
 
     describe "UserAccount payload FromJSON" $ do
         it "accepts canonical admin wire keys for user create and update payloads" $ do
             case decodeUserAccountCreate
-                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"uacPassword\":\"TempPass123!\",\"uacActive\":true,\"uacRoles\":[\"Admin\",\"Teacher\"]}" of
+                "{\"uacPartyId\":42,\"uacUsername\":\"ada.example\",\"uacPassword\":\"TempPass123!\",\"uacActive\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical user create payload to decode, got: " <> err)
                 Right payload -> do
@@ -301,17 +551,15 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     uacUsername payload `shouldBe` Just "ada.example"
                     uacPassword payload `shouldBe` Just "TempPass123!"
                     uacActive payload `shouldBe` Just True
-                    uacRoles payload `shouldBe` Just [Admin, Teacher]
 
             case decodeUserAccountUpdate
-                "{\"uauUsername\":\"ada.ops\",\"uauPassword\":\"NextPass123!\",\"uauActive\":false,\"uauRoles\":[\"ReadOnly\"]}" of
+                "{\"uauUsername\":\"ada.ops\",\"uauPassword\":\"NextPass123!\",\"uauActive\":false}" of
                 Left err ->
                     expectationFailure ("Expected canonical user update payload to decode, got: " <> err)
                 Right payload -> do
                     uauUsername payload `shouldBe` Just "ada.ops"
                     uauPassword payload `shouldBe` Just "NextPass123!"
                     uauActive payload `shouldBe` Just False
-                    uauRoles payload `shouldBe` Just [ReadOnly]
 
         it "rejects mixed-prefix or unexpected keys so admin user writes fail explicitly" $ do
             decodeUserAccountCreate
@@ -326,6 +574,41 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             decodeUserAccountUpdate
                 "{\"uauUsername\":\"ada.ops\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+        it "rejects removed direct-role fields so assignments must use security revisions" $ do
+            decodeUserAccountCreate
+                "{\"uacPartyId\":42,\"uacRoles\":[\"Admin\"]}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauRoles\":[\"ReadOnly\"]}"
+                `shouldSatisfy` isLeft
+            decodeUserAccountUpdate
+                "{\"uauRoles\":null}"
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null user fields so admin defaults and no-op patches stay intentional" $ do
+            let expectRejected expectedMessage result =
+                    case result of
+                        Left err -> err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected explicit null user payload to fail, got " <> show payload)
+            expectRejected
+                "uacActive must be omitted instead of null"
+                (decodeUserAccountCreate "{\"uacPartyId\":42,\"uacActive\":null}")
+            expectRejected
+                "uacPassword must be omitted instead of null"
+                (decodeUserAccountCreate "{\"uacPartyId\":42,\"uacPassword\":null}")
+            expectRejected
+                "uauActive must be omitted instead of null"
+                (decodeUserAccountUpdate "{\"uauActive\":null}")
+        it "rejects empty admin user updates instead of returning a successful no-op patch" $
+            case decodeUserAccountUpdate "{}" of
+                Left err ->
+                    err `shouldContain` "UserAccountUpdate must include at least one field"
+                Right payload ->
+                    expectationFailure
+                        ("Expected empty user update to fail, got " <> show payload)
 
     describe "ArtistReleaseUpsert FromJSON" $ do
         it "accepts canonical admin release write keys" $
@@ -371,12 +654,47 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     beuActive payload `shouldBe` Just False
 
         it "rejects unexpected brain entry keys so admin writes fail before turning into silent partial updates" $ do
+            decodeBrainEntryUpdate "{}" `shouldSatisfy` isLeft
             decodeBrainEntryCreate
                 "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
             decodeBrainEntryUpdate
                 "{\"beuTitle\":\"Updated runbook\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null create defaults so omitted fields stay distinguishable from nulls" $ do
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becActive\":null}"
+                `shouldSatisfy` isLeft
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becTags\":null}"
+                `shouldSatisfy` isLeft
+            decodeBrainEntryCreate
+                "{\"becTitle\":\"Runbook\",\"becBody\":\"Keep this handy\",\"becCategory\":null}"
+                `shouldSatisfy` isLeft
+
+        it "rejects null brain entry update fields except the explicit category clear" $ do
+            decodeBrainEntryUpdate "{\"beuCategory\":null}" `shouldSatisfy` isRight
+            decodeBrainEntryUpdate "{\"beuTitle\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuBody\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuTags\":null}" `shouldSatisfy` isLeft
+            decodeBrainEntryUpdate "{\"beuActive\":null}" `shouldSatisfy` isLeft
+
+    describe "validateBrainEntryId" $
+        it "rejects non-positive Studio Brain ids before update lookup can report a missing row" $ do
+            validateBrainEntryId 1 `shouldBe` Right 1
+
+            let assertInvalid rawId =
+                    case validateBrainEntryId rawId of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL8.unpack (errBody err)
+                                `shouldContain` "entryId must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ("Expected invalid brain entry id, got " <> show value)
+            assertInvalid 0
+            assertInvalid (-7)
 
     describe "normalizeBrainEntryTags" $ do
         it "trims, drops blanks, and deduplicates tags before brain entry persistence" $ do
@@ -403,6 +721,57 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid
                 "must not contain control characters"
                 (normalizeBrainEntryTags (Just ["ops\ninternal"]))
+            assertInvalid
+                "must not contain hidden format characters"
+                (normalizeBrainEntryTags (Just ["ops" <> T.singleton '\x202E' <> "internal"]))
+
+    describe "validateBrainEntryBody" $ do
+        it "trims Studio Brain bodies while preserving supported multiline text" $
+            validateBrainEntryBody "  Paso 1\n\tRevisar logs\r\nPaso 2  "
+                `shouldBe` Right "Paso 1\n\tRevisar logs\r\nPaso 2"
+
+        it "rejects malformed Studio Brain bodies before RAG indexing" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid brain entry body, got " <> show value)
+            assertInvalid
+                "body is required"
+                (validateBrainEntryBody "   ")
+            assertInvalid
+                "20000 characters or fewer"
+                (validateBrainEntryBody (T.replicate 20001 "x"))
+            assertInvalid
+                "unsupported control or hidden format characters"
+                (validateBrainEntryBody ("Paso 1" <> T.singleton '\NUL' <> "Paso 2"))
+            assertInvalid
+                "unsupported control or hidden format characters"
+                (validateBrainEntryBody ("Paso 1" <> T.singleton '\x202E' <> "Paso 2"))
+
+    describe "validateBrainEntryCategory" $ do
+        it "normalizes optional Studio Brain categories and preserves explicit clears" $ do
+            validateBrainEntryCategory Nothing `shouldBe` Right Nothing
+            validateBrainEntryCategory (Just "  ops  ") `shouldBe` Right (Just "ops")
+            validateBrainEntryCategory (Just "   ") `shouldBe` Right Nothing
+
+        it "rejects malformed Studio Brain categories before storage and RAG indexing" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid brain entry category, got " <> show value)
+            assertInvalid
+                "80 characters or fewer"
+                (validateBrainEntryCategory (Just (T.replicate 81 "x")))
+            assertInvalid
+                "must not contain control characters"
+                (validateBrainEntryCategory (Just "ops\ninternal"))
+            assertInvalid
+                "must not contain hidden format characters"
+                (validateBrainEntryCategory (Just ("ops" <> T.singleton '\x202E' <> "internal")))
 
     describe "validateAdminWhatsAppSendMode" $ do
         it "normalizes supported modes and preserves valid reply semantics" $ do
@@ -420,6 +789,142 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
             assertInvalid "replyToMessageId requerido" (validateAdminWhatsAppSendMode "reply" Nothing)
             assertInvalid "entero positivo" (validateAdminWhatsAppSendMode "reply" (Just 0))
             assertInvalid "solo se permite en mode=reply" (validateAdminWhatsAppSendMode "notify" (Just 99))
+            assertInvalid
+                "control o formato"
+                (validateAdminWhatsAppSendMode "reply\n" (Just 42))
+            assertInvalid
+                "control o formato"
+                (validateAdminWhatsAppSendMode ("re" <> T.singleton '\x202E' <> "ply") (Just 42))
+
+    describe "validateAdminWhatsAppMessageBody" $ do
+        it "trims admin WhatsApp text while preserving multiline formatting" $ do
+            validateAdminWhatsAppMessageBody "  Hola\nseguimos\tpor aqui  "
+                `shouldBe` Right "Hola\nseguimos\tpor aqui"
+            validateAdminWhatsAppMessageBody (T.replicate 4096 "a")
+                `shouldBe` Right (T.replicate 4096 "a")
+
+        it "rejects blank, oversized, control, or hidden-format messages before WhatsApp dispatch" $ do
+            let assertInvalid expectedMessage result = case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure ("Expected invalid WhatsApp message body, got " <> show value)
+            assertInvalid "Mensaje vac" (validateAdminWhatsAppMessageBody "   ")
+            assertInvalid
+                "max 4096 caracteres"
+                (validateAdminWhatsAppMessageBody (T.replicate 4097 "a"))
+            assertInvalid
+                "caracteres de control o formato no soportados"
+                (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\NUL'))
+            assertInvalid
+                "caracteres de control o formato no soportados"
+                (validateAdminWhatsAppMessageBody ("hola" <> T.singleton '\x202E' <> "cod"))
+
+    describe "resolveAdminWhatsAppSendPhone" $ do
+        it "routes replies to the referenced message phone instead of the first party fallback" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                replyTarget =
+                    (seedWhatsAppAdminMessage now "wa-incoming-reply" "incoming")
+                        { ME.whatsAppMessageSenderId = "+593999000222"
+                        , ME.whatsAppMessagePhoneE164 = Just "+593999000222"
+                        }
+                replyTargetWithBadStoredPhone =
+                    replyTarget { ME.whatsAppMessagePhoneE164 = Just "not-a-phone" }
+                partyPhones = ["+593999000111", "+593999000222"]
+
+            resolveAdminWhatsAppSendPhone "notify" ["+593999000111"] Nothing
+                `shouldBe` Right "+593999000111"
+            resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTarget)
+                `shouldBe` Right "+593999000222"
+            resolveAdminWhatsAppSendPhone "reply" partyPhones (Just replyTargetWithBadStoredPhone)
+                `shouldBe` Right "+593999000222"
+
+        it "rejects notify sends when party phone fallbacks are ambiguous" $ do
+            case resolveAdminWhatsAppSendPhone
+                "notify"
+                ["+593999000111", "+593999000222"]
+                Nothing of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "WhatsApp posible"
+                Right phone ->
+                    expectationFailure
+                        ("Expected ambiguous notify phone fallback to be rejected, got " <> show phone)
+
+        it "rejects reply targets without a resolvable WhatsApp phone" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                replyTarget =
+                    (seedWhatsAppAdminMessage now "wa-incoming-no-phone" "incoming")
+                        { ME.whatsAppMessageSenderId = "not-a-phone"
+                        , ME.whatsAppMessagePhoneE164 = Nothing
+                        }
+
+            case resolveAdminWhatsAppSendPhone "reply" ["+593999000111"] (Just replyTarget) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "mensaje de referencia"
+                Right phone ->
+                    expectationFailure ("Expected invalid reply phone to be rejected, got " <> show phone)
+
+        it "rejects reply targets with conflicting stored and sender phones" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                replyTarget =
+                    (seedWhatsAppAdminMessage now "wa-incoming-conflicting-phone" "incoming")
+                        { ME.whatsAppMessageSenderId = "+593999000222"
+                        , ME.whatsAppMessagePhoneE164 = Just "+593999000333"
+                        }
+
+            case resolveAdminWhatsAppSendPhone "reply" ["+593999000222"] (Just replyTarget) of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "ambiguo"
+                Right phone ->
+                    expectationFailure ("Expected ambiguous reply phone to be rejected, got " <> show phone)
+
+    describe "resolveAdminWhatsAppResendPhone" $ do
+        it "validates stored resend phones before falling back to sender ids" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                resendTarget =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-resend" "outgoing")
+                        { ME.whatsAppMessagePhoneE164 = Just "not-a-phone"
+                        , ME.whatsAppMessageSenderId = "593999000333"
+                        }
+            resolveAdminWhatsAppResendPhone resendTarget
+                `shouldBe` Right "+593999000333"
+
+        it "rejects resend targets without any resolvable WhatsApp phone" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                resendTarget =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-resend-no-phone" "outgoing")
+                        { ME.whatsAppMessagePhoneE164 = Just "not-a-phone"
+                        , ME.whatsAppMessageSenderId = "also-not-a-phone"
+                        }
+            case resolveAdminWhatsAppResendPhone resendTarget of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "No se pudo determinar"
+                Right phone ->
+                    expectationFailure ("Expected invalid resend phone to be rejected, got " <> show phone)
+
+        it "rejects resend targets with conflicting stored and sender phones" $ do
+            let now = UTCTime (fromGregorian 2026 4 28) (secondsToDiffTime 0)
+                resendTarget =
+                    (seedWhatsAppAdminMessage now "wa-outgoing-resend-conflicting-phone" "outgoing")
+                        { ME.whatsAppMessagePhoneE164 = Just "+593999000444"
+                        , ME.whatsAppMessageSenderId = "+593999000555"
+                        }
+            case resolveAdminWhatsAppResendPhone resendTarget of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "ambiguo"
+                Right phone ->
+                    expectationFailure ("Expected ambiguous resend phone to be rejected, got " <> show phone)
 
     describe "validateUserCommunicationHistoryLimit" $ do
         it "defaults omitted limits and accepts explicit values inside the supported history window" $ do
@@ -494,6 +999,90 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected multiline broadcast subject to be rejected, got " <> show value)
 
+    describe "artist enrichment route authorization" $ do
+        it "requires the literal Admin role for read-only research and audit data" $ do
+            let assertRejected role = do
+                    result <- runAdminTest (enrichmentOverviewHandlerFor (mkUser [role]) Nothing Nothing)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value -> expectationFailure
+                            ("Expected enrichment access to be rejected, got " <> show value)
+            assertRejected StudioManager
+            assertRejected Webmaster
+            assertRejected Fan
+
+    describe "admin seed route authorization" $ do
+        it "requires literal Admin instead of broad Admin-module membership before seeding" $ do
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+            let assertRejected role = do
+                    result <- runAdminTest (seedHandlerFor (mkUser [role]) Nothing)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right NoContent ->
+                            expectationFailure
+                                ("Expected " <> show role <> " seed access to be rejected")
+
+            assertRejected StudioManager
+            assertRejected Webmaster
+            result <- runAdminTest (seedHandlerFor malformedAdmin Nothing)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing required module access"
+                Right NoContent ->
+                    expectationFailure
+                        "Expected malformed Admin seed access to be rejected"
+
+        it "requires a configured seed token even for strict Admin seed requests" $ do
+            cfg <- loadConfig
+            let seedHandler = seedHandlerFor (mkUser [Admin])
+                token = "correct-seed-token-123"
+                envWithToken =
+                    dummyEnv { envConfig = cfg { seedTriggerToken = Just token } }
+                envWithoutToken =
+                    dummyEnv { envConfig = cfg { seedTriggerToken = Nothing } }
+
+            missingResult <- runAdminTestWith envWithToken (seedHandler Nothing)
+            case missingResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 401
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing X-Seed-Token header"
+                Right NoContent ->
+                    expectationFailure "Expected missing seed token to be rejected"
+
+            invalidResult <-
+                runAdminTestWith envWithToken (seedHandler (Just "wrong-seed-token-123"))
+            case invalidResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Invalid seed token"
+                Right NoContent ->
+                    expectationFailure "Expected invalid seed token to be rejected"
+
+            malformedResult <-
+                runAdminTestWith envWithToken (seedHandler (Just (" " <> token <> " ")))
+            case malformedResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Malformed X-Seed-Token header"
+                Right NoContent ->
+                    expectationFailure "Expected malformed seed token to be rejected"
+
+            disabledResult <- runAdminTestWith envWithoutToken (seedHandler (Just token))
+            case disabledResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "Seeding endpoint disabled"
+                Right NoContent ->
+                    expectationFailure "Expected disabled seed route to be rejected"
+
     describe "admin lookup id validation" $ do
         it "rejects non-positive user ids before admin user lookups can degrade malformed input into 404s" $ do
             let _listUsers :<|> _createUser :<|> userById = usersHandlersFor (mkUser [Admin])
@@ -529,11 +1118,41 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     expectationFailure
                         ("Expected invalid WhatsApp resend message id to be rejected, got " <> show value)
 
+        it "rejects non-positive dropdown option ids before update lookups hit the database" $ do
+            let _listOptions :<|> _createOption :<|> updateOption =
+                    dropdownsHandlersFor "asset-category" (mkUser [Admin])
+                updateReq =
+                    DropdownOptionUpdate
+                        { douValue = Nothing
+                        , douLabel = Nothing
+                        , douSortOrder = Nothing
+                        , douActive = Just True
+                        }
+                assertRejected rawId = do
+                    result <- runAdminTest (updateOption rawId updateReq)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL8.unpack (errBody err)
+                                `shouldContain` "identifier must be a positive integer"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected invalid dropdown option id to be rejected, got "
+                                    <> show value
+                                )
+
+            assertRejected "0"
+            assertRejected "-7"
+
         it "rejects non-positive artist and release ids before admin artist writes hit the database" $ do
-            let artistProfiles :<|> artistReleases :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
+            let artistProfiles :<|> artistReleases :<|> _connectOnboarding
+                    :<|> artistPromotions =
+                    artistsHandlersFor (mkUser [Admin])
                 _listProfiles :<|> upsertArtistProfile = artistProfiles
                 createArtistRelease :<|> updateArtistRelease = artistReleases
-                _listPromotions :<|> createArtistPromotion :<|> updateArtistPromotion :<|> deleteArtistPromotion :<|> _previewPromotionReport :<|> _promotionReportPdf =
+                _listPromotions :<|> createArtistPromotion
+                    :<|> updateArtistPromotion :<|> deleteArtistPromotion
+                    :<|> _previewPromotionReport :<|> _promotionReportPdf =
                     artistPromotions 0
                 invalidArtistProfilePayload =
                     ArtistProfileUpsert
@@ -549,7 +1168,7 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , apuYoutubeUrl = Nothing
                         , apuWebsiteUrl = Nothing
                         , apuFeaturedVideoUrl = Nothing
-                        , apuGenres = Nothing
+                        , apuGenreIds = []
                         , apuHighlights = Nothing
                         }
                 invalidArtistReleasePayload =
@@ -604,40 +1223,31 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         ("Expected invalid artist release id to be rejected, got " <> show value)
 
             createPromotionResult <- runAdminTest (createArtistPromotion validArtistPromotionPayload)
-            case createPromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "artistId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion artist id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "artistId must be a positive integer"
+                createPromotionResult
 
             updatePromotionResult <- runAdminTest (updateArtistPromotion 0 validArtistPromotionPayload)
-            case updatePromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "promotionId must be a positive integer"
+                updatePromotionResult
 
             deletePromotionResult <- runAdminTest (deleteArtistPromotion 0)
-            case deletePromotionResult of
-                Left err -> do
-                    errHTTPCode err `shouldBe` 400
-                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
-                Right value ->
-                    expectationFailure
-                        ("Expected invalid artist promotion delete id to be rejected, got " <> show value)
+            expectBadRequestContaining
+                "promotionId must be a positive integer"
+                deletePromotionResult
 
         it "returns artist promotion report previews ordered by Ecuador schedule time" $ do
             pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
             runSqlPool initializeArtistPromotionSchema pool
             cfg <- loadConfig
-            let env = dummyEnv { envPool = pool, envConfig = cfg }
-                _artistProfiles :<|> _artistReleases :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
-                _listPromotions :<|> _createArtistPromotion :<|> _updateArtistPromotion :<|> _deleteArtistPromotion :<|> previewPromotionReport :<|> _promotionReportPdf =
-                    artistPromotions 7
+            let reportConfig = cfg
+                    { defaultLocale = "es"
+                    , defaultTimezone = "America/Guayaquil"
+                    }
+                env = dummyEnv { envPool = pool, envConfig = reportConfig }
+                _artistProfiles :<|> _artistReleases :<|> _connectOnboarding
+                    :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
                 now = UTCTime (fromGregorian 2026 4 23) (secondsToDiffTime 0)
                 reportDay = fromGregorian 2026 4 23
             artistKey <- runSqlPool
@@ -653,11 +1263,18 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 )
                 pool
-            fromSqlKey artistKey `shouldBe` 7
+            let artistId = fromSqlKey artistKey
+                _listPromotions :<|> _createArtistPromotion
+                    :<|> _updateArtistPromotion :<|> _deleteArtistPromotion
+                    :<|> previewPromotionReport :<|> _promotionReportPdf =
+                    artistPromotions artistId
             _ <- runSqlPool
                 (insert
                     ArtistProfile
@@ -674,6 +1291,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , artistProfileFeaturedVideoUrl = Nothing
                         , artistProfileGenres = Nothing
                         , artistProfileHighlights = Nothing
+                        , artistProfileStripeAccountId = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
                         , artistProfileCreatedAt = now
                         , artistProfileUpdatedAt = Just now
                         }
@@ -719,9 +1339,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Left err ->
                     expectationFailure ("Expected artist promotion preview to succeed, got " <> show err)
                 Right report -> do
-                    apdArtistId report `shouldBe` 7
+                    apdArtistId report `shouldBe` artistId
                     apdArtistName report `shouldBe` "La Ruta"
-                    apdTimezone report `shouldBe` "Hora de Ecuador (America/Guayaquil)"
+                    apdTimezone report `shouldBe` "America/Guayaquil"
                     map apsStartTime (apdEntries report) `shouldBe` ["08:15", "11:30"]
 
     describe "admin user creation invariants" $ do
@@ -745,6 +1365,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         , partyInstagram = Nothing
                         , partyEmergencyContact = Nothing
                         , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
                         , partyCreatedAt = now
                         }
                 )
@@ -770,7 +1393,6 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , uacUsername = Just "ada.new"
                             , uacPassword = Just "TempPass123!"
                             , uacActive = Just True
-                            , uacRoles = Nothing
                             }
                     )
             case result of
@@ -805,6 +1427,9 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , partyInstagram = Nothing
                             , partyEmergencyContact = Nothing
                             , partyNotes = Nothing
+                            , partyStripeCustomerId = Nothing
+                            , partyCountryCode = Nothing
+                            , partyCountryId = Nothing
                             , partyCreatedAt = now
                             }
                     )
@@ -819,7 +1444,6 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                             , uacUsername = Nothing
                             , uacPassword = Just "   "
                             , uacActive = Just True
-                            , uacRoles = Nothing
                             }
                     )
             case result of
@@ -862,8 +1486,17 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "externalId must not contain whitespace"
                 (validateSocialUnholdLookup (Just "ig mid 1") Nothing)
             assertInvalid
+                "externalId must include letters or numbers"
+                (validateSocialUnholdLookup (Just "---") Nothing)
+            assertInvalid
                 "senderId must not contain control characters"
                 (validateSocialUnholdLookup Nothing (Just ("wa:+593" <> T.singleton '\NUL')))
+            assertInvalid
+                "senderId must not contain hidden format characters"
+                ( validateSocialUnholdLookup
+                    Nothing
+                    (Just ("wa:+593" <> T.singleton '\x202E' <> "999000111"))
+                )
             assertInvalid
                 "externalId must be 256 characters or fewer"
                 (validateSocialUnholdLookup (Just (T.replicate 257 "x")) Nothing)
@@ -886,10 +1519,55 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 "note must not contain control characters"
                 (validateSocialUnholdNote (Just "retry\nnow"))
             assertInvalid
+                "note must not contain control characters or hidden format characters"
+                (validateSocialUnholdNote (Just ("retry" <> T.singleton '\x202E' <> "now")))
+            assertInvalid
                 "note must be 500 characters or fewer"
                 (validateSocialUnholdNote (Just (T.replicate 501 "x")))
 
     describe "social unhold route validation" $ do
+        it "requires literal Admin before retrying held social replies" $ do
+            let malformedAdmin = (mkUser [Admin]) { auModules = modulesForRoles [] }
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-incoming-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+                assertRoleRejected role = do
+                    let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                            socialHandlersFor (mkUser [role])
+                    result <- runAdminTest (socialUnhold req)
+                    case result of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 403
+                            BL8.unpack (errBody err) `shouldContain` "Admin role required"
+                        Right value ->
+                            expectationFailure
+                                ( "Expected "
+                                    <> show role
+                                    <> " social unhold to be rejected, got "
+                                    <> show value
+                                )
+
+            assertRoleRejected StudioManager
+            assertRoleRejected Webmaster
+
+            let socialUnhold :<|> _socialStatus :<|> _socialErrors =
+                    socialHandlersFor malformedAdmin
+            result <- runAdminTest (socialUnhold req)
+            case result of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err)
+                        `shouldContain` "Missing required module access"
+                Right value ->
+                    expectationFailure
+                        ( "Expected malformed Admin social unhold to be rejected, got "
+                            <> show value
+                        )
+
         it "rejects blank channels before surfacing lookup-shape errors" $ do
             let socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
                 req =
@@ -945,9 +1623,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure ("Expected malformed social unhold note to be rejected, got " <> show value)
 
-        it "rejects external-id unholds that only match outgoing WhatsApp messages" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "rejects external-id unholds that only match outgoing WhatsApp messages" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
@@ -985,9 +1662,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageHoldReason stored `shouldBe` Just "should stay outbound"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "transport failure"
 
-        it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors =
@@ -1026,9 +1702,8 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageReplyStatus stored `shouldBe` "pending"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "previous transport error"
 
-        it "resets reply hold fields for matching incoming WhatsApp messages" $ do
-            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
-            runSqlPool initializeWhatsAppAdminSchema pool
+        it "resets reply hold fields for matching incoming WhatsApp messages" $
+          withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }
                 now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
                 socialUnhold :<|> _socialStatus :<|> _socialErrors = socialHandlersFor (mkUser [Admin])
@@ -1088,6 +1763,19 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     BL8.unpack (errBody err) `shouldContain` "Missing required module access"
                 Right NoContent ->
                     expectationFailure "Expected unauthorized log clearing to be rejected"
+
+        it "honors persisted Admin-module grants independently of legacy role defaults" $ do
+            let persistedModuleUser = (mkUser [Fan, Customer]) { auModules = modulesForRoles [Admin] }
+                listLogs :<|> _clearLogs = logsHandlersFor persistedModuleUser
+
+            result <- runAdminTest (listLogs Nothing)
+            case result of
+                Left err ->
+                    expectationFailure
+                        ( "Expected persisted Admin-module log listing to be allowed, got "
+                            <> show err
+                        )
+                Right _ -> pure ()
   where
     decodeEmailTest :: BL8.ByteString -> Either String EmailTestRequest
     decodeEmailTest = eitherDecode
@@ -1109,8 +1797,26 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
     decodeBrainEntryUpdate = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+    isRight (Right _) = True
+    isRight (Left _) = False
 
 type AdminTestM = ReaderT Env (ExceptT ServerError IO)
+
+seedHandlerFor :: AuthedUser -> Maybe T.Text -> AdminTestM NoContent
+seedHandlerFor user rawToken =
+    case adminServer user of
+        seedHandler
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> _artists
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                seedHandler rawToken
 
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
@@ -1119,6 +1825,15 @@ mkUser roles =
         , auRoles = roles
         , auModules = modulesForRoles roles
         }
+
+expectBadRequestContaining :: Show a => String -> Either ServerError a -> Expectation
+expectBadRequestContaining expectedMessage =
+    either
+        (\err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` expectedMessage)
+        (\value -> expectationFailure
+            ("Expected bad request containing " <> show expectedMessage <> ", got " <> show value))
 
 runAdminTest :: AdminTestM a -> IO (Either ServerError a)
 runAdminTest action = runExceptT (runReaderT action dummyEnv)
@@ -1132,6 +1847,14 @@ dummyEnv =
         { envPool = error "envPool should be unused in ServerAdminSpec"
         , envConfig = error "envConfig should be unused in ServerAdminSpec"
         }
+
+withWhatsAppAdminPool :: (ConnectionPool -> IO a) -> IO a
+withWhatsAppAdminPool action =
+    withSystemTempFile "tdf-admin-whatsapp.sqlite" $ \dbPath handle -> do
+        hClose handle
+        pool <- runStdoutLoggingT $ createSqlitePool (T.pack dbPath) 1
+        runSqlPool initializeWhatsAppAdminSchema pool
+        action pool
 
 initializeWhatsAppAdminSchema :: SqlPersistT IO ()
 initializeWhatsAppAdminSchema = do
@@ -1189,6 +1912,9 @@ initializeAdminUsersSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -1220,7 +1946,25 @@ initializeArtistPromotionSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_locale_preferences\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"user_id\" INTEGER NOT NULL UNIQUE,\
+        \\"locale\" VARCHAR NOT NULL,\
+        \\"currency\" VARCHAR NOT NULL,\
+        \\"timezone\" VARCHAR NOT NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"locale_id\" VARCHAR NULL,\
+        \\"currency_id\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
     rawExecute
@@ -1230,6 +1974,8 @@ initializeArtistPromotionSchema = do
         \\"slug\" VARCHAR NULL,\
         \\"bio\" VARCHAR NULL,\
         \\"city\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"hero_image_url\" VARCHAR NULL,\
         \\"spotify_artist_id\" VARCHAR NULL,\
         \\"spotify_url\" VARCHAR NULL,\
@@ -1239,6 +1985,7 @@ initializeArtistPromotionSchema = do
         \\"featured_video_url\" VARCHAR NULL,\
         \\"genres\" VARCHAR NULL,\
         \\"highlights\" VARCHAR NULL,\
+        \\"stripe_account_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NULL,\
         \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\"),\
@@ -1307,9 +2054,9 @@ logsHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> logsRouter
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1327,42 +2074,102 @@ usersHandlersFor user =
             :<|> _dropdowns
             :<|> usersRouter
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
             :<|> _social ->
                 usersRouter
 
+dropdownsHandlersFor
+    :: T.Text
+    -> AuthedUser
+    -> (Maybe Bool -> AdminTestM [DropdownOptionDTO])
+        :<|> (DropdownOptionCreate -> AdminTestM DropdownOptionDTO)
+        :<|> (T.Text -> DropdownOptionUpdate -> AdminTestM DropdownOptionDTO)
+dropdownsHandlersFor category user =
+    case adminServer user of
+        _seed
+            :<|> dropdownsRouter
+            :<|> _users
+            :<|> _communications
+            :<|> _artists
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                dropdownsRouter category
+
 artistsHandlersFor
     :: AuthedUser
-    -> ((AdminTestM [ArtistProfileDTO]
+    -> (AdminTestM [ArtistProfileDTO]
         :<|> (ArtistProfileUpsert -> AdminTestM ArtistProfileDTO))
         :<|> ((ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)
-        :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO))
+              :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO))
+        :<|> (Int64 -> ConnectOnboardingLinkRequest -> AdminTestM ConnectOnboardingLinkResponse)
         :<|> (Int64
             -> ((Day -> AdminTestM [ArtistPromoSlotDTO])
             :<|> (ArtistPromoSlotUpsert -> AdminTestM ArtistPromoSlotDTO)
             :<|> (Int64 -> ArtistPromoSlotUpsert -> AdminTestM ArtistPromoSlotDTO)
             :<|> (Int64 -> AdminTestM NoContent)
             :<|> (Day -> AdminTestM ArtistPromoDayReportDTO)
-            :<|> (Day -> AdminTestM (Headers '[Header "Content-Disposition" T.Text] BL8.ByteString)))))
+            :<|> (Day
+                -> AdminTestM
+                    (Headers '[Header "Content-Disposition" T.Text] BL8.ByteString))))
 artistsHandlersFor user =
     case adminServer user of
         _seed
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> artistsRouter
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
             :<|> _social ->
-                artistsRouter
+                case artistsRouter of
+                    profilesRouter
+                        :<|> releasesRouter
+                        :<|> connectRouter
+                        :<|> promotionsRouter
+                        :<|> _enrichmentRouter ->
+                            profilesRouter
+                                :<|> releasesRouter
+                                :<|> connectRouter
+                                :<|> promotionsRouter
+
+enrichmentOverviewHandlerFor
+    :: AuthedUser
+    -> Maybe T.Text
+    -> Maybe Int64
+    -> AdminTestM ArtistEnrichmentOverviewDTO
+enrichmentOverviewHandlerFor user =
+    case adminServer user of
+        _seed
+            :<|> _dropdowns
+            :<|> _users
+            :<|> _communications
+            :<|> artistsRouter
+            :<|> _logs
+            :<|> _activity
+            :<|> _emailTest
+            :<|> _brain
+            :<|> _rag
+            :<|> _social ->
+                case artistsRouter of
+                    _profiles
+                        :<|> _releases
+                        :<|> _connect
+                        :<|> _promotions
+                        :<|> enrichmentRouter ->
+                            case enrichmentRouter of
+                                overviewHandler :<|> _rest -> overviewHandler
 
 communicationsHandlersFor
     :: AuthedUser
@@ -1376,9 +2183,9 @@ communicationsHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> communicationsRouter
-            :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag
@@ -1396,9 +2203,9 @@ socialHandlersFor user =
             :<|> _dropdowns
             :<|> _users
             :<|> _communications
-            :<|> _roles
             :<|> _artists
             :<|> _logs
+            :<|> _activity
             :<|> _emailTest
             :<|> _brain
             :<|> _rag

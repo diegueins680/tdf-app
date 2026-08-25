@@ -1,0 +1,108 @@
+- generic [active] [ref=f15e1]:
+  - generic [ref=f15e4]:
+    - banner [ref=f15e6]:
+      - generic [ref=f15e10]:
+        - list:
+          - listitem [ref=f15e11]:
+            - generic [ref=f15e12] [cursor=pointer]: Iniciar sesión
+          - listitem [ref=f15e13]:
+            - generic [ref=f15e14] [cursor=pointer]: Registrarme
+          - listitem [ref=f15e15]:
+            - link "Historial de Reservas" [ref=f15e16] [cursor=pointer]:
+              - /url: /historial-compra
+      - generic [ref=f15e19]:
+        - link [ref=f15e22] [cursor=pointer]:
+          - /url: /
+          - img "Logo TicketShow" [ref=f15e23]
+        - navigation [ref=f15e25]:
+          - list [ref=f15e27]:
+            - listitem [ref=f15e28]:
+              - link "CONCIERTOS" [ref=f15e29] [cursor=pointer]:
+                - /url: /eventos/Conciertos
+            - listitem [ref=f15e30]:
+              - link "TEATRO" [ref=f15e31] [cursor=pointer]:
+                - /url: /eventos/Teatro
+            - listitem [ref=f15e32]:
+              - link "SEMINARIOS" [ref=f15e33] [cursor=pointer]:
+                - /url: /eventos/Seminarios
+            - listitem [ref=f15e34]:
+              - link "OTROS" [ref=f15e35] [cursor=pointer]:
+                - /url: /eventos/Otros
+            - listitem [ref=f15e36]:
+              - link "CIUDAD" [ref=f15e37] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f15e38]:
+              - link "FECHA" [ref=f15e39] [cursor=pointer]:
+                - /url: "#"
+    - tabpanel [ref=f15e41]:
+      - text:   
+      - generic [ref=f15e42]:
+        - img "CARLOS VIVES" [ref=f15e45]
+        - generic [ref=f15e47]:
+          - 'heading "NOTA: Una vez realizada la compra no se podrá aplicar descuento alguno. Para acceder al descuento de tercera edad o discapacidad deben acercarse al punto de venta a realizar la compra, deberá llevar copia de cédula, este descuento será personal e intrasferible." [level=5] [ref=f15e49]'
+          - 'heading "NOTA: EVENTO EN PREVENTA" [level=5] [ref=f15e51]'
+        - heading "SINOPSIS:" [level=3] [ref=f15e54]
+        - generic [ref=f15e56]:
+          - paragraph [ref=f15e57]: CARLOS VIVES
+          - paragraph [ref=f15e58]: Jueves, 3 de septiembre de 2026 20:00
+          - paragraph [ref=f15e59]: Coliseo General Rumiñahui
+          - paragraph [ref=f15e60]
+          - paragraph [ref=f15e61]
+          - paragraph [ref=f15e62]
+          - paragraph [ref=f15e64]:
+            - strong [ref=f15e65]
+        - generic [ref=f15e68]:
+          - heading "ORGANIZADO POR:" [level=3] [ref=f15e70]
+          - generic [ref=f15e71]: TOPSHOWS CIA. LTDA.
+        - generic [ref=f15e72] [cursor=pointer]: Reservar ticket
+      - generic [ref=f15e74]:
+        - generic [ref=f15e75]:
+          - generic [ref=f15e76]: 
+          - paragraph [ref=f15e77]: 3 Septiembre
+        - generic [ref=f15e78]:
+          - separator [ref=f15e80]
+          - generic [ref=f15e81]: 
+          - paragraph [ref=f15e82]: 20:00
+        - generic [ref=f15e83]:
+          - separator [ref=f15e85]
+          - generic [ref=f15e86]: 
+          - paragraph [ref=f15e87]: Coliseo General Rumiñahui
+        - generic [ref=f15e88]:
+          - separator [ref=f15e90]
+          - generic [ref=f15e91] [cursor=pointer]: Reservar ticket
+    - contentinfo [ref=f15e93]:
+      - generic [ref=f15e96]:
+        - link [ref=f15e98] [cursor=pointer]:
+          - /url: /
+          - img "logo" [ref=f15e99]
+        - list [ref=f15e101]:
+          - listitem [ref=f15e102]:
+            - link "VENDE CON NOSOTROS" [ref=f15e103] [cursor=pointer]:
+              - /url: https://sale.ticketshow.com.ec/rps/cotiza.aspx
+          - listitem [ref=f15e104]:
+            - link "QUIENES SOMOS" [ref=f15e105] [cursor=pointer]:
+              - /url: /quienessomos/
+        - list [ref=f15e107]:
+          - listitem [ref=f15e108]:
+            - link "PUNTOS DE VENTA" [ref=f15e109] [cursor=pointer]:
+              - /url: /puntosventa/
+          - listitem [ref=f15e110]:
+            - link "TERMINOS Y CONDICIONES" [ref=f15e111] [cursor=pointer]:
+              - /url: /terminosycondiciones/
+        - list [ref=f15e113]:
+          - listitem [ref=f15e114]:
+            - generic [ref=f15e115] [cursor=pointer]: TICKET SEGURO
+          - listitem [ref=f15e116]:
+            - link "CONTÁCTANOS" [ref=f15e117] [cursor=pointer]:
+              - /url: /contactenos/
+      - generic [ref=f15e126]:
+        - link "" [ref=f15e127] [cursor=pointer]:
+          - /url: https://www.facebook.com/TicketShowFanPage
+        - link "" [ref=f15e129] [cursor=pointer]:
+          - /url: https://www.twitter.com/ticketshow
+        - link "" [ref=f15e131] [cursor=pointer]:
+          - /url: https://www.instagram.com/ticketshow/?hl=es-la
+        - link "" [ref=f15e133] [cursor=pointer]:
+          - /url: /contactenos
+      - generic [ref=f15e135]: © 2023 TICKETSHOW TODOS LOS DERECHOS RESERVADOS.
+  - generic [ref=f15e140] [cursor=pointer]

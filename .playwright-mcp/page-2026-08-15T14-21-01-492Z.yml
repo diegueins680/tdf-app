@@ -1,0 +1,76 @@
+- generic [ref=f15e9]:
+  - generic [ref=f15e12]:
+    - link [ref=f15e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f15e22]
+    - generic [ref=f15e25]:
+      - link [ref=f15e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f15e35]
+      - link [ref=f15e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f15e45]
+      - link [ref=f15e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f15e57]
+      - link [ref=f15e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f15e67]
+      - link [ref=f15e219] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f15e224]
+      - link [ref=f15e87] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f15e92]
+      - link [ref=f15e97] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f15e102]
+      - link [ref=f15e109] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f15e114]:
+          - img "tdf.records.label's profile picture" [ref=f15e115]
+    - generic [ref=f15e116]:
+      - link [ref=f15e119] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f15e124]
+      - link [ref=f15e127] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f15e132]
+  - main [ref=f15e136]:
+    - generic [ref=f15e232]:
+      - navigation "Thread list" [ref=f15e233]:
+        - generic [ref=f15e234]:
+          - generic [ref=f15e235]:
+            - button [ref=f15e236] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f15e238]
+              - img "Down chevron icon" [ref=f15e241]
+            - button [ref=f15e245] [cursor=pointer]:
+              - img "New message" [ref=f15e247]
+          - tablist [ref=f15e252]:
+            - tab "Primary" [selected] [ref=f15e253] [cursor=pointer]
+            - tab "General" [ref=f15e256] [cursor=pointer]
+            - tab "From ads" [ref=f15e259] [cursor=pointer]
+            - tab "Requests" [ref=f15e263] [cursor=pointer]
+          - generic [ref=f15e266]:
+            - generic [ref=f15e267]:
+              - button "Back" [ref=f15e774] [cursor=pointer]:
+                - img "Back" [ref=f15e777]
+              - generic [ref=f15e780]:
+                - textbox "Clear search" [active] [ref=f15e781]:
+                  - /placeholder: Search
+                  - text: blue_records333
+                - button "Clear search" [ref=f15e782] [cursor=pointer]:
+                  - img "Clear search" [ref=f15e784]
+            - generic [ref=f15e786]:
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar Blue Records blue_records333" [ref=f15e787] [cursor=pointer]:
+                - generic [ref=f15e788]:
+                  - img "User avatar" [ref=f15e793]
+                  - generic [ref=f15e796]:
+                    - generic [ref=f15e797]: Blue Records
+                    - generic [ref=f15e801]: blue_records333
+      - generic [ref=f15e761]:
+        - heading "Your messages" [level=2] [ref=f15e768]
+        - generic [ref=f15e769]: Send a message to start a chat.
+        - button "Send message" [ref=f15e773] [cursor=pointer]

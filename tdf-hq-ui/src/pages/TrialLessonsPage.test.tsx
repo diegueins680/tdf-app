@@ -6,14 +6,14 @@ import { MemoryRouter } from 'react-router-dom';
 import type { RoomDTO } from '../api/types';
 import type { ClassSessionDTO, StudentDTO, TeacherDTO, TrialSubject } from '../api/trials';
 
-type ClassSessionFilters = {
+interface ClassSessionFilters {
   subjectId?: number;
   teacherId?: number;
   studentId?: number;
   from?: string;
   to?: string;
   status?: string;
-};
+}
 
 const listSubjectsMock = jest.fn<() => Promise<TrialSubject[]>>();
 const listTeachersMock = jest.fn<() => Promise<TeacherDTO[]>>();
@@ -79,7 +79,7 @@ const renderPage = async (container: HTMLElement) => {
 
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         <QueryClientProvider client={qc}>
           <TrialLessonsPage />
         </QueryClientProvider>
@@ -145,6 +145,14 @@ const buildClassSession = (overrides: Partial<ClassSessionDTO> = {}): ClassSessi
   updatedAt: null,
   ...overrides,
 });
+
+const getRowByClassSessionId = (root: ParentNode, classSessionId: number) => {
+  const row = root.querySelector<HTMLElement>(`[data-testid="trial-lesson-row-${classSessionId}"]`);
+  if (!(row instanceof HTMLElement)) {
+    throw new Error(`Row not found: ${classSessionId}`);
+  }
+  return row;
+};
 
 describe('TrialLessonsPage', () => {
   beforeAll(() => {
@@ -212,6 +220,23 @@ describe('TrialLessonsPage', () => {
         expect(hasButton(container, 'Refrescar')).toBe(false);
         expect(hasButton(container, 'Nuevo alumno')).toBe(true);
         expect(hasButton(container, 'Nueva clase')).toBe(true);
+        expect(hasButton(container, 'Ajustar fechas')).toBe(true);
+        expect(hasButton(container, 'Últimos 7d / próximos 30d')).toBe(false);
+        expect(hasButton(container, 'Próximas 12 semanas')).toBe(false);
+        expect(hasButton(container, 'Restablecer filtros')).toBe(false);
+        expect(hasButton(container, 'Filtrar por materia, profesor y estado')).toBe(false);
+        expect(container.querySelectorAll('input[type="datetime-local"]')).toHaveLength(0);
+      });
+
+      await clickButton(container, 'Ajustar fechas');
+
+      await waitForExpectation(() => {
+        expect(hasButton(container, 'Ajustar fechas')).toBe(false);
+        expect(hasButton(container, 'Últimos 7d / próximos 30d')).toBe(true);
+        expect(hasButton(container, 'Próximas 12 semanas')).toBe(true);
+        expect(hasButton(container, 'Restablecer filtros')).toBe(true);
+        expect(hasButton(container, 'Filtrar por materia, profesor y estado')).toBe(true);
+        expect(container.querySelectorAll('input[type="datetime-local"]')).toHaveLength(2);
       });
     } finally {
       await cleanup();
@@ -278,6 +303,40 @@ describe('TrialLessonsPage', () => {
         expect(hasExactText(container, 'Todos los estados')).toBe(true);
         expect(hasExactText(container, 'Canto')).toBe(true);
         expect(hasExactText(container, 'Lin-Manuel Miranda')).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides the current quick-status action so each row only offers real state changes', async () => {
+    listClassSessionsMock.mockResolvedValue([
+      buildClassSession({ classSessionId: 401, status: 'realizada', studentName: 'Ada Sessions' }),
+      buildClassSession({ classSessionId: 402, status: 'cancelada', studentName: 'Grace Hopper' }),
+      buildClassSession({ classSessionId: 403, status: 'programada', studentName: 'Lin Manual' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const completedRow = getRowByClassSessionId(container, 401);
+        const cancelledRow = getRowByClassSessionId(container, 402);
+        const scheduledRow = getRowByClassSessionId(container, 403);
+
+        expect(completedRow.textContent).toContain('Realizada');
+        expect(hasButton(completedRow, 'Realizada')).toBe(false);
+        expect(hasButton(completedRow, 'Cancelar')).toBe(true);
+
+        expect(cancelledRow.textContent).toContain('Cancelada');
+        expect(hasButton(cancelledRow, 'Cancelar')).toBe(false);
+        expect(hasButton(cancelledRow, 'Realizada')).toBe(true);
+
+        expect(scheduledRow.textContent).toContain('Programada');
+        expect(hasButton(scheduledRow, 'Realizada')).toBe(true);
+        expect(hasButton(scheduledRow, 'Cancelar')).toBe(true);
       });
     } finally {
       await cleanup();

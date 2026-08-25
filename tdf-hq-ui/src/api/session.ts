@@ -1,7 +1,7 @@
 import type { components } from './generated/types';
-import { env } from '../utils/env';
+import { resolveApiBase } from '../config/apiBase';
 
-const API_BASE = env.read('VITE_API_BASE') ?? '';
+const API_BASE = resolveApiBase();
 
 export type SessionResponseDTO = components['schemas']['SessionResponse'];
 

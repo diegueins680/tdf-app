@@ -28,6 +28,8 @@ import type { TrialSlot, TrialSubject, TeacherDTO, ClassSessionDTO } from '../ap
 import { Trials } from '../api/trials';
 import { Parties } from '../api/parties';
 import { resolveTeacherClasses } from './teachersPageLogic';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { formatDateForUser } from '../utils/formatters';
 
 type ClassStatus = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const CLASS_STATUS_OPTIONS: readonly ClassStatus[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -92,18 +94,18 @@ const statusMeta: Record<ClassStatus, { label: string; color: string; bg: string
   },
 };
 
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('es-EC', { weekday: 'short', month: 'short', day: 'numeric' });
-};
+const formatDate = (iso: string) => formatDateForUser(iso, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+});
 
 const formatRange = (startIso: string, endIso: string) => {
   const start = new Date(startIso);
   const end = new Date(endIso);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
-  const startLabel = start.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
-  const endLabel = end.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+  const startLabel = formatDateForUser(start, { hour: '2-digit', minute: '2-digit' });
+  const endLabel = formatDateForUser(end, { hour: '2-digit', minute: '2-digit' });
   return `${startLabel} - ${endLabel}`;
 };
 
@@ -204,6 +206,7 @@ const buildClassesFromDTO = (classes: ClassSessionDTO[]): ClassRow[] =>
   }));
 
 export default function TeachersPage() {
+  useDocumentTitle('Escuela / Profesores');
   const qc = useQueryClient();
   const subjectsQuery = useQuery({
     queryKey: ['trial-subjects-for-teachers'],

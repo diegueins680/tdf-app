@@ -11,6 +11,8 @@ module TDF.ServerAdmin
   , normalizeAdminEmailAddress
   , normalizeAdminUsername
   , normalizeAdminEmailBodyLines
+  , resolveAdminEmailTestBody
+  , validateAdminEmailBodyLines
   , parseSocialErrorsChannel
   , SocialUnholdLookup(..)
   , validateSocialUnholdLookup
@@ -19,11 +21,22 @@ module TDF.ServerAdmin
   , validateAdminLogsLimit
   , validateUserCommunicationHistoryLimit
   , validateAdminWhatsAppSendMode
+  , validateAdminWhatsAppMessageBody
+  , resolveAdminWhatsAppSendPhone
+  , resolveAdminWhatsAppResendPhone
   , validateAdminEmailSubject
+  , validateOptionalAdminEmailName
   , validateAdminEmailCtaUrl
   , validateAdminEmailBroadcastLimit
   , validateOptionalAdminUsername
   , validateAdminPassword
+  , validateDropdownOptionCategory
+  , validateDropdownOptionValue
+  , validateDropdownOptionLabel
+  , validateBrainEntryId
+  , validateBrainEntryTitle
+  , validateBrainEntryBody
+  , validateBrainEntryCategory
   , normalizeBrainEntryTags
   ) where
 
@@ -35,14 +48,27 @@ import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader   (MonadReader, asks)
 import           Crypto.BCrypt          (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
 import           Data.Foldable          (for_)
-import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
+import           Data.Char              ( GeneralCategory
+                                          ( Format
+                                          , LineSeparator
+                                          , ParagraphSeparator
+                                          )
+                                        , generalCategory
+                                        , isAlphaNum
+                                        , isAsciiLower
+                                        , isControl
+                                        , isDigit
+                                        , isSpace
+                                        )
 import           Data.List              (nub)
-import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import qualified Data.Map.Strict        as Map
+import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing)
 import           Data.Int               (Int64)
 import qualified Data.Set               as Set
 import           Data.Text              (Text)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.ByteString        as BS
 import qualified Data.ByteString.Lazy   as BL
 import           Data.Time              (diffUTCTime, getCurrentTime)
 import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
@@ -61,9 +87,14 @@ import           Database.Persist       ( (==.), (!=.), (<-.), (||.)
                                         , getEntity
                                         , getJustEntity
                                         , insert
-                                        , upsert
                                         )
-import           Database.Persist.Sql   (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist.Sql   ( SqlPersistT
+                                        , Single(..)
+                                        , fromSqlKey
+                                        , rawSql
+                                        , runSqlPool
+                                        , toSqlKey
+                                        )
 import           Servant
 import           Web.PathPieces         (PathPiece, fromPathPiece, toPathPiece)
 
@@ -74,9 +105,13 @@ import           TDF.API.Admin          ( AdminAPI
                                         , AdminWhatsAppResendRequest(..)
                                         , AdminWhatsAppSendRequest(..)
                                         , AdminWhatsAppSendResponse(..)
+                                        , ArtistEnrichmentOverviewDTO(..)
+                                        , ArtistEnrichmentRunRequest(..)
                                         , BrainEntryCreate(..)
                                         , BrainEntryDTO(..)
                                         , BrainEntryUpdate(..)
+                                        , ConnectOnboardingLinkRequest(..)
+                                        , ConnectOnboardingLinkResponse(..)
                                         , EmailTestRequest(..)
                                         , EmailTestResponse(..)
                                         , RagIndexStatus(..)
@@ -85,10 +120,10 @@ import           TDF.API.Admin          ( AdminAPI
                                         , UserCommunicationHistoryDTO(..)
                                         , WhatsAppMessageAdminDTO(..)
                                         )
+import qualified TDF.Services.Stripe    as Stripe
 import           TDF.API.Types          ( DropdownOptionCreate(..)
                                         , DropdownOptionDTO(..)
                                         , DropdownOptionUpdate(..)
-                                        , RoleDetailDTO(..)
                                         , UserAccountCreate(..)
                                         , UserAccountDTO(..)
                                         , UserAccountUpdate(..)
@@ -101,13 +136,21 @@ import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
                                         , auPartyId
                                         , hasStrictAdminAccess
-                                        , hasModuleAccess
+                                        , validateModuleAccess
                                         , moduleName
-                                        , modulesForRoles
                                         )
 import           TDF.DB                 (Env(..))
-import           TDF.Config             (ragRefreshHours)
+import           TDF.Catalog.Security   (loadCanonicalPartyRoles)
+import           TDF.Config             ( defaultLocale
+                                        , defaultTimezone
+                                        , ragRefreshHours
+                                        , seedTriggerToken
+                                        , stripeSecretKey
+                                        , stripeWebhookSecret
+                                        )
 import           TDF.Models
+import           TDF.Internationalization (normalizeCountryCode)
+import qualified TDF.Catalog.Models as Catalog
 import           TDF.ModelsExtra (DropdownOption(..))
 import qualified TDF.ModelsExtra as ME
 import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
@@ -119,8 +162,12 @@ import           TDF.WhatsApp.History   ( OutgoingWhatsAppRecord(..)
                                         , resolvePartyPhones
                                         )
 import           TDF.WhatsApp.Transport (loadWhatsAppEnv, sendWhatsAppTextIO)
-import qualified TDF.Trials.Server      as TrialsServer (isValidHttpUrl)
-import           Data.Aeson (object, (.=))
+import qualified TDF.Trials.Server      as TrialsServer
+                                            ( hasAmbiguousPublicUrlPath
+                                            , isValidHttpUrl
+                                            )
+import           Data.Aeson (object, withObject, (.:), (.=))
+import           Data.Aeson.Types (parseMaybe)
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
@@ -131,19 +178,62 @@ import           TDF.Artists.Promotion  ( createArtistPromoSlotRecord
                                         , loadArtistPromoDayReport
                                         , updateArtistPromoSlotRecord
                                         )
+import           TDF.Artists.Enrichment ( createArtistMediaAsset
+                                        , createArtistIdentityCandidate
+                                        , createArtistResearchSource
+                                        , createArtistSuggestion
+                                        , decideArtistIdentityCandidate
+                                        , decideArtistSuggestion
+                                        , decideArtistSuggestionSet
+                                        , loadArtistEnrichmentOverview
+                                        , runArtistEnrichment
+                                        , updateArtistEnrichmentRun
+                                        )
 import qualified TDF.Handlers.InputList as InputList
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
+                                        , validateArtistProfileUpsert
                                         )
 import           TDF.LogBuffer          ( LogEntry(..), LogLevel(..), addLog, getRecentLogs, clearLogs )
 import           TDF.DTO                ( LogEntryDTO(..) )
 import           TDF.RagStore           (getRagIndexStats, refreshRagIndex)
+import           TDF.UserActivity       ( listRecentUserActivities
+                                        , recordUserActivity
+                                        , validateUserActivityLimit
+                                        )
 import           System.IO              (hPutStrLn, stderr)
 
 data SocialUnholdLookup
   = SocialUnholdByExternalId Text
   | SocialUnholdBySenderId Text
   deriving (Show, Eq)
+
+ensureAdminSeedToken
+  :: ( MonadReader Env m
+     , MonadError ServerError m
+     )
+  => Maybe Text
+  -> m ()
+ensureAdminSeedToken rawToken = do
+  cfg <- asks envConfig
+  let encodeBody = BL.fromStrict . TE.encodeUtf8
+      missingHeader =
+        throwError err401 { errBody = encodeBody "Missing X-Seed-Token header" }
+      disabled =
+        throwError err403 { errBody = encodeBody "Seeding endpoint disabled" }
+      invalid =
+        throwError err403 { errBody = encodeBody "Invalid seed token" }
+      malformed =
+        throwError err400 { errBody = encodeBody "Malformed X-Seed-Token header" }
+      invalidTokenChar ch =
+        isSpace ch
+          || isControl ch
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+  secret <- maybe disabled pure (seedTriggerToken cfg)
+  token <- maybe missingHeader pure rawToken
+  when (T.null (T.strip token)) missingHeader
+  when (token /= T.strip token || T.any invalidTokenChar token) malformed
+  when (token /= secret) invalid
 
 adminServer
   :: ( MonadReader Env m
@@ -157,16 +247,18 @@ adminServer user =
   :<|> dropdownRouter
   :<|> usersRouter
   :<|> userCommunicationsRouter
-  :<|> rolesHandler
   :<|> artistsRouter
   :<|> logsRouter
+  :<|> activityHandler
   :<|> emailTestHandler
   :<|> brainRouter
   :<|> ragRouter
   :<|> socialRouter
   where
-    seedHandler = do
+    seedHandler rawToken = do
+      ensureStrictAdmin user
       ensureModule ModuleAdmin user
+      ensureAdminSeedToken rawToken
       withPool seedAll
       pure NoContent
 
@@ -190,17 +282,87 @@ adminServer user =
            getUser userId
       :<|> updateUser userId
 
-    rolesHandler = do
-      ensureStrictAdmin user
-      pure (map roleDetail [minBound .. maxBound])
-
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
+      :<|> artistConnectOnboardingLinkAdmin
       :<|> artistPromotionsRouter
+      :<|> artistEnrichmentRouter
+
+    artistEnrichmentRouter =
+         artistEnrichmentOverviewHandler
+      :<|> (artistEnrichmentRunsHandler :<|> artistEnrichmentRunHandler :<|> artistEnrichmentRunUpdateHandler)
+      :<|> artistEnrichmentRerunHandler
+      :<|> artistResearchSourceCreateHandler
+      :<|> artistSuggestionCreateHandler
+      :<|> artistSuggestionDecisionHandler
+      :<|> artistSuggestionSetDecisionHandler
+      :<|> (artistIdentityCreateHandler :<|> artistIdentityDecisionHandler)
+      :<|> artistMediaCreateHandler
+
+    artistEnrichmentOverviewHandler mStatus mArtistId = do
+      ensureStrictAdmin user
+      withPool (loadArtistEnrichmentOverview mStatus mArtistId)
+
+    artistEnrichmentRunsHandler = do
+      ensureStrictAdmin user
+      aeoRuns <$> withPool (loadArtistEnrichmentOverview Nothing Nothing)
+
+    artistEnrichmentRunHandler request = do
+      ensureStrictAdmin user
+      withPool (runArtistEnrichment enrichmentActor request)
+
+    artistEnrichmentRunUpdateHandler runId request = do
+      ensureStrictAdmin user
+      withPool (updateArtistEnrichmentRun runId request)
+
+    artistEnrichmentRerunHandler rawArtistId request = do
+      ensureStrictAdmin user
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" rawArtistId)
+      let scopedRequest = request { aerrArtistId = Just artistId }
+      withPool (runArtistEnrichment enrichmentActor scopedRequest)
+
+    artistResearchSourceCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistResearchSource now request)
+
+    artistSuggestionCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistSuggestion now request)
+
+    artistSuggestionDecisionHandler suggestionId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistSuggestion enrichmentActor (auPartyId user) suggestionId decision)
+
+    artistSuggestionSetDecisionHandler artistId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistSuggestionSet enrichmentActor (auPartyId user) artistId decision)
+
+    artistIdentityCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistIdentityCandidate now request)
+
+    artistIdentityDecisionHandler candidateId decision = do
+      ensureStrictAdmin user
+      withPool (decideArtistIdentityCandidate (auPartyId user) candidateId decision)
+
+    artistMediaCreateHandler request = do
+      ensureStrictAdmin user
+      now <- liftIO getCurrentTime
+      withPool (createArtistMediaAsset now request)
+
+    enrichmentActor = "admin:" <> T.pack (show (fromSqlKey (auPartyId user)))
 
     logsRouter =
       listLogsHandler :<|> clearLogsProtected
+
+    activityHandler mLimit = do
+      ensureModule ModuleAdmin user
+      limit <- either throwError pure (validateUserActivityLimit mLimit)
+      withPool (listRecentUserActivities limit)
 
     listLogsHandler mLimit = do
       ensureModule ModuleAdmin user
@@ -209,7 +371,9 @@ adminServer user =
 
     clearLogsProtected = do
       ensureModule ModuleAdmin user
-      clearLogsHandler
+      result <- clearLogsHandler
+      recordActivity "server_logs" "buffer" "clear" Nothing
+      pure result
 
     emailTestHandler EmailTestRequest{..} = do
       ensureModule ModuleAdmin user
@@ -220,10 +384,10 @@ adminServer user =
         (normalizeAdminEmailAddress etrEmail)
       subj <- either throwError pure $
         maybe (Right "Correo de prueba TDF") validateAdminEmailSubject etrSubject
+      targetName <- either throwError pure (validateOptionalAdminEmailName etrName)
       ctaUrl <- either throwError pure (validateAdminEmailCtaUrl etrCtaUrl)
+      body <- either throwError pure (resolveAdminEmailTestBody etrBody)
       let emailSvc = EmailSvc.mkEmailService cfg
-          body = maybe ["Correo de prueba desde TDF HQ."] (\txt -> [txt]) etrBody
-          targetName = fromMaybe "" etrName
           preMsg = "[Admin][EmailTest] Sending to " <> targetEmail <> " | subject: " <> subj
       liftIO $ addLog LogInfo preMsg
       sendResult <- liftIO $ try $
@@ -239,11 +403,15 @@ adminServer user =
           let msg = "[Admin][EmailTest] Failed for " <> targetEmail <> ": " <> T.pack (show err)
           liftIO $ addLog LogError msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
+          recordActivity "admin_email_test" "test" "failed" $
+            Just (object ["email" .= targetEmail, "subject" .= subj])
           pure EmailTestResponse { status = "error", message = Just msg }
         Right () -> do
           let msg = "[Admin][EmailTest] Sent to " <> targetEmail
           liftIO $ addLog LogInfo msg
           liftIO $ hPutStrLn stderr (T.unpack msg)
+          recordActivity "admin_email_test" "test" "sent" $
+            Just (object ["email" .= targetEmail, "subject" .= subj])
           pure EmailTestResponse { status = "sent", message = Nothing }
 
     brainRouter =
@@ -255,7 +423,25 @@ adminServer user =
     socialRouter =
       socialUnholdHandler :<|> socialStatusHandler :<|> socialErrorsHandler
 
+    recordActivity entity entityId action details = do
+      pool <- asks envPool
+      result <- liftIO $ try $
+        runSqlPool (recordUserActivity (Just (auPartyId user)) entity entityId action details) pool
+      case result of
+        Left (err :: SomeException) -> do
+          liftIO $ addLog LogWarning $
+            "[Admin][Activity] Failed to record "
+              <> action
+              <> " "
+              <> entity
+              <> "#"
+              <> entityId
+              <> ": "
+              <> T.pack (show err)
+        Right () -> pure ()
+
     socialUnholdHandler SocialUnholdRequest{..} = do
+      ensureStrictAdmin user
       ensureModule ModuleAdmin user
       now <- liftIO getCurrentTime
       channel <- either throwError pure (parseSocialErrorsChannel (Just surChannel))
@@ -266,6 +452,8 @@ adminServer user =
           found <- unholdByExternalId channel extId
           ensureSocialUnholdTargetFound channel found
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold " <> channel <> " extId=" <> extId <> auditNoteSuffix note)
+          recordActivity "social_message" extId "unhold" $
+            Just (object ["channel" .= channel, "note" .= note])
           pure (object $
             [ "status" .= ("ok" :: Text)
             , "channel" .= channel
@@ -439,6 +627,8 @@ adminServer user =
         Just extId -> do
           _ <- unholdByExternalId channel extId
           liftIO $ addLog LogInfo ("[Admin][Social] Unhold latest hold " <> channel <> " senderId=" <> senderId <> " extId=" <> extId <> auditNoteSuffix note)
+          recordActivity "social_message" extId "unhold_latest" $
+            Just (object ["channel" .= channel, "senderId" .= senderId, "note" .= note])
           pure (object $
             [ "status" .= ("ok" :: Text)
             , "channel" .= channel
@@ -459,13 +649,11 @@ adminServer user =
 
     brainCreateHandler BrainEntryCreate{..} = do
       ensureModule ModuleAdmin user
-      let title = T.strip becTitle
-          body = T.strip becBody
-          category = cleanMaybe becCategory
-          active = fromMaybe True becActive
+      title <- either throwError pure (validateBrainEntryTitle becTitle)
+      body <- either throwError pure (validateBrainEntryBody becBody)
+      category <- either throwError pure (validateBrainEntryCategory becCategory)
+      let active = fromMaybe True becActive
       tags <- either throwError pure (normalizeBrainEntryTags becTags)
-      when (T.null title) $ throwError err400 { errBody = "Título requerido" }
-      when (T.null body) $ throwError err400 { errBody = "Contenido requerido" }
       now <- liftIO getCurrentTime
       entryId <- withPool $ insert ME.StudioBrainEntry
         { ME.studioBrainEntryTitle = title
@@ -477,17 +665,21 @@ adminServer user =
         , ME.studioBrainEntryUpdatedAt = now
         }
       row <- withPool $ getJust entryId
+      recordActivity "studio_brain_entry" (T.pack (show (fromSqlKey entryId))) "create" $
+        Just (object ["title" .= title, "active" .= active])
       pure (brainEntryToDTO (Entity entryId row))
 
-    brainUpdateHandler entryId BrainEntryUpdate{..} = do
+    brainUpdateHandler rawEntryId BrainEntryUpdate{..} = do
       ensureModule ModuleAdmin user
+      entryId <- either throwError pure (validateBrainEntryId rawEntryId)
       let entryKey = toSqlKey entryId :: ME.StudioBrainEntryId
-          titleUpdate = T.strip <$> beuTitle
-          bodyUpdate = T.strip <$> beuBody
-      for_ titleUpdate $ \t -> when (T.null t) $
-        throwError err400 { errBody = "Título requerido" }
-      for_ bodyUpdate $ \t -> when (T.null t) $
-        throwError err400 { errBody = "Contenido requerido" }
+      titleUpdate <- traverse (either throwError pure . validateBrainEntryTitle) beuTitle
+      bodyUpdate <- traverse (either throwError pure . validateBrainEntryBody) beuBody
+      categoryUpdate <- case beuCategory of
+        Nothing -> pure Nothing
+        Just rawCategory ->
+          fmap (Just . (ME.StudioBrainEntryCategory =.)) $
+            either throwError pure (validateBrainEntryCategory rawCategory)
       tagsUpdate <- case beuTags of
         Nothing -> pure Nothing
         Just rawTags ->
@@ -497,7 +689,7 @@ adminServer user =
       let updates = catMaybes
             [ (ME.StudioBrainEntryTitle =.) <$> titleUpdate
             , (ME.StudioBrainEntryBody =.) <$> bodyUpdate
-            , (ME.StudioBrainEntryCategory =.) <$> fmap cleanMaybe beuCategory
+            , categoryUpdate
             , tagsUpdate
             , (ME.StudioBrainEntryActive =.) <$> beuActive
             ]
@@ -514,7 +706,16 @@ adminServer user =
                 Right <$> getEntity entryKey
       case result of
         Left err -> throwError err
-        Right maybeEntry -> maybe (throwError err404) (pure . brainEntryToDTO) maybeEntry
+        Right maybeEntry -> do
+          recordActivity "studio_brain_entry" (T.pack (show entryId)) "update" $
+            Just (object ["updatedFields" .= catMaybes
+              [ ("title" :: Text) <$ beuTitle
+              , ("body" :: Text) <$ beuBody
+              , ("category" :: Text) <$ beuCategory
+              , ("tags" :: Text) <$ beuTags
+              , ("active" :: Text) <$ beuActive
+              ]])
+          maybe (throwError err404) (pure . brainEntryToDTO) maybeEntry
 
     ragStatusHandler = do
       ensureModule ModuleAdmin user
@@ -541,11 +742,13 @@ adminServer user =
       case result of
         Left err ->
           throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
-        Right chunkCount ->
+        Right chunkCount -> do
+          recordActivity "rag_index" "default" "refresh" $
+            Just (object ["chunks" .= chunkCount])
           pure RagRefreshResponse
             { rrrStatus = "ok"
             , rrrChunks = chunkCount
-      }
+            }
 
     brainEntryToDTO (Entity key entry) = BrainEntryDTO
       { bedId = fromSqlKey key
@@ -557,17 +760,6 @@ adminServer user =
       , bedUpdatedAt = ME.studioBrainEntryUpdatedAt entry
       }
 
-    cleanMaybe Nothing = Nothing
-    cleanMaybe (Just txt) =
-      let trimmed = T.strip txt
-      in if T.null trimmed then Nothing else Just trimmed
-
-    roleDetail role = RoleDetailDTO
-      { role    = role
-      , label   = roleToText role
-      , modules = map moduleName (Set.toList (modulesForRoles [role]))
-      }
-
     listArtistProfilesAdmin = do
       ensureModule ModuleAdmin user
       withPool loadAllArtistProfilesDTO
@@ -576,12 +768,21 @@ adminServer user =
       ensureModule ModuleAdmin user
       artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" apuArtistId)
       let artistKey = toSqlKey artistId
+      validated <-
+        either (throwError . artistProfileValidationError) pure
+          (validateArtistProfileUpsert payload)
       mParty <- withPool $ get artistKey
       case mParty of
         Nothing -> throwError err404
         Just _ -> do
           now <- liftIO getCurrentTime
-          dto <- withPool $ upsertArtistProfileRecord artistKey payload now
+          result <- withPool $ upsertArtistProfileRecord artistKey validated now
+          dto <- either (throwError . artistProfileValidationError) pure result
+          recordActivity "artist_profile" (T.pack (show artistId)) "upsert" $
+            Just (object
+              [ "artistId" .= artistId
+              , "slug" .= apuSlug
+              ])
           pure dto
 
     createArtistReleaseAdmin ArtistReleaseUpsert{..} = do
@@ -607,6 +808,10 @@ adminServer user =
             entity <- getJustEntity releaseId
             pure (Just (artistReleaseEntityToDTOAdmin entity))
       maybe (throwError err404) pure dto
+        >>= \result -> do
+          recordActivity "artist_release" (T.pack (show (arReleaseId result))) "create" $
+            Just (object ["artistId" .= aruArtistId, "title" .= aruTitle])
+          pure result
 
     updateArtistReleaseAdmin releaseId ArtistReleaseUpsert{..} = do
       ensureModule ModuleAdmin user
@@ -629,7 +834,81 @@ adminServer user =
             , ArtistReleaseYoutubeUrl   =. aruYoutubeUrl
             ]
           entity <- withPool $ getJustEntity releaseKey
-          pure (artistReleaseEntityToDTOAdmin entity)
+          let result = artistReleaseEntityToDTOAdmin entity
+          recordActivity "artist_release" (T.pack (show releaseIdValid)) "update" $
+            Just (object ["artistId" .= artistId, "title" .= aruTitle])
+          pure result
+
+    artistConnectOnboardingLinkAdmin artistIdRaw req = do
+      ensureModule ModuleAdmin user
+      artistId <- either throwError pure
+        (validatePositiveAdminLookupId "artistProfileId" artistIdRaw)
+      let refreshUrl = T.strip (colRefreshUrl req)
+          returnUrl = T.strip (colReturnUrl req)
+      when (not ("https://" `T.isPrefixOf` refreshUrl) ||
+            not ("https://" `T.isPrefixOf` returnUrl)) $
+        throwError err400
+          { errBody = "colRefreshUrl and colReturnUrl must be https URLs" }
+      let profileKey = toSqlKey artistId :: ArtistProfileId
+      mProfile <- withPool $ get profileKey
+      profile <- maybe (throwError err404) pure mProfile
+      cfg <- asks envConfig
+      case (stripeSecretKey cfg, stripeWebhookSecret cfg) of
+        (Just secretKey, Just webhookSecret) -> do
+          let stripeCfg = Stripe.StripeConfig
+                { Stripe.stripeSecretKey = secretKey
+                , Stripe.stripeWebhookSecret = webhookSecret
+                , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
+                }
+          (accountId, accountCreated) <- case artistProfileStripeAccountId profile of
+            Just existing -> pure (existing, False)
+            Nothing -> do
+              mStoredPreferences <- withPool $
+                getBy (UniqueUserLocalePreference (artistProfileArtistPartyId profile))
+              let storedCountry =
+                    mStoredPreferences >>= userLocalePreferenceCountryCode . entityVal
+                  requestedCountry = colCountry req <|> storedCountry
+              country <-
+                case requestedCountry >>= normalizeCountryCode of
+                  Just value -> pure value
+                  Nothing -> throwError err400
+                    { errBody =
+                        "colCountry is required for a new Stripe account when the artist has no country preference"
+                    }
+              mEmail <- withPool $ do
+                mParty <- get (artistProfileArtistPartyId profile)
+                pure (mParty >>= partyPrimaryEmail)
+              acctResult <- liftIO $
+                Stripe.createConnectExpressAccount stripeCfg country mEmail Nothing
+              accountJson <- case acctResult of
+                Left err -> throwError err500
+                  { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe account error: " <> err)) }
+                Right val -> pure val
+              newId <- case parseMaybe (withObject "account" (.: "id")) accountJson of
+                Just sid -> pure sid
+                Nothing -> throwError err500
+                  { errBody = "Could not parse Stripe account id" }
+              withPool $ update profileKey
+                [ArtistProfileStripeAccountId =. Just newId]
+              pure (newId, True)
+          linkResult <- liftIO $
+            Stripe.createAccountLink stripeCfg accountId refreshUrl returnUrl
+          linkJson <- case linkResult of
+            Left err -> throwError err500
+              { errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe account link error: " <> err)) }
+            Right val -> pure val
+          onboardingUrl <- case parseMaybe (withObject "account_link" (.: "url")) linkJson of
+            Just url -> pure url
+            Nothing -> throwError err500
+              { errBody = "Could not parse Stripe account link url" }
+          recordActivity "artist_profile" (T.pack (show artistId)) "connect_onboarding_link" $
+            Just (object ["accountCreated" .= accountCreated])
+          pure ConnectOnboardingLinkResponse
+            { colAccountId = accountId
+            , colOnboardingUrl = onboardingUrl
+            , colAccountCreated = accountCreated
+            }
+        _ -> throwError err500 { errBody = "Stripe is not configured" }
 
     artistPromotionsRouter rawArtistId =
            listArtistPromoSlotsAdmin rawArtistId
@@ -648,29 +927,31 @@ adminServer user =
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
       now <- liftIO getCurrentTime
-      case createArtistPromoSlotRecord artistKey payload now of
-        Left errMsg ->
-          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right action ->
-          withPool action
+      action <- either
+        (\errMsg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        (createArtistPromoSlotRecord artistKey payload now)
+      withPool action
 
     updateArtistPromoSlotAdmin rawArtistId rawPromotionId payload = do
       ensureModule ModuleAdmin user
+      promotionId <- either throwError pure $
+        validatePositiveAdminLookupId "promotionId" rawPromotionId
       artistKey <- resolveArtistKey rawArtistId
-      promotionId <- either throwError pure (validatePositiveAdminLookupId "promotionId" rawPromotionId)
       let promotionKey = toSqlKey promotionId
       now <- liftIO getCurrentTime
-      case updateArtistPromoSlotRecord artistKey promotionKey payload now of
-        Left errMsg ->
-          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right action -> do
-          mDto <- withPool action
-          maybe (throwError err404) pure mDto
+      action <- either
+        (\errMsg -> throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        (updateArtistPromoSlotRecord artistKey promotionKey payload now)
+      mDto <- withPool action
+      maybe (throwError err404) pure mDto
 
     deleteArtistPromoSlotAdmin rawArtistId rawPromotionId = do
       ensureModule ModuleAdmin user
+      promotionId <- either throwError pure $
+        validatePositiveAdminLookupId "promotionId" rawPromotionId
       artistKey <- resolveArtistKey rawArtistId
-      promotionId <- either throwError pure (validatePositiveAdminLookupId "promotionId" rawPromotionId)
       let promotionKey = toSqlKey promotionId
       deleted <- withPool $ deleteArtistPromoSlotRecord artistKey promotionKey
       unless deleted (throwError err404)
@@ -679,43 +960,59 @@ adminServer user =
     artistPromoDayReportAdmin rawArtistId dayVal = do
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
-      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      (locale, timezone) <- artistPromoLocalePreferences
+      mReport <- withPool $ loadArtistPromoDayReport locale timezone artistKey dayVal
       maybe (throwError err404) pure mReport
 
     artistPromoDayReportPdfAdmin rawArtistId dayVal = do
       ensureModule ModuleAdmin user
       artistKey <- resolveArtistKey rawArtistId
       let artistId = fromSqlKey artistKey
-      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      (locale, timezone) <- artistPromoLocalePreferences
+      mReport <- withPool $ loadArtistPromoDayReport locale timezone artistKey dayVal
       report <- maybe (throwError err404) pure mReport
       pdfResult <- liftIO (generateArtistPromoDayReportPdf report)
-      case pdfResult of
-        Left errMsg ->
-          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
-        Right pdf -> do
-          let rawFileName =
-                T.concat
-                  [ "promo-diario-artista-"
-                  , T.pack (show artistId)
-                  , "-"
-                  , T.pack (show dayVal)
-                  ]
-              fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
-              disposition = T.concat ["attachment; filename=\"", fileName, "\""]
-          pure (addHeader disposition pdf)
+      pdf <- either
+        (\errMsg -> throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) })
+        pure
+        pdfResult
+      let rawFileName = T.concat
+            [ "promo-diario-artista-"
+            , T.pack (show artistId)
+            , "-"
+            , T.pack (show dayVal)
+            ]
+          fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
+          disposition = T.concat ["attachment; filename=\"", fileName, "\""]
+      pure (addHeader disposition pdf)
+
+    artistPromoLocalePreferences = do
+      cfg <- asks envConfig
+      mStored <- withPool $ getBy (UniqueUserLocalePreference (auPartyId user))
+      case mStored of
+        Nothing -> pure (defaultLocale cfg, defaultTimezone cfg)
+        Just (Entity _ preferences) -> do
+          mLocale <- case userLocalePreferenceLocaleId preferences of
+            Nothing -> pure Nothing
+            Just localeId -> withPool $ get (Catalog.LocaleReferenceKey localeId)
+          pure
+            ( maybe (defaultLocale cfg) Catalog.localeReferenceCode mLocale
+            , userLocalePreferenceTimezone preferences
+            )
 
     resolveArtistKey rawArtistId = do
-      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" rawArtistId)
+      artistId <- either throwError pure $
+        validatePositiveAdminLookupId "artistId" rawArtistId
       let artistKey = toSqlKey artistId
-      mParty <- withPool $ get artistKey
-      case mParty of
+      mProfile <- withPool $ getBy (UniqueArtistProfile artistKey)
+      case mProfile of
         Nothing -> throwError err404
-        Just _  -> pure artistKey
+        Just _ -> pure artistKey
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
-          includeInactive = fromMaybe False mIncludeInactive
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
+      let includeInactive = fromMaybe False mIncludeInactive
           filters = [ME.DropdownOptionCategory ==. categoryKey]
                  ++ [ME.DropdownOptionActive ==. True | not includeInactive]
           ordering =
@@ -728,12 +1025,10 @@ adminServer user =
 
     createOption rawCategory DropdownOptionCreate{..} = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
-          valueTxt    = T.strip docValue
-      when (T.null valueTxt) $
-        throwError err400 { errBody = "Value is required" }
-      let labelValue    = normaliseText docLabel
-          sortOrderValue = docSortOrder
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
+      valueTxt <- either throwError pure (validateDropdownOptionValue docValue)
+      labelValue <- either throwError pure (validateDropdownOptionLabel docLabel)
+      let sortOrderValue = docSortOrder
           activeValue    = fromMaybe True docActive
       conflict <- withPool $ selectFirst
         [ ME.DropdownOptionCategory ==. categoryKey
@@ -754,14 +1049,18 @@ adminServer user =
           , dropdownOptionUpdatedAt = now
           }
         getJustEntity optionId
+      recordActivity "dropdown_option" rawCategory "create" $
+        Just (object
+          [ "category" .= categoryKey
+          , "value" .= valueTxt
+          , "active" .= activeValue
+          ])
       pure (toDTO entity)
 
     updateOption rawCategory rawId DropdownOptionUpdate{..} = do
       ensureModule ModuleAdmin user
-      let categoryKey = normaliseCategory rawCategory
-          valueUpdate = fmap T.strip douValue
-      when (maybe False T.null valueUpdate) $
-        throwError err400 { errBody = "Value must not be empty" }
+      categoryKey <- either throwError pure (validateDropdownOptionCategory rawCategory)
+      valueUpdate <- either throwError pure (traverse validateDropdownOptionValue douValue)
       optionId <- parseKey rawId
       mOption <- withPool $ getEntity optionId
       case mOption of
@@ -780,7 +1079,8 @@ adminServer user =
                     []
                   when (isJust conflict) $
                     throwError err409 { errBody = "Option already exists for category" }
-              let labelUpdate = fmap normaliseText douLabel
+              labelUpdate <- either throwError pure (traverse validateDropdownOptionLabel douLabel)
+              let
                   sortOrderUpdate = douSortOrder
                   activeUpdate = douActive
               now <- liftIO getCurrentTime
@@ -798,6 +1098,17 @@ adminServer user =
                 else withPool $ do
                   update key updates
                   getJustEntity key
+              recordActivity "dropdown_option" rawId "update" $
+                Just (object
+                  [ "category" .= categoryKey
+                  , "updated" .= not (null updates)
+                  , "fields" .= catMaybes
+                    [ ("value" :: Text) <$ valueUpdate
+                    , ("label" :: Text) <$ douLabel
+                    , ("sortOrder" :: Text) <$ douSortOrder
+                    , ("active" :: Text) <$ activeUpdate
+                    ]
+                  ])
               pure (toDTO entity)
 
     listUsers mIncludeInactive = do
@@ -844,10 +1155,15 @@ adminServer user =
         , userCredentialPasswordHash = hashed
         , userCredentialActive       = activeValue
         }
-      for_ uacRoles $ \rolesList -> withPool $ setPartyRoles partyKey rolesList
       account <- withPool $ do
         credEnt <- getJustEntity credId
         loadUserAccount credEnt
+      recordActivity "user_account" (T.pack (show (fromSqlKey credId))) "create" $
+        Just (object
+          [ "partyId" .= uacPartyId
+          , "username" .= uniqueUsername
+          , "active" .= activeValue
+          ])
       welcomeResult <- liftIO $ try $
         EmailSvc.sendWelcome
           emailSvc
@@ -922,10 +1238,18 @@ adminServer user =
                 ]
           when (not (null updates)) $
             withPool $ update credKey updates
-          for_ uauRoles $ \rolesList -> withPool $ setPartyRoles (userCredentialPartyId cred) rolesList
-          withPool $ do
+          account <- withPool $ do
             fresh <- getJustEntity credKey
             loadUserAccount fresh
+          recordActivity "user_account" (T.pack (show userIdValid)) "update" $
+            Just (object
+              [ "fields" .= catMaybes
+                [ ("username" :: Text) <$ usernameUpdate
+                , ("active" :: Text) <$ uauActive
+                , ("password" :: Text) <$ passwordHash
+                ]
+              ])
+          pure account
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user
@@ -939,16 +1263,13 @@ adminServer user =
     userCommunicationSendHandler userId AdminWhatsAppSendRequest{..} = do
       ensureStrictAdmin user
       userIdValid <- either throwError pure (validatePositiveAdminLookupId "userId" userId)
-      let body = T.strip awsrMessage
+      body <- either throwError pure (validateAdminWhatsAppMessageBody awsrMessage)
       mode <- either throwError pure (validateAdminWhatsAppSendMode awsrMode awsrReplyToMessageId)
-      when (T.null body) $
-        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
       mContext <- withPool (loadUserCommunicationContext userIdValid)
       (_, partyEnt) <- maybe (throwError err404) pure mContext
       let partyKey = entityKey partyEnt
           partyVal = entityVal partyEnt
           candidatePhones = resolvePartyPhones partyVal
-      phone <- maybe (throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }) pure (listToMaybe candidatePhones)
       replyTarget <- case (mode, awsrReplyToMessageId) of
         ("reply", Just replyId) -> do
           let msgKey = toSqlKey replyId :: ME.WhatsAppMessageId
@@ -960,6 +1281,8 @@ adminServer user =
                 then pure (Just msgEnt)
                 else throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El mensaje no pertenece a este usuario") }
         _ -> pure Nothing
+      phone <- either throwError pure $
+        resolveAdminWhatsAppSendPhone mode candidatePhones (entityVal <$> replyTarget)
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv phone body
@@ -992,9 +1315,9 @@ adminServer user =
         (throwError err400 { errBody = "El mensaje original no tiene contenido de texto" })
         pure
         (cleanMaybeText (ME.whatsAppMessageText msg))
-      let resendBody = fromMaybe originalBody (cleanMaybeText awrrMessage)
-          phone = ME.whatsAppMessagePhoneE164 msg <|> normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
-      targetPhone <- maybe (throwError err400 { errBody = "No se pudo determinar el número destino" }) pure phone
+      resendBody <- either throwError pure $
+        validateAdminWhatsAppMessageBody (fromMaybe originalBody (cleanMaybeText awrrMessage))
+      targetPhone <- either throwError pure (resolveAdminWhatsAppResendPhone msg)
       now <- liftIO getCurrentTime
       waEnv <- liftIO loadWhatsAppEnv
       sendResult <- liftIO $ sendWhatsAppTextIO waEnv targetPhone resendBody
@@ -1018,11 +1341,9 @@ adminServer user =
     registeredUserEmailBroadcastHandler AdminEmailBroadcastRequest{..} = do
       ensureStrictAdmin user
       subject <- either throwError pure (validateAdminEmailSubject aebrSubject)
-      let bodyLines = normalizeAdminEmailBodyLines aebrBodyLines
-          dryRun = fromMaybe False aebrDryRun
+      bodyLines <- either throwError pure (validateAdminEmailBodyLines aebrBodyLines)
+      let dryRun = fromMaybe False aebrDryRun
           includeInactive = fromMaybe False aebrIncludeInactive
-      when (null bodyLines) $
-        throwError err400 { errBody = "At least one non-empty body line is required" }
       limitValue <- either throwError pure (validateAdminEmailBroadcastLimit aebrLimit)
       cfg <- asks envConfig
       let emailSvc = EmailSvc.mkEmailService cfg
@@ -1095,6 +1416,15 @@ adminServer user =
           , " | failed="
           , T.pack (show failedCount)
           ]
+      recordActivity "admin_email_broadcast" "registered-users" finalStatus $
+        Just (object
+          [ "dryRun" .= dryRun
+          , "matchedUsers" .= matchedUsers
+          , "uniqueRecipients" .= length uniqueRecipients
+          , "processedRecipients" .= processedRecipients
+          , "sentCount" .= sentCount
+          , "failedCount" .= failedCount
+          ])
       pure AdminEmailBroadcastResponse
         { aersStatus = finalStatus
         , aersDryRun = dryRun
@@ -1122,10 +1452,53 @@ parseKey
   => Text
   -> m (Key record)
 parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  let trimmed = T.strip raw
+      isSignedNegativeInt =
+        case T.uncons trimmed of
+          Just ('-', digits) -> not (T.null digits) && T.all isDigit digits
+          _ -> False
+      isNonPositiveDigits =
+        T.null trimmed || (T.all isDigit trimmed && T.all (== '0') trimmed)
+  in
+    if isSignedNegativeInt || isNonPositiveDigits
+      then throwError err400 { errBody = "identifier must be a positive integer" }
+      else case fromPathPiece trimmed of
+        Just key -> pure key
+        Nothing ->
+          throwError err400 { errBody = "Invalid identifier" }
 
 normaliseCategory :: Text -> Text
 normaliseCategory = T.toLower . T.strip
+
+validateDropdownOptionCategory :: Text -> Either ServerError Text
+validateDropdownOptionCategory rawCategory
+  | T.null category =
+      Left err400 { errBody = "Dropdown category is required" }
+  | T.length category > maxDropdownCategoryChars =
+      Left err400 { errBody = "Dropdown category must be 64 characters or fewer" }
+  | T.any isControl category =
+      Left err400 { errBody = "Dropdown category must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar category =
+      Left err400 { errBody = "Dropdown category must not contain hidden format characters" }
+  | not (T.all isDropdownCategoryChar category) =
+      Left err400
+        { errBody =
+            "Dropdown category must use only ASCII letters, numbers, hyphens, or underscores"
+        }
+  | not (isDropdownCategoryAtom (T.head category))
+      || not (isDropdownCategoryAtom (T.last category)) =
+      Left err400
+        { errBody = "Dropdown category must start and end with an ASCII letter or number" }
+  | otherwise =
+      Right category
+  where
+    category = normaliseCategory rawCategory
+    isDropdownCategoryAtom ch = isAsciiLower ch || isDigit ch
+    isDropdownCategoryChar ch =
+      isDropdownCategoryAtom ch || ch == '-' || ch == '_'
+
+maxDropdownCategoryChars :: Int
+maxDropdownCategoryChars = 64
 
 normaliseText :: Maybe Text -> Maybe Text
 normaliseText Nothing = Nothing
@@ -1133,14 +1506,59 @@ normaliseText (Just txt) =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just trimmed
 
+validateDropdownOptionValue :: Text -> Either ServerError Text
+validateDropdownOptionValue rawValue
+  | T.null value =
+      Left err400 { errBody = "Value is required" }
+  | T.length value > maxDropdownValueChars =
+      Left err400 { errBody = "Value must be 160 characters or fewer" }
+  | T.any isControl value =
+      Left err400 { errBody = "Value must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar value =
+      Left err400 { errBody = "Value must not contain hidden format characters" }
+  | otherwise =
+      Right value
+  where
+    value = T.strip rawValue
+
+maxDropdownValueChars :: Int
+maxDropdownValueChars = 160
+
+validateDropdownOptionLabel :: Maybe Text -> Either ServerError (Maybe Text)
+validateDropdownOptionLabel Nothing = Right Nothing
+validateDropdownOptionLabel (Just rawLabel)
+  | T.null label =
+      Right Nothing
+  | T.length label > maxDropdownLabelChars =
+      Left err400 { errBody = "Label must be 160 characters or fewer" }
+  | T.any isControl label =
+      Left err400 { errBody = "Label must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar label =
+      Left err400 { errBody = "Label must not contain hidden format characters" }
+  | otherwise =
+      Right (Just label)
+  where
+    label = T.strip rawLabel
+
+maxDropdownLabelChars :: Int
+maxDropdownLabelChars = 160
+
 ensureModule
   :: (MonadError ServerError m)
   => ModuleAccess
   -> AuthedUser
   -> m ()
 ensureModule moduleTag user =
-  unless (hasModuleAccess moduleTag user) $
-    throwError err403 { errBody = "Missing required module access" }
+  case validateModuleAccess moduleTag user of
+    Right () -> pure ()
+    Left err
+      | errBody err == missingModuleBody ->
+          throwError err403 { errBody = "Missing required module access" }
+      | otherwise ->
+          throwError err
+  where
+    missingModuleBody =
+      BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
 
 ensureStrictAdmin
   :: (MonadError ServerError m)
@@ -1165,17 +1583,27 @@ ensureSocialUnholdTargetFound channel found =
 
 parseSocialErrorsChannel :: Maybe Text -> Either ServerError Text
 parseSocialErrorsChannel mChannel =
-  case fmap (T.toLower . T.strip) mChannel of
-    Just "instagram" -> Right "instagram"
-    Just "facebook" -> Right "facebook"
-    Just "whatsapp" -> Right "whatsapp"
+  case mChannel of
     Nothing -> missingChannel
-    Just txt
-      | T.null txt -> missingChannel
+    Just rawChannel
+      | T.null channel -> missingChannel
+      | T.any isControl rawChannel ->
+          Left err400 { errBody = "channel must not contain control characters" }
+      | T.any isAdminHiddenFormatChar rawChannel ->
+          Left err400 { errBody = "channel must not contain hidden format characters" }
+      | channel == "instagram" -> Right "instagram"
+      | channel == "facebook" -> Right "facebook"
+      | channel == "whatsapp" -> Right "whatsapp"
       | otherwise -> Left err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
   where
+    channel =
+      maybe "" (T.toLower . T.strip) mChannel
     missingChannel =
       Left err400 { errBody = "channel requerido (instagram|facebook|whatsapp)" }
+
+isAdminHiddenFormatChar :: Char -> Bool
+isAdminHiddenFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialUnholdLookup :: Maybe Text -> Maybe Text -> Either ServerError SocialUnholdLookup
 validateSocialUnholdLookup mExternalId mSenderId =
@@ -1195,8 +1623,9 @@ validateSocialUnholdNote (Just rawNote)
   | T.null note = Right Nothing
   | T.length note > 500 =
       Left err400 { errBody = "note must be 500 characters or fewer" }
-  | T.any isControl note =
-      Left err400 { errBody = "note must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar note =
+      Left err400
+        { errBody = "note must not contain control characters or hidden format characters" }
   | otherwise = Right (Just note)
   where
     note = T.strip rawNote
@@ -1205,14 +1634,23 @@ validateSocialUnholdIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialUnholdIdentifier fieldName value
   | T.length value > 256 =
       invalid (" must be 256 characters or fewer")
+  | not (T.any isAlphaNum value) =
+      invalid (" must include letters or numbers")
   | T.any isControl value =
       invalid (" must not contain control characters")
   | T.any isSpace value =
       invalid (" must not contain whitespace")
+  | T.any isUnsupportedAdminAuditChar value =
+      invalid (" must not contain hidden format characters")
   | otherwise = Right value
   where
     invalid reason =
       Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> reason)) }
+
+isUnsupportedAdminAuditChar :: Char -> Bool
+isUnsupportedAdminAuditChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 auditNoteSuffix :: Maybe Text -> Text
 auditNoteSuffix Nothing = ""
@@ -1247,23 +1685,103 @@ validatePositiveAdminLookupId fieldName rawId
         }
   | otherwise = Right rawId
 
+artistProfileValidationError :: Text -> ServerError
+artistProfileValidationError msg =
+  err400 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+validateBrainEntryId :: Int64 -> Either ServerError Int64
+validateBrainEntryId =
+  validatePositiveAdminLookupId "entryId"
+
 validateAdminWhatsAppSendMode :: Text -> Maybe Int64 -> Either ServerError Text
 validateAdminWhatsAppSendMode rawMode mReplyToMessageId =
-  case T.toLower (T.strip rawMode) of
-    "reply" ->
-      case mReplyToMessageId of
-        Nothing ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
-        Just replyId
-          | replyId <= 0 ->
-              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId debe ser un entero positivo") }
-          | otherwise -> Right "reply"
-    "notify"
-      | isJust mReplyToMessageId ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId solo se permite en mode=reply") }
-      | otherwise -> Right "notify"
+  if T.any isUnsupportedAdminAuditChar rawMode
+    then
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mode no debe contener caracteres de control o formato no soportados")
+        }
+    else
+      case T.toLower (T.strip rawMode) of
+        "reply" ->
+          case mReplyToMessageId of
+            Nothing ->
+              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId requerido para responder") }
+            Just replyId
+              | replyId <= 0 ->
+                  Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId debe ser un entero positivo") }
+              | otherwise -> Right "reply"
+        "notify"
+          | isJust mReplyToMessageId ->
+              Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "replyToMessageId solo se permite en mode=reply") }
+          | otherwise -> Right "notify"
+        _ ->
+          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+
+validateAdminWhatsAppMessageBody :: Text -> Either ServerError Text
+validateAdminWhatsAppMessageBody rawBody
+  | T.null body =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje vacío") }
+  | T.length body > adminWhatsAppMessageMaxLength =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje demasiado largo (max 4096 caracteres)") }
+  | T.any isUnsupportedAdminWhatsAppMessageChar body =
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje no debe contener caracteres de control o formato no soportados") }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+adminWhatsAppMessageMaxLength :: Int
+adminWhatsAppMessageMaxLength = 4096
+
+isUnsupportedAdminWhatsAppMessageChar :: Char -> Bool
+isUnsupportedAdminWhatsAppMessageChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+resolveAdminWhatsAppSendPhone :: Text -> [Text] -> Maybe ME.WhatsAppMessage -> Either ServerError Text
+resolveAdminWhatsAppSendPhone "reply" _ (Just msg) =
+  case resolveMessagePhone storedPhone senderPhone of
+    Right (Just phone) -> Right phone
+    Right Nothing ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino del mensaje de referencia") }
+    Left errBodyText ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 errBodyText) }
+  where
+    storedPhone = cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
+    senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+resolveAdminWhatsAppSendPhone "reply" _ Nothing =
+  Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Mensaje de referencia requerido para responder") }
+resolveAdminWhatsAppSendPhone _ candidatePhones _ =
+  case candidatePhones of
+    [] ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario no tiene WhatsApp o teléfono configurado") }
+    [phone] ->
+      Right phone
     _ ->
-      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "mode inválido (reply|notify)") }
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 "El usuario tiene más de un número WhatsApp posible; responde a un mensaje existente para elegir destino") }
+
+resolveAdminWhatsAppResendPhone :: ME.WhatsAppMessage -> Either ServerError Text
+resolveAdminWhatsAppResendPhone msg =
+  case resolveMessagePhone storedPhone senderPhone of
+    Right (Just phone) -> Right phone
+    Right Nothing ->
+      Left err400
+        { errBody = BL.fromStrict (TE.encodeUtf8 "No se pudo determinar el número destino")
+        }
+    Left errBodyText ->
+      Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 errBodyText) }
+  where
+    storedPhone =
+      cleanMaybeText (ME.whatsAppMessagePhoneE164 msg) >>= normalizeWhatsAppPhone
+    senderPhone = normalizeWhatsAppPhone (ME.whatsAppMessageSenderId msg)
+
+resolveMessagePhone :: Maybe Text -> Maybe Text -> Either Text (Maybe Text)
+resolveMessagePhone (Just storedPhone) (Just senderPhone)
+  | storedPhone == senderPhone = Right (Just storedPhone)
+  | otherwise = Left "Número destino ambiguo en el historial de WhatsApp"
+resolveMessagePhone storedPhone senderPhone = Right (storedPhone <|> senderPhone)
 
 validateAdminEmailSubject :: Text -> Either ServerError Text
 validateAdminEmailSubject rawSubject
@@ -1271,6 +1789,8 @@ validateAdminEmailSubject rawSubject
       Left err400 { errBody = "Subject must be a single line" }
   | T.any isControl rawSubject =
       Left err400 { errBody = "Subject must not contain control characters" }
+  | T.any isHiddenAdminTextChar rawSubject =
+      Left err400 { errBody = "Subject must not contain hidden format characters" }
   | T.null subject =
       Left err400 { errBody = "Subject must not be empty" }
   | T.length subject > adminEmailSubjectMaxLength =
@@ -1283,36 +1803,59 @@ validateAdminEmailSubject rawSubject
 adminEmailSubjectMaxLength :: Int
 adminEmailSubjectMaxLength = 160
 
+validateOptionalAdminEmailName :: Maybe Text -> Either ServerError Text
+validateOptionalAdminEmailName Nothing = Right ""
+validateOptionalAdminEmailName (Just rawName)
+  | T.any isEmailHeaderLineBreak rawName =
+      Left err400 { errBody = "Name must be a single line" }
+  | T.any isUnsupportedAdminAuditChar rawName =
+      Left err400 { errBody = "Name must not contain control or hidden format characters" }
+  | T.null name =
+      Right ""
+  | T.length name > adminEmailNameMaxLength =
+      Left err400 { errBody = "Name must be 120 characters or fewer" }
+  | otherwise =
+      Right name
+  where
+    name = T.strip rawName
+    isEmailHeaderLineBreak c = c == '\r' || c == '\n'
+
+adminEmailNameMaxLength :: Int
+adminEmailNameMaxLength = 120
+
 validateAdminEmailCtaUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validateAdminEmailCtaUrl Nothing = Right Nothing
 validateAdminEmailCtaUrl (Just rawUrl)
   | T.any isControl rawUrl =
       Left err400 { errBody = "CTA URL must not contain control characters" }
+  | T.any isAdminHiddenFormatChar rawUrl =
+      Left err400 { errBody = "CTA URL must not contain hidden formatting characters" }
   | T.null url =
       Right Nothing
   | T.length url > 2048 =
       Left err400 { errBody = "CTA URL must be 2048 characters or fewer" }
   | T.any isSpace url =
       Left err400 { errBody = "CTA URL must not contain whitespace" }
-  | Nothing <- mRemainder =
-      Left err400 { errBody = "CTA URL must be http(s)" }
+  | not ("https://" `T.isPrefixOf` lowerUrl) =
+      Left err400 { errBody = "CTA URL must be an absolute https URL" }
   | T.null authority =
       Left err400 { errBody = "CTA URL must include a host" }
   | T.any (== '@') authority =
       Left err400 { errBody = "CTA URL must not include user info" }
   | not (TrialsServer.isValidHttpUrl url) =
-      Left err400 { errBody = "CTA URL must be an absolute public http(s) URL" }
+      Left err400 { errBody = "CTA URL must be an absolute public https URL" }
+  | "#" `T.isInfixOf` url =
+      Left err400 { errBody = "CTA URL must not include a URL fragment" }
+  | TrialsServer.hasAmbiguousPublicUrlPath url =
+      Left err400
+        { errBody = "CTA URL path must not contain empty, dot, or dot-dot segments" }
   | otherwise =
       Right (Just url)
   where
     url = T.strip rawUrl
     lowerUrl = T.toLower url
-    mRemainder
-      | "https://" `T.isPrefixOf` lowerUrl = Just (T.drop 8 url)
-      | "http://" `T.isPrefixOf` lowerUrl = Just (T.drop 7 url)
-      | otherwise = Nothing
     authority =
-      maybe "" (T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#')) mRemainder
+      T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') (T.drop 8 url)
 
 validateAdminEmailBroadcastLimit :: Maybe Int -> Either ServerError (Maybe Int)
 validateAdminEmailBroadcastLimit Nothing = Right Nothing
@@ -1326,6 +1869,69 @@ maxBrainEntryTags = 20
 
 maxBrainEntryTagChars :: Int
 maxBrainEntryTagChars = 40
+
+brainEntryTitleMaxChars :: Int
+brainEntryTitleMaxChars = 160
+
+brainEntryBodyMaxChars :: Int
+brainEntryBodyMaxChars = 20000
+
+brainEntryCategoryMaxChars :: Int
+brainEntryCategoryMaxChars = 80
+
+validateBrainEntryTitle :: Text -> Either ServerError Text
+validateBrainEntryTitle rawTitle
+  | T.null title =
+      Left err400 { errBody = "Brain entry title is required" }
+  | T.length title > brainEntryTitleMaxChars =
+      Left err400 { errBody = "Brain entry title must be 160 characters or fewer" }
+  | T.any isControl title =
+      Left err400 { errBody = "Brain entry title must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar title =
+      Left err400
+        { errBody = "Brain entry title must not contain hidden format characters" }
+  | otherwise =
+      Right title
+  where
+    title = T.strip rawTitle
+
+validateBrainEntryBody :: Text -> Either ServerError Text
+validateBrainEntryBody rawBody
+  | T.null body =
+      Left err400 { errBody = "Brain entry body is required" }
+  | T.length body > brainEntryBodyMaxChars =
+      Left err400 { errBody = "Brain entry body must be 20000 characters or fewer" }
+  | T.any isUnsupportedBrainEntryBodyChar body =
+      Left err400
+        { errBody =
+            "Brain entry body must not contain unsupported control or hidden format characters"
+        }
+  | otherwise =
+      Right body
+  where
+    body = T.strip rawBody
+
+validateBrainEntryCategory :: Maybe Text -> Either ServerError (Maybe Text)
+validateBrainEntryCategory Nothing = Right Nothing
+validateBrainEntryCategory (Just rawCategory)
+  | T.null category =
+      Right Nothing
+  | T.length category > brainEntryCategoryMaxChars =
+      Left err400 { errBody = "Brain entry category must be 80 characters or fewer" }
+  | T.any isControl category =
+      Left err400 { errBody = "Brain entry category must not contain control characters" }
+  | T.any isUnsupportedAdminAuditChar category =
+      Left err400
+        { errBody = "Brain entry category must not contain hidden format characters" }
+  | otherwise =
+      Right (Just category)
+  where
+    category = T.strip rawCategory
+
+isUnsupportedBrainEntryBodyChar :: Char -> Bool
+isUnsupportedBrainEntryBodyChar ch =
+  (isControl ch && ch `notElem` ['\n', '\r', '\t'])
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizeBrainEntryTags :: Maybe [Text] -> Either ServerError (Maybe [Text])
 normalizeBrainEntryTags Nothing = Right Nothing
@@ -1347,18 +1953,39 @@ normalizeBrainEntryTags (Just rawTags) =
           Left err400 { errBody = "brain entry tags must be 40 characters or fewer" }
       | T.any isControl tag =
           Left err400 { errBody = "brain entry tags must not contain control characters" }
+      | T.any isUnsupportedAdminAuditChar tag =
+          Left err400
+            { errBody = "brain entry tags must not contain hidden format characters" }
       | otherwise =
           Right tag
 
 loadUserAccount :: Entity UserCredential -> SqlPersistT IO UserAccountDTO
 loadUserAccount (Entity credId cred) = do
   party <- getJustEntity (userCredentialPartyId cred)
-  roles <- selectList
-    [ PartyRolePartyId ==. userCredentialPartyId cred
-    , PartyRoleActive ==. True
-    ]
-    [Asc PartyRoleRole]
-  let roleList = map (partyRoleRole . entityVal) roles
+  canonicalRoles <- loadCanonicalPartyRoles (userCredentialPartyId cred)
+  roleList <- either
+    (liftIO . ioError . userError . T.unpack)
+    pure
+    canonicalRoles
+  persistedDetails <- loadPersistedRoleDetails
+  let modulesByRole = Map.fromList
+        [ (roleRegistryCode persistedRole, Set.fromList persistedModuleCodes)
+        | (roleCode, _, persistedModuleCodes) <- persistedDetails
+        , Just persistedRole <- [roleFromRegistryCode roleCode]
+        ]
+      missingRoleCodes =
+        [ code
+        | assignedRole <- roleList
+        , let code = roleRegistryCode assignedRole
+        , Map.notMember code modulesByRole
+        ]
+      effectiveModuleCodes = Set.toAscList (Set.unions
+        [ Map.findWithDefault Set.empty (roleRegistryCode assignedRole) modulesByRole
+        | assignedRole <- roleList
+        ])
+  unless (null missingRoleCodes) $
+    liftIO . ioError . userError $
+      "Missing persisted security roles for assigned codes: " <> show missingRoleCodes
   pure UserAccountDTO
     { userId    = fromSqlKey credId
     , partyId   = fromSqlKey (entityKey party)
@@ -1369,8 +1996,25 @@ loadUserAccount (Entity credId cred) = do
     , whatsapp = partyWhatsapp (entityVal party)
     , active    = userCredentialActive cred
     , roles     = roleList
-    , modules   = map moduleName (Set.toList (modulesForRoles roleList))
+    , modules   = effectiveModuleCodes
     }
+
+loadPersistedRoleDetails :: SqlPersistT IO [(Text, Text, [Text])]
+loadPersistedRoleDetails = do
+  roles <- rawSql
+    "SELECT code, name_es FROM security_role WHERE active=TRUE ORDER BY sort_order, code"
+    [] :: SqlPersistT IO [(Single Text, Single Text)]
+  moduleRows <- rawSql
+    "SELECT r.code, m.code FROM security_role r JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE r.active=TRUE AND rp.active=TRUE AND p.active=TRUE AND a.active=TRUE AND m.active=TRUE AND p.resource_scope='module' AND a.code='access' ORDER BY r.sort_order, r.code, m.sort_order, m.code"
+    [] :: SqlPersistT IO [(Single Text, Single Text)]
+  let modulesByRole = Map.fromListWith (flip (++))
+        [ (roleCode, [moduleCode])
+        | (Single roleCode, Single moduleCode) <- moduleRows
+        ]
+  pure
+    [ (roleCode, roleLabel, nub (Map.findWithDefault [] roleCode modulesByRole))
+    | (Single roleCode, Single roleLabel) <- roles
+    ]
 
 loadUserCommunicationContext
   :: Int64
@@ -1453,10 +2097,51 @@ normalizeAdminEmailBodyLines :: [Text] -> [Text]
 normalizeAdminEmailBodyLines =
   filter (not . T.null) . map T.strip
 
+resolveAdminEmailTestBody :: Maybe Text -> Either ServerError [Text]
+resolveAdminEmailTestBody Nothing = Right ["Correo de prueba desde TDF HQ."]
+resolveAdminEmailTestBody (Just rawBody) =
+  validateAdminEmailBodyLines [rawBody]
+
+validateAdminEmailBodyLines :: [Text] -> Either ServerError [Text]
+validateAdminEmailBodyLines rawLines
+  | null bodyLines =
+      Left err400 { errBody = "At least one non-empty body line is required" }
+  | length bodyLines > adminEmailBodyLineMaxCount =
+      Left err400 { errBody = "Body must include at most 50 non-empty lines" }
+  | any ((> adminEmailBodyLineMaxLength) . T.length) bodyLines =
+      Left err400 { errBody = "Body lines must be 1000 characters or fewer" }
+  | any (T.any isControl) bodyLines =
+      Left err400 { errBody = "Body lines must not contain control characters" }
+  | any (T.any isHiddenAdminTextChar) bodyLines =
+      Left err400 { errBody = "Body lines must not contain hidden format characters" }
+  | otherwise =
+      Right bodyLines
+  where
+    bodyLines = normalizeAdminEmailBodyLines rawLines
+
+isHiddenAdminTextChar :: Char -> Bool
+isHiddenAdminTextChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+adminEmailBodyLineMaxCount :: Int
+adminEmailBodyLineMaxCount = 50
+
+adminEmailBodyLineMaxLength :: Int
+adminEmailBodyLineMaxLength = 1000
+
 normalizeAdminEmailAddress :: Text -> Maybe Text
 normalizeAdminEmailAddress raw =
   let normalized = T.toLower (T.strip raw)
   in if isValidAdminEmailAddress normalized then Just normalized else Nothing
+
+maxAdminEmailChars :: Int
+maxAdminEmailChars = 254
+
+maxAdminEmailLocalPartChars :: Int
+maxAdminEmailLocalPartChars = 64
+
+maxAdminEmailDomainLabelChars :: Int
+maxAdminEmailDomainLabelChars = 63
 
 adminUsernameMaxLength :: Int
 adminUsernameMaxLength = 60
@@ -1528,22 +2213,30 @@ validateOptionalAdminUsername (Just raw) =
 
 validateAdminPassword :: Text -> Either ServerError Text
 validateAdminPassword rawPassword
+  | T.any isControl rawPassword =
+      Left err400 { errBody = "Password must not contain control characters" }
+  | T.any isHiddenAdminTextChar rawPassword =
+      Left err400 { errBody = "Password must not contain hidden formatting characters" }
   | T.null trimmed =
       Left err400 { errBody = "Password must not be empty" }
   | T.length trimmed < 8 =
       Left err400 { errBody = "Password must be at least 8 characters" }
-  | T.any isControl trimmed =
-      Left err400 { errBody = "Password must not contain control characters" }
+  | BS.length (TE.encodeUtf8 trimmed) > maxAdminPasswordBytes =
+      Left err400 { errBody = "Password must be 72 bytes or fewer" }
   | otherwise =
       Right trimmed
   where
     trimmed = T.strip rawPassword
 
+maxAdminPasswordBytes :: Int
+maxAdminPasswordBytes = 72
+
 isValidAdminEmailAddress :: Text -> Bool
 isValidAdminEmailAddress candidate =
   case T.splitOn "@" candidate of
     [localPart, domain] ->
-      isValidAdminEmailLocalPart localPart
+      T.length candidate <= maxAdminEmailChars
+        && isValidAdminEmailLocalPart localPart
         && not (T.null domain)
         && not (T.any isSpace candidate)
         && not (T.isPrefixOf "." domain)
@@ -1555,6 +2248,7 @@ isValidAdminEmailAddress candidate =
 isValidAdminEmailLocalPart :: Text -> Bool
 isValidAdminEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxAdminEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
@@ -1567,6 +2261,7 @@ isValidAdminEmailLocalChar c =
 isValidAdminEmailDomainLabel :: Text -> Bool
 isValidAdminEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= maxAdminEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidAdminEmailDomainChar label
@@ -1600,17 +2295,6 @@ loadRegisteredUserEmailRecipients includeInactive = do
             Nothing -> Nothing
             Just normalizedEmail -> Just (partyDisplayName party, normalizedEmail)
   pure (catMaybes pairs)
-
-setPartyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-setPartyRoles partyKey rolesList = do
-  existing <- selectList [PartyRolePartyId ==. partyKey] []
-  let desired = Set.fromList rolesList
-  for_ (Set.toList desired) $ \role -> do
-    _ <- upsert (PartyRole partyKey role True) [PartyRoleActive =. True]
-    pure ()
-  for_ existing $ \(Entity roleId partyRole) ->
-    when (partyRoleActive partyRole && Set.notMember (partyRoleRole partyRole) desired) $
-      update roleId [PartyRoleActive =. False]
 
 artistReleaseEntityToDTOAdmin :: Entity ArtistRelease -> ArtistReleaseDTO
 artistReleaseEntityToDTOAdmin (Entity releaseId release) =

@@ -1,0 +1,131 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e2]:
+    - img "overlay-clever" [ref=f7e3] [cursor=pointer]
+    - img "close" [ref=f7e4] [cursor=pointer]
+    - link "Logo":
+      - /url: https://cleveradvertising.com
+      - img "Logo" [ref=f7e5] [cursor=pointer]
+    - iframe [ref=f7e6] [cursor=pointer]:
+      - generic [ref=f10e4] [cursor=pointer]:
+        - generic:
+          - generic:
+            - img "CTA"
+          - generic:
+            - img "copy"
+          - generic:
+            - img "legal"
+          - generic:
+            - img "copy 2"
+          - generic:
+            - img "#ad"
+  - generic [ref=f7e9]:
+    - banner [ref=f7e11]:
+      - generic [ref=f7e15]:
+        - list:
+          - listitem [ref=f7e16]:
+            - generic [ref=f7e17] [cursor=pointer]: Iniciar sesión
+          - listitem [ref=f7e18]:
+            - generic [ref=f7e19] [cursor=pointer]: Registrarme
+          - listitem [ref=f7e20]:
+            - link "Historial de Reservas" [ref=f7e21] [cursor=pointer]:
+              - /url: /historial-compra
+      - generic [ref=f7e24]:
+        - link [ref=f7e27] [cursor=pointer]:
+          - /url: /
+          - img "Logo TicketShow" [ref=f7e28]
+        - navigation [ref=f7e30]:
+          - list [ref=f7e32]:
+            - listitem [ref=f7e33]:
+              - link "CONCIERTOS" [ref=f7e34] [cursor=pointer]:
+                - /url: /eventos/Conciertos
+            - listitem [ref=f7e35]:
+              - link "TEATRO" [ref=f7e36] [cursor=pointer]:
+                - /url: /eventos/Teatro
+            - listitem [ref=f7e37]:
+              - link "SEMINARIOS" [ref=f7e38] [cursor=pointer]:
+                - /url: /eventos/Seminarios
+            - listitem [ref=f7e39]:
+              - link "OTROS" [ref=f7e40] [cursor=pointer]:
+                - /url: /eventos/Otros
+            - listitem [ref=f7e41]:
+              - link "CIUDAD" [ref=f7e42] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=f7e43]:
+              - link "FECHA" [ref=f7e44] [cursor=pointer]:
+                - /url: "#"
+    - tabpanel [ref=f7e46]:
+      - text:   
+      - generic [ref=f7e47]:
+        - img "RAWAYANA" [ref=f7e50]
+        - generic [ref=f7e52]:
+          - 'heading "NOTA: Una vez realizada la compra no se podrá aplicar descuento alguno. Para acceder al descuento de tercera edad o discapacidad deben acercarse al punto de venta a realizar la compra, deberá llevar copia de cédula, este descuento será personal e intrasferible." [level=5] [ref=f7e54]'
+          - 'heading "NOTA: CANJE DISPONIBLE" [level=5] [ref=f7e56]'
+        - heading "SINOPSIS:" [level=3] [ref=f7e59]
+        - generic [ref=f7e61]:
+          - paragraph [ref=f7e62]:
+            - strong [ref=f7e63]: RAWAYANA
+          - paragraph [ref=f7e64]:
+            - strong [ref=f7e65]: Jueves, 27 de agosto de 2026 20:30
+          - paragraph [ref=f7e66]:
+            - strong [ref=f7e67]: Coliseo General Ruminahui
+          - paragraph [ref=f7e68]
+          - paragraph [ref=f7e69]
+          - paragraph [ref=f7e70]
+          - paragraph [ref=f7e72]
+          - paragraph [ref=f7e73]
+          - paragraph [ref=f7e75]
+        - generic [ref=f7e77]:
+          - heading "ORGANIZADO POR:" [level=3] [ref=f7e79]
+          - generic [ref=f7e80]: OUTPUT S.A.
+        - generic [ref=f7e81] [cursor=pointer]: Reservar ticket
+      - generic [ref=f7e83]:
+        - generic [ref=f7e84]:
+          - generic [ref=f7e85]: 
+          - paragraph [ref=f7e86]: 27 Agosto
+        - generic [ref=f7e87]:
+          - separator [ref=f7e89]
+          - generic [ref=f7e90]: 
+          - paragraph [ref=f7e91]: 20:30
+        - generic [ref=f7e92]:
+          - separator [ref=f7e94]
+          - generic [ref=f7e95]: 
+          - paragraph [ref=f7e96]: Coliseo General Ruminahui
+        - generic [ref=f7e97]:
+          - separator [ref=f7e99]
+          - generic [ref=f7e100] [cursor=pointer]: Reservar ticket
+    - contentinfo [ref=f7e102]:
+      - generic [ref=f7e105]:
+        - link [ref=f7e107] [cursor=pointer]:
+          - /url: /
+          - img "logo" [ref=f7e108]
+        - list [ref=f7e110]:
+          - listitem [ref=f7e111]:
+            - link "VENDE CON NOSOTROS" [ref=f7e112] [cursor=pointer]:
+              - /url: https://sale.ticketshow.com.ec/rps/cotiza.aspx
+          - listitem [ref=f7e113]:
+            - link "QUIENES SOMOS" [ref=f7e114] [cursor=pointer]:
+              - /url: /quienessomos/
+        - list [ref=f7e116]:
+          - listitem [ref=f7e117]:
+            - link "PUNTOS DE VENTA" [ref=f7e118] [cursor=pointer]:
+              - /url: /puntosventa/
+          - listitem [ref=f7e119]:
+            - link "TERMINOS Y CONDICIONES" [ref=f7e120] [cursor=pointer]:
+              - /url: /terminosycondiciones/
+        - list [ref=f7e122]:
+          - listitem [ref=f7e123]:
+            - generic [ref=f7e124] [cursor=pointer]: TICKET SEGURO
+          - listitem [ref=f7e125]:
+            - link "CONTÁCTANOS" [ref=f7e126] [cursor=pointer]:
+              - /url: /contactenos/
+      - generic [ref=f7e135]:
+        - link "" [ref=f7e136] [cursor=pointer]:
+          - /url: https://www.facebook.com/TicketShowFanPage
+        - link "" [ref=f7e138] [cursor=pointer]:
+          - /url: https://www.twitter.com/ticketshow
+        - link "" [ref=f7e140] [cursor=pointer]:
+          - /url: https://www.instagram.com/ticketshow/?hl=es-la
+        - link "" [ref=f7e142] [cursor=pointer]:
+          - /url: /contactenos
+      - generic [ref=f7e144]: © 2023 TICKETSHOW TODOS LOS DERECHOS RESERVADOS.
+  - generic [ref=f7e149] [cursor=pointer]

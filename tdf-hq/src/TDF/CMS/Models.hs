@@ -17,6 +17,7 @@ module TDF.CMS.Models where
 import Database.Persist.TH
 import Data.Time (UTCTime)
 import Data.Text (Text)
+import Data.UUID (UUID)
 import Data.Aeson (Value(..), encode, eitherDecodeStrict')
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
@@ -25,6 +26,7 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Database.Persist
 import Database.Persist.Sql (PersistFieldSql(..))
 import TDF.Models (PartyId)
+import TDF.UUIDInstances ()
 
 newtype AesonValue = AesonValue { unAesonValue :: Value } deriving stock (Show, Eq)
 
@@ -47,6 +49,7 @@ decodeValue bs =
 
 share [mkPersist sqlSettings, mkMigrate "migrateCMS"] [persistLowerCase|
 CmsContent
+    authoredContentId UUID Maybe
     slug        Text
     locale      Text
     version     Int

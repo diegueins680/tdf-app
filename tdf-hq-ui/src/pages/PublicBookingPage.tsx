@@ -1,5 +1,7 @@
+import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Autocomplete,
@@ -8,6 +10,10 @@ import {
   Card,
   CardContent,
   Divider,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Chip,
   Checkbox,
   CircularProgress,
@@ -27,25 +33,32 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PersonIcon from '@mui/icons-material/Person';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
-import { Bookings } from '../api/bookings';
+import {
+  Bookings,
+  loadPublicBookingLookupToken,
+  storePublicBookingLookupToken,
+  type PublicBookingCheckoutDTO,
+  type PublicBookingQuoteDTO,
+} from '../api/bookings';
 import { API_BASE_URL } from '../api/client';
 import { Meta } from '../api/meta';
-import type { BookingDTO, RoomDTO, ServiceCatalogDTO } from '../api/types';
+import type { BookingDTO, DatafastCheckoutDTO, ServiceCatalogDTO } from '../api/types';
 import { Engineers, type PublicEngineer } from '../api/engineers';
 import { Services } from '../api/services';
-import { Rooms } from '../api/rooms';
 import { STUDIO_MAP_URL, STUDIO_WHATSAPP_URL } from '../config/appConfig';
-import { defaultRoomsForService, sameRooms } from '../utils/publicBookingRooms';
 import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore';
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
+import { resolveRuntimeCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 interface FormState {
   fullName: string;
   email: string;
   phone: string;
+  serviceOfferingId: string;
   serviceType: string;
   startsAt: string;
   durationMinutes: number;
@@ -54,6 +67,8 @@ interface FormState {
   engineerName: string;
   resourceLabels: string[];
 }
+
+export type PublicBookingPreset = 'dj-booth';
 
 type BookingWithAliases = BookingDTO & {
   pbStartsAt?: string;
@@ -74,9 +89,57 @@ const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
-const ROOM_FALLBACKS = ['Live Room', 'Control Room', 'Vocal Booth', 'DJ Booth'] as const;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+const createBookingIdempotencyKey = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `service-booking-${crypto.randomUUID()}`;
+  }
+  return `service-booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const formatMinorAmount = (currency: string, amountMinor: number): string =>
+  `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const PUBLIC_BOOKING_PRESETS: Record<
+  PublicBookingPreset,
+  {
+    path: string;
+    serviceCode: string;
+    eyebrow: string;
+    title: string;
+    description: string;
+    introChips: string[];
+    contactTitle: string;
+    contactDescription: string;
+    calendarNote: string;
+    durationNote: string;
+    notesPlaceholder: string;
+  }
+> = {
+  'dj-booth': {
+    path: '/dj-booth',
+    serviceCode: 'dj-booth-practice',
+    eyebrow: 'DJ Booth',
+    title: 'Reserva práctica en DJ Booth',
+    description:
+      'Agenda horas de práctica o alquiler del DJ Booth. Este enlace usa el servicio Práctica en DJ Booth para asignar el booth automáticamente.',
+    introChips: [
+      '1. Elige horario para DJ Booth',
+      '2. Reservamos por horas',
+      '3. Confirmamos por email o WhatsApp',
+    ],
+    contactTitle: 'Datos para reservar tu booth',
+    contactDescription: 'Usa un correo válido para recibir la confirmación de tu práctica en DJ Booth.',
+    calendarNote: 'Bloque tentativo para el DJ Booth.',
+    durationNote: 'Reserva por horas de práctica (30 min mínimo).',
+    notesPlaceholder: 'Cuéntanos si traes USB/controlador, estilo musical o cualquier requerimiento para practicar.',
+  },
+};
 
 const zoneLabel = (zone: string) => {
   try {
@@ -101,10 +164,8 @@ const normalizeServiceToken = (value: string) => {
 const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType | null => {
   const trimmed = raw.trim();
   if (!trimmed) return null;
-  if (/^\d+$/.test(trimmed)) {
-    const matchById = list.find((svc) => svc.id === trimmed);
-    if (matchById) return matchById;
-  }
+  const matchByIdentity = list.find((svc) => svc.id === trimmed || svc.code === trimmed);
+  if (matchByIdentity) return matchByIdentity;
   const token = normalizeServiceToken(trimmed);
   if (!token) return null;
   const exact = list.find((svc) => normalizeServiceToken(svc.name) === token);
@@ -115,6 +176,14 @@ const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType 
   });
   return partial ?? null;
 };
+
+const resolvePresetService = (
+  presetConfig: (typeof PUBLIC_BOOKING_PRESETS)[PublicBookingPreset],
+  list: ServiceType[],
+): ServiceType | null => list.find((service) => service.code === presetConfig.serviceCode) ?? null;
+
+const serviceResourceLabels = (service: ServiceType | null | undefined): string[] =>
+  (service?.defaultResources ?? []).map((resource) => resource.sdrResourceName);
 
 const ensureDiegoOption = (list: PublicEngineer[]): PublicEngineer[] => {
   return list;
@@ -159,20 +228,20 @@ export const resolveFirstAvailableShortcut = ({
   return limitedStudio.setZone(userTimeZone);
 };
 
-const buildInitialForm = (defaultService: string, roomOptions: string[]) => {
+const buildInitialForm = () => {
   const start = alignToStepMinutes(DateTime.now().plus({ minutes: 90 }));
-  const initialRooms = defaultRoomsForService(defaultService, roomOptions);
   return {
     fullName: '',
     email: '',
     phone: '',
-    serviceType: defaultService,
+    serviceOfferingId: '',
+    serviceType: '',
     startsAt: toLocalInputValue(start.toJSDate()),
     durationMinutes: 60,
     notes: '',
     engineerId: null,
     engineerName: '',
-    resourceLabels: initialRooms,
+    resourceLabels: [],
   };
 };
 
@@ -243,7 +312,18 @@ const toFriendlyBookingError = (error: unknown): string => {
   return message;
 };
 
-export default function PublicBookingPage() {
+interface PublicBookingPageProps {
+  preset?: PublicBookingPreset;
+}
+
+export default function PublicBookingPage({ preset }: PublicBookingPageProps = {}) {
+  useMetaTags({
+    title: 'Reservar',
+    description: 'Reserva una sesión de estudio, clase o servicio en TDF Records.',
+  });
+
+  const location = useLocation();
+  const presetConfig = preset ? PUBLIC_BOOKING_PRESETS[preset] : null;
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: Meta.health,
@@ -255,40 +335,17 @@ export default function PublicBookingPage() {
     queryFn: () => Services.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
-  const roomsQuery = useQuery<RoomDTO[]>({
-    queryKey: ['rooms', 'public'],
-    queryFn: () => Rooms.listPublic(),
-    staleTime: 5 * 60 * 1000,
-  });
-  const publicRooms = useMemo<RoomDTO[]>(
-    () => (roomsQuery.data ?? []).filter((room) => room.roomId.trim() !== '' && room.rName.trim() !== ''),
-    [roomsQuery.data],
-  );
-  const services = useMemo<ServiceType[]>(() => {
-    const merged = mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
-    return merged.filter((svc) => svc.priceCents != null);
+  const baseServices = useMemo<ServiceType[]>(() => {
+    return mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
   }, [serviceCatalogQuery.data]);
-  const roomOptions = useMemo<string[]>(() => {
-    const apiRooms = publicRooms.map((r) => r.rName).filter(Boolean);
-    const unique = Array.from(new Set(apiRooms));
-    return unique.length ? unique : [...ROOM_FALLBACKS];
-  }, [publicRooms]);
-  const roomIdByLabel = useMemo(() => {
-    const lookup = new Map<string, string | null>();
-    publicRooms.forEach((room) => {
-      const label = room.rName.trim();
-      const existing = lookup.get(label);
-      if (existing === undefined) {
-        lookup.set(label, room.roomId);
-        return;
-      }
-      if (existing !== room.roomId) {
-        lookup.set(label, null);
-      }
-    });
-    return lookup;
-  }, [publicRooms]);
-  const defaultService = services[0]?.name ?? 'Reserva';
+  const presetService = useMemo(
+    () => (presetConfig ? resolvePresetService(presetConfig, baseServices) : null),
+    [baseServices, presetConfig],
+  );
+  const services = baseServices;
+  const publicRoutePath = presetConfig?.path ?? '/reservar';
+  const loginPath = `/login?redirect=${encodeURIComponent(publicRoutePath)}`;
+  const signupPath = `/login?signup=1&redirect=${encodeURIComponent(publicRoutePath)}`;
   const { session, logout } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
@@ -298,19 +355,16 @@ export default function PublicBookingPage() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
   }, []);
   const studioTimeZone = useMemo(
-    () => env.read('VITE_TZ') ?? 'America/Guayaquil',
+    () => env.read('VITE_DEFAULT_TIMEZONE') ?? 'UTC',
     [],
   );
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
-  const studioCurrency = useMemo(() => services[0]?.currency ?? 'USD', [services]);
-  const usingFallbackServices =
+  const studioCurrency = useMemo(() => services[0]?.currency ?? resolveRuntimeCurrency(), [services]);
+  const serviceCatalogUnavailable =
     serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
-  const usingFallbackRooms =
-    roomsQuery.isFetched && (roomsQuery.isError || (roomsQuery.data?.length ?? 0) === 0);
   const requiresManualConfirmation =
-    usingFallbackServices ||
-    usingFallbackRooms ||
+    serviceCatalogUnavailable ||
     healthQuery.isError ||
     (Boolean(healthQuery.data?.status) && String(healthQuery.data?.status).toLowerCase() !== 'ok');
   const bookingStatusChip = useMemo(() => {
@@ -327,15 +381,50 @@ export default function PublicBookingPage() {
   }, [healthQuery.data, healthQuery.isLoading, requiresManualConfirmation]);
   const bookingReadinessNote = useMemo(() => {
     if (!requiresManualConfirmation) return null;
-    if (usingFallbackServices || usingFallbackRooms) {
-      return 'Estamos mostrando la agenda base mientras reconectamos el estudio. Si no ves el servicio exacto o la sala final, envía la solicitud igual y confirmamos los detalles contigo por correo o WhatsApp.';
+    if (serviceCatalogUnavailable) {
+      return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
     }
     return 'Puedes dejar la solicitud ahora mismo. Confirmaremos disponibilidad y recursos contigo por correo o WhatsApp antes de bloquear la sesión.';
-  }, [requiresManualConfirmation, usingFallbackRooms, usingFallbackServices]);
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(defaultService, roomOptions));
+  }, [requiresManualConfirmation, serviceCatalogUnavailable]);
+  const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
+  const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
+  const pageDescription =
+    presetConfig?.description ??
+    'Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no tienes cuenta, crearemos tu acceso automáticamente.';
+  const introChips = presetConfig?.introChips ?? [
+    '1. Agenda sin crear cuenta',
+    '2. Confirmamos por email',
+    '3. Coordinamos por WhatsApp si lo dejas',
+  ];
+  const contactTitle = presetConfig?.contactTitle ?? 'Datos de contacto';
+  const contactDescription =
+    presetConfig?.contactDescription ??
+    'Usa un correo válido para recibir la confirmación. Si eres nuevo, crearemos un perfil para ti.';
+  const calendarNote = presetConfig?.calendarNote ?? 'Bloque tentativo en el calendario.';
+  const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const notesPlaceholder =
+    presetConfig?.notesPlaceholder ?? 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)';
+  const [form, setForm] = useState<FormState>(buildInitialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState<PublicBookingCheckoutDTO | null>(null);
+  const [authoritativeQuote, setAuthoritativeQuote] = useState<PublicBookingQuoteDTO | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
+  const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
+  const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
+  const datafastFormRef = useRef<HTMLDivElement>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
+  const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const paypalClientId = useMemo(() => env.read('VITE_PAYPAL_CLIENT_ID') ?? '', []);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
+  const [manualReference, setManualReference] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
@@ -351,13 +440,27 @@ export default function PublicBookingPage() {
   useEffect(() => {
     if (!services.length) return;
     setForm((prev) => {
-      const serviceStillValid = services.some((svc) => svc.name === prev.serviceType);
+      if (presetService) {
+        if (prev.serviceOfferingId === presetService.id) return prev;
+        return {
+          ...prev,
+          serviceOfferingId: presetService.id,
+          serviceType: presetService.name,
+          resourceLabels: serviceResourceLabels(presetService),
+        };
+      }
+      const serviceStillValid = services.some((svc) => svc.id === prev.serviceOfferingId);
       if (serviceStillValid) return prev;
-      const nextService = services[0]?.name ?? prev.serviceType;
-      if (!nextService || nextService === prev.serviceType) return prev;
-      return { ...prev, serviceType: nextService, resourceLabels: defaultRoomsForService(nextService, roomOptions) };
+      const nextService = services[0];
+      if (!nextService) return prev;
+      return {
+        ...prev,
+        serviceOfferingId: nextService.id,
+        serviceType: nextService.name,
+        resourceLabels: serviceResourceLabels(nextService),
+      };
     });
-  }, [services, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     if (appliedStoredProfile.current) return;
@@ -367,29 +470,30 @@ export default function PublicBookingPage() {
       const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
-      const allowedServices = new Set(services.map((s) => s.name));
-      const storedService = stored.serviceType ?? defaultService;
       const nextService =
-        services.length === 0 || allowedServices.has(storedService) ? storedService : defaultService;
+        presetService ??
+        services.find((service) => service.id === stored.serviceOfferingId) ??
+        services[0];
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
         email: stored.email ?? prev.email,
         phone: stored.phone ?? prev.phone,
-        serviceType: nextService,
-        resourceLabels: defaultRoomsForService(nextService, roomOptions),
+        serviceOfferingId: nextService?.id ?? '',
+        serviceType: nextService?.name ?? '',
+        resourceLabels: serviceResourceLabels(nextService),
       }));
       setRememberProfile(true);
     } catch {
       // ignore parsing issues
     }
-  }, [defaultService, services, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
+    if (presetService) return;
     if (!services.length) return;
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
     if (!rawToken) return;
     const match = resolveServiceFromToken(rawToken, services);
@@ -397,10 +501,11 @@ export default function PublicBookingPage() {
     appliedServiceQuery.current = true;
     setForm((prev) => ({
       ...prev,
+      serviceOfferingId: match.id,
       serviceType: match.name,
-      resourceLabels: defaultRoomsForService(match.name, roomOptions),
+      resourceLabels: serviceResourceLabels(match),
     }));
-  }, [roomOptions, services]);
+  }, [location.search, presetService, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -429,10 +534,10 @@ export default function PublicBookingPage() {
       fullName: form.fullName.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
-      serviceType: form.serviceType,
+      serviceOfferingId: form.serviceOfferingId,
     };
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
-  }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceType]);
+  }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceOfferingId]);
 
   useEffect(() => {
     setEngineersLoading(true);
@@ -449,7 +554,7 @@ export default function PublicBookingPage() {
       .finally(() => setEngineersLoading(false));
   }, []);
 
-  const formDisabled = submitting || Boolean(success);
+  const formDisabled = submitting || Boolean(success) || serviceCatalogUnavailable;
 
   const sanitizeStart = useCallback(
     (candidate: DateTime, durationMinutes: number) => {
@@ -476,12 +581,29 @@ export default function PublicBookingPage() {
 
   const resetForm = useCallback(() => {
     setSuccess(null);
+    setCheckoutSuccess(null);
+    setAuthoritativeQuote(null);
+    setPaymentError(null);
+    setDatafastCheckout(null);
+    setDatafastDialogOpen(false);
+    setPaypalOrderId(null);
+    setPaypalDialogOpen(false);
+    setManualDialogOpen(false);
+    setManualReference('');
+    setTermsAccepted(false);
+    checkoutIdempotency.current = null;
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
-    setForm(buildInitialForm(defaultService, roomOptions));
+    const nextService = presetService ?? services[0];
+    setForm({
+      ...buildInitialForm(),
+      serviceOfferingId: nextService?.id ?? '',
+      serviceType: nextService?.name ?? '',
+      resourceLabels: serviceResourceLabels(nextService),
+    });
     setAssignEngineerLater(false);
-  }, [defaultService, roomOptions]);
+  }, [presetService, services]);
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -489,6 +611,13 @@ export default function PublicBookingPage() {
     if (!parsed.isValid) {
       setAvailabilityStatus('idle');
       setAvailabilityNote(null);
+      setAuthoritativeQuote(null);
+      return;
+    }
+    if (!form.serviceOfferingId) {
+      setAvailabilityStatus('idle');
+      setAvailabilityNote(null);
+      setAuthoritativeQuote(null);
       return;
     }
     const controller = new AbortController();
@@ -501,11 +630,19 @@ export default function PublicBookingPage() {
     if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
-    const url = `${API_BASE_URL}/bookings/public/availability?startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
+    setTermsAccepted(false);
+    checkoutIdempotency.current = null;
+    const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
     fetch(url, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`status ${res.status}`);
-        const data = (await res.json()) as { available?: boolean; isAvailable?: boolean; reason?: string } | null;
+        const data = (await res.json()) as {
+          available?: boolean;
+          isAvailable?: boolean;
+          reason?: string;
+          quote?: PublicBookingQuoteDTO | null;
+        } | null;
+        setAuthoritativeQuote(data?.quote ?? null);
         const isAvailable = data?.available ?? data?.isAvailable;
         if (isAvailable === false) {
           setAvailabilityStatus('unavailable');
@@ -519,13 +656,14 @@ export default function PublicBookingPage() {
         }
       })
       .catch((err) => {
+        setAuthoritativeQuote(null);
         if (controller.signal.aborted) {
           if (!didTimeout) return;
           setAvailabilityStatus('unknown');
           setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
           return;
         }
-        console.warn('No se pudo verificar disponibilidad', err);
+        logger.warn('No se pudo verificar disponibilidad', err);
         setAvailabilityStatus('unknown');
         setAvailabilityNote('No pudimos verificar disponibilidad ahora. Reintenta o confirmaremos contigo.');
       });
@@ -533,7 +671,7 @@ export default function PublicBookingPage() {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [availabilityNonce, form.durationMinutes, form.startsAt, userTimeZone]);
+  }, [availabilityNonce, form.durationMinutes, form.serviceOfferingId, form.startsAt, userTimeZone]);
 
   const validateContactStep = () => {
     if (!form.fullName.trim()) return 'Agrega tu nombre para continuar.';
@@ -546,7 +684,8 @@ export default function PublicBookingPage() {
   };
 
   const validateScheduleStep = () => {
-    if (!form.serviceType.trim()) return 'Selecciona un tipo de servicio.';
+    const selectedService = services.find((service) => service.id === form.serviceOfferingId);
+    if (!selectedService) return 'Selecciona un servicio publicado.';
     const parsedStartLocal = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
     if (!parsedStartLocal.isValid) return 'Selecciona una fecha y hora válida.';
     const now = DateTime.now().setZone(userTimeZone);
@@ -567,7 +706,7 @@ export default function PublicBookingPage() {
       const remaining = Math.max(0, Math.floor(closeStudio.diff(startStudio, 'minutes').minutes));
       return `La cita debe terminar antes de las ${closeStudio.toFormat('HH:mm')} (${studioZoneLabel}). Con esa hora, el máximo es ${remaining} min.`;
     }
-    if (requiresEngineer(form.serviceType) && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
+    if (selectedService.requiresEngineer && !assignEngineerLater && !form.engineerId && !form.engineerName.trim()) {
       return 'Selecciona un ingeniero para grabación/mezcla/mastering.';
     }
     if (availabilityStatus === 'unavailable') {
@@ -619,33 +758,61 @@ export default function PublicBookingPage() {
     }
 
     setSubmitting(true);
-    const autoRooms = defaultRoomsForService(form.serviceType, roomOptions);
-    const roomsToSend =
-      autoRooms.length > 0 ? autoRooms : roomOptions.length > 0 ? roomOptions.slice(0, 1) : [];
-    const resolvedRoomIds = roomsToSend.map((label) => roomIdByLabel.get(label.trim()) ?? null);
-    const roomIdsToSend = resolvedRoomIds.every((roomId): roomId is string => typeof roomId === 'string' && roomId.trim() !== '')
-      ? resolvedRoomIds
-      : null;
-    if (roomsToSend.length > 0) {
-      setForm((prev) => (sameRooms(prev.resourceLabels, roomsToSend) ? prev : { ...prev, resourceLabels: roomsToSend }));
+    const selectedService = services.find((service) => service.id === form.serviceOfferingId);
+    if (!selectedService) {
+      setError('El servicio seleccionado ya no está disponible. Elige otro servicio publicado.');
+      setSubmitting(false);
+      return;
     }
     const engineerPartyId = assignEngineerLater ? null : form.engineerId;
     const engineerName = assignEngineerLater ? null : form.engineerName.trim() || null;
     try {
       const startsAtIso = parsedStartLocal.toUTC().toISO();
-      const dto = await Bookings.createPublic({
-        pbFullName: form.fullName.trim(),
-        pbEmail: form.email.trim(),
-        pbPhone: form.phone.trim() || null,
-        pbServiceType: form.serviceType.trim(),
-        pbStartsAt: startsAtIso,
-        pbDurationMinutes: durationMinutes,
-        pbNotes: form.notes.trim() || null,
-        pbEngineerPartyId: engineerPartyId,
-        pbEngineerName: engineerName,
-        pbResourceIds: roomIdsToSend,
-      });
-      setSuccess(dto);
+      if (!startsAtIso) throw new Error('No pudimos normalizar la hora seleccionada.');
+      if (authoritativeQuote) {
+        if (!termsAccepted) {
+          setError('Acepta la política y el precio de la reserva para crear el checkout del depósito.');
+          return;
+        }
+        const checkoutPayload = {
+          pbcFullName: form.fullName.trim(),
+          pbcEmail: form.email.trim(),
+          pbcPhone: form.phone.trim() || null,
+          pbcServiceOfferingId: selectedService.id,
+          pbcStartsAt: startsAtIso,
+          pbcDurationMinutes: durationMinutes,
+          pbcNotes: form.notes.trim() || null,
+          pbcEngineerPartyId: engineerPartyId,
+          pbcEngineerName: engineerName,
+          pbcResourceIds: null,
+          pbcTermsAccepted: true,
+        };
+        const fingerprint = JSON.stringify(checkoutPayload);
+        if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
+          checkoutIdempotency.current = { fingerprint, key: createBookingIdempotencyKey() };
+        }
+        const checkout = await Bookings.createPublicCheckout(
+          checkoutPayload,
+          checkoutIdempotency.current.key,
+        );
+        storePublicBookingLookupToken(checkout.booking.bookingId, checkout.lookupToken);
+        setCheckoutSuccess(checkout);
+        setSuccess(checkout.booking);
+      } else {
+        const dto = await Bookings.createPublic({
+          pbFullName: form.fullName.trim(),
+          pbEmail: form.email.trim(),
+          pbPhone: form.phone.trim() || null,
+          pbServiceOfferingId: selectedService.id,
+          pbStartsAt: startsAtIso,
+          pbDurationMinutes: durationMinutes,
+          pbNotes: form.notes.trim() || null,
+          pbEngineerPartyId: engineerPartyId,
+          pbEngineerName: engineerName,
+          pbResourceIds: null,
+        });
+        setSuccess(dto);
+      }
     } catch (err) {
       setError(toFriendlyBookingError(err));
     } finally {
@@ -686,12 +853,15 @@ export default function PublicBookingPage() {
       if (svc.priceCents == null) return;
       const display = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
       const unit = svc.billingUnit ? ` / ${svc.billingUnit}` : '';
-      map.set(svc.name, `${display}${unit}`);
+      map.set(svc.id, `${display}${unit}`);
     });
     return map;
   }, [services]);
   const estimatePriceLabel = useMemo(() => {
-    const svc = services.find((s) => s.name === form.serviceType);
+    if (authoritativeQuote?.durationMinutes === normalizeDurationMinutes(form.durationMinutes)) {
+      return `${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)} total · depósito ${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.depositMinor)}`;
+    }
+    const svc = services.find((service) => service.id === form.serviceOfferingId);
     if (svc?.priceCents == null) return null;
     const base = `${svc.currency} ${(svc.priceCents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
     if (svc.billingUnit?.toLowerCase().includes('hora')) {
@@ -700,8 +870,8 @@ export default function PublicBookingPage() {
       return `${svc.currency} ${total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} aprox (${hours.toFixed(1)}h)`;
     }
     return `${base}${svc.billingUnit ? ` / ${svc.billingUnit}` : ''}`;
-  }, [form.durationMinutes, form.serviceType, services]);
-  const selectedPrice = servicePriceLookup.get(form.serviceType);
+  }, [authoritativeQuote, form.durationMinutes, form.serviceOfferingId, services]);
+  const selectedPrice = servicePriceLookup.get(form.serviceOfferingId);
 
   const priceBanner = useMemo(() => {
     if (!form.serviceType) return null;
@@ -742,14 +912,11 @@ export default function PublicBookingPage() {
     return bookingWindow.startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY);
   }, [bookingWindow]);
   const suggestedRooms = useMemo(
-    () => defaultRoomsForService(form.serviceType, roomOptions),
-    [form.serviceType, roomOptions],
+    () => serviceResourceLabels(services.find((service) => service.id === form.serviceOfferingId)),
+    [form.serviceOfferingId, services],
   );
-
-  const requiresEngineer = (service: string) => {
-    const lowered = service.toLowerCase();
-    return lowered.includes('graba') || lowered.includes('mezcl') || lowered.includes('master');
-  };
+  const selectedServiceRequiresEngineer =
+    services.find((service) => service.id === form.serviceOfferingId)?.requiresEngineer ?? false;
 
   const buildSummary = useCallback(
     (booking?: BookingDTO | null) => {
@@ -776,7 +943,7 @@ export default function PublicBookingPage() {
         (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
       const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
       const lines = [
-        'Reserva TDF',
+        presetConfig ? `Reserva TDF - ${presetConfig.eyebrow}` : 'Reserva TDF',
         `Servicio: ${booking?.serviceType ?? form.serviceType}`,
         `Inicio: ${startLabel}`,
         `Duración: ${duration} min`,
@@ -790,7 +957,7 @@ export default function PublicBookingPage() {
       }
       return lines.join('\n');
     },
-    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, selectedPrice, suggestedRooms, userTimeZone],
+    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, presetConfig, selectedPrice, suggestedRooms, userTimeZone],
   );
 
   const copySummary = useCallback(
@@ -815,7 +982,10 @@ export default function PublicBookingPage() {
 
   useEffect(() => {
     setForm((prev) => {
-      if (sameRooms(prev.resourceLabels, suggestedRooms)) return prev;
+      if (
+        prev.resourceLabels.length === suggestedRooms.length
+        && prev.resourceLabels.every((room, index) => room === suggestedRooms[index])
+      ) return prev;
       return { ...prev, resourceLabels: suggestedRooms };
     });
   }, [suggestedRooms]);
@@ -982,6 +1152,197 @@ export default function PublicBookingPage() {
     return slots.slice(0, 12);
   }, [form.durationMinutes, form.startsAt, studioTimeZone, studioZoneLabel, userTimeZone, userZoneLabel]);
 
+  const checkoutLookupToken = useMemo(() => {
+    if (!checkoutSuccess) return null;
+    return checkoutSuccess.lookupToken
+      ?? loadPublicBookingLookupToken(checkoutSuccess.booking.bookingId);
+  }, [checkoutSuccess]);
+  const datafastReturnUrl = useMemo(() => {
+    if (!checkoutSuccess || typeof window === 'undefined') return '';
+    return new URL(
+      `/reservas/orden/${checkoutSuccess.booking.bookingId}`,
+      window.location.origin,
+    ).toString();
+  }, [checkoutSuccess]);
+
+  const handleDatafastDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerCheckout = await Bookings.createPublicDatafastCheckout(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setDatafastCheckout(providerCheckout);
+      setDatafastDialogOpen(true);
+      setDatafastWidgetKey((current) => current + 1);
+    } catch {
+      setPaymentError('No pudimos iniciar Datafast. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess]);
+
+  const handlePaypalDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    if (!paypalClientId) {
+      setPaymentError('PayPal no está disponible en este navegador. La reserva sigue sin pago.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerOrder = await Bookings.createPublicPaypalOrder(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setPaypalOrderId(providerOrder.pcPaypalOrderId);
+      setPaypalDialogOpen(true);
+    } catch {
+      setPaymentError('No pudimos crear la orden PayPal. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess, paypalClientId]);
+
+  const handleManualDeposit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden. Crea una nueva reserva.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const updated = await Bookings.selectPublicManualPayment(
+        checkoutSuccess.booking.bookingId,
+        checkoutLookupToken,
+      );
+      setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+      setManualDialogOpen(true);
+    } catch {
+      setPaymentError('No pudimos seleccionar transferencia. La reserva sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess]);
+
+  const handleManualEvidenceSubmit = useCallback(async () => {
+    if (!checkoutSuccess || !checkoutLookupToken) return;
+    const reference = manualReference.trim();
+    if (reference.length < 3 || reference.length > 120) {
+      setPaymentError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const updated = await Bookings.submitPublicManualEvidence(
+        checkoutSuccess.booking.bookingId,
+        reference,
+        checkoutLookupToken,
+      );
+      setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+      setManualDialogOpen(false);
+      setManualReference('');
+      setSnackbar({
+        open: true,
+        message: 'Referencia enviada para revisión. El depósito todavía no está confirmado.',
+      });
+    } catch {
+      setPaymentError('No pudimos enviar la referencia. No se confirmó ningún pago.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  }, [checkoutLookupToken, checkoutSuccess, manualReference]);
+
+  useEffect(() => {
+    if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
+    window.wpwlOptions = { locale: 'es', style: 'card' };
+    const script = document.createElement('script');
+    script.src = datafastCheckout.dcWidgetUrl;
+    script.async = true;
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar el formulario Datafast. No se confirmó ningún pago.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
+
+  useEffect(() => {
+    const paypalOffered = checkoutSuccess?.paymentMethods?.includes('paypal') ?? false;
+    if (!paypalOffered || !paypalClientId || typeof window === 'undefined') return;
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkoutSuccess?.quote.currency ?? 'USD')}`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar PayPal. La reserva continúa sin pago confirmado.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [checkoutSuccess?.paymentMethods, checkoutSuccess?.quote.currency, paypalClientId]);
+
+  useEffect(() => {
+    if (
+      !paypalDialogOpen
+      || !paypalReady
+      || !paypalOrderId
+      || !checkoutSuccess
+      || !checkoutLookupToken
+      || !paypalButtonRef.current
+      || typeof window === 'undefined'
+      || !window.paypal
+    ) return;
+    paypalButtonRef.current.innerHTML = '';
+    const buttons = window.paypal.Buttons({
+      createOrder: () => paypalOrderId,
+      onApprove: async (data) => {
+        if (data.orderID !== paypalOrderId) {
+          setPaymentError('PayPal devolvió una referencia distinta. No se capturó el pago.');
+          return;
+        }
+        setPaymentBusy(true);
+        try {
+          const updated = await Bookings.capturePublicPaypalOrder(
+            checkoutSuccess.booking.bookingId,
+            paypalOrderId,
+            checkoutLookupToken,
+          );
+          setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
+          setSuccess(updated.booking);
+          setPaypalDialogOpen(false);
+          setPaypalOrderId(null);
+          setSnackbar({
+            open: true,
+            message: updated.paymentStatus === 'paid'
+              ? 'PayPal verificó el depósito en el servidor.'
+              : 'PayPal respondió, pero el depósito todavía no está confirmado.',
+          });
+        } catch {
+          setPaymentError('No pudimos verificar la captura PayPal. No mostramos el depósito como pagado.');
+        } finally {
+          setPaymentBusy(false);
+        }
+      },
+      onCancel: () => setPaymentError('Cancelaste PayPal. La reserva continúa sin pago.'),
+      onError: () => setPaymentError('PayPal no completó la operación. La reserva continúa sin pago.'),
+    });
+    void buttons.render(paypalButtonRef.current);
+    return () => buttons.close?.();
+  }, [checkoutLookupToken, checkoutSuccess, paypalDialogOpen, paypalOrderId, paypalReady]);
+
   if (success) {
     const successWithAliases = success as BookingWithAliases | null;
     const successStartIso =
@@ -1024,6 +1385,10 @@ export default function PublicBookingPage() {
             `tdf-booking-${success.bookingId}@tdf`,
           )
         : null;
+    const depositPaid = checkoutSuccess?.paymentStatus === 'paid';
+    const depositProcessing = checkoutSuccess?.paymentStatus === 'processing';
+    const paymentMethods = checkoutSuccess?.paymentMethods ?? [];
+    const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
       <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
@@ -1041,21 +1406,41 @@ export default function PublicBookingPage() {
             <Stack spacing={2.5}>
               <Stack spacing={0.6}>
                 <Typography variant="overline" color="text.secondary">
-                  Agenda pública
+                  {pageEyebrow}
                 </Typography>
                 <Typography variant="h4" fontWeight={800}>
-                  Reserva enviada
+                  {checkoutSuccess
+                    ? depositPaid
+                      ? 'Depósito verificado · reserva confirmada'
+                      : depositProcessing
+                        ? 'Depósito en verificación'
+                        : 'Orden creada · depósito pendiente'
+                    : 'Reserva enviada'}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.
+                  {checkoutSuccess
+                    ? depositPaid
+                      ? 'El servidor verificó el depósito. El saldo y la prestación del servicio permanecen en estados separados.'
+                      : depositProcessing
+                        ? 'El proveedor todavía no confirmó el resultado. Esta pantalla no representa un pago exitoso.'
+                        : 'El horario está retenido temporalmente, pero todavía no está pagado ni confirmado. Solo una verificación del proveedor puede confirmar el depósito.'
+                    : 'Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.'}
                 </Typography>
               </Stack>
 
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Alert severity="success">
-                    Reserva creada. ID <strong>{success.bookingId}</strong> · Servicio:{' '}
+                  <Alert severity={checkoutSuccess ? (depositPaid ? 'success' : 'info') : 'success'}>
+                    {checkoutSuccess
+                      ? depositPaid ? 'Depósito pagado y verificado' : depositProcessing ? 'Pago en verificación' : 'Orden creada, pago pendiente'
+                      : 'Reserva creada'}. ID{' '}
+                    <strong>{success.bookingId}</strong> · Servicio:{' '}
                     <strong>{success.serviceType ?? form.serviceType}</strong>
+                    {checkoutSuccess && (
+                      <>
+                        {' '}· Depósito: <strong>{formatMinorAmount(checkoutSuccess.quote.currency, checkoutSuccess.quote.depositMinor)}</strong>
+                      </>
+                    )}
                   </Alert>
                 </Grid>
                 <Grid item xs={12}>
@@ -1076,20 +1461,98 @@ export default function PublicBookingPage() {
                         <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
                         {successRooms.length > 0 && <Chip label={`Salas: ${successRooms.join(' + ')}`} size="small" />}
                         {successEngineer && <Chip label={`Ingeniero: ${successEngineer}`} size="small" />}
+                        {checkoutSuccess && (
+                          <Chip
+                            label={`Saldo posterior: ${formatMinorAmount(checkoutSuccess.quote.currency, checkoutSuccess.quote.balanceMinor)}`}
+                            size="small"
+                          />
+                        )}
                       </Stack>
                     </CardContent>
                   </Card>
                 </Grid>
+                {checkoutSuccess && !depositPaid && (
+                  <Grid item xs={12}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Stack spacing={1.5}>
+                          <Typography variant="subtitle1" fontWeight={800}>Pagar depósito</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Elige únicamente un método habilitado por el servidor. Abrir un proveedor no confirma el pago.
+                          </Typography>
+                          {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+                          {manualPayment?.status === 'submitted' && (
+                            <Alert severity="info" variant="outlined">
+                              Referencia recibida. Permanece pendiente hasta que una persona autorizada la compare con el estado bancario.
+                            </Alert>
+                          )}
+                          {manualPayment?.status === 'under_review' && (
+                            <Alert severity="info" variant="outlined">
+                              Transferencia en revisión. Este estado no significa pago confirmado.
+                            </Alert>
+                          )}
+                          {manualPayment?.status === 'rejected' && (
+                            <Alert severity="warning" variant="outlined">
+                              La evidencia anterior fue rechazada. Verifica la referencia y vuelve a enviarla.
+                            </Alert>
+                          )}
+                          {paymentMethods.length === 0 && (
+                            <Alert severity="info" variant="outlined">
+                              No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
+                            </Alert>
+                          )}
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            {paymentMethods.includes('datafast') && (
+                              <Button
+                                variant="contained"
+                                disabled={paymentBusy}
+                                onClick={() => void handleDatafastDeposit()}
+                              >
+                                Pagar con tarjeta · Datafast
+                              </Button>
+                            )}
+                            {paymentMethods.includes('paypal') && paypalClientId && (
+                              <Button
+                                variant="outlined"
+                                disabled={paymentBusy}
+                                onClick={() => void handlePaypalDeposit()}
+                              >
+                                Pagar con PayPal
+                              </Button>
+                            )}
+                            {paymentMethods.includes('bank_transfer') && (
+                              <Button
+                                variant="outlined"
+                                disabled={paymentBusy}
+                                onClick={() => void handleManualDeposit()}
+                              >
+                                Registrar transferencia
+                              </Button>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                )}
                 <Grid item xs={12}>
                   <Alert severity="info" variant="outlined">
                     <Typography variant="subtitle2" fontWeight={800} gutterBottom>
                       Qué sigue
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).
+                      {checkoutSuccess
+                        ? depositPaid
+                          ? '• Depósito verificado por el servidor; revisa el saldo antes de la sesión.'
+                          : `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
+                        : '• Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      • Llega 10 minutos antes para hacer check-in y preparar la sala.
+                      {checkoutSuccess
+                        ? paymentMethods.length > 0
+                          ? '• El estado cambia solo después de una verificación del servidor.'
+                          : '• Datafast/PayPal permanecen ocultos mientras el servidor no habilite un rail real.'
+                        : '• Llega 10 minutos antes para hacer check-in y preparar la sala.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       • Si vas tarde o necesitas mover el horario, escríbenos por WhatsApp.
@@ -1101,10 +1564,12 @@ export default function PublicBookingPage() {
                     <Button
                       variant="outlined"
                       component={RouterLink}
-                      to="/login?redirect=/estudio/calendario"
+                      to={checkoutSuccess
+                        ? `/reservas/orden/${success.bookingId}`
+                        : '/login?redirect=/estudio/calendario'}
                       size="medium"
                     >
-                      Ver mi reserva
+                      {checkoutSuccess ? 'Seguir esta orden' : 'Ver mi reserva'}
                     </Button>
                     <Button variant="contained" size="medium" onClick={resetForm}>
                       Crear otra reserva
@@ -1145,6 +1610,95 @@ export default function PublicBookingPage() {
             </Stack>
           </CardContent>
         </Card>
+        <Dialog
+          open={datafastDialogOpen}
+          onClose={() => setDatafastDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar depósito con Datafast</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                El formulario es alojado por el proveedor. Al volver, TDF consultará el estado en el servidor antes de confirmar.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {datafastCheckout && datafastReturnUrl && (
+                <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
+                  <form
+                    action={datafastReturnUrl}
+                    className="paymentWidgets"
+                    data-brands="VISA MASTER DINERS AMEX DISCOVER"
+                  />
+                </Box>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDatafastWidgetKey((current) => current + 1)}>Reintentar carga</Button>
+            <Button onClick={() => setDatafastDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={paypalDialogOpen}
+          onClose={() => setPaypalDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar depósito con PayPal</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                Aprobar en PayPal no es confirmación. TDF capturará y verificará importe, moneda, comercio y referencia en el servidor.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPaypalDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={manualDialogOpen}
+          onClose={() => { if (!paymentBusy) setManualDialogOpen(false); }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Registrar transferencia bancaria</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="warning" variant="outlined">
+                Enviar una referencia no confirma el depósito. TDF debe verificar el movimiento bancario y el importe exacto antes de confirmar la reserva.
+              </Alert>
+              <Typography variant="body2" color="text.secondary">
+                Usa únicamente las instrucciones bancarias oficiales que TDF te haya proporcionado. No incluyas claves, números completos de cuenta ni datos de tarjeta.
+              </Typography>
+              <TextField
+                label="Referencia o comprobante bancario"
+                value={manualReference}
+                onChange={(event) => setManualReference(event.target.value)}
+                inputProps={{ maxLength: 120 }}
+                helperText="3–120 caracteres. La referencia queda protegida para revisión financiera."
+                autoComplete="off"
+                fullWidth
+              />
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setManualDialogOpen(false)} disabled={paymentBusy} color="inherit">
+              Cerrar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => void handleManualEvidenceSubmit()}
+              disabled={paymentBusy || manualReference.trim().length < 3}
+            >
+              Enviar para revisión
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }
@@ -1165,23 +1719,26 @@ export default function PublicBookingPage() {
           <Stack spacing={2.5}>
             <Stack spacing={0.6}>
               <Typography variant="overline" color="text.secondary">
-                Agenda pública
+                {pageEyebrow}
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography variant="h4" fontWeight={800}>
-                  Reserva un servicio con TDF
+                  {pageTitle}
                 </Typography>
                 {bookingStatusChip}
               </Stack>
               <Typography variant="body1" color="text.secondary">
-                Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no
-                tienes cuenta, crearemos tu acceso automáticamente.
+                {pageDescription}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.
+                {authoritativeQuote ? (
+                  <>Precio y depósito calculados por el servidor en <strong>{authoritativeQuote.currency}</strong>.</>
+                ) : (
+                  <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
+                )}
               </Typography>
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
@@ -1194,9 +1751,9 @@ export default function PublicBookingPage() {
                 </Alert>
               )}
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                <Chip label="1. Agenda sin crear cuenta" size="small" variant="outlined" />
-                <Chip label="2. Confirmamos por email" size="small" variant="outlined" />
-                <Chip label="3. Coordinamos por WhatsApp si lo dejas" size="small" variant="outlined" />
+                {introChips.map((label) => (
+                  <Chip key={label} label={label} size="small" variant="outlined" />
+                ))}
               </Stack>
               <Card
                 variant="outlined"
@@ -1222,10 +1779,10 @@ export default function PublicBookingPage() {
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                      <Button size="small" variant="outlined" component={RouterLink} to="/login?redirect=/reservar">
+                      <Button size="small" variant="outlined" component={RouterLink} to={loginPath}>
                         Iniciar sesión
                       </Button>
-                      <Button size="small" variant="text" component={RouterLink} to="/login?signup=1&redirect=/reservar">
+                      <Button size="small" variant="text" component={RouterLink} to={signupPath}>
                         Crear cuenta
                       </Button>
                       {session && (
@@ -1249,22 +1806,22 @@ export default function PublicBookingPage() {
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <PersonIcon color="primary" fontSize="small" />
                     <Typography variant="subtitle2" color="text.secondary">
-                      Datos de contacto
+                      {contactTitle}
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    Usa un correo válido para recibir la confirmación. Si eres nuevo, crearemos un perfil para ti.
+                    {contactDescription}
                   </Typography>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <EventAvailableIcon color="primary" fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      Bloque tentativo en el calendario.
+                      {calendarNote}
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <AccessTimeIcon color="primary" fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      Duración estándar de 1h (ajústala si necesitas más tiempo).
+                      {durationNote}
                     </Typography>
                   </Stack>
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -1336,6 +1893,7 @@ export default function PublicBookingPage() {
                           </Grid>
                           <Grid item xs={12}>
                             <TextField
+                              type="tel"
                               label="WhatsApp / Teléfono"
                               value={form.phone}
                               onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -1388,37 +1946,45 @@ export default function PublicBookingPage() {
                         <>
                           <Grid item xs={12}>
                             <TextField
-                              label="Servicio"
+                              label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
                               select
-                              value={form.serviceType}
+                              value={form.serviceOfferingId}
                               onChange={(e) => {
-                                const nextService = e.target.value;
+                                const nextService = services.find((service) => service.id === e.target.value);
+                                if (!nextService) return;
                                 setForm((prev) => ({
                                   ...prev,
-                                  serviceType: nextService,
-                                  resourceLabels: defaultRoomsForService(nextService, roomOptions),
+                                  serviceOfferingId: nextService.id,
+                                  serviceType: nextService.name,
+                                  resourceLabels: serviceResourceLabels(nextService),
                                 }));
                               }}
                               fullWidth
                               required
-                              disabled={formDisabled}
+                              disabled={formDisabled || Boolean(presetService)}
                               helperText={
-                                estimatePriceLabel
+                                presetService
+                                  ? `Servicio preseleccionado para este enlace. ${
+                                      estimatePriceLabel
+                                        ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+                                        : `Moneda: ${studioCurrency}`
+                                    }`
+                                  : estimatePriceLabel
                                   ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
                                   : `Moneda: ${studioCurrency}`
                               }
                             >
                               {services.map((svc) => (
-                                <MenuItem key={svc.id} value={svc.name}>
+                                <MenuItem key={svc.id} value={svc.id}>
                                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
                                     <Typography>{svc.name}</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                      {servicePriceLookup.get(svc.name)}
+                                      {servicePriceLookup.get(svc.id)}
                                     </Typography>
                                   </Stack>
                                 </MenuItem>
                               ))}
-                              {services.length === 0 && <MenuItem value={defaultService}>{defaultService}</MenuItem>}
+                              {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
                             </TextField>
                           </Grid>
                           <Grid item xs={12} sm={7}>
@@ -1586,7 +2152,7 @@ export default function PublicBookingPage() {
                               </Stack>
                             </Grid>
                           )}
-                          {requiresEngineer(form.serviceType) && (
+                          {selectedServiceRequiresEngineer && (
                             <Grid item xs={12}>
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} alignItems="center">
@@ -1690,7 +2256,7 @@ export default function PublicBookingPage() {
                               fullWidth
                               multiline
                               minRows={3}
-                              placeholder="Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)"
+                              placeholder={notesPlaceholder}
                               disabled={formDisabled}
                             />
                           </Grid>
@@ -1756,7 +2322,13 @@ export default function PublicBookingPage() {
                                       variant="outlined"
                                     />
                                     <Chip
-                                      label={selectedPrice ? `Referencia: ${selectedPrice}` : 'Precio se confirma contigo'}
+                                      label={
+                                        authoritativeQuote
+                                          ? `Total: ${formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)}`
+                                          : selectedPrice
+                                            ? `Referencia: ${selectedPrice}`
+                                            : 'Precio se confirma contigo'
+                                      }
                                       size="small"
                                       variant="outlined"
                                     />
@@ -1765,7 +2337,7 @@ export default function PublicBookingPage() {
                                       size="small"
                                       variant="outlined"
                                     />
-                                    {requiresEngineer(form.serviceType) && (
+                                    {selectedServiceRequiresEngineer && (
                                       <Chip
                                         label={
                                           form.engineerName.trim()
@@ -1784,8 +2356,26 @@ export default function PublicBookingPage() {
                                   </Typography>
                                   {estimatePriceLabel && (
                                     <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                                      Estimado: {estimatePriceLabel}
+                                      {authoritativeQuote ? 'Precio autorizado' : 'Estimado'}: {estimatePriceLabel}
                                     </Typography>
+                                  )}
+                                  {authoritativeQuote && (
+                                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                                      <Checkbox
+                                        checked={termsAccepted}
+                                        onChange={(event) => setTermsAccepted(event.target.checked)}
+                                        size="small"
+                                        disabled={formDisabled}
+                                        inputProps={{ 'aria-label': 'Aceptar precio y política de reserva' }}
+                                      />
+                                      <Typography variant="body2" color="text.secondary" sx={{ pt: 0.75 }}>
+                                        Acepto la política {authoritativeQuote.termsVersion}, el total de{' '}
+                                        <strong>{formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.totalMinor)}</strong>{' '}
+                                        y el depósito de{' '}
+                                        <strong>{formatMinorAmount(authoritativeQuote.currency, authoritativeQuote.depositMinor)}</strong>.
+                                        Crear la orden no significa que el depósito esté pagado.
+                                      </Typography>
+                                    </Stack>
                                   )}
                                 </Stack>
                               </CardContent>
@@ -1800,7 +2390,7 @@ export default function PublicBookingPage() {
                               <Button
                                 variant="text"
                                 onClick={() => setActiveStep(1)}
-                                disabled={formDisabled}
+                                disabled={formDisabled || Boolean(authoritativeQuote && !termsAccepted)}
                                 fullWidth={isMobile}
                               >
                                 Volver
@@ -1812,7 +2402,13 @@ export default function PublicBookingPage() {
                                 disabled={formDisabled}
                                 fullWidth={isMobile}
                               >
-                                {success ? 'Reserva enviada' : submitting ? 'Enviando…' : 'Confirmar reserva'}
+                                {success
+                                  ? 'Reserva enviada'
+                                  : submitting
+                                    ? 'Creando…'
+                                    : authoritativeQuote
+                                      ? 'Crear orden y retener horario'
+                                      : 'Confirmar reserva'}
                               </Button>
                             </Stack>
                           </Grid>
@@ -1832,6 +2428,15 @@ export default function PublicBookingPage() {
           </Stack>
         </CardContent>
       </Card>
+      {form.serviceOfferingId && (
+        <Box sx={{ mt: 3 }}>
+          <ExperienceReviews
+            targetKind="service_offering"
+            targetId={form.serviceOfferingId}
+            title="Reseñas del servicio"
+          />
+        </Box>
+      )}
       <Snackbar
         open={snackbar.open}
         message={snackbar.message}

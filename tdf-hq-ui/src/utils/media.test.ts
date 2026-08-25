@@ -1,8 +1,17 @@
 import {
+  extractYoutubeVideoId,
   normalizeSpotifyEmbed,
   normalizeStreamingSource,
   normalizeYoutubeEmbed,
 } from './media';
+
+describe('extractYoutubeVideoId', () => {
+  it('extracts a video id from a YouTube playlist watch URL', () => {
+    expect(extractYoutubeVideoId('https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP')).toBe(
+      '9387ent0ELc',
+    );
+  });
+});
 
 describe('normalizeYoutubeEmbed', () => {
   it('normalizes valid YouTube URLs', () => {

@@ -1,0 +1,34 @@
+name: Catalog list authority
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  hardcoded-list-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository and mobile submodule
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install audit dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Verify deterministic catalog-list discovery
+        run: npm run test:catalog-list-audit
+
+      - name: Reject unreviewed or stale business-list decisions
+        run: npm run audit:catalog-lists

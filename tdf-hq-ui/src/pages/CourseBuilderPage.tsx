@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { DateTime } from 'luxon';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -19,8 +19,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { Courses, type CourseUpsert, type CourseMetadata } from '../api/courses';
 import { COURSE_DEFAULTS, COURSE_PATH_BASE } from '../config/appConfig';
-
-const COURSE_DRAFT_STORAGE_KEY = 'tdf-course-builder-draft';
+import { resolveRuntimeCurrency } from '../utils/formatters';
+import { useAutoSave } from '../hooks/useAutoSave';
 
 interface SessionInput { label: string; date: string }
 interface SyllabusInput { title: string; topics: string }
@@ -38,10 +38,10 @@ const splitTopics = (input: string) =>
     .filter(Boolean);
 
 const DEFAULT_SESSIONS: SessionInput[] = [
-  { label: 'Sábado 1 · Introducción', date: '2026-05-02' },
-  { label: 'Sábado 2 · Grabación', date: '2026-05-09' },
-  { label: 'Sábado 3 · Mezcla', date: '2026-05-16' },
-  { label: 'Sábado 4 · Masterización', date: '2026-05-23' },
+  { label: 'Sábado 1 · Introducción', date: '2026-06-06' },
+  { label: 'Sábado 2 · Grabación', date: '2026-06-13' },
+  { label: 'Sábado 3 · Mezcla', date: '2026-06-20' },
+  { label: 'Sábado 4 · Masterización', date: '2026-06-27' },
 ];
 
 const DEFAULT_SYLLABUS: SyllabusInput[] = [
@@ -101,15 +101,15 @@ const DEFAULT_SLUG = COURSE_DEFAULTS.slug || generateSlug(DEFAULT_TITLE, DEFAULT
 
 export default function CourseBuilderPage() {
   const [title, setTitle] = useState(DEFAULT_TITLE);
-  const [subtitle, setSubtitle] = useState('Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 2 de mayo');
+  const [subtitle, setSubtitle] = useState('Presencial · Cuatro sábados · 16 horas en total · Próximo inicio: sábado 6 de junio');
   const [format, setFormat] = useState('Presencial');
   const [duration, setDuration] = useState('Cuatro sábados (16 horas en total)');
   const [price, setPrice] = useState('150');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(resolveRuntimeCurrency);
   const [capacity, setCapacity] = useState('16');
   const [sessionStartHour, setSessionStartHour] = useState('15');
   const [sessionDurationHours, setSessionDurationHours] = useState('4');
-  const [locationLabel, setLocationLabel] = useState('TDF Records – Quito');
+  const [locationLabel, setLocationLabel] = useState('TDF Records');
   const [locationMapUrl, setLocationMapUrl] = useState(COURSE_DEFAULTS.mapUrl);
   const [whatsappCtaUrl, setWhatsappCtaUrl] = useState(COURSE_DEFAULTS.whatsappUrl);
   const landingFor = useCallback((s: string) => `${COURSE_PATH_BASE}/${s}`, []);
@@ -221,7 +221,7 @@ export default function CourseBuilderPage() {
       format: format.trim() || null,
       duration: duration.trim() || null,
       priceCents: cleanPrice,
-      currency: currency.trim() || 'USD',
+      currency: currency.trim() || resolveRuntimeCurrency(),
       capacity: Math.max(0, Math.round(cleanCapacity)),
       sessionStartHour: sessionStart ?? null,
       sessionDurationHours: sessionDuration ?? null,
@@ -268,10 +268,20 @@ export default function CourseBuilderPage() {
     whatsappCtaUrl,
   ]);
 
+  const payload = buildPayload();
+  const { loadDraft, saveDraft, clearDraft } = useAutoSave('course-builder', payload, {
+    enabled: hasLocalEditsRef.current,
+    debounceMs: 2000,
+    storageKey: 'tdf-course-builder-draft',
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
-      const payload = buildPayload();
-      await Courses.upsert(payload);
+      const p = buildPayload();
+      await Courses.upsert(p);
+    },
+    onSuccess: () => {
+      clearDraft();
     },
   });
 
@@ -294,6 +304,10 @@ export default function CourseBuilderPage() {
     });
   };
 
+  const handleDuplicateLastSession = () => {
+    handleDuplicateSession(sessions.length - 1);
+  };
+
   const handleAddSession = () => {
     markDirty();
     setSessions((prev) => [...prev, { label: '', date: '' }]);
@@ -311,63 +325,56 @@ export default function CourseBuilderPage() {
 
   const payloadPreview = JSON.stringify(buildPayload(), null, 2);
   const canResetLanding = landingUrlTouched && landingUrl !== landingFor(slug);
+  const landingUrlHelperText = canResetLanding
+    ? `Editaste la URL. Slug sugerido: ${slug}.`
+    : `Slug sugerido: ${slug}.`;
   const existingCourseLoaderOpen = showExistingCourseLoader || Boolean(loadError);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (draftLoadedRef.current) return;
-    try {
-      const raw = window.localStorage.getItem(COURSE_DRAFT_STORAGE_KEY);
-      if (!raw) return;
-      const draft = JSON.parse(raw) as Partial<CourseUpsert>;
-      if (!draft.title && !draft.slug) return;
-      setTitle((prev) => draft.title ?? prev);
-      setSubtitle((prev) => draft.subtitle ?? prev);
-      setFormat((prev) => draft.format ?? prev);
-      setDuration((prev) => draft.duration ?? prev);
-      setPrice((prev) =>
-        draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
-      );
-      setCurrency((prev) => draft.currency ?? prev);
-      setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
-      setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
-      setSessionDurationHours((prev) =>
-        draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
-      );
-      setLocationLabel((prev) => draft.locationLabel ?? prev);
-      setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
-      setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
-      setLandingUrl((prev) => draft.landingUrl ?? prev);
-      setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
-      setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
-      setInstructorName((prev) => draft.instructorName ?? prev);
-      setInstructorBio((prev) => draft.instructorBio ?? prev);
-      setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
-      setSessions((prev) =>
-        draft.sessions
-          ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
-          : prev,
-      );
-      setSyllabus((prev) =>
-        draft.syllabus
-          ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
-          : prev,
-      );
-      draftLoadedRef.current = true;
-      hasLocalEditsRef.current = true;
-      setHasDraft(true);
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
+    const draft = loadDraft() as Partial<CourseUpsert> | null;
+    if (!draft || (!draft.title && !draft.slug)) return;
+    setTitle((prev) => draft.title ?? prev);
+    setSubtitle((prev) => draft.subtitle ?? prev);
+    setFormat((prev) => draft.format ?? prev);
+    setDuration((prev) => draft.duration ?? prev);
+    setPrice((prev) =>
+      draft.priceCents != null ? String(Math.round(draft.priceCents / 100)) : prev,
+    );
+    setCurrency((prev) => draft.currency ?? prev);
+    setCapacity((prev) => (draft.capacity != null ? String(draft.capacity) : prev));
+    setSessionStartHour((prev) => (draft.sessionStartHour != null ? String(draft.sessionStartHour) : prev));
+    setSessionDurationHours((prev) =>
+      draft.sessionDurationHours != null ? String(draft.sessionDurationHours) : prev,
+    );
+    setLocationLabel((prev) => draft.locationLabel ?? prev);
+    setLocationMapUrl((prev) => draft.locationMapUrl ?? prev);
+    setWhatsappCtaUrl((prev) => draft.whatsappCtaUrl ?? prev);
+    setLandingUrl((prev) => draft.landingUrl ?? prev);
+    setDaws((prev) => (draft.daws?.length ? draft.daws.join('\n') : prev));
+    setIncludes((prev) => (draft.includes?.length ? draft.includes.join('\n') : prev));
+    setInstructorName((prev) => draft.instructorName ?? prev);
+    setInstructorBio((prev) => draft.instructorBio ?? prev);
+    setInstructorAvatarUrl((prev) => draft.instructorAvatarUrl ?? prev);
+    setSessions((prev) =>
+      draft.sessions
+        ? draft.sessions.map((s) => ({ label: s.label ?? '', date: s.date ?? '' }))
+        : prev,
+    );
+    setSyllabus((prev) =>
+      draft.syllabus
+        ? draft.syllabus.map((s) => ({ title: s.title ?? '', topics: (s.topics ?? []).join('; ') }))
+        : prev,
+    );
+    draftLoadedRef.current = true;
+    hasLocalEditsRef.current = true;
+    setHasDraft(true);
+  }, [loadDraft]);
 
   useEffect(() => {
-    const payload = buildPayload();
-    try {
-      window.localStorage.setItem(COURSE_DRAFT_STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-      // ignore
-    }
-  }, [buildPayload]);
+    if (!hasLocalEditsRef.current) return;
+    saveDraft(payload);
+  }, [payload, saveDraft]);
 
   const applyMetadata = (meta: CourseMetadata) => {
     const sanitizedSessions =
@@ -391,7 +398,7 @@ export default function CourseBuilderPage() {
     setFormat(meta.format ?? '');
     setDuration(meta.duration ?? '');
     setPrice(meta.price ? String(Math.round(meta.price)) : '0');
-    setCurrency(meta.currency ?? 'USD');
+    setCurrency(meta.currency ?? resolveRuntimeCurrency());
     setCapacity(meta.capacity ? String(meta.capacity) : '0');
     setSessionStartHour(meta.sessionStartHour != null ? String(meta.sessionStartHour) : '');
     setSessionDurationHours(meta.sessionDurationHours != null ? String(meta.sessionDurationHours) : '');
@@ -450,11 +457,8 @@ export default function CourseBuilderPage() {
   };
 
   const handleClearDraft = () => {
-    try {
-      window.localStorage.removeItem(COURSE_DRAFT_STORAGE_KEY);
-    } catch {
-      // ignore
-    }
+    clearDraft();
+    hasLocalEditsRef.current = false;
     draftLoadedRef.current = false;
     setHasDraft(false);
   };
@@ -583,20 +587,11 @@ export default function CourseBuilderPage() {
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
-                label="Slug (auto)"
-                fullWidth
-                value={slug}
-                InputProps={{ readOnly: true }}
-                helperText="Se genera con el título y la fecha de inicio."
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
                 label="Landing URL"
                 fullWidth
                 value={landingUrl}
                 onChange={(e) => handleLandingUrlChange(e.target.value)}
-                helperText={canResetLanding ? 'Editaste la URL; puedes restablecer la sugerida.' : undefined}
+                helperText={landingUrlHelperText}
               />
               {canResetLanding && (
                 <Box sx={{ mt: 0.5 }}>
@@ -842,11 +837,6 @@ export default function CourseBuilderPage() {
                   <Grid item xs={12} md={2}>
                     <Stack direction="row" spacing={1}>
                       {sessions.length > 1 && (
-                        <Button variant="text" size="small" onClick={() => handleDuplicateSession(idx)}>
-                          Duplicar
-                        </Button>
-                      )}
-                      {sessions.length > 1 && (
                         <Button
                           variant="text"
                           size="small"
@@ -861,9 +851,16 @@ export default function CourseBuilderPage() {
                 </Grid>
               );
             })}
-            <Button variant="outlined" onClick={handleAddSession}>
-              Añadir sesión
-            </Button>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Button variant="outlined" onClick={handleAddSession}>
+                Añadir sesión
+              </Button>
+              {sessions.length > 1 && (
+                <Button variant="text" onClick={handleDuplicateLastSession}>
+                  Duplicar última sesión
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </CardContent>
       </Card>

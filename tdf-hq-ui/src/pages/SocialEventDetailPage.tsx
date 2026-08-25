@@ -1,0 +1,252 @@
+import { useRef, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ImageIcon from '@mui/icons-material/Image';
+import LinkIcon from '@mui/icons-material/Link';
+import RouteIcon from '@mui/icons-material/Route';
+import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import PageShell, { EmptyState } from '../components/PageShell';
+import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
+import { Catalogs } from '../api/catalogs';
+import { useSession } from '../session/SessionContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { formatCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
+
+const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString(locale, { timeZone: timezone, dateStyle: 'medium', timeStyle: 'short' });
+};
+
+const inferredMediaType = (url: string): 'image' | 'video' => /\.(mp4|mov|webm|m4v)(?:$|[?#])/i.test(url) ? 'video' : 'image';
+
+const ticketFee = (faceValueCents: number) => {
+  const total = Math.max(0, Math.floor((faceValueCents * 400) / 10000));
+  const buyer = Math.ceil(total / 2);
+  return { buyer, organizer: total - buyer, checkout: faceValueCents + buyer };
+};
+
+export default function SocialEventDetailPage() {
+  const { eventId = '' } = useParams();
+  const { session } = useSession();
+  const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [caption, setCaption] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [ticketName, setTicketName] = useState('General');
+  const [ticketPrice, setTicketPrice] = useState('');
+  const [ticketQuantity, setTicketQuantity] = useState('100');
+  const eventQuery = useQuery({
+    queryKey: ['social-event', eventId],
+    queryFn: () => SocialEventsAPI.getEvent(eventId),
+    enabled: Boolean(eventId),
+  });
+  const eventTypeQuery = useQuery({
+    queryKey: ['catalog', 'event-types', eventQuery.data?.eventTypeId, locale],
+    queryFn: () => Catalogs.getItem('event-types', eventQuery.data!.eventTypeId!, locale),
+    enabled: Boolean(eventQuery.data?.eventTypeId),
+  });
+  const momentsQuery = useQuery({
+    queryKey: ['social-event-moments', eventId],
+    queryFn: () => SocialEventsAPI.listMoments(eventId),
+    enabled: Boolean(eventId),
+  });
+  const tiersQuery = useQuery({
+    queryKey: ['social-event-ticket-tiers', eventId],
+    queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
+    enabled: Boolean(eventId),
+  });
+  const postMutation = useMutation({
+    mutationFn: async () => {
+      if (!session) throw new Error('Inicia sesión para publicar en el evento.');
+      let url = mediaUrl.trim();
+      if (file) {
+        if (!file.type.startsWith('image/')) throw new Error('Por ahora puedes subir imágenes; usa un enlace para publicar video.');
+        const uploaded = await SocialEventsAPI.uploadMomentImage(eventId, file);
+        url = uploaded.eiuPublicUrl;
+      }
+      if (!url) throw new Error('Selecciona una imagen o pega un enlace de imagen/video.');
+      const payload: SocialEventMomentCreateDTO = {
+        emCreateCaption: caption.trim() || undefined,
+        emCreateMediaUrl: url,
+        emCreateMediaType: inferredMediaType(url),
+      };
+      return SocialEventsAPI.createMoment(eventId, payload);
+    },
+    onSuccess: () => {
+      setCaption('');
+      setMediaUrl('');
+      setFile(null);
+      void queryClient.invalidateQueries({ queryKey: ['social-event-moments', eventId] });
+    },
+  });
+  const ticketTierMutation = useMutation({
+    mutationFn: () => {
+      const price = Number(ticketPrice);
+      const quantity = Number(ticketQuantity);
+      if (!Number.isFinite(price) || price < 0) throw new Error('Ingresa un precio válido.');
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Ingresa una cantidad válida.');
+      const name = ticketName.trim();
+      if (!name) throw new Error('El nombre del ticket es obligatorio.');
+      const payload: SocialTicketTierDTO = {
+        ticketTierCode: name.toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'GENERAL',
+        ticketTierName: name,
+        ticketTierPriceCents: Math.round(price * 100),
+        ticketTierCurrency: event?.eventCurrency ?? preferredCurrency,
+        ticketTierQuantityTotal: quantity,
+        ticketTierQuantitySold: 0,
+        ticketTierActive: true,
+      };
+      return SocialEventsAPI.createTicketTier(eventId, payload);
+    },
+    onSuccess: () => {
+      setTicketName('General');
+      setTicketPrice('');
+      void queryClient.invalidateQueries({ queryKey: ['social-event-ticket-tiers', eventId] });
+    },
+  });
+
+  const event = eventQuery.data;
+  const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
+  const error = eventQuery.error ?? momentsQuery.error ?? postMutation.error;
+
+  return (
+    <PageShell
+      title={event?.eventTitle ?? 'Evento'}
+      subtitle={event ? `${formatDate(event.eventStart, locale, timezone)} · ${eventTypeQuery.data?.name ?? 'Evento'}` : undefined}
+      loading={eventQuery.isLoading}
+      actions={<Stack direction="row" spacing={1}>
+        <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
+        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+      </Stack>}
+    >
+      <Stack spacing={2.5}>
+        {error && <Alert severity="error">{error instanceof Error ? error.message : 'No se pudo cargar el evento.'}</Alert>}
+        {event && (
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1.5}>
+                {event.eventImageUrl && <Box component="img" src={event.eventImageUrl} alt={`Afiche de ${event.eventTitle}`} sx={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 2 }} />}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  <Chip label={formatDate(event.eventStart, locale, timezone)} color="primary" />
+                  {event.eventWorkflowStateId && (
+                    <Chip
+                      label={locale.toLowerCase().startsWith('en') ? event.eventWorkflowStateNameEn : event.eventWorkflowStateNameEs}
+                      variant="outlined"
+                    />
+                  )}
+                  {event.eventCapacity && <Chip label={`${event.eventCapacity} personas`} variant="outlined" />}
+                </Stack>
+                {event.eventDescription && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{event.eventDescription}</Typography>}
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Typography variant="h6">Tickets</Typography>
+              <Alert severity="info">TDF cobra una comisión del 4%: la mitad se suma al checkout y la otra mitad se descuenta del pago al organizador.</Alert>
+              {tiersQuery.isLoading ? <CircularProgress size={22} /> : tiersQuery.data?.length ? (
+                <Stack spacing={1}>
+                  {tiersQuery.data.map((tier) => {
+                    const fee = ticketFee(tier.ticketTierPriceCents);
+                    return <Stack key={tier.ticketTierId ?? tier.ticketTierCode} direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                      <Box><Typography fontWeight={700}>{tier.ticketTierName}</Typography><Typography variant="body2" color="text.secondary">{Math.max(0, tier.ticketTierQuantityTotal - tier.ticketTierQuantitySold)} disponibles</Typography></Box>
+                      <Box sx={{ textAlign: { sm: 'right' } }}><Typography>{formatCurrency(tier.ticketTierPriceCents / 100, tier.ticketTierCurrency, locale)}</Typography><Typography variant="caption" color="text.secondary">Checkout: {formatCurrency(fee.checkout / 100, tier.ticketTierCurrency, locale)} (incluye {formatCurrency(fee.buyer / 100, tier.ticketTierCurrency, locale)} de tarifa)</Typography></Box>
+                    </Stack>;
+                  })}
+                </Stack>
+              ) : <Typography color="text.secondary">Aún no hay tickets para este evento.</Typography>}
+              {isOrganizer && <>
+                <Divider />
+                <Typography variant="subtitle1" fontWeight={700}>Crear tipo de ticket</Typography>
+                {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo crear el ticket.'}</Alert>}
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                  <TextField label="Nombre" value={ticketName} onChange={(event) => setTicketName(event.target.value)} sx={{ flex: 1 }} />
+                  <TextField label="Precio" type="number" value={ticketPrice} onChange={(event) => setTicketPrice(event.target.value)} inputProps={{ min: 0, step: '0.01' }} />
+                  <TextField label="Cantidad" type="number" value={ticketQuantity} onChange={(event) => setTicketQuantity(event.target.value)} inputProps={{ min: 1, step: 1 }} />
+                  <Button variant="contained" onClick={() => ticketTierMutation.mutate()} disabled={ticketTierMutation.isPending}>{ticketTierMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Crear tickets'}</Button>
+                </Stack>
+              </>}
+            </Stack>
+          </CardContent>
+        </Card>
+
+        {event && <ExperienceReviews targetKind="event" targetId={eventId} title="Reseñas del evento" />}
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Typography variant="h6">Publicar media</Typography>
+              {!session ? (
+                <Alert severity="info">Inicia sesión para añadir imágenes o enlaces de video a este evento.</Alert>
+              ) : (
+                <>
+                  <TextField label="Describe tu publicación" value={caption} onChange={(event) => setCaption(event.target.value)} multiline minRows={2} inputProps={{ maxLength: 1000 }} />
+                  <TextField label="Enlace de imagen o video" value={mediaUrl} onChange={(event) => setMediaUrl(event.target.value)} disabled={Boolean(file)} placeholder="https://…" InputProps={{ startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} /> }} />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                    <Button component="label" variant="outlined" startIcon={<ImageIcon />}>
+                      Seleccionar imagen
+                      <input ref={fileInputRef} hidden type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                    </Button>
+                    <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>{file ? file.name : 'Imágenes de hasta 10 MB. Para video, pega un enlace público.'}</Typography>
+                    <Button variant="contained" onClick={() => postMutation.mutate()} disabled={postMutation.isPending || (!file && !mediaUrl.trim())}>
+                      {postMutation.isPending ? <CircularProgress size={20} color="inherit" /> : 'Publicar'}
+                    </Button>
+                  </Stack>
+                </>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Stack spacing={1.5}>
+          <Typography variant="h5">Publicaciones</Typography>
+          {momentsQuery.isLoading ? <CircularProgress size={24} /> : momentsQuery.data?.length === 0 ? (
+            <EmptyState icon={<ImageIcon fontSize="inherit" />} title="Todavía no hay publicaciones" description="Sé la primera persona en compartir un momento de este evento." />
+          ) : momentsQuery.data?.map((moment) => (
+            <Card key={moment.emId ?? `${moment.emAuthorPartyId}-${moment.emCreatedAt}`} variant="outlined">
+              <CardContent>
+                <Stack spacing={1.25}>
+                  {moment.emAuthorPartyId ? (
+                    <ButtonBase
+                      component={RouterLink}
+                      to={`/perfil/${encodeURIComponent(moment.emAuthorPartyId)}`}
+                      sx={{ alignSelf: 'flex-start', borderRadius: 2, textAlign: 'left' }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
+                        <Box>
+                          <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
+                          <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt, locale, timezone)}</Typography>
+                        </Box>
+                      </Stack>
+                    </ButtonBase>
+                  ) : (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar>{moment.emAuthorName.slice(0, 1).toUpperCase()}</Avatar>
+                      <Box>
+                        <Typography fontWeight={700}>{moment.emAuthorName}</Typography>
+                        <Typography variant="caption" color="text.secondary">Publicado {formatDate(moment.emCreatedAt, locale, timezone)}</Typography>
+                      </Box>
+                    </Stack>
+                  )}
+                  {moment.emMediaType === 'video' ? <Box component="video" src={moment.emMediaUrl} controls sx={{ width: '100%', maxHeight: 520, borderRadius: 2, bgcolor: 'black' }} /> : <Box component="img" src={moment.emMediaUrl} alt={moment.emCaption ?? `Publicación de ${moment.emAuthorName}`} sx={{ width: '100%', maxHeight: 520, objectFit: 'contain', borderRadius: 2, bgcolor: 'action.hover' }} />}
+                  {moment.emCaption && <><Divider /><Typography sx={{ whiteSpace: 'pre-wrap' }}>{moment.emCaption}</Typography></>}
+                </Stack>
+              </CardContent>
+            </Card>
+          ))}
+        </Stack>
+      </Stack>
+    </PageShell>
+  );
+}

@@ -9,7 +9,7 @@ const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const createPartyMock = jest.fn<(body: PartyCreate) => Promise<PartyDTO>>();
 const updatePartyMock = jest.fn<(id: number, body: PartyUpdate) => Promise<PartyDTO | null>>();
 const canAccessPathMock = jest.fn<() => boolean>();
-const createUserMock = jest.fn<(payload: { partyId: number; username?: string; roles?: string[] }) => Promise<null>>();
+const createUserMock = jest.fn<(payload: { partyId: number; username?: string }) => Promise<null>>();
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
@@ -21,7 +21,7 @@ jest.unstable_mockModule('../api/parties', () => ({
 
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
-    createUser: (payload: { partyId: number; username?: string; roles?: string[] }) => createUserMock(payload),
+    createUser: (payload: { partyId: number; username?: string }) => createUserMock(payload),
   },
 }));
 
@@ -148,7 +148,7 @@ const renderPage = async (container: HTMLElement) => {
 
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         <QueryClientProvider client={qc}>
           <PartiesPage />
         </QueryClientProvider>
@@ -426,10 +426,13 @@ describe('PartiesPage', () => {
         );
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
-        expect(container.textContent).toContain('Acciones de Ada Lovelace');
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
+        expect(countButtonsByAriaLabel(container, 'Abrir acciones para Ada Lovelace')).toBe(1);
+        expect(container.textContent).not.toContain('Acciones de Ada Lovelace');
         expect(getButtonsByText(container, 'Limpiar búsqueda')).toHaveLength(0);
         expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(0);
-        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(0);
+        expect(container.querySelectorAll('button[aria-label^="Abrir acciones para "]')).toHaveLength(1);
       });
     } finally {
       await cleanup();
@@ -563,7 +566,9 @@ describe('PartiesPage', () => {
         expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).toContain('Contacto: ada@example.com · @ada');
-        expect(container.textContent).toContain('Acciones de Ada Lovelace');
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
+        expect(container.textContent).not.toContain('Acciones de Ada Lovelace');
         expect(container.textContent).not.toContain('Los Navegantes');
       });
     } finally {
@@ -717,13 +722,15 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Primer contacto registrado');
         expect(container.textContent).toContain('Grace Hopper');
+        expect(getButtonsByText(container, 'Completar contacto')).toHaveLength(1);
+        expect(container.textContent).not.toContain('Acciones de Grace Hopper');
         expect(container.textContent).toContain(
           'Completa el correo desde Acciones antes de crear el usuario.',
         );
       });
 
       await act(async () => {
-        clickButton(getButtonsByText(document.body, 'Acciones de Grace Hopper')[0]!);
+        clickButton(getButtonsByText(document.body, 'Completar contacto')[0]!);
         await flushPromises();
         await flushPromises();
       });
@@ -780,10 +787,12 @@ describe('PartiesPage', () => {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Primer contacto registrado');
         expect(container.textContent).toContain('Ada Lovelace');
+        expect(getButtonsByText(container, 'Crear usuario')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Editar o crear usuario')).toHaveLength(0);
       });
 
       await act(async () => {
-        clickButton(getButtonsByText(document.body, 'Acciones de Ada Lovelace')[0]!);
+        clickButton(getButtonsByText(document.body, 'Crear usuario')[0]!);
         await flushPromises();
         await flushPromises();
       });
@@ -808,8 +817,16 @@ describe('PartiesPage', () => {
         );
       });
 
+      const createUserSubmit = getButtonsByText(document.body, 'Crear usuario').find(
+        (button) => button.closest('[role="dialog"]'),
+      );
+
+      if (!createUserSubmit) {
+        throw new Error('Create-user dialog submit button not found');
+      }
+
       await act(async () => {
-        clickButton(getButtonsByText(document.body, 'Crear usuario')[0]!);
+        clickButton(createUserSubmit);
         await flushPromises();
         await flushPromises();
       });
@@ -818,7 +835,6 @@ describe('PartiesPage', () => {
         expect(createUserMock).toHaveBeenCalledWith({
           partyId: 1,
           username: undefined,
-          roles: undefined,
         });
         expect(updatePartyMock).not.toHaveBeenCalled();
         expect(document.body.textContent).toContain(

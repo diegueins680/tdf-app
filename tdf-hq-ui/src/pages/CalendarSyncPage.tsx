@@ -21,6 +21,11 @@ import LinkIcon from '@mui/icons-material/Link';
 import EventIcon from '@mui/icons-material/Event';
 import { DateTime } from 'luxon';
 import { CalendarApi } from '../api/calendar';
+import { isSessionAuthFailureMessage } from '../session/authEvents';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
+import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { formatDateTime } from '../utils/formatters';
 
 const normalizeStoredText = (value: string | null): string => value?.trim() ?? '';
 
@@ -38,8 +43,18 @@ const normalizeHistoryEntries = (value: unknown): string[] => {
 const sameStringArray = (a: string[], b: string[]) =>
   a.length === b.length && a.every((value, idx) => value === b[idx]);
 
+const SESSION_EXPIRED_MESSAGE =
+  'La sesión del CMS expiró o el navegador no está enviando la cookie. Vuelve a iniciar sesión y reabre esta integración.';
+
+const getCalendarPageErrorMessage = (error: unknown, fallback: string): string | null => {
+  if (!(error instanceof Error)) return fallback;
+  return isSessionAuthFailureMessage(error.message) ? SESSION_EXPIRED_MESSAGE : error.message;
+};
+
 export default function CalendarSyncPage() {
-  const zone: string = import.meta.env['VITE_TZ'] ?? 'America/Guayaquil';
+  const { timezone: zone, locale } = useLocalePreferences();
+  const displayDateTime = useCallback((value: Date | string | number) =>
+    formatDateTime(value, { locale, timeZone: zone }), [locale, zone]);
   const [calendarId, setCalendarId] = useState('');
   const [code, setCode] = useState('');
   const [fromInput, setFromInput] = useState('');
@@ -56,9 +71,13 @@ export default function CalendarSyncPage() {
 
   const trimmedCalendarId = calendarId.trim();
   const location = useLocation();
+  const loginRedirectPath = useMemo(
+    () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
+    [location.hash, location.pathname, location.search],
+  );
   const icsUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const base = (import.meta.env['VITE_CALENDAR_ICS_BASE'] ?? `${window.location.origin}/calendar/v1/ics`).trim();
+    const base = (import.meta.env.VITE_CALENDAR_ICS_BASE ?? `${window.location.origin}/calendar/v1/ics`).trim();
     const cal = trimmedCalendarId || 'primary';
     const separator = base.includes('?') ? '&' : '?';
     return `${base}${separator}calendarId=${encodeURIComponent(cal)}`;
@@ -216,7 +235,7 @@ export default function CalendarSyncPage() {
       }
       setSyncToast({
         severity: 'success',
-        message: `Sync OK (${new Date(ts).toLocaleString()}): ${res.created} creados, ${res.updated} actualizados.`,
+        message: `Sync OK (${displayDateTime(ts)}): ${res.created} creados, ${res.updated} actualizados.`,
       });
     },
     onError: () =>
@@ -231,12 +250,11 @@ export default function CalendarSyncPage() {
     queryFn: () => CalendarApi.getConfig(),
     staleTime: 5 * 60 * 1000,
   });
-  const configErrorMessage =
-    configQuery.error instanceof Error
-      ? configQuery.error.message
-      : configQuery.isError
-        ? 'No se pudo cargar la configuración de calendario.'
-        : null;
+  const configAuthError =
+    configQuery.error instanceof Error && isSessionAuthFailureMessage(configQuery.error.message);
+  const configErrorMessage = configQuery.isError
+    ? getCalendarPageErrorMessage(configQuery.error, 'No se pudo cargar la configuración de calendario.')
+    : null;
 
   const testConnection = useCallback(async () => {
     const res = await configQuery.refetch();
@@ -269,13 +287,16 @@ export default function CalendarSyncPage() {
 
   const lastSyncSummary = useMemo(() => {
     if (!lastSyncAt) return 'Sin sincronizar';
-    const formatted = new Date(lastSyncAt).toLocaleString();
-    const fromLabel = fromInput ? new Date(fromInput).toLocaleString() : 'Sin fecha inicio';
-    const toLabel = toInput ? new Date(toInput).toLocaleString() : 'Sin fecha fin';
+    const formatted = displayDateTime(lastSyncAt);
+    const fromLabel = fromInput ? displayDateTime(fromInput) : 'Sin fecha inicio';
+    const toLabel = toInput ? displayDateTime(toInput) : 'Sin fecha fin';
     return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
   }, [fromInput, lastSyncAt, toInput]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
+  const eventsErrorMessage = eventsQuery.isError
+    ? getCalendarPageErrorMessage(eventsQuery.error, 'No se pudieron cargar los eventos.')
+    : null;
   const calendarIdError = showValidation && !trimmedCalendarId ? 'Ingresa el Calendar ID o usa "primary".' : '';
   const codeError = showValidation && !code.trim() ? 'Pega el code que te devuelve Google tras consentir.' : '';
 
@@ -383,14 +404,25 @@ export default function CalendarSyncPage() {
               variant="outlined"
               color={lastSyncAt ? 'secondary' : 'default'}
               size="small"
-              label={`Última sync: ${lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}`}
+              label={`Última sync: ${lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar'}`}
             />
             <Button size="small" onClick={handleDisconnect} variant="outlined" color="inherit">
               Desconectar y limpiar
             </Button>
           </Stack>
           {configErrorMessage && (
-            <Alert severity="warning">{configErrorMessage}</Alert>
+            <Alert
+              severity="warning"
+              action={
+                configAuthError ? (
+                  <Button component={RouterLink} to={loginRedirectPath} color="inherit" size="small">
+                    Iniciar sesión
+                  </Button>
+                ) : undefined
+              }
+            >
+              {configErrorMessage}
+            </Alert>
           )}
           <Typography variant="subtitle1" fontWeight={700}>
             Pasos guiados
@@ -570,7 +602,7 @@ export default function CalendarSyncPage() {
                     Ver últimos logs
                   </Button>
                   <Typography variant="caption" color="text.secondary">
-                    Última sync: {lastSyncAt ? new Date(lastSyncAt).toLocaleString() : 'Sin sincronizar'}
+                    Última sync: {lastSyncAt ? displayDateTime(lastSyncAt) : 'Sin sincronizar'}
                   </Typography>
                 </Stack>
               </Paper>
@@ -612,40 +644,48 @@ export default function CalendarSyncPage() {
             <Chip label={`${events.length}`} size="small" />
           </Stack>
           {eventsQuery.isLoading && <LinearProgress />}
-          {eventsQuery.isError && <Alert severity="error">No se pudieron cargar los eventos.</Alert>}
+          {eventsErrorMessage && <Alert severity="error">{eventsErrorMessage}</Alert>}
           <Divider />
           <Stack spacing={1.5}>
-            {events.map((ev) => (
-              <Paper key={ev.eventId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {ev.startAt ? new Date(ev.startAt).toLocaleString() : 'Sin fecha'} —{' '}
-                      {ev.endAt ? new Date(ev.endAt).toLocaleString() : 'Sin fin'}
-                    </Typography>
-                    {ev.location && (
-                      <Typography variant="body2" color="text.secondary">
-                        {ev.location}
-                      </Typography>
-                    )}
-                    {ev.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {ev.description}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
-                    <Chip label={ev.status} size="small" />
-                    {ev.htmlLink && (
-                      <Button href={ev.htmlLink} target="_blank" rel="noreferrer" size="small">
-                        Ver en Google
-                      </Button>
-                    )}
-                  </Stack>
+            <LazyPaginatedList
+              items={events}
+              pagination={{ itemLabel: 'eventos', initialRowsPerPage: 10 }}
+              renderItems={(visibleEvents) => (
+                <Stack spacing={1.5}>
+                  {visibleEvents.map((ev) => (
+                    <Paper key={ev.eventId} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between">
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography fontWeight={700}>{ev.summary ?? '(Sin título)'}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {ev.startAt ? displayDateTime(ev.startAt) : 'Sin fecha'} —{' '}
+                            {ev.endAt ? displayDateTime(ev.endAt) : 'Sin fin'}
+                          </Typography>
+                          {ev.location && (
+                            <Typography variant="body2" color="text.secondary">
+                              {ev.location}
+                            </Typography>
+                          )}
+                          {ev.description && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              {ev.description}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Stack spacing={0.5} alignItems={{ xs: 'flex-start', sm: 'flex-end' }}>
+                          <Chip label={ev.status} size="small" />
+                          {ev.htmlLink && (
+                            <Button href={ev.htmlLink} target="_blank" rel="noreferrer" size="small">
+                              Ver en Google
+                            </Button>
+                          )}
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  ))}
                 </Stack>
-              </Paper>
-            ))}
+              )}
+            />
             {events.length === 0 && !eventsQuery.isLoading && (
               <Typography color="text.secondary">Sin eventos sincronizados para este calendario.</Typography>
             )}

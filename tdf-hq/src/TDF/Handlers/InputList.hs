@@ -12,6 +12,7 @@ module TDF.Handlers.InputList
   , fetchSessionInputRowsByIndex
   , fetchSessionInputRowsByKey
   , renderInputListLatex
+  , renderInputListLatexWithAssets
   , generateInputListPdf
   , generateInputListPdfWithAssets
   , sanitizeFileName
@@ -19,7 +20,8 @@ module TDF.Handlers.InputList
 
 import           Control.Applicative        ((<|>))
 import           Control.Monad              (forM_, guard, when)
-import           Data.Char                  (isAlphaNum)
+import           Data.Char                  (GeneralCategory(Format, LineSeparator, ParagraphSeparator),
+                                             generalCategory, isAlphaNum, isControl)
 import           Data.List                  (find)
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (mapMaybe)
@@ -156,7 +158,14 @@ loadLatestInputRows sessionKey = do
             [ Asc ME.InputRowChannelNumber ]
 
 renderInputListLatex :: Text -> [Entity InputListEntry] -> Text
-renderInputListLatex title rows =
+renderInputListLatex title = renderInputListLatexWithAssets title Map.empty
+
+renderInputListLatexWithAssets
+  :: Text
+  -> Map.Map ME.AssetId Text
+  -> [Entity InputListEntry]
+  -> Text
+renderInputListLatexWithAssets title assetNames rows =
   let escapedTitle = latexEscape title
       bodyLines    = map renderRow rows
   in T.unlines $
@@ -189,7 +198,7 @@ renderInputListLatex title rows =
           cells =
             [ showText (ME.inputRowChannelNumber row)
             , maybe "-" id (ME.inputRowTrackName row)
-            , maybe "-" id (ME.inputRowInstrument row)
+            , maybe "-" id (ME.inputRowMicId row >>= (`Map.lookup` assetNames))
             , maybe "-" id medusaVal
             , maybe "-" id preampVal
             , maybe "-" id interfaceVal
@@ -217,6 +226,7 @@ latexEscape :: Text -> Text
 latexEscape = T.concatMap escapeChar
   where
     escapeChar c = case c of
+      _ | isUnsafeLatexTextChar c -> " "
       '&'  -> "\\&"
       '%'  -> "\\%"
       '$'  -> "\\$"
@@ -228,6 +238,10 @@ latexEscape = T.concatMap escapeChar
       '^'  -> "\\textasciicircum{}"
       '\\' -> "\\textbackslash{}"
       _    -> T.singleton c
+
+    isUnsafeLatexTextChar ch =
+      isControl ch
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 generateInputListPdf :: Text -> IO (Either Text BL.ByteString)
 generateInputListPdf = generateInputListPdfWithAssets Nothing

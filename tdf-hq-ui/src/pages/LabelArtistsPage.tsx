@@ -34,6 +34,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import { Admin } from '../api/admin';
@@ -45,6 +47,8 @@ import type {
   ArtistPromoSlotDTO,
   ArtistPromoSlotUpsert,
 } from '../api/types';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { Catalogs, type CatalogItem } from '../api/catalogs';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -59,7 +63,7 @@ interface ArtistFormState {
   youtubeUrl: string;
   websiteUrl: string;
   featuredVideoUrl: string;
-  genres: string;
+  genreIds: string[];
   highlights: string;
 }
 
@@ -78,7 +82,6 @@ interface BannerState {
   message: string;
 }
 
-const ECUADOR_TIMEZONE = 'America/Guayaquil';
 const DEFAULT_PROMOTION_TIME = '09:00';
 
 function buildEmptyForm(): ArtistFormState {
@@ -95,7 +98,7 @@ function buildEmptyForm(): ArtistFormState {
     youtubeUrl: '',
     websiteUrl: '',
     featuredVideoUrl: '',
-    genres: '',
+    genreIds: [],
     highlights: '',
   };
 }
@@ -117,7 +120,7 @@ const toNullableField = (value: string) => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const todayInEcuador = () => DateTime.now().setZone(ECUADOR_TIMEZONE).toISODate() ?? '';
+const todayInTimezone = (timezone: string) => DateTime.now().setZone(timezone).toISODate() ?? '';
 
 const sortPromotionSlots = (slots: ArtistPromoSlotDTO[]) =>
   [...slots].sort((a, b) => {
@@ -129,34 +132,34 @@ const sortPromotionSlots = (slots: ArtistPromoSlotDTO[]) =>
   });
 
 const buildPromotionPdfFilename = (artist: ArtistProfileDTO | null, day: string) => {
-  const base =
-    artist?.apSlug?.trim() ||
+  const base = [
+    artist?.apSlug?.trim(),
     artist?.apDisplayName
       ?.trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') ||
-    `artista-${artist?.apArtistId ?? 'sin-id'}`;
+      .replace(/^-+|-+$/g, ''),
+  ].find((candidate) => Boolean(candidate)) ?? `artista-${artist?.apArtistId ?? 'sin-id'}`;
   return `promo-diario-${base}-${day}.pdf`;
 };
 
 const triggerBlobDownload = (blob: Blob, fileName: string) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(url);
+  const downloadObjectUrl = URL.createObjectURL(blob);
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.href = downloadObjectUrl;
+  downloadAnchor.download = fileName;
+  downloadAnchor.click();
+  URL.revokeObjectURL(downloadObjectUrl);
 };
 
 const openBlobPreview = (blob: Blob, fallbackFileName: string) => {
-  const url = URL.createObjectURL(blob);
-  const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
+  const previewObjectUrl = URL.createObjectURL(blob);
+  const previewWindow = window.open(previewObjectUrl, '_blank', 'noopener,noreferrer');
   if (!previewWindow) {
     triggerBlobDownload(blob, fallbackFileName);
     return false;
   }
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  window.setTimeout(() => URL.revokeObjectURL(previewObjectUrl), 60_000);
   return true;
 };
 
@@ -186,13 +189,14 @@ function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
     youtubeUrl: artist.apYoutubeUrl ?? '',
     websiteUrl: artist.apWebsiteUrl ?? '',
     featuredVideoUrl: artist.apFeaturedVideoUrl ?? '',
-    genres: artist.apGenres ?? '',
+    genreIds: artist.apGenreIds ?? [],
     highlights: artist.apHighlights ?? '',
   };
 }
 
 export default function LabelArtistsPage() {
   const qc = useQueryClient();
+  const { locale, timezone } = useLocalePreferences();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
@@ -203,7 +207,7 @@ export default function LabelArtistsPage() {
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
-  const [promotionDay, setPromotionDay] = useState(todayInEcuador);
+  const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
   const [promotionFormError, setPromotionFormError] = useState<string | null>(null);
   const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
@@ -216,9 +220,33 @@ export default function LabelArtistsPage() {
     queryKey: ['parties'],
     queryFn: () => Parties.list(),
   });
+  const genresCatalogQuery = useQuery({
+    queryKey: ['catalog', 'genres', locale],
+    queryFn: () => Catalogs.listItems('genres', { locale, page: 1, pageSize: 500, includeInactive: true }),
+    staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) => {
+      // Retry on network errors or 5xx, but not on 4xx (auth issues)
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as { status: number }).status;
+        if (status >= 400 && status < 500) return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: 1000,
+  });
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
+  const genreOptions = useMemo<CatalogItem[]>(
+    () => (genresCatalogQuery.data?.items ?? [])
+      .filter((genre) => genre.active && genre.workflowState === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
+    [genresCatalogQuery.data?.items],
+  );
+  const unavailableFormGenreIds = useMemo(
+    () => form.genreIds.filter((genreId) => !genreOptions.some((genre) => genre.id === genreId)),
+    [form.genreIds, genreOptions],
+  );
   const partyMap = useMemo(() => new Map(parties.map((p) => [p.partyId, p])), [parties]);
   const selectedPromotionArtist = useMemo(
     () => artists.find((artist) => artist.apArtistId === promotionArtistId) ?? null,
@@ -241,18 +269,22 @@ export default function LabelArtistsPage() {
     [promotionsQuery.data],
   );
   const promotionReport = useMemo<ArtistPromoDayReportDTO | null>(() => {
-    if (promotionReportQuery.data) return promotionReportQuery.data;
-    if (!selectedPromotionArtist) return null;
-    return {
+    const report = promotionReportQuery.data ?? (selectedPromotionArtist ? {
       apdArtistId: selectedPromotionArtist.apArtistId,
       apdArtistName: selectedPromotionArtist.apDisplayName,
       apdDay: promotionDay,
-      apdTimezone: `Hora de Ecuador (${ECUADOR_TIMEZONE})`,
-      apdDayHeader:
-        DateTime.fromISO(promotionDay, { zone: ECUADOR_TIMEZONE }).setLocale('es').toFormat("cccc d 'de' LLLL 'de' yyyy"),
+      apdTimezone: timezone,
+      apdDayHeader: '',
       apdEntries: promotionSlots,
+    } : null);
+    if (!report) return null;
+    const localizedDay = DateTime.fromISO(promotionDay, { zone: timezone }).setLocale(locale);
+    return {
+      ...report,
+      apdTimezone: timezone,
+      apdDayHeader: localizedDay.isValid ? localizedDay.toLocaleString(DateTime.DATE_FULL) : promotionDay,
     };
-  }, [promotionDay, promotionReportQuery.data, promotionSlots, selectedPromotionArtist]);
+  }, [locale, promotionDay, promotionReportQuery.data, promotionSlots, selectedPromotionArtist, timezone]);
 
   const sortedArtists = useMemo(
     () => [...artists].sort((a, b) => a.apDisplayName.localeCompare(b.apDisplayName)),
@@ -265,7 +297,7 @@ export default function LabelArtistsPage() {
       return;
     }
     setPromotionArtistId((prev) =>
-      prev && artists.some((artist) => artist.apArtistId === prev) ? prev : artists[0].apArtistId,
+      prev && artists.some((artist) => artist.apArtistId === prev) ? prev : artists[0]!.apArtistId,
     );
   }, [artists]);
 
@@ -315,7 +347,7 @@ export default function LabelArtistsPage() {
   const hasArtistSearch = search.trim().length > 0;
   const showArtistSearch = hasArtistProfiles || hasArtistSearch;
   const showArtistRefresh = hasArtistProfiles || Boolean(artistsQuery.error);
-  const showQuickNotesCard = filteredArtists.length > 0;
+  const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
   const selectedParty = useMemo(
@@ -390,7 +422,7 @@ export default function LabelArtistsPage() {
         apuYoutubeUrl: toNullableField(draft.youtubeUrl),
         apuWebsiteUrl: toNullableField(draft.websiteUrl),
         apuFeaturedVideoUrl: toNullableField(draft.featuredVideoUrl),
-        apuGenres: toNullableField(draft.genres),
+        apuGenreIds: draft.genreIds,
         apuHighlights: toNullableField(draft.highlights),
       };
       return Admin.upsertArtistProfile(body);
@@ -532,12 +564,16 @@ export default function LabelArtistsPage() {
   };
 
   const handleSubmit = () => {
+    if (!genresCatalogQuery.isSuccess) {
+      setFormError('Espera a que el catálogo de géneros esté disponible antes de guardar.');
+      return;
+    }
+    if (unavailableFormGenreIds.length > 0) {
+      setFormError('Sustituye los géneros inactivos o reemplazados antes de guardar.');
+      return;
+    }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
     upsertMutation.mutate({ draft: form, originalDisplayName: originalName });
-  };
-
-  const handleRefresh = () => {
-    void qc.invalidateQueries({ queryKey: ['admin', 'artists'] });
   };
 
   const handlePromotionEdit = (slot: ArtistPromoSlotDTO) => {
@@ -607,19 +643,25 @@ export default function LabelArtistsPage() {
   };
 
   return (
-    <Stack spacing={3}>
+    <PageShell
+      title="Artistas"
+      subtitle="Administra los perfiles que alimentan la comunidad y los lanzamientos del label."
+      actions={(
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
+          Nuevo perfil
+        </Button>
+      )}
+    >
+      <Stack spacing={3}>
+      <Typography variant="caption" color="text.secondary">
+        Label / Artistas
+      </Typography>
       {banner && (
         <Alert severity={banner.severity} onClose={() => setBanner(null)}>
           {banner.message}
         </Alert>
       )}
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="flex-start">
-        <Stack spacing={0.5}>
-          <Typography variant="h4" fontWeight={700}>Label / Artistas</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Administra los perfiles que alimentan la comunidad y los lanzamientos del label.
-          </Typography>
-        </Stack>
+      {(showArtistSearch || showArtistRefresh) && (
         <Stack direction="row" spacing={1} alignItems="center">
           {showArtistSearch && (
             <TextField
@@ -640,24 +682,27 @@ export default function LabelArtistsPage() {
             />
           )}
           {showArtistRefresh && (
-            <Tooltip title="Refrescar">
-              <span>
-                <IconButton
-                  onClick={handleRefresh}
-                  disabled={artistsQuery.isFetching}
-                  aria-label="Refrescar artistas"
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
+            <Button
+              tabIndex={0}
+              onClick={(event) => {
+                const refreshButton = event.currentTarget;
+                void artistsQuery.refetch().finally(() => {
+                  window.setTimeout(() => {
+                    if (refreshButton.isConnected) refreshButton.focus();
+                  }, 0);
+                });
+              }}
+              aria-label="Refrescar artistas"
+              disabled={artistsQuery.isFetching}
+              size="small"
+              startIcon={<RefreshIcon />}
+              variant="outlined"
+            >
+              {artistsQuery.isFetching ? 'Actualizando' : 'Refrescar'}
+            </Button>
           )}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenNew}>
-            Nuevo perfil
-          </Button>
         </Stack>
-      </Stack>
-
+      )}
       {showQuickNotesCard && (
         <Card>
           <CardContent>
@@ -667,51 +712,67 @@ export default function LabelArtistsPage() {
                 Usa este espacio para pendientes breves; se guardan en las notas del contacto (Party.notes) y se reutilizan en el CRM.
               </Typography>
               <Stack spacing={1.5}>
-                {filteredArtists.map((artist) => {
-                  const party = partyMap.get(artist.apArtistId);
-                  const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
-                  return (
-                    <Box
-                      key={artist.apArtistId}
-                      sx={{
-                        border: '1px solid rgba(148,163,184,0.35)',
-                        borderRadius: 2,
-                        p: 1.5,
-                        display: 'flex',
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        gap: 1,
-                        alignItems: { xs: 'stretch', sm: 'center' },
-                      }}
-                    >
-                      <Box sx={{ minWidth: 220 }}>
-                        <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {artist.apCity ?? 'Sin ciudad'}
-                        </Typography>
-                      </Box>
-                      <TextField
-                        value={noteValue}
-                        onChange={(e) =>
-                          setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
-                        }
-                        aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
-                        placeholder="Agregar nota o pendiente"
-                        fullWidth
-                        size="small"
-                        multiline
-                        minRows={1}
-                      />
-                      <Button
-                        variant="contained"
-                        onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
-                        disabled={noteMutation.isPending}
-                        sx={{ minWidth: 140 }}
-                      >
-                        {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
-                      </Button>
-                    </Box>
-                  );
-                })}
+                {filteredArtists.length === 0 && (
+                  <EmptyState
+                    title="Sin artistas"
+                    description="Aún no hay perfiles de artista. Crea el primero para empezar."
+                    actionLabel="Nuevo perfil"
+                    actionOnClick={handleOpenNew}
+                  />
+                )}
+                <LazyPaginatedList
+                  items={filteredArtists}
+                  pagination={{ itemLabel: 'artistas', initialRowsPerPage: 10, resetKey: search.trim() }}
+                  renderItems={(visibleArtists) => (
+                    <Stack spacing={1.5}>
+                      {visibleArtists.map((artist) => {
+                        const party = partyMap.get(artist.apArtistId);
+                        const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
+                        return (
+                          <Box
+                            key={artist.apArtistId}
+                            sx={{
+                              border: '1px solid rgba(148,163,184,0.35)',
+                              borderRadius: 2,
+                              p: 1.5,
+                              display: 'flex',
+                              flexDirection: { xs: 'column', sm: 'row' },
+                              gap: 1,
+                              alignItems: { xs: 'stretch', sm: 'center' },
+                            }}
+                          >
+                            <Box sx={{ minWidth: 220 }}>
+                              <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {artist.apCity ?? 'Sin ciudad'}
+                              </Typography>
+                            </Box>
+                            <TextField
+                              value={noteValue}
+                              onChange={(e) =>
+                                setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
+                              }
+                              aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
+                              placeholder="Agregar nota o pendiente"
+                              fullWidth
+                              size="small"
+                              multiline
+                              minRows={1}
+                            />
+                            <Button
+                              variant="contained"
+                              onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
+                              disabled={noteMutation.isPending}
+                              sx={{ minWidth: 140 }}
+                            >
+                              {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
+                            </Button>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  )}
+                />
               </Stack>
             </Stack>
           </CardContent>
@@ -720,36 +781,44 @@ export default function LabelArtistsPage() {
 
       <Card>
         <CardContent>
-          {artistsQuery.isLoading && <Typography>Cargando artistas…</Typography>}
+          {artistsQuery.isLoading && <SkeletonCards count={4} />}
           {artistsQuery.error && (
             <Alert severity="error">
               No pudimos cargar los artistas. Verifica tus permisos de admin.
             </Alert>
           )}
           {showFirstArtistSetup && (
-            <Alert severity="info" variant="outlined">
-              Todavía no hay perfiles de artista. Usa Nuevo perfil para enlazar el primer contacto del CRM; la búsqueda, notas rápidas, refresco y tabla aparecerán cuando exista al menos un perfil.
-            </Alert>
+            <EmptyState
+              title="Sin artistas"
+              description="Todavía no hay perfiles de artista. Usa Nuevo perfil para enlazar el primer contacto del CRM; la búsqueda, notas rápidas, refresco y tabla aparecerán cuando exista al menos un perfil."
+            />
           )}
           {!showFirstArtistSetup && !artistsQuery.isLoading && filteredArtists.length === 0 && !artistsQuery.error && (
-            <Typography color="text.secondary">No hay perfiles de artista que coincidan con la búsqueda.</Typography>
+            <EmptyState
+              title="Sin coincidencias"
+              description="No hay perfiles de artista que coincidan con la búsqueda."
+            />
           )}
           {filteredArtists.length > 0 && (
-            <Box sx={{ overflowX: 'auto' }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Artista</TableCell>
-                    <TableCell>Slug</TableCell>
-                    <TableCell>Fans</TableCell>
-                    <TableCell>Cuenta</TableCell>
-                    <TableCell>Ciudad</TableCell>
-                    <TableCell>Enlaces</TableCell>
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredArtists.map((artist) => {
+            <LazyPaginatedList
+              items={filteredArtists}
+              pagination={{ itemLabel: 'artistas', initialRowsPerPage: 25, resetKey: search.trim() }}
+              renderItems={(visibleArtists) => (
+                <Box sx={{ overflowX: 'auto' }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Artista</TableCell>
+                        <TableCell>Slug</TableCell>
+                        <TableCell>Fans</TableCell>
+                        <TableCell>Cuenta</TableCell>
+                        <TableCell>Ciudad</TableCell>
+                        <TableCell>Enlaces</TableCell>
+                        <TableCell align="right">Acciones</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {visibleArtists.map((artist) => {
                     const spotifyUrl =
                       artist.apSpotifyUrl ??
                       (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
@@ -811,12 +880,14 @@ export default function LabelArtistsPage() {
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                </TableBody>
-              </Table>
-            </Box>
+                      })}
+                    </TableBody>
+                  </Table>
+                </Box>
+              )}
+            />
           )}
-      </CardContent>
+        </CardContent>
       </Card>
 
       {hasArtistProfiles && (
@@ -826,12 +897,12 @@ export default function LabelArtistsPage() {
               <Stack spacing={0.5}>
                 <Typography variant="h6">Promoción diaria y reporte PDF</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Gestiona la agenda promocional por artista y genera el PDF diario ordenado por hora en formato Ecuador.
+                  Gestiona la agenda promocional por artista y genera el PDF diario ordenado por hora.
                 </Typography>
               </Stack>
 
               <Alert severity="info" variant="outlined">
-                El reporte usa horario de Ecuador ({ECUADOR_TIMEZONE}) y un PDF por artista + día seleccionado.
+                El reporte usa tu zona horaria configurada ({timezone}) y un PDF por artista + día seleccionado.
               </Alert>
 
               <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems={{ xs: 'stretch', lg: 'center' }}>
@@ -991,7 +1062,7 @@ export default function LabelArtistsPage() {
                         </Alert>
                       )}
                       {promotionReportQuery.isLoading && <Typography color="text.secondary">Cargando vista previa…</Typography>}
-                      {promotionReport && promotionReport.apdEntries.length === 0 && !promotionReportQuery.isLoading && (
+                      {promotionReport?.apdEntries.length === 0 && !promotionReportQuery.isLoading && (
                         <Alert severity="info" variant="outlined">
                           No hay espacios promocionales registrados para este artista en la fecha seleccionada.
                         </Alert>
@@ -1167,9 +1238,9 @@ export default function LabelArtistsPage() {
               label="Subir portada a Drive"
               helperText="Sube la imagen principal a Google Drive; guardaremos el enlace."
               onComplete={(files) => {
-                const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-                if (link) {
-                  setForm((prev) => ({ ...prev, heroImageUrl: link }));
+                const uploadedHeroImageUrl = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                if (uploadedHeroImageUrl) {
+                  setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
                   setHeroImageFileName('Imagen en Drive');
                 }
               }}
@@ -1261,10 +1332,24 @@ export default function LabelArtistsPage() {
               />
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                label="Géneros (coma separada)"
-                value={form.genres}
-                onChange={(event) => setForm((prev) => ({ ...prev, genres: event.target.value }))}
+              <Autocomplete
+                multiple
+                disabled={!genresCatalogQuery.isSuccess}
+                options={genreOptions}
+                value={genreOptions.filter((genre) => form.genreIds.includes(genre.id))}
+                getOptionLabel={(genre) => genre.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(_event, selected) => setForm((prev) => ({
+                  ...prev,
+                  genreIds: selected.map((genre) => genre.id),
+                }))}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Géneros"
+                    helperText="Solo se pueden asignar géneros publicados y activos."
+                  />
+                )}
                 fullWidth
               />
               <TextField
@@ -1274,6 +1359,28 @@ export default function LabelArtistsPage() {
                 fullWidth
               />
             </Stack>
+            {genresCatalogQuery.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => { void genresCatalogQuery.refetch(); }}
+                    disabled={genresCatalogQuery.isRefetching}
+                  >
+                    {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                  </Button>
+                }
+              >
+                No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+              </Alert>
+            )}
+            {unavailableFormGenreIds.length > 0 && !genresCatalogQuery.isLoading && (
+              <Alert severity="warning">
+                Este perfil referencia géneros inactivos o reemplazados. Sustitúyelos por valores vigentes.
+              </Alert>
+            )}
             {formError && <Alert severity="error">{formError}</Alert>}
           </Stack>
         </DialogContent>
@@ -1282,12 +1389,13 @@ export default function LabelArtistsPage() {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={upsertMutation.isPending || !form.partyId}
+            disabled={upsertMutation.isPending || !form.partyId || !genresCatalogQuery.isSuccess || unavailableFormGenreIds.length > 0}
           >
             {upsertMutation.isPending ? 'Guardando…' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
     </Stack>
+    </PageShell>
   );
 }

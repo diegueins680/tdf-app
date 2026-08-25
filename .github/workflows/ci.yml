@@ -8,18 +8,140 @@ on:
       - 'tdf-mobile'
       - 'tdf-mobile/**'
       - 'scripts/**'
+      - 'test/personas/**'
+      - 'test/internships/**'
+      - 'e2e/web/**'
+      - 'playwright.config.mjs'
+      - 'docs/persona-testing/**'
+      - 'docs/internships/**'
       - 'package.json'
       - 'package-lock.json'
       - '.npmrc'
+      - '.dockerignore'
       - '.github/workflows/**'
+      - 'fly.toml'
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      force_backend:
+        description: Always build and test the backend, even when path classification would skip it.
+        required: false
+        default: false
+        type: boolean
+      publish_backend_artifact:
+        description: Upload the tested backend executable for the image packaging workflow.
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  quality:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.scope.outputs.repo }}
+      ui: ${{ steps.scope.outputs.ui }}
+      mobile: ${{ steps.scope.outputs.mobile }}
+      backend: ${{ steps.scope.outputs.backend }}
+      contracts: ${{ steps.scope.outputs.contracts }}
+      migrations: ${{ steps.scope.outputs.migrations }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          FORCE_BACKEND: ${{ inputs.force_backend && 'true' || 'false' }}
+        run: |
+          args=(--base "$BASE_SHA" --head "$HEAD_SHA" --github-output "$GITHUB_OUTPUT")
+          if [ "$FORCE_BACKEND" = 'true' ]; then args+=(--force-backend); fi
+          node scripts/ci-change-scope.mjs "${args[@]}"
+
+  repo-quality:
+    needs: changes
+    if: needs.changes.outputs.repo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Run repository checks
+        run: npm run quality:repo
+
+  ui-quality:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Run UI checks
+        run: npm run quality:ui
+
+  persona-web-e2e:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true' || needs.changes.outputs.repo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run isolated persona web journeys
+        run: npm run test:e2e:web
+
+      - name: Upload sanitized browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: persona-web-e2e-${{ github.run_id }}
+          path: artifacts/persona-playwright
+          retention-days: 14
+
+  mobile-quality:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     env:
       REQUIRE_MOBILE_WORKSPACE: '1'
-      REQUIRE_STACK: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,15 +160,101 @@ jobs:
       - name: Install mobile dependencies
         run: npm --prefix tdf-mobile ci
 
-      - name: Install Stack
+      - name: Run mobile checks
+        run: npm run quality:mobile
+
+  backend-quality:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    container: haskell:9.10.3-bookworm
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: tdf_hq_automatic_migration_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tdf_hq_automatic_migration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      REQUIRE_STACK: '1'
+      STACK_ROOT: ${{ github.workspace }}/.stack-root
+      BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install native build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y haskell-stack
+          apt-get update
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
 
-      - name: Run quality gate
-        run: npm run quality
+      - name: Restore immutable Stack dependencies
+        uses: actions/cache@v4
+        with:
+          path: .stack-root
+          key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
 
-  api-contracts:
+      - name: Restore incremental backend objects
+        uses: actions/cache@v4
+        with:
+          path: tdf-hq/.stack-work
+          key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
+          restore-keys: |
+            stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Build and test backend once
+        run: bash scripts/quality-backend.sh
+
+      - name: Verify automatic migrations against the production schema
+        env:
+          TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/test-automatic-migrations-production-schema.sh
+
+      - name: Upload tested backend executable
+        if: inputs.publish_backend_artifact == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdf-hq-binary-${{ github.sha }}
+          path: tdf-hq/.release/tdf-hq-exe
+          if-no-files-found: error
+          retention-days: 1
+
+  quality:
+    if: always()
+    needs:
+      - changes
+      - repo-quality
+      - ui-quality
+      - persona-web-e2e
+      - mobile-quality
+      - backend-quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every selected quality job to pass
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          REPO_RESULT: ${{ needs.repo-quality.result }}
+          UI_RESULT: ${{ needs.ui-quality.result }}
+          PERSONA_WEB_E2E_RESULT: ${{ needs.persona-web-e2e.result }}
+          MOBILE_RESULT: ${{ needs.mobile-quality.result }}
+          BACKEND_RESULT: ${{ needs.backend-quality.result }}
+        run: |
+          for result in "$CHANGES_RESULT" "$REPO_RESULT" "$UI_RESULT" "$PERSONA_WEB_E2E_RESULT" "$MOBILE_RESULT" "$BACKEND_RESULT"; do
+            case "$result" in
+              success|skipped) ;;
+              *) echo "Selected quality job did not pass: $result" >&2; exit 1 ;;
+            esac
+          done
+
+  api-contract-tests:
+    needs: changes
+    if: needs.changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     env:
       REQUIRE_MOBILE_WORKSPACE: '1'
@@ -73,3 +281,157 @@ jobs:
 
       - name: Verify generated clients are committed
         run: git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
+
+  api-contracts:
+    if: always()
+    needs:
+      - changes
+      - api-contract-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require API contract validation when selected
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          CONTRACT_RESULT: ${{ needs.api-contract-tests.result }}
+        run: |
+          test "$CHANGES_RESULT" = success
+          case "$CONTRACT_RESULT" in success|skipped) ;; *) exit 1 ;; esac
+
+  migration-tests:
+    needs: changes
+    if: needs.changes.outputs.migrations == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: tdf_hq_migration_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tdf_hq_migration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_hq_migration_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test the production release contract
+        run: npm run test:production-release
+
+      - name: Rehearse the studio internship audit migration and rollback
+        run: sh scripts/test-studio-internship-audit-migration.sh
+
+      - name: Rehearse service-storefront checkout runtime migration
+        run: ./scripts/test-service-storefront-checkout-runtime-migration.sh
+
+      - name: Rehearse checkout event and refund runtime migration
+        run: ./scripts/test-checkout-event-refund-runtime-migration.sh
+
+      - name: Rehearse provider event operations migration
+        run: ./scripts/test-provider-event-operations-migration.sh
+
+      - name: Rehearse service booking checkout runtime migration
+        run: ./scripts/test-service-booking-checkout-runtime-migration.sh
+
+      - name: Rehearse course checkout runtime migration
+        run: ./scripts/test-course-checkout-runtime-migration.sh
+
+      - name: Rehearse Domo quote and deposit checkout runtime migration
+        run: ./scripts/test-domo-quote-checkout-runtime-migration.sh
+
+      - name: Rehearse marketplace customer operations and deposit settlement migration
+        run: ./scripts/test-marketplace-operations-migration.sh
+
+      - name: Rehearse verified experience review migration
+        run: sh ./scripts/test-verified-experience-reviews-migration.sh
+
+      - name: Create production baseline fixture
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-schema-20260814.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/catalog-production-source-fixture.sql
+
+      - name: Verify pristine production preflight
+        run: |
+          node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          security_report="$(psql "$PGURL" -X -qAt -v ON_ERROR_STOP=1 -f tdf-hq/sql/preflight_security_emergency_readiness.sql)"
+          node -e 'const report=JSON.parse(process.argv[1]); if (report.schemaMode!=="legacy" || !report.preMigrationReady || report.authenticatableParties!==2) process.exit(1)' "$security_report"
+
+      - name: Apply the authoritative migration batch twice
+        env:
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
+        run: |
+          node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          expected_migrations="$(node -p "require('./scripts/production-migrations.json').migrations.length")"
+          test "$(psql "$PGURL" -Atqc 'SELECT COUNT(*) FROM public.tdf_schema_migration')" = "$expected_migrations"
+          security_report="$(psql "$PGURL" -X -qAt -v ON_ERROR_STOP=1 -f tdf-hq/sql/preflight_security_emergency_readiness.sql)"
+          node -e 'const report=JSON.parse(process.argv[1]); if (report.schemaMode!=="canonical" || !report.databaseReady || report.databaseCoherentPaths!==2) process.exit(1)' "$security_report"
+
+      - name: Verify catalog dry-runs and raw cutover idempotency
+        env:
+          TDF_CATALOG_TEST_DATABASE_URL: ${{ env.PGURL }}
+          TDF_CATALOG_TEST_REVISION: catalog-ci-idempotency-v1
+        run: scripts/test-catalog-production-cutover.sh
+
+      - name: Verify raw migration idempotency and the release schema contract
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-12_event_discovery_imports.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-15_social_discovery_reviews.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-07-29_campaign_automation.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-02_ddex_catalog_core.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-06_feature_access_requests.sql
+          psql "$PGURL" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-06_feature_navigation_preferences.sql
+          node scripts/render-production-schema-verification.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+          node scripts/render-production-schema-preflight.mjs | psql "$PGURL" -v ON_ERROR_STOP=1
+
+      - name: Reject a changed applied migration
+        env:
+          SOURCE_COMMIT: '0000000000000000000000000000000000000000'
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c "UPDATE public.tdf_schema_migration SET checksum = repeat('f', 64) WHERE migration_id = '2026-07-12_ticketing_runtime_schema'"
+          if node scripts/render-production-migration-batch.mjs | psql "$PGURL" -v ON_ERROR_STOP=1; then
+            echo "checksum mismatch was accepted" >&2
+            exit 1
+          fi
+
+      - name: Verify artist enrichment migration rollback preserves base profiles
+        env:
+          PGROLLBACK: postgresql://postgres:postgres@127.0.0.1:5432/artist_enrichment_rollback_test
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE artist_enrichment_rollback_test'
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -c 'CREATE TABLE party (id BIGSERIAL PRIMARY KEY); CREATE TABLE artist_profile (id BIGSERIAL PRIMARY KEY, artist_party_id BIGINT REFERENCES party(id), slug TEXT);'
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment.sql
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment.sql
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -c "INSERT INTO party DEFAULT VALUES; INSERT INTO artist_profile (artist_party_id, slug) VALUES (1, 'rollback-proof');"
+          psql "$PGROLLBACK" -v ON_ERROR_STOP=1 -f tdf-hq/sql/2026-08-05_artist_enrichment_rollback.sql
+          test "$(psql "$PGROLLBACK" -Atqc "SELECT count(*) FROM artist_profile WHERE slug = 'rollback-proof'")" = '1'
+          test "$(psql "$PGROLLBACK" -Atqc "SELECT count(*) FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relname IN ('artist_profile_enrichment','artist_inventory_reference','artist_research_source','artist_enrichment_suggestion','artist_field_change','artist_enrichment_run','artist_identity_candidate','artist_media_asset')")" = '0'
+
+  production-migrations:
+    if: always()
+    needs:
+      - changes
+      - migration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require production migration validation when selected
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          MIGRATION_RESULT: ${{ needs.migration-tests.result }}
+        run: |
+          test "$CHANGES_RESULT" = success
+          case "$MIGRATION_RESULT" in success|skipped) ;; *) exit 1 ;; esac

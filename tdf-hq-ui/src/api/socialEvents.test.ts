@@ -1,11 +1,42 @@
 import { jest } from '@jest/globals';
 
-const getMock = jest.fn<(path: string) => Promise<unknown>>();
+const getMock = jest.fn<(path: string, init?: RequestInit) => Promise<unknown>>();
 const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
 const postFormMock = jest.fn<(path: string, body: FormData) => Promise<unknown>>();
 const putMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
+const delMock = jest.fn<(path: string) => Promise<unknown>>();
+
+type RawPathSegment = string & { readonly __rawPathSegment: 'RawPathSegment' };
+type EncodedPathSegment = string & { readonly __encodedPathSegment: 'EncodedPathSegment' };
+
+const rawPathSegment = (value: string): RawPathSegment => {
+  if (value.trim().length === 0) {
+    throw new Error('Test path segment fixtures must be non-blank.');
+  }
+  if (value.includes('%')) {
+    throw new Error('Test path segment fixtures must be raw, not pre-encoded.');
+  }
+  return value as RawPathSegment;
+};
+
+const encodeExpectedPathSegment = (value: RawPathSegment): EncodedPathSegment => {
+  const encoded = encodeURIComponent(value);
+  if (encoded.includes('/')) {
+    throw new Error('Encoded path segment fixtures must not contain raw slashes.');
+  }
+  return encoded as EncodedPathSegment;
+};
+
+const WAITLIST_EVENT_ID_WITH_SPACE = rawPathSegment('event 7');
+const WAITLIST_ENTRY_ID_WITH_SLASH = rawPathSegment('entry/a');
+const WAITLIST_TIER_ID_WITH_SLASH = rawPathSegment('tier/3');
+const PADDED_WAITLIST_TIER_ID_WITH_SLASH = ` ${WAITLIST_TIER_ID_WITH_SLASH} `;
+const WAITLIST_EVENT_PATH = `/social-events/events/${encodeExpectedPathSegment(WAITLIST_EVENT_ID_WITH_SPACE)}/waitlist`;
+const WAITLIST_ENTRY_PATH = `${WAITLIST_EVENT_PATH}/${encodeExpectedPathSegment(WAITLIST_ENTRY_ID_WITH_SLASH)}`;
+const WAITLIST_TIER_QUERY_PATH = `${WAITLIST_EVENT_PATH}?tierId=${encodeExpectedPathSegment(WAITLIST_TIER_ID_WITH_SLASH)}`;
 
 jest.unstable_mockModule('./client', () => ({
+  del: delMock,
   get: getMock,
   post: postMock,
   postForm: postFormMock,
@@ -20,23 +51,70 @@ describe('SocialEventsAPI', () => {
     postMock.mockReset();
     postFormMock.mockReset();
     putMock.mockReset();
+    delMock.mockReset();
     getMock.mockResolvedValue([]);
     postMock.mockResolvedValue({});
     postFormMock.mockResolvedValue({});
     putMock.mockResolvedValue({});
+    delMock.mockResolvedValue({});
   });
 
   it('trims list query params and skips blank filters', async () => {
     await SocialEventsAPI.listEvents({
       city: '  Quito  ',
       startAfter: '   ',
-      eventType: ' concert ',
-      eventStatus: '',
+      eventTypeId: '31000000-0000-4000-8000-000000000001',
+      workflowStateId: ' 00000000-0000-4000-8000-000000000233 ',
       artistId: ' 42 ',
       venueId: '   ',
     });
 
-    expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type=concert&artistId=42');
+    expect(getMock).toHaveBeenCalledWith('/social-events/events?city=Quito&event_type_id=31000000-0000-4000-8000-000000000001&workflow_state_id=00000000-0000-4000-8000-000000000233&artistId=42');
+  });
+
+  it('forwards cancellation for public upcoming event searches', async () => {
+    const controller = new AbortController();
+
+    await SocialEventsAPI.listPublicUpcomingEvents({
+      city: ' Guayaquil ',
+      startAfter: '2030-01-01T00:00:00.000Z',
+      limit: 50,
+      signal: controller.signal,
+    });
+
+    expect(getMock).toHaveBeenLastCalledWith(
+      '/social-events/upcoming?city=Guayaquil&startAfter=2030-01-01T00%3A00%3A00.000Z&limit=50',
+      { signal: controller.signal },
+    );
+  });
+
+  it('removes waitlist entries through the shared API client', async () => {
+    await SocialEventsAPI.removeFromWaitlist(WAITLIST_EVENT_ID_WITH_SPACE, WAITLIST_ENTRY_ID_WITH_SLASH);
+
+    expect(delMock).toHaveBeenCalledWith(WAITLIST_ENTRY_PATH);
+  });
+
+  it('lists waitlist entries with a trimmed tier filter', async () => {
+    await SocialEventsAPI.listWaitlist(WAITLIST_EVENT_ID_WITH_SPACE, PADDED_WAITLIST_TIER_ID_WITH_SLASH);
+
+    expect(getMock).toHaveBeenCalledWith(WAITLIST_TIER_QUERY_PATH);
+  });
+
+  it('uses encoded event and activity identifiers for logistics route verification', async () => {
+    await SocialEventsAPI.verifyLogisticsRoute('event 7', 'travel/12');
+
+    expect(postMock).toHaveBeenCalledWith(
+      '/social-events/events/event%207/logistics/activities/travel%2F12/verify-route',
+      {},
+    );
+  });
+
+  it('uses the logistics aggregate and delete endpoints', async () => {
+    await SocialEventsAPI.getLogisticsPlan('event 7');
+    await SocialEventsAPI.deleteLogisticsPlace('event 7', 'place/3');
+
+    expect(getMock).toHaveBeenCalledWith('/social-events/events/event%207/logistics');
+    expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207/logistics/places/place%2F3');
   });
 
   it('respondInvitation includes invitationToPartyId required by backend schema', async () => {

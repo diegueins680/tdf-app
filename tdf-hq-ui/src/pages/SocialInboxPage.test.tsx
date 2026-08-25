@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { SocialMessage } from '../api/socialInbox';
+import type { SocialChannel, SocialMessage } from '../api/socialInbox';
 import type { InstagramOAuthExchangeResponse } from '../api/instagramOAuth';
 import type { MetaReviewAssetSelection } from '../services/instagramAuth';
 
@@ -16,10 +16,33 @@ const listFacebookMessagesMock = jest.fn<
 const listWhatsAppMessagesMock = jest.fn<
   (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) => Promise<SocialMessage[]>
 >();
+const sendReplyMock = jest.fn<
+  (
+    channel: SocialChannel,
+    payload: { senderId: string; message: string; externalId?: string },
+  ) => Promise<{ status?: string; message?: string; response?: unknown }>
+>();
+const suggestReplyMock = jest.fn<
+  (channel: SocialChannel, message: string, hint?: string) => Promise<
+    | { kind: 'send'; text: string }
+    | { kind: 'hold'; reason: string; neededInfo: string; raw: string }
+  >
+>();
+const askOperatorQuestionMock = jest.fn<
+  (payload: {
+    channel: SocialChannel;
+    senderId: string;
+    externalId?: string;
+    inboundMessage: string;
+    holdReason: string;
+    neededInfo: string;
+  }) => Promise<{ status?: string; message?: string; response?: unknown }>
+>();
 const getInstagramOAuthProviderMock = jest.fn<() => 'facebook' | 'instagram'>();
 const getInstagramRequestedScopesMock = jest.fn<() => string[]>();
 const getMetaReviewAssetSelectionMock = jest.fn<() => MetaReviewAssetSelection | null>();
 const getStoredInstagramResultMock = jest.fn<() => InstagramOAuthExchangeResponse | null>();
+const META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE = ['2', '5', '3', '4', '0', '4', '4'].join('');
 
 jest.unstable_mockModule('../api/socialInbox', () => ({
   SocialInboxAPI: {
@@ -29,8 +52,20 @@ jest.unstable_mockModule('../api/socialInbox', () => ({
       listFacebookMessagesMock(filters),
     listWhatsAppMessages: (filters?: { limit?: number; direction?: 'incoming' | 'outgoing' | 'all'; repliedOnly?: boolean }) =>
       listWhatsAppMessagesMock(filters),
-    sendReply: jest.fn(() => Promise.resolve({ status: 'ok' })),
-    suggestReply: jest.fn(() => Promise.resolve('Reply drafted by AI.')),
+    sendReply: (
+      channel: SocialChannel,
+      payload: { senderId: string; message: string; externalId?: string },
+    ) => sendReplyMock(channel, payload),
+    suggestReply: (channel: SocialChannel, message: string, hint?: string) =>
+      suggestReplyMock(channel, message, hint),
+    askOperatorQuestion: (payload: {
+      channel: SocialChannel;
+      senderId: string;
+      externalId?: string;
+      inboundMessage: string;
+      holdReason: string;
+      neededInfo: string;
+    }) => askOperatorQuestionMock(payload),
   },
 }));
 
@@ -39,6 +74,14 @@ jest.unstable_mockModule('../services/instagramAuth', () => ({
   getInstagramRequestedScopes: () => getInstagramRequestedScopesMock(),
   getMetaReviewAssetSelection: () => getMetaReviewAssetSelectionMock(),
   getStoredInstagramResult: () => getStoredInstagramResultMock(),
+}));
+
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 const { default: SocialInboxPage, SocialMessageDialog } = await import('./SocialInboxPage');
@@ -71,7 +114,6 @@ const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?
     root?.render(
       <MemoryRouter
         initialEntries={[initialEntry]}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <SocialInboxPage />
@@ -96,14 +138,18 @@ const renderPage = async (container: HTMLElement, initialEntry = '/social/inbox?
   };
 };
 
-const renderDialog = async (container: HTMLElement, selection: { channel: 'instagram'; message: SocialMessage }) => {
+const renderDialog = async (
+  container: HTMLElement,
+  selection: { channel: 'instagram'; message: SocialMessage },
+  reviewMode = true,
+) => {
   let root: Root | null = createRoot(container);
 
   await act(async () => {
     root?.render(
       <SocialMessageDialog
         selection={selection}
-        reviewMode
+        reviewMode={reviewMode}
         activeAsset={null}
         onClose={() => undefined}
         onRefresh={() => undefined}
@@ -131,6 +177,19 @@ const countInstagramSetupLinks = (root: ParentNode) =>
 
 const countButtonsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
+
+const getButtonByText = (root: ParentNode, labelText: string) => {
+  const button = Array.from(root.querySelectorAll('button')).find(
+    (candidate) => (candidate.textContent ?? '').trim() === labelText,
+  );
+  if (!(button instanceof HTMLButtonElement)) {
+    throw new Error(`Button not found: ${labelText}`);
+  }
+  return button;
+};
+
+const countButtonsByAriaLabel = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll('button')).filter((candidate) => candidate.getAttribute('aria-label') === labelText).length;
 
 const countInteractiveElementsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('button, a')).filter((candidate) => (candidate.textContent ?? '').trim() === labelText).length;
@@ -168,6 +227,9 @@ const hasLabel = (root: ParentNode, labelText: string) =>
 
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
+
+const hasExactText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('*')).some((el) => (el.textContent ?? '').trim() === labelText);
 
 const queryFilterChip = (root: ParentNode, labelText: string) =>
   root.querySelector(`[aria-label="Filter inbox by ${labelText}"]`);
@@ -215,6 +277,9 @@ describe('SocialInboxPage', () => {
     listInstagramMessagesMock.mockReset();
     listFacebookMessagesMock.mockReset();
     listWhatsAppMessagesMock.mockReset();
+    sendReplyMock.mockReset();
+    suggestReplyMock.mockReset();
+    askOperatorQuestionMock.mockReset();
     getInstagramOAuthProviderMock.mockReset();
     getInstagramRequestedScopesMock.mockReset();
     getMetaReviewAssetSelectionMock.mockReset();
@@ -223,6 +288,9 @@ describe('SocialInboxPage', () => {
     listInstagramMessagesMock.mockResolvedValue([]);
     listFacebookMessagesMock.mockResolvedValue([]);
     listWhatsAppMessagesMock.mockResolvedValue([]);
+    sendReplyMock.mockResolvedValue({ status: 'ok' });
+    suggestReplyMock.mockResolvedValue({ kind: 'send', text: 'Reply drafted by AI.' });
+    askOperatorQuestionMock.mockResolvedValue({ status: 'ok' });
     getInstagramOAuthProviderMock.mockReturnValue('facebook');
     getInstagramRequestedScopesMock.mockReturnValue([
       'instagram_basic',
@@ -288,8 +356,11 @@ describe('SocialInboxPage', () => {
       );
       expect(container.textContent).toContain('@tdfreview');
       expect(container.textContent).toContain('IG User ID: ig-user-1');
-      expect(container.textContent).toContain('No inbound messages yet.');
+      expect(container.textContent).toContain('Waiting for the first inbound message.');
       expect(container.textContent).toContain(
+        'Send one inbound test message to the selected asset and wait a few seconds. This review inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
+      );
+      expect(container.textContent).not.toContain(
         'Send one test message to the selected professional/business account. Status filters and channel panels appear here after the first inbound message arrives.',
       );
       expect(container.textContent).not.toContain(
@@ -299,14 +370,51 @@ describe('SocialInboxPage', () => {
         container,
         'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
       )).toBe(0);
-      expect(container.textContent).not.toContain(
-        'The inbox updates automatically; status filters and channel panels appear after the first inbound message arrives.',
-      );
-      expect(countInstagramSetupLinks(container)).toBe(1);
-      expect(getLinkByText(container, 'Change selected asset').getAttribute('href')).toBe('/social/instagram?review=1');
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
       expect(container.textContent).not.toContain('Select asset in Instagram setup');
       expect(container.textContent).not.toContain('Open Instagram setup');
       expect(container.textContent).not.toContain('Re-select asset');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps review proof guidance in one compact helper block once inbound messages arrive', async () => {
+    getMetaReviewAssetSelectionMock.mockReturnValue({
+      pageId: 'page-1',
+      pageName: 'TDF Review Page',
+      instagramUserId: 'ig-user-1',
+      instagramUsername: 'tdfreview',
+      selectedAt: 1_763_000_000_000,
+    });
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Step 2/3: send a live reply from app UI, then show the same message in native client.',
+      );
+      expect(container.textContent).toContain(
+        'Proof order: open the inbound thread, send the reply from TDF HQ, show the same message in the native Instagram client, delete or unsend it there, then wait for the inbox auto-refresh.',
+      );
+      expect(container.textContent).toContain(
+        'Keep this panel visible while recording. It already shows the selected account, inbound message, send action, native-client confirmation, and deleted-message refresh. App Review mode auto-refreshes every 5 seconds.',
+      );
+      expect(container.textContent).not.toContain('Recording checklist');
+      expect(container.textContent).not.toContain('Keep this panel visible and narrate:');
+      expect(container.textContent).not.toContain(
+        'App Review mode auto-refreshes every 5 seconds so deleted or unsent messages disappear from the inbox without a manual reload.',
+      );
+      expect(countTextOccurrences(container, 'App Review mode auto-refreshes every 5 seconds')).toBe(1);
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
+      expect(container.textContent).not.toContain('Select asset in Instagram setup');
     });
 
     await cleanup();
@@ -331,6 +439,36 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps initial inbox loading out of empty filter and channel chrome', async () => {
+    const pendingMessages = new Promise<SocialMessage[]>(() => undefined);
+    listInstagramMessagesMock.mockReturnValue(pendingMessages);
+    listFacebookMessagesMock.mockReturnValue(pendingMessages);
+    listWhatsAppMessagesMock.mockReturnValue(pendingMessages);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Preparando inbox social.');
+      expect(container.textContent).toContain(
+        'Cargando mensajes entrantes. Los filtros y canales apareceran cuando termine la carga.',
+      );
+      expect(countTextOccurrences(container, 'filtros y canales')).toBe(1);
+      expect(container.textContent).not.toContain(
+        'Cargando mensajes entrantes antes de mostrar filtros y canales.',
+      );
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
+      expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+      expect(container.textContent).not.toContain('Filtro');
+      expect(container.textContent).not.toContain('Sin mensajes para este filtro.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps the manual refresh action in the normal inbox where auto-refresh is off', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
@@ -342,6 +480,8 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Inbox social');
+      expect(container.textContent).toContain('Mensajes entrantes y respuestas por canal.');
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(countButtonsByText(container, 'Actualizar')).toBe(1);
       expect(countButtonsByText(container, 'Refresh')).toBe(0);
       expect(container.textContent).not.toContain('App Review mode auto-refreshes every 5 seconds');
@@ -357,11 +497,14 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Inbox social');
+      expect(container.textContent).toContain('Primer mensaje entrante pendiente.');
+      expect(container.textContent).not.toContain('Auto respuestas registradas por el cron diario.');
       expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
       expect(container.textContent).toContain(
-        'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado. Usa Actualizar inbox si esperabas uno ahora.',
+        'Cuando llegue el primer mensaje entrante, aparecera aqui y se activaran los filtros por estado.',
       );
       expect(countButtonsByText(container, 'Actualizar inbox')).toBe(1);
+      expect(countTextOccurrences(container, 'Actualizar inbox')).toBe(1);
       expect(countButtonsByText(container, 'Actualizar')).toBe(0);
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
@@ -424,12 +567,56 @@ describe('SocialInboxPage', () => {
       expect(container.querySelectorAll('table')).toHaveLength(0);
       expect(container.textContent).not.toContain('No messages for this filter.');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
+      expect(countInstagramSetupLinks(container)).toBe(0);
+      expect(container.textContent).not.toContain('Change selected asset');
     });
 
     await cleanup();
   });
 
-  it('keeps zero-result filters hidden while reserving per-channel status chips for the all-messages view', async () => {
+  it('moves normal first-load channel retry into the error guidance instead of a generic header action', async () => {
+    listInstagramMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+    listFacebookMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+    listWhatsAppMessagesMock.mockRejectedValueOnce(new Error('403 forbidden'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container, '/social/inbox');
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('No se pudieron cargar los canales del inbox.');
+      expect(container.textContent).toContain('Reintenta desde aqui; el detalle por canal queda abajo.');
+      expect(countTextOccurrences(container, 'No se pudieron cargar los canales del inbox.')).toBe(1);
+      expect(container.textContent).toContain('Instagram: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(container.textContent).toContain('Facebook: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(container.textContent).toContain('WhatsApp: No se pueden cargar mensajes: permisos insuficientes (403).');
+      expect(countButtonsByText(container, 'Reintentar inbox')).toBe(1);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+      expect(countButtonsByText(container, 'Actualizar inbox')).toBe(0);
+      expect(container.querySelectorAll('[aria-label^="Filtrar inbox por "]')).toHaveLength(0);
+      expect(container.querySelectorAll('table')).toHaveLength(0);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Reintentar inbox').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(listInstagramMessagesMock).toHaveBeenCalledTimes(2);
+      expect(listFacebookMessagesMock).toHaveBeenCalledTimes(2);
+      expect(listWhatsAppMessagesMock).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain('Todavia no hay mensajes entrantes.');
+      expect(countButtonsByText(container, 'Actualizar inbox')).toBe(1);
+      expect(countButtonsByText(container, 'Reintentar inbox')).toBe(0);
+      expect(countButtonsByText(container, 'Actualizar')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('uses visible status counts in filtered channel cards while hiding zero-result filters', async () => {
     listInstagramMessagesMock.mockResolvedValue([
       buildMessage(),
     ]);
@@ -457,8 +644,8 @@ describe('SocialInboxPage', () => {
       expect(queryFilterChip(container, 'Pending')?.textContent).toContain('Pending (1)');
       expect(queryFilterChip(container, 'Replied')?.textContent).toContain('Replied (1)');
       expect(container.textContent).toContain('Only statuses with inbound messages in this view are shown.');
-      expect(container.textContent).toContain('Inbound: 1');
-      expect(container.textContent).not.toContain('Pending: 1');
+      expect(container.textContent).toContain('Pending: 1');
+      expect(container.textContent).not.toContain('Inbound: 1');
       expect(container.textContent).not.toContain('Replied: 1');
       expect(container.textContent).not.toContain('Pending: 0');
       expect(container.textContent).not.toContain('Replied: 0');
@@ -535,7 +722,9 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('Instagram');
-      expect(container.textContent).toContain('Inbound: 100');
+      expect(container.textContent).toContain('Messages: 100');
+      expect(container.textContent).not.toContain('Pending: 100');
+      expect(container.textContent).not.toContain('Inbound: 100');
     });
 
     await cleanup();
@@ -552,10 +741,13 @@ describe('SocialInboxPage', () => {
 
     await waitForExpectation(() => {
       expect(container.querySelectorAll('[aria-label^="Filter inbox by "]')).toHaveLength(0);
+      expect(hasExactText(container, 'Filter')).toBe(false);
       expect(container.textContent).toContain('Status available');
       expect(container.textContent).toContain('Pending');
       expect(container.textContent).toContain('No need to filter it: it is the only inbound status in this view.');
+      expect(container.textContent).toContain('Messages: 1');
       expect(container.textContent).not.toContain('Pending: 1');
+      expect(container.textContent).not.toContain('Inbound: 1');
       expect(container.textContent).not.toContain('Only statuses with inbound messages in this view are shown.');
     });
 
@@ -625,6 +817,37 @@ describe('SocialInboxPage', () => {
     await cleanup();
   });
 
+  it('keeps filtered views focused on channels that still have messages in the current status', async () => {
+    listInstagramMessagesMock.mockResolvedValue([
+      buildMessage(),
+    ]);
+    listFacebookMessagesMock.mockResolvedValue([
+      buildMessage({
+        externalId: 'msg-2',
+        senderId: 'sender-2',
+        senderName: 'Grace',
+        repliedAt: '2030-01-03T03:04:05.000Z',
+        replyText: 'Done.',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.querySelectorAll('table')).toHaveLength(1);
+      expect(container.textContent).toContain('Ada');
+      expect(container.textContent).not.toContain('Grace');
+      expect(container.textContent).toContain(
+        'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
+      );
+      expect(container.textContent).not.toContain('No messages for this filter.');
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single native-client CTA in the review dialog once a reply already exists', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -637,17 +860,298 @@ describe('SocialInboxPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(document.body.textContent).toContain('Reply from app UI');
+      expect(document.body.textContent).toContain('Delivered proof');
+      expect(document.body.textContent).not.toContain('Reply from app UI');
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
+      expect(countTextOccurrences(document.body, 'Done.')).toBe(1);
+      expect(document.body.textContent).not.toContain('· Done.');
+      expect(document.body.textContent).toContain('Sent from app UI');
       expect(countInteractiveElementsByText(document.body, 'Open native client')).toBe(1);
     });
 
     await cleanup();
   });
 
-  it('treats an already delivered reply as proof instead of preloading it as a duplicate send draft', async () => {
+  it('keeps provider message ID copy chrome in review mode only', async () => {
+    const normalContainer = document.createElement('div');
+    document.body.appendChild(normalContainer);
+    const normalDialog = await renderDialog(normalContainer, {
+      channel: 'instagram',
+      message: buildMessage(),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Remitente');
+      expect(document.body.textContent).toContain('Responder');
+      expect(document.body.textContent).not.toContain('Message ID');
+      expect(countButtonsByAriaLabel(document.body, 'Copiar ID')).toBe(0);
+      expect(countButtonsByAriaLabel(document.body, 'Copiar remitente')).toBe(1);
+    });
+
+    await normalDialog.cleanup();
+
+    const reviewContainer = document.createElement('div');
+    document.body.appendChild(reviewContainer);
+    const reviewDialog = await renderDialog(reviewContainer, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Message ID');
+      expect(countButtonsByAriaLabel(document.body, 'Copy ID')).toBe(1);
+    });
+
+    await reviewDialog.cleanup();
+  });
+
+  it('keeps the pending text-message review dialog to one Step 2 helper instead of restating every visible control', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Step 2 of 3: keep this dialog visible, click Send message, then show the same delivered text in the native client.',
+      );
+      expect(countTextOccurrences(document.body, 'Step 2 of 3:')).toBe(1);
+      expect(document.body.textContent).not.toContain('Explain each button while recording');
+      expect(document.body.textContent).not.toContain(
+        'Explain the attachment, message textarea, and Send action while recording.',
+      );
+      expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(true);
+      expect(hasLabel(document.body, 'Outgoing message')).toBe(true);
+      expect(countButtonsByText(document.body, 'Generate with AI')).toBe(1);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('asks Diego on WhatsApp instead of placing HOLD/NEED text into the customer reply draft', async () => {
+    suggestReplyMock.mockResolvedValueOnce({
+      kind: 'hold',
+      reason: 'No sé a qué anuncio específico se refiere.',
+      neededInfo: 'Tema del anuncio\n\nque vio.',
+      raw: 'HOLD: No sé a qué anuncio específico se refiere.\nNEED: Tema del anuncio\n\nque vio.',
+    });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({ text: '¿Puedes contarme algo más sobre tu anuncio?' }),
+    }, false);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countButtonsByText(document.body, 'Generar con IA')).toBe(1);
+      });
+
+      await act(async () => {
+        getButtonByText(document.body, 'Generar con IA').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(suggestReplyMock).toHaveBeenCalledWith(
+          'instagram',
+          '¿Puedes contarme algo más sobre tu anuncio?',
+          '',
+        );
+        expect(askOperatorQuestionMock).toHaveBeenCalledWith({
+          channel: 'instagram',
+          senderId: 'sender-1',
+          externalId: 'msg-1',
+          inboundMessage: '¿Puedes contarme algo más sobre tu anuncio?',
+          holdReason: 'No sé a qué anuncio específico se refiere.',
+          neededInfo: 'Tema del anuncio\n\nque vio.',
+        });
+        expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('');
+        expect(sendReplyMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain('Le escribí a Diego por WhatsApp: Tema del anuncio que vio.');
+        expect(document.body.textContent).not.toContain('HOLD:');
+        expect(document.body.textContent).not.toContain('NEED:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not preload stored HOLD/NEED text as a resendable customer reply', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: 'HOLD: Falta contexto\nNEED: Tema del anuncio',
+        replyError: 'Previous AI hold.',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('');
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+      expect(document.body.textContent).not.toContain('HOLD: Falta contexto');
+    });
+
+    await cleanup();
+  });
+
+  it('preloads stored SEND text without exposing the model format prefix', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: '  SEND: Ya te respondemos por aquí.  ',
+        replyError: 'Previous send failed.',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(getTextControlByLabel(document.body, 'Respuesta').value).toBe('Ya te respondemos por aquí.');
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(false);
+      expect(document.body.textContent).not.toContain('SEND:');
+    });
+
+    await cleanup();
+  });
+
+  it('prioritizes expired Meta reply-window errors over capability fallbacks', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        createdAt: '2020-01-02T03:04:05.000Z',
+        replyText: 'Cuesta $15 la hora.',
+        replyError:
+          'Send failed via connected asset token: HTTP 400 {"error":{"message":"(#3) Application does not have the capability to make this API call.","code":3}} | Send failed via connected asset token (me fallback): HTTP 400 {"error":{"message":"(#10) This message is sent outside of allowed window.","error_subcode":2534022}}',
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Envío bloqueado: la ventana de respuesta de Meta está cerrada.');
+      expect(document.body.textContent).toContain(
+        'Pide a la persona que envíe un nuevo DM antes de responder desde la app',
+      );
+      expect(document.body.textContent).toContain(
+        'La ventana de respuesta de Meta de 7 días ya se cerró para esta conversación.',
+      );
+      expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
+      expect(countInteractiveElementsByText(document.body, 'Abrir inbox')).toBe(1);
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps provider-blocked reply errors from enabling app send with a draft', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyError: 'Recipient user does not have role on app.',
+      }),
+    }, false);
+
+    await act(async () => {
+      setTextControlValue(getTextControlByLabel(document.body, 'Respuesta'), 'Hola de nuevo.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Envío bloqueado: la cuenta destinataria no tiene rol/tester en esta app de Meta.',
+      );
+      expect(getButtonByText(document.body, 'Enviar').disabled).toBe(true);
+    });
+
+    await cleanup();
+  });
+
+  it('prioritizes missing Meta Human Agent Tag subcode over capability fallbacks', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage({
+        replyText: 'Cuesta $15 la hora.',
+        replyError:
+          `Send failed via connected asset token: HTTP 400 {"error":{"message":"(#3) Application does not have the capability to make this API call.","code":3,"error_subcode":${META_HUMAN_AGENT_TAG_MISSING_ERROR_SUBCODE}}}`,
+      }),
+    }, false);
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain(
+        'Envío bloqueado: la app no tiene acceso a Human Agent Tag para mensajería de Instagram.',
+      );
+      expect(document.body.textContent).toContain(
+        'Activa Human Agent Tag en Configuración de la App de Meta > Instagram Settings y reconecta el asset de Instagram.',
+      );
+      expect(document.body.textContent).not.toContain('faltan permisos/capacidades');
+    });
+
+    await cleanup();
+  });
+
+  it('updates the review dialog title status after sending so proof copy does not conflict with delivered state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderDialog(container, {
+      channel: 'instagram',
+      message: buildMessage(),
+    });
+
+    try {
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Pending');
+        expect(countButtonsByText(document.body, 'Send message')).toBe(1);
+      });
+
+      await act(async () => {
+        setTextControlValue(getTextControlByLabel(document.body, 'Outgoing message'), 'Done from app.');
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await act(async () => {
+        const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+          (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
+        );
+        if (!sendButton) throw new Error('Send message button not found');
+        sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(sendReplyMock).toHaveBeenCalledWith('instagram', {
+          senderId: 'sender-1',
+          message: 'Done from app.',
+          externalId: 'msg-1',
+        });
+        expect(document.body.textContent).toContain('Sent from app UI:');
+        expect(document.body.textContent).toContain(
+          'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done from app.”',
+        );
+        expect(document.body.textContent).toContain('Replied');
+        expect(document.body.textContent).not.toContain('Pending');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('treats an already delivered reply as proof instead of preloading duplicate send controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderDialog(container, {
@@ -659,13 +1163,11 @@ describe('SocialInboxPage', () => {
     });
 
     await waitForExpectation(() => {
-      const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
-      const sendButton = Array.from(document.body.querySelectorAll('button')).find(
-        (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
-      );
-      expect(followUpInput.value).toBe('');
-      expect(sendButton).toBeInstanceOf(HTMLButtonElement);
-      expect((sendButton as HTMLButtonElement).disabled).toBe(true);
+      expect(document.body.textContent).toContain('Delivered proof');
+      expect(document.body.textContent).not.toContain('Reply from app UI');
+      expect(() => getTextControlByLabel(document.body, 'Follow-up message')).toThrow();
+      expect(countButtonsByText(document.body, 'Write follow-up')).toBe(1);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(0);
       expect(countButtonsByText(document.body, 'Copy')).toBe(0);
       expect(countButtonsByText(document.body, 'Clear')).toBe(0);
       expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
@@ -673,12 +1175,48 @@ describe('SocialInboxPage', () => {
       expect(document.body.textContent).not.toContain('Step 2 of 3: keep this dialog visible, click Send');
       expect(document.body.textContent).not.toContain('Explain each button while recording');
       expect(countTextOccurrences(document.body, 'Step 3 of 3:')).toBe(1);
-      expect(document.body.textContent).toContain(
+      expect(document.body.textContent).not.toContain(
         'Already replied. Send a follow-up only if the review run needs a second app message.',
       );
       expect(document.body.textContent).toContain(
         'Step 3 of 3: show this exact text in the native client (Instagram/Messenger/WhatsApp): “Done.”',
       );
+      expect(countTextOccurrences(document.body, 'Done.')).toBe(1);
+    });
+
+    await act(async () => {
+      const followUpButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Write follow-up',
+      );
+      if (!followUpButton) throw new Error('Write follow-up button not found');
+      followUpButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const followUpInput = getTextControlByLabel(document.body, 'Follow-up message');
+      expect(followUpInput.value).toBe('');
+      expect(countButtonsByText(document.body, 'Write follow-up')).toBe(0);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(0);
+      expect(document.body.textContent).toContain(
+        'Already replied. Send a follow-up only if the review run needs a second app message.',
+      );
+    });
+
+    await act(async () => {
+      setTextControlValue(getTextControlByLabel(document.body, 'Follow-up message'), 'One more note.');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const sendButton = Array.from(document.body.querySelectorAll('button')).find(
+        (candidate) => (candidate.textContent ?? '').trim() === 'Send message',
+      );
+      expect(sendButton).toBeInstanceOf(HTMLButtonElement);
+      expect(sendButton!.disabled).toBe(false);
+      expect(countButtonsByText(document.body, 'Send message')).toBe(1);
     });
 
     await cleanup();
@@ -722,7 +1260,11 @@ describe('SocialInboxPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain('Attachments');
       expect(document.body.textContent).toContain(
-        'Explain the attachment, message textarea, and Send action while recording. AI draft is hidden because this message has no text body.',
+        'Step 2 of 3: explain the attachment, type the outgoing message, click Send message, then show the delivered text in the native client. AI draft is hidden because this message has no text body.',
+      );
+      expect(countTextOccurrences(document.body, 'Step 2 of 3:')).toBe(1);
+      expect(document.body.textContent).not.toContain(
+        'Explain the attachment, message textarea, and Send action while recording.',
       );
       expect(hasLabel(document.body, 'AI instructions (optional)')).toBe(false);
       expect(hasLabel(document.body, 'Outgoing message')).toBe(true);
@@ -804,6 +1346,8 @@ describe('SocialInboxPage', () => {
       expect(container.textContent).toContain(
         'Showing only channels with messages in this view. No messages right now: Facebook, WhatsApp.',
       );
+      expect(container.textContent).toContain('Messages: 1');
+      expect(container.textContent).not.toContain('Replied: 1');
       expect(container.textContent).not.toContain('No messages for this filter.');
       expect(container.textContent).not.toContain(
         'No messages match Pending in this view. Use All or a status with a count to see existing inbound messages.',

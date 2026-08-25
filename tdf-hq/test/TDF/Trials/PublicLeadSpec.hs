@@ -2,19 +2,21 @@
 
 module TDF.Trials.PublicLeadSpec (spec) where
 
-import Control.Exception (try)
+import Control.Exception (SomeException, try)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
 import Data.Text (Text, pack)
+import qualified Data.Text as T
 import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
-import Database.Persist (Entity (..), getBy, getJustEntity, insert, selectList, (==.))
-import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist (Entity (..), getBy, getJustEntity, insert, insertKey, selectList, toPersistValue, (==.))
+import Database.Persist.Sql (Single (..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (NoContent, ServerError (errBody, errHTTPCode), (:<|>) ((:<|>)))
+import Servant.Server.Internal.Handler (runHandler)
 import Test.Hspec
 
 import TDF.Auth (AuthedUser (..), modulesForRoles)
@@ -28,6 +30,7 @@ import TDF.Trials.DTO
   , TeacherStudentLinkIn (..)
   , TeacherSubjectsUpdate (..)
   , TrialRequestIn (TrialRequestIn)
+  , TrialSlotDTO
   , TrialAvailabilityUpsert (..)
   , TrialAvailabilitySlotDTO
   , TrialAssignIn (..)
@@ -37,12 +40,15 @@ import TDF.Trials.DTO
 import TDF.Trials.API
   ( AttendIn (..)
   , ClassSessionIn (..)
+  , CommissionDTO
   , ClassSessionOut
   , InterestIn (..)
   , PackageDTO
   , PurchaseIn (..)
+  , PurchaseOut
   , SignupIn (..)
   , SubjectCreate (SubjectCreate)
+  , SubjectDTO
   , SubjectUpdate (..)
   , TrialQueueItem
   )
@@ -51,9 +57,12 @@ import TDF.Trials.Server
   , createOrFetchParty
   , ensurePublicLeadParty
   , privateTrialsServer
+  , trialsServer
   , validateAvailabilityIdInput
+  , validateClassSessionPathId
   , validateEmailUpdate
   , validateOptionalTrialRequestStatusFilter
+  , validateOptionalClassSessionNotes
   , validatePurchaseInput
   , validatePreferredSlots
   , validatePreferredSlotsAt
@@ -63,8 +72,12 @@ import TDF.Trials.Server
   , validatePublicSubjectSelection
   , validatePublicTrialRequestInput
   , validatePublicTrialPartyId
+  , validateSubjectPathId
   , validateTeacherSubjectIdsInput
+  , validateTeacherStudentLinkInput
+  , validateTrialAvailabilityUpsertInput
   , validateTrialScheduleInput
+  , resolveAttendNotesUpdate
   )
 import qualified TDF.Models as Models
 import TDF.Trials.Models (Subject (..))
@@ -86,6 +99,41 @@ spec = do
       storedName `shouldBe` "Test User"
       storedPhone `shouldBe` Just "+593991234567"
 
+    it "rejects duplicate email party matches instead of choosing an arbitrary signup fallback" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        let party displayName =
+              Models.Party
+                { Models.partyLegalName = Nothing
+                , Models.partyDisplayName = displayName
+                , Models.partyIsOrg = False
+                , Models.partyTaxId = Nothing
+                , Models.partyPrimaryEmail = Just "duplicate@example.com"
+                , Models.partyPrimaryPhone = Nothing
+                , Models.partyWhatsapp = Nothing
+                , Models.partyInstagram = Nothing
+                , Models.partyEmergencyContact = Nothing
+                , Models.partyNotes = Nothing
+                , Models.partyStripeCustomerId = Nothing
+                , Models.partyCountryCode = Nothing
+                , Models.partyCountryId = Nothing
+                , Models.partyCreatedAt = now
+                }
+        _ <- insert (party "Duplicate Public Lead A")
+        _ <- insert (party "Duplicate Public Lead B")
+        createOrFetchParty
+          (Just "Duplicate Public Lead")
+          (Just " duplicate@example.com ")
+          Nothing
+          now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Multiple parties match this email"
+        Right partyId ->
+          expectationFailure
+            ("Expected duplicate signup parties to be rejected, got " <> show partyId)
+
     it "falls back to the normalized email when the provided name is blank" $ do
       storedName <- runInMemory $ do
         now <- liftIO getCurrentTime
@@ -93,6 +141,26 @@ spec = do
         Models.partyDisplayName . entityVal <$> getJustEntity partyId
 
       storedName `shouldBe` "student@example.com"
+
+    it "rejects unsafe or oversized display names before storing public lead parties" $ do
+      let assertRejected rawName expectedMessage = do
+            result <- tryCreateOrFetchParty (Just rawName) (Just "user@example.com") Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right partyId ->
+                expectationFailure
+                  ("Expected unsafe display name to be rejected, got " <> show partyId)
+      assertRejected
+        ("Ada" <> T.singleton '\x202E')
+        "displayName must not contain control characters, hidden formatting characters, or Unicode space lookalikes"
+      assertRejected
+        ("Ada" <> T.singleton '\x00A0' <> "Lovelace")
+        "Unicode space lookalikes"
+      assertRejected
+        (T.replicate 161 "a")
+        "displayName must be 1-160 characters"
 
     it "accepts common dot-and-plus email aliases while still normalizing casing" $ do
       storedEmail <- runInMemory $ do
@@ -123,6 +191,25 @@ spec = do
       assertRejected "12345"
       assertRejected "+1234567890123456"
 
+    it "rejects control, hidden, or lookalike phone separators instead of normalizing forged contact data" $ do
+      let assertRejected rawPhone = do
+            result <-
+              tryCreateOrFetchParty
+                (Just "Test User")
+                (Just "user@example.com")
+                (Just rawPhone)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "phone"
+              Right _ ->
+                expectationFailure ("Expected unsafe phone input to be rejected: " <> show rawPhone)
+      assertRejected "099\n1234567"
+      assertRejected ("099" <> T.singleton '\x2028' <> "1234567")
+      assertRejected ("099" <> T.singleton '\x202E' <> "1234567")
+      assertRejected ("099" <> T.singleton '\x00A0' <> "1234567")
+      assertRejected (T.singleton '\x00A0' <> "0991234567")
+
     it "rejects malformed emails instead of creating unusable parties" $ do
       let assertRejected rawEmail = do
             result <- tryCreateOrFetchParty (Just "Test User") (Just rawEmail) Nothing
@@ -140,6 +227,10 @@ spec = do
       assertRejected "user.@example.com"
       assertRejected "user..name@example.com"
       assertRejected "user()@example.com"
+      assertRejected "user@example.123"
+      assertRejected "user@example.c"
+      assertRejected (pack (replicate 65 'a') <> "@example.com")
+      assertRejected ("user@" <> pack (replicate 64 'b') <> ".com")
 
     it "rejects the reserved anonymous-interest fallback email for real parties" $ do
       result <- tryCreateOrFetchParty
@@ -174,12 +265,321 @@ spec = do
       (firstId, secondId, total) <- runInMemory $ do
         now <- liftIO getCurrentTime
         firstId <- ensurePublicLeadParty now
+        _ <- insert Trials.LeadInterest
+          { Trials.leadInterestPartyId = firstId
+          , Trials.leadInterestInterestType = "voice-lessons"
+          , Trials.leadInterestSubjectId = Nothing
+          , Trials.leadInterestDetails = Just "anonymous interest details"
+          , Trials.leadInterestSource = "public_interest"
+          , Trials.leadInterestDriveLink = Nothing
+          , Trials.leadInterestStatus = "Open"
+          , Trials.leadInterestCreatedAt = now
+          }
         secondId <- ensurePublicLeadParty now
         rows <- selectList [Models.PartyPrimaryEmail ==. Just "public-interest@tdf.local"] []
         pure (firstId, secondId, length rows)
 
       firstId `shouldBe` secondId
       total `shouldBe` 1
+
+    it "rejects ambiguous fallback party rows instead of choosing one arbitrarily" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        let fallbackParty label = Models.Party
+              { Models.partyLegalName = Nothing
+              , Models.partyDisplayName = label
+              , Models.partyIsOrg = False
+              , Models.partyTaxId = Nothing
+              , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+              , Models.partyPrimaryPhone = Nothing
+              , Models.partyWhatsapp = Nothing
+              , Models.partyInstagram = Nothing
+              , Models.partyEmergencyContact = Nothing
+              , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+              , Models.partyStripeCustomerId = Nothing
+              , Models.partyCountryCode = Nothing
+              , Models.partyCountryId = Nothing
+              , Models.partyCreatedAt = now
+              }
+        _ <- insert (fallbackParty "Public Trial Interest A")
+        _ <- insert (fallbackParty "Public Trial Interest B")
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "fallback party is ambiguous"
+        Right partyId ->
+          expectationFailure
+            ("Expected ambiguous fallback parties to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows that carry non-anonymous profile data" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        _ <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Just "+593991234567"
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Just "Duplicate anonymous public lead fallback."
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
+          , Models.partyCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "non-anonymous profile data"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party profile data to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows whose reserved system markers were modified" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        _ <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest Imported"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes = Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
+          , Models.partyCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "unexpected system marker fields"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party marker drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows with impossible persisted ids" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        insertKey
+          (toSqlKey 0 :: Models.PartyId)
+          Models.Party
+            { Models.partyLegalName = Nothing
+            , Models.partyDisplayName = "Public Trial Interest"
+            , Models.partyIsOrg = False
+            , Models.partyTaxId = Nothing
+            , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+            , Models.partyPrimaryPhone = Nothing
+            , Models.partyWhatsapp = Nothing
+            , Models.partyInstagram = Nothing
+            , Models.partyEmergencyContact = Nothing
+            , Models.partyNotes =
+                Just "System fallback party for anonymous public trial interests."
+            , Models.partyStripeCustomerId = Nothing
+            , Models.partyCountryCode = Nothing
+            , Models.partyCountryId = Nothing
+            , Models.partyCreatedAt = now
+            }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "fallback party id is invalid"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party id drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows that already have artist profile links" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Models.ArtistProfile
+          { Models.artistProfileArtistPartyId = partyId
+          , Models.artistProfileSlug = Just "public-interest"
+          , Models.artistProfileBio = Nothing
+          , Models.artistProfileCity = Nothing
+          , Models.artistProfileHeroImageUrl = Nothing
+          , Models.artistProfileSpotifyArtistId = Nothing
+          , Models.artistProfileSpotifyUrl = Nothing
+          , Models.artistProfileYoutubeChannelId = Nothing
+          , Models.artistProfileYoutubeUrl = Nothing
+          , Models.artistProfileWebsiteUrl = Nothing
+          , Models.artistProfileFeaturedVideoUrl = Nothing
+          , Models.artistProfileGenres = Nothing
+          , Models.artistProfileHighlights = Nothing
+          , Models.artistProfileStripeAccountId = Nothing
+          , Models.artistProfileCountryCode = Nothing
+          , Models.artistProfileCountryId = Nothing
+          , Models.artistProfileCreatedAt = now
+          , Models.artistProfileUpdatedAt = Nothing
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "artist profile links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party profile link drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows with non-public lead interest links" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Trials.LeadInterest
+          { Trials.leadInterestPartyId = partyId
+          , Trials.leadInterestInterestType = "signup"
+          , Trials.leadInterestSubjectId = Nothing
+          , Trials.leadInterestDetails = Just "real signup details"
+          , Trials.leadInterestSource = "public_signup"
+          , Trials.leadInterestDriveLink = Nothing
+          , Trials.leadInterestStatus = "Open"
+          , Trials.leadInterestCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "non-public lead interest links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party lead interest drift to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows that already own trial requests" $ do
+      result <- (try $ runInMemory $ do
+        now <- liftIO getCurrentTime
+        partyId <- insert Models.Party
+          { Models.partyLegalName = Nothing
+          , Models.partyDisplayName = "Public Trial Interest"
+          , Models.partyIsOrg = False
+          , Models.partyTaxId = Nothing
+          , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+          , Models.partyPrimaryPhone = Nothing
+          , Models.partyWhatsapp = Nothing
+          , Models.partyInstagram = Nothing
+          , Models.partyEmergencyContact = Nothing
+          , Models.partyNotes =
+              Just "System fallback party for anonymous public trial interests."
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
+          , Models.partyCreatedAt = now
+          }
+        _ <- insert Trials.TrialRequest
+          { Trials.trialRequestPartyId = partyId
+          , Trials.trialRequestSubjectId = toSqlKey 1
+          , Trials.trialRequestPref1Start = slotStart
+          , Trials.trialRequestPref1End = slotEnd
+          , Trials.trialRequestPref2Start = Nothing
+          , Trials.trialRequestPref2End = Nothing
+          , Trials.trialRequestPref3Start = Nothing
+          , Trials.trialRequestPref3End = Nothing
+          , Trials.trialRequestNotes = Nothing
+          , Trials.trialRequestStatus = "Requested"
+          , Trials.trialRequestAssignedTeacherId = Nothing
+          , Trials.trialRequestAssignedAt = Nothing
+          , Trials.trialRequestCreatedAt = now
+          }
+        ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 500
+          BL8.unpack (errBody err) `shouldContain` "trial request links"
+        Right partyId ->
+          expectationFailure
+            ("Expected fallback party trial request links to be rejected, got " <> show partyId)
+
+    it "rejects fallback party rows that already have account or role links" $ do
+      let fallbackParty now = Models.Party
+            { Models.partyLegalName = Nothing
+            , Models.partyDisplayName = "Public Trial Interest"
+            , Models.partyIsOrg = False
+            , Models.partyTaxId = Nothing
+            , Models.partyPrimaryEmail = Just "public-interest@tdf.local"
+            , Models.partyPrimaryPhone = Nothing
+            , Models.partyWhatsapp = Nothing
+            , Models.partyInstagram = Nothing
+            , Models.partyEmergencyContact = Nothing
+            , Models.partyNotes =
+                Just "System fallback party for anonymous public trial interests."
+            , Models.partyStripeCustomerId = Nothing
+            , Models.partyCountryCode = Nothing
+            , Models.partyCountryId = Nothing
+            , Models.partyCreatedAt = now
+            }
+          assertRejected attach = do
+            result <- (try $ runInMemory $ do
+              now <- liftIO getCurrentTime
+              partyId <- insert (fallbackParty now)
+              _ <- attach partyId
+              ensurePublicLeadParty now) :: IO (Either ServerError Models.PartyId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 500
+                BL8.unpack (errBody err) `shouldContain` "account or role links"
+              Right partyId ->
+                expectationFailure
+                  ("Expected fallback party relation drift to be rejected, got " <> show partyId)
+      assertRejected $ \partyId -> do
+        insertCanonicalRoleFixture partyId "customer" True
+      assertRejected $ \partyId -> do
+        _ <- insert Models.UserCredential
+          { Models.userCredentialPartyId = partyId
+          , Models.userCredentialUsername = "public-interest@tdf.local"
+          , Models.userCredentialPasswordHash = "hash"
+          , Models.userCredentialActive = False
+          }
+        pure ()
+      assertRejected $ \partyId -> do
+        _ <- insert Models.ApiToken
+          { Models.apiTokenToken = "public-interest-token"
+          , Models.apiTokenPartyId = partyId
+          , Models.apiTokenLabel = Just "anonymous-public-lead"
+          , Models.apiTokenActive = False
+          }
+        pure ()
 
     it "preserves collision suffixes inside the username length limit" $ do
       let root = pack (replicate 60 'a')
@@ -197,6 +597,53 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "partyId is not allowed on public trial requests"
         Right _ ->
           expectationFailure "Expected public partyId to be rejected"
+
+  describe "TrialRequestIn request decoding" $ do
+    it "requires the public partyId field to be absent, not merely null" $ do
+      let canonicalPayload = BL8.pack $ concat
+            [ "{\"subjectId\":7"
+            , ",\"preferred\":["
+            , "{\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\"}]"
+            , ",\"notes\":\"Piano goals\""
+            , ",\"fullName\":\"Ada Lovelace\""
+            , ",\"email\":\"ada@example.com\""
+            , ",\"phone\":\"+593991234567\"}"
+            ]
+      case A.eitherDecode canonicalPayload of
+        Left decodeErr ->
+          expectationFailure
+            ("Expected canonical public trial request payload to decode, got: " <> decodeErr)
+        Right
+          ( TrialRequestIn
+              partyIdValue
+              subjectIdValue
+              preferredValue
+              notesValue
+              fullNameValue
+              emailValue
+              phoneValue
+          ) -> do
+          partyIdValue `shouldBe` Nothing
+          subjectIdValue `shouldBe` 7
+          preferredValue `shouldBe` [validSlot]
+          notesValue `shouldBe` Just "Piano goals"
+          fullNameValue `shouldBe` Just "Ada Lovelace"
+          emailValue `shouldBe` Just "ada@example.com"
+          phoneValue `shouldBe` Just "+593991234567"
+
+      isLeft
+        ( A.eitherDecode
+            "{\"partyId\":null,\"subjectId\":7,\"preferred\":[]}"
+            :: Either String TrialRequestIn
+        )
+        `shouldBe` True
+      isLeft
+        ( A.eitherDecode
+            "{\"partyId\":42,\"subjectId\":7,\"preferred\":[]}"
+            :: Either String TrialRequestIn
+        )
+        `shouldBe` True
 
   describe "validatePublicTrialRequestInput" $ do
     it "normalizes public trial contact fields before party, credential, and request writes" $ do
@@ -231,11 +678,72 @@ spec = do
                 BL8.unpack (errBody err) `shouldContain` expectedMessage
               Right value ->
                 expectationFailure ("Expected malformed public trial request to be rejected, got " <> show value)
-      assertRejected (mkTrial (Just "Ada\nLovelace") Nothing (Just "ada@example.com") Nothing) "fullName must not contain control characters"
-      assertRejected (mkTrial (Just (pack (replicate 161 'a'))) Nothing (Just "ada@example.com") Nothing) "fullName must be 1-160 characters"
-      assertRejected (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing) "notes must not contain control characters"
-      assertRejected (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing) "notes must be 1-2000 characters"
+      assertRejected
+        (mkTrial (Just "Ada\nLovelace") Nothing (Just "ada@example.com") Nothing)
+        "fullName must not contain control characters"
+      assertRejected
+        (mkTrial
+          (Just ("Ada" <> "\x202E" <> "Lovelace"))
+          Nothing
+          (Just "ada@example.com")
+          Nothing)
+        "hidden formatting characters"
+      assertRejected
+        (mkTrial (Just (pack (replicate 161 'a'))) Nothing (Just "ada@example.com") Nothing)
+        "fullName must be 1-160 characters"
+      assertRejected
+        (mkTrial (Just "Ada") (Just "first line\nsecond line") (Just "ada@example.com") Nothing)
+        "notes must not contain control characters"
+      assertRejected
+        (mkTrial
+          (Just "Ada")
+          (Just ("first line" <> "\x2028" <> "second line"))
+          (Just "ada@example.com")
+          Nothing)
+        "hidden formatting characters"
+      assertRejected
+        (mkTrial (Just "Ada") (Just (pack (replicate 2001 'a'))) (Just "ada@example.com") Nothing)
+        "notes must be 1-2000 characters"
       assertRejected (mkTrial (Just "Ada") Nothing Nothing Nothing) "Correo requerido"
+
+    it "rejects malformed preferred slots before the handler reaches scheduling logic" $ do
+      let overlappingSlot = PreferredSlot (addUTCTime 1800 slotStart) (addUTCTime 5400 slotStart)
+          payload = TrialRequestIn Nothing 7 [validSlot, overlappingSlot] Nothing (Just "Ada") (Just "ada@example.com") Nothing
+      case validatePublicTrialRequestInput payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Preferred slots must be distinct non-overlapping windows"
+        Right value ->
+          expectationFailure ("Expected malformed public trial preferred slots to be rejected, got " <> show value)
+
+  describe "public trial request handler" $ do
+    it "returns invalid public trial input as a 400 response instead of an uncaught exception" $ do
+      result <- runPublicTrialRequestHandler
+        (TrialRequestIn Nothing 7 [validSlot] Nothing (Just "Ada Lovelace") Nothing Nothing)
+      case result of
+        Left ex ->
+          expectationFailure
+            ("Expected invalid public trial request to return a ServerError, got exception: " <> show ex)
+        Right (Left err) -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Correo requerido"
+        Right (Right value) ->
+          expectationFailure
+            ("Expected invalid public trial request to be rejected, got " <> show value)
+
+  describe "public trial slots handler" $ do
+    it "requires subjectId instead of returning an ambiguous empty availability list" $ do
+      result <- runPublicTrialSlotsHandler Nothing
+      case result of
+        Left ex ->
+          expectationFailure
+            ("Expected missing subjectId to return a ServerError, got exception: " <> show ex)
+        Right (Left err) -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "subjectId is required for public trial slots"
+        Right (Right slots) ->
+          expectationFailure
+            ("Expected missing subjectId to be rejected, got slots: " <> show slots)
 
   describe "validateOptionalTrialRequestStatusFilter" $ do
     it "treats omitted or blank filters as absent and canonicalizes supported values" $ do
@@ -275,6 +783,26 @@ spec = do
           "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"marketingOptIn\":true,\"role\":\"Admin\"}"
             :: Either String SignupIn)
         `shouldBe` True
+
+    it "rejects null optional signup fields instead of treating them as fallback omissions" $ do
+      let decodeSignup rawPayload = A.eitherDecode rawPayload :: Either String SignupIn
+          assertNullRejected fieldName rawPayload =
+            case decodeSignup rawPayload of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right _ ->
+                expectationFailure
+                  ("Expected null public signup field to fail for " <> fieldName)
+
+      assertNullRejected
+        "phone"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":null,\"marketingOptIn\":true}"
+      assertNullRejected
+        "password"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"password\":null,\"marketingOptIn\":true}"
+      assertNullRejected
+        "googleIdToken"
+        "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"googleIdToken\":null,\"marketingOptIn\":true}"
 
   describe "validatePublicSignupInput" $ do
     it "normalizes public signup contact fields before creating parties and lead details" $
@@ -318,7 +846,12 @@ spec = do
                 expectationFailure "Expected malformed public signup to be rejected"
       assertRejected baseSignup { firstName = "   " } "firstName is required"
       assertRejected baseSignup { lastName = "   " } "lastName is required"
-      assertRejected baseSignup { firstName = "Ada\nLovelace" } "firstName must not contain control characters"
+      assertRejected
+        baseSignup { firstName = "Ada\nLovelace" }
+        "firstName must not contain control characters"
+      assertRejected
+        baseSignup { firstName = "Ada" <> "\x200B" <> "Lovelace" }
+        "hidden formatting characters"
       assertRejected baseSignup { lastName = pack (replicate 121 'a') } "lastName must be 120 characters or fewer"
 
     it "rejects oversized signup emails before persisting unusable contact data" $ do
@@ -385,6 +918,26 @@ spec = do
             :: Either String InterestIn)
         `shouldBe` True
 
+    it "rejects explicit null optional interest fields instead of treating them as fallback omissions" $ do
+      let decodeInterest rawPayload = A.eitherDecode rawPayload :: Either String InterestIn
+          assertNullRejected fieldName rawPayload =
+            case decodeInterest rawPayload of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right _ ->
+                expectationFailure
+                  ("Expected null public interest field to fail for " <> fieldName)
+
+      assertNullRejected
+        "subjectId"
+        "{\"interestType\":\"workshop\",\"subjectId\":null}"
+      assertNullRejected
+        "details"
+        "{\"interestType\":\"workshop\",\"details\":null}"
+      assertNullRejected
+        "driveLink"
+        "{\"interestType\":\"workshop\",\"driveLink\":null}"
+
     it "rejects blank interest types instead of creating unusable anonymous lead rows" $
       case validatePublicInterestInput (InterestIn "   " Nothing (Just "Looking for info") (Just "https://example.com")) of
         Left err -> do
@@ -392,6 +945,19 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "interestType is required"
         Right _ ->
           expectationFailure "Expected blank interest type to be rejected"
+
+    it
+      "rejects system-managed interest types before anonymous fallback rows can masquerade as another lead source"
+      $ do
+      let assertRejected rawInterestType =
+            case validatePublicInterestInput (InterestIn rawInterestType Nothing Nothing Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "interestType is reserved for system-managed lead flows"
+              Right _ ->
+                expectationFailure "Expected reserved interestType to be rejected"
+      mapM_ assertRejected ["ad_inquiry", " Ad_Inquiry ", "signup"]
 
     it "rejects oversized or control-character interest types before storing fallback lead rows" $ do
       let assertRejected rawInterestType expectedMessage =
@@ -403,6 +969,8 @@ spec = do
                 expectationFailure "Expected malformed interestType to be rejected"
       assertRejected (pack (replicate 81 'a')) "interestType must be 1-80 characters"
       assertRejected "workshop\nvip" "interestType must not contain control characters"
+      assertRejected ("workshop" <> "\x202E" <> "vip") "hidden formatting characters"
+      assertRejected ("workshop" <> T.singleton '\x00A0' <> "vip") "Unicode space lookalikes"
 
     it "trims interest types and details, and drops blank optional fields" $ do
       case validatePublicInterestInput (InterestIn "  workshop  " (Just 7) (Just "  Looking for info  ") (Just "  https://example.com/file  ")) of
@@ -430,6 +998,7 @@ spec = do
                 expectationFailure "Expected malformed details to be rejected"
       assertRejected (pack (replicate 2001 'a')) "details must be 1-2000 characters"
       assertRejected "line one\nline two" "details must not contain control characters"
+      assertRejected ("line one" <> "\x2029" <> "line two") "hidden formatting characters"
 
     it "accepts public drive links with valid explicit ports" $
       case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just "https://example.com:8443/file")) of
@@ -437,6 +1006,33 @@ spec = do
           expectationFailure ("Expected public driveLink with a valid port to be accepted, got " <> show err)
         Right (InterestIn _ _ _ driveLinkValue) ->
           driveLinkValue `shouldBe` Just "https://example.com:8443/file"
+
+    it "rejects drive links with URL fragments before storing ambiguous lead metadata" $
+      case validatePublicInterestInput
+        (InterestIn "workshop" Nothing Nothing (Just "https://example.com/file#section")) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "driveLink must not contain URL fragments"
+        Right _ ->
+          expectationFailure "Expected fragmented driveLink to be rejected"
+
+    it "rejects ambiguous drive link paths before storing public lead metadata" $ do
+      let assertRejected rawDriveLink =
+            case validatePublicInterestInput
+              (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "driveLink path must not contain empty, dot, or dot-dot segments"
+              Right _ ->
+                expectationFailure "Expected ambiguous driveLink path to be rejected"
+      assertRejected "https://example.com/folder/../admin"
+      assertRejected "https://example.com/folder/./file"
+      assertRejected "https://example.com/folder//file"
+      assertRejected "https://example.com/folder/%2e%2e/admin"
+      assertRejected "https://example.com/folder/%2E/file"
+      assertRejected "https://example.com/folder%2fadmin"
+      assertRejected "https://example.com/folder%5Cadmin"
 
     it "rejects non-positive subject ids instead of treating them as unavailable subjects" $
       case validatePublicInterestInput (InterestIn "workshop" (Just 0) Nothing Nothing) of
@@ -448,7 +1044,8 @@ spec = do
 
     it "rejects malformed or non-HTTPS drive links instead of storing ambiguous free-form text" $ do
       let assertRejected rawDriveLink =
-            case validatePublicInterestInput (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
+            case validatePublicInterestInput
+              (InterestIn "workshop" Nothing Nothing (Just rawDriveLink)) of
               Left err -> do
                 errHTTPCode err `shouldBe` 400
                 BL8.unpack (errBody err) `shouldContain` "driveLink must be an absolute https URL"
@@ -460,7 +1057,10 @@ spec = do
       assertRejected "https://drive..example.com/folder"
       assertRejected "https://drive_example.com/folder"
       assertRejected "https://drive/folder"
+      assertRejected "https://example.123/folder"
       assertRejected "https://2130706433/folder"
+      assertRejected "https://0x7f.0.0.1/folder"
+      assertRejected "https://0xc0.0xa8.0x00.0x01/folder"
       assertRejected "https://0177.0.0.1/folder"
       assertRejected "https://192.0.2.10/folder"
       assertRejected "https://198.51.100.24/folder"
@@ -468,8 +1068,27 @@ spec = do
       assertRejected "https://224.0.0.1/folder"
       assertRejected "http://localhost/folder"
       assertRejected "http://127.0.0.1/folder"
+      assertRejected "https://example.com/folder\\file"
+      assertRejected "https://example.com/folder%ZZ"
+      assertRejected "https://example.com/folder/%2"
+      assertRejected "https://[2001:4860:4860::8888]/folder"
+      assertRejected "https://[:::]/folder"
       assertRejected "https://[::1]/folder"
       assertRejected "https://example.com:70000/folder"
+
+    it "rejects oversized drive links before storing public lead metadata" $
+      case validatePublicInterestInput
+        ( InterestIn
+            "workshop"
+            Nothing
+            Nothing
+            (Just ("https://example.com/" <> T.replicate 2049 "a"))
+        ) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "driveLink must be 2048 characters or fewer"
+        Right _ ->
+          expectationFailure "Expected oversized driveLink to be rejected"
 
   describe "SubjectUpdate request decoding" $ do
     it "rejects typoed or unexpected JSON keys so subject patches cannot degrade into silent no-ops" $ do
@@ -490,6 +1109,24 @@ spec = do
           "{\"active\":false,\"unexpected\":true}"
             :: Either String SubjectUpdate)
         `shouldBe` True
+      isLeft
+        (A.eitherDecode "{}" :: Either String SubjectUpdate)
+        `shouldBe` True
+
+    it "rejects explicit null subject patch fields instead of silently omitting them" $ do
+      case (A.eitherDecode "{\"name\":null,\"active\":false}" :: Either String SubjectUpdate) of
+        Left err ->
+          err `shouldContain` "name must be omitted instead of null"
+        Right _ ->
+          expectationFailure
+            "Expected null subject name patch to be rejected, but it decoded successfully"
+
+      case (A.eitherDecode "{\"active\":null}" :: Either String SubjectUpdate) of
+        Left err ->
+          err `shouldContain` "active must be omitted instead of null"
+        Right _ ->
+          expectationFailure
+            "Expected null subject active patch to be rejected, but it decoded successfully"
 
   describe "StudentCreate request decoding" $ do
     it "accepts canonical private student create payloads" $ do
@@ -521,6 +1158,25 @@ spec = do
         )
         `shouldBe` True
 
+    it "rejects explicit null optional fields so student create defaults require omission" $ do
+      case ( A.eitherDecode
+              "{\"fullName\":\"Ada\",\"email\":\"ada@example.com\",\"phone\":null}"
+                :: Either String StudentCreate
+           ) of
+        Left err ->
+          err `shouldContain` "phone must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null student create phone to be rejected"
+
+      case ( A.eitherDecode
+              "{\"fullName\":\"Ada\",\"email\":\"ada@example.com\",\"notes\":null}"
+                :: Either String StudentCreate
+           ) of
+        Left err ->
+          err `shouldContain` "notes must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null student create notes to be rejected"
+
   describe "StudentUpdate request decoding" $ do
     it "rejects typoed or unexpected JSON keys so student patches cannot degrade into silent no-ops" $ do
       case (A.eitherDecode "{\"displayName\":\"Ada\",\"phone\":\"+593991234567\"}" :: Either String StudentUpdate) of
@@ -542,6 +1198,54 @@ spec = do
           "{\"displayName\":\"Ada\",\"unexpected\":true}"
             :: Either String StudentUpdate)
         `shouldBe` True
+      isLeft
+        (A.eitherDecode "{}" :: Either String StudentUpdate)
+        `shouldBe` True
+      isLeft
+        (A.eitherDecode
+          "{\"displayName\":null,\"email\":null,\"phone\":null,\"notes\":null}"
+            :: Either String StudentUpdate)
+        `shouldBe` True
+
+    it "rejects explicit null patch fields before student updates can silently ignore them" $ do
+      let assertNullRejected raw expectedMessage =
+            case (A.eitherDecode raw :: Either String StudentUpdate) of
+              Left err ->
+                err `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure
+                  ("Expected null student update field to be rejected in " <> BL8.unpack raw)
+      assertNullRejected
+        "{\"displayName\":null,\"email\":\"ada@example.com\"}"
+        "displayName must be omitted instead of null"
+      assertNullRejected
+        "{\"email\":null,\"phone\":\"+593991234567\"}"
+        "email must be omitted instead of null"
+      assertNullRejected
+        "{\"displayName\":\"Ada\",\"phone\":null}"
+        "phone must be omitted instead of null"
+      assertNullRejected
+        "{\"displayName\":\"Ada\",\"notes\":null}"
+        "notes must be omitted instead of null"
+
+  describe "private subject mutation path ids" $ do
+    it "rejects non-positive subject ids before update or delete lookups" $ do
+      let assertRejected expectedMessage action = do
+            result <- try $ runTrialsInMemory action
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid subject path id to be rejected"
+      validateSubjectPathId 7 `shouldBe` Right 7
+      mapM_
+        (\rawSubjectId -> do
+          assertRejected "subjectId must be a positive integer" $
+            privateSubjectUpdateHandler rawSubjectId (SubjectUpdate (Just "Piano") Nothing)
+          assertRejected "subjectId must be a positive integer" $
+            privateSubjectDeleteHandler rawSubjectId)
+        [0, -3]
 
   describe "validatePublicSubjectIdInput" $ do
     it "accepts positive subject ids" $
@@ -559,9 +1263,9 @@ spec = do
       assertRejected (-3)
 
   describe "validateTeacherSubjectIdsInput" $ do
-    it "accepts explicit clears and removes duplicate positive ids without changing intent" $ do
+    it "accepts explicit clears and distinct positive ids without rewriting the requested subject set" $ do
       validateTeacherSubjectIdsInput [] `shouldBe` Right []
-      validateTeacherSubjectIdsInput [7, 3, 7, 5, 3] `shouldBe` Right [7, 3, 5]
+      validateTeacherSubjectIdsInput [7, 3, 5] `shouldBe` Right [7, 3, 5]
 
     it "rejects non-positive ids instead of silently treating them as a subject clear or partial update" $ do
       let assertRejected rawSubjectIds =
@@ -573,6 +1277,36 @@ spec = do
                 expectationFailure ("Expected invalid subject ids to be rejected, got " <> show value)
       assertRejected [0]
       assertRejected [4, -1]
+
+    it "rejects duplicate ids instead of silently collapsing an ambiguous teacher subject update" $
+      case validateTeacherSubjectIdsInput [7, 3, 7] of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "subjectIds must not contain duplicates"
+        Right value ->
+          expectationFailure ("Expected duplicate subject ids to be rejected, got " <> show value)
+
+  describe "validateTeacherStudentLinkInput" $ do
+    it "accepts distinct positive teacher and student party ids" $
+      validateTeacherStudentLinkInput 7 11 `shouldBe` Right (7, 11)
+
+    it "rejects malformed teacher-student link ids before private link mutations" $ do
+      let assertRejected expectedMessage result =
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ( "Expected malformed teacher-student link ids to be rejected, got "
+                      <> show value
+                  )
+      assertRejected "teacherId must be a positive integer" $
+        validateTeacherStudentLinkInput 0 11
+      assertRejected "studentId must be a positive integer" $
+        validateTeacherStudentLinkInput 7 (-1)
+      assertRejected "studentId must refer to a different party than teacherId" $
+        validateTeacherStudentLinkInput 7 7
 
   describe "validatePublicSubjectSelection" $ do
     it "accepts active public subjects" $
@@ -604,6 +1338,14 @@ spec = do
       isLeft
         (A.eitherDecode "{\"name\":\"Piano\",\"active\":false,\"roomIds\":[1]}" :: Either String SubjectCreate)
         `shouldBe` True
+
+    it "rejects explicit null subject create defaults instead of falling back to active" $
+      case (A.eitherDecode "{\"name\":\"Piano\",\"active\":null}" :: Either String SubjectCreate) of
+        Left err ->
+          err `shouldContain` "active must be omitted instead of null"
+        Right _ ->
+          expectationFailure
+            "Expected null subject active default to be rejected, but it decoded successfully"
 
   describe "validatePreferredSlots" $ do
     it "rejects requests with more than three preferred slots" $ do
@@ -678,6 +1420,22 @@ spec = do
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotEnd 0)
       assertInvalid "La hora de fin debe ser mayor a la de inicio" $
         validateTrialScheduleInput (TrialScheduleIn 1 2 slotStart slotStart 3)
+
+  describe "validateClassSessionPathId" $
+    it "rejects non-positive class-session path ids before update or attendance lookups" $ do
+      validateClassSessionPathId 42 `shouldBe` Right 42
+
+      let assertInvalid rawClassId =
+            case validateClassSessionPathId rawClassId of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "classSessionId must be a positive integer"
+              Right value ->
+                expectationFailure
+                  ("Expected invalid class-session path id to be rejected, got " <> show value)
+
+      assertInvalid 0
+      assertInvalid (-7)
 
   describe "private trial scheduling request decoding" $ do
     it "rejects typoed or unexpected assignment keys so teacher selection cannot be silently ignored" $ do
@@ -800,6 +1558,148 @@ spec = do
         )
         `shouldBe` True
 
+    it "rejects explicit null purchase fallbacks so discounts, taxes, and links require omission" $ do
+      let assertRejected fieldName =
+            isLeft
+              ( A.eitherDecode
+                  ( "{\"studentId\":1,\"packageId\":2,\"priceCents\":12000,\""
+                      <> fieldName
+                      <> "\":null}"
+                  )
+                  :: Either String PurchaseIn
+              )
+              `shouldBe` True
+      mapM_
+        assertRejected
+        [ "discountCents"
+        , "taxCents"
+        , "sellerId"
+        , "commissionedTeacherId"
+        , "trialRequestId"
+        ]
+
+  describe "private purchases" $ do
+    it "rejects missing referenced rows before persisting an orphan purchase" $ do
+      let assertRejected expectedMessage buildPurchase = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              let scheduleStart = addUTCTime 3600 now
+                  scheduleEnd = addUTCTime 7200 now
+              studentPartyId <- insertPartyFixture "Student One" now
+              sellerPartyId <- insertPartyFixture "Seller One" now
+              subjectKey <- insert (Subject "Piano" True)
+              packageKey <- insertPackageFixture subjectKey
+              requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+              privatePurchaseHandler
+                (buildPurchase studentPartyId sellerPartyId packageKey requestKey)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 404
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected dangling purchase references to be rejected"
+      assertRejected "Estudiante no encontrado" $
+        \_ sellerPartyId packageKey requestKey ->
+          PurchaseIn
+            9999
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Paquete no encontrado" $
+        \studentPartyId sellerPartyId _ requestKey ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            9999
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Vendedor no encontrado" $
+        \studentPartyId _ packageKey requestKey ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just 9999)
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey)))
+      assertRejected "Solicitud de prueba no encontrada" $
+        \studentPartyId sellerPartyId packageKey _ ->
+          PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just 9999)
+
+    it "rejects non-teacher commissioned sellers instead of storing an invalid commission target" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        studentPartyId <- insertPartyFixture "Student One" now
+        sellerPartyId <- insertPartyFixture "Seller One" now
+        nonTeacherPartyId <- insertPartyFixture "Studio Assistant" now
+        subjectKey <- insert (Subject "Piano" True)
+        packageKey <- insertPackageFixture subjectKey
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privatePurchaseHandler
+          (PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            (Just (fromIntegral (fromSqlKey nonTeacherPartyId)))
+            (Just (fromIntegral (fromSqlKey requestKey))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected invalid commissioned teachers to be rejected"
+
+    it "rejects trial requests that do not match the purchase student and package subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        studentPartyId <- insertPartyFixture "Student One" now
+        otherStudentPartyId <- insertPartyFixture "Student Two" now
+        sellerPartyId <- insertPartyFixture "Seller One" now
+        packageSubjectKey <- insert (Subject "Piano" True)
+        requestSubjectKey <- insert (Subject "Guitar" True)
+        packageKey <- insertPackageFixture packageSubjectKey
+        requestKey <- insertTrialRequestFixture otherStudentPartyId requestSubjectKey scheduleStart scheduleEnd now
+        privatePurchaseHandler
+          (PurchaseIn
+            (fromIntegral (fromSqlKey studentPartyId))
+            (fromIntegral (fromSqlKey packageKey))
+            12000
+            (Just 1000)
+            (Just 1440)
+            (Just (fromIntegral (fromSqlKey sellerPartyId)))
+            Nothing
+            (Just (fromIntegral (fromSqlKey requestKey))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "mismo estudiante"
+        Right _ ->
+          expectationFailure "Expected mismatched trial request references to be rejected"
+
   describe "ClassSessionIn FromJSON" $ do
     it "accepts canonical class-session create payloads" $ do
       let payload = BL8.pack $ concat
@@ -847,6 +1747,22 @@ spec = do
         , ",\"unexpected\":true}"
         ]
 
+    it "rejects explicit null booking links instead of treating them as omitted" $ do
+      let payload = BL8.pack $ concat
+            [ "{\"studentId\":1"
+            , ",\"teacherId\":2"
+            , ",\"subjectId\":3"
+            , ",\"startAt\":\"2026-04-01T10:00:00Z\""
+            , ",\"endAt\":\"2026-04-01T11:00:00Z\""
+            , ",\"roomId\":4"
+            , ",\"bookingId\":null}"
+            ]
+      case (A.eitherDecode payload :: Either String ClassSessionIn) of
+        Left decodeErr ->
+          decodeErr `shouldContain` "bookingId must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null class-session bookingId to be rejected"
+
   describe "AttendIn FromJSON" $ do
     it "accepts canonical attendance payloads for private class sessions" $
       case A.eitherDecode "{\"attended\":true,\"notes\":\"Completed exercises\"}" of
@@ -869,6 +1785,65 @@ spec = do
             :: Either String AttendIn
         )
         `shouldBe` True
+
+    it "preserves omitted attendance notes and rejects null notes before persistence" $ do
+      case A.eitherDecode "{\"attended\":true}" of
+        Left decodeErr ->
+          expectationFailure ("Expected omitted attendance notes to decode, got: " <> decodeErr)
+        Right req@(AttendIn attendedValue notesValue) -> do
+          attendedValue `shouldBe` True
+          notesValue `shouldBe` Nothing
+          case resolveAttendNotesUpdate req of
+            Right Nothing -> pure ()
+            Right _ ->
+              expectationFailure "Expected omitted attendance notes to produce no note update"
+            Left err ->
+              expectationFailure
+                ("Expected omitted attendance notes to validate, got " <> BL8.unpack (errBody err))
+
+      case A.eitherDecode "{\"attended\":true,\"notes\":\"   \"}" of
+        Left decodeErr ->
+          expectationFailure ("Expected blank attendance notes to decode, got: " <> decodeErr)
+        Right req ->
+          case resolveAttendNotesUpdate req of
+            Right (Just Nothing) -> pure ()
+            Right _ ->
+              expectationFailure "Expected blank attendance notes to produce an explicit clear"
+            Left err ->
+              expectationFailure
+                ("Expected blank attendance notes to validate, got " <> BL8.unpack (errBody err))
+
+      case (A.eitherDecode "{\"attended\":true,\"notes\":null}" :: Either String AttendIn) of
+        Left decodeErr ->
+          decodeErr `shouldContain` "notes must be omitted instead of null"
+        Right _ ->
+          expectationFailure "Expected null attendance notes to be rejected"
+
+  describe "validateOptionalClassSessionNotes" $ do
+    it "normalizes class-session notes before attendance or update persistence" $ do
+      validateOptionalClassSessionNotes Nothing `shouldBe` Right Nothing
+      validateOptionalClassSessionNotes (Just "  Completed exercises  ")
+        `shouldBe` Right (Just "Completed exercises")
+      validateOptionalClassSessionNotes (Just "   ") `shouldBe` Right Nothing
+
+    it "rejects unsafe class-session notes before storing private session metadata" $ do
+      let assertRejected rawNotes expectedMessage =
+            case validateOptionalClassSessionNotes (Just rawNotes) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected malformed class-session notes to be rejected, got " <> show value)
+      assertRejected
+        "line one\nline two"
+        "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected
+        (pack (replicate 2001 'a'))
+        "notes must be 1-2000 characters"
 
   describe "private trial queue filtering" $ do
     it "rejects non-positive subject filters before querying the queue" $ do
@@ -912,7 +1887,7 @@ spec = do
     it "rejects typoed teacher keys so teacherId fallback cannot publish slots for the wrong teacher" $ do
       let canonicalPayload = BL8.pack $ concat
             [ "{\"subjectId\":3"
-            , ",\"roomId\":\"sala-a\""
+            , ",\"roomId\":\"4\""
             , ",\"startAt\":\"2026-04-01T10:00:00Z\""
             , ",\"endAt\":\"2026-04-01T11:00:00Z\""
             , ",\"teacherId\":2}"
@@ -923,7 +1898,7 @@ spec = do
         Right (TrialAvailabilityUpsert availabilityIdValue subjectIdValue roomIdValue startValue endValue notesValue teacherIdValue) -> do
           availabilityIdValue `shouldBe` Nothing
           subjectIdValue `shouldBe` 3
-          roomIdValue `shouldBe` "sala-a"
+          roomIdValue `shouldBe` "4"
           startValue `shouldBe` slotStart
           endValue `shouldBe` slotEnd
           notesValue `shouldBe` Nothing
@@ -933,7 +1908,7 @@ spec = do
         ( A.eitherDecode
             (BL8.pack $ concat
               [ "{\"subjectId\":3"
-              , ",\"roomId\":\"sala-a\""
+              , ",\"roomId\":\"4\""
               , ",\"startAt\":\"2026-04-01T10:00:00Z\""
               , ",\"endAt\":\"2026-04-01T11:00:00Z\""
               , ",\"teacherID\":2}"
@@ -941,6 +1916,97 @@ spec = do
             :: Either String TrialAvailabilityUpsert
         )
         `shouldBe` True
+
+    it "rejects explicit null availability fallback fields so only omission can mean fallback" $ do
+      let assertNullRejected fieldName payload =
+            case A.eitherDecode (BL8.pack payload) :: Either String TrialAvailabilityUpsert of
+              Left decodeErr ->
+                decodeErr `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right value ->
+                expectationFailure
+                  ("Expected null availability field to fail, got " <> show value)
+      assertNullRejected
+        "availabilityId"
+        "{\"availabilityId\":null,\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"teacherId\":2}"
+      assertNullRejected
+        "notes"
+        "{\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"notes\":null,\"teacherId\":2}"
+      assertNullRejected
+        "teacherId"
+        "{\"subjectId\":3,\"roomId\":\"4\",\"startAt\":\"2026-04-01T10:00:00Z\",\"endAt\":\"2026-04-01T11:00:00Z\",\"teacherId\":null}"
+
+  describe "validateTrialAvailabilityUpsertInput" $ do
+    let mkAvailability availabilityIdValue subjectIdValue notesValue teacherIdValue =
+          TrialAvailabilityUpsert
+            availabilityIdValue
+            subjectIdValue
+            " 4 "
+            slotStart
+            slotEnd
+            notesValue
+            teacherIdValue
+
+    it "normalizes notes and keeps valid availability upsert identifiers explicit" $ do
+      case validateTrialAvailabilityUpsertInput
+        (mkAvailability (Just 5) 7 (Just "  Teaching block  ") (Just 2)) of
+        Left err ->
+          expectationFailure $
+            "Expected valid availability upsert input to normalize, got " <> show err
+        Right
+          ( TrialAvailabilityUpsert
+              availabilityIdValue
+              subjectIdValue
+              roomIdValue
+              startValue
+              endValue
+              notesValue
+              teacherIdValue
+          ) -> do
+          availabilityIdValue `shouldBe` Just 5
+          subjectIdValue `shouldBe` 7
+          roomIdValue `shouldBe` "4"
+          startValue `shouldBe` slotStart
+          endValue `shouldBe` slotEnd
+          notesValue `shouldBe` Just "Teaching block"
+          teacherIdValue `shouldBe` Just 2
+
+      case validateTrialAvailabilityUpsertInput
+        (mkAvailability Nothing 7 (Just "   ") Nothing) of
+        Left err ->
+          expectationFailure ("Expected blank availability notes to be dropped, got " <> show err)
+        Right (TrialAvailabilityUpsert _ _ _ _ _ notesValue _) ->
+          notesValue `shouldBe` Nothing
+
+    it "rejects malformed availability upsert ids and notes before database lookup" $ do
+      let assertRejected payload expectedMessage =
+            case validateTrialAvailabilityUpsertInput payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected malformed availability upsert to be rejected, got " <> show value)
+      assertRejected
+        (mkAvailability (Just 0) 7 Nothing (Just 2))
+        "availabilityId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 0 Nothing (Just 2))
+        "subjectId must be a positive integer"
+      assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "sala-a" slotStart slotEnd Nothing (Just 2))
+        "roomId must be a positive integer"
+      assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "04" slotStart slotEnd Nothing (Just 2))
+        "roomId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 7 Nothing (Just 0))
+        "teacherId must be a positive integer"
+      assertRejected
+        (mkAvailability Nothing 7 (Just "line one\nline two") (Just 2))
+        "notes must not contain control characters"
+      assertRejected
+        (TrialAvailabilityUpsert Nothing 7 "4" slotStart slotStart Nothing (Just 2))
+        "La hora de fin debe ser posterior al inicio"
 
   describe "teacher relationship request decoding" $ do
     it "rejects typoed or unexpected teacher-subject keys before mutating assignments" $ do
@@ -1005,6 +2071,42 @@ spec = do
         Right value ->
           expectationFailure ("Expected inverted teacher class window to be rejected, got " <> show value)
 
+  describe "private class session filtering" $ do
+    it "rejects non-positive subject, teacher, or student filters before querying class history" $ do
+      let assertRejected expectedMessage rawSubjectId rawTeacherId rawStudentId = do
+            result <- try $ runTrialsInMemory $
+              privateClassSessionsListHandler rawSubjectId rawTeacherId rawStudentId Nothing Nothing Nothing
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid class session filters to be rejected, got " <> show value)
+      assertRejected "subjectId must be a positive integer" (Just 0) Nothing Nothing
+      assertRejected "teacherId must be a positive integer" Nothing (Just (-3)) Nothing
+      assertRejected "studentId must be a positive integer" Nothing Nothing (Just 0)
+
+    it "rejects inverted class session windows instead of silently returning no classes" $ do
+      result <- try $ runTrialsInMemory $
+        privateClassSessionsListHandler Nothing Nothing Nothing (Just slotEnd) (Just slotStart) Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right value ->
+          expectationFailure ("Expected inverted class session window to be rejected, got " <> show value)
+
+    it "rejects unknown class session statuses instead of silently returning no classes" $ do
+      result <- try $ runTrialsInMemory $
+        privateClassSessionsListHandler Nothing Nothing Nothing Nothing Nothing (Just "done")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "status must be one of: programada, por-confirmar, realizada, cancelada"
+        Right value ->
+          expectationFailure ("Expected invalid class session status filter to be rejected, got " <> show value)
+
   describe "private package filtering" $ do
     it "rejects non-positive subject filters before querying packages" $ do
       let assertRejected rawSubjectId = do
@@ -1018,6 +2120,30 @@ spec = do
                 expectationFailure "Expected invalid package subject filter to be rejected"
       assertRejected 0
       assertRejected (-3)
+
+  describe "private commission filtering" $ do
+    it "rejects non-positive teacher filters before querying commissions" $ do
+      let assertRejected rawTeacherId = do
+            result <- try $ runTrialsInMemory $
+              privateCommissionsHandler Nothing Nothing (Just rawTeacherId)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "teacherId must be a positive integer"
+              Right _ ->
+                expectationFailure "Expected invalid commission filters to be rejected"
+      assertRejected 0
+      assertRejected (-3)
+
+    it "rejects inverted commission windows instead of silently returning no rows" $ do
+      result <- try $ runTrialsInMemory $
+        privateCommissionsHandler (Just slotEnd) (Just slotStart) Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "from must be on or before to"
+        Right _ ->
+          expectationFailure "Expected inverted commission window to be rejected"
 
   describe "private trial availability upserts" $ do
     it "rejects non-positive availability ids before querying for deletion targets" $ do
@@ -1058,6 +2184,30 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-room resources to be rejected for availability upserts"
 
+    it "rejects availability upserts for non-teacher parties instead of publishing invalid teacher slots" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let availabilityStart = addUTCTime 3600 now
+            availabilityEnd = addUTCTime 7200 now
+        nonTeacherPartyId <- insertPartyFixture "Student Helper" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        privateAvailabilityUpsertHandler
+          (TrialAvailabilityUpsert
+            Nothing
+            (fromIntegral (fromSqlKey subjectKey))
+            (pack (show (fromSqlKey roomResourceId)))
+            availabilityStart
+            availabilityEnd
+            Nothing
+            (Just (fromIntegral (fromSqlKey nonTeacherPartyId))))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
+        Right _ ->
+          expectationFailure "Expected non-teacher parties to be rejected for availability upserts"
+
   describe "private trial scheduling" $ do
     it "rejects non-positive assignment identifiers before any lookup so malformed requests return 400" $ do
       let assertRejected expectedMessage rawRequestId rawTeacherId = do
@@ -1090,6 +2240,32 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "no está registrada como profesor"
         Right _ ->
           expectationFailure "Expected non-teacher parties to be rejected for trial assignment"
+
+    it "rejects assigning a teacher who is not linked to the trial subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        subjectKey <- insert (Subject "Piano" True)
+        otherSubjectKey <- insert (Subject "Voice" True)
+        _ <- insert Trials.TeacherSubject
+          { Trials.teacherSubjectTeacherId = teacherPartyId
+          , Trials.teacherSubjectSubjectId = otherSubjectKey
+          , Trials.teacherSubjectLevelMin = Nothing
+          , Trials.teacherSubjectLevelMax = Nothing
+          }
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateAssignHandler
+          (fromIntegral (fromSqlKey requestKey))
+          (TrialAssignIn (fromIntegral (fromSqlKey teacherPartyId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "No estás asignado a esta materia."
+        Right _ ->
+          expectationFailure "Expected teachers outside the subject roster to be rejected for trial assignment"
 
     it "rejects scheduling a trial with a missing teacher id instead of creating an orphan assignment" $ do
       result <- try $ runTrialsInMemory $ do
@@ -1139,17 +2315,44 @@ spec = do
         Right _ ->
           expectationFailure "Expected non-teacher parties to be rejected for trial scheduling"
 
+    it "rejects scheduling a trial with a teacher who is not linked to the requested subject" $ do
+      result <- try $ runTrialsInMemory $ do
+        now <- liftIO getCurrentTime
+        let scheduleStart = addUTCTime 3600 now
+            scheduleEnd = addUTCTime 7200 now
+        teacherPartyId <- insertTeacherFixture "Teacher One" now
+        studentPartyId <- insertPartyFixture "Student One" now
+        roomResourceId <- insertRoomFixture "Sala A" "sala-a"
+        subjectKey <- insert (Subject "Piano" True)
+        otherSubjectKey <- insert (Subject "Voice" True)
+        _ <- insert Trials.TeacherSubject
+          { Trials.teacherSubjectTeacherId = teacherPartyId
+          , Trials.teacherSubjectSubjectId = otherSubjectKey
+          , Trials.teacherSubjectLevelMin = Nothing
+          , Trials.teacherSubjectLevelMax = Nothing
+          }
+        requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
+        privateScheduleHandler
+          (TrialScheduleIn
+            (fromIntegral (fromSqlKey requestKey))
+            (fromIntegral (fromSqlKey teacherPartyId))
+            scheduleStart
+            scheduleEnd
+            (fromIntegral (fromSqlKey roomResourceId)))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 422
+          BL8.unpack (errBody err) `shouldContain` "No estás asignado a esta materia."
+        Right _ ->
+          expectationFailure "Expected teachers outside the subject roster to be rejected for trial scheduling"
+
     it "rejects scheduling a trial with an inactive teacher role instead of using stale authorization" $ do
       result <- try $ runTrialsInMemory $ do
         now <- liftIO getCurrentTime
         let scheduleStart = addUTCTime 3600 now
             scheduleEnd = addUTCTime 7200 now
         formerTeacherPartyId <- insertPartyFixture "Former Teacher" now
-        _ <- insert Models.PartyRole
-          { Models.partyRolePartyId = formerTeacherPartyId
-          , Models.partyRoleRole = Models.Teacher
-          , Models.partyRoleActive = False
-          }
+        insertCanonicalRoleFixture formerTeacherPartyId "teacher" False
         studentPartyId <- insertPartyFixture "Student One" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
@@ -1177,6 +2380,7 @@ spec = do
         teacherPartyId <- insertTeacherFixture "Teacher One" now
         studentPartyId <- insertPartyFixture "Student One" now
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         privateScheduleHandler
           (TrialScheduleIn
@@ -1201,6 +2405,7 @@ spec = do
         studentPartyId <- insertPartyFixture "Student One" now
         nonRoomResourceId <- insertResourceFixture "PA Rack" "pa-rack" Models.Equipment
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         privateScheduleHandler
           (TrialScheduleIn
@@ -1226,6 +2431,7 @@ spec = do
         allowedRoomId <- insertRoomFixture "Sala Piano" "sala-piano"
         blockedRoomId <- insertRoomFixture "Sala Voces" "sala-voces"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         _ <- insert Trials.SubjectRoomPreference
           { Trials.subjectRoomPreferenceSubjectId = subjectKey
           , Trials.subjectRoomPreferenceRoomId = allowedRoomId
@@ -1256,6 +2462,7 @@ spec = do
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         _ <- insert Trials.ClassSession
           { Trials.classSessionStudentId = otherStudentPartyId
@@ -1295,6 +2502,7 @@ spec = do
         otherStudentPartyId <- insertPartyFixture "Student Two" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture scheduledTeacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey scheduleStart scheduleEnd now
         _ <- insert Trials.ClassSession
           { Trials.classSessionStudentId = otherStudentPartyId
@@ -1334,6 +2542,7 @@ spec = do
         studentPartyId <- insertPartyFixture "Student One" now
         roomResourceId <- insertRoomFixture "Sala A" "sala-a"
         subjectKey <- insert (Subject "Piano" True)
+        linkTeacherSubjectFixture teacherPartyId subjectKey
         requestKey <- insertTrialRequestFixture studentPartyId subjectKey oldStart oldEnd now
         _ <- insert Trials.TrialAssignment
           { Trials.trialAssignmentRequestId = requestKey
@@ -1670,6 +2879,55 @@ spec = do
         Right _ ->
           expectationFailure "Expected blank student names to be rejected"
 
+    it "rejects unsafe or oversized notes before persisting private student profiles" $ do
+      let assertRejected rawNotes expectedMessage = do
+            result <- try $ runTrialsInMemory $
+              privateStudentCreateHandler
+                (StudentCreate "Student One" "student@example.com" Nothing (Just rawNotes))
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student create notes to be rejected"
+      assertRejected "line one\nline two" "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected (pack (replicate 2001 'a')) "notes must be 1-2000 characters"
+
+    it "assigns Student through the persisted automatic policy with immutable provenance" $ do
+      (roleRows, auditRows) <- runTrialsInMemory $ do
+        _ <- privateStudentCreateHandler
+          (StudentCreate "Student Policy" "student-policy@example.com" Nothing Nothing)
+        roles <-
+          ( rawSql
+              "SELECT role.code, assignment.approval_mode, policy.code FROM party_security_role assignment INNER JOIN party ON party.id=assignment.party_id INNER JOIN security_role role ON role.id=assignment.role_id INNER JOIN security_role_assignment_policy policy ON policy.id=assignment.source_policy_id WHERE party.primary_email=?"
+              [toPersistValue ("student-policy@example.com" :: Text)]
+            :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+          )
+        audits <-
+          ( rawSql
+              "SELECT event.operation, event.approval_mode, event.result FROM security_audit_event event INNER JOIN party ON party.id=event.party_id INNER JOIN security_role_assignment_policy policy ON policy.id=event.source_policy_id WHERE party.primary_email=? AND policy.code=?"
+              [ toPersistValue ("student-policy@example.com" :: Text)
+              , toPersistValue ("trial.student-created.student" :: Text)
+              ]
+            :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+          )
+        pure (roles, audits)
+      roleRows `shouldBe`
+        [ ( Single "student"
+          , Single "system-policy"
+          , Single "trial.student-created.student"
+          )
+        ]
+      auditRows `shouldBe`
+        [ ( Single "system-policy-assigned"
+          , Single "system-policy"
+          , Single "success"
+          )
+        ]
+
   describe "private student updates" $ do
     it "rejects duplicate emails instead of letting two parties claim the same contact identity" $ do
       result <- try $ runTrialsInMemory $ do
@@ -1685,6 +2943,9 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         targetStudentId <- insert Models.Party
@@ -1698,6 +2959,9 @@ spec = do
           , Models.partyInstagram = Nothing
           , Models.partyEmergencyContact = Nothing
           , Models.partyNotes = Nothing
+          , Models.partyStripeCustomerId = Nothing
+          , Models.partyCountryCode = Nothing
+          , Models.partyCountryId = Nothing
           , Models.partyCreatedAt = now
           }
         privateStudentUpdateHandler
@@ -1709,6 +2973,49 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "correo ya está asignado"
         Right _ ->
           expectationFailure "Expected duplicate student emails to be rejected"
+
+    it "rejects unsafe or oversized display names before updating private student profiles" $ do
+      let assertRejected rawDisplayName expectedMessage = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              targetStudentId <- insertPartyFixture "Target Student" now
+              privateStudentUpdateHandler
+                (fromIntegral (fromSqlKey targetStudentId))
+                (StudentUpdate (Just rawDisplayName) Nothing Nothing Nothing)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student update displayName to be rejected"
+      assertRejected "Target\nStudent" "displayName must not contain control characters"
+      assertRejected
+        ("Target" <> "\x202E" <> "Student")
+        "hidden formatting characters"
+      assertRejected
+        ("Target" <> T.singleton '\x00A0' <> "Student")
+        "Unicode space lookalikes"
+      assertRejected (pack (replicate 161 'a')) "displayName must be 1-160 characters"
+
+    it "rejects unsafe or oversized notes before updating private student profiles" $ do
+      let assertRejected rawNotes expectedMessage = do
+            result <- try $ runTrialsInMemory $ do
+              now <- liftIO getCurrentTime
+              targetStudentId <- insertPartyFixture "Target Student" now
+              privateStudentUpdateHandler
+                (fromIntegral (fromSqlKey targetStudentId))
+                (StudentUpdate Nothing Nothing Nothing (Just rawNotes))
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected malformed student update notes to be rejected"
+      assertRejected "line one\nline two" "notes must not contain control characters"
+      assertRejected
+        ("line one" <> "\x202E" <> "line two")
+        "hidden formatting characters"
+      assertRejected (pack (replicate 2001 'a')) "notes must be 1-2000 characters"
 
 runInMemory :: SqlPersistT IO a -> IO a
 runInMemory action =
@@ -1743,7 +3050,116 @@ initializePartySchema = do
     \\"instagram\" VARCHAR NULL,\
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  initializeCanonicalSecuritySchema
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"user_credential\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"username\" VARCHAR NOT NULL,\
+    \\"password_hash\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"api_token\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"token\" VARCHAR NOT NULL,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"label\" VARCHAR NULL,\
+    \\"active\" BOOLEAN NOT NULL,\
+    \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"trial_request\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"pref1_start\" TIMESTAMP NOT NULL,\
+    \\"pref1_end\" TIMESTAMP NOT NULL,\
+    \\"pref2_start\" TIMESTAMP NULL,\
+    \\"pref2_end\" TIMESTAMP NULL,\
+    \\"pref3_start\" TIMESTAMP NULL,\
+    \\"pref3_end\" TIMESTAMP NULL,\
+    \\"notes\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"assigned_teacher_id\" INTEGER NULL,\
+    \\"assigned_at\" TIMESTAMP NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"lead_interest\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"interest_type\" VARCHAR NOT NULL,\
+    \\"subject_id\" INTEGER NULL,\
+    \\"details\" VARCHAR NULL,\
+    \\"source\" VARCHAR NOT NULL,\
+    \\"drive_link\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  initializeArtistProfileSchema
+
+initializeCanonicalSecuritySchema :: (MonadIO m) => SqlPersistT m ()
+initializeCanonicalSecuritySchema = do
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_role (id VARCHAR PRIMARY KEY, code VARCHAR NOT NULL UNIQUE, name_es VARCHAR NOT NULL, name_en VARCHAR NOT NULL, description_es VARCHAR NULL, description_en VARCHAR NULL, sort_order INTEGER NOT NULL, system_role BOOLEAN NOT NULL, emergency_administrator BOOLEAN NOT NULL, self_assignable BOOLEAN NOT NULL, automatic_assignable BOOLEAN NOT NULL, active BOOLEAN NOT NULL, workflow_state_id VARCHAR NOT NULL, created_by INTEGER NULL, updated_by INTEGER NULL, approved_by INTEGER NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, published_revision INTEGER NOT NULL, version INTEGER NOT NULL)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_role_assignment_policy (id VARCHAR PRIMARY KEY, code VARCHAR NOT NULL UNIQUE, trigger_code VARCHAR NOT NULL, role_id VARCHAR NOT NULL, name_es VARCHAR NOT NULL, name_en VARCHAR NOT NULL, description_es VARCHAR NULL, description_en VARCHAR NULL, requires_verified_email BOOLEAN NOT NULL, active BOOLEAN NOT NULL, effective_from TIMESTAMP NULL, effective_to TIMESTAMP NULL, created_by INTEGER NULL, updated_by INTEGER NULL, approved_by INTEGER NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, version INTEGER NOT NULL, UNIQUE(trigger_code,role_id))"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS party_security_role (id VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), party_id INTEGER NOT NULL, role_id VARCHAR NOT NULL, granted_by INTEGER NULL, approved_by INTEGER NULL, approval_mode VARCHAR NOT NULL, emergency_reason VARCHAR NULL, source_revision_id VARCHAR NULL, source_policy_id VARCHAR NULL, active BOOLEAN NOT NULL, created_at TIMESTAMP NOT NULL, revoked_at TIMESTAMP NULL, version INTEGER NOT NULL, UNIQUE(party_id,role_id))"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS security_audit_event (id VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))), revision_id VARCHAR NULL, source_policy_id VARCHAR NULL, entity_kind VARCHAR NOT NULL, party_id INTEGER NULL, role_id VARCHAR NOT NULL, permission_id VARCHAR NULL, operation VARCHAR NOT NULL, previous_active BOOLEAN NULL, new_active BOOLEAN NULL, actor_id INTEGER NULL, reviewer_id INTEGER NULL, approver_id INTEGER NULL, occurred_at TIMESTAMP NOT NULL, source_platform VARCHAR NOT NULL, reason VARCHAR NULL, correlation_id VARCHAR NOT NULL, approval_mode VARCHAR NOT NULL, result VARCHAR NOT NULL)"
+    []
+  rawExecute
+    "INSERT OR IGNORE INTO security_role (id,code,name_es,name_en,sort_order,system_role,emergency_administrator,self_assignable,automatic_assignable,active,workflow_state_id,created_at,updated_at,published_revision,version) VALUES ('00000000-0000-4000-8000-000000000401','customer','Cliente','Customer',1,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000402','student','Estudiante','Student',2,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000403','teacher','Docente','Teacher',3,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1),('00000000-0000-4000-8000-000000000404','artist','Artista','Artist',4,1,0,0,1,1,'00000000-0000-4000-8000-000000000499',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1,1)"
+    []
+  rawExecute
+    "INSERT OR IGNORE INTO security_role_assignment_policy (id,code,trigger_code,role_id,name_es,name_en,requires_verified_email,active,created_at,updated_at,version) VALUES ('00000000-0000-4000-8000-000000000304','account.generated.customer','generated-account-create','00000000-0000-4000-8000-000000000401','Cliente generado','Generated customer',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000305','course.registration.student','course-registration','00000000-0000-4000-8000-000000000402','Registro de curso','Course registration',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000306','trial.inquiry.student','trial-inquiry','00000000-0000-4000-8000-000000000402','Consulta de clase','Lesson inquiry',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000307','trial.teacher-subject.teacher','teacher-subject-configured','00000000-0000-4000-8000-000000000403','Materias de docente','Teacher subjects',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000308','trial.teacher-student.student','teacher-student-linked','00000000-0000-4000-8000-000000000402','Vínculo docente','Teacher link',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000309','trial.student-created.student','student-created','00000000-0000-4000-8000-000000000402','Estudiante creado','Student created',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),('00000000-0000-4000-8000-000000000310','live-session.artist-profile.artist','artist-profile-created','00000000-0000-4000-8000-000000000404','Artista Live Session','Live Session artist',0,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)"
+    []
+
+insertCanonicalRoleFixture :: Models.PartyId -> Text -> Bool -> SqlPersistT IO ()
+insertCanonicalRoleFixture partyId roleCode active =
+  rawExecute
+    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,?,CURRENT_TIMESTAMP,CASE WHEN ? THEN NULL ELSE CURRENT_TIMESTAMP END,1 FROM security_role WHERE code=? ON CONFLICT(party_id,role_id) DO UPDATE SET active=excluded.active, revoked_at=excluded.revoked_at"
+    [toPersistValue partyId, toPersistValue active, toPersistValue active, toPersistValue roleCode]
+
+initializeArtistProfileSchema :: (MonadIO m) => SqlPersistT m ()
+initializeArtistProfileSchema =
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"artist_party_id\" INTEGER NOT NULL,\
+    \\"slug\" VARCHAR NULL,\
+    \\"bio\" VARCHAR NULL,\
+    \\"city\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
+    \\"hero_image_url\" VARCHAR NULL,\
+    \\"spotify_artist_id\" VARCHAR NULL,\
+    \\"spotify_url\" VARCHAR NULL,\
+    \\"youtube_channel_id\" VARCHAR NULL,\
+    \\"youtube_url\" VARCHAR NULL,\
+    \\"website_url\" VARCHAR NULL,\
+    \\"featured_video_url\" VARCHAR NULL,\
+    \\"genres\" VARCHAR NULL,\
+    \\"highlights\" VARCHAR NULL,\
+    \\"stripe_account_id\" VARCHAR NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL,\
+    \\"updated_at\" TIMESTAMP NULL,\
+    \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\")\
     \)"
     []
 
@@ -1770,18 +3186,14 @@ initializeTrialsSchema = do
     \\"instagram\" VARCHAR NULL,\
     \\"emergency_contact\" VARCHAR NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
+    \\"country_code\" VARCHAR NULL,\
+    \\"country_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
-  rawExecute
-    "CREATE TABLE IF NOT EXISTS \"party_role\" (\
-    \\"id\" INTEGER PRIMARY KEY,\
-    \\"party_id\" INTEGER NOT NULL,\
-    \\"role\" VARCHAR NOT NULL,\
-    \\"active\" BOOLEAN NOT NULL,\
-    \CONSTRAINT \"unique_party_role\" UNIQUE (\"party_id\", \"role\")\
-    \)"
-    []
+  initializeCanonicalSecuritySchema
+  initializeArtistProfileSchema
   rawExecute
     "CREATE TABLE IF NOT EXISTS \"resource\" (\
     \\"id\" INTEGER PRIMARY KEY,\
@@ -1799,6 +3211,16 @@ initializeTrialsSchema = do
     \\"name\" VARCHAR NOT NULL,\
     \\"active\" BOOLEAN NOT NULL,\
     \CONSTRAINT \"unique_subject_name\" UNIQUE (\"name\")\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"teacher_subject\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"teacher_id\" INTEGER NOT NULL,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"level_min\" INTEGER NULL,\
+    \\"level_max\" INTEGER NULL,\
+    \CONSTRAINT \"unique_teacher_subject\" UNIQUE (\"teacher_id\", \"subject_id\")\
     \)"
     []
   rawExecute
@@ -1825,6 +3247,19 @@ initializeTrialsSchema = do
     \\"status\" VARCHAR NOT NULL,\
     \\"assigned_teacher_id\" INTEGER NULL,\
     \\"assigned_at\" TIMESTAMP NULL,\
+    \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"lead_interest\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"party_id\" INTEGER NOT NULL,\
+    \\"interest_type\" VARCHAR NOT NULL,\
+    \\"subject_id\" INTEGER NULL,\
+    \\"details\" VARCHAR NULL,\
+    \\"source\" VARCHAR NOT NULL,\
+    \\"drive_link\" VARCHAR NULL,\
+    \\"status\" VARCHAR NOT NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -1864,6 +3299,9 @@ initializeTrialsSchema = do
     \\"service_order_id\" INTEGER NULL,\
     \\"party_id\" INTEGER NULL,\
     \\"service_type\" VARCHAR NULL,\
+    \\"service_offering_id\" VARCHAR NULL,\
+    \\"booking_type_id\" VARCHAR NULL,\
+    \\"workflow_state_id\" VARCHAR NULL,\
     \\"engineer_party_id\" INTEGER NULL,\
     \\"engineer_name\" VARCHAR NULL,\
     \\"starts_at\" TIMESTAMP NOT NULL,\
@@ -1871,6 +3309,7 @@ initializeTrialsSchema = do
     \\"status\" VARCHAR NOT NULL,\
     \\"created_by\" INTEGER NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
     \)"
     []
@@ -1892,7 +3331,36 @@ initializeTrialsSchema = do
     \\"start_at\" TIMESTAMP NOT NULL,\
     \\"end_at\" TIMESTAMP NOT NULL,\
     \\"notes\" VARCHAR NULL,\
+    \\"stripe_customer_id\" VARCHAR NULL,\
     \\"created_at\" TIMESTAMP NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"package_catalog\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"subject_id\" INTEGER NOT NULL,\
+    \\"name\" VARCHAR NOT NULL,\
+    \\"hours_qty\" INTEGER NOT NULL,\
+    \\"price_cents\" INTEGER NOT NULL,\
+    \\"expires_days\" INTEGER NOT NULL,\
+    \\"refund_policy\" VARCHAR NOT NULL,\
+    \\"active\" BOOLEAN NOT NULL\
+    \)"
+    []
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS \"class_package_purchase\" (\
+    \\"id\" INTEGER PRIMARY KEY,\
+    \\"student_id\" INTEGER NOT NULL,\
+    \\"package_id\" INTEGER NOT NULL,\
+    \\"price_cents\" INTEGER NOT NULL,\
+    \\"discount_cents\" INTEGER NOT NULL,\
+    \\"tax_cents\" INTEGER NOT NULL,\
+    \\"total_paid_cents\" INTEGER NOT NULL,\
+    \\"purchased_at\" TIMESTAMP NOT NULL,\
+    \\"seller_id\" INTEGER NULL,\
+    \\"commissioned_teacher_id\" INTEGER NULL,\
+    \\"trial_request_id\" INTEGER NULL,\
+    \\"status\" VARCHAR NOT NULL\
     \)"
     []
 
@@ -1904,6 +3372,36 @@ adminUser =
       , auRoles = roles
       , auModules = modulesForRoles roles
       }
+
+runPublicTrialRequestHandler
+  :: TrialRequestIn
+  -> IO (Either SomeException (Either ServerError TrialRequestOut))
+runPublicTrialRequestHandler req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeTrialsSchema pool
+    let handler =
+          case trialsServer pool of
+            publicServer :<|> _privateServer ->
+              case publicServer of
+                _signupH :<|> _interestH :<|> trialRequestH :<|> _subjectsH :<|> _trialSlotsH ->
+                  trialRequestH req
+    liftIO $ try (runHandler handler)
+
+runPublicTrialSlotsHandler
+  :: Maybe Int
+  -> IO (Either SomeException (Either ServerError [TrialSlotDTO]))
+runPublicTrialSlotsHandler mSubjectId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeTrialsSchema pool
+    let handler =
+          case trialsServer pool of
+            publicServer :<|> _privateServer ->
+              case publicServer of
+                _signupH :<|> _interestH :<|> _trialRequestH :<|> _subjectsH :<|> trialSlotsH ->
+                  trialSlotsH mSubjectId
+    liftIO $ try (runHandler handler)
 
 privateQueueHandler :: Maybe Int -> Maybe Text -> SqlPersistT IO [TrialQueueItem]
 privateQueueHandler =
@@ -1929,6 +3427,18 @@ privateAvailabilityDeleteHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> availabilityDeleteH :<|> _ = privateTrialsServer adminUser
   in availabilityDeleteH
 
+privateSubjectUpdateHandler :: Int -> SubjectUpdate -> SqlPersistT IO SubjectDTO
+privateSubjectUpdateHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> updateH :<|> _ =
+        privateTrialsServer adminUser
+  in updateH
+
+privateSubjectDeleteHandler :: Int -> SqlPersistT IO NoContent
+privateSubjectDeleteHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> deleteH :<|> _ =
+        privateTrialsServer adminUser
+  in deleteH
+
 privateTeacherClassesHandler
   :: Int
   -> Maybe Int
@@ -1941,11 +3451,43 @@ privateTeacherClassesHandler =
           privateTrialsServer adminUser
   in teacherClassesH
 
+privateClassSessionsListHandler
+  :: Maybe Int
+  -> Maybe Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> SqlPersistT IO [ClassSessionDTO]
+privateClassSessionsListHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> classSessionsListH :<|> _ =
+          privateTrialsServer adminUser
+  in classSessionsListH
+
 privatePackagesHandler :: Maybe Int -> SqlPersistT IO [PackageDTO]
 privatePackagesHandler =
   let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> packagesH :<|> _ =
         privateTrialsServer adminUser
   in packagesH
+
+privateCommissionsHandler
+  :: Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Int
+  -> SqlPersistT IO [CommissionDTO]
+privateCommissionsHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ :<|> _ :<|> _ :<|> commissionsH :<|> _ :<|> _ :<|> _ :<|> _ :<|> _
+        :<|> _ :<|> _ =
+          privateTrialsServer adminUser
+  in commissionsH
+
+privatePurchaseHandler :: PurchaseIn -> SqlPersistT IO PurchaseOut
+privatePurchaseHandler =
+  let _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> _ :<|> purchaseH :<|> _ =
+        privateTrialsServer adminUser
+  in purchaseH
 
 privateScheduleHandler :: TrialScheduleIn -> SqlPersistT IO TrialRequestOut
 privateScheduleHandler =
@@ -1996,18 +3538,27 @@ insertPartyFixture displayName now =
     , Models.partyInstagram = Nothing
     , Models.partyEmergencyContact = Nothing
     , Models.partyNotes = Nothing
+    , Models.partyStripeCustomerId = Nothing
+    , Models.partyCountryCode = Nothing
+    , Models.partyCountryId = Nothing
     , Models.partyCreatedAt = now
     }
 
 insertTeacherFixture :: Text -> UTCTime -> SqlPersistT IO Models.PartyId
 insertTeacherFixture displayName now = do
   partyId <- insertPartyFixture displayName now
-  _ <- insert Models.PartyRole
-    { Models.partyRolePartyId = partyId
-    , Models.partyRoleRole = Models.Teacher
-    , Models.partyRoleActive = True
-    }
+  insertCanonicalRoleFixture partyId "teacher" True
   pure partyId
+
+linkTeacherSubjectFixture :: Models.PartyId -> Trials.SubjectId -> SqlPersistT IO ()
+linkTeacherSubjectFixture teacherPartyId subjectKey = do
+  _ <- insert Trials.TeacherSubject
+    { Trials.teacherSubjectTeacherId = teacherPartyId
+    , Trials.teacherSubjectSubjectId = subjectKey
+    , Trials.teacherSubjectLevelMin = Nothing
+    , Trials.teacherSubjectLevelMax = Nothing
+    }
+  pure ()
 
 insertRoomFixture :: Text -> Text -> SqlPersistT IO Models.ResourceId
 insertRoomFixture name slug =
@@ -2021,6 +3572,18 @@ insertResourceFixture name slug resourceType =
     , Models.resourceResourceType = resourceType
     , Models.resourceCapacity = Nothing
     , Models.resourceActive = True
+    }
+
+insertPackageFixture :: Trials.SubjectId -> SqlPersistT IO Trials.PackageCatalogId
+insertPackageFixture subjectKey =
+  insert Trials.PackageCatalog
+    { Trials.packageCatalogSubjectId = subjectKey
+    , Trials.packageCatalogName = "Mensual"
+    , Trials.packageCatalogHoursQty = 4
+    , Trials.packageCatalogPriceCents = 12000
+    , Trials.packageCatalogExpiresDays = 30
+    , Trials.packageCatalogRefundPolicy = "No reembolsable"
+    , Trials.packageCatalogActive = True
     }
 
 insertTrialRequestFixture

@@ -1,0 +1,359 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e367]:
+    - generic [ref=f6e370]:
+      - link [ref=f6e375] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e380]
+      - generic [ref=f6e383]:
+        - link [ref=f6e388] [cursor=pointer]:
+          - /url: /
+          - img "Hogar" [ref=f6e393]
+        - link [ref=f6e398] [cursor=pointer]:
+          - /url: /reels/
+          - img "Bobinas" [ref=f6e403]
+        - link [ref=f6e1245] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Mensajes" [ref=f6e415]
+        - link [ref=f6e425] [cursor=pointer]:
+          - /url: /explore/
+          - img "Buscar" [ref=f6e430]
+        - link [ref=f6e1240] [cursor=pointer]:
+          - /url: "#"
+          - img "Notificaciones" [ref=f6e1241]
+        - link [ref=f6e448] [cursor=pointer]:
+          - /url: "#"
+          - img "Nueva publicación" [ref=f6e453]
+        - link [ref=f6e458] [cursor=pointer]:
+          - /url: "#"
+          - img "Panel de control profesional" [ref=f6e463]
+        - link [ref=f6e470] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e475]:
+            - img "Foto de perfil de tdf.records.label" [ref=f6e476]
+      - generic [ref=f6e477]:
+        - link [ref=f6e480] [cursor=pointer]:
+          - /url: "#"
+          - img "Ajustes" [ref=f6e485]
+        - link [ref=f6e488] [cursor=pointer]:
+          - /url: "#"
+          - img "También de Meta" [ref=f6e493]
+    - main [ref=f6e497]:
+      - generic [ref=f6e498]:
+        - generic [ref=f6e501]:
+          - heading "Ajustes" [level=3] [ref=f6e503]
+          - generic [ref=f6e505]:
+            - generic [ref=f6e507]:
+              - img "Buscar" [ref=f6e509]
+              - textbox "Buscar" [ref=f6e512]
+            - generic [ref=f6e513]:
+              - generic [ref=f6e517]:
+                - heading "Tu cuenta" [level=4] [ref=f6e521]
+                - img "Logotipo meta" [ref=f6e525]
+              - link "Centro de cuentas Contraseña, seguridad, datos personales, experiencias conectadas, preferencias de anuncios" [ref=f6e533] [cursor=pointer]:
+                - /url: https://accountscenter.instagram.com/?entry_point=app_settings
+                - generic [ref=f6e543]:
+                  - generic [ref=f6e544]: Centro de cuentas
+                  - generic [ref=f6e546]: Contraseña, seguridad, datos personales, experiencias conectadas, preferencias de anuncios
+            - generic [ref=f6e548]:
+              - heading "Cómo usas Instagram" [level=4] [ref=f6e556]
+              - link "Editar perfil" [ref=f6e560] [cursor=pointer]:
+                - /url: /accounts/edit/
+              - link "Notificaciones" [ref=f6e575] [cursor=pointer]:
+                - /url: /accounts/notifications/
+            - generic [ref=f6e588]:
+              - heading "Para profesionales" [level=4] [ref=f6e596]
+              - link "Cuenta profesional" [ref=f6e600] [cursor=pointer]:
+                - /url: /accounts/professional_account_settings/
+              - link "Herramientas y controles empresariales" [ref=f6e617] [cursor=pointer]:
+                - /url: /accounts/professional_account_tools/
+              - link "Pagos por anuncios" [ref=f6e633] [cursor=pointer]:
+                - /url: /accounts/ad_payments/
+            - generic [ref=f6e648]:
+              - heading "Quién puede ver tu contenido" [level=4] [ref=f6e656]
+              - link "Privacidad de la cuenta" [ref=f6e660] [cursor=pointer]:
+                - /url: /accounts/settings/v2/account_privacy/
+              - link "Amigos íntimos" [ref=f6e675] [cursor=pointer]:
+                - /url: /accounts/close_friends/
+              - link "Obstruido" [ref=f6e690] [cursor=pointer]:
+                - /url: /accounts/blocked_accounts/
+              - link "Historia y ubicación" [ref=f6e705] [cursor=pointer]:
+                - /url: /accounts/hide_story_and_live/
+            - generic [ref=f6e718]:
+              - heading "Cómo pueden interactuar los demás contigo" [level=4] [ref=f6e726]
+              - link "Mensajes y respuestas a historias" [ref=f6e730] [cursor=pointer]:
+                - /url: /accounts/messages_and_story_replies/
+              - link "Etiquetas y menciones" [ref=f6e746] [cursor=pointer]:
+                - /url: /accounts/settings/v2/tags_and_mentions/
+              - link "Comentarios" [ref=f6e762] [cursor=pointer]:
+                - /url: /accounts/comments/
+              - link "Compartir y reutilizar" [ref=f6e777] [cursor=pointer]:
+                - /url: /accounts/settings/v2/sharing_and_reuse/
+              - link "Cuentas restringidas" [ref=f6e792] [cursor=pointer]:
+                - /url: /accounts/restricted_accounts/
+              - link "Palabras ocultas" [ref=f6e809] [cursor=pointer]:
+                - /url: /accounts/settings/v2/hidden_words/
+            - generic [ref=f6e822]:
+              - heading "Lo que ves" [level=4] [ref=f6e830]
+              - link "Cuentas silenciadas" [ref=f6e834] [cursor=pointer]:
+                - /url: /accounts/muted_accounts/
+              - link "Preferencias de contenido" [ref=f6e849] [cursor=pointer]:
+                - /url: /accounts/settings/v2/content_preferences/
+              - link "Los \"me gusta\" y las veces que se comparte cuentan." [ref=f6e864] [cursor=pointer]:
+                - /url: /accounts/settings/v2/hidden_feedback/
+              - link "Suscripciones para creadores" [ref=f6e879] [cursor=pointer]:
+                - /url: /accounts/subscriptions/
+            - generic [ref=f6e892]:
+              - heading "Tu aplicación y medios" [level=4] [ref=f6e900]
+              - link "Archivo y descarga" [ref=f6e904] [cursor=pointer]:
+                - /url: /accounts/settings/v2/archiving_and_downloading/
+              - link "Accesibilidad" [ref=f6e919] [cursor=pointer]:
+                - /url: /accounts/accessibility/
+              - link "Idioma" [ref=f6e934] [cursor=pointer]:
+                - /url: /language/preferences/
+              - link "Permisos del sitio web" [ref=f6e949] [cursor=pointer]:
+                - /url: /accounts/website_permissions/
+            - generic [ref=f6e963]:
+              - heading "Centro Familiar" [level=4] [ref=f6e971]
+              - link "Supervisión de cuentas de adolescentes" [ref=f6e975] [cursor=pointer]:
+                - /url: /accounts/supervision/?supervision_entrypoint=main_settings_screen
+            - generic [ref=f6e988]:
+              - heading "Más información y asistencia" [level=4] [ref=f6e996]
+              - link "Ayuda" [ref=f6e1000] [cursor=pointer]:
+                - /url: /settings/help/
+              - link "Centro de privacidad" [ref=f6e1015] [cursor=pointer]:
+                - /url: https://privacycenter.instagram.com/?entry_point=instagram_settings_page
+              - link "Estado de la cuenta" [ref=f6e1031] [cursor=pointer]:
+                - /url: /settings/help/account_status/
+        - generic [ref=f6e1046]:
+          - generic [ref=f6e1048]:
+            - heading "Estado de la cuenta" [level=3] [ref=f6e1050]
+            - generic [ref=f6e1056]:
+              - img "tdf.records.label" [ref=f6e1060]
+              - generic [ref=f6e1063]:
+                - generic [ref=f6e1064]: tdf.records.label
+                - generic [ref=f6e1066]: Récords del Tour de Francia
+            - generic [ref=f6e1070]:
+              - generic [ref=f6e1071]: Consulta las medidas que Instagram ha tomado cuando tu cuenta o contenido no cumplen con nuestros estándares.
+              - link "Más información sobre el estado de la cuenta." [ref=f6e1072] [cursor=pointer]:
+                - /url: https://help.instagram.com/539126347315373
+            - generic [ref=f6e1074]:
+              - link "Icono de foto. Se eliminaron problemas de contenido y mensajería. Icono de marca de verificación rellena Galón derecho" [ref=f6e1075] [cursor=pointer]:
+                - /url: /settings/help/account_status/removed_content
+                - generic [ref=f6e1078]:
+                  - img "Icono de foto." [ref=f6e1082]
+                  - generic [ref=f6e1086]: Se eliminaron problemas de contenido y mensajería.
+                  - generic [ref=f6e1094]:
+                    - img "Icono de marca de verificación rellena" [ref=f6e1097]
+                    - img "Galón derecho" [ref=f6e1100]
+              - link "Icono de búsqueda. Disponible para menores de 18 años. Icono de marca de verificación rellena Galón derecho" [ref=f6e1102] [cursor=pointer]:
+                - /url: /settings/help/account_status/limits_to_your_reach/people_under_18
+                - generic [ref=f6e1105]:
+                  - img "Icono de búsqueda." [ref=f6e1109]
+                  - generic [ref=f6e1112]: Disponible para menores de 18 años.
+                  - generic [ref=f6e1120]:
+                    - img "Icono de marca de verificación rellena" [ref=f6e1123]
+                    - img "Galón derecho" [ref=f6e1126]
+              - link "Icono de comentario. Funciones que no puedes usar Icono de marca de verificación rellena Galón derecho" [ref=f6e1128] [cursor=pointer]:
+                - /url: /settings/help/account_status/feature_limits
+                - generic [ref=f6e1131]:
+                  - img "Icono de comentario." [ref=f6e1135]
+                  - generic [ref=f6e1137]: Funciones que no puedes usar
+                  - generic [ref=f6e1145]:
+                    - img "Icono de marca de verificación rellena" [ref=f6e1148]
+                    - img "Galón derecho" [ref=f6e1151]
+          - contentinfo [ref=f6e1153]:
+            - generic [ref=f6e1154]:
+              - generic [ref=f6e1156]:
+                - link "Meta" [ref=f6e1158] [cursor=pointer]:
+                  - /url: https://about.meta.com/
+                - link "Acerca de" [ref=f6e1162] [cursor=pointer]:
+                  - /url: https://about.instagram.com/
+                - link "Blog" [ref=f6e1166] [cursor=pointer]:
+                  - /url: https://about.instagram.com/blog/
+                - link "Empleos" [ref=f6e1170] [cursor=pointer]:
+                  - /url: https://about.instagram.com/about-us/careers
+                - link "Ayuda" [ref=f6e1174] [cursor=pointer]:
+                  - /url: https://help.instagram.com/
+                - link "API" [ref=f6e1178] [cursor=pointer]:
+                  - /url: https://developers.facebook.com/docs/instagram
+                - link "Privacidad" [ref=f6e1182] [cursor=pointer]:
+                  - /url: /legal/privacy/
+                - link "Términos" [ref=f6e1186] [cursor=pointer]:
+                  - /url: /legal/terms/
+                - link "Ubicaciones" [ref=f6e1190] [cursor=pointer]:
+                  - /url: /explore/locations/
+                - link "Popular" [ref=f6e1194] [cursor=pointer]:
+                  - /url: /popular/
+                - link "Instagram Lite" [ref=f6e1198] [cursor=pointer]:
+                  - /url: /web/lite/
+                - link "Meta IA" [ref=f6e1202] [cursor=pointer]:
+                  - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                - link "Trapos" [ref=f6e1206] [cursor=pointer]:
+                  - /url: https://www.threads.com/
+                - link "Carga de contactos y usuarios no registrados" [ref=f6e1210] [cursor=pointer]:
+                  - /url: https://www.facebook.com/help/instagram/261704639352628
+                - link "Meta verificado" [ref=f6e1214] [cursor=pointer]:
+                  - /url: /accounts/meta_verified/?entrypoint=web_footer
+              - generic [ref=f6e1217]:
+                - generic [ref=f6e1218] [cursor=pointer]:
+                  - generic [ref=f6e1219]:
+                    - generic [ref=f6e1220]: Inglés
+                    - img "icono de flecha hacia abajo" [ref=f6e1224]
+                  - combobox "Cambiar idioma de visualización" [ref=f6e1226]:
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option [selected]
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                    - option
+                - generic [ref=f6e1227]: © 2026 Instagram de Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f6e1246] [cursor=pointer]:
+              - generic "Messages" [ref=f6e1247]:
+                - generic [ref=f6e344]:
+                  - img "Mensajes" [ref=f6e1232]
+                  - generic [ref=f6e353]: Mensajes
+                - button "Avatar de usuario Martini 🍸" [ref=f6e1236]:
+                  - img "Avatar de usuario" [ref=f6e1237]
+            - generic [ref=f6e1248]:
+              - generic [ref=f6e1249]:
+                - generic [ref=f6e1250]:
+                  - heading "Messages" [level=3] [ref=f6e1252]
+                  - generic [ref=f6e1253]:
+                    - button [active] [ref=f6e1254] [cursor=pointer]:
+                      - img "Expand" [ref=f6e1256]
+                    - button [ref=f6e1258] [cursor=pointer]:
+                      - img "Close" [ref=f6e1260]
+                - separator [ref=f6e1263]
+              - generic [ref=f6e1267]:
+                - button "user-profile-picture Tentáculos Tentáculos sent a video. 23 hours ago" [ref=f6e1271] [cursor=pointer]:
+                  - generic [ref=f6e1273]:
+                    - img "user-profile-picture" [ref=f6e1277]
+                    - generic [ref=f6e1280]:
+                      - generic [ref=f6e1281]: Tentáculos
+                      - generic [ref=f6e1287]:
+                        - generic [ref=f6e1288]: Tentáculos sent a video.
+                        - generic [ref=f6e1290]:
+                          - generic [ref=f6e1291]: ·
+                          - generic "23 hours ago" [ref=f6e1296]: 23h
+                - 'button "user-profile-picture Las Abejas - Club de Vinilos You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records 23 hours ago" [ref=f6e1300] [cursor=pointer]':
+                  - generic [ref=f6e1302]:
+                    - img "user-profile-picture" [ref=f6e1306]
+                    - generic [ref=f6e1309]:
+                      - generic [ref=f6e1310]: Las Abejas - Club de Vinilos
+                      - generic [ref=f6e1316]:
+                        - generic [ref=f6e1317]: "You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e1319]:
+                          - generic [ref=f6e1320]: ·
+                          - generic "23 hours ago" [ref=f6e1325]: 23h
+                - 'button "user-profile-picture ▪️ KINO CAVALIER▫️▪️ You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records 23 hours ago" [ref=f6e1329] [cursor=pointer]':
+                  - generic [ref=f6e1331]:
+                    - img "user-profile-picture" [ref=f6e1335]
+                    - generic [ref=f6e1338]:
+                      - generic [ref=f6e1339]: ▪️ KINO CAVALIER▫️▪️
+                      - generic [ref=f6e1345]:
+                        - generic [ref=f6e1346]: "You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                        - generic [ref=f6e1348]:
+                          - generic [ref=f6e1349]: ·
+                          - generic "23 hours ago" [ref=f6e1354]: 23h
+                - button "user-profile-picture George Molina Liked a message a day ago" [ref=f6e1358] [cursor=pointer]:
+                  - generic [ref=f6e1360]:
+                    - img "user-profile-picture" [ref=f6e1364]
+                    - generic [ref=f6e1367]:
+                      - generic [ref=f6e1368]: George Molina
+                      - generic [ref=f6e1374]:
+                        - generic [ref=f6e1375]: Liked a message
+                        - generic [ref=f6e1377]:
+                          - generic [ref=f6e1378]: ·
+                          - generic "a day ago" [ref=f6e1383]: 1d
+                - button "user-profile-picture KIRMANA RECORDS Liked a message a day ago" [ref=f6e1387] [cursor=pointer]:
+                  - generic [ref=f6e1389]:
+                    - img "user-profile-picture" [ref=f6e1393]
+                    - generic [ref=f6e1396]:
+                      - generic [ref=f6e1397]: KIRMANA RECORDS
+                      - generic [ref=f6e1403]:
+                        - generic [ref=f6e1404]: Liked a message
+                        - generic [ref=f6e1406]:
+                          - generic [ref=f6e1407]: ·
+                          - generic "a day ago" [ref=f6e1412]: 1d
+                - button "user-profile-picture Beto Graciaaaaas locoo a day ago More options" [ref=f6e1416] [cursor=pointer]:
+                  - generic [ref=f6e1418]:
+                    - img "user-profile-picture" [ref=f6e1422]
+                    - generic [ref=f6e1425]:
+                      - generic [ref=f6e1426]: Beto
+                      - generic [ref=f6e1432]:
+                        - generic [ref=f6e1433]: Graciaaaaas locoo
+                        - generic [ref=f6e1435]:
+                          - generic [ref=f6e1436]: ·
+                          - generic "a day ago" [ref=f6e1441]: 1d
+                    - button [ref=f6e1444]:
+                      - img "More options" [ref=f6e1447]
+                - 'button "user-profile-picture BACKROOM SESSIONS You: La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad. a day ago" [ref=f6e1454] [cursor=pointer]':
+                  - generic [ref=f6e1456]:
+                    - img "user-profile-picture" [ref=f6e1460]
+                    - generic [ref=f6e1463]:
+                      - generic [ref=f6e1464]: BACKROOM SESSIONS
+                      - generic [ref=f6e1470]:
+                        - generic [ref=f6e1471]: "You: La idea sería diseñar juntos un modelo de coproducción viable: Backroom Sessions aportaría su identidad, curaduría, comunidad y visión de contenidos; TDF, el espacio, la infraestructura y el soporte de producción. También nos interesa conversar sobre otras formas de colaboración entre ambos proyectos. ¿Les gustaría visitar el Domo y tener una reunión breve para conversar sobre el piloto y una posible serie recurrente? Pueden proponernos una fecha que les funcione y, si les parece, compartirnos un número de WhatsApp para coordinar con mayor facilidad."
+                        - generic [ref=f6e1473]:
+                          - generic [ref=f6e1474]: ·
+                          - generic "a day ago" [ref=f6e1479]: 1d
+                - button [ref=f6e1505] [cursor=pointer]:
+                  - generic [ref=f6e1507]:
+                    - status "Loading..." [ref=f6e1510]
+                    - generic [ref=f6e1513]:
+                      - status "Loading..." [ref=f6e1515]
+                      - status "Loading..." [ref=f6e1517]
+              - button [ref=f6e1520] [cursor=pointer]:
+                - img "New message" [ref=f6e1521]

@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { Box, Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import PageShell from '../components/PageShell';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import DownloadIcon from '@mui/icons-material/Download';
 import MapIcon from '@mui/icons-material/Map';
 import { useQuery } from '@tanstack/react-query';
 import { Meta } from '../api/meta';
+import { formatDateTimeForUser } from '../utils/formatters';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '';
 
@@ -16,15 +18,16 @@ export default function DocsPage() {
 
   const buildInfo = useMemo(() => {
     if (!version) return '—';
-    const date = version.buildTime ? new Date(version.buildTime) : null;
-    const formatted = date && !Number.isNaN(date.getTime())
-      ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
-      : version.buildTime ?? '—';
+    const formatted = version.buildTime ? formatDateTimeForUser(version.buildTime) : '—';
     return `${version.name} v${version.version} — ${formatted}`;
   }, [version]);
 
   return (
-    <Stack gap={4}>
+    <PageShell
+      title="Documentación"
+      subtitle="Consulta los contratos de la API, guías de integración y el mapa funcional desde un solo lugar."
+    >
+      <Stack gap={4}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack gap={1}>
           <Typography variant="overline">Documentación</Typography>
@@ -81,5 +84,6 @@ export default function DocsPage() {
         />
       </Paper>
     </Stack>
+    </PageShell>
   );
 }

@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 module TDF.ServerProposals
   ( proposalsServer
@@ -11,22 +10,32 @@ module TDF.ServerProposals
   , resolveOptionalProposalPipelineCardReference
   , resolveOptionalProposalPipelineCardReferenceUpdate
   , validateOptionalProposalStatus
+  , validateOptionalProposalContactName
   , validateOptionalProposalContactEmail
   , validateOptionalProposalContactPhone
+  , validateOptionalProposalNotes
   , validateOptionalProposalClientPartyId
   , validateProposalContentSource
+  , validateProposalTitle
   , validateProposalStatus
   , validateProposalVersionNumber
   , validateTemplateKey
   ) where
 
-import           Control.Monad              (unless)
+import           Control.Monad              (unless, when)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiLower, isDigit)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isControl
+  , isDigit
+  )
 import           Data.Int                   (Int64)
-import           Data.List                  (foldl')
 import qualified Data.Map.Strict            as Map
 import           Data.Maybe                 (catMaybes, maybeToList)
 import           Data.Text                  (Text)
@@ -42,7 +51,7 @@ import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool
 import           Servant
 import           System.Directory           (doesFileExist)
 import           System.FilePath            ((</>))
-import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
+import           Web.PathPieces             (fromPathPiece, toPathPiece)
 
 import           TDF.API.Proposals
 import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
@@ -90,7 +99,7 @@ proposalsServer user =
 
     getProposalH rawId = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
         Nothing -> throwError proposalNotFound
@@ -105,11 +114,14 @@ proposalsServer user =
 
     createProposalH ProposalCreate{..} = do
       ensureCRM
-      title <- requireText "title" pcTitle
+      title <- either throwError pure (validateProposalTitle pcTitle)
       latex <- resolveLatex pcLatex pcTemplateKey
       statusVal <- either throwError pure (validateProposalStatus pcStatus)
+      contactName <- either throwError pure (validateOptionalProposalContactName pcContactName)
       contactEmail <- either throwError pure (validateOptionalProposalContactEmail pcContactEmail)
       contactPhone <- either throwError pure (validateOptionalProposalContactPhone pcContactPhone)
+      notesVal <- either throwError pure (validateOptionalProposalNotes "notes" pcNotes)
+      versionNotesVal <- either throwError pure (validateOptionalProposalNotes "versionNotes" pcVersionNotes)
       clientPartyKey <- withPool (resolveOptionalProposalClientPartyReference pcClientPartyId)
         >>= either throwError pure
       pipelineCardKey <- withPool (resolveOptionalProposalPipelineCardReference pcPipelineCardId)
@@ -119,12 +131,12 @@ proposalsServer user =
             { ME.proposalTitle          = title
             , ME.proposalServiceKind    = pcServiceKind
             , ME.proposalClientPartyId  = clientPartyKey
-            , ME.proposalContactName    = normalizeOptionalText pcContactName
+            , ME.proposalContactName    = contactName
             , ME.proposalContactEmail   = contactEmail
             , ME.proposalContactPhone   = contactPhone
             , ME.proposalPipelineCardId = pipelineCardKey
             , ME.proposalStatus         = statusVal
-            , ME.proposalNotes          = normalizeOptionalText pcNotes
+            , ME.proposalNotes          = notesVal
             , ME.proposalCreatedAt      = now
             , ME.proposalUpdatedAt      = now
             , ME.proposalLastGeneratedAt = Nothing
@@ -137,25 +149,29 @@ proposalsServer user =
             , ME.proposalVersionLatex        = latex
             , ME.proposalVersionCreatedAt    = now
             , ME.proposalVersionCreatedByRef = Just (toPathPiece (auPartyId user))
-            , ME.proposalVersionNotes        = normalizeOptionalText pcVersionNotes
+            , ME.proposalVersionNotes        = versionNotesVal
             }
       _ <- withPool $ insert versionRecord
       pure (proposalToDTO (Map.singleton proposalKey 1) (Entity proposalKey proposalRecord))
 
     updateProposalH rawId ProposalUpdate{..} = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       mEntity <- withPool $ getEntity proposalKey
       case mEntity of
-        Nothing -> throwError err404
+        Nothing -> throwError proposalNotFound
         Just (Entity key proposal) -> do
           now <- liftIO getCurrentTime
-          titleUpdate <- traverse (requireText "title") puTitle
+          titleUpdate <- either throwError pure (traverse validateProposalTitle puTitle)
           statusUpdate <- either throwError pure (validateOptionalProposalStatus puStatus)
+          contactNameUpdate <- either throwError pure
+            (traverse validateOptionalProposalContactName puContactName)
           contactEmailUpdate <- either throwError pure
             (traverse validateOptionalProposalContactEmail puContactEmail)
           contactPhoneUpdate <- either throwError pure
             (traverse validateOptionalProposalContactPhone puContactPhone)
+          notesUpdate <- either throwError pure
+            (traverse (validateOptionalProposalNotes "notes") puNotes)
           clientPartyIdUpdate <- case puClientPartyId of
             Nothing -> pure Nothing
             Just rawClientPartyId -> do
@@ -168,17 +184,18 @@ proposalsServer user =
                 , fmap (ME.ProposalStatus =.) statusUpdate
                 , fmap (ME.ProposalServiceKind =.) puServiceKind
                 , fmap (ME.ProposalClientPartyId =.) clientPartyIdUpdate
-                , fmap (ME.ProposalContactName =.) (normalizeOptionalUpdate puContactName)
+                , fmap (ME.ProposalContactName =.) contactNameUpdate
                 , fmap (ME.ProposalContactEmail =.) contactEmailUpdate
                 , fmap (ME.ProposalContactPhone =.) contactPhoneUpdate
                 , fmap (ME.ProposalPipelineCardId =.) pipelineCardUpdate
-                , fmap (ME.ProposalNotes =.) (normalizeOptionalUpdate puNotes)
+                , fmap (ME.ProposalNotes =.) notesUpdate
                 ]
               sentUpdate = sentAtUpdate (ME.proposalSentAt proposal) statusUpdate now
               updates' = updates ++ maybeToList sentUpdate
-              finalUpdates =
-                if null updates' then [] else updates' ++ [ME.ProposalUpdatedAt =. now]
-          unless (null finalUpdates) (withPool $ update key finalUpdates)
+          when (null updates') $
+            throwError err400 { errBody = "Proposal update must include at least one field" }
+          let finalUpdates = updates' ++ [ME.ProposalUpdatedAt =. now]
+          withPool $ update key finalUpdates
           updated <- withPool $ getJustEntity key
           mLatest <- withPool $ selectFirst
             [ ME.ProposalVersionProposalId ==. key ]
@@ -190,7 +207,7 @@ proposalsServer user =
 
     listVersionsH rawId = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       ensureProposalExists proposalKey
       versions <- withPool $ selectList
         [ ME.ProposalVersionProposalId ==. proposalKey ]
@@ -199,9 +216,10 @@ proposalsServer user =
 
     createVersionH rawId ProposalVersionCreate{..} = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       _ <- ensureProposalExists proposalKey
       latex <- resolveLatex pvcLatex pvcTemplateKey
+      notesVal <- either throwError pure (validateOptionalProposalNotes "notes" pvcNotes)
       now <- liftIO getCurrentTime
       mLatest <- withPool $ selectFirst
         [ ME.ProposalVersionProposalId ==. proposalKey ]
@@ -213,7 +231,7 @@ proposalsServer user =
             , ME.proposalVersionLatex        = latex
             , ME.proposalVersionCreatedAt    = now
             , ME.proposalVersionCreatedByRef = Just (toPathPiece (auPartyId user))
-            , ME.proposalVersionNotes        = normalizeOptionalText pvcNotes
+            , ME.proposalVersionNotes        = notesVal
             }
       versionKey <- withPool $ insert versionRecord
       withPool $ update proposalKey [ME.ProposalUpdatedAt =. now]
@@ -221,7 +239,7 @@ proposalsServer user =
 
     getVersionH rawId versionNumber = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       validVersionNumber <- either throwError pure (validateProposalVersionNumber versionNumber)
       ensureProposalExists proposalKey
       mVersion <- withPool $ selectFirst
@@ -233,7 +251,7 @@ proposalsServer user =
 
     proposalPdfH rawId mVersion = do
       ensureCRM
-      proposalKey <- parseKey @ME.Proposal rawId
+      proposalKey <- parseProposalKey rawId
       validVersion <- traverse (either throwError pure . validateProposalVersionNumber) mVersion
       mProposal <- withPool $ getEntity proposalKey
       case mProposal of
@@ -348,24 +366,28 @@ proposalVersionToDTO proposalKey (Entity key v) = ProposalVersionDTO
 normalizeOptionalText :: Maybe Text -> Maybe Text
 normalizeOptionalText = (>>= normalizeText)
 
-normalizeOptionalUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
-normalizeOptionalUpdate = fmap normalizeOptionalText
-
-normalizeLatex :: Maybe Text -> Maybe Text
-normalizeLatex Nothing = Nothing
-normalizeLatex (Just raw) =
-  if T.null (T.strip raw) then Nothing else Just raw
-
 normalizeText :: Text -> Maybe Text
 normalizeText raw =
   let trimmed = T.strip raw
   in if T.null trimmed then Nothing else Just trimmed
 
-requireText :: MonadError ServerError m => Text -> Text -> m Text
-requireText label raw =
-  case normalizeText raw of
-    Nothing -> throwError err400 { errBody = encodeUtf8Lazy (label <> " required") }
-    Just val -> pure val
+maxProposalTitleChars :: Int
+maxProposalTitleChars = 160
+
+validateProposalTitle :: Text -> Either ServerError Text
+validateProposalTitle rawTitle
+  | T.null title =
+      Left err400 { errBody = "title is required" }
+  | T.length title > maxProposalTitleChars =
+      Left err400 { errBody = "title must be 160 characters or fewer" }
+  | T.any isUnsafeProposalInlineTextChar title =
+      Left err400 { errBody = proposalInlineTextError "title" }
+  | not (T.any isAlphaNum title) =
+      Left err400 { errBody = "title must include letters or numbers" }
+  | otherwise =
+      Right title
+  where
+    title = T.strip rawTitle
 
 validateProposalStatus :: Maybe Text -> Either ServerError Text
 validateProposalStatus Nothing = Right "draft"
@@ -386,6 +408,22 @@ validateProposalVersionNumber rawVersion
       Left err400 { errBody = "version must be a positive integer" }
   | otherwise = Right rawVersion
 
+validateOptionalProposalContactName :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalContactName Nothing = Right Nothing
+validateOptionalProposalContactName (Just rawName) =
+  case normalizeOptionalText (Just rawName) of
+    Nothing -> Right Nothing
+    Just contactName
+      | T.length contactName > maxProposalContactNameChars ->
+          Left err400 { errBody = "contactName must be 160 characters or fewer" }
+      | T.any isUnsafeProposalInlineTextChar contactName ->
+          Left err400 { errBody = proposalInlineTextError "contactName" }
+      | otherwise ->
+          Right (Just contactName)
+
+maxProposalContactNameChars :: Int
+maxProposalContactNameChars = 160
+
 validateOptionalProposalContactEmail :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalProposalContactEmail Nothing = Right Nothing
 validateOptionalProposalContactEmail (Just rawEmail) =
@@ -393,7 +431,9 @@ validateOptionalProposalContactEmail (Just rawEmail) =
     Nothing -> Right Nothing
     Just emailVal ->
       let normalized = T.toLower emailVal
-      in if isValidProposalEmail normalized
+      in if T.length normalized > maxProposalContactEmailLength
+           then Left err400 { errBody = "contactEmail must be 254 characters or fewer" }
+           else if isValidProposalEmail normalized
            then Right (Just normalized)
            else Left err400 { errBody = "contactEmail must be a valid email address" }
 
@@ -402,11 +442,39 @@ validateOptionalProposalContactPhone Nothing = Right Nothing
 validateOptionalProposalContactPhone (Just rawPhone) =
   case normalizeOptionalText (Just rawPhone) of
     Nothing -> Right Nothing
-    Just _ ->
-      case normalizeWhatsAppPhone rawPhone of
-        Just phoneVal -> Right (Just phoneVal)
-        Nothing ->
-          Left err400 { errBody = "contactPhone must be a valid phone number" }
+    Just phoneVal
+      | T.any isHiddenProposalFormattingChar phoneVal ->
+          Left err400
+            { errBody = "contactPhone must not contain hidden formatting characters" }
+      | T.any isControl phoneVal ->
+          Left err400 { errBody = "contactPhone must not contain control characters" }
+      | otherwise ->
+          case normalizeWhatsAppPhone phoneVal of
+            Just normalizedPhone -> Right (Just normalizedPhone)
+            Nothing ->
+              Left err400 { errBody = "contactPhone must be a valid phone number" }
+
+validateOptionalProposalNotes :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalNotes _ Nothing = Right Nothing
+validateOptionalProposalNotes fieldName (Just rawNotes) =
+  case normalizeOptionalText (Just rawNotes) of
+    Nothing -> Right Nothing
+    Just notesVal
+      | T.any isUnsafeNoteChar notesVal ->
+          Left err400
+            { errBody =
+                encodeUtf8Lazy
+                  ( fieldName
+                      <> " must not contain control characters other than tabs or line breaks, "
+                      <> "or hidden formatting characters"
+                  )
+            }
+      | otherwise ->
+          Right (Just notesVal)
+  where
+    isUnsafeNoteChar ch =
+      (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateOptionalProposalClientPartyId :: Maybe Int64 -> Either ServerError (Maybe Int64)
 validateOptionalProposalClientPartyId Nothing = Right Nothing
@@ -415,6 +483,19 @@ validateOptionalProposalClientPartyId (Just rawClientPartyId)
       Left err400 { errBody = "clientPartyId must be a positive integer" }
   | otherwise =
       Right (Just rawClientPartyId)
+
+isUnsafeProposalInlineTextChar :: Char -> Bool
+isUnsafeProposalInlineTextChar ch =
+  isControl ch || isHiddenProposalFormattingChar ch
+
+isHiddenProposalFormattingChar :: Char -> Bool
+isHiddenProposalFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+proposalInlineTextError :: Text -> BL.ByteString
+proposalInlineTextError fieldName =
+  encodeUtf8Lazy
+    (fieldName <> " must not contain control characters or hidden formatting characters")
 
 resolveOptionalProposalClientPartyReference
   :: Maybe Int64
@@ -438,19 +519,24 @@ resolveOptionalProposalPipelineCardReference
   -> SqlPersistT IO (Either ServerError (Maybe ME.PipelineCardId))
 resolveOptionalProposalPipelineCardReference Nothing = pure (Right Nothing)
 resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId) = do
-  case fromPathPiece rawPipelineCardId of
-    Nothing ->
-      pure
-        (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be a valid identifier" })
-    Just pipelineCardKey -> do
-      mPipelineCard <- getEntity pipelineCardKey
-      pure $
-        case mPipelineCard of
-          Nothing ->
-            Left err422
-              { errBody = encodeUtf8Lazy "pipelineCardId references an unknown pipeline card" }
-          Just _ ->
-            Right (Just pipelineCardKey)
+  case T.strip rawPipelineCardId of
+    trimmed
+      | T.null trimmed ->
+          pure (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be omitted or a valid identifier" })
+      | otherwise ->
+          case fromPathPiece trimmed of
+            Nothing ->
+              pure
+                (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be a valid identifier" })
+            Just pipelineCardKey -> do
+              mPipelineCard <- getEntity pipelineCardKey
+              pure $
+                case mPipelineCard of
+                  Nothing ->
+                    Left err422
+                      { errBody = encodeUtf8Lazy "pipelineCardId references an unknown pipeline card" }
+                  Just _ ->
+                    Right (Just pipelineCardKey)
 
 resolveOptionalProposalPipelineCardReferenceUpdate
   :: Maybe (Maybe Text)
@@ -459,7 +545,10 @@ resolveOptionalProposalPipelineCardReferenceUpdate Nothing =
   pure (Right Nothing)
 resolveOptionalProposalPipelineCardReferenceUpdate (Just Nothing) =
   pure (Right (Just Nothing))
-resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId)) = do
+resolveOptionalProposalPipelineCardReferenceUpdate (Just (Just rawPipelineCardId))
+  | T.null (T.strip rawPipelineCardId) =
+      pure (Left err400 { errBody = encodeUtf8Lazy "pipelineCardId must be null to clear or a valid identifier" })
+  | otherwise = do
   resolved <- resolveOptionalProposalPipelineCardReference (Just rawPipelineCardId)
   pure (fmap Just resolved)
 
@@ -480,6 +569,7 @@ isValidProposalEmail candidate =
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
         && T.isInfixOf "." domain
         && all isValidProposalDomainLabel (T.splitOn "." domain)
+        && isValidProposalFinalDomainLabel domain
     _ -> False
 
 maxProposalContactEmailLength :: Int
@@ -509,6 +599,13 @@ isValidProposalDomainLabel label =
     && not (T.isSuffixOf "-" label)
     && T.all isValidProposalDomainChar label
 
+isValidProposalFinalDomainLabel :: Text -> Bool
+isValidProposalFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
+
 maxProposalEmailDomainLabelLength :: Int
 maxProposalEmailDomainLabelLength = 63
 
@@ -536,15 +633,23 @@ isSentStatus =
   where
     isSpace c = c == ' ' || c == '_' || c == '-'
 
-parseKey
-  :: forall record m.
-     ( PathPiece (Key record)
-     , MonadError ServerError m
-     )
+parseProposalKey
+  :: MonadError ServerError m
   => Text
-  -> m (Key record)
-parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  -> m (Key ME.Proposal)
+parseProposalKey raw =
+  case fromPathPiece raw of
+    Just key
+      | toPathPiece key == raw
+      , raw /= nilUuidPathPiece -> pure key
+    _ -> throwError invalidProposalIdentifier
+
+nilUuidPathPiece :: Text
+nilUuidPathPiece = "00000000-0000-0000-0000-000000000000"
+
+invalidProposalIdentifier :: ServerError
+invalidProposalIdentifier =
+  err400 { errBody = "Invalid proposal identifier" }
 
 withPool
   :: (MonadReader Env m, MonadIO m)
@@ -569,17 +674,39 @@ resolveLatex mLatex mTemplateKey =
         Nothing -> throwError err404 { errBody = "Template not found" }
         Just template -> pure template
 
-validateProposalContentSource :: Maybe Text -> Maybe Text -> Either ServerError ProposalContentSource
-validateProposalContentSource mLatex mTemplateKey =
-  case (normalizeLatex mLatex, normalizeOptionalText mTemplateKey) of
-    (Just latex, Nothing) ->
-      Right (ProposalInlineLatex latex)
+validateProposalContentSource
+  :: Maybe Text
+  -> Maybe Text
+  -> Either ServerError ProposalContentSource
+validateProposalContentSource mLatex mTemplateKey = do
+  latex <- validateOptionalProposalLatex mLatex
+  templateKey <- validateOptionalProposalTemplateKey mTemplateKey
+  case (latex, templateKey) of
+    (Just inlineLatex, Nothing) ->
+      Right (ProposalInlineLatex inlineLatex)
     (Nothing, Just rawKey) ->
       ProposalTemplateKey <$> validateTemplateKey rawKey
     (Nothing, Nothing) ->
       Left err400 { errBody = "latex or templateKey required" }
     (Just _, Just _) ->
       Left err400 { errBody = "Provide either latex or templateKey, not both" }
+
+validateOptionalProposalLatex :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalLatex Nothing = Right Nothing
+validateOptionalProposalLatex (Just rawLatex)
+  | T.null (T.strip rawLatex) =
+      Left err400 { errBody = "latex must not be blank" }
+  | otherwise =
+      Right (Just rawLatex)
+
+validateOptionalProposalTemplateKey :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalProposalTemplateKey Nothing = Right Nothing
+validateOptionalProposalTemplateKey (Just rawTemplateKey) =
+  case normalizeText rawTemplateKey of
+    Nothing ->
+      Left err400 { errBody = "templateKey must not be blank" }
+    Just templateKey ->
+      Right (Just templateKey)
 
 validateTemplateKey :: Text -> Either ServerError Text
 validateTemplateKey raw =

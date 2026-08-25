@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings #-}
 module TDF.Trials.API where
 
 import Servant
@@ -9,6 +10,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Aeson (FromJSON (parseJSON), Options, ToJSON, defaultOptions, genericParseJSON, rejectUnknownFields)
 import GHC.Generics (Generic)
+import TDF.API.Types (rejectNullOptionalFields)
 import TDF.Trials.DTO
 
 strictRequestObjectOptions :: Options
@@ -62,14 +64,18 @@ type PrivateTrialsAPI =
 data SignupIn = SignupIn { firstName :: Text, lastName :: Text, email :: Text, phone :: Maybe Text, password :: Maybe Text, googleIdToken :: Maybe Text, marketingOptIn :: Bool } deriving (Generic)
 instance ToJSON SignupIn
 instance FromJSON SignupIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SignupIn" ["phone", "password", "googleIdToken"] value
+    genericParseJSON strictRequestObjectOptions value
 data SignupOut = SignupOut { ok :: Bool } deriving (Generic)
 instance ToJSON SignupOut; instance FromJSON SignupOut
 
 data InterestIn = InterestIn { interestType :: Text, subjectId :: Maybe Int, details :: Maybe Text, driveLink :: Maybe Text } deriving (Generic)
 instance ToJSON InterestIn
 instance FromJSON InterestIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "InterestIn" ["subjectId", "details", "driveLink"] value
+    genericParseJSON strictRequestObjectOptions value
 data InterestOut = InterestOut { leadId :: Int } deriving (Generic)
 instance ToJSON InterestOut; instance FromJSON InterestOut
 
@@ -100,7 +106,9 @@ data SubjectCreate = SubjectCreate
   } deriving (Generic)
 instance ToJSON SubjectCreate
 instance FromJSON SubjectCreate where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SubjectCreate" ["active"] value
+    genericParseJSON strictRequestObjectOptions value
 
 data SubjectUpdate = SubjectUpdate
   { name   :: Maybe Text
@@ -108,7 +116,14 @@ data SubjectUpdate = SubjectUpdate
   } deriving (Generic)
 instance ToJSON SubjectUpdate
 instance FromJSON SubjectUpdate where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "SubjectUpdate" ["name", "active"] value
+    payload@(SubjectUpdate nameValue activeValue) <- genericParseJSON strictRequestObjectOptions value
+    case (nameValue, activeValue) of
+      (Nothing, Nothing) ->
+        fail "SubjectUpdate must include at least one field"
+      _ ->
+        pure payload
 
 data PackageDTO = PackageDTO { packageId :: Int, name :: Text, hoursQty :: Int, priceCents :: Int, expiresDays :: Int } deriving (Generic)
 instance ToJSON PackageDTO; instance FromJSON PackageDTO
@@ -116,21 +131,35 @@ instance ToJSON PackageDTO; instance FromJSON PackageDTO
 data PurchaseIn = PurchaseIn { studentId :: Int, packageId :: Int, priceCents :: Int, discountCents :: Maybe Int, taxCents :: Maybe Int, sellerId :: Maybe Int, commissionedTeacherId :: Maybe Int, trialRequestId :: Maybe Int } deriving (Generic)
 instance ToJSON PurchaseIn
 instance FromJSON PurchaseIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "PurchaseIn"
+      [ "discountCents"
+      , "taxCents"
+      , "sellerId"
+      , "commissionedTeacherId"
+      , "trialRequestId"
+      ]
+      value
+    genericParseJSON strictRequestObjectOptions value
 data PurchaseOut = PurchaseOut { purchaseId :: Int } deriving (Generic)
 instance ToJSON PurchaseOut; instance FromJSON PurchaseOut
 
 data ClassSessionIn = ClassSessionIn { studentId :: Int, teacherId :: Int, subjectId :: Int, startAt :: UTCTime, endAt :: UTCTime, roomId :: Int, bookingId :: Maybe Int } deriving (Generic)
 instance ToJSON ClassSessionIn
 instance FromJSON ClassSessionIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "ClassSessionIn" ["bookingId"] value
+    genericParseJSON strictRequestObjectOptions value
 data ClassSessionOut = ClassSessionOut { classSessionId :: Int, consumedMinutes :: Int } deriving (Generic)
 instance ToJSON ClassSessionOut; instance FromJSON ClassSessionOut
 
 data AttendIn = AttendIn { attended :: Bool, notes :: Maybe Text } deriving (Generic)
 instance ToJSON AttendIn
 instance FromJSON AttendIn where
-  parseJSON = genericParseJSON strictRequestObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "AttendIn" ["notes"] value
+    genericParseJSON strictRequestObjectOptions value
 
 data CommissionDTO = CommissionDTO { teacherId :: Int, amountCents :: Int, basisCents :: Int, percent :: Double } deriving (Generic)
 instance ToJSON CommissionDTO; instance FromJSON CommissionDTO

@@ -3,27 +3,53 @@
 
 module TDF.ServerProposalsSpec (spec) where
 
+import Control.Monad (forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
-import Control.Monad.Trans.Reader (ReaderT, runReaderT)
+import Control.Monad.Trans.Reader (ReaderT, ask, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text (Text)
+import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Database.Persist (Entity, get, insertKey, selectList)
 import Database.Persist.Sql (SqlPersistT, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
 import Test.Hspec
+import Web.PathPieces (fromPathPiece)
 
-import TDF.API.Proposals (ProposalVersionDTO, ProposalVersionSummaryDTO, ProposalsAPI)
+import TDF.API.Proposals (ProposalCreate (..), ProposalDTO, ProposalUpdate (..), ProposalVersionDTO,
+                          ProposalVersionSummaryDTO, ProposalsAPI)
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.DB (Env (..))
 import TDF.Models (RoleEnum (..))
+import qualified TDF.ModelsExtra as ME
 import TDF.ServerProposals (proposalsServer)
 
 type ProposalTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
 spec = describe "TDF.ServerProposals proposal versions" $ do
+  it "rejects malformed, nil, or non-canonical proposal ids before proposal lookups" $
+    forM_
+      [ "not-a-uuid"
+      , "00000000-0000-0000-0000-000000000000"
+      , "550E8400-E29B-41D4-A716-446655440000"
+      ] $ \rawId -> do
+        result <-
+          runProposalTest $
+            listVersionsHandlerFor
+              (mkUser [Admin])
+              rawId
+
+        case result of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` "Invalid proposal identifier"
+          Right versions ->
+            expectationFailure
+              ("Expected invalid proposal id lookup to fail, got versions: " <> show versions)
+
   it "rejects missing proposals instead of returning an empty version list" $ do
     result <-
       runProposalTest $
@@ -55,6 +81,330 @@ spec = describe "TDF.ServerProposals proposal versions" $ do
         expectationFailure
           ("Expected missing proposal version lookup to fail, got: " <> show versionDto)
 
+  it "rejects empty proposal patch payloads instead of treating them as silent no-op updates" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440001"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        updateProposalHandlerFor
+          (mkUser [Admin])
+          proposalIdText
+          (ProposalUpdate Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "Proposal update must include at least one field"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected empty proposal patch to fail, got: " <> show proposalDto)
+
+  it "rejects missing proposals before attempting a patch so clients get the same explicit 404 as other proposal reads" $ do
+    result <-
+      runProposalTest $
+        updateProposalHandlerFor
+          (mkUser [Admin])
+          "550e8400-e29b-41d4-a716-446655440000"
+          (ProposalUpdate (Just "Updated title") Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 404
+        BL8.unpack (errBody err) `shouldContain` "Proposal not found"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected missing proposal patch to fail, got: " <> show proposalDto)
+
+  it "rejects control characters in proposal contact names before mutating persisted records" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440002"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        rejected <-
+          captureProposalError $
+            updateProposalHandlerFor
+              (mkUser [Admin])
+              proposalIdText
+              (ProposalUpdate
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                (Just (Just "Ops\nBcc"))
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+              )
+        persistedContactName <-
+          runProposalSql $
+            fmap (fmap ME.proposalContactName) (get (fixtureProposalKey proposalIdText))
+        pure (rejected, persistedContactName)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected contact-name rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedContactName) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` "contactName must not contain control characters"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected invalid contactName patch to fail, got: " <> show proposalDto)
+        persistedContactName `shouldBe` Just (Just "Ops")
+
+  it "rejects blank pipelineCardId patches so identifier clears must be explicit nulls" $ do
+    let proposalIdText = "550e8400-e29b-41d4-a716-446655440003"
+    result <-
+      runProposalTest $ do
+        seedProposal proposalIdText
+        rejected <-
+          captureProposalError $
+            updateProposalHandlerFor
+              (mkUser [Admin])
+              proposalIdText
+              (ProposalUpdate
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                (Just (Just "   "))
+                Nothing
+              )
+        persistedPipelineCardId <-
+          runProposalSql $
+            fmap (fmap ME.proposalPipelineCardId) (get (fixtureProposalKey proposalIdText))
+        pure (rejected, persistedPipelineCardId)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected pipelineCardId rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedPipelineCardId) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "pipelineCardId must be null to clear or a valid identifier"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected blank pipelineCardId patch to fail, got: " <> show proposalDto)
+        persistedPipelineCardId `shouldBe` Just Nothing
+
+  it "rejects blank pipelineCardId on proposal creation instead of silently dropping the malformed identifier" $ do
+    result <-
+      runProposalTest $
+        createProposalHandlerFor
+          (mkUser [Admin])
+          (ProposalCreate
+            { pcTitle = "Studio proposal"
+            , pcStatus = Nothing
+            , pcServiceKind = Nothing
+            , pcClientPartyId = Nothing
+            , pcContactName = Just "Ops"
+            , pcContactEmail = Just "ops@example.com"
+            , pcContactPhone = Just "+593991234567"
+            , pcPipelineCardId = Just "   "
+            , pcNotes = Nothing
+            , pcLatex = Just "\\section{Hello}"
+            , pcTemplateKey = Nothing
+            , pcVersionNotes = Nothing
+            })
+
+    case result of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err)
+          `shouldContain` "pipelineCardId must be omitted or a valid identifier"
+      Right proposalDto ->
+        expectationFailure
+          ("Expected blank pipelineCardId create to fail, got: " <> show proposalDto)
+
+  it "rejects ambiguous contact email final domain labels before persisting proposal rows" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.123"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Nothing
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure
+          ( "Expected contact email rejection to be handled in the inner proposal action, got: "
+              <> show err
+          )
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "contactEmail must be a valid email address"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected ambiguous contactEmail create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
+
+  it "rejects hidden-format proposal titles before persisting rows" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio\8203 proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.com"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Nothing
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure
+          ("Expected title rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            let expectedMessage =
+                  "title must not contain control characters or hidden formatting characters"
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err) `shouldContain` expectedMessage
+          Right proposalDto ->
+            expectationFailure
+              ("Expected hidden-format title create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
+
+  it "rejects control characters in proposal notes on creation before any proposal rows are persisted" $ do
+    result <-
+      runProposalTest $ do
+        rejected <-
+          captureProposalError $
+            createProposalHandlerFor
+              (mkUser [Admin])
+              (ProposalCreate
+                { pcTitle = "Studio proposal"
+                , pcStatus = Nothing
+                , pcServiceKind = Nothing
+                , pcClientPartyId = Nothing
+                , pcContactName = Just "Ops"
+                , pcContactEmail = Just "ops@example.com"
+                , pcContactPhone = Just "+593991234567"
+                , pcPipelineCardId = Nothing
+                , pcNotes = Just "Internal\NULonly"
+                , pcLatex = Just "\\section{Hello}"
+                , pcTemplateKey = Nothing
+                , pcVersionNotes = Nothing
+                })
+        persistedProposalCount <-
+          runProposalSql $ do
+            proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+            pure (length proposals)
+        pure (rejected, persistedProposalCount)
+
+    case result of
+      Left err ->
+        expectationFailure ("Expected notes rejection to be handled in the inner proposal action, got: " <> show err)
+      Right (rejected, persistedProposalCount) -> do
+        case rejected of
+          Left err -> do
+            errHTTPCode err `shouldBe` 400
+            BL8.unpack (errBody err)
+              `shouldContain` "notes must not contain control characters other than tabs or line breaks"
+          Right proposalDto ->
+            expectationFailure
+              ("Expected invalid notes create to fail, got: " <> show proposalDto)
+        persistedProposalCount `shouldBe` (0 :: Int)
+
+  it "rejects blank proposal content source fields instead of silently falling back" $ do
+    let payload latexValue templateKeyValue =
+          ProposalCreate
+            { pcTitle = "Studio proposal"
+            , pcStatus = Nothing
+            , pcServiceKind = Nothing
+            , pcClientPartyId = Nothing
+            , pcContactName = Just "Ops"
+            , pcContactEmail = Just "ops@example.com"
+            , pcContactPhone = Just "+593991234567"
+            , pcPipelineCardId = Nothing
+            , pcNotes = Nothing
+            , pcLatex = latexValue
+            , pcTemplateKey = templateKeyValue
+            , pcVersionNotes = Nothing
+            }
+        assertRejected expectedMessage candidate = do
+          result <-
+            runProposalTest $ do
+              rejected <-
+                captureProposalError $
+                  createProposalHandlerFor (mkUser [Admin]) candidate
+              persistedProposalCount <-
+                runProposalSql $ do
+                  proposals <- (selectList [] [] :: SqlPersistT IO [Entity ME.Proposal])
+                  pure (length proposals)
+              pure (rejected, persistedProposalCount)
+
+          case result of
+            Left err ->
+              expectationFailure
+                ( "Expected content-source rejection to be handled in the inner "
+                    <> "proposal action, got: "
+                    <> show err
+                )
+            Right (rejected, persistedProposalCount) -> do
+              case rejected of
+                Left err -> do
+                  errHTTPCode err `shouldBe` 400
+                  BL8.unpack (errBody err) `shouldContain` expectedMessage
+                Right proposalDto ->
+                  expectationFailure
+                    ( "Expected invalid content source create to fail, got: "
+                        <> show proposalDto
+                    )
+              persistedProposalCount `shouldBe` (0 :: Int)
+
+    assertRejected
+      "latex must not be blank"
+      (payload (Just "   ") (Just "tdf_live_sessions"))
+    assertRejected
+      "templateKey must not be blank"
+      (payload (Just "\\section{Hello}") (Just "   "))
+
 mkUser :: [RoleEnum] -> AuthedUser
 mkUser roles =
   AuthedUser
@@ -75,6 +425,16 @@ runProposalTest action =
             }
     liftIO $ runExceptT (runReaderT action env)
 
+runProposalSql :: SqlPersistT IO a -> ProposalTestM a
+runProposalSql action = do
+  env <- ask
+  liftIO $ runSqlPool action (envPool env)
+
+captureProposalError :: ProposalTestM a -> ProposalTestM (Either ServerError a)
+captureProposalError action = do
+  env <- ask
+  liftIO $ runExceptT (runReaderT action env)
+
 listVersionsHandlerFor :: AuthedUser -> Text -> ProposalTestM [ProposalVersionSummaryDTO]
 listVersionsHandlerFor user rawId =
   case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
@@ -88,6 +448,25 @@ listVersionsHandlerFor user rawId =
           :<|> _proposalPdf ->
             listVersions
 
+createProposalHandlerFor :: AuthedUser -> ProposalCreate -> ProposalTestM ProposalDTO
+createProposalHandlerFor user payload =
+  case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
+    _listProposals :<|> createProposal :<|> _proposalRoutes ->
+      createProposal payload
+
+updateProposalHandlerFor :: AuthedUser -> Text -> ProposalUpdate -> ProposalTestM ProposalDTO
+updateProposalHandlerFor user rawId payload =
+  case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
+    _listProposals :<|> _createProposal :<|> proposalRoutes ->
+      case proposalRoutes rawId of
+        _getProposal
+          :<|> updateProposal
+          :<|> _listVersions
+          :<|> _createVersion
+          :<|> _getVersion
+          :<|> _proposalPdf ->
+            updateProposal payload
+
 getVersionHandlerFor :: AuthedUser -> Text -> Int -> ProposalTestM ProposalVersionDTO
 getVersionHandlerFor user rawId versionNumber =
   case (proposalsServer user :: ServerT ProposalsAPI ProposalTestM) of
@@ -100,6 +479,33 @@ getVersionHandlerFor user rawId versionNumber =
           :<|> getVersion
           :<|> _proposalPdf ->
             getVersion versionNumber
+
+seedProposal :: Text -> ProposalTestM ()
+seedProposal rawId = do
+  let proposalKey = fixtureProposalKey rawId
+  let fixtureTime = UTCTime (fromGregorian 2026 4 24) (secondsToDiffTime 0)
+  runProposalSql $
+    insertKey proposalKey ME.Proposal
+      { ME.proposalTitle = "Studio proposal"
+      , ME.proposalServiceKind = Nothing
+      , ME.proposalClientPartyId = Nothing
+      , ME.proposalContactName = Just "Ops"
+      , ME.proposalContactEmail = Just "ops@example.com"
+      , ME.proposalContactPhone = Just "+593991234567"
+      , ME.proposalPipelineCardId = Nothing
+      , ME.proposalStatus = "draft"
+      , ME.proposalNotes = Just "Initial draft"
+      , ME.proposalCreatedAt = fixtureTime
+      , ME.proposalUpdatedAt = fixtureTime
+      , ME.proposalLastGeneratedAt = Nothing
+      , ME.proposalSentAt = Nothing
+      }
+
+fixtureProposalKey :: Text -> ME.ProposalId
+fixtureProposalKey rawId =
+  case (fromPathPiece rawId :: Maybe ME.ProposalId) of
+    Just key -> key
+    Nothing -> error ("invalid proposal fixture key: " <> show rawId)
 
 initializeProposalSchema :: SqlPersistT IO ()
 initializeProposalSchema = do

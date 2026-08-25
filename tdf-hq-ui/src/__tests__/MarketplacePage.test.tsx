@@ -8,24 +8,31 @@ import type { MarketplaceCartDTO, MarketplaceItemDTO, MarketplaceOrderDTO } from
 const listMock = jest.fn<() => Promise<MarketplaceItemDTO[]>>();
 const getCartMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
 const createCartMock = jest.fn<() => Promise<MarketplaceCartDTO>>();
-const upsertItemMock = jest.fn<(cartId: string) => Promise<MarketplaceCartDTO>>();
-const checkoutMock = jest.fn<(cartId: string, payload: unknown) => Promise<MarketplaceOrderDTO>>();
+const upsertItemMock = jest.fn<(cartId: string, payload: unknown) => Promise<MarketplaceCartDTO>>();
+const checkoutMock = jest.fn<
+  (cartId: string, payload: unknown, idempotencyKey: string) => Promise<MarketplaceOrderDTO>
+>();
 const datafastCheckoutMock = jest.fn();
 const createPaypalOrderMock = jest.fn();
 const capturePaypalOrderMock = jest.fn();
 const inventoryUpdateMock = jest.fn();
+const storeLookupTokenMock = jest.fn();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
   Marketplace: {
     list: () => listMock(),
     getCart: (cartId: string) => getCartMock(cartId),
     createCart: () => createCartMock(),
-    upsertItem: (cartId: string) => upsertItemMock(cartId),
-    checkout: (cartId: string, payload: unknown) => checkoutMock(cartId, payload as never),
+    upsertItem: (cartId: string, payload: unknown) => upsertItemMock(cartId, payload),
+    checkout: (cartId: string, payload: unknown, idempotencyKey: string) =>
+      checkoutMock(cartId, payload as never, idempotencyKey),
     datafastCheckout: (...args: unknown[]) => datafastCheckoutMock(...args),
     createPaypalOrder: (...args: unknown[]) => createPaypalOrderMock(...args),
     capturePaypalOrder: (...args: unknown[]) => capturePaypalOrderMock(...args),
   },
+  getMarketplaceCheckoutIdempotencyKey: (cartId: string, provider: string) => `${cartId}-${provider}-idempotency`,
+  loadMarketplaceLookupToken: () => 'secure-lookup-token',
+  storeMarketplaceLookupToken: (...args: unknown[]) => storeLookupTokenMock(...args),
 }));
 
 jest.unstable_mockModule('../api/inventory', () => ({
@@ -36,6 +43,14 @@ jest.unstable_mockModule('../api/inventory', () => ({
 
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
   default: () => null,
+}));
+
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -49,7 +64,9 @@ const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
-  for (let index = 0; index < attempts; index += 1) {
+  let remainingAttempts = attempts;
+  while (remainingAttempts > 0) {
+    remainingAttempts -= 1;
     try {
       assertion();
       return;
@@ -129,7 +146,7 @@ const renderPage = async (container: HTMLElement) => {
   let root: Root | null = createRoot(container);
   await act(async () => {
     root?.render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter>
         <QueryClientProvider client={qc}>
           <MarketplacePage />
         </QueryClientProvider>
@@ -180,6 +197,17 @@ const setInputValue = (input: HTMLInputElement, value: string) => {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 };
 
+const readSavedFilters = (): { category?: string; condition?: string } => {
+  const raw = window.localStorage.getItem('tdf-marketplace-filters');
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' ? (parsed as { category?: string; condition?: string }) : {};
+  } catch {
+    return {};
+  }
+};
+
 const clickButtonByText = (label: string, pick: 'first' | 'last' = 'first') => {
   const buttons = Array.from(document.querySelectorAll('button')).filter(
     (candidate) => candidate.textContent?.trim() === label,
@@ -219,6 +247,7 @@ describe('MarketplacePage', () => {
     createPaypalOrderMock.mockReset();
     capturePaypalOrderMock.mockReset();
     inventoryUpdateMock.mockReset();
+    storeLookupTokenMock.mockReset();
     listMock.mockResolvedValue([buildListing()]);
     getCartMock.mockResolvedValue(buildCart());
     createCartMock.mockResolvedValue(buildCart({ mcCartId: 'new-cart', mcItems: [] }));
@@ -226,6 +255,16 @@ describe('MarketplacePage', () => {
     checkoutMock.mockResolvedValue(buildOrder());
     window.localStorage.clear();
     window.history.pushState({}, '', '/marketplace');
+  });
+
+  it('stops waiting after the configured number of failed attempts', async () => {
+    const expectedError = new Error('still waiting');
+    const assertion = jest.fn(() => {
+      throw expectedError;
+    });
+
+    await expect(waitForExpectation(assertion, 3)).rejects.toThrow('still waiting');
+    expect(assertion).toHaveBeenCalledTimes(3);
   });
 
   it('prefers URL filters over saved filters on first render', async () => {
@@ -262,6 +301,26 @@ describe('MarketplacePage', () => {
     document.body.removeChild(container);
   });
 
+  it('ignores malformed saved filters on first render', async () => {
+    window.localStorage.setItem('tdf-marketplace-filters', '{not valid json');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Vintage Mic');
+      expect(getInputByLabel(container, 'Buscar equipo').value).toBe('');
+      expect(window.location.search).toBe('');
+      expect(window.localStorage.getItem('tdf-marketplace-filters')).toBe(
+        JSON.stringify({ search: '', category: 'all', sort: 'relevance', purpose: 'all', condition: 'all' }),
+      );
+    });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('drops stale saved category and condition filters once listings load', async () => {
     listMock.mockResolvedValue([
       buildListing({ miCategory: 'Mics', miCondition: 'used', miPurpose: 'sale' }),
@@ -287,10 +346,7 @@ describe('MarketplacePage', () => {
       expect(container.textContent).toContain('Vintage Mic');
       expect(container.textContent).toContain('Stage Piano');
       expect(window.location.search).toBe('');
-      const savedFilters = JSON.parse(window.localStorage.getItem('tdf-marketplace-filters') ?? '{}') as {
-        category?: string;
-        condition?: string;
-      };
+      const savedFilters = readSavedFilters();
       expect(savedFilters.category).toBe('all');
       expect(savedFilters.condition).toBe('all');
       expect(container.textContent).not.toContain('Categoría: Missing');
@@ -323,6 +379,90 @@ describe('MarketplacePage', () => {
       expect(document.body.textContent).toContain('Detalle del equipo');
       expect(document.body.textContent).toContain('Rare Synth');
       expect(document.body.textContent).toContain('Roland Juno');
+    });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('keeps a rental disabled until approved server-side terms exist', async () => {
+    listMock.mockResolvedValue([
+      buildListing({ miPurpose: 'rent', miTitle: 'Rental Console' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const rentalButton = Array.from(container.querySelectorAll('button')).find(
+        (button) => button.textContent?.trim() === 'Renta en revisión',
+      );
+      expect(rentalButton).toBeDefined();
+      expect(rentalButton?.disabled).toBe(true);
+    });
+    expect(upsertItemMock).not.toHaveBeenCalled();
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('adds an approved rental only after collecting both inclusive dates', async () => {
+    listMock.mockResolvedValue([
+      buildListing({
+        miPurpose: 'rent',
+        miTitle: 'Rental Console',
+        miRentalTermsVersion: 'rental-v1',
+        miRentalTermsSummary: 'Inspección de salida y retorno obligatoria.',
+        miRentalMinDays: 1,
+        miRentalMaxDays: 30,
+        miRentalSecurityDepositDisplay: 'USD $50.00',
+        miRentalTimezone: 'America/Guayaquil',
+      }),
+    ]);
+    createCartMock.mockResolvedValue(buildCart({ mcCartId: 'cart-rental', mcItems: [] }));
+    upsertItemMock.mockResolvedValue(buildCart({
+      mcCartId: 'cart-rental',
+      mcItems: [{
+        mciListingId: 'listing-1',
+        mciTitle: 'Rental Console',
+        mciCategory: 'Mics',
+        mciQuantity: 1,
+        mciPurpose: 'rent',
+        mciUnitPriceDisplay: 'USD $100.00',
+        mciSubtotalDisplay: 'USD $350.00',
+        mciRentalStartDate: '2030-01-10',
+        mciRentalEndDate: '2030-01-12',
+        mciRentalDurationDays: 3,
+        mciRentalChargeDisplay: 'USD $300.00',
+        mciSecurityDepositDisplay: 'USD $50.00',
+      }] as MarketplaceCartDTO['mcItems'],
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => expect(container.textContent).toContain('Elegir fechas'));
+    await act(async () => {
+      clickButtonByText('Elegir fechas');
+      await flushPromises();
+    });
+    setInputValue(getInputByLabel(document.body, 'Inicio'), '2030-01-10');
+    setInputValue(getInputByLabel(document.body, 'Devolución'), '2030-01-12');
+    await act(async () => {
+      await flushPromises();
+      clickButtonByText('Agregar renta');
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(upsertItemMock).toHaveBeenCalledWith('cart-rental', {
+        mciuListingId: 'listing-1',
+        mciuQuantity: 1,
+        mciuRentalStartDate: '2030-01-10',
+        mciuRentalEndDate: '2030-01-12',
+      });
     });
 
     await cleanup();
@@ -416,9 +556,19 @@ describe('MarketplacePage', () => {
 
     await waitForExpectation(() => {
       expect(checkoutMock).toHaveBeenCalled();
+      expect(checkoutMock).toHaveBeenCalledWith(
+        'cart-1',
+        expect.objectContaining({
+          mcrBuyerName: 'Saved Buyer',
+          mcrBuyerEmail: 'saved@example.com',
+          mcrFulfillmentMethod: 'pickup',
+        }),
+        'cart-1-bank_transfer-idempotency',
+      );
       expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBeNull();
       expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
-      expect(document.body.textContent).toContain('Pedido enviado');
+      expect(document.body.textContent).toContain('Pedido creado');
+      expect(document.body.textContent).toContain('pendiente de pago');
       expect(document.body.textContent).not.toContain('Tienes un carrito guardado');
     });
 

@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -8,7 +9,7 @@
 
 module TDF.ServerExtra where
 
-import           Control.Monad              (filterM, unless, when, join, guard)
+import           Control.Monad              (filterM, forM, unless, when, join, guard)
 import           Control.Applicative        ((<|>))
 import           Control.Exception          (SomeException, try)
 import           Control.Monad.Except       (MonadError)
@@ -17,10 +18,21 @@ import           Control.Monad.Reader       (MonadReader, ask, asks)
 import           Data.Foldable              (for_)
 import           Data.List                  (sortOn)
 import qualified Data.Map.Strict            as Map
-import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
+import           Data.Maybe                 (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set                   as Set
 import           Data.Bits                  (xor)
-import           Data.Char                  (isAlphaNum, isAscii, isAsciiUpper, isControl, isDigit, isSpace, ord)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  , ord
+  )
 import           Data.Word                  (Word64)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
@@ -28,23 +40,23 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.ByteString.Char8      as BS
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM)
+import           Data.Time                  (Day, UTCTime(..), defaultTimeLocale, getCurrentTime, parseTimeM, utctDay)
 import           Data.UUID                  (toText)
 import qualified Data.UUID                  as UUID
 import           Data.UUID.V4               (nextRandom)
 import           Data.Aeson                 (object, (.:), (.:?), (.=))
-import           Data.Aeson.Types           (Parser, parseMaybe, withObject, (.!=))
+import           Data.Aeson.Types           (Parser, parseEither, parseMaybe, withObject, (.!=))
 import qualified Data.Aeson                as A
 import           Data.Int                   (Int64)
 import qualified Data.Scientific            as Sci
 import           Numeric                    (showHex)
-import           System.Directory           (copyFile, createDirectoryIfMissing)
+import           System.Directory           (copyFile, createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeExtension, takeFileName)
 import           System.IO                  (hPutStrLn, stderr)
+import           Text.Read                  (readMaybe)
 import           Database.Persist        hiding (Active)
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
-import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import           Network.HTTP.Client        (Manager, Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
 import           Network.HTTP.Types.Header  (hAuthorization)
 import           Network.HTTP.Types.Status  (statusCode)
 import           Network.HTTP.Types.URI     (urlEncode)
@@ -53,27 +65,40 @@ import           Servant.Multipart          (FileData(..))
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
 import           TDF.API.Inventory          (InventoryAPI, InventoryPublicAPI, AssetUploadForm(..))
+import qualified TDF.API.Inventory          as Inventory
 import           TDF.API.Bands              (BandsAPI)
 import           TDF.API.Pipelines          (PipelinesAPI)
 import           TDF.API.Rooms              (RoomsAPI, RoomsPublicAPI)
 import           TDF.API.Sessions           (SessionsAPI)
 import           TDF.API.Services           (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.Types
-import           TDF.Auth                   (AuthedUser(..), ModuleAccess(..), hasModuleAccess, hasOperationsAccess, hasSocialInboxAccess)
+import           TDF.Auth
+  ( AuthedUser(..)
+  , ModuleAccess(..)
+  , hasOperationsAccess
+  , hasSocialInboxAccess
+  , moduleName
+  , validateModuleAccess
+  )
 import           TDF.API.Payments          (PaymentDTO(..), PaymentCreate(..), PaymentsAPI)
 import qualified TDF.API.Facebook          as FB
 import qualified TDF.API.Instagram         as IG
-import           TDF.DB                     (Env(..))
-import           TDF.Config                 (AppConfig, assetsRootDir, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase)
-import           TDF.Services.InstagramMessaging (sendInstagramTextWithContext)
+import           TDF.DB                     (Env(..), sharedTlsManager)
+import           TDF.Config                 (AppConfig, assetsRootDir, defaultCurrency, facebookAppSecret, facebookMessagingApiBase, facebookMessagingToken, instagramAppToken, instagramMessagingApiBase, instagramMessagingToken, instagramVerifyToken, resolveConfiguredAppBase, resolveConfiguredAssetsBase, supportedCurrencies)
+import           TDF.Internationalization   (normalizeCurrencyCode)
+import           TDF.Services.InstagramMessaging (sendInstagramTextWithContextAndTag)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Models                 (Party(..), Payment(..), PaymentMethod(..))
 import qualified TDF.Models                 as M
+import qualified TDF.Catalog.Models         as Catalog
 import           TDF.ModelsExtra
 import qualified TDF.ModelsExtra as ME
-import           TDF.Pipelines              (canonicalStage, defaultStage, pipelineStages, pipelineTypeSlug, parsePipelineType)
-import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
+import qualified TDF.Trials.Server          as TrialsServer
+  ( hasAmbiguousPublicUrlPath
+  , isValidHttpUrl
+  )
 import qualified TDF.Handlers.InputList     as InputList
+import           TDF.WhatsApp.History       (normalizeWhatsAppPhone)
 
 -- Helpers for simple date parsing (YYYY-MM-DD)
 parseDayText :: MonadError ServerError m => Text -> m Day
@@ -110,17 +135,20 @@ hasIsoDateShape t =
 parseCheckoutTargetKind :: Maybe Text -> Either ServerError CheckoutTarget
 parseCheckoutTargetKind Nothing =
   Left err400 { errBody = "targetKind is required and must be one of: party, room, session" }
-parseCheckoutTargetKind (Just raw) =
-  case T.toLower (T.strip raw) of
+parseCheckoutTargetKind (Just raw) = do
+  selector <- validateCheckoutSelectorField "targetKind" raw
+  case T.toLower selector of
     "session" -> Right TargetSession
     "party" -> Right TargetParty
     "room" -> Right TargetRoom
     _ -> Left err400 { errBody = "targetKind must be one of: party, room, session" }
 
 parseCheckoutDisposition :: Maybe Text -> Either ServerError CheckoutDisposition
-parseCheckoutDisposition Nothing = Right Loan
-parseCheckoutDisposition (Just raw) =
-  case T.toLower (T.strip raw) of
+parseCheckoutDisposition Nothing =
+  Left err400 { errBody = "disposition is required and must be one of: loan, rental, sale, repair, transfer, other" }
+parseCheckoutDisposition (Just raw) = do
+  selector <- validateCheckoutSelectorField "disposition" raw
+  case T.toLower selector of
     "" -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
     "loan" -> Right Loan
     "lend" -> Right Loan
@@ -133,6 +161,27 @@ parseCheckoutDisposition (Just raw) =
     "transfer" -> Right Transfer
     "other" -> Right OtherDisposition
     _ -> Left err400 { errBody = "disposition must be one of: loan, rental, sale, repair, transfer, other" }
+
+validateCheckoutSelectorField :: Text -> Text -> Either ServerError Text
+validateCheckoutSelectorField fieldName raw
+  | T.any isUnsafeCheckoutSelectorChar raw =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8
+                ( fieldName
+                    <> " must not contain control characters, hidden formatting characters, "
+                    <> "or whitespace other than spaces"
+                )
+        }
+  | otherwise =
+      Right (T.strip raw)
+
+isUnsafeCheckoutSelectorChar :: Char -> Bool
+isUnsafeCheckoutSelectorChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (isSpace ch && ch /= ' ')
 
 validateCheckoutTargets
   :: CheckoutTarget
@@ -172,10 +221,22 @@ validateCheckoutTargetParty mTargetParty =
     Just targetParty
       | T.length targetParty > 160 ->
           Left err400 { errBody = "targetParty must be 160 characters or fewer" }
-      | T.any isControl targetParty ->
-          Left err400 { errBody = "targetParty must not contain control characters" }
+      | T.any isUnsafeCheckoutTargetPartyChar targetParty ->
+          Left err400
+            { errBody =
+                "targetParty must not contain control characters or hidden formatting characters"
+                  <> ", or Unicode space lookalikes"
+            }
+      | not (T.any isAlphaNum targetParty) ->
+          Left err400 { errBody = "targetParty must contain at least one letter or digit" }
       | otherwise ->
           Right (Just targetParty)
+
+isUnsafeCheckoutTargetPartyChar :: Char -> Bool
+isUnsafeCheckoutTargetPartyChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 inventoryServer
   :: ( MonadReader Env m
@@ -203,14 +264,16 @@ inventoryServer user =
 
     listAssets mq mp mps = do
       ensureInventoryAccess
+      assetQuery <- either throwError pure (validateAssetSearchQuery mq)
       (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
       let
           pageOffset = (pageNum - 1) * pageSize'
       entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
-      let filteredEntities = filterAssetsByQuery mq entities
+      let filteredEntities = filterAssetsByQuery assetQuery entities
           totalCount = length filteredEntities
           pagedEntities = take pageSize' (drop pageOffset filteredEntities)
-      activeMap <- withPool $ loadActiveCheckoutMap (map entityKey pagedEntities)
+      activeMap <- either throwError pure =<< withPool
+        (loadActiveCheckoutMap "listing assets" (map entityKey pagedEntities))
       pure (mkPage pageNum pageSize' totalCount (map (\entity -> toAssetDTO entity (Map.lookup (entityKey entity) activeMap)) pagedEntities))
 
     createAssetH req = do
@@ -259,6 +322,8 @@ inventoryServer user =
       statusValue <- either throwError pure (validateAssetStatusUpdate (uStatus req))
       notesUpdate <- either throwError pure (normalizeAssetNotesUpdate (uNotes req))
       photoUrlUpdate <- either throwError pure (validateAssetPhotoUrlUpdate (uPhotoUrl req))
+      either throwError pure
+        (validateAssetPatchIntent nameUpdate categoryUpdate statusValue locationKey notesUpdate photoUrlUpdate)
       let updates = catMaybes
             [ (AssetName =.) <$> nameUpdate
             , (AssetCategory =.) <$> categoryUpdate
@@ -272,17 +337,32 @@ inventoryServer user =
         case mEntity of
           Nothing -> pure (Right Nothing)
           Just entity -> do
-            mActiveCheckout <- selectFirst
+            locationResult <- validateAssetLocationReference locationKey
+            activeCheckouts <- selectList
               [ AssetCheckoutAssetId ==. assetKey
               , AssetCheckoutReturnedAt ==. Nothing
               ]
-              [Desc AssetCheckoutCheckedOutAt]
-            let activeCheckoutStatus =
-                  assetStatusForCheckoutDisposition . assetCheckoutDisposition . entityVal <$> mActiveCheckout
-            case validateAssetPatchStatusInvariant
-              (assetStatus (entityVal entity))
-              statusValue
-              activeCheckoutStatus of
+              [ Desc AssetCheckoutCheckedOutAt
+              , LimitTo 2
+              ]
+            let activeCheckoutStatusResult =
+                  case activeCheckouts of
+                    [] ->
+                      Right Nothing
+                    [checkoutEnt] ->
+                      Right
+                        (Just (assetStatusForCheckoutDisposition (assetCheckoutDisposition (entityVal checkoutEnt))))
+                    _ ->
+                      Left err409
+                        { errBody = "Asset has multiple active checkouts; resolve the inventory state before patching asset metadata"
+                        }
+            case do
+              activeCheckoutStatus <- activeCheckoutStatusResult
+              locationResult
+              validateAssetPatchStatusInvariant
+                (assetStatus (entityVal entity))
+                statusValue
+                activeCheckoutStatus of
               Left err ->
                 pure (Left err)
               Right () -> do
@@ -292,7 +372,8 @@ inventoryServer user =
         Left err -> throwError err
         Right Nothing -> throwError err404
         Right (Just entity) -> do
-          activeMap <- withPool $ loadActiveCheckoutMap [entityKey entity]
+          activeMap <- either throwError pure =<< withPool
+            (loadActiveCheckoutMap "loading asset details" [entityKey entity])
           pure (toAssetDTO entity (Map.lookup (entityKey entity) activeMap))
 
     deleteAssetH rawId = do
@@ -331,6 +412,7 @@ inventoryServer user =
     checkoutHistoryH rawId = do
       ensureInventoryAccess
       assetKey <- parseKey @Asset rawId
+      _ <- loadAssetEntityByKey assetKey
       recs <- withPool $ selectList [AssetCheckoutAssetId ==. assetKey] [Desc AssetCheckoutCheckedOutAt, LimitTo 50]
       pure (map toCheckoutDTO recs)
 
@@ -356,25 +438,48 @@ inventoryPublicServer
      )
   => ServerT InventoryPublicAPI m
 inventoryPublicServer =
-       loadAssetDTOByQrToken
+       loadPublicAssetDTOByQrToken
   :<|> checkoutByQrToken
   :<|> checkinByQrToken
   :<|> uploadByQrToken
   where
-    checkoutByQrToken token req = do
+    checkoutByQrToken token rawReq = do
       assetEntity <- loadAssetEntityByQrToken token
+      Env{envConfig} <- ask
+      let req = normalizePublicQrCheckoutRequest envConfig rawReq
+      either throwError pure (validatePublicQrCheckoutRequestFields req)
       normalized <- either throwError pure (normalizeCheckoutRequest req)
       either throwError pure (validatePublicQrCheckoutRequest normalized)
-      performCheckout "public-link" assetEntity req
+      sanitizePublicCheckoutDTO <$> performCheckout "public-link" assetEntity req
 
-    checkinByQrToken token req = do
+    checkinByQrToken token rawReq = do
       assetEntity <- loadAssetEntityByQrToken token
+      Env{envConfig} <- ask
+      let req = normalizePublicQrCheckinRequest envConfig rawReq
       normalized <- either throwError pure (normalizeAssetCheckinFields req)
       either throwError pure (validatePublicQrCheckinFields normalized)
-      performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
+      sanitizePublicCheckoutDTO <$> performCheckinWith ensurePublicQrCheckinAllowed assetEntity req
 
     uploadByQrToken token uploadForm = do
-      _ <- loadAssetEntityByQrToken token
+      Entity assetKey assetRecord <- loadAssetEntityByQrToken token
+      openCheckouts <- withPool $
+        selectList
+          [ AssetCheckoutAssetId ==. assetKey
+          , AssetCheckoutReturnedAt ==. Nothing
+          ]
+          [ Desc AssetCheckoutCheckedOutAt
+          , LimitTo 2
+          ]
+      mOpenCheckout <- case openCheckouts of
+        [] ->
+          pure Nothing
+        [checkoutEnt] ->
+          pure (Just checkoutEnt)
+        _ ->
+          throwError err409
+            { errBody = "Asset has multiple active checkouts; resolve the inventory state before public upload"
+            }
+      either throwError pure (validatePublicQrUploadContext (assetStatus assetRecord) mOpenCheckout)
       storeAssetUpload uploadForm
 
 loadAssetEntityByKey
@@ -397,8 +502,20 @@ loadAssetEntityByQrToken
   -> m (Entity Asset)
 loadAssetEntityByQrToken token = do
   tokenCanonical <- either throwError pure (validateAssetQrToken token)
-  mEntity <- withPool $ selectFirst [AssetQrCode ==. Just tokenCanonical] []
-  maybe (throwError err404 { errBody = "Asset not found" }) pure mEntity
+  matches <- withPool $
+    selectList
+      [AssetQrCode ==. Just tokenCanonical]
+      [Asc AssetId, LimitTo 2]
+  case matches of
+    [] ->
+      throwError err404 { errBody = "Asset not found" }
+    [entity] ->
+      pure entity
+    _ ->
+      throwError err409
+        { errBody =
+            "Asset QR token resolves to multiple assets; resolve the inventory state before QR lookup"
+        }
 
 loadAssetDTOByKey
   :: ( MonadReader Env m
@@ -408,9 +525,40 @@ loadAssetDTOByKey
   => Key Asset
   -> m AssetDTO
 loadAssetDTOByKey assetKey = do
-  assetEntity <- loadAssetEntityByKey assetKey
-  activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
-  pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+  assetEntity@(Entity _ assetRecord) <- loadAssetEntityByKey assetKey
+  mActiveCheckout <- loadSingleActiveCheckoutForRead "loading asset details" assetKey
+  either throwError pure
+    (validateAssetReadCheckoutState "loading asset details" (assetStatus assetRecord) mActiveCheckout)
+  pure (toAssetDTO assetEntity mActiveCheckout)
+
+loadSingleActiveCheckoutForRead
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> Key Asset
+  -> m (Maybe (Entity AssetCheckout))
+loadSingleActiveCheckoutForRead readContext assetKey = do
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      pure Nothing
+    [checkoutEnt] ->
+      pure (Just checkoutEnt)
+    _ ->
+      throwError err409
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 ("Asset has multiple active checkouts; resolve the inventory state before " <> readContext))
+        }
 
 loadAssetDTOByQrToken
   :: ( MonadReader Env m
@@ -420,22 +568,155 @@ loadAssetDTOByQrToken
   => Text
   -> m AssetDTO
 loadAssetDTOByQrToken token = do
-  assetEntity@(Entity assetKey _) <- loadAssetEntityByQrToken token
-  activeMap <- withPool $ loadActiveCheckoutMap [assetKey]
-  pure (toAssetDTO assetEntity (Map.lookup assetKey activeMap))
+  assetEntity@(Entity assetKey assetRecord) <- loadAssetEntityByQrToken token
+  mActiveCheckout <- loadSingleActiveCheckoutForRead "QR lookup" assetKey
+  either throwError pure
+    (validateAssetReadCheckoutState "QR lookup" (assetStatus assetRecord) mActiveCheckout)
+  pure (toAssetDTO assetEntity mActiveCheckout)
+
+loadPublicAssetDTOByQrToken
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Text
+  -> m AssetDTO
+loadPublicAssetDTOByQrToken token =
+  sanitizePublicAssetDTO <$> loadAssetDTOByQrToken token
+
+validateAssetReadCheckoutState
+  :: Text
+  -> AssetStatus
+  -> Maybe (Entity AssetCheckout)
+  -> Either ServerError ()
+validateAssetReadCheckoutState readContext Booked Nothing =
+  Left err409
+    { errBody =
+        BL.fromStrict
+          (TE.encodeUtf8
+            ( "Asset status is booked but no active checkout exists; resolve the inventory state before "
+                <> readContext
+            ))
+    }
+validateAssetReadCheckoutState readContext assetState (Just checkoutEnt)
+  | assetReadStateAllowsCheckout assetState checkoutDisposition =
+      Right ()
+  | otherwise =
+      Left err409
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8
+                ( "Asset status is "
+                    <> assetStatusToText assetState
+                    <> " but an active "
+                    <> checkoutDispositionToText checkoutDisposition
+                    <> " checkout exists; resolve the inventory state before "
+                    <> readContext
+                ))
+        }
+  where
+    checkoutDisposition = assetCheckoutDisposition (entityVal checkoutEnt)
+validateAssetReadCheckoutState _ _ _ =
+  Right ()
+
+assetReadStateAllowsCheckout :: AssetStatus -> CheckoutDisposition -> Bool
+assetReadStateAllowsCheckout Booked Sale = False
+assetReadStateAllowsCheckout Booked _ = True
+assetReadStateAllowsCheckout Retired Sale = True
+assetReadStateAllowsCheckout _ _ = False
+
+assetStatusToText :: AssetStatus -> Text
+assetStatusToText Active = "active"
+assetStatusToText Booked = "booked"
+assetStatusToText OutForMaintenance = "out_for_maintenance"
+assetStatusToText Retired = "retired"
+assetStatusToText Sold = "sold"
+
+sanitizePublicAssetDTO :: AssetDTO -> AssetDTO
+sanitizePublicAssetDTO dto =
+  dto
+    { location = Nothing
+    , qrToken = Nothing
+    , currentCheckoutKind = publicCheckoutContextField (currentCheckoutKind dto)
+    , currentCheckoutTarget = publicCheckoutContextField (currentCheckoutTarget dto)
+    , currentCheckoutDisposition = publicCheckoutDispositionField (currentCheckoutDisposition dto)
+    , currentCheckoutHolderEmail = Nothing
+    , currentCheckoutHolderPhone = Nothing
+    , currentCheckoutAt = publicCheckoutContextField (currentCheckoutAt dto)
+    , currentCheckoutDueAt = publicCheckoutContextField (currentCheckoutDueAt dto)
+    , currentCheckoutPaymentType = Nothing
+    , currentCheckoutPaymentInstallments = Nothing
+    , currentCheckoutPaymentAmountCents = Nothing
+    , currentCheckoutPaymentCurrency = Nothing
+    , currentCheckoutPaymentOutstandingCents = Nothing
+    , currentCheckoutPhotoUrl = Nothing
+    }
+  where
+    disposition = currentCheckoutDisposition dto
+    exposesPublicCheckoutContext =
+      currentCheckoutKind dto == Just "party"
+        && disposition `elem` [Just "loan", Just "rental"]
+    exposesPublicDisposition =
+      currentCheckoutKind dto == Just "party"
+        && disposition `elem` [Just "loan", Just "rental", Just "sale"]
+    publicCheckoutContextField value
+      | exposesPublicCheckoutContext = value
+      | otherwise = Nothing
+    publicCheckoutDispositionField value
+      | exposesPublicDisposition = value
+      | otherwise = Nothing
+
+sanitizePublicCheckoutDTO :: AssetCheckoutDTO -> AssetCheckoutDTO
+sanitizePublicCheckoutDTO dto =
+  dto
+    { termsAndConditions = Nothing
+    , holderEmail = Nothing
+    , holderPhone = Nothing
+    , paymentType = Nothing
+    , paymentInstallments = Nothing
+    , paymentReference = Nothing
+    , paymentAmountCents = Nothing
+    , paymentCurrency = Nothing
+    , paymentOutstandingCents = Nothing
+    , checkedOutBy = "redacted"
+    , conditionOut = Nothing
+    , photoOutUrl = Nothing
+    , conditionIn = Nothing
+    , photoInUrl = Nothing
+    , notes = Nothing
+    }
 
 loadActiveCheckoutMap
   :: MonadIO m
-  => [Key Asset]
-  -> SqlPersistT m (Map.Map (Key Asset) (Entity AssetCheckout))
-loadActiveCheckoutMap [] = pure Map.empty
-loadActiveCheckoutMap assetKeys = do
+  => Text
+  -> [Key Asset]
+  -> SqlPersistT m (Either ServerError (Map.Map (Key Asset) (Entity AssetCheckout)))
+loadActiveCheckoutMap _ [] = pure (Right Map.empty)
+loadActiveCheckoutMap readContext assetKeys = do
   recs <- selectList
     [ AssetCheckoutAssetId <-. assetKeys
     , AssetCheckoutReturnedAt ==. Nothing
     ]
     [Desc AssetCheckoutCheckedOutAt]
-  pure (Map.fromListWith (\left _ -> left) [(assetCheckoutAssetId rec, ent) | ent@(Entity _ rec) <- recs])
+  let activeCheckoutCounts =
+        Map.fromListWith (+)
+          [ (assetCheckoutAssetId rec, 1 :: Int)
+          | Entity _ rec <- recs
+          ]
+  if any (> 1) (Map.elems activeCheckoutCounts)
+    then
+      pure $
+        Left err409
+          { errBody =
+              BL.fromStrict
+                (TE.encodeUtf8
+                  ( "One or more assets have multiple active checkouts; resolve the inventory state before "
+                      <> readContext
+                  ))
+          }
+    else
+      pure $
+        Right (Map.fromList [(assetCheckoutAssetId rec, ent) | ent@(Entity _ rec) <- recs])
 
 performCheckout
   :: ( MonadReader Env m
@@ -450,9 +731,23 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
   now <- liftIO getCurrentTime
   normalized <- either throwError pure (normalizeCheckoutRequest req)
   dueAtValue <- either throwError pure (validateCheckoutDueAt now (ncrDueAt normalized))
-  active <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-  when (isJust active) $
-    throwError err409 { errBody = "Asset already checked out" }
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      pure ()
+    [_] ->
+      throwError err409 { errBody = "Asset already checked out" }
+    _ ->
+      throwError err409
+        { errBody = "Asset has multiple active checkouts; resolve the inventory state before checkout"
+        }
   either throwError pure (validateAssetCheckoutStatus (assetStatus assetRecord))
   either throwError pure =<< withPool (validateCheckoutTargetReferences (ncrTargetRoom normalized) (ncrTargetSession normalized))
   recEnt <- withPool $ do
@@ -469,6 +764,9 @@ performCheckout checkedOutBy (Entity assetKey assetRecord) req = do
       , assetCheckoutPaymentType      = ncrPaymentType normalized
       , assetCheckoutPaymentInstallments = ncrPaymentInstallments normalized
       , assetCheckoutPaymentReference = ncrPaymentReference normalized
+      , assetCheckoutPaymentAmountCents = ncrPaymentAmountCents normalized
+      , assetCheckoutPaymentCurrency  = ncrPaymentCurrency normalized
+      , assetCheckoutPaymentOutstandingCents = ncrPaymentOutstandingCents normalized
       , assetCheckoutCheckedOutByRef  = checkedOutBy
       , assetCheckoutCheckedOutAt     = now
       , assetCheckoutDueAt            = dueAtValue
@@ -507,22 +805,48 @@ performCheckinWith
 performCheckinWith validateOpenCheckout (Entity assetKey _) req = do
   now <- liftIO getCurrentTime
   (conditionInUpdate, checkinNotesUpdate, photoInUpdate) <- either throwError pure (normalizeAssetCheckinFields req)
-  mOpen <- withPool $ selectFirst [AssetCheckoutAssetId ==. assetKey, AssetCheckoutReturnedAt ==. Nothing] [Desc AssetCheckoutCheckedOutAt]
-  case mOpen of
-    Nothing -> throwError err404 { errBody = "No active checkout" }
-    Just checkoutEnt@(Entity checkoutId checkoutRecord) -> do
-      validateOpenCheckout checkoutEnt
-      recEnt <- withPool $ do
-        let updates = catMaybes
-              [ Just (AssetCheckoutReturnedAt =. Just now)
-              , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
-              , fmap (\notesText -> AssetCheckoutNotes =. Just notesText) checkinNotesUpdate
-              , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
-              ]
-        update checkoutId updates
-        update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
-        getJustEntity checkoutId
-      pure (toCheckoutDTO recEnt)
+  either throwError pure (validateCheckinPayload conditionInUpdate checkinNotesUpdate photoInUpdate)
+  checkoutEnt@(Entity checkoutId checkoutRecord) <- loadSingleOpenCheckout assetKey
+  either throwError pure (validateCheckinDisposition (assetCheckoutDisposition checkoutRecord))
+  validateOpenCheckout checkoutEnt
+  notesUpdate <- either throwError pure (prepareCheckinNotesUpdate (assetCheckoutNotes checkoutRecord) checkinNotesUpdate)
+  recEnt <- withPool $ do
+    let updates = catMaybes
+          [ Just (AssetCheckoutReturnedAt =. Just now)
+          , fmap (\conditionText -> AssetCheckoutConditionIn =. Just conditionText) conditionInUpdate
+          , (AssetCheckoutNotes =.) <$> notesUpdate
+          , fmap (\photoUrl -> AssetCheckoutPhotoInUrl =. Just photoUrl) photoInUpdate
+          ]
+    update checkoutId updates
+    update assetKey [AssetStatus =. assetStatusForCheckinDisposition (assetCheckoutDisposition checkoutRecord)]
+    getJustEntity checkoutId
+  pure (toCheckoutDTO recEnt)
+
+loadSingleOpenCheckout
+  :: ( MonadReader Env m
+     , MonadIO m
+     , MonadError ServerError m
+     )
+  => Key Asset
+  -> m (Entity AssetCheckout)
+loadSingleOpenCheckout assetKey = do
+  openCheckouts <- withPool $
+    selectList
+      [ AssetCheckoutAssetId ==. assetKey
+      , AssetCheckoutReturnedAt ==. Nothing
+      ]
+      [ Desc AssetCheckoutCheckedOutAt
+      , LimitTo 2
+      ]
+  case openCheckouts of
+    [] ->
+      throwError err409 { errBody = "Asset is not currently checked out" }
+    [checkoutEnt] ->
+      pure checkoutEnt
+    _ ->
+      throwError err409
+        { errBody = "Asset has multiple active checkouts; resolve the inventory state before check-in"
+        }
 
 ensurePublicQrCheckinAllowed
   :: MonadError ServerError m
@@ -530,9 +854,39 @@ ensurePublicQrCheckinAllowed
   -> m ()
 ensurePublicQrCheckinAllowed (Entity _ checkoutRecord)
   | assetCheckoutTargetKind checkoutRecord == TargetParty =
-      pure ()
+      case assetCheckoutDisposition checkoutRecord of
+        Loan -> pure ()
+        Rental -> pure ()
+        _ ->
+          throwError err409 { errBody = "Public QR check-in only supports party loan or rental checkouts" }
   | otherwise =
       throwError err409 { errBody = "Public QR check-in only supports party checkouts" }
+
+validatePublicQrUploadContext
+  :: AssetStatus
+  -> Maybe (Entity AssetCheckout)
+  -> Either ServerError ()
+validatePublicQrUploadContext Booked Nothing =
+  Left err409
+    { errBody =
+        "Asset status is booked but no active checkout exists; resolve the inventory state before public QR proof upload"
+    }
+validatePublicQrUploadContext assetState Nothing =
+  validateAssetCheckoutStatus assetState
+validatePublicQrUploadContext assetState (Just checkoutEnt@(Entity _ checkoutRecord))
+  | assetCheckoutTargetKind checkoutRecord /= TargetParty =
+      Left err409
+        { errBody =
+            "Public QR upload only supports assets that are available for checkout or currently checked out to a party loan or rental"
+        }
+  | assetCheckoutDisposition checkoutRecord /= Loan
+      && assetCheckoutDisposition checkoutRecord /= Rental =
+      Left err409
+        { errBody =
+            "Public QR upload only supports assets that are available for checkout or currently checked out to a party loan or rental"
+        }
+  | otherwise =
+      validateAssetReadCheckoutState "public QR proof upload" assetState (Just checkoutEnt)
 
 data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   { ncrTargetKind :: CheckoutTarget
@@ -546,6 +900,9 @@ data NormalizedCheckoutRequest = NormalizedCheckoutRequest
   , ncrPaymentType :: Maybe Text
   , ncrPaymentInstallments :: Maybe Int
   , ncrPaymentReference :: Maybe Text
+  , ncrPaymentAmountCents :: Maybe Int
+  , ncrPaymentCurrency :: Maybe Text
+  , ncrPaymentOutstandingCents :: Maybe Int
   , ncrDueAt :: Maybe UTCTime
   , ncrConditionOut :: Maybe Text
   , ncrPhotoOutUrl :: Maybe Text
@@ -560,13 +917,31 @@ normalizeCheckoutRequest req = do
   (mTargetParty, mRoom, mSession) <-
     validateCheckoutTargets targetKind (coTargetParty req) targetRoomKey targetSessionKey
   disposition <- parseCheckoutDisposition (coDisposition req)
+  holderEmail <- validateCheckoutHolderEmail (coHolderEmail req)
+  holderPhone <- validateCheckoutHolderPhone (coHolderPhone req)
   termsAndConditions <- validateCheckoutTermsField "termsAndConditions" (coTermsAndConditions req)
-  holderEmail <- validateCheckoutContactField "holderEmail" 160 (coHolderEmail req)
-  holderPhone <- validateCheckoutContactField "holderPhone" 60 (coHolderPhone req)
   paymentType <- normalizeCheckoutPaymentType (coPaymentType req)
   paymentInstallments <- validateCheckoutInstallments (coPaymentInstallments req)
   paymentReference <- validateOptionalPaymentTextField "paymentReference" 160 (coPaymentReference req)
-  validateCheckoutFinancials paymentType paymentInstallments paymentReference
+  paymentAmountCents <- validateCheckoutAmountField "paymentAmount" (coPaymentAmount req)
+  paymentCurrency <- validateCheckoutCurrency (coPaymentCurrency req)
+  rawPaymentOutstandingCents <- validateCheckoutMoneyField "paymentOutstanding" True (coPaymentOutstanding req)
+  validateCheckoutFinancials
+    disposition
+    paymentType
+    paymentInstallments
+    paymentReference
+    paymentAmountCents
+    paymentCurrency
+    rawPaymentOutstandingCents
+  let paymentOutstandingCents =
+        normalizeCheckoutOutstanding
+          disposition
+          paymentType
+          paymentAmountCents
+          paymentCurrency
+          rawPaymentOutstandingCents
+  validateCheckoutDispositionFields targetKind disposition (coDueAt req)
   conditionOut <- validateInventoryConditionField "conditionOut" (coConditionOut req)
   checkoutNotes <- validateInventoryNotesField "notes" (coNotes req)
   photoOutUrl <- validateAssetPhotoUrl (coPhotoUrl req)
@@ -582,41 +957,216 @@ normalizeCheckoutRequest req = do
     , ncrPaymentType = paymentType
     , ncrPaymentInstallments = paymentInstallments
     , ncrPaymentReference = paymentReference
+    , ncrPaymentAmountCents = paymentAmountCents
+    , ncrPaymentCurrency = paymentCurrency
+    , ncrPaymentOutstandingCents = paymentOutstandingCents
     , ncrDueAt = coDueAt req
     , ncrConditionOut = conditionOut
     , ncrPhotoOutUrl = photoOutUrl
     , ncrNotes = checkoutNotes
     }
 
+normalizePublicQrCheckoutRequest :: AppConfig -> AssetCheckoutRequest -> AssetCheckoutRequest
+normalizePublicQrCheckoutRequest cfg req =
+  req
+    { coPhotoUrl = normalizePublicQrProofField cfg (coPhotoUrl req)
+    }
+
+normalizePublicQrCheckinRequest :: AppConfig -> AssetCheckinRequest -> AssetCheckinRequest
+normalizePublicQrCheckinRequest cfg req =
+  req
+    { ciPhotoUrl = normalizePublicQrProofField cfg (ciPhotoUrl req)
+    }
+
+normalizePublicQrProofField :: AppConfig -> Maybe Text -> Maybe Text
+normalizePublicQrProofField cfg rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Nothing
+    Just cleanValue ->
+      Just (fromMaybe cleanValue (normalizeManagedInventoryProofUrl cfg cleanValue))
+
+normalizeManagedInventoryProofUrl :: AppConfig -> Text -> Maybe Text
+normalizeManagedInventoryProofUrl cfg rawValue =
+  normalizeAssetPhotoPath rawValue
+    <|> do
+      relPath <- T.stripPrefix assetsPrefix (T.strip rawValue)
+      normalizeAssetPhotoPath relPath
+  where
+    assetsPrefix = T.dropWhileEnd (== '/') (resolveConfiguredAssetsBase cfg) <> "/"
+
 validatePublicQrCheckoutRequest :: NormalizedCheckoutRequest -> Either ServerError ()
 validatePublicQrCheckoutRequest normalized
   | ncrTargetKind normalized /= TargetParty =
       Left err400 { errBody = "Public QR checkout only supports party targets" }
+  | ncrDisposition normalized == Sale =
+      Left err400 { errBody = "Public QR checkout does not allow sale disposition" }
+  | ncrDisposition normalized /= Loan && ncrDisposition normalized /= Rental =
+      Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
+  | isNothing (ncrTermsAndConditions normalized) =
+      Left err400 { errBody = "Public QR checkout requires coTermsAndConditions" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentType normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentAmountCents normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentCurrency normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  | ncrDisposition normalized == Rental && isNothing (ncrPaymentOutstandingCents normalized) =
+      Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
   | isNothing (ncrHolderEmail normalized) && isNothing (ncrHolderPhone normalized) =
       Left err400 { errBody = "Public QR checkout requires holderEmail or holderPhone" }
+  | isNothing (ncrConditionOut normalized) =
+      Left err400 { errBody = "Public QR checkout requires coConditionOut" }
   | isNothing (ncrPhotoOutUrl normalized) =
       Left err400 { errBody = "Public QR checkout requires coPhotoUrl" }
+  | not (maybe False isManagedInventoryPhotoProof (ncrPhotoOutUrl normalized)) =
+      Left err400 { errBody = "Public QR checkout requires coPhotoUrl to reference an uploaded inventory asset path" }
+  | isNothing (ncrDueAt normalized) =
+      Left err400 { errBody = "Public QR checkout requires coDueAt" }
   | otherwise =
       Right ()
+
+validatePublicQrCheckoutRequestFields :: AssetCheckoutRequest -> Either ServerError ()
+validatePublicQrCheckoutRequestFields req = do
+  targetKind <- parseCheckoutTargetKind (coTargetKind req)
+  when (targetKind /= TargetParty) $
+    Left err400 { errBody = "Public QR checkout only supports party targets" }
+  disposition <- parseCheckoutDisposition (coDisposition req)
+  when (disposition == Sale) $
+    Left err400 { errBody = "Public QR checkout does not allow sale disposition" }
+  when (disposition /= Loan && disposition /= Rental) $
+    Left err400 { errBody = "Public QR checkout only supports loan or rental disposition" }
+  _ <- validateCheckoutHolderEmail (coHolderEmail req)
+  _ <- validateCheckoutHolderPhone (coHolderPhone req)
+  when (isNothing (normalizeOptionalTextField (coTermsAndConditions req))) $
+    Left err400 { errBody = "Public QR checkout requires coTermsAndConditions" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentType req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentType" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentAmount req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentAmount" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentCurrency req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentCurrency" }
+  when (disposition == Rental && isNothing (normalizeOptionalTextField (coPaymentOutstanding req))) $
+    Left err400 { errBody = "Public QR rental checkout requires coPaymentOutstanding" }
 
 validatePublicQrCheckinFields :: (Maybe Text, Maybe Text, Maybe Text) -> Either ServerError ()
-validatePublicQrCheckinFields (mConditionIn, _, _)
+validatePublicQrCheckinFields (mConditionIn, _, mPhotoIn)
   | isNothing mConditionIn =
       Left err400 { errBody = "Public QR check-in requires ciConditionIn" }
+  | isNothing mPhotoIn =
+      Left err400 { errBody = "Public QR check-in requires ciPhotoUrl" }
+  | not (maybe False isManagedInventoryPhotoProof mPhotoIn) =
+      Left err400 { errBody = "Public QR check-in requires ciPhotoUrl to reference an uploaded inventory asset path" }
   | otherwise =
       Right ()
 
-validateCheckoutContactField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
-validateCheckoutContactField fieldName maxLen rawValue =
+isManagedInventoryPhotoProof :: Text -> Bool
+isManagedInventoryPhotoProof =
+  isJust . normalizeAssetPhotoPath
+
+validateCheckoutHolderEmail :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutHolderEmail rawValue =
   case normalizeOptionalTextField rawValue of
     Nothing -> Right Nothing
     Just cleanValue
-      | T.length cleanValue > maxLen ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLen) <> " characters or fewer")) }
-      | T.any isControl cleanValue ->
-          Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
+      | T.length cleanValue > maxCheckoutHolderEmailChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 ("holderEmail must be " <> T.pack (show maxCheckoutHolderEmailChars) <> " characters or fewer"))
+            }
+      | T.any isUnsafeCheckoutContactChar cleanValue ->
+          Left err400
+            { errBody =
+                "holderEmail must not contain control characters or hidden formatting characters"
+            }
+      | isValidCheckoutHolderEmail normalized ->
+          Right (Just normalized)
       | otherwise ->
-          Right (Just cleanValue)
+          Left err400 { errBody = "holderEmail must be a valid email address" }
+      where
+        normalized = T.toLower cleanValue
+
+validateCheckoutHolderPhone :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutHolderPhone rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue
+      | T.length cleanValue > maxCheckoutHolderPhoneChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 ("holderPhone must be " <> T.pack (show maxCheckoutHolderPhoneChars) <> " characters or fewer"))
+            }
+      | T.any isUnsafeCheckoutContactChar cleanValue ->
+          Left err400
+            { errBody =
+                "holderPhone must not contain control characters or hidden formatting characters"
+            }
+      | otherwise ->
+          maybe
+            (Left err400 { errBody = "holderPhone must be a valid phone number" })
+            (Right . Just)
+            (normalizeWhatsAppPhone cleanValue)
+
+isValidCheckoutHolderEmail :: Text -> Bool
+isValidCheckoutHolderEmail candidate =
+  case T.split (== '@') candidate of
+    [localPart, domain] ->
+      T.length candidate <= maxCheckoutHolderEmailChars
+        && isValidCheckoutHolderEmailLocalPart localPart
+        && not (T.null domain)
+        && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
+        && T.isInfixOf "." domain
+        && hasValidCheckoutHolderFinalDomainLabel domain
+        && all isValidCheckoutHolderDomainLabel (T.splitOn "." domain)
+    _ -> False
+
+hasValidCheckoutHolderFinalDomainLabel :: Text -> Bool
+hasValidCheckoutHolderFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
+
+isValidCheckoutHolderEmailLocalPart :: Text -> Bool
+isValidCheckoutHolderEmailLocalPart localPart =
+  not (T.null localPart)
+    && T.length localPart <= maxCheckoutHolderEmailLocalPartChars
+    && not (T.isPrefixOf "." localPart)
+    && not (T.isSuffixOf "." localPart)
+    && not (".." `T.isInfixOf` localPart)
+    && T.all isValidCheckoutHolderEmailLocalChar localPart
+
+isValidCheckoutHolderEmailLocalChar :: Char -> Bool
+isValidCheckoutHolderEmailLocalChar c =
+  isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
+
+isValidCheckoutHolderDomainLabel :: Text -> Bool
+isValidCheckoutHolderDomainLabel label =
+  not (T.null label)
+    && T.length label <= maxCheckoutHolderEmailDomainLabelChars
+    && not (T.isPrefixOf "-" label)
+    && not (T.isSuffixOf "-" label)
+    && T.all isValidCheckoutHolderDomainChar label
+
+isValidCheckoutHolderDomainChar :: Char -> Bool
+isValidCheckoutHolderDomainChar c = isAsciiLower c || isDigit c || c == '-'
+
+maxCheckoutHolderEmailChars :: Int
+maxCheckoutHolderEmailChars = 160
+
+maxCheckoutHolderEmailLocalPartChars :: Int
+maxCheckoutHolderEmailLocalPartChars = 64
+
+maxCheckoutHolderEmailDomainLabelChars :: Int
+maxCheckoutHolderEmailDomainLabelChars = 63
+
+maxCheckoutHolderPhoneChars :: Int
+maxCheckoutHolderPhoneChars = 60
+
+isUnsafeCheckoutContactChar :: Char -> Bool
+isUnsafeCheckoutContactChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateCheckoutTermsField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateCheckoutTermsField fieldName =
@@ -640,13 +1190,186 @@ validateCheckoutInstallments (Just installments)
   | otherwise =
       Right (Just installments)
 
-validateCheckoutFinancials :: Maybe Text -> Maybe Int -> Maybe Text -> Either ServerError ()
-validateCheckoutFinancials Nothing (Just _) _ =
+validateCheckoutAmountField :: Text -> Maybe Text -> Either ServerError (Maybe Int)
+validateCheckoutAmountField fieldName rawValue = do
+  amountCents <- validateCheckoutMoneyField fieldName False rawValue
+  case amountCents of
+    Just 0 ->
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+        }
+    _ ->
+      Right amountCents
+
+validateCheckoutCurrency :: Maybe Text -> Either ServerError (Maybe Text)
+validateCheckoutCurrency Nothing = Right Nothing
+validateCheckoutCurrency (Just rawCurrency) =
+  if T.any isUnsafePaymentTextChar rawCurrency
+    then Left err400
+      { errBody = "paymentCurrency must not contain control characters or hidden formatting characters"
+      }
+    else
+      case normalizeOptionalTextField (Just rawCurrency) of
+        Nothing -> Right Nothing
+        Just currency ->
+          let normalized = T.toUpper currency
+          in if T.length normalized == 3 && T.all isAsciiUpper normalized
+               then Right (Just normalized)
+               else Left err400 { errBody = "paymentCurrency must be a 3-letter ISO code" }
+
+validateCheckoutMoneyField :: Text -> Bool -> Maybe Text -> Either ServerError (Maybe Int)
+validateCheckoutMoneyField fieldName allowZero rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just cleanValue ->
+      case parseMoneyToCents cleanValue of
+        Nothing ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (fieldName <> " must be a non-negative amount with up to 2 decimals"))
+            }
+        Just cents
+          | not allowZero && cents <= 0 ->
+              Left err400
+                { errBody =
+                    BL.fromStrict
+                      (TE.encodeUtf8 (fieldName <> " must be greater than 0"))
+                }
+          | otherwise ->
+              Right (Just cents)
+
+parseMoneyToCents :: Text -> Maybe Int
+parseMoneyToCents rawValue
+  | T.any isSpace rawValue = Nothing
+  | T.any isControl rawValue = Nothing
+  | T.isPrefixOf "-" rawValue = Nothing
+  | otherwise =
+      case T.splitOn "." rawValue of
+        [wholePart]
+          | validWholePart wholePart ->
+              buildCents wholePart ""
+        [wholePart, fractionalPart]
+          | validWholePart wholePart
+              && not (T.null fractionalPart)
+              && T.length fractionalPart <= 2
+              && T.all isDigit fractionalPart ->
+                  buildCents wholePart fractionalPart
+        _ ->
+          Nothing
+  where
+    validWholePart part = not (T.null part) && T.all isDigit part
+    buildCents wholePart fractionalPart = do
+      wholeUnits <- parseInteger wholePart
+      fractionalUnits <- parseInteger (fractionalPart <> T.replicate (2 - T.length fractionalPart) "0")
+      let totalCents = wholeUnits * 100 + fractionalUnits
+      if totalCents <= fromIntegral (maxBound :: Int)
+        then Just (fromIntegral totalCents)
+        else Nothing
+    parseInteger txt =
+      case reads (T.unpack txt) :: [(Integer, String)] of
+        [(value, "")] -> Just value
+        _             -> Nothing
+
+validateCheckoutFinancials
+  :: CheckoutDisposition
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Either ServerError ()
+validateCheckoutFinancials disposition paymentType paymentInstallments paymentReference paymentAmount paymentCurrency paymentOutstanding
+  | not (checkoutDispositionSupportsPaymentDetails disposition)
+      && any isJust
+        [ fmap (const ()) paymentType
+        , fmap (const ()) paymentInstallments
+        , fmap (const ()) paymentReference
+        , fmap (const ()) paymentAmount
+        , fmap (const ()) paymentCurrency
+        , fmap (const ()) paymentOutstanding
+        ] =
+      Left err400 { errBody = "payment fields are only allowed for sale or rental checkout" }
+validateCheckoutFinancials _ Nothing (Just _) _ _ _ _ =
   Left err400 { errBody = "paymentInstallments requires paymentType" }
-validateCheckoutFinancials Nothing _ (Just _) =
+validateCheckoutFinancials _ Nothing _ (Just _) _ _ _ =
   Left err400 { errBody = "paymentReference requires paymentType" }
-validateCheckoutFinancials _ _ _ =
+validateCheckoutFinancials _ Nothing _ _ (Just _) _ _ =
+  Left err400 { errBody = "paymentAmount requires paymentType" }
+validateCheckoutFinancials _ Nothing _ _ _ (Just _) _ =
+  Left err400 { errBody = "paymentCurrency requires paymentType" }
+validateCheckoutFinancials _ Nothing _ _ _ _ (Just _) =
+  Left err400 { errBody = "paymentOutstanding requires paymentType" }
+validateCheckoutFinancials _ (Just _) Nothing Nothing Nothing Nothing Nothing =
+  Left err400 { errBody = "paymentType requires paymentAmount" }
+validateCheckoutFinancials _ _ _ (Just _) Nothing _ _ =
+  Left err400 { errBody = "paymentReference requires paymentAmount" }
+validateCheckoutFinancials _ _ (Just _) _ Nothing _ _ =
+  Left err400 { errBody = "paymentInstallments requires paymentAmount" }
+validateCheckoutFinancials _ _ _ _ Nothing (Just _) _ =
+  Left err400 { errBody = "paymentCurrency requires paymentAmount" }
+validateCheckoutFinancials _ _ _ _ (Just _) Nothing _ =
+  Left err400 { errBody = "paymentAmount requires paymentCurrency" }
+validateCheckoutFinancials _ _ _ _ Nothing _ (Just _) =
+  Left err400 { errBody = "paymentOutstanding requires paymentAmount" }
+validateCheckoutFinancials _ _ (Just installments) _ _ _ Nothing
+  | installments > 1 =
+      Left err400 { errBody = "paymentInstallments greater than 1 requires paymentOutstanding" }
+validateCheckoutFinancials Rental _ _ _ (Just _) _ Nothing =
+  Left err400 { errBody = "rental checkout requires paymentOutstanding" }
+validateCheckoutFinancials _ _ _ _ (Just amountCents) _ (Just outstandingCents)
+  | outstandingCents > amountCents =
+      Left err400 { errBody = "paymentOutstanding must be less than or equal to paymentAmount" }
+validateCheckoutFinancials _ _ _ _ _ _ _ =
   Right ()
+
+normalizeCheckoutOutstanding
+  :: CheckoutDisposition
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+normalizeCheckoutOutstanding Sale (Just _) (Just _) (Just _) Nothing = Just 0
+normalizeCheckoutOutstanding _ _ _ _ outstanding = outstanding
+
+validateCheckoutDispositionFields
+  :: CheckoutTarget
+  -> CheckoutDisposition
+  -> Maybe UTCTime
+  -> Either ServerError ()
+validateCheckoutDispositionFields TargetParty Sale (Just _) =
+  Left err400 { errBody = "dueAt is not allowed for sale checkout" }
+validateCheckoutDispositionFields TargetParty _ _ =
+  Right ()
+validateCheckoutDispositionFields _ Sale _ =
+  Left err400 { errBody = "sale checkout only supports party targets" }
+validateCheckoutDispositionFields _ _ _ =
+  Right ()
+
+validateCheckinDisposition :: CheckoutDisposition -> Either ServerError ()
+validateCheckinDisposition Sale =
+  Left err409 { errBody = "Sale checkouts cannot be checked in" }
+validateCheckinDisposition _ =
+  Right ()
+
+validateCheckinPayload
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe Text
+  -> Either ServerError ()
+validateCheckinPayload Nothing Nothing Nothing =
+  Left err400 { errBody = "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl" }
+validateCheckinPayload _ _ _ =
+  Right ()
+
+checkoutDispositionSupportsPaymentDetails :: CheckoutDisposition -> Bool
+checkoutDispositionSupportsPaymentDetails Rental = True
+checkoutDispositionSupportsPaymentDetails Sale = True
+checkoutDispositionSupportsPaymentDetails _ = False
 
 validateInventoryConditionField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
 validateInventoryConditionField fieldName =
@@ -667,18 +1390,22 @@ validateInventoryOptionalTextField fieldName maxLength rawValue =
                 BL.fromStrict
                   (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
             }
-      | T.any isUnsafeInventoryTextControl cleanValue ->
+      | T.any isUnsafeInventoryTextChar cleanValue ->
           Left err400
             { errBody =
-                BL.fromStrict
-                  (TE.encodeUtf8 (fieldName <> " must not contain control characters other than tabs or line breaks"))
+                BL.fromStrict $
+                  TE.encodeUtf8
+                    ( fieldName
+                        <> " must not contain control characters other than tabs or line breaks, or hidden formatting characters"
+                    )
             }
       | otherwise ->
           Right (Just cleanValue)
 
-isUnsafeInventoryTextControl :: Char -> Bool
-isUnsafeInventoryTextControl ch =
-  isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+isUnsafeInventoryTextChar :: Char -> Bool
+isUnsafeInventoryTextChar ch =
+  (isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 inventoryConditionMaxLength :: Int
 inventoryConditionMaxLength = 240
@@ -692,6 +1419,8 @@ inventoryTermsMaxLength = 4000
 validateCheckoutDueAt :: UTCTime -> Maybe UTCTime -> Either ServerError (Maybe UTCTime)
 validateCheckoutDueAt _ Nothing = Right Nothing
 validateCheckoutDueAt now (Just dueAt)
+  | utctDay dueAt == utctDay now && utctDayTime dueAt == 0 =
+      Right (Just dueAt)
   | dueAt < now =
       Left err400 { errBody = "dueAt must not be in the past" }
   | otherwise =
@@ -759,6 +1488,9 @@ toAssetDTO (Entity key asset) mCurrentCheckout = AssetDTO
   , currentCheckoutDueAt = mCurrentCheckout >>= (assetCheckoutDueAt . entityVal)
   , currentCheckoutPaymentType = mCurrentCheckout >>= (assetCheckoutPaymentType . entityVal)
   , currentCheckoutPaymentInstallments = mCurrentCheckout >>= (assetCheckoutPaymentInstallments . entityVal)
+  , currentCheckoutPaymentAmountCents = mCurrentCheckout >>= (assetCheckoutPaymentAmountCents . entityVal)
+  , currentCheckoutPaymentCurrency = mCurrentCheckout >>= (assetCheckoutPaymentCurrency . entityVal)
+  , currentCheckoutPaymentOutstandingCents = mCurrentCheckout >>= (assetCheckoutPaymentOutstandingCents . entityVal)
   , currentCheckoutPhotoUrl = mCurrentCheckout >>= (checkoutPhotoOutUrl . entityVal)
   }
 
@@ -777,6 +1509,9 @@ toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
   , paymentType     = assetCheckoutPaymentType rec
   , paymentInstallments = assetCheckoutPaymentInstallments rec
   , paymentReference = assetCheckoutPaymentReference rec
+  , paymentAmountCents = assetCheckoutPaymentAmountCents rec
+  , paymentCurrency = assetCheckoutPaymentCurrency rec
+  , paymentOutstandingCents = assetCheckoutPaymentOutstandingCents rec
   , checkedOutBy    = assetCheckoutCheckedOutByRef rec
   , checkedOutAt    = assetCheckoutCheckedOutAt rec
   , dueAt           = assetCheckoutDueAt rec
@@ -791,12 +1526,20 @@ toCheckoutDTO (Entity key rec) = AssetCheckoutDTO
 storeAssetUpload
   :: ( MonadReader Env m
      , MonadIO m
+     , MonadError ServerError m
      )
   => AssetUploadForm
   -> m AssetUploadDTO
-storeAssetUpload AssetUploadForm{..} = do
+storeAssetUpload rawUploadForm = do
+  validatedUploadForm <-
+    case Inventory.validateAssetUploadForm rawUploadForm of
+      Left err ->
+        throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
+      Right uploadForm ->
+        pure uploadForm
   Env{envConfig} <- ask
-  let assetsBase = resolveConfiguredAssetsBase envConfig
+  let AssetUploadForm{..} = validatedUploadForm
+      assetsBase = resolveConfiguredAssetsBase envConfig
       assetsRoot = assetsRootDir envConfig
       fallbackName = nonEmptyText (fdFileName aufFile)
       requestedName = aufName >>= nonEmptyText
@@ -807,6 +1550,8 @@ storeAssetUpload AssetUploadForm{..} = do
       relPath = "inventory/" <> storedName
       targetDir = assetsRoot </> "inventory"
       targetPath = targetDir </> T.unpack storedName
+  fileSize <- liftIO (getFileSize (fdPayload aufFile))
+  either throwError pure (validateInventoryAssetUploadSize fileSize)
   liftIO $ createDirectoryIfMissing True targetDir
   liftIO $ copyFile (fdPayload aufFile) targetPath
   let publicUrl = buildAssetUrl assetsBase relPath
@@ -815,6 +1560,20 @@ storeAssetUpload AssetUploadForm{..} = do
     , auPath = relPath
     , auPublicUrl = publicUrl
     }
+
+maxInventoryAssetUploadBytes :: Integer
+maxInventoryAssetUploadBytes = 10 * 1024 * 1024
+
+validateInventoryAssetUploadSize :: Integer -> Either ServerError ()
+validateInventoryAssetUploadSize size
+  | size < 0 =
+      Left err400 { errBody = "asset upload size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "asset upload must not be empty" }
+  | size > maxInventoryAssetUploadBytes =
+      Left err400 { errBody = "asset upload must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText txt =
@@ -904,17 +1663,11 @@ bandsServer user =
 
     createBandH req = do
       ensureModule ModuleCRM user
-      let trimmedName = T.strip (bcName req)
-          toPartyKey pid = toSqlKey pid :: Key Party
+      let toPartyKey pid = toSqlKey pid :: Key Party
+      nameClean <- either throwError pure (normalizeBandName (bcName req))
       memberPartyKeys <- either throwError pure
         (validateDistinctBandMemberIds (map (toPartyKey . bmiPartyId) (bcMembers req)))
-      when (trimmedName == "") $
-        throwError err400 { errBody = "Band name is required" }
-      nameExists <- withPool $ do
-        existing <- selectFirst [BandName ==. trimmedName] []
-        pure (isJust existing)
-      when nameExists $
-        throwError err409 { errBody = "A band with this name already exists" }
+      ensureBandNameAvailable nameClean
       missingMemberKeys <- if null memberPartyKeys
         then pure []
         else withPool $ filterM (fmap isNothing . get) memberPartyKeys
@@ -924,7 +1677,7 @@ bandsServer user =
       (bandEntity, memberEntities, partyEntities) <- withPool $ do
         partyId <- insert Party
           { partyLegalName        = Nothing
-          , partyDisplayName      = trimmedName
+          , partyDisplayName      = nameClean
           , partyIsOrg            = True
           , partyTaxId            = Nothing
           , partyPrimaryEmail     = Nothing
@@ -933,11 +1686,14 @@ bandsServer user =
           , partyInstagram        = Nothing
           , partyEmergencyContact = Nothing
           , partyNotes            = Nothing
+          , partyStripeCustomerId = Nothing
+          , partyCountryCode       = Nothing
+          , partyCountryId         = Nothing
           , partyCreatedAt        = now
           }
         let band = Band
               { bandPartyId      = partyId
-              , bandName         = trimmedName
+              , bandName         = nameClean
               , bandLabelArtist  = fromMaybe False (bcLabelArtist req)
               , bandPrimaryGenre = bcPrimaryGenre req
               , bandHomeCity     = bcHomeCity req
@@ -1005,6 +1761,17 @@ bandsServer user =
         , genres = map toOptionDTO genreOptions
         }
 
+    ensureBandNameAvailable nameClean = do
+      let canonicalName = canonicalBandName nameClean
+      duplicate <- withPool $ do
+        existing <- selectList ([] :: [Filter Band]) []
+        pure $
+          any
+            (\(Entity _ band) -> canonicalBandName (bandName band) == canonicalName)
+            existing
+      when duplicate $
+        throwError err409 { errBody = "A band with this name already exists" }
+
     toOptionDTO (Entity optKey option) = DropdownOptionDTO
       { optionId  = toPathPiece optKey
       , category  = dropdownOptionCategory option
@@ -1058,6 +1825,11 @@ sessionsServer user =
       roomKeys <- either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       bandKey  <- traverse (parseKey @Band) (scBandId req)
       statusVal <- either throwError pure (validateSessionStatusInput (scStatus req))
+      serviceClean <- either throwError pure (validateSessionRequiredTextField "service" (scService req))
+      engineerRefClean <- either throwError pure (validateSessionRequiredTextField "engineerRef" (scEngineerRef req))
+      sampleRateValue <- either throwError pure (validateSessionSampleRate (scSampleRate req))
+      bitDepthValue <- either throwError pure (validateSessionBitDepth (scBitDepth req))
+      dawValue <- either throwError pure (validateSessionOptionalTextField "daw" (scDaw req))
       either throwError pure (validateSessionTimeRange (scStartAt req) (scEndAt req))
       either throwError pure =<< withPool (validateSessionReferences bandKey roomKeys)
       let
@@ -1067,15 +1839,15 @@ sessionsServer user =
           { sessionBookingRef           = scBookingRef req
           , sessionBandId               = bandKey
           , sessionClientPartyRef       = scClientPartyRef req
-          , sessionService              = scService req
+          , sessionService              = serviceClean
           , sessionStartAt              = scStartAt req
           , sessionEndAt                = scEndAt req
-          , sessionEngineerRef          = scEngineerRef req
+          , sessionEngineerRef          = engineerRefClean
           , sessionAssistantRef         = scAssistantRef req
           , sessionStatus               = status'
-          , sessionSampleRate           = scSampleRate req
-          , sessionBitDepth             = scBitDepth req
-          , sessionDaw                  = scDaw req
+          , sessionSampleRate           = sampleRateValue
+          , sessionBitDepth             = bitDepthValue
+          , sessionDaw                  = dawValue
           , sessionSessionFolderDriveId = scSessionFolderDriveId req
           , sessionNotes                = scNotes req
           }
@@ -1119,6 +1891,11 @@ sessionsServer user =
           parsedRoomKeys <- traverse (parseKey @Room) rooms
           Just <$> either throwError pure (validateDistinctSessionRooms parsedRoomKeys)
       statusVal <- either throwError pure (validateSessionStatusInput (suStatus req))
+      serviceUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "service") (suService req)
+      engineerRefUpdate <- traverse (either throwError pure . validateSessionRequiredTextField "engineerRef") (suEngineerRef req)
+      sampleRateUpdate <- traverse (either throwError pure . validateSessionSampleRate) (suSampleRate req)
+      bitDepthUpdate <- traverse (either throwError pure . validateSessionBitDepth) (suBitDepth req)
+      dawUpdate <- traverse (either throwError pure . validateSessionOptionalTextField "daw") (suDaw req)
       let currentSession = entityVal existing
           effectiveStartAt = fromMaybe (sessionStartAt currentSession) (suStartAt req)
           effectiveEndAt = fromMaybe (sessionEndAt currentSession) (suEndAt req)
@@ -1130,15 +1907,15 @@ sessionsServer user =
             [ fmap (SessionBookingRef =.)           (suBookingRef req)
             , fmap (SessionBandId =.)               bandUpdate
             , fmap (SessionClientPartyRef =.)       (suClientPartyRef req)
-            , fmap (SessionService =.)              (suService req)
+            , fmap (SessionService =.)              serviceUpdate
             , fmap (SessionStartAt =.)              (suStartAt req)
             , fmap (SessionEndAt =.)                (suEndAt req)
-            , fmap (SessionEngineerRef =.)          (suEngineerRef req)
+            , fmap (SessionEngineerRef =.)          engineerRefUpdate
             , fmap (SessionAssistantRef =.)         (suAssistantRef req)
             , fmap (SessionStatus =.)               statusVal
-            , fmap (SessionSampleRate =.)           (suSampleRate req)
-            , fmap (SessionBitDepth =.)             (suBitDepth req)
-            , fmap (SessionDaw =.)                  (suDaw req)
+            , fmap (SessionSampleRate =.)           sampleRateUpdate
+            , fmap (SessionBitDepth =.)             bitDepthUpdate
+            , fmap (SessionDaw =.)                  dawUpdate
             , fmap (SessionSessionFolderDriveId =.) (suSessionFolderDriveId req)
             , fmap (SessionNotes =.)                (suNotes req)
             ]
@@ -1161,20 +1938,47 @@ sessionsServer user =
     sessionInputListH rawId = do
       ensureModule ModuleScheduling user
       sessionKey <- parseKey @Session rawId
-      result <- withPool (InputList.fetchSessionInputRowsByKey sessionKey)
+      result <- withPool $ do
+        loaded <- InputList.fetchSessionInputRowsByKey sessionKey
+        case loaded of
+          Nothing -> pure Nothing
+          Just (session, rows) -> do
+            let instrumentIds = Set.toList . Set.fromList $ mapMaybe (ME.inputRowInstrumentId . entityVal) rows
+            instruments <- if null instrumentIds
+              then pure []
+              else selectList [Catalog.InstrumentId <-. instrumentIds] []
+            let instrumentMap = Map.fromList
+                  [ (entityKey item, Catalog.instrumentNameEs (entityVal item))
+                  | item <- instruments
+                  ]
+            pure (Just (session, rows, instrumentMap))
       case result of
-        Nothing                -> throwError err404
-        Just (_session, rows)  -> pure (map toSessionInputRowDTO rows)
+        Nothing -> throwError err404
+        Just (_session, rows, instrumentMap) ->
+          pure (map (toSessionInputRowDTO instrumentMap) rows)
 
     sessionInputListPdfH rawId = do
       ensureModule ModuleScheduling user
       sessionKey <- parseKey @Session rawId
-      result <- withPool (InputList.fetchSessionInputRowsByKey sessionKey)
+      result <- withPool $ do
+        loaded <- InputList.fetchSessionInputRowsByKey sessionKey
+        case loaded of
+          Nothing -> pure Nothing
+          Just (session, rows) -> do
+            let assetIds = Set.toList . Set.fromList $ mapMaybe (ME.inputRowMicId . entityVal) rows
+            assets <- if null assetIds
+              then pure []
+              else selectList [ME.AssetId <-. assetIds] []
+            pure . Just $
+              ( session
+              , rows
+              , Map.fromList [(entityKey asset, ME.assetName (entityVal asset)) | asset <- assets]
+              )
       case result of
         Nothing -> throwError err404
-        Just (Entity _ session, rows) -> do
+        Just (Entity _ session, rows, assetNames) -> do
           let title = fromMaybe (sessionService session <> " session") (sessionClientPartyRef session)
-              latex = InputList.renderInputListLatex title rows
+              latex = InputList.renderInputListLatexWithAssets title assetNames rows
           pdfResult <- liftIO (InputList.generateInputListPdf latex)
           case pdfResult of
             Left errMsg ->
@@ -1184,10 +1988,11 @@ sessionsServer user =
                   disposition = T.concat ["attachment; filename=\"", fileName, "\""]
               pure (addHeader disposition pdf)
 
-    toSessionInputRowDTO (Entity _ row) = SessionInputRow
+    toSessionInputRowDTO instrumentMap (Entity _ row) = SessionInputRow
       { channelNumber    = ME.inputRowChannelNumber row
       , trackName        = ME.inputRowTrackName row
-      , instrument       = ME.inputRowInstrument row
+      , instrumentId     = toPathPiece <$> ME.inputRowInstrumentId row
+      , instrumentName   = ME.inputRowInstrumentId row >>= (`Map.lookup` instrumentMap)
       , micId            = fmap toPathPiece (ME.inputRowMicId row)
       , standId          = fmap toPathPiece (ME.inputRowStandId row)
       , cableId          = fmap toPathPiece (ME.inputRowCableId row)
@@ -1247,138 +2052,348 @@ pipelinesServer
      )
   => AuthedUser
   -> ServerT PipelinesAPI m
-pipelinesServer user rawType =
-  case parsePipelineType rawType of
-    Nothing   -> notFoundHandlers
-    Just kind ->
-      (     listCards kind
-       :<|> listStages kind
-       :<|> createCard kind
-       :<|> cardServer kind
-      )
+pipelinesServer user = getSnapshot :<|> listDefinitions :<|> workflowRoutes
   where
-    throw404 = throwError err404 { errBody = "Unknown pipeline type" }
+    getSnapshot = do
+      requirePipelineCapability "pipeline.read"
+      (definitions, cards) <- loadPipelineSnapshotRows
+      pure PipelineSnapshotDTO
+        { pspRevision = sum (map pdRevision definitions)
+        , pspDefinitions = definitions
+        , pspCards = cards
+        }
 
-    notFoundHandlers =
-          throw404
-      :<|> throw404
-      :<|> (\_ -> throw404)
-      :<|> (\_ ->
-            throw404
-        :<|> (\_ -> throw404)
-        :<|> throw404
-        )
+    listDefinitions = do
+      requirePipelineCapability "pipeline.read"
+      fst <$> loadPipelineSnapshotRows
 
-    listCards kind = do
-      ensureModule ModuleScheduling user
-      entities <- withPool $ selectList
-        [ ME.PipelineCardServiceKind ==. kind ]
+    workflowRoutes rawWorkflowId =
+          listCards rawWorkflowId
+      :<|> listStages rawWorkflowId
+      :<|> createCard rawWorkflowId
+      :<|> cardServer rawWorkflowId
+
+    listCards rawWorkflowId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
+      let offeringIds = map entityKey offerings
+          offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      cards <- withPool $ selectList
+        [ ME.PipelineCardServiceOfferingId <-. map Just offeringIds ]
         [ Asc ME.PipelineCardSortOrder
         , Asc ME.PipelineCardCreatedAt
         ]
-      pure (map toPipelineDTO entities)
+      forM cards $ \card ->
+        maybe
+          (throwError err500 { errBody = "Pipeline card has invalid canonical references" })
+          pure
+          (toPipelineDTO (entityKey workflow) offeringMap stateMap card)
 
-    listStages kind = do
-      ensureModule ModuleScheduling user
-      pure (pipelineStages kind)
+    listStages rawWorkflowId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (_, _, states) <- requirePipelineDefinition workflowId
+      pure (map toPipelineStageDTO states)
 
-    createCard kind req = do
-      ensureModule ModuleScheduling user
+    createCard rawWorkflowId req = do
+      requirePipelineCapability "pipeline.create"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       titleClean <- either throwError pure (normalizePipelineCardTitle (pccTitle req))
-      stageValue <- resolveStage kind (pccStage req)
+      sortOrderValue <- either throwError pure (validatePipelineCardSortOrder (pccSortOrder req))
+      offeringId <- parseKey @Catalog.ServiceOffering (pccServiceOfferingId req)
+      unless (offeringId `elem` map entityKey offerings) $
+        throwError err400 { errBody = "serviceOfferingId is not active in this pipeline" }
+      stateId <- case pccWorkflowStateId req of
+        Nothing -> do
+          defaults <- withPool $ selectList
+            [ Catalog.WorkflowDefaultStateWorkflowId ==. workflowId
+            , Catalog.WorkflowDefaultStateContext ==. "initial"
+            , Catalog.WorkflowDefaultStateActive ==. True
+            ]
+            []
+          case defaults of
+            [Entity _ defaultRow]
+              | Catalog.workflowDefaultStateStateId defaultRow `elem` map entityKey states ->
+                  pure (Catalog.workflowDefaultStateStateId defaultRow)
+            _ -> throwError err500 { errBody = "Pipeline requires exactly one active initial state" }
+        Just rawStateId -> parsePipelineStateId states rawStateId
       let artistValue = normalizeOptionalTextField (pccArtist req)
           notesValue = normalizeOptionalTextField (pccNotes req)
       now <- liftIO getCurrentTime
       entity <- withPool $ do
         newId <- insert ME.PipelineCard
-          { ME.pipelineCardServiceKind = kind
+          { ME.pipelineCardServiceKind = Nothing
+          , ME.pipelineCardServiceOfferingId = Just offeringId
           , ME.pipelineCardTitle       = titleClean
           , ME.pipelineCardArtist      = artistValue
-          , ME.pipelineCardStage       = stageValue
-          , ME.pipelineCardSortOrder   = fromMaybe 0 (pccSortOrder req)
+          , ME.pipelineCardStage       = Nothing
+          , ME.pipelineCardWorkflowStateId = Just stateId
+          , ME.pipelineCardSortOrder   = fromMaybe 0 sortOrderValue
           , ME.pipelineCardNotes       = notesValue
           , ME.pipelineCardCreatedAt   = now
           , ME.pipelineCardUpdatedAt   = now
           }
         getJustEntity newId
-      pure (toPipelineDTO entity)
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      maybe
+        (throwError err500 { errBody = "Pipeline card has invalid canonical references" })
+        pure
+        (toPipelineDTO (entityKey workflow) offeringMap stateMap entity)
 
-    cardServer kind rawId =
-          getCard kind rawId
-     :<|> updateCard kind rawId
-     :<|> deleteCard kind rawId
+    cardServer rawWorkflowId rawId =
+          getCard rawWorkflowId rawId
+     :<|> updateCard rawWorkflowId rawId
+     :<|> deleteCard rawWorkflowId rawId
 
-    getCard kind rawId = do
-      ensureModule ModuleScheduling user
+    getCard rawWorkflowId rawId = do
+      requirePipelineCapability "pipeline.read"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       mEntity <- withPool $ getEntity cardKey
-      case mEntity of
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      case mEntity >>= toPipelineDTO (entityKey workflow) offeringMap stateMap of
         Nothing -> throwError err404
-        Just ent ->
-          if ME.pipelineCardServiceKind (entityVal ent) /= kind
-            then throwError err404
-            else pure (toPipelineDTO ent)
+        Just dto -> pure dto
 
-    updateCard kind rawId req = do
-      ensureModule ModuleScheduling user
+    updateCard rawWorkflowId rawId req = do
+      requirePipelineCapability "pipeline.update"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (workflow, offerings, states) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       titleUpdate <- either throwError pure (normalizePipelineCardTitleUpdate (pcuTitle req))
-      stageUpdate <- case pcuStage req of
+      stateUpdate <- case pcuWorkflowStateId req of
         Nothing   -> pure Nothing
-        Just raw  -> Just <$> resolveStage kind (Just raw)
+        Just raw  -> Just <$> parsePipelineStateId states raw
+      sortOrderUpdate <- either throwError pure (validatePipelineCardSortOrder (pcuSortOrder req))
       let artistUpdate = normalizeOptionalTextFieldUpdate (pcuArtist req)
           notesUpdate = normalizeOptionalTextFieldUpdate (pcuNotes req)
+      either throwError pure
+        (validatePipelineCardPatchIntent titleUpdate artistUpdate (fmap toPathPiece stateUpdate) sortOrderUpdate notesUpdate)
       now <- liftIO getCurrentTime
       result <- withPool $ do
         mEntity <- getEntity cardKey
         case mEntity of
           Nothing -> pure Nothing
           Just (Entity key card)
-            | ME.pipelineCardServiceKind card /= kind -> pure Nothing
+            | maybe True (`notElem` map entityKey offerings) (ME.pipelineCardServiceOfferingId card) -> pure Nothing
             | otherwise -> do
-                let updates = catMaybes
-                      [ fmap (ME.PipelineCardTitle =.) titleUpdate
-                      , fmap (ME.PipelineCardArtist =.) artistUpdate
-                      , fmap (ME.PipelineCardStage =.) stageUpdate
-                      , fmap (ME.PipelineCardSortOrder =.) (pcuSortOrder req)
-                      , fmap (ME.PipelineCardNotes =.) notesUpdate
-                      ]
-                    updates' = if null updates
-                      then []
-                      else updates ++ [ME.PipelineCardUpdatedAt =. now]
-                unless (null updates') (update key updates')
-                getEntity key
-      maybe (throwError err404) (pure . toPipelineDTO) result
+                transitionAllowed <- case (ME.pipelineCardWorkflowStateId card, stateUpdate) of
+                  (_, Nothing) -> pure True
+                  (Just oldState, Just newState) | oldState == newState -> pure True
+                  (Just oldState, Just newState) -> isDirectPipelineTransitionAllowed workflowId oldState newState
+                  (Nothing, Just _) -> pure False
+                if not transitionAllowed
+                  then pure Nothing
+                  else do
+                    let updates = catMaybes
+                          [ fmap (ME.PipelineCardTitle =.) titleUpdate
+                          , fmap (ME.PipelineCardArtist =.) artistUpdate
+                          , fmap (ME.PipelineCardWorkflowStateId =.) (fmap Just stateUpdate)
+                          , fmap (ME.PipelineCardSortOrder =.) sortOrderUpdate
+                          , fmap (ME.PipelineCardNotes =.) notesUpdate
+                          ]
+                        updates' = if null updates
+                          then []
+                          else updates ++ [ME.PipelineCardUpdatedAt =. now]
+                    unless (null updates') (update key updates')
+                    getEntity key
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+      case result >>= toPipelineDTO (entityKey workflow) offeringMap stateMap of
+        Nothing -> throwError err400 { errBody = "Pipeline card or requested workflow transition is invalid" }
+        Just dto -> pure dto
 
-    deleteCard kind rawId = do
-      ensureModule ModuleScheduling user
+    deleteCard rawWorkflowId rawId = do
+      requirePipelineCapability "pipeline.delete"
+      workflowId <- parsePipelineWorkflowId rawWorkflowId
+      (_, offerings, _) <- requirePipelineDefinition workflowId
       cardKey <- parseKey @ME.PipelineCard rawId
       deleted <- withPool $ do
         mCard <- get cardKey
         case mCard of
           Nothing -> pure False
           Just card ->
-            if ME.pipelineCardServiceKind card /= kind
+            if maybe True (`notElem` map entityKey offerings) (ME.pipelineCardServiceOfferingId card)
               then pure False
               else delete cardKey >> pure True
       unless deleted (throwError err404)
       pure NoContent
 
-    resolveStage kind Nothing  = pure (defaultStage kind)
-    resolveStage kind (Just raw) =
-      case canonicalStage kind raw of
-        Nothing   -> throwError err400 { errBody = "Invalid stage for pipeline" }
-        Just val  -> pure val
+    requirePipelineCapability permissionCode = do
+      ensureModule ModuleScheduling user
+      granted <- withPool $ do
+        rows <- rawSql
+          "SELECT EXISTS (SELECT 1 FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id JOIN role_permission grant_row ON grant_row.role_id=role.id JOIN security_permission permission ON permission.id=grant_row.permission_id JOIN security_action action ON action.id=permission.action_id JOIN security_module module_row ON module_row.id=permission.module_id WHERE assignment.party_id=? AND assignment.active=TRUE AND role.active=TRUE AND grant_row.active=TRUE AND permission.active=TRUE AND action.active=TRUE AND module_row.active=TRUE AND permission.code=?)"
+          [toPersistValue (auPartyId user), toPersistValue permissionCode]
+          :: SqlPersistT IO [Single Bool]
+        pure (rows == [Single True])
+      unless granted $
+        throwError err403
+          { errBody = BL.fromStrict (TE.encodeUtf8 ("Missing pipeline capability: " <> permissionCode))
+          }
 
-    toPipelineDTO (Entity key card) = PipelineCardDTO
-      { pcId        = toPathPiece key
-      , pcTitle     = ME.pipelineCardTitle card
-      , pcArtist    = ME.pipelineCardArtist card
-      , pcType      = pipelineTypeSlug (ME.pipelineCardServiceKind card)
-      , pcStage     = ME.pipelineCardStage card
-      , pcSortOrder = ME.pipelineCardSortOrder card
-      , pcNotes     = ME.pipelineCardNotes card
+    parsePipelineWorkflowId rawWorkflowId = do
+      workflowId <- parseKey @Catalog.WorkflowDefinition rawWorkflowId
+      mWorkflow <- withPool $ get workflowId
+      case mWorkflow of
+        Just workflow | Catalog.workflowDefinitionActive workflow -> pure workflowId
+        _ -> throwError err404 { errBody = "Unknown pipeline workflowId" }
+
+    requirePipelineDefinition workflowId = do
+      mWorkflow <- withPool $ getEntity workflowId
+      case mWorkflow of
+        Nothing -> throwError err404 { errBody = "Unknown pipeline workflowId" }
+        Just workflow -> do
+          (offerings, states) <- withPool (loadPipelineDefinitionRows workflowId)
+          if null offerings || null states
+            then throwError err404 { errBody = "Unknown pipeline workflowId" }
+            else pure (workflow, offerings, states)
+
+    parsePipelineStateId states rawStateId = do
+      stateId <- parseKey @Catalog.WorkflowState rawStateId
+      if stateId `elem` map entityKey states
+        then pure stateId
+        else throwError err400 { errBody = "workflowStateId is not active in this pipeline" }
+
+    loadPipelineDefinitionRows workflowId = do
+      bindings <- selectList
+        [ Catalog.PipelineWorkflowBindingWorkflowId ==. workflowId
+        , Catalog.PipelineWorkflowBindingActive ==. True
+        ]
+        []
+      offerings <- selectList
+        [ Catalog.ServiceOfferingId <-. map (Catalog.pipelineWorkflowBindingServiceOfferingId . entityVal) bindings
+        , Catalog.ServiceOfferingActive ==. True
+        ]
+        [Asc Catalog.ServiceOfferingSortOrder, Asc Catalog.ServiceOfferingNameEs]
+      states <- selectList
+        [ Catalog.WorkflowStateWorkflowId ==. workflowId
+        , Catalog.WorkflowStateActive ==. True
+        ]
+        [Asc Catalog.WorkflowStateSortOrder, Asc Catalog.WorkflowStateCode]
+      pure (offerings, states)
+
+    loadPipelineSnapshotRows = do
+      (bindings, workflows, offerings, states, cards) <- withPool $ do
+        activeBindings <- selectList [Catalog.PipelineWorkflowBindingActive ==. True] []
+        let workflowIds = Set.toList . Set.fromList $
+              map (Catalog.pipelineWorkflowBindingWorkflowId . entityVal) activeBindings
+            offeringIds = Set.toList . Set.fromList $
+              map (Catalog.pipelineWorkflowBindingServiceOfferingId . entityVal) activeBindings
+        activeWorkflows <- selectList
+          [ Catalog.WorkflowDefinitionId <-. workflowIds
+          , Catalog.WorkflowDefinitionActive ==. True
+          ]
+          [Asc Catalog.WorkflowDefinitionNameEs, Asc Catalog.WorkflowDefinitionCode]
+        activeOfferings <- selectList
+          [ Catalog.ServiceOfferingId <-. offeringIds
+          , Catalog.ServiceOfferingActive ==. True
+          ]
+          [Asc Catalog.ServiceOfferingSortOrder, Asc Catalog.ServiceOfferingNameEs]
+        activeStates <- selectList
+          [ Catalog.WorkflowStateWorkflowId <-. workflowIds
+          , Catalog.WorkflowStateActive ==. True
+          ]
+          [Asc Catalog.WorkflowStateSortOrder, Asc Catalog.WorkflowStateCode]
+        canonicalCards <- selectList
+          [ME.PipelineCardServiceOfferingId <-. map (Just . entityKey) activeOfferings]
+          [Asc ME.PipelineCardSortOrder, Asc ME.PipelineCardCreatedAt]
+        pure (activeBindings, activeWorkflows, activeOfferings, activeStates, canonicalCards)
+      let offeringMap = Map.fromList [(entityKey item, entityVal item) | item <- offerings]
+          stateMap = Map.fromList [(entityKey item, entityVal item) | item <- states]
+          workflowByOffering = Map.fromList
+            [ ( Catalog.pipelineWorkflowBindingServiceOfferingId binding
+              , Catalog.pipelineWorkflowBindingWorkflowId binding
+              )
+            | Entity _ binding <- bindings
+            ]
+          offeringsFor workflowId =
+            [ offering
+            | offering <- offerings
+            , Map.lookup (entityKey offering) workflowByOffering == Just workflowId
+            ]
+          statesFor workflowId =
+            filter ((== workflowId) . Catalog.workflowStateWorkflowId . entityVal) states
+          definitions =
+            [ toPipelineDefinitionDTO workflow (offeringsFor (entityKey workflow)) (statesFor (entityKey workflow))
+            | workflow <- workflows
+            , not (null (offeringsFor (entityKey workflow)))
+            , not (null (statesFor (entityKey workflow)))
+            ]
+          canonicalCardDTOs =
+            [ dto
+            | card <- cards
+            , Just offeringId <- [ME.pipelineCardServiceOfferingId (entityVal card)]
+            , Just workflowId <- [Map.lookup offeringId workflowByOffering]
+            , Just dto <- [toPipelineDTO workflowId offeringMap stateMap card]
+            ]
+      when (length canonicalCardDTOs /= length cards) $
+        throwError err500 { errBody = "Pipeline snapshot contains invalid canonical references" }
+      pure (definitions, canonicalCardDTOs)
+
+    isDirectPipelineTransitionAllowed workflowId fromStateId toStateId =
+      isJust <$> selectFirst
+        [ Catalog.WorkflowTransitionWorkflowId ==. workflowId
+        , Catalog.WorkflowTransitionFromStateId ==. fromStateId
+        , Catalog.WorkflowTransitionToStateId ==. toStateId
+        , Catalog.WorkflowTransitionActive ==. True
+        , Catalog.WorkflowTransitionRequiredPermissionId ==. Nothing
+        , Catalog.WorkflowTransitionRequiresReview ==. False
+        , Catalog.WorkflowTransitionRequiresDistinctApprover ==. False
+        ]
+        []
+
+    toPipelineDefinitionDTO (Entity workflowId workflow) offerings states = PipelineDefinitionDTO
+      { pdWorkflowId = toPathPiece workflowId
+      , pdCode = Catalog.workflowDefinitionCode workflow
+      , pdNameEs = Catalog.workflowDefinitionNameEs workflow
+      , pdNameEn = Catalog.workflowDefinitionNameEn workflow
+      , pdRevision = Catalog.workflowDefinitionCacheRevision workflow
+      , pdServiceOfferings = map toPipelineServiceOfferingDTO offerings
+      , pdStages = map toPipelineStageDTO states
       }
+
+    toPipelineServiceOfferingDTO (Entity offeringId offering) = PipelineServiceOfferingDTO
+      { psoId = toPathPiece offeringId
+      , psoCode = Catalog.serviceOfferingCode offering
+      , psoNameEs = Catalog.serviceOfferingNameEs offering
+      , psoNameEn = Catalog.serviceOfferingNameEn offering
+      }
+
+    toPipelineStageDTO (Entity stateId state) = PipelineStageDTO
+      { psId = toPathPiece stateId
+      , psCode = Catalog.workflowStateCode state
+      , psNameEs = Catalog.workflowStateNameEs state
+      , psNameEn = Catalog.workflowStateNameEn state
+      , psSortOrder = Catalog.workflowStateSortOrder state
+      , psTerminal = Catalog.workflowStateTerminal state
+      }
+
+    toPipelineDTO workflowId offeringMap stateMap (Entity key card) = do
+      offeringId <- ME.pipelineCardServiceOfferingId card
+      stateId <- ME.pipelineCardWorkflowStateId card
+      offering <- Map.lookup offeringId offeringMap
+      state <- Map.lookup stateId stateMap
+      pure PipelineCardDTO
+        { pcId = toPathPiece key
+        , pcTitle = ME.pipelineCardTitle card
+        , pcArtist = ME.pipelineCardArtist card
+        , pcServiceOfferingId = toPathPiece offeringId
+        , pcServiceOfferingCode = Catalog.serviceOfferingCode offering
+        , pcWorkflowId = toPathPiece workflowId
+        , pcWorkflowStateId = toPathPiece stateId
+        , pcWorkflowStateCode = Catalog.workflowStateCode state
+        , pcWorkflowStateNameEs = Catalog.workflowStateNameEs state
+        , pcWorkflowStateNameEn = Catalog.workflowStateNameEn state
+        , pcSortOrder = ME.pipelineCardSortOrder card
+        , pcNotes = ME.pipelineCardNotes card
+        }
 
 roomsServer
   :: ( MonadReader Env m
@@ -1414,6 +2429,7 @@ roomsServer user = listRooms :<|> createRoomH :<|> patchRoomH
       ensureModule ModuleScheduling user
       roomKey <- parseKey @Room rawId
       nameUpdate <- either throwError pure (normalizeRoomNameUpdate (ruName req))
+      either throwError pure (validateRoomPatchIntent nameUpdate (ruIsBookable req))
       for_ nameUpdate (ensureRoomNameAvailable (Just roomKey))
       let updates = catMaybes
             [ (RoomName =.)       <$> nameUpdate
@@ -1449,11 +2465,32 @@ toRoomDTO (Entity key room) = RoomDTO
   , rBookable = roomIsBookable room
   }
 
+normalizeBandName :: Text -> Either ServerError Text
+normalizeBandName rawName =
+  let normalized = normalizeBandNameValue rawName
+  in if T.null normalized
+       then Left err400 { errBody = "Band name is required" }
+       else Right normalized
+
+normalizeBandNameValue :: Text -> Text
+normalizeBandNameValue = T.unwords . T.words
+
+canonicalBandName :: Text -> Text
+canonicalBandName = T.toCaseFold . normalizeBandNameValue
+
 normalizeRoomName :: Text -> Either ServerError Text
 normalizeRoomName rawName =
   let normalized = normalizeRoomNameValue rawName
   in if T.null normalized
        then Left err400 { errBody = "Room name is required" }
+       else if T.length normalized > maxRoomNameLength
+         then Left err400 { errBody = "Room name must be 120 characters or fewer" }
+       else if T.any isUnsafeRoomNameChar rawName
+         then Left err400
+           { errBody =
+               "Room name must not contain hidden formatting characters, "
+                 <> "Unicode separator spaces, or control characters other than tabs"
+           }
        else Right normalized
 
 normalizeRoomNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
@@ -1461,8 +2498,23 @@ normalizeRoomNameUpdate Nothing = Right Nothing
 normalizeRoomNameUpdate (Just rawName) =
   Just <$> normalizeRoomName rawName
 
+validateRoomPatchIntent :: Maybe Text -> Maybe Bool -> Either ServerError ()
+validateRoomPatchIntent Nothing Nothing =
+  Left err400 { errBody = "Room patch requires at least one of ruName or ruIsBookable" }
+validateRoomPatchIntent _ _ =
+  Right ()
+
 normalizeRoomNameValue :: Text -> Text
 normalizeRoomNameValue = T.unwords . T.words
+
+maxRoomNameLength :: Int
+maxRoomNameLength = 120
+
+isUnsafeRoomNameChar :: Char -> Bool
+isUnsafeRoomNameChar ch =
+  (isControl ch && ch /= '\t')
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 canonicalRoomName :: Text -> Text
 canonicalRoomName = T.toCaseFold . normalizeRoomNameValue
@@ -1472,15 +2524,45 @@ normalizePipelineCardTitle rawTitle =
   let trimmed = T.strip rawTitle
   in if T.null trimmed
        then Left err400 { errBody = "Pipeline card title is required" }
+       else if T.any isUnsafePipelineCardTitleChar trimmed
+         then
+           Left err400
+             { errBody =
+                 "Pipeline card title must not contain control characters or hidden formatting characters"
+             }
        else Right trimmed
+
+isUnsafePipelineCardTitleChar :: Char -> Bool
+isUnsafePipelineCardTitleChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 normalizePipelineCardTitleUpdate :: Maybe Text -> Either ServerError (Maybe Text)
 normalizePipelineCardTitleUpdate Nothing = Right Nothing
 normalizePipelineCardTitleUpdate (Just rawTitle) =
   Just <$> normalizePipelineCardTitle rawTitle
 
+validatePipelineCardSortOrder :: Maybe Int -> Either ServerError (Maybe Int)
+validatePipelineCardSortOrder Nothing = Right Nothing
+validatePipelineCardSortOrder (Just sortOrderValue)
+  | sortOrderValue < 0 =
+      Left err400 { errBody = "Pipeline card sortOrder must be greater than or equal to 0" }
+  | otherwise =
+      Right (Just sortOrderValue)
+
 normalizeOptionalTextFieldUpdate :: Maybe (Maybe Text) -> Maybe (Maybe Text)
 normalizeOptionalTextFieldUpdate = fmap normalizeOptionalTextField
+
+validatePipelineCardPatchIntent
+  :: Maybe Text
+  -> Maybe (Maybe Text)
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe (Maybe Text)
+  -> Either ServerError ()
+validatePipelineCardPatchIntent Nothing Nothing Nothing Nothing Nothing =
+  Left err400 { errBody = "Pipeline card patch requires at least one field to update" }
+validatePipelineCardPatchIntent _ _ _ _ _ =
+  Right ()
 
 normalizeAssetName :: Text -> Either ServerError Text
 normalizeAssetName rawName =
@@ -1511,12 +2593,19 @@ validateRequiredAssetTextField fieldName maxLength rawValue =
               BL.fromStrict
                 (TE.encodeUtf8 (fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"))
           }
-        else if T.any isControl trimmed
+        else if T.any isUnsafeAssetLabelChar trimmed
           then Left err400
             { errBody =
-                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters"))
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      (fieldName <> " must not contain control characters or hidden formatting characters")
+                  )
             }
           else Right trimmed
+
+isUnsafeAssetLabelChar :: Char -> Bool
+isUnsafeAssetLabelChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 assetNameMaxLength :: Int
 assetNameMaxLength = 160
@@ -1530,14 +2619,36 @@ validateAssetPhotoUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just trimmedUrl
+      | T.length trimmedUrl > maxAssetPhotoUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "photoUrl must be "
+                      <> T.pack (show maxAssetPhotoUrlChars)
+                      <> " characters or fewer"
+            }
       | "https://" `T.isPrefixOf` T.toLower trimmedUrl
-          && TrialsServer.isValidHttpUrl trimmedUrl ->
+          && TrialsServer.isValidHttpUrl trimmedUrl
+          && not ("#" `T.isInfixOf` trimmedUrl)
+          && TrialsServer.hasAmbiguousPublicUrlPath trimmedUrl ->
+          Left err400 { errBody = "photoUrl path must not contain empty, dot, or dot-dot segments" }
+      | "https://" `T.isPrefixOf` T.toLower trimmedUrl
+          && TrialsServer.isValidHttpUrl trimmedUrl
+          && not ("#" `T.isInfixOf` trimmedUrl)
+          && hasSupportedAssetPhotoUrlExtension trimmedUrl ->
           Right (Just trimmedUrl)
       | Just normalizedPath <- normalizeAssetPhotoPath trimmedUrl -> Right (Just normalizedPath)
       | otherwise ->
           Left err400
-            { errBody = "photoUrl must be an absolute https URL or an inventory asset path"
+            { errBody =
+                "photoUrl must be an absolute https URL without a fragment "
+                  <> "or an inventory asset path; external photo URLs must end "
+                  <> "with .jpg, .jpeg, .png, .webp, or .gif"
             }
+
+maxAssetPhotoUrlChars :: Int
+maxAssetPhotoUrlChars = 2048
 
 validateAssetPhotoUrlUpdate :: Maybe Text -> Either ServerError (Maybe (Maybe Text))
 validateAssetPhotoUrlUpdate Nothing = Right Nothing
@@ -1557,7 +2668,9 @@ normalizeAssetPhotoPath rawPath =
         | "assets/" `T.isPrefixOf` path0 = T.drop (T.length ("assets/" :: Text)) path0
         | otherwise = path0
       pathSegments = T.splitOn "/" path1
-  in if "inventory/" `T.isPrefixOf` path1 && all isValidAssetPhotoPathSegment pathSegments
+  in if "inventory/" `T.isPrefixOf` path1
+        && all isValidAssetPhotoPathSegment pathSegments
+        && hasSupportedAssetPhotoExtension path1
        then Just path1
        else Nothing
 
@@ -1566,11 +2679,21 @@ isValidAssetPhotoPathSegment segment =
   not (T.null segment)
     && segment /= "."
     && segment /= ".."
+    && not ("." `T.isPrefixOf` segment)
     && T.all isValidAssetPhotoPathChar segment
 
 isValidAssetPhotoPathChar :: Char -> Bool
 isValidAssetPhotoPathChar ch =
   isAscii ch && (isAlphaNum ch || ch `elem` ("._-" :: String))
+
+hasSupportedAssetPhotoExtension :: Text -> Bool
+hasSupportedAssetPhotoExtension path =
+  T.toLower (T.pack (takeExtension (T.unpack path))) `elem`
+    [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+
+hasSupportedAssetPhotoUrlExtension :: Text -> Bool
+hasSupportedAssetPhotoUrlExtension url =
+  hasSupportedAssetPhotoExtension (T.takeWhile (/= '?') url)
 
 roomsPublicServer
   :: ( MonadReader Env m
@@ -1586,51 +2709,13 @@ roomsPublicServer = do
 serviceCatalogPublicServer
   :: ( MonadReader Env m
      , MonadIO m
+     , MonadError ServerError m
      )
   => ServerT ServiceCatalogPublicAPI m
-serviceCatalogPublicServer = do
-  entities <- withPool $ selectList [M.ServiceCatalogActive ==. True] []
-  let sorted = sortOn serviceCatalogSortKey entities
-  pure (map serviceCatalogToDTO sorted)
-  where
-    serviceCatalogSortKey (Entity _ svc) =
-      let nameNorm = normalizeServiceName (M.serviceCatalogName svc)
-      in ( groupRank (M.serviceCatalogKind svc) nameNorm
-         , nameRank nameNorm
-         , nameNorm
-         )
-    groupRank kind nameNorm
-      | nameNorm == "podcast" = 0 :: Int
-      | otherwise =
-          case kind of
-            M.Recording       -> 0
-            M.Rehearsal       -> 1
-            M.Mixing          -> 2
-            M.Mastering       -> 3
-            M.Classes         -> 4
-            M.EventProduction -> 5
-    nameRank nameNorm =
-      case nameNorm of
-        "grabacion de banda"     -> 0 :: Int
-        "grabacion de voz"       -> 1
-        "podcast"                -> 2
-        "ensayo"                 -> 0
-        "practica en dj booth"   -> 1
-        _                        -> 999
-    normalizeServiceName =
-      stripDiacritics . T.unwords . T.words . T.toLower . T.strip
-    stripDiacritics = T.map replaceChar
-      where
-        replaceChar c =
-          case c of
-            'á' -> 'a'
-            'é' -> 'e'
-            'í' -> 'i'
-            'ó' -> 'o'
-            'ú' -> 'u'
-            'ü' -> 'u'
-            'ñ' -> 'n'
-            _   -> c
+serviceCatalogPublicServer requestedLocale ifNoneMatch = do
+  now <- liftIO getCurrentTime
+  envelope <- withPool $ loadCanonicalServiceCatalog now False (normalizeServiceCatalogLocale requestedLocale)
+  serviceCatalogResponse ifNoneMatch envelope
 
 serviceCatalogServer
   :: ( MonadReader Env m
@@ -1639,185 +2724,184 @@ serviceCatalogServer
      )
   => AuthedUser
   -> ServerT ServiceCatalogAPI m
-serviceCatalogServer user = listH :<|> createH :<|> updateH :<|> deleteH
+serviceCatalogServer user = listH
   where
-    listH mIncludeInactive = do
+    listH mIncludeInactive requestedLocale ifNoneMatch = do
       ensureModule ModuleScheduling user
-      let filters = [M.ServiceCatalogActive ==. True | not (fromMaybe False mIncludeInactive)]
-      entities <- withPool $ selectList filters [Asc M.ServiceCatalogName]
-      pure (map serviceCatalogToDTO entities)
+      now <- liftIO getCurrentTime
+      envelope <- withPool $ loadCanonicalServiceCatalog now (fromMaybe False mIncludeInactive) (normalizeServiceCatalogLocale requestedLocale)
+      serviceCatalogResponse ifNoneMatch envelope
 
-    createH ServiceCatalogCreate{..} = do
-      ensureModule ModuleScheduling user
-      nameClean <- normalizeName sccName
-      currencyClean <- either throwError pure (validateServiceCatalogCurrency sccCurrency)
-      taxClean <- either throwError pure (validateServiceCatalogTaxBps sccTaxBps)
-      billingUnitClean <-
-        either throwError pure (validateServiceCatalogBillingUnit sccBillingUnit)
-      when (maybe False (< 0) sccRateCents) $
-        throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      duplicate <- withPool $ selectFirst [M.ServiceCatalogName ==. nameClean] []
-      when (isJust duplicate) $
-        throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
-      entity <- withPool $ do
-        let record = M.ServiceCatalog
-              { M.serviceCatalogName = nameClean
-              , M.serviceCatalogKind = fromMaybe M.Recording sccKind
-              , M.serviceCatalogPricingModel = fromMaybe M.Hourly sccPricingModel
-              , M.serviceCatalogDefaultRateCents = sccRateCents
-              , M.serviceCatalogTaxBps = taxClean
-              , M.serviceCatalogCurrency = currencyClean
-              , M.serviceCatalogBillingUnit = billingUnitClean
-              , M.serviceCatalogActive = fromMaybe True sccActive
+normalizeServiceCatalogLocale :: Maybe Text -> Text
+normalizeServiceCatalogLocale requested =
+  if maybe False ("en" `T.isPrefixOf`) (T.toLower . T.strip <$> requested) then "en" else "es"
+
+serviceCatalogResponse
+  :: MonadError ServerError m
+  => Maybe Text
+  -> ServiceCatalogEnvelopeDTO
+  -> m (Headers '[Header "ETag" Text] ServiceCatalogEnvelopeDTO)
+serviceCatalogResponse ifNoneMatch envelope = do
+  let etag = "\"service-catalog-" <> T.pack (show (sceRevision envelope)) <> "\""
+      matches supplied = any (\candidate -> T.strip candidate `elem` [etag, "W/" <> etag, "*"]) (T.splitOn "," supplied)
+  when (maybe False matches ifNoneMatch) $
+    throwError err304 { errHeaders = [("ETag", TE.encodeUtf8 etag)] }
+  pure (addHeader etag envelope)
+
+loadCanonicalServiceCatalog :: UTCTime -> Bool -> Text -> SqlPersistT IO ServiceCatalogEnvelopeDTO
+loadCanonicalServiceCatalog now includeInactive locale = do
+  catalog <- getBy (Catalog.UniqueCatalogDefinitionCode "services") >>= maybe
+    (liftIO $ ioError (userError "Services catalog definition is missing"))
+    pure
+  offerings <- selectList
+    [Catalog.ServiceOfferingActive ==. True | not includeInactive]
+    [ Asc Catalog.ServiceOfferingSortOrder
+    , Asc Catalog.ServiceOfferingNameEs
+    , Asc Catalog.ServiceOfferingCode
+    ]
+  let offeringKeys = map entityKey offerings
+      categoryKeys = map (Catalog.serviceOfferingCategoryId . entityVal) offerings
+      pricingModelKeys = mapMaybe (Catalog.serviceOfferingPricingModelId . entityVal) offerings
+      taxRateKeys = mapMaybe (Catalog.serviceOfferingTaxRateId . entityVal) offerings
+      currencyKeys = map (Catalog.serviceOfferingCurrencyId . entityVal) offerings
+      workflowKeys = map (Catalog.serviceOfferingWorkflowStateId . entityVal) offerings
+  categories <- selectList [Catalog.ServiceCategoryId <-. categoryKeys] []
+  pricingModels <- selectList [Catalog.ServicePricingModelId <-. pricingModelKeys] []
+  taxRates <- selectList [Catalog.TaxRateReferenceId <-. taxRateKeys] []
+  currencies <- selectList [Catalog.CurrencyReferenceId <-. currencyKeys] []
+  workflowStates <- selectList [Catalog.WorkflowStateId <-. workflowKeys] []
+  relationships <- selectList
+    [ Catalog.ServiceOfferingDefaultResourceServiceOfferingId <-. offeringKeys
+    , Catalog.ServiceOfferingDefaultResourceActive ==. True
+    ]
+    [ Asc Catalog.ServiceOfferingDefaultResourceSortOrder
+    , Asc Catalog.ServiceOfferingDefaultResourceId
+    ]
+  let resourceKeys = map (Catalog.serviceOfferingDefaultResourceResourceId . entityVal) relationships
+      selectionModeKeys = mapMaybe (Catalog.serviceOfferingDefaultResourceSelectionModeId . entityVal) relationships
+  resources <- selectList [M.ResourceId <-. resourceKeys, M.ResourceActive ==. True] []
+  selectionModes <- selectList
+    [ Catalog.ServiceResourceSelectionModeId <-. selectionModeKeys
+    , Catalog.ServiceResourceSelectionModeActive ==. True
+    ]
+    []
+  let categoryMap = Map.fromList [(entityKey row, entityVal row) | row <- categories]
+      pricingModelMap = Map.fromList [(entityKey row, entityVal row) | row <- pricingModels]
+      taxRateMap = Map.fromList [(entityKey row, entityVal row) | row <- taxRates]
+      currencyMap = Map.fromList [(entityKey row, entityVal row) | row <- currencies]
+      workflowMap = Map.fromList [(entityKey row, entityVal row) | row <- workflowStates]
+      resourceMap = Map.fromList [(entityKey row, entityVal row) | row <- resources]
+      selectionModeMap = Map.fromList [(entityKey row, entityVal row) | row <- selectionModes]
+      offeringRelationships offeringKey =
+        [ relationship
+        | Entity _ relationship <- relationships
+        , Catalog.serviceOfferingDefaultResourceServiceOfferingId relationship == offeringKey
+        ]
+      isPublished offering =
+        maybe False ((== "published") . Catalog.workflowStateCode)
+          (Map.lookup (Catalog.serviceOfferingWorkflowStateId offering) workflowMap)
+      isEffective offering =
+        let today = utctDay now
+        in maybe True (<= today) (Catalog.serviceOfferingEffectiveFrom offering)
+             && maybe True (>= today) (Catalog.serviceOfferingEffectiveUntil offering)
+      visible offering =
+        isPublished offering
+          && ( includeInactive
+                 || ( Catalog.serviceOfferingActive offering
+                        && isNothing (Catalog.serviceOfferingDeprecatedAt offering)
+                        && isEffective offering
+                    )
+             )
+  items <- fmap catMaybes . forM offerings $ \(Entity offeringKey offering) ->
+    if not (visible offering)
+      then pure Nothing
+      else case UUID.fromText (toPathPiece offeringKey) of
+        Nothing -> liftIO $ ioError (userError "Service offering key is not a UUID")
+        Just offeringUuid -> do
+          category <- maybe
+            (liftIO $ ioError (userError "Service offering category relation is missing"))
+            pure
+            (Map.lookup (Catalog.serviceOfferingCategoryId offering) categoryMap)
+          pricingModel <- maybe
+            (liftIO $ ioError (userError "Service offering pricing model relation is missing"))
+            pure
+            (Catalog.serviceOfferingPricingModelId offering >>= (`Map.lookup` pricingModelMap))
+          currency <- maybe
+            (liftIO $ ioError (userError "Service offering currency relation is missing"))
+            pure
+            (Map.lookup (Catalog.serviceOfferingCurrencyId offering) currencyMap)
+          let taxRateCode =
+                Catalog.taxRateReferenceCode
+                  <$> (Catalog.serviceOfferingTaxRateId offering >>= (`Map.lookup` taxRateMap))
+              keyUuidText key = UUID.fromText (toPathPiece key)
+          categoryUuid <- maybe
+            (liftIO $ ioError (userError "Service category key is not a UUID"))
+            pure
+            (keyUuidText (Catalog.serviceOfferingCategoryId offering))
+          pricingModelUuid <- maybe
+            (liftIO $ ioError (userError "Service pricing model key is not a UUID"))
+            pure
+            (Catalog.serviceOfferingPricingModelId offering >>= keyUuidText)
+          currencyUuid <- maybe
+            (liftIO $ ioError (userError "Currency key is not a UUID"))
+            pure
+            (keyUuidText (Catalog.serviceOfferingCurrencyId offering))
+          taxRateUuid <- traverse
+            (maybe (liftIO $ ioError (userError "Tax rate key is not a UUID")) pure . keyUuidText)
+            (Catalog.serviceOfferingTaxRateId offering)
+          defaultResources <- forM (offeringRelationships offeringKey) $ \relationship -> do
+            let resourceKey = Catalog.serviceOfferingDefaultResourceResourceId relationship
+            resource <- maybe
+              (liftIO $ ioError (userError "A default service resource is missing or inactive"))
+              pure
+              (Map.lookup resourceKey resourceMap)
+            selectionModeKey <- maybe
+              (liftIO $ ioError (userError "A default service resource has no canonical selection mode"))
+              pure
+              (Catalog.serviceOfferingDefaultResourceSelectionModeId relationship)
+            selectionMode <- maybe
+              (liftIO $ ioError (userError "A default service resource selection mode is missing or inactive"))
+              pure
+              (Map.lookup selectionModeKey selectionModeMap)
+            selectionModeUuid <- maybe
+              (liftIO $ ioError (userError "Service resource selection mode key is not a UUID"))
+              pure
+              (keyUuidText selectionModeKey)
+            pure ServiceDefaultResourceDTO
+              { sdrResourceId = toPathPiece resourceKey
+              , sdrResourceName = M.resourceName resource
+              , sdrSelectionModeId = selectionModeUuid
+              , sdrSelectionMode = Catalog.serviceResourceSelectionModeCode selectionMode
+              , sdrSortOrder = Catalog.serviceOfferingDefaultResourceSortOrder relationship
               }
-        newId <- insert record
-        getJustEntity newId
-      pure (serviceCatalogToDTO entity)
-
-    updateH rawId ServiceCatalogUpdate{..} = do
-      ensureModule ModuleScheduling user
-      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
-      let rateCandidate = join scuRateCents
-      currencyUpdate <- either throwError pure (validateServiceCatalogCurrencyUpdate scuCurrency)
-      taxUpdate <- either throwError pure (validateServiceCatalogTaxBpsUpdate scuTaxBps)
-      billingUnitUpdate <-
-        either throwError pure (validateServiceCatalogBillingUnitUpdate scuBillingUnit)
-      when (maybe False (< 0) rateCandidate) $
-        throwError err400 { errBody = "La tarifa debe ser mayor o igual a cero" }
-      nameClean <- either throwError pure (normalizeServiceCatalogNameUpdate scuName)
-      case nameClean of
-        Just nm -> do
-          conflict <- withPool $ selectFirst
-            [ M.ServiceCatalogName ==. nm
-            , M.ServiceCatalogId !=. svcKey
-            ]
-            []
-          when (isJust conflict) $
-            throwError err409 { errBody = "Ya existe un servicio con ese nombre" }
-        Nothing -> pure ()
-      updated <- withPool $ do
-        mExisting <- getEntity svcKey
-        case mExisting of
-          Nothing -> pure Nothing
-          Just _ -> do
-            let updates = catMaybes
-                  [ (M.ServiceCatalogName =.) <$> nameClean
-                  , (M.ServiceCatalogKind =.) <$> scuKind
-                  , (M.ServiceCatalogPricingModel =.) <$> scuPricingModel
-                  , (M.ServiceCatalogDefaultRateCents =.) <$> scuRateCents
-                  , (M.ServiceCatalogTaxBps =.) <$> taxUpdate
-                  , (M.ServiceCatalogCurrency =.) <$> currencyUpdate
-                  , (M.ServiceCatalogBillingUnit =.) <$> billingUnitUpdate
-                  , (M.ServiceCatalogActive =.) <$> scuActive
-                  ]
-            unless (null updates) (update svcKey updates)
-            getEntity svcKey
-      maybe (throwError err404) (pure . serviceCatalogToDTO) updated
-
-    deleteH rawId = do
-      ensureModule ModuleScheduling user
-      let svcKey = toSqlKey rawId :: Key M.ServiceCatalog
-      found <- withPool $ do
-        mSvc <- getEntity svcKey
-        case mSvc of
-          Nothing -> pure False
-          Just _ -> update svcKey [M.ServiceCatalogActive =. False] >> pure True
-      if found then pure NoContent else throwError err404
-
-    normalizeName txt =
-      either throwError pure (normalizeServiceCatalogName txt)
-
-normalizeServiceCatalogNameUpdate :: Maybe Text -> Either ServerError (Maybe Text)
-normalizeServiceCatalogNameUpdate Nothing = Right Nothing
-normalizeServiceCatalogNameUpdate (Just rawName) =
-  Just <$> normalizeServiceCatalogName rawName
-
-normalizeServiceCatalogName :: Text -> Either ServerError Text
-normalizeServiceCatalogName rawName =
-  let trimmed = T.strip rawName
-  in if T.null trimmed
-       then Left err400 { errBody = "Nombre requerido" }
-       else if T.length trimmed > 160
-         then Left err400 { errBody = "Nombre debe tener 160 caracteres o menos" }
-         else if T.any isControl trimmed
-         then Left err400 { errBody = "Nombre no debe contener caracteres de control" }
-         else Right trimmed
-
-validateServiceCatalogBillingUnit :: Maybe Text -> Either ServerError (Maybe Text)
-validateServiceCatalogBillingUnit Nothing = Right Nothing
-validateServiceCatalogBillingUnit (Just rawBillingUnit) =
-  case normalizeOptionalTextField (Just rawBillingUnit) of
-    Nothing -> Right Nothing
-    Just billingUnit -> Just <$> validateServiceCatalogBillingUnitValue billingUnit
-
-validateServiceCatalogBillingUnitUpdate
-  :: Maybe (Maybe Text)
-  -> Either ServerError (Maybe (Maybe Text))
-validateServiceCatalogBillingUnitUpdate Nothing = Right Nothing
-validateServiceCatalogBillingUnitUpdate (Just Nothing) = Right (Just Nothing)
-validateServiceCatalogBillingUnitUpdate (Just (Just rawBillingUnit)) =
-  case normalizeOptionalTextField (Just rawBillingUnit) of
-    Nothing ->
-      Left err400 { errBody = "Unidad debe omitirse, ser null, o contener texto" }
-    Just billingUnit ->
-      Just . Just <$> validateServiceCatalogBillingUnitValue billingUnit
-
-validateServiceCatalogBillingUnitValue :: Text -> Either ServerError Text
-validateServiceCatalogBillingUnitValue billingUnit
-  | T.length billingUnit > 80 =
-      Left err400 { errBody = "Unidad debe tener 80 caracteres o menos" }
-  | T.any isControl billingUnit =
-      Left err400 { errBody = "Unidad no debe contener caracteres de control" }
-  | otherwise =
-      Right billingUnit
-
-validateServiceCatalogCurrency :: Maybe Text -> Either ServerError Text
-validateServiceCatalogCurrency Nothing = Right "USD"
-validateServiceCatalogCurrency (Just rawCurrency) =
-  let trimmed = T.toUpper (T.strip rawCurrency)
-  in if T.null trimmed
-       then invalidCurrency
-       else
-         if T.length trimmed == 3 && T.all isAsciiUpper trimmed
-           then Right trimmed
-           else invalidCurrency
-  where
-    invalidCurrency =
-      Left err400 { errBody = "Moneda inválida. Usa un código ISO de 3 letras, por ejemplo USD" }
-
-validateServiceCatalogCurrencyUpdate :: Maybe Text -> Either ServerError (Maybe Text)
-validateServiceCatalogCurrencyUpdate Nothing = Right Nothing
-validateServiceCatalogCurrencyUpdate (Just rawCurrency) =
-  Just <$> validateServiceCatalogCurrency (Just rawCurrency)
-
-validateServiceCatalogTaxBps :: Maybe Int -> Either ServerError (Maybe Int)
-validateServiceCatalogTaxBps Nothing = Right Nothing
-validateServiceCatalogTaxBps (Just rawTaxBps)
-  | rawTaxBps < 0 = invalidTaxBps
-  | rawTaxBps > 10000 = invalidTaxBps
-  | otherwise = Right (Just rawTaxBps)
-  where
-    invalidTaxBps =
-      Left err400 { errBody = "Impuesto inválido. Usa basis points entre 0 y 10000" }
-
-validateServiceCatalogTaxBpsUpdate :: Maybe (Maybe Int) -> Either ServerError (Maybe (Maybe Int))
-validateServiceCatalogTaxBpsUpdate Nothing = Right Nothing
-validateServiceCatalogTaxBpsUpdate (Just Nothing) = Right (Just Nothing)
-validateServiceCatalogTaxBpsUpdate (Just (Just rawTaxBps)) =
-  Just <$> validateServiceCatalogTaxBps (Just rawTaxBps)
-
-serviceCatalogToDTO :: Entity M.ServiceCatalog -> ServiceCatalogDTO
-serviceCatalogToDTO (Entity key svc) = ServiceCatalogDTO
-  { scId           = fromSqlKey key
-  , scName         = M.serviceCatalogName svc
-  , scKind         = M.serviceCatalogKind svc
-  , scPricingModel = M.serviceCatalogPricingModel svc
-  , scRateCents    = M.serviceCatalogDefaultRateCents svc
-  , scCurrency     = M.serviceCatalogCurrency svc
-  , scBillingUnit  = M.serviceCatalogBillingUnit svc
-  , scTaxBps       = M.serviceCatalogTaxBps svc
-  , scActive       = M.serviceCatalogActive svc
-  }
+          pure . Just $ ServiceCatalogDTO
+            { scId = offeringUuid
+            , scCode = Catalog.serviceOfferingCode offering
+            , scName = if locale == "en" then Catalog.serviceOfferingNameEn offering else Catalog.serviceOfferingNameEs offering
+            , scNameEs = Catalog.serviceOfferingNameEs offering
+            , scNameEn = Catalog.serviceOfferingNameEn offering
+            , scCategoryId = categoryUuid
+            , scKind = Catalog.serviceCategoryCode category
+            , scPricingModelId = pricingModelUuid
+            , scPricingModel = Catalog.servicePricingModelCode pricingModel
+            , scRateCents = Catalog.serviceOfferingDefaultRateCents offering
+            , scCurrency = Catalog.currencyReferenceCode currency
+            , scCurrencyId = currencyUuid
+            , scBillingUnit = if locale == "en" then Catalog.serviceOfferingBillingUnitEn offering else Catalog.serviceOfferingBillingUnitEs offering
+            , scTaxRateCode = taxRateCode
+            , scTaxRateId = taxRateUuid
+            , scDefaultDurationMinutes = Catalog.serviceOfferingDefaultDurationMinutes offering
+            , scRequiresEngineer = Catalog.serviceOfferingRequiresEngineer offering
+            , scDefaultResources = defaultResources
+            , scSortOrder = Catalog.serviceOfferingSortOrder offering
+            , scActive = Catalog.serviceOfferingActive offering
+            }
+  pure ServiceCatalogEnvelopeDTO
+    { sceSchemaVersion = 2
+    , sceRevision = Catalog.catalogDefinitionCacheRevision (entityVal catalog)
+    , sceLocale = locale
+    , sceItems = items
+    }
 
 mkPage :: Int -> Int -> Int -> [a] -> Page a
 mkPage current size totalCount values =
@@ -1835,7 +2919,9 @@ validatePageParams mPage mPageSize = do
     Just n
       | n < 1 || n > 100 -> Left err400 { errBody = "pageSize must be between 1 and 100" }
       | otherwise -> Right n
-  pure (pageNum, pageSize)
+  if pageNum - 1 > (maxBound :: Int) `div` pageSize
+    then Left err400 { errBody = "page is too large" }
+    else pure (pageNum, pageSize)
 
 validateInventoryPageParams :: Maybe Int -> Maybe Int -> Either ServerError (Int, Int)
 validateInventoryPageParams = validatePageParams
@@ -1845,6 +2931,41 @@ normalizeAssetSearchQuery Nothing = Nothing
 normalizeAssetSearchQuery (Just rawQuery) =
   let normalized = T.toCaseFold (T.strip rawQuery)
   in if T.null normalized then Nothing else Just normalized
+
+validateAssetSearchQuery :: Maybe Text -> Either ServerError (Maybe Text)
+validateAssetSearchQuery Nothing = Right Nothing
+validateAssetSearchQuery (Just rawQuery) =
+  let cleanQuery = T.strip rawQuery
+  in if T.null cleanQuery
+       then Right Nothing
+       else if T.length cleanQuery > assetSearchQueryMaxLength
+         then
+           Left err400
+             { errBody =
+                 BL.fromStrict
+                   ( TE.encodeUtf8
+                       ( "q must be "
+                           <> T.pack (show assetSearchQueryMaxLength)
+                           <> " characters or fewer"
+                       )
+                   )
+             }
+         else if T.any isUnsafeAssetSearchQueryChar cleanQuery
+           then
+             Left err400
+               { errBody =
+                   "q must not contain control characters, hidden formatting characters, or non-ASCII spaces"
+               }
+           else Right (Just (T.toCaseFold cleanQuery))
+
+assetSearchQueryMaxLength :: Int
+assetSearchQueryMaxLength = 120
+
+isUnsafeAssetSearchQueryChar :: Char -> Bool
+isUnsafeAssetSearchQueryChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 assetMatchesSearchQuery :: Text -> Asset -> Bool
 assetMatchesSearchQuery normalizedQuery asset =
@@ -1883,7 +3004,10 @@ parseKey
   => Text
   -> m (Key record)
 parseKey raw =
-  maybe (throwError err400 { errBody = "Invalid identifier" }) pure (fromPathPiece raw)
+  maybe
+    (throwError err400 { errBody = "Invalid identifier" })
+    pure
+    (parseCanonicalPathPiece raw)
 
 parseOptionalKeyField
   :: forall record.
@@ -1897,15 +3021,47 @@ parseOptionalKeyField fieldName (Just raw) =
   in if T.null trimmed
       then Right Nothing
       else maybe
-        (Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier")) })
+        ( Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a valid identifier"))
+            }
+        )
         (Right . Just)
-        (fromPathPiece trimmed)
+        (parseCanonicalPathPiece trimmed)
+
+parseCanonicalPathPiece :: PathPiece a => Text -> Maybe a
+parseCanonicalPathPiece raw = do
+  guard (raw /= "0")
+  guard (not ("-" `T.isPrefixOf` raw))
+  parsed <- fromPathPiece raw
+  guard (toPathPiece parsed == raw)
+  pure parsed
 
 validateAssetQrToken :: Text -> Either ServerError Text
-validateAssetQrToken rawToken =
-  case UUID.fromText (T.strip rawToken) of
-    Just uuid -> Right (UUID.toText uuid)
-    Nothing -> Left err400 { errBody = "Invalid asset QR token" }
+validateAssetQrToken rawToken
+  | rawToken /= T.strip rawToken || T.any isUnsafeAssetQrTokenChar rawToken =
+      Left invalidAssetQrTokenError
+  | otherwise =
+      case UUID.fromText rawToken of
+        Just uuid ->
+          let canonicalToken = UUID.toText uuid
+          in if canonicalToken == "00000000-0000-0000-0000-000000000000"
+               then Left invalidAssetQrTokenError
+               else if T.toLower rawToken /= canonicalToken
+                 then Left invalidAssetQrTokenError
+                 else Right canonicalToken
+        Nothing -> Left invalidAssetQrTokenError
+
+isUnsafeAssetQrTokenChar :: Char -> Bool
+isUnsafeAssetQrTokenChar ch =
+  not (isAscii ch)
+    || isControl ch
+    || isSpace ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+invalidAssetQrTokenError :: ServerError
+invalidAssetQrTokenError =
+  err400 { errBody = "Invalid asset QR token" }
 
 normalizeOptionalTextField :: Maybe Text -> Maybe Text
 normalizeOptionalTextField Nothing = Nothing
@@ -1927,6 +3083,15 @@ normalizeAssetCheckinFields AssetCheckinRequest{..} =
     <$> validateInventoryConditionField "conditionIn" ciConditionIn
     <*> validateInventoryNotesField "notes" ciNotes
     <*> validateAssetPhotoUrl ciPhotoUrl
+
+prepareCheckinNotesUpdate :: Maybe Text -> Maybe Text -> Either ServerError (Maybe (Maybe Text))
+prepareCheckinNotesUpdate _ Nothing = Right Nothing
+prepareCheckinNotesUpdate Nothing (Just checkinNotes) = Right (Just (Just checkinNotes))
+prepareCheckinNotesUpdate (Just existingNotes) (Just checkinNotes)
+  | existingNotes == checkinNotes =
+      Right (Just (Just existingNotes))
+  | otherwise =
+      Just <$> validateInventoryNotesField "notes" (Just (existingNotes <> "\n\nCheck-in: " <> checkinNotes))
 
 parseAssetStatus :: Text -> Maybe AssetStatus
 parseAssetStatus = lookupStatus . normalise
@@ -1971,6 +3136,28 @@ validateAssetPatchStatusInvariant currentStatus requestedStatus mActiveCheckoutS
     _ ->
       Right ()
 
+validateAssetPatchIntent
+  :: Maybe Text
+  -> Maybe Text
+  -> Maybe AssetStatus
+  -> Maybe (Key Room)
+  -> Maybe (Maybe Text)
+  -> Maybe (Maybe Text)
+  -> Either ServerError ()
+validateAssetPatchIntent nameUpdate categoryUpdate statusUpdate locationUpdate notesUpdate photoUpdate
+  | any
+      isJust
+      [ fmap (const ()) nameUpdate
+      , fmap (const ()) categoryUpdate
+      , fmap (const ()) statusUpdate
+      , fmap (const ()) locationUpdate
+      , fmap (const ()) notesUpdate
+      , fmap (const ()) photoUpdate
+      ] =
+      Right ()
+  | otherwise =
+      Left err400 { errBody = "Asset patch requires at least one field to update" }
+
 validateAssetCheckoutStatus :: AssetStatus -> Either ServerError ()
 validateAssetCheckoutStatus Active = Right ()
 validateAssetCheckoutStatus Booked =
@@ -1984,6 +3171,10 @@ validateAssetCheckoutStatus OutForMaintenance =
 validateAssetCheckoutStatus Retired =
   Left err409
     { errBody = "Asset is retired and cannot be checked out"
+    }
+validateAssetCheckoutStatus Sold =
+  Left err409
+    { errBody = "Asset has been sold and cannot be checked out"
     }
 
 parseSessionStatus :: Text -> Maybe SessionStatus
@@ -1999,6 +3190,100 @@ parseSessionStatus = lookupStatus . normalise
       "closed"     -> Just Closed
       _             -> Nothing
     normalise = T.toLower . T.filter (`notElem` [' ', '_'])
+
+validateSessionRequiredTextField :: Text -> Text -> Either ServerError Text
+validateSessionRequiredTextField fieldName rawValue =
+  let cleanValue = T.strip rawValue
+  in if T.null cleanValue
+       then Left err400
+         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is required"))
+         }
+       else if T.length cleanValue > maxSessionRequiredTextChars
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must be "
+                         <> T.pack (show maxSessionRequiredTextChars)
+                         <> " characters or fewer"
+                     )
+                 )
+           }
+       else if T.any isUnsafeSessionRequiredTextChar cleanValue
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must not contain control characters or hidden formatting characters"
+                     )
+                 )
+           }
+       else Right cleanValue
+
+isUnsafeSessionRequiredTextChar :: Char -> Bool
+isUnsafeSessionRequiredTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+maxSessionRequiredTextChars :: Int
+maxSessionRequiredTextChars = 160
+
+validateSessionOptionalTextField :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSessionOptionalTextField _ Nothing = Right Nothing
+validateSessionOptionalTextField fieldName (Just rawValue) =
+  let cleanValue = T.strip rawValue
+  in if T.null cleanValue
+       then Right Nothing
+       else if T.length cleanValue > maxSessionRequiredTextChars
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must be "
+                         <> T.pack (show maxSessionRequiredTextChars)
+                         <> " characters or fewer"
+                     )
+                 )
+           }
+       else if T.any isUnsafeSessionRequiredTextChar cleanValue
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 ( TE.encodeUtf8
+                     ( fieldName
+                         <> " must not contain control characters or hidden formatting characters"
+                     )
+                 )
+           }
+       else Right (Just cleanValue)
+
+validateSessionSampleRate :: Maybe Int -> Either ServerError (Maybe Int)
+validateSessionSampleRate =
+  validateSessionPositiveBoundedInt "sampleRate" 384000
+
+validateSessionBitDepth :: Maybe Int -> Either ServerError (Maybe Int)
+validateSessionBitDepth =
+  validateSessionPositiveBoundedInt "bitDepth" 64
+
+validateSessionPositiveBoundedInt :: Text -> Int -> Maybe Int -> Either ServerError (Maybe Int)
+validateSessionPositiveBoundedInt _ _ Nothing = Right Nothing
+validateSessionPositiveBoundedInt fieldName maxValue (Just value)
+  | value <= 0 =
+      Left err400
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be greater than zero"))
+        }
+  | value > maxValue =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  (fieldName <> " must be " <> T.pack (show maxValue) <> " or less")
+              )
+        }
+  | otherwise = Right (Just value)
 
 validateSessionStatusInput :: Maybe Text -> Either ServerError (Maybe SessionStatus)
 validateSessionStatusInput Nothing = Right Nothing
@@ -2064,6 +3349,18 @@ validateCheckoutTargetReferences mRoomKey mSessionKey = do
         then Left err400 { errBody = "targetSession references an unknown session" }
         else Right ()
 
+validateAssetLocationReference
+  :: MonadIO m
+  => Maybe (Key Room)
+  -> SqlPersistT m (Either ServerError ())
+validateAssetLocationReference Nothing = pure (Right ())
+validateAssetLocationReference (Just roomKey) = do
+  mRoom <- getEntity roomKey
+  pure $
+    if isNothing mRoom
+      then Left err400 { errBody = "locationId references an unknown room" }
+      else Right ()
+
 validateDistinctBandMemberIds :: [Key Party] -> Either ServerError [Key Party]
 validateDistinctBandMemberIds partyKeys
   | any ((<= 0) . fromSqlKey) partyKeys = Left err400
@@ -2080,8 +3377,16 @@ ensureModule
   -> AuthedUser
   -> m ()
 ensureModule moduleTag user =
-  unless (hasModuleAccess moduleTag user) $
-    throwError err403 { errBody = "Missing required module access" }
+  case validateModuleAccess moduleTag user of
+    Right () -> pure ()
+    Left err
+      | errBody err == missingModuleBody ->
+          throwError err403 { errBody = "Missing required module access" }
+      | otherwise ->
+          throwError err
+  where
+    missingModuleBody =
+      BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
 
 -- Basic payments server (manual payouts / honorarios)
 paymentsServer
@@ -2098,13 +3403,14 @@ paymentsServer user =
   where
     listPaymentsH mPartyId = do
       ensureModule ModuleAdmin user
-      partyIdFilter <- either throwError pure (validateOptionalPositivePaymentReferenceId "partyId" mPartyId)
+      partyIdFilter <- either throwError pure =<< withPool (validatePaymentPartyFilter mPartyId)
       let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) partyIdFilter
       recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
       pure (map toPaymentDTO recs)
 
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
+      cfg <- asks envConfig
       partyId <- either throwError pure (validatePositivePaymentReferenceId "partyId" pcPartyId)
       orderId <- either throwError pure (validateOptionalPositivePaymentReferenceId "orderId" pcOrderId)
       invoiceId <- either throwError pure (validateOptionalPositivePaymentReferenceId "invoiceId" pcInvoiceId)
@@ -2112,7 +3418,7 @@ paymentsServer user =
       now <- liftIO getCurrentTime
       paidAt <- either throwError pure (validatePaymentPaidAt now parsedPaidAt)
       amountCents <- either throwError pure (validatePaymentAmountCents pcAmountCents)
-      _ <- either throwError pure (validatePaymentCurrency pcCurrency)
+      currency <- either throwError pure (validatePaymentCurrency (supportedCurrencies cfg) pcCurrency)
       conceptVal <- either throwError pure (validatePaymentConcept pcConcept)
       paymentMethodVal <- either throwError pure (validatePaymentMethod pcMethod)
       referenceVal <- either throwError pure (validatePaymentReference pcReference)
@@ -2129,6 +3435,7 @@ paymentsServer user =
           , paymentPartyId     = partyKey
           , paymentMethod      = paymentMethodVal
           , paymentAmountCents = amountCents
+          , paymentCurrency    = currency
           , paymentReceivedAt  = paidAt
           , paymentReference   = referenceVal
           , paymentConcept     = Just conceptVal
@@ -2151,8 +3458,8 @@ paymentsServer user =
       , payPartyId     = fromSqlKey (paymentPartyId p)
       , payOrderId     = fmap fromSqlKey (paymentOrderId p)
       , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
-      , payAmountCents = paymentAmountCents p
-      , payCurrency    = "USD"
+      , payAmountCents = M.paymentAmountCents p
+      , payCurrency    = M.paymentCurrency p
       , payMethod      = T.pack (show (paymentMethod p))
       , payReference   = M.paymentReference p
       , payPaidAt      = T.pack (show (paymentReceivedAt p))
@@ -2183,6 +3490,21 @@ validateOptionalPositivePaymentReferenceId :: Text -> Maybe Int64 -> Either Serv
 validateOptionalPositivePaymentReferenceId _ Nothing = Right Nothing
 validateOptionalPositivePaymentReferenceId fieldName (Just rawId) =
   Just <$> validatePositivePaymentReferenceId fieldName rawId
+
+validatePaymentPartyFilter
+  :: MonadIO m
+  => Maybe Int64
+  -> SqlPersistT m (Either ServerError (Maybe Int64))
+validatePaymentPartyFilter rawPartyId =
+  case validateOptionalPositivePaymentReferenceId "partyId" rawPartyId of
+    Left err -> pure (Left err)
+    Right Nothing -> pure (Right Nothing)
+    Right (Just partyId) -> do
+      mParty <- getEntity (toSqlKey partyId :: Key Party)
+      pure $
+        if isJust mParty
+          then Right (Just partyId)
+          else Left err400 { errBody = "partyId references an unknown party" }
 
 validatePaymentReferences
   :: MonadIO m
@@ -2224,8 +3546,11 @@ validatePaymentConcept rawConcept =
        then Left err400 { errBody = "concept is required" }
        else if T.length trimmed > 240
          then Left err400 { errBody = "concept must be 240 characters or fewer" }
-         else if T.any isControl trimmed
-           then Left err400 { errBody = "concept must not contain control characters" }
+         else if T.any isUnsafePaymentTextChar trimmed
+           then Left err400
+             { errBody =
+                 "concept must not contain control characters or hidden formatting characters"
+             }
            else Right trimmed
 
 validatePaymentReference :: Maybe Text -> Either ServerError (Maybe Text)
@@ -2233,8 +3558,36 @@ validatePaymentReference =
   validateOptionalPaymentTextField "reference" 160
 
 validatePaymentPeriod :: Maybe Text -> Either ServerError (Maybe Text)
-validatePaymentPeriod =
-  validateOptionalPaymentTextField "period" 80
+validatePaymentPeriod rawValue =
+  case normalizeOptionalTextField rawValue of
+    Nothing -> Right Nothing
+    Just value
+      | T.any isUnsafePaymentTextChar value ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "period must not contain control characters or hidden formatting characters"
+            }
+      | hasValidPaymentPeriodShape value ->
+          Right (Just value)
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 "period must be in YYYY-MM format"
+            }
+  where
+    hasValidPaymentPeriodShape periodValue =
+      case T.splitOn "-" periodValue of
+        [yearPart, monthPart]
+          | T.length yearPart == 4
+              && T.length monthPart == 2
+              && T.all isDigit (yearPart <> monthPart) ->
+                  case readMaybe (T.unpack monthPart) :: Maybe Int of
+                    Just monthNumber -> monthNumber >= 1 && monthNumber <= 12
+                    Nothing -> False
+        _ -> False
 
 validateOptionalPaymentTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPaymentTextField fieldName maxLength rawValue =
@@ -2248,20 +3601,27 @@ validateOptionalPaymentTextField fieldName maxLength rawValue =
                   TE.encodeUtf8 $
                     fieldName <> " must be " <> T.pack (show maxLength) <> " characters or fewer"
             }
-      | T.any isControl value ->
+      | T.any isUnsafePaymentTextChar value ->
           Left err400
             { errBody =
                 BL.fromStrict $
                   TE.encodeUtf8 $
-                    fieldName <> " must not contain control characters"
+                    fieldName <> " must not contain control characters or hidden formatting characters"
             }
       | otherwise ->
           Right (Just value)
 
+isUnsafePaymentTextChar :: Char -> Bool
+isUnsafePaymentTextChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 validatePaymentMethod :: Text -> Either ServerError PaymentMethod
 validatePaymentMethod rawMethod
-  | T.any isControl rawMethod =
-      Left err400 { errBody = "paymentMethod must not contain control characters" }
+  | T.any isUnsafePaymentTextChar rawMethod =
+      Left err400
+        { errBody =
+            "paymentMethod must not contain control characters or hidden formatting characters"
+        }
   | otherwise =
       case normalized of
         "cash" -> Right CashM
@@ -2297,14 +3657,26 @@ validatePaymentMethod rawMethod
             "paymentMethod must be one of: cash, bank_transfer, bank, transferencia, produbanco, card, paypal, stripe, wompi, payphone, crypto, other"
         }
 
-validatePaymentCurrency :: Text -> Either ServerError Text
-validatePaymentCurrency rawCurrency =
-  let normalized = T.toUpper (T.strip rawCurrency)
-  in if T.any isControl rawCurrency
-       then Left err400 { errBody = "currency must not contain control characters" }
-     else if normalized == "USD"
-       then Right normalized
-       else Left err400 { errBody = "Only USD manual payments are currently supported" }
+validatePaymentCurrency :: [Text] -> Text -> Either ServerError Text
+validatePaymentCurrency supported rawCurrency =
+  let trimmed = T.strip rawCurrency
+  in if T.any isUnsafePaymentTextChar rawCurrency
+       then Left err400
+         { errBody = "currency must not contain control characters or hidden formatting characters"
+         }
+     else if T.null trimmed
+       then Left err400 { errBody = "currency is required" }
+     else case normalizeCurrencyCode trimmed of
+       Nothing -> Left err400 { errBody = "currency must be a valid ISO 4217 code" }
+       Just normalized
+         | normalized `elem` supported -> Right normalized
+         | otherwise -> Left err400
+             { errBody =
+                 BL.fromStrict $
+                   TE.encodeUtf8 $
+                     "Unsupported currency. Supported currencies: "
+                       <> T.intercalate ", " supported
+             }
 
 validatePaymentAttachmentUrl :: Maybe Text -> Either ServerError (Maybe Text)
 validatePaymentAttachmentUrl Nothing = Right Nothing
@@ -2312,11 +3684,32 @@ validatePaymentAttachmentUrl (Just rawUrl) =
   case normalizeOptionalTextField (Just rawUrl) of
     Nothing -> Right Nothing
     Just attachmentUrl
-      | "https://" `T.isPrefixOf` T.toLower attachmentUrl
-          && TrialsServer.isValidHttpUrl attachmentUrl ->
-          Right (Just attachmentUrl)
+      | T.length attachmentUrl > maxPaymentAttachmentUrlChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict $
+                  TE.encodeUtf8 $
+                    "attachmentUrl must be "
+                      <> T.pack (show maxPaymentAttachmentUrlChars)
+                      <> " characters or fewer"
+            }
+      | not ("https://" `T.isPrefixOf` T.toLower attachmentUrl)
+          || not (TrialsServer.isValidHttpUrl attachmentUrl)
+          || "#" `T.isInfixOf` attachmentUrl ->
+          Left err400
+            { errBody =
+                "attachmentUrl must be an absolute https URL without a fragment"
+            }
+      | TrialsServer.hasAmbiguousPublicUrlPath attachmentUrl ->
+          Left err400
+            { errBody =
+                "attachmentUrl path must not contain empty, dot, or dot-dot segments"
+            }
       | otherwise ->
-          Left err400 { errBody = "attachmentUrl must be an absolute https URL" }
+          Right (Just attachmentUrl)
+
+maxPaymentAttachmentUrlChars :: Int
+maxPaymentAttachmentUrlChars = 2048
 
 data MetaChannel = MetaInstagram | MetaFacebook
   deriving (Eq, Show)
@@ -2388,7 +3781,9 @@ data IGChangeActor = IGChangeActor
 
 instance A.FromJSON IGWebhook where
   parseJSON = withObject "IGWebhook" $ \o -> do
-    igEntries <- o .:? "entry" .!= []
+    igEntries <- o .: "entry"
+    when (null igEntries) $
+      fail "entry must contain at least one item"
     pure IGWebhook{..}
 
 instance A.FromJSON IGEntry where
@@ -2405,7 +3800,7 @@ instance A.FromJSON IGActor where
 
 instance A.FromJSON IGMessage where
   parseJSON = withObject "IGMessage" $ \o -> do
-    igMid <- o .:? "mid"
+    igMid <- o .:? "mid" >>= parseOptionalMetaWebhookExternalId "message.mid"
     igText <- o .:? "text"
     igIsEcho <- o .:? "is_echo"
     igIsDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
@@ -2447,7 +3842,7 @@ instance A.FromJSON IGChangeValue where
     igChangeTimestamp <- parseTimestampMaybe rawTs
     igChangeReferral <- o .:? "referral"
     igChangeDeleted <- o .:? "is_deleted" <|> o .:? "deleted"
-    igChangeMid <- o .:? "mid"
+    igChangeMid <- o .:? "mid" >>= parseOptionalMetaWebhookExternalId "change.mid"
     pure IGChangeValue{..}
 
 instance A.FromJSON IGChangeActor where
@@ -2463,13 +3858,27 @@ parseTimestampMaybe (Just raw) =
   case raw of
     A.Number n ->
       case Sci.toBoundedInteger n of
-        Just v -> pure (Just v)
+        Just v -> validateTimestampValue v
         Nothing -> fail "Invalid timestamp number"
     A.String txt ->
       case reads (T.unpack (T.strip txt)) of
-        [(v, "")] -> pure (Just v)
+        [(v, "")] -> validateTimestampValue v
         _ -> fail "Invalid timestamp text"
     _ -> fail "Invalid timestamp type"
+  where
+    validateTimestampValue v
+      | v < 0 = fail "Invalid negative timestamp"
+      | otherwise = pure (Just v)
+
+parseOptionalMetaWebhookExternalId :: Text -> Maybe Text -> Parser (Maybe Text)
+parseOptionalMetaWebhookExternalId _ Nothing = pure Nothing
+parseOptionalMetaWebhookExternalId fieldName (Just rawExternalId) =
+  case stripNonEmptyText (Just rawExternalId) of
+    Nothing -> pure Nothing
+    Just externalId ->
+      case validateSocialReplyIdentifier fieldName externalId of
+        Left err -> fail (BL8.unpack (errBody err))
+        Right cleanExternalId -> pure (Just cleanExternalId)
 
 data IGInbound = IGInbound
   { igInboundExternalId :: Text
@@ -2495,15 +3904,27 @@ data MetaInboundEvent
   | MetaInboundDeleted IGInboundDeleted
   deriving (Eq, Show)
 
+validateMetaInboundPayload :: A.Value -> Either ServerError [MetaInboundEvent]
+validateMetaInboundPayload payload =
+  case parseEither A.parseJSON payload of
+    Left parseErr ->
+      Left err400
+        { errBody =
+            BL8.pack ("Invalid Meta webhook payload: " <> parseErr)
+        }
+    Right IGWebhook{igEntries} ->
+      Right (concatMap extractEntry igEntries)
+
 extractMetaInbound :: A.Value -> [MetaInboundEvent]
 extractMetaInbound payload =
-  case parseMaybe A.parseJSON payload of
-    Nothing -> []
-    Just IGWebhook{igEntries} -> concatMap extractEntry igEntries
-  where
-    extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
-      mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
+  case validateMetaInboundPayload payload of
+    Left _ -> []
+    Right events -> events
 
+extractEntry :: IGEntry -> [MetaInboundEvent]
+extractEntry IGEntry{igEntryId, igMessaging, igChanges} =
+  mapMaybe (extractMessagingEvent igEntryId) igMessaging <> mapMaybe (extractChangeEvent igEntryId) igChanges
+  where
     extractMessagingEvent mEntryId IGMessaging{igSender, igRecipient, igMessage, igReferral = eventReferral, igTimestamp} = do
       msg@IGMessage{igMid, igText, igIsEcho, igReferral = msgReferral, igAttachments, igIsDeleted} <- igMessage
       if fromMaybe False igIsDeleted
@@ -2590,7 +4011,7 @@ extractMetaInbound payload =
             , fromMaybe "" meta
             ]
           fallbackId = senderId <> "-" <> toHashText fallbackBase
-          externalId = fromMaybe fallbackId (normalizeMetaWebhookExternalId mMid)
+      externalId <- normalizeMetaWebhookExternalId mMid <|> (fallbackId <$ mTs)
       pure (MetaInboundMessage IGInbound
         { igInboundExternalId = externalId
         , igInboundSenderId = senderId
@@ -2858,24 +4279,46 @@ verifyMetaWebhook
   -> m Text
 verifyMetaWebhook channel mMode mToken mChallenge = do
   Env{envConfig} <- ask
-  either throwError pure $
-    validateMetaWebhookVerifyRequest
-      (metaChannelLabel channel)
-      mMode
-      mChallenge
-      mToken
-      (metaWebhookVerifyTokenCandidates channel envConfig)
+  either throwError pure (validateWithFallback envConfig)
+  where
+    validateWithFallback envConfig =
+      case channel of
+        MetaFacebook ->
+          let primary =
+                validateMetaWebhookVerifyRequest
+                  (metaChannelLabel channel)
+                  mMode
+                  mChallenge
+                  mToken
+                  [facebookMessagingToken envConfig]
+          in case primary of
+              Right challenge -> Right challenge
+              Left err
+                | errHTTPCode err == 403 ->
+                    validateMetaWebhookVerifyRequest
+                      (metaChannelLabel channel)
+                      mMode
+                      mChallenge
+                      mToken
+                      [instagramVerifyToken envConfig]
+                | otherwise -> Left err
+        MetaInstagram ->
+          validateMetaWebhookVerifyRequest
+            (metaChannelLabel channel)
+            mMode
+            mChallenge
+            mToken
+            (metaWebhookVerifyTokenCandidates channel envConfig)
 
 metaWebhookVerifyTokenCandidates :: MetaChannel -> AppConfig -> [Maybe Text]
 metaWebhookVerifyTokenCandidates channel cfg =
   case channel of
     MetaInstagram ->
       [ instagramVerifyToken cfg
-      , instagramMessagingToken cfg
-      , instagramAppToken cfg
       ]
     MetaFacebook ->
       [ facebookMessagingToken cfg
+      , instagramVerifyToken cfg
       ]
 
 validateMetaWebhookVerifyRequest
@@ -2886,7 +4329,7 @@ validateMetaWebhookVerifyRequest
   -> [Maybe Text]
   -> Either ServerError Text
 validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedCandidates =
-  case validateConfiguredMetaVerifyToken expectedCandidates of
+  case validateConfiguredMetaVerifyTokens expectedCandidates of
     Left err ->
       Left err
     Right expected ->
@@ -2906,10 +4349,15 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just provided
-                      | T.any isControl provided ->
+                      | T.any isUnsafeMetaVerifyTokenChar provided ->
                           Left err400
-                            { errBody = "hub.verify_token must not contain control characters" }
-                      | provided == expected -> Right challengeVal
+                            { errBody = "hub.verify_token must not contain whitespace or control characters" }
+                      | T.any isHiddenMetaWebhookTextChar provided ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must not contain hidden formatting characters"
+                            }
+                      | provided `elem` expected -> Right challengeVal
                       | otherwise ->
                           Left err403
                             { errBody =
@@ -2919,14 +4367,18 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
         Just _ ->
           Left err400 { errBody = "hub.mode must be subscribe" }
   where
-    validateConfiguredMetaVerifyToken :: [Maybe Text] -> Either ServerError Text
-    validateConfiguredMetaVerifyToken candidates =
-      case listToMaybe (mapMaybe nonBlankText candidates) of
-        Nothing ->
+    validateConfiguredMetaVerifyTokens :: [Maybe Text] -> Either ServerError [Text]
+    validateConfiguredMetaVerifyTokens candidates =
+      case mapMaybe nonBlankText candidates of
+        [] ->
           Left err403 { errBody = "Meta verify token not configured" }
-        Just expected
-          | T.any isControl expected ->
+        expected
+          | any (T.any isUnsafeMetaVerifyTokenChar) expected ->
               Left err403 { errBody = "Meta verify token is misconfigured" }
+          | any (T.any isHiddenMetaWebhookTextChar) expected ->
+              Left err403 { errBody = "Meta verify token is misconfigured" }
+          | length (Set.fromList expected) > 1 ->
+              Left err403 { errBody = "Meta verify token candidates conflict" }
           | otherwise ->
               Right expected
 
@@ -2942,8 +4394,18 @@ validateMetaWebhookVerifyRequest platformLabel mMode mChallenge mToken expectedC
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isSpace challenge =
+          Left err400 { errBody = "hub.challenge must not contain whitespace" }
+      | T.any isHiddenMetaWebhookTextChar challenge =
+          Left err400
+            { errBody = "hub.challenge must not contain hidden formatting characters" }
       | otherwise =
           Right challenge
+
+    isUnsafeMetaVerifyTokenChar ch = isSpace ch || isControl ch
+
+    isHiddenMetaWebhookTextChar ch =
+      generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 instagramWebhookServer
   :: ( MonadIO m
@@ -2958,14 +4420,18 @@ instagramWebhookServer =
     verifyWebhook mMode mToken mChallenge =
       verifyMetaWebhook MetaInstagram mMode mToken mChallenge
 
-    handleWebhook payload = do
-      Env{..} <- ask
+    handleWebhook mSignature rawBody = do
+      Env{envConfig, envPool} <- ask
+      either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
+      payload <- case A.eitherDecode rawBody of
+        Left parseErr -> throwError err400 { errBody = BL8.pack ("Invalid JSON body: " <> parseErr) }
+        Right val -> pure val
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
-      let incoming = extractMetaInbound payload
+      incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr (A.encode payload)
+        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
       pure NoContent
 
@@ -2982,14 +4448,18 @@ facebookWebhookServer =
     verifyWebhook mMode mToken mChallenge =
       verifyMetaWebhook MetaFacebook mMode mToken mChallenge
 
-    handleWebhook payload = do
-      Env{..} <- ask
+    handleWebhook mSignature rawBody = do
+      Env{envConfig, envPool} <- ask
+      either throwError pure (verifyMetaWebhookSignature (facebookAppSecret envConfig) mSignature rawBody)
+      payload <- case A.eitherDecode rawBody of
+        Left parseErr -> throwError err400 { errBody = BL8.pack ("Invalid JSON body: " <> parseErr) }
+        Right val -> pure val
       now <- liftIO getCurrentTime
       channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
-      let incoming = extractMetaInbound payload
+      incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
         hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr (A.encode payload)
+        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
       pure NoContent
 
@@ -3015,11 +4485,19 @@ instagramServer user =
       recipient <- either throwError pure (validateSocialReplySenderId (IG.irSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (IG.irExternalId req))
       body <- either throwError pure (validateSocialReplyBody (IG.irMessage req))
+      mReplyTarget <-
+        liftIO $
+          flip runSqlPool envPool $
+            case mExternalId of
+              Nothing -> pure Nothing
+              Just extId -> getBy (M.UniqueInstagramMessage extId)
+      _ <- either throwError pure $
+        validateInstagramReplyTarget recipient mExternalId mReplyTarget
       (mTargetAccountId, mTargetAccessToken) <-
         liftIO $
           flip runSqlPool envPool $
             resolveInstagramReplyContext mExternalId
-      sendResult <- liftIO $ sendInstagramTextWithContext envConfig mTargetAccessToken mTargetAccountId recipient body
+      sendResult <- liftIO $ sendInstagramTextWithContextAndTag envConfig mTargetAccessToken mTargetAccountId recipient body (Just "HUMAN_AGENT")
       let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
         insert_ (M.InstagramMessage (recipient <> "-out-" <> T.pack (show now))
@@ -3136,6 +4614,14 @@ facebookServer user =
       recipient <- either throwError pure (validateSocialReplySenderId (FB.frSenderId req))
       mExternalId <- either throwError pure (validateSocialReplyExternalId (FB.frExternalId req))
       body <- either throwError pure (validateSocialReplyBody (FB.frMessage req))
+      mReplyTarget <-
+        liftIO $
+          flip runSqlPool envPool $
+            case mExternalId of
+              Nothing -> pure Nothing
+              Just extId -> getBy (ME.UniqueFacebookMessage extId)
+      _ <- either throwError pure $
+        validateFacebookReplyTarget recipient mExternalId mReplyTarget
       sendResult <- liftIO $ sendFacebookText envConfig recipient body
       let (replyStatusValue, replyErrorValue) = socialReplyOutcomeFields sendResult
       liftIO $ flip runSqlPool envPool $ do
@@ -3427,13 +4913,28 @@ resolveMetaSenderLabels cfg channel senderIds = do
   case mToken of
     Nothing -> pure Map.empty
     Just tok -> do
-      manager <- newManager tlsManagerSettings
-      let uniqueIds = take 25 (Set.toList (Set.fromList (map T.strip senderIds)))
+      manager <- pure sharedTlsManager
+      let uniqueIds = normalizeMetaSenderLabelIds senderIds
       pairs <- mapM (\sid -> do
         mLabel <- fetchMetaProfileLabel manager base tok channel sid
         pure (sid, mLabel)
         ) uniqueIds
       pure $ Map.fromList [ (sid, label) | (sid, Just label) <- pairs, not (T.null (T.strip label)) ]
+
+maxMetaSenderLabelIds :: Int
+maxMetaSenderLabelIds = 25
+
+normalizeMetaSenderLabelIds :: [Text] -> [Text]
+normalizeMetaSenderLabelIds =
+  take maxMetaSenderLabelIds . go Set.empty
+  where
+    go _ [] = []
+    go seen (rawSenderId : rest)
+      | T.null senderId = go seen rest
+      | senderId `Set.member` seen = go seen rest
+      | otherwise = senderId : go (Set.insert senderId seen) rest
+      where
+        senderId = T.strip rawSenderId
 
 validateSocialLimit :: Maybe Int -> Either ServerError Int
 validateSocialLimit Nothing = Right 100
@@ -3446,7 +4947,8 @@ validateSocialReplySenderId :: Text -> Either ServerError Text
 validateSocialReplySenderId rawSenderId =
   case normalizeOptionalTextField (Just rawSenderId) of
     Nothing -> Left err400 { errBody = "senderId is required" }
-    Just senderId -> validateSocialReplyIdentifier "senderId" senderId
+    Just senderId ->
+      validateSocialReplyGraphNodeId =<< validateSocialReplyIdentifier "senderId" senderId
 
 validateSocialReplyExternalId :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialReplyExternalId Nothing = Right Nothing
@@ -3454,6 +4956,68 @@ validateSocialReplyExternalId (Just rawExternalId) =
   case normalizeOptionalTextField (Just rawExternalId) of
     Nothing -> Left err400 { errBody = "externalId must be omitted or a non-empty string" }
     Just externalId -> Just <$> validateSocialReplyIdentifier "externalId" externalId
+
+validateInstagramReplyTarget
+  :: Text
+  -> Maybe Text
+  -> Maybe (Entity M.InstagramMessage)
+  -> Either ServerError (Maybe (Entity M.InstagramMessage))
+validateInstagramReplyTarget =
+  validateMetaReplyTarget
+    "Instagram"
+    M.instagramMessageDirection
+    M.instagramMessageSenderId
+    M.instagramMessageDeletedAt
+
+validateFacebookReplyTarget
+  :: Text
+  -> Maybe Text
+  -> Maybe (Entity ME.FacebookMessage)
+  -> Either ServerError (Maybe (Entity ME.FacebookMessage))
+validateFacebookReplyTarget =
+  validateMetaReplyTarget
+    "Facebook"
+    ME.facebookMessageDirection
+    ME.facebookMessageSenderId
+    ME.facebookMessageDeletedAt
+
+validateMetaReplyTarget
+  :: Text
+  -> (record -> Text)
+  -> (record -> Text)
+  -> (record -> Maybe UTCTime)
+  -> Text
+  -> Maybe Text
+  -> Maybe (Entity record)
+  -> Either ServerError (Maybe (Entity record))
+validateMetaReplyTarget _ _ _ _ _ Nothing _ = Right Nothing
+validateMetaReplyTarget channelLabel getDirection getSenderId getDeletedAt recipient (Just _) mTarget =
+  case mTarget of
+    Nothing ->
+      Left err404
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 (channelLabel <> " reply target not found"))
+        }
+    Just target@(Entity _ row)
+      | isJust (getDeletedAt row) ->
+          Left err404
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 (channelLabel <> " reply target not found"))
+            }
+      | getDirection row /= "incoming" ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (channelLabel <> " reply target must be an incoming message"))
+            }
+      | normalizeMetaWebhookActorId (getSenderId row) /= Just recipient ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 (channelLabel <> " reply target does not match recipient"))
+            }
+      | otherwise ->
+          Right (Just target)
 
 validateSocialReplyBody :: Text -> Either ServerError Text
 validateSocialReplyBody rawBody
@@ -3463,6 +5027,8 @@ validateSocialReplyBody rawBody
       Left err400 { errBody = "message must be 4096 characters or fewer" }
   | T.any isUnsupportedMessageControl body =
       Left err400 { errBody = "message must not contain unsupported control characters" }
+  | T.any isHiddenSocialReplyBodyChar body =
+      Left err400 { errBody = "message must not contain hidden formatting characters" }
   | otherwise =
       Right body
   where
@@ -3475,6 +5041,10 @@ isUnsupportedMessageControl :: Char -> Bool
 isUnsupportedMessageControl ch =
   isControl ch && ch `notElem` ("\n\r\t" :: String)
 
+isHiddenSocialReplyBodyChar :: Char -> Bool
+isHiddenSocialReplyBodyChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 validateSocialReplyIdentifier :: Text -> Text -> Either ServerError Text
 validateSocialReplyIdentifier fieldName value
   | T.any isSpace value =
@@ -3483,6 +5053,18 @@ validateSocialReplyIdentifier fieldName value
   | T.any isControl value =
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must not contain control characters")) }
+  | T.any isHiddenSocialReplyIdentifierChar value =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must not contain hidden formatting characters"))
+        }
+  | T.any (not . isAscii) value =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must contain only ASCII characters"))
+        }
   | T.length value > 256 =
       Left err400
         { errBody =
@@ -3491,6 +5073,32 @@ validateSocialReplyIdentifier fieldName value
         }
   | otherwise =
       Right value
+
+validateSocialReplyGraphNodeId :: Text -> Either ServerError Text
+validateSocialReplyGraphNodeId senderId
+  | not (T.any isGraphNodeIdAtom senderId)
+      || T.any (not . isGraphNodeIdChar) senderId =
+      Left err400
+        { errBody =
+            "senderId must be a Graph node id using only ASCII letters, numbers, "
+              <> "'.', '_' or '-' with at least one letter or number"
+        }
+  | otherwise =
+      Right senderId
+
+isGraphNodeIdChar :: Char -> Bool
+isGraphNodeIdChar ch =
+  isGraphNodeIdAtom ch || ch `elem` ("._-" :: String)
+
+isGraphNodeIdAtom :: Char -> Bool
+isGraphNodeIdAtom ch =
+  (ch >= 'a' && ch <= 'z')
+    || (ch >= 'A' && ch <= 'Z')
+    || (ch >= '0' && ch <= '9')
+
+isHiddenSocialReplyIdentifierChar :: Char -> Bool
+isHiddenSocialReplyIdentifierChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 socialReplyOutcomeFields :: Either Text a -> (Text, Maybe Text)
 socialReplyOutcomeFields sendResult =

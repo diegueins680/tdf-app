@@ -40,6 +40,9 @@ export interface AssetCheckoutRequest {
   coPaymentType?: string | null;
   coPaymentInstallments?: number | null;
   coPaymentReference?: string | null;
+  coPaymentAmount?: string | null;
+  coPaymentCurrency?: string | null;
+  coPaymentOutstanding?: string | null;
   coPhotoUrl?: string | null;
   coDueAt?: string | null;
   coConditionOut?: string | null;

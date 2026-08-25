@@ -55,6 +55,7 @@ const renderPrimaryStream = (source: NormalizedStreamingSource, posterUrl?: stri
         playsInline
         sx={{ width: '100%', borderRadius: 1.5, bgcolor: 'background.default' }}
       >
+        {/* Placeholder for future captions — no src until subtitles are available */}
         <track kind="captions" />
         Tu navegador no soporta la reproducción de video.
       </Box>
@@ -149,6 +150,7 @@ export function StreamingPlayer({
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`${source.label} (abre en nueva pestaña)`}
             >
               {source.label}
             </Button>

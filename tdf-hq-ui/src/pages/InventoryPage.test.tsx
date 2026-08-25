@@ -122,6 +122,24 @@ const buildCheckoutHistoryEntry = (overrides: Partial<AssetCheckoutDTO> = {}): A
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => (cell.textContent ?? '').trim() === labelText);
 
+const countOccurrencesIgnoringCase = (value: string, fragment: string) =>
+  value.toLocaleLowerCase().split(fragment.toLocaleLowerCase()).length - 1;
+
+const getRowTextByAssetName = (root: ParentNode, assetName: string) => {
+  const row = Array.from(root.querySelectorAll<HTMLTableRowElement>('tbody tr')).find(
+    (tableRow) => (tableRow.textContent ?? '').includes(assetName),
+  );
+
+  if (!row) throw new Error(`Row not found for asset ${assetName}`);
+
+  return row.textContent ?? '';
+};
+
+const countButtonsByAriaLabel = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLButtonElement>('button')).filter(
+    (button) => button.getAttribute('aria-label') === labelText,
+  ).length;
+
 const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabel: string) => {
   await act(async () => {
     const actionsButton = container.querySelector<HTMLButtonElement>(
@@ -140,6 +158,17 @@ const openSingleAssetSecondaryAction = async (container: HTMLElement, actionLabe
       (item) => (item.textContent ?? '').trim() === actionLabel,
     );
     menuItem?.click();
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
+const setInputValue = async (input: HTMLInputElement, value: string) => {
+  await act(async () => {
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    nativeValueSetter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
     await flushPromises();
     await flushPromises();
   });
@@ -177,7 +206,37 @@ describe('InventoryPage', () => {
     historyMock.mockResolvedValue([]);
   });
 
-  it('replaces the blank inventory table with first-run guidance when there are no assets', async () => {
+  it('keeps the initial inventory load to one clear state before table actions appear', async () => {
+    listAssetsMock.mockImplementation(() => new Promise(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Cargando inventario');
+        expect(container.textContent).toContain(
+          'Estamos consultando equipos antes de mostrar búsqueda, actualización o tabla operativa.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(false);
+        expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
+        expect(container.textContent).not.toContain('Primeros pasos');
+        expect(container.textContent).not.toContain('No se pudo cargar inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces the blank inventory table and detached refresh chrome with one first-run reload path when there are no assets', async () => {
     listAssetsMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -186,16 +245,97 @@ describe('InventoryPage', () => {
 
     try {
       await waitForExpectation(() => {
+        const emptyState = container.querySelector<HTMLElement>('[data-testid="inventory-first-run-empty-state"]');
+
+        expect(emptyState).not.toBeNull();
         expect(container.textContent).toContain('Primeros pasos');
         expect(container.textContent).toContain(
           'Todavía no hay equipos registrados. Cuando exista el primero, aquí verás estado, ubicación, QR e historial para operar check-out y check-in desde una sola fila.',
         );
-        expect(container.textContent).toContain(
-          'Si estás esperando la carga inicial del inventario, usa Actualizar para volver a consultar sin revisar una tabla vacía.',
+        expect(container.textContent).not.toContain(
+          'Si estás esperando la carga inicial del inventario, vuelve a consultar desde aquí sin revisar una tabla vacía.',
         );
+        expect(
+          Array.from(emptyState!.querySelectorAll('p')).filter(
+            (paragraph) => (paragraph.textContent ?? '').trim().length > 0,
+          ),
+        ).toHaveLength(1);
         expect(container.querySelector('table')).toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Volver a consultar inventario',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toHaveLength(0);
+      });
+
+      const initialCallCount = listAssetsMock.mock.calls.length;
+      expect(initialCallCount).toBeGreaterThan(0);
+
+      await act(async () => {
+        const reloadButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Volver a consultar inventario',
+        );
+        reloadButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock.mock.calls.length).toBeGreaterThan(initialCallCount);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps an initial inventory load failure attached to one retry path', async () => {
+    listAssetsMock
+      .mockRejectedValueOnce(new Error('inventory unavailable'))
+      .mockResolvedValueOnce([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar inventario.');
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Reintentar inventario',
+          ),
+        ).toHaveLength(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).filter(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toHaveLength(0);
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Primeros pasos');
+      });
+
+      const initialCallCount = listAssetsMock.mock.calls.length;
+
+      await act(async () => {
+        const retryButton = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+          (button) => (button.textContent ?? '').trim() === 'Reintentar inventario',
+        );
+        retryButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(container.textContent).toContain('Primeros pasos');
+        expect(container.textContent).not.toContain('Reintentar inventario');
       });
     } finally {
       await cleanup();
@@ -223,6 +363,11 @@ describe('InventoryPage', () => {
         expect(hasTableHeader(container, 'Acciones')).toBe(false);
         expect(
           Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
         ).toBe(true);
@@ -233,7 +378,7 @@ describe('InventoryPage', () => {
         ).toBe(true);
         expect(
           Array.from(container.querySelectorAll('button')).some(
-            (button) => (button.textContent ?? '').trim() === 'Ver QR',
+            (button) => (button.textContent ?? '').trim() === 'QR y enlace público',
           ),
         ).toBe(false);
         expect(
@@ -252,7 +397,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('collapses the single-asset QR, link, and history actions into one secondary menu so the movement stays primary', async () => {
+  it('keeps QR sharing behind one clearer entry point so the secondary menu does not duplicate copy-link actions', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -275,9 +420,30 @@ describe('InventoryPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Ver QR');
-        expect(document.body.textContent).toContain('Copiar enlace');
+        expect(document.body.textContent).toContain('QR y enlace público');
         expect(document.body.textContent).toContain('Historial');
+        expect(
+          Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).some(
+            (item) => (item.textContent ?? '').trim() === 'Copiar enlace',
+          ),
+        ).toBe(false);
+      });
+
+      await act(async () => {
+        const qrMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'QR y enlace público',
+        );
+        qrMenuItem?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('QR y enlace público');
+        expect(document.body.textContent).toContain('Enlace público');
+        expect(document.body.textContent).toContain('Copiar enlace');
+        expect(document.body.textContent).not.toContain('Token:');
+        expect(document.body.textContent).not.toContain('qr-1');
       });
     } finally {
       await cleanup();
@@ -303,6 +469,46 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Estado: Disponible');
         expect(container.textContent).not.toContain('Ubicación:');
         expect(container.textContent).not.toContain('Condición:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses single-asset checkout detail into one custody summary plus contact', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: ' grace@example.com ',
+        currentCheckoutHolderPhone: ' 0999999999 ',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+        currentCheckoutPaymentType: 'card',
+        currentCheckoutPaymentInstallments: 2,
+        currentCheckoutPaymentAmountCents: 250000,
+        currentCheckoutPaymentCurrency: 'USD',
+        currentCheckoutPaymentOutstandingCents: 50000,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain('Primer equipo registrado');
+        expect(text).toContain('Tenencia actual: Grace Hopper');
+        expect(text).toContain('Contexto: Alquiler');
+        expect(text).toContain('Salida:');
+        expect(text).toContain('Retorno pactado:');
+        expect(text).toContain('Pago: Tarjeta');
+        expect(text).toContain('Contacto: grace@example.com · 0999999999');
+        expect(text).not.toContain('Tiene:');
+        expect(text).not.toContain('Movimiento:');
       });
     } finally {
       await cleanup();
@@ -340,7 +546,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('keeps repeated table actions compact by naming the secondary row menu after QR and history', async () => {
+  it('keeps repeated table secondary actions compact as an icon-only menu with one guidance line', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset(),
       buildAsset({
@@ -364,6 +570,9 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain(
           'Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
         );
+        expect(container.textContent).toContain(
+          'El botón de más opciones de cada fila agrupa QR e historial.',
+        );
         expect(container.textContent).not.toContain('Abre Acciones para ver QR o historial.');
         expect(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).toHaveLength(2);
         expect(container.querySelector('button[aria-label="Abrir QR de Neumann U87"]')).toBeNull();
@@ -372,7 +581,12 @@ describe('InventoryPage', () => {
           Array.from(container.querySelectorAll('button')).filter(
             (button) => (button.textContent ?? '').trim() === 'QR e historial',
           ),
-        ).toHaveLength(2);
+        ).toHaveLength(0);
+        expect(
+          Array.from(container.querySelectorAll('button[aria-label^="Abrir QR, enlace e historial de "]')).every(
+            (button) => (button.textContent ?? '').trim() === '',
+          ),
+        ).toBe(true);
         expect(
           Array.from(container.querySelectorAll('button')).some(
             (button) => (button.textContent ?? '').trim() === 'Acciones',
@@ -394,8 +608,9 @@ describe('InventoryPage', () => {
       });
 
       await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('Ver QR');
+        expect(document.body.textContent).toContain('QR y enlace público');
         expect(document.body.textContent).toContain('Historial');
+        expect(document.body.textContent).not.toContain('Copiar enlace');
       });
     } finally {
       await cleanup();
@@ -430,6 +645,437 @@ describe('InventoryPage', () => {
     }
   });
 
+  it('turns refresh into one disabled progress cue while inventory refetches', async () => {
+    let resolveRefresh: ((assets: AssetDTO[]) => void) | undefined;
+    const refreshedAssets = [
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ];
+
+    listAssetsMock
+      .mockResolvedValueOnce(refreshedAssets)
+      .mockImplementationOnce(() => new Promise<AssetDTO[]>((resolve) => {
+        resolveRefresh = resolve;
+      }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const findButton = (label: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => (button.textContent ?? '').trim() === label,
+    ) ?? null;
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+      });
+
+      await act(async () => {
+        findButton('Actualizar')?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const refreshingButton = findButton('Actualizando…');
+
+        expect(refreshingButton).not.toBeNull();
+        expect(refreshingButton?.disabled).toBe(true);
+        expect(findButton('Actualizar')).toBeNull();
+        expect(container.querySelector('table')).not.toBeNull();
+      });
+
+      await act(async () => {
+        resolveRefresh?.(refreshedAssets);
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const refreshButton = findButton('Actualizar');
+
+        expect(refreshButton).not.toBeNull();
+        expect(refreshButton?.disabled).toBe(false);
+        expect(findButton('Actualizando…')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the visible inventory controls when a refresh fails after data loaded', async () => {
+    const visibleAssets = [
+      buildAsset(),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        status: 'Booked',
+      }),
+    ];
+    listAssetsMock
+      .mockResolvedValueOnce(visibleAssets)
+      .mockRejectedValueOnce(new Error('refresh unavailable'));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    const findButton = (label: string) => Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => (button.textContent ?? '').trim() === label,
+    ) ?? null;
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+      });
+
+      await act(async () => {
+        findButton('Actualizar')?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(listAssetsMock).toHaveBeenCalledTimes(2);
+        expect(container.textContent).toContain('No se pudo cargar inventario.');
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(findButton('Actualizar')).not.toBeNull();
+        expect(findButton('Reintentar inventario')).toBeNull();
+        expect(container.textContent).not.toContain('Primeros pasos');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('collapses a single filtered inventory match into the focused summary card before falling back to the empty-search reset path', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Genelec 8040',
+        category: 'Monitor',
+        location: 'Bodega',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).toContain('Genelec 8040');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'grace');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Mostrando 1 de 3 equipos.');
+        expect(container.textContent).toContain('Resultado único');
+        expect(container.textContent).toContain(
+          'Tu búsqueda ya dejó un solo equipo visible. Revisa estado, ubicación y el siguiente movimiento desde este resumen.',
+        );
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).not.toContain('Neumann U87');
+        expect(container.textContent).not.toContain('Genelec 8040');
+        expect(container.querySelector('[aria-label="Abrir check-in de Apollo Twin"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir QR, enlace e historial de Apollo Twin"]')).not.toBeNull();
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
+      });
+
+      await setInputValue(searchInput!, 'zzzz');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Mostrando 0 de 3 equipos.');
+        expect(container.textContent).toContain('Sin coincidencias');
+        expect(container.textContent).toContain(
+          'No encontramos equipos que coincidan con tu búsqueda. Ajusta o limpia el término desde el campo de arriba para volver a la vista completa.',
+        );
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
+      });
+
+      await act(async () => {
+        const clearButton = container.querySelector<HTMLButtonElement>('button[aria-label="Volver a la tabla completa"]');
+        clearButton?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(container.textContent).not.toContain('Mostrando 0 de 3 equipos.');
+        expect(container.textContent).toContain('Neumann U87');
+        expect(container.textContent).toContain('Apollo Twin');
+        expect(container.textContent).toContain('Genelec 8040');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the lighter clear-search chrome only while a filtered inventory table still has multiple matches', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Genelec 8040',
+        category: 'Monitor',
+        location: 'Bodega',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'sala');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Mostrando 2 de 3 equipos.');
+        expect(container.textContent).not.toContain('Resultado único');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Limpiar búsqueda')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Limpiar búsqueda',
+          ),
+        ).toBe(false);
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the inventory search placeholder focused on fields that can narrow the current table', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: null,
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: ' micrófono ',
+        location: '   ',
+        condition: ' excelente ',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+
+        expect(searchInput).not.toBeNull();
+        expect(searchInput?.getAttribute('placeholder')).toBe('Equipo');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('categoría');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('ubicación');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('condición');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('estado');
+        expect(searchInput?.getAttribute('placeholder')).not.toContain('tenencia');
+        expect(container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent).toContain(
+          'estado Disponible',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('matches unaccented category searches against accented inventory labels instead of showing an empty state', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: ' micrófono ',
+        location: 'Sala B',
+        condition: 'Bueno',
+        status: 'Retired',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Interfaz Uno',
+        category: 'Interfaz',
+        location: 'Sala C',
+        condition: 'Regular',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Retirado Uno');
+        expect(container.textContent).toContain('Interfaz Uno');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'microfono');
+
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Mostrando 2 de 3 equipos.');
+        expect(container.textContent).toContain(
+          'Mostrando una sola categoría: Micrófono. La categoría volverá cuando esta vista mezcle categorías distintas.',
+        );
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Retirado Uno');
+        expect(container.textContent).not.toContain('Interfaz Uno');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the empty-search recovery attached to the field instead of duplicating clear or refresh actions', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Neumann U87',
+        category: 'Micrófono',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Apollo Twin',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('input[aria-label="Buscar en inventario"]')).not.toBeNull();
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(true);
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      expect(searchInput).not.toBeNull();
+
+      await setInputValue(searchInput!, 'sin-match');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Actualizar',
+          ),
+        ).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides the empty location column until at least one asset has a registered location', async () => {
     listAssetsMock.mockResolvedValue([
       buildAsset({
@@ -454,6 +1100,8 @@ describe('InventoryPage', () => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
         expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(true);
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(false);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).toContain(
@@ -462,11 +1110,293 @@ describe('InventoryPage', () => {
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(5);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
       });
     } finally {
       await cleanup();
+    }
+  });
+
+  it('combines repeated shared-column guidance into one summary when the visible inventory already matches on several fields', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: ' micrófono ',
+        location: 'sala a',
+        condition: ' excelente ',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent?.trim()).toBe(
+          'Se ocultaron columnas porque toda esta vista coincide en estado Disponible, categoría Micrófono, ubicación Sala A y condición Excelente. Volverán cuando esta vista mezcle valores distintos.',
+        );
+        expect(text).not.toContain('Mostrando un solo estado:');
+        expect(text).not.toContain('Mostrando una sola categoría:');
+        expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(text).not.toContain('Mostrando una sola condición:');
+        expect(countOccurrencesIgnoringCase(text, 'Se ocultaron columnas porque toda esta vista coincide en')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Disponible')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Excelente')).toBe(1);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(2);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes one shared location once and restores the location column when assets diverge again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+        condition: 'Excelente',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'sala a',
+        condition: 'Bueno',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola ubicación: Sala A. La columna volverá cuando esta vista mezcle ubicaciones distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola ubicación: Sala A.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Sala A')).toBe(1);
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(false);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Retired',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola ubicación:');
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(secondContainer, 'Estado')).toBe(true);
+        expect(hasTableHeader(secondContainer, 'Ubicación')).toBe(true);
+        expect(text).toContain('Sala A');
+        expect(text).toContain('Sala B');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('summarizes one shared category once and restores row categories when the visible inventory mix changes', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: ' micrófono ',
+        location: 'Sala B',
+        status: 'Retired',
+        condition: 'Bueno',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola categoría: Micrófono. La categoría volverá cuando esta vista mezcle categorías distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola categoría: Micrófono.')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'Micrófono')).toBe(1);
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.textContent).not.toContain('Micrófono');
+        expect(rows[1]?.textContent).not.toContain('Micrófono');
+        expect(rows[0]?.textContent).toContain('Condición: Excelente');
+        expect(rows[1]?.textContent).toContain('Condición: Bueno');
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Retired',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola categoría:');
+        expect(text).not.toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(text).toContain('Micrófono');
+        expect(text).toContain('Interfaz');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('summarizes one shared status once and restores the status column when the visible inventory mixes states again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        category: 'Interfaz',
+        location: 'Sala B',
+        condition: 'Bueno',
+        status: ' active ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando un solo estado: Disponible. La columna volverá cuando esta vista mezcle estados distintos.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando un solo estado: Disponible.')).toBe(1);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando un solo estado:');
+        expect(hasTableHeader(secondContainer, 'Estado')).toBe(true);
+      });
+    } finally {
+      await secondRender.cleanup();
     }
   });
 
@@ -492,19 +1422,240 @@ describe('InventoryPage', () => {
       await waitForExpectation(() => {
         expect(container.querySelector('table')).not.toBeNull();
         expect(hasTableHeader(container, 'Equipo')).toBe(true);
-        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
         expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
         expect(hasTableHeader(container, 'Salida')).toBe(false);
         expect(hasTableHeader(container, 'Ubicación')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).toContain(
-          'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo. Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.',
+          'Quién lo tiene y desde cuándo aparecerán en la tabla cuando al menos un equipo tenga un check-out activo. Usa check-out para registrar la siguiente salida.',
         );
 
         const rows = Array.from(container.querySelectorAll('tbody tr'));
         expect(rows).toHaveLength(2);
-        expect(rows[0]?.querySelectorAll('td')).toHaveLength(4);
-        expect(rows[1]?.querySelectorAll('td')).toHaveLength(4);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('compresses current custody details into one scan-friendly summary line plus contact', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        location: 'Sala A',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        location: 'Sala B',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+        currentCheckoutPaymentType: 'card',
+        currentCheckoutPaymentInstallments: 2,
+        currentCheckoutPaymentAmountCents: 250000,
+        currentCheckoutPaymentCurrency: 'USD',
+        currentCheckoutPaymentOutstandingCents: 50000,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(hasTableHeader(container, 'Estado')).toBe(true);
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(true);
+        expect(hasTableHeader(container, 'Salida')).toBe(false);
+        expect(hasTableHeader(container, 'Ubicación')).toBe(true);
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(5);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(5);
+
+        const custodyCell = rows[1]?.querySelectorAll('td')[2];
+        const captionTexts = Array.from(custodyCell?.querySelectorAll('span') ?? [])
+          .map((node) => (node.textContent ?? '').trim())
+          .filter(Boolean);
+        expect(custodyCell?.textContent).toContain('Grace Hopper');
+        expect(captionTexts).toContain('grace@example.com');
+        expect(captionTexts.some(
+          (text) => text.includes('Alquiler')
+            && text.includes('Salida:')
+            && text.includes('Retorno pactado:')
+            && text.includes('Pago: Tarjeta'),
+        )).toBe(true);
+        expect(captionTexts).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('matches visible custody contact through the existing search instead of sending admins to empty recovery', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        currentCheckoutTarget: 'Ada Lovelace',
+        currentCheckoutHolderEmail: 'ada@example.com',
+        currentCheckoutAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+
+        expect(searchInput).not.toBeNull();
+        expect(searchInput?.getAttribute('placeholder')).toBe('Equipo o tenencia');
+        expect(container.textContent).toContain('Prestado Uno');
+        expect(container.textContent).toContain('Prestado Dos');
+      });
+
+      const searchInput = container.querySelector<HTMLInputElement>('input[aria-label="Buscar en inventario"]');
+      await setInputValue(searchInput!, 'grace@example.com');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Resultado único');
+        expect(container.textContent).toContain('Prestado Dos');
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain('grace@example.com');
+        expect(container.textContent).not.toContain('Prestado Uno');
+        expect(container.textContent).not.toContain('Sin coincidencias');
+        expect(countButtonsByAriaLabel(container, 'Volver a la tabla completa')).toBe(1);
+        expect(
+          Array.from(container.querySelectorAll('button')).some(
+            (button) => (button.textContent ?? '').trim() === 'Volver a la tabla completa',
+          ),
+        ).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('combines shared custody and status into one helper line so busy inventory views explain hidden columns once', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        category: 'Micrófono',
+        status: 'Booked',
+        location: 'Sala A',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        category: 'Interfaz',
+        status: 'Booked',
+        location: 'Sala B',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutDisposition: 'rental',
+        currentCheckoutHolderEmail: 'grace@example.com',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+        currentCheckoutDueAt: '2030-01-05T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        const sharedSummary = container.querySelector('[data-testid="inventory-shared-columns-summary"]')?.textContent ?? '';
+        expect(sharedSummary).toContain('Se ocultaron columnas porque toda esta vista coincide en');
+        expect(sharedSummary).toContain('estado Prestado');
+        expect(sharedSummary).toContain('condición Excelente');
+        expect(sharedSummary).toContain('tenencia actual Grace Hopper');
+        expect(sharedSummary).toContain('Alquiler');
+        expect(sharedSummary).toContain('Salida:');
+        expect(sharedSummary).toContain('Retorno pactado:');
+        expect(sharedSummary).toContain('grace@example.com');
+        expect(sharedSummary).toContain('Volverán cuando esta vista mezcle valores distintos.');
+        expect(container.querySelector('[data-testid="inventory-shared-checkout-summary"]')).toBeNull();
+        expect(text).not.toContain('Mostrando una sola tenencia actual:');
+        expect(text).not.toContain('Mostrando un solo estado:');
+        expect(hasTableHeader(container, 'Tenencia actual')).toBe(false);
+        expect(hasTableHeader(container, 'Estado')).toBe(false);
+        expect(countOccurrencesIgnoringCase(text, 'Grace Hopper')).toBe(1);
+        expect(countOccurrencesIgnoringCase(text, 'grace@example.com')).toBe(1);
+        expect(getRowTextByAssetName(container, 'Prestado Uno')).not.toContain('Grace Hopper');
+        expect(getRowTextByAssetName(container, 'Prestado Dos')).not.toContain('Grace Hopper');
+
+        const rows = Array.from(container.querySelectorAll('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(rows[0]?.querySelectorAll('td')).toHaveLength(3);
+        expect(rows[1]?.querySelectorAll('td')).toHaveLength(3);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('matches the table guidance to check-in only rows so first-time admins do not look for missing check-out controls', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Prestado Uno',
+        status: 'Booked',
+        currentCheckoutTarget: 'Ada Lovelace',
+        currentCheckoutAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Prestado Dos',
+        status: 'Booked',
+        currentCheckoutTarget: 'Grace Hopper',
+        currentCheckoutAt: '2030-01-03T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).not.toBeNull();
+        expect(container.textContent).toContain('Usa check-in para registrar el siguiente retorno.');
+        expect(container.textContent).not.toContain('Usa check-out o check-in cuando esté disponible para registrar el siguiente movimiento.');
+        expect(container.textContent).not.toContain('Usa check-out para registrar la siguiente salida.');
+        expect(container.querySelector('[aria-label="Abrir check-in de Prestado Uno"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Prestado Uno"]')).toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-in de Prestado Dos"]')).not.toBeNull();
+        expect(container.querySelector('[aria-label="Abrir check-out de Prestado Dos"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -517,7 +1668,9 @@ describe('InventoryPage', () => {
       buildAsset({
         assetId: 'asset-2',
         name: 'Apollo Twin',
+        category: 'Interfaz',
         status: 'Booked',
+        condition: 'Bueno',
       }),
     ]);
 
@@ -533,6 +1686,121 @@ describe('InventoryPage', () => {
         expect(container.textContent).toContain('Neumann U87');
         expect(container.textContent).toContain('Micrófono');
         expect(container.textContent).toContain('Condición: Excelente');
+        expect(container.textContent).toContain('Condición: Bueno');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes one shared condition once and restores row detail when the visible inventory conditions diverge again', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        condition: ' excelente ',
+        status: 'Retired',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const text = container.textContent ?? '';
+        expect(text).toContain(
+          'Mostrando una sola condición: Excelente. El detalle volverá cuando esta vista mezcle condiciones distintas.',
+        );
+        expect(countOccurrencesIgnoringCase(text, 'Mostrando una sola condición: Excelente.')).toBe(1);
+        expect(getRowTextByAssetName(container, 'Activo Uno')).not.toContain('Condición:');
+        expect(getRowTextByAssetName(container, 'Retirado Uno')).not.toContain('Condición:');
+        expect(countOccurrencesIgnoringCase(text, 'Condición:')).toBe(1);
+      });
+    } finally {
+      await cleanup();
+    }
+
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        category: 'Micrófono',
+        location: 'Sala A',
+        condition: 'Excelente',
+        status: 'Active',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Retirado Uno',
+        category: 'Interfaz',
+        location: 'Sala B',
+        condition: 'Bueno',
+        status: 'Retired',
+      }),
+    ]);
+
+    const secondContainer = document.createElement('div');
+    document.body.appendChild(secondContainer);
+    const secondRender = await renderPage(secondContainer);
+
+    try {
+      await waitForExpectation(() => {
+        const text = secondContainer.textContent ?? '';
+        expect(text).not.toContain('Mostrando una sola condición:');
+        expect(getRowTextByAssetName(secondContainer, 'Activo Uno')).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(secondContainer, 'Retirado Uno')).toContain('Condición: Bueno');
+      });
+    } finally {
+      await secondRender.cleanup();
+    }
+  });
+
+  it('hides empty condition labels in table rows so busy inventory views only show real metadata', async () => {
+    listAssetsMock.mockResolvedValue([
+      buildAsset({
+        assetId: 'asset-1',
+        name: 'Activo Uno',
+        condition: 'Excelente',
+      }),
+      buildAsset({
+        assetId: 'asset-2',
+        name: 'Activo Dos',
+        condition: '   ',
+      }),
+      buildAsset({
+        assetId: 'asset-3',
+        name: 'Activo Tres',
+        condition: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasTableHeader(container, 'Equipo')).toBe(true);
+        expect(container.textContent).toContain('Activo Uno');
+        expect(container.textContent).toContain('Activo Dos');
+        expect(container.textContent).toContain('Activo Tres');
+        expect(container.textContent).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(container, 'Activo Uno')).toContain('Condición: Excelente');
+        expect(getRowTextByAssetName(container, 'Activo Dos')).not.toContain('Condición:');
+        expect(getRowTextByAssetName(container, 'Activo Tres')).not.toContain('Condición:');
+        expect(countOccurrencesIgnoringCase(container.textContent ?? '', 'Condición:')).toBe(1);
       });
     } finally {
       await cleanup();
@@ -592,7 +1860,7 @@ describe('InventoryPage', () => {
     }
   });
 
-  it('turns an empty history request into one dismissible panel instead of a silent no-op', async () => {
+  it('turns an empty history request into one dismissible panel and hides the duplicate history menu action', async () => {
     historyMock.mockResolvedValue([]);
 
     const container = document.createElement('div');
@@ -616,6 +1884,22 @@ describe('InventoryPage', () => {
       });
 
       await act(async () => {
+        const actionsButton = container.querySelector<HTMLButtonElement>(
+          'button[aria-label="Abrir QR, enlace e historial de Neumann U87"]',
+        );
+        actionsButton?.click();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const menuItems = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+        expect(menuItems.map((item) => (item.textContent ?? '').trim())).toEqual(['QR y enlace público']);
+        expect(document.body.textContent).not.toContain('Historial abierto aquí abajo');
+      });
+
+      expect(historyMock).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
         const hideButton = Array.from(container.querySelectorAll('button')).find(
           (button) => (button.textContent ?? '').trim() === 'Ocultar historial',
         );
@@ -636,7 +1920,13 @@ describe('InventoryPage', () => {
 
   it('keeps checkout history inside the checkout flow until the admin explicitly opens the standalone history panel', async () => {
     historyMock.mockResolvedValue([
-      buildCheckoutHistoryEntry(),
+      buildCheckoutHistoryEntry({
+        paymentType: 'card',
+        paymentInstallments: 3,
+        paymentAmountCents: 250000,
+        paymentCurrency: 'USD',
+        paymentOutstandingCents: 50000,
+      }),
     ]);
 
     const container = document.createElement('div');
@@ -667,6 +1957,9 @@ describe('InventoryPage', () => {
         expect(historyMock).toHaveBeenCalledTimes(2);
         expect(container.textContent).toContain('Historial · Neumann U87');
         expect(container.textContent).toContain('Uso en grabación.');
+        expect(container.textContent).toContain('Tarjeta');
+        expect(container.textContent).toContain('3 cuotas');
+        expect(container.textContent).toContain('saldo');
       });
     } finally {
       await cleanup();

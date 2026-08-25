@@ -11,7 +11,16 @@ import           Control.Exception      (SomeException, displayException, throwI
 import           Control.Monad          (forM, forM_, unless, void, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Int               (Int64)
-import           Data.Char              (isAlphaNum, isAsciiLower, isControl, isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  , generalCategory
+  , isAlphaNum
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isHexDigit
+  , isSpace
+  )
 import           Data.Maybe             (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, maybeToList)
 import qualified Data.Map.Strict        as Map
 import qualified Data.Set               as Set
@@ -32,13 +41,18 @@ import           Servant.Server.Experimental.Auth (AuthHandler)
 import           Database.Persist.Sql hiding (loadConfig)
 
 import           TDF.Auth             (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
+import qualified TDF.Catalog.Models   as Catalog
+import           TDF.Catalog.Security
+  ( applySecurityRoleAssignmentPolicy
+  , hasCanonicalPartyRole
+  , selectCanonicalPartyIdsByRole
+  )
 import           TDF.Config          (loadConfig)
 import           TDF.Models          ( Party(..)
                                       , PartyId
                                       , ResourceId
                                       , partyDisplayName
                                       , RoleEnum(..)
-                                      , PartyRole(..)
                                       )
 import qualified TDF.Models          as Models
 import qualified TDF.Email           as Email
@@ -55,6 +69,24 @@ statusRequested, statusAssigned, statusScheduled :: Text
 statusRequested = "Requested"
 statusAssigned  = "Assigned"
 statusScheduled = "Scheduled"
+
+requireAutomaticSecurityPolicy
+  :: Text
+  -> PartyId
+  -> Maybe PartyId
+  -> Text
+  -> Text
+  -> UTCTime
+  -> AppM ()
+requireAutomaticSecurityPolicy policyCode partyKey actorId sourcePlatform correlationId now = do
+  result <- applySecurityRoleAssignmentPolicy
+    policyCode partyKey False actorId sourcePlatform correlationId now
+  case result of
+    Right _ -> pure ()
+    Left message ->
+      liftIO $ throwIO err503
+        { errBody = BL8.fromStrict (TE.encodeUtf8 message)
+        }
 
 entityKeyInt :: ToBackendKey SqlBackend record => Key record -> Int
 entityKeyInt = fromIntegral . fromSqlKey
@@ -82,8 +114,16 @@ isValidEmail candidate =
         && not (T.isPrefixOf "." domain)
         && not (T.isSuffixOf "." domain)
         && T.isInfixOf "." domain
+        && hasValidEmailFinalDomainLabel domain
         && all isValidEmailDomainLabel (T.splitOn "." domain)
     _ -> False
+
+hasValidEmailFinalDomainLabel :: Text -> Bool
+hasValidEmailFinalDomainLabel domain =
+  case reverse (T.splitOn "." domain) of
+    finalLabel : _ ->
+      T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+    [] -> False
 
 maxPublicEmailChars :: Int
 maxPublicEmailChars = 254
@@ -91,10 +131,14 @@ maxPublicEmailChars = 254
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
   not (T.null localPart)
+    && T.length localPart <= maxPublicEmailLocalPartChars
     && not (T.isPrefixOf "." localPart)
     && not (T.isSuffixOf "." localPart)
     && not (".." `T.isInfixOf` localPart)
     && T.all isValidEmailLocalChar localPart
+
+maxPublicEmailLocalPartChars :: Int
+maxPublicEmailLocalPartChars = 64
 
 isValidEmailLocalChar :: Char -> Bool
 isValidEmailLocalChar c =
@@ -103,9 +147,13 @@ isValidEmailLocalChar c =
 isValidEmailDomainLabel :: Text -> Bool
 isValidEmailDomainLabel label =
   not (T.null label)
+    && T.length label <= maxPublicEmailDomainLabelChars
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidEmailDomainChar label
+
+maxPublicEmailDomainLabelChars :: Int
+maxPublicEmailDomainLabelChars = 63
 
 isValidEmailDomainChar :: Char -> Bool
 isValidEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
@@ -158,6 +206,7 @@ normalizePhone raw =
       firstDigitIndex = T.findIndex isDigit trimmed
       allowedPhoneChar ch =
         isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+      hasUnsafeChars = T.any isUnsafePhoneChar raw
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -170,10 +219,17 @@ normalizePhone raw =
     if T.null onlyDigits
         || digitCount < 8
         || digitCount > 15
+        || hasUnsafeChars
         || hasInvalidChars
         || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isUnsafePhoneChar :: Char -> Bool
+isUnsafePhoneChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
 
 validateOptionalPhone :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPhone Nothing = Right Nothing
@@ -470,14 +526,16 @@ validatePublicTrialPartyId (Just _) =
   Left err400 { errBody = "partyId is not allowed on public trial requests" }
 
 validatePublicTrialRequestInput :: TrialRequestIn -> Either ServerError TrialRequestIn
-validatePublicTrialRequestInput (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
+validatePublicTrialRequestInput
+  (TrialRequestIn rawPartyId rawSubjectId preferredSlots rawNotes rawFullName rawEmail rawPhone) = do
   validatePublicTrialPartyId rawPartyId
   subjectIdVal <- validatePublicSubjectIdInput rawSubjectId
+  preferredVal <- validatePreferredSlots preferredSlots
   fullNameVal <- validateOptionalPublicTextField "fullName" 160 rawFullName
   notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
   emailVal <- validateRequiredEmail rawEmail
   phoneVal <- validateOptionalPhone rawPhone
-  Right (TrialRequestIn Nothing subjectIdVal preferredSlots notesVal fullNameVal (Just emailVal) phoneVal)
+  Right (TrialRequestIn Nothing subjectIdVal preferredVal notesVal fullNameVal (Just emailVal) phoneVal)
 
 validateOptionalPublicTextField :: Text -> Int -> Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalPublicTextField fieldName maxChars rawValue =
@@ -486,11 +544,23 @@ validateOptionalPublicTextField fieldName maxChars rawValue =
       Right Nothing
     Just value
       | T.length value > maxChars ->
-          Left (badRequestText (fieldName <> " must be 1-" <> T.pack (show maxChars) <> " characters"))
-      | T.any isControl value ->
-          Left (badRequestText (fieldName <> " must not contain control characters"))
+          Left
+            (badRequestText
+              (fieldName <> " must be 1-" <> T.pack (show maxChars) <> " characters"))
+      | T.any invalidPublicTextChar value ->
+          Left (badRequestText (publicTextCharacterMessage fieldName))
       | otherwise ->
           Right (Just value)
+
+invalidPublicTextChar :: Char -> Bool
+invalidPublicTextChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
+publicTextCharacterMessage :: Text -> Text
+publicTextCharacterMessage fieldName =
+  fieldName <> " must not contain control characters, hidden formatting characters, or Unicode space lookalikes"
 
 validatePublicSignupInput :: SignupIn -> Either ServerError SignupIn
 validatePublicSignupInput
@@ -532,8 +602,10 @@ validatePublicSignupNamePart fieldName rawName =
        else if T.length nameVal > 120
        then Left err400 { errBody = fieldLabel <> " must be 120 characters or fewer" }
        else
-         if T.any isControl nameVal
-           then Left err400 { errBody = fieldLabel <> " must not contain control characters" }
+         if T.any invalidPublicTextChar nameVal
+           then
+             Left err400
+               { errBody = BL8.pack (T.unpack (publicTextCharacterMessage fieldName)) }
            else Right nameVal
 
 validatePublicSubjectIdInput :: Int -> Either ServerError Int
@@ -543,19 +615,32 @@ validatePublicSubjectIdInput subjectIdInt
   | otherwise =
       Right subjectIdInt
 
+validatePublicTrialSlotsSubjectId :: Maybe Int -> Either ServerError Int
+validatePublicTrialSlotsSubjectId Nothing =
+  Left err400 { errBody = "subjectId is required for public trial slots" }
+validatePublicTrialSlotsSubjectId (Just subjectIdInt) =
+  validatePublicSubjectIdInput subjectIdInt
+
 validateTeacherSubjectIdsInput :: [Int] -> Either ServerError [Int]
 validateTeacherSubjectIdsInput rawSubjectIds
   | any (<= 0) rawSubjectIds =
       Left err400 { errBody = "subjectIds must contain only positive integers" }
+  | length rawSubjectIds /= Set.size (Set.fromList rawSubjectIds) =
+      Left err400 { errBody = "subjectIds must not contain duplicates" }
   | otherwise =
-      Right (dedupeSubjectIds rawSubjectIds)
-  where
-    dedupeSubjectIds = go Set.empty
+      Right rawSubjectIds
 
-    go _ [] = []
-    go seen (subjectIdInt:rest)
-      | subjectIdInt `Set.member` seen = go seen rest
-      | otherwise = subjectIdInt : go (Set.insert subjectIdInt seen) rest
+validateTeacherStudentTeacherIdInput :: Int -> Either ServerError Int
+validateTeacherStudentTeacherIdInput =
+  validatePositiveIntField "teacherId"
+
+validateTeacherStudentLinkInput :: Int -> Int -> Either ServerError (Int, Int)
+validateTeacherStudentLinkInput rawTeacherId rawStudentId = do
+  teacherIdVal <- validateTeacherStudentTeacherIdInput rawTeacherId
+  studentIdVal <- validatePositiveIntField "studentId" rawStudentId
+  when (teacherIdVal == studentIdVal) $
+    Left (badRequestText "studentId must refer to a different party than teacherId")
+  Right (teacherIdVal, studentIdVal)
 
 validateTrialAssignInput :: Int -> TrialAssignIn -> Either ServerError (Int, TrialAssignIn)
 validateTrialAssignInput requestIdInt input@TrialAssignIn{..}
@@ -578,6 +663,26 @@ validateTrialScheduleInput input@TrialScheduleIn{..}
       Left err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
   | otherwise =
       Right input
+
+validateClassSessionPathId :: Int -> Either ServerError Int
+validateClassSessionPathId =
+  validatePositiveIntField "classSessionId"
+
+validateSubjectPathId :: Int -> Either ServerError Int
+validateSubjectPathId =
+  validatePositiveIntField "subjectId"
+
+validateOptionalClassSessionNotes :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalClassSessionNotes =
+  validateOptionalPublicTextField "notes" 2000
+
+resolveAttendNotesUpdate :: AttendIn -> Either ServerError (Maybe (Maybe Text))
+resolveAttendNotesUpdate AttendIn{..} =
+  case notes of
+    Nothing ->
+      Right Nothing
+    Just rawNotes ->
+      Just <$> validateOptionalClassSessionNotes (Just rawNotes)
 
 badRequestText :: Text -> ServerError
 badRequestText message =
@@ -655,6 +760,89 @@ validateAvailabilityIdInput :: Int -> Either ServerError Int
 validateAvailabilityIdInput =
   validatePositiveIntField "availabilityId"
 
+validateTrialAvailabilityUpsertInput
+  :: TrialAvailabilityUpsert
+  -> Either ServerError TrialAvailabilityUpsert
+validateTrialAvailabilityUpsertInput
+  ( TrialAvailabilityUpsert
+      rawAvailabilityId
+      rawSubjectId
+      rawRoomId
+      rawStartAt
+      rawEndAt
+      rawNotes
+      rawTeacherId
+  ) = do
+    availabilityIdVal <- traverse validateAvailabilityIdInput rawAvailabilityId
+    subjectIdVal <- validatePositiveIntField "subjectId" rawSubjectId
+    roomIdVal <- validateAvailabilityRoomIdInput rawRoomId
+    teacherIdVal <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+    notesVal <- validateOptionalPublicTextField "notes" 2000 rawNotes
+    when (rawStartAt >= rawEndAt) $
+      Left err400 { errBody = "La hora de fin debe ser posterior al inicio." }
+    Right
+      (TrialAvailabilityUpsert
+        availabilityIdVal
+        subjectIdVal
+        roomIdVal
+        rawStartAt
+        rawEndAt
+        notesVal
+        teacherIdVal)
+
+validateAvailabilityRoomIdInput :: Text -> Either ServerError Text
+validateAvailabilityRoomIdInput rawRoomId =
+  let normalized = T.strip rawRoomId
+      invalid = Left err400 { errBody = "roomId must be a positive integer" }
+  in if T.null normalized
+       || not (T.all isDigit normalized)
+       || (T.length normalized > 1 && T.head normalized == '0')
+       then invalid
+       else case readMaybe (T.unpack normalized) :: Maybe Int64 of
+         Just value | value > 0 -> Right normalized
+         _ -> invalid
+
+validateClassSessionListFilters
+  :: Maybe Int
+  -> Maybe Int
+  -> Maybe Int
+  -> Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> Either ServerError (Maybe Int, Maybe Int, Maybe Int, Maybe UTCTime, Maybe UTCTime, Maybe Text)
+validateClassSessionListFilters rawSubjectId rawTeacherId rawStudentId mFrom mTo rawStatus = do
+  subjectId <- traverse (validatePositiveIntField "subjectId") rawSubjectId
+  teacherId <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+  studentId <- traverse (validatePositiveIntField "studentId") rawStudentId
+  statusFilter <- validateOptionalClassSessionStatusFilter rawStatus
+  case (mFrom, mTo) of
+    (Just fromTs, Just toTs)
+      | fromTs > toTs ->
+          Left err400 { errBody = "from must be on or before to" }
+    _ -> pure ()
+  Right (subjectId, teacherId, studentId, mFrom, mTo, statusFilter)
+
+normalizeClassSessionStatusFilter :: Text -> Maybe Text
+normalizeClassSessionStatusFilter rawStatus =
+  case T.toLower (T.strip rawStatus) of
+    "programada" -> Just "programada"
+    "por-confirmar" -> Just "por-confirmar"
+    "realizada" -> Just "realizada"
+    "cancelada" -> Just "cancelada"
+    _ -> Nothing
+
+validateOptionalClassSessionStatusFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateOptionalClassSessionStatusFilter Nothing = Right Nothing
+validateOptionalClassSessionStatusFilter (Just rawStatus) =
+  case cleanOptional (Just rawStatus) of
+    Nothing -> Right Nothing
+    Just statusVal ->
+      case normalizeClassSessionStatusFilter statusVal of
+        Just normalized -> Right (Just normalized)
+        Nothing ->
+          Left err400
+            { errBody = "status must be one of: programada, por-confirmar, realizada, cancelada" }
+
 validateTeacherClassesFilters
   :: Int
   -> Maybe Int
@@ -666,19 +854,99 @@ validateTeacherClassesFilters rawTeacherId rawSubjectId mFrom mTo = do
   (subjectId, fromTs, toTs) <- validateAvailabilityListFilters rawSubjectId mFrom mTo
   Right (teacherId, subjectId, fromTs, toTs)
 
+validateCommissionListFilters
+  :: Maybe UTCTime
+  -> Maybe UTCTime
+  -> Maybe Int
+  -> Either ServerError (Maybe UTCTime, Maybe UTCTime, Maybe Int)
+validateCommissionListFilters mFrom mTo rawTeacherId = do
+  teacherId <- traverse (validatePositiveIntField "teacherId") rawTeacherId
+  case (mFrom, mTo) of
+    (Just fromTs, Just toTs)
+      | fromTs > toTs ->
+          Left err400 { errBody = "from must be on or before to" }
+    _ -> pure ()
+  Right (mFrom, mTo, teacherId)
+
 validateOptionalDriveLink :: Maybe Text -> Either ServerError (Maybe Text)
 validateOptionalDriveLink Nothing = Right Nothing
 validateOptionalDriveLink (Just rawDriveLink) =
   case cleanOptional (Just rawDriveLink) of
     Nothing -> Right Nothing
     Just driveLinkVal ->
-      if "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
-        then Right (Just driveLinkVal)
-        else Left err400 { errBody = "driveLink must be an absolute https URL" }
+      if T.length driveLinkVal > maxPublicDriveLinkChars
+        then Left err400 { errBody = "driveLink must be 2048 characters or fewer" }
+        else if T.any (== '#') driveLinkVal
+          then Left err400 { errBody = "driveLink must not contain URL fragments" }
+        else if not (isValidPublicDriveLinkUrl driveLinkVal)
+          then Left err400 { errBody = "driveLink must be an absolute https URL" }
+        else if hasAmbiguousPublicUrlPath driveLinkVal
+          then Left err400
+            { errBody =
+                "driveLink path must not contain empty, dot, or dot-dot segments "
+                  <> "or encoded separators"
+            }
+        else
+          Right (Just driveLinkVal)
+
+maxPublicDriveLinkChars :: Int
+maxPublicDriveLinkChars = 2048
+
+isValidPublicDriveLinkUrl :: Text -> Bool
+isValidPublicDriveLinkUrl driveLinkVal =
+  "https://" `T.isPrefixOf` T.toLower driveLinkVal && isValidHttpUrl driveLinkVal
+
+hasAmbiguousPublicUrlPath :: Text -> Bool
+hasAmbiguousPublicUrlPath rawUrl =
+  any isAmbiguousPathSegment pathSegments
+  where
+    lowerUrl = T.toLower rawUrl
+    noScheme
+      | "https://" `T.isPrefixOf` lowerUrl = T.drop 8 rawUrl
+      | "http://" `T.isPrefixOf` lowerUrl = T.drop 7 rawUrl
+      | otherwise = rawUrl
+    pathWithQueryOrFragment =
+      T.dropWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') noScheme
+    path =
+      case T.uncons pathWithQueryOrFragment of
+        Just ('/', _) ->
+          T.takeWhile (\ch -> ch /= '?' && ch /= '#') pathWithQueryOrFragment
+        _ ->
+          ""
+    trimmedPath = T.dropWhileEnd (== '/') path
+    pathSegments =
+      if T.null trimmedPath
+        then []
+        else T.splitOn "/" (T.drop 1 trimmedPath)
+    isAmbiguousPathSegment segment =
+      segment == ""
+        || decodedSegment == "."
+        || decodedSegment == ".."
+        || hasEncodedPathSeparator segment
+      where
+        decodedSegment = decodeUrlEncodedDots (T.toLower segment)
+
+    hasEncodedPathSeparator segment =
+      "%2f" `T.isInfixOf` loweredSegment
+        || "%5c" `T.isInfixOf` loweredSegment
+      where
+        loweredSegment = T.toLower segment
+
+    decodeUrlEncodedDots txt =
+      case T.uncons txt of
+        Nothing -> ""
+        Just ('%', rest)
+          | "2e" `T.isPrefixOf` rest ->
+              "." <> decodeUrlEncodedDots (T.drop 2 rest)
+          | otherwise ->
+              "%" <> decodeUrlEncodedDots rest
+        Just (ch, rest) ->
+          T.singleton ch <> decodeUrlEncodedDots rest
 
 isValidHttpUrl :: Text -> Bool
 isValidHttpUrl rawUrl
   | T.any invalidUrlChar trimmed = False
+  | hasMalformedPercentEncoding trimmed = False
   | "http://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 7 trimmed)
   | "https://" `T.isPrefixOf` lowerUrl = hasValidAuthority (T.drop 8 trimmed)
   | otherwise = False
@@ -686,7 +954,22 @@ isValidHttpUrl rawUrl
     trimmed = T.strip rawUrl
     lowerUrl = T.toLower trimmed
 
-    invalidUrlChar ch = isSpace ch || isControl ch
+    invalidUrlChar ch =
+      isSpace ch
+        || isControl ch
+        || ch == '\\'
+        || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+    hasMalformedPercentEncoding url =
+      case T.breakOn "%" url of
+        (_, rest)
+          | T.null rest -> False
+          | otherwise ->
+              case T.unpack (T.take 3 rest) of
+                ['%', firstHex, secondHex]
+                  | isHexDigit firstHex && isHexDigit secondHex ->
+                      hasMalformedPercentEncoding (T.drop 3 rest)
+                _ -> True
 
     hasValidAuthority remainder =
       let authority = T.takeWhile (\c -> c /= '/' && c /= '?' && c /= '#') remainder
@@ -695,12 +978,9 @@ isValidHttpUrl rawUrl
     validateAuthority rawAuthority
       | T.null rawAuthority = False
       | T.any (== '@') rawAuthority = False
+      -- Public lead drive links should be DNS-backed URLs, not IP literals.
       | "[" `T.isPrefixOf` rawAuthority =
-          let (hostPart, rest) = T.breakOn "]" rawAuthority
-              host = T.drop 1 hostPart
-          in not (T.null rest)
-               && validateBracketedHost host
-               && validatePortSuffix (T.drop 1 rest)
+          False
       | T.count ":" rawAuthority > 1 = False
       | otherwise =
           let (host, portSuffix) = T.breakOn ":" rawAuthority
@@ -712,16 +992,12 @@ isValidHttpUrl rawUrl
         && not (T.isPrefixOf "." normalizedHost)
         && not (T.isSuffixOf "." normalizedHost)
         && not (isAmbiguousNumericHost normalizedHost)
+        && hasValidEmailFinalDomainLabel normalizedHost
         && all isValidEmailDomainLabel (T.splitOn "." normalizedHost)
+        && not (looksLikeNonDecimalIpv4 normalizedHost)
         && not (looksLikeInvalidIpv4 normalizedHost)
         && not (requiresExplicitPublicHostname normalizedHost)
         && not (isPrivateHost normalizedHost)
-
-    validateBracketedHost host =
-      not (T.null host)
-        && T.any (== ':') host
-        && T.all (`elem` ("0123456789abcdefABCDEF:." :: String)) host
-        && not (isPrivateHost (T.toLower host))
 
     validatePortSuffix suffix
       | T.null suffix = True
@@ -729,6 +1005,7 @@ isValidHttpUrl rawUrl
           let port = T.drop 1 suffix
           in not (T.null port)
                && T.all isDigit port
+               && not (T.length port > 1 && T.head port == '0')
                && maybe False (\portNumber -> portNumber >= (1 :: Int) && portNumber <= 65535)
                     (readMaybe (T.unpack port))
       | otherwise = False
@@ -756,6 +1033,23 @@ isValidHttpUrl rawUrl
         [a, b, c, d]
           | all isNumericLabel [a, b, c, d] -> isNothing (parseIpv4Octets host)
         _ -> False
+
+    looksLikeNonDecimalIpv4 host =
+      case T.splitOn "." host of
+        [a, b, c, d] ->
+          let labels = [a, b, c, d]
+          in any isHexIpv4Label labels && all isIpv4LiteralLikeLabel labels
+        _ -> False
+
+    isIpv4LiteralLikeLabel label =
+      isNumericLabel label || isHexIpv4Label label
+
+    isHexIpv4Label label =
+      let lowerLabel = T.toLower label
+          digitsOnly = T.drop 2 lowerLabel
+      in "0x" `T.isPrefixOf` lowerLabel
+           && not (T.null digitsOnly)
+           && T.all isHexDigit digitsOnly
 
     isAmbiguousNumericHost host =
       T.all (\c -> isDigit c || c == '.') host
@@ -819,12 +1113,20 @@ validatePublicInterestType rawInterestType =
     Nothing ->
       Left err400 { errBody = "interestType is required" }
     Just interestTypeVal
+      | T.toLower interestTypeVal `elem` reservedPublicInterestTypes ->
+          Left err400 { errBody = "interestType is reserved for system-managed lead flows" }
       | T.length interestTypeVal > 80 ->
           Left err400 { errBody = "interestType must be 1-80 characters" }
-      | T.any isControl interestTypeVal ->
-          Left err400 { errBody = "interestType must not contain control characters" }
+      | T.any invalidPublicTextChar interestTypeVal ->
+          Left (badRequestText (publicTextCharacterMessage "interestType"))
       | otherwise ->
           Right interestTypeVal
+
+reservedPublicInterestTypes :: [Text]
+reservedPublicInterestTypes =
+  [ "signup"
+  , "ad_inquiry"
+  ]
 
 validatePublicInterestDetails :: Maybe Text -> Either ServerError (Maybe Text)
 validatePublicInterestDetails rawDetails =
@@ -834,8 +1136,8 @@ validatePublicInterestDetails rawDetails =
     Just detailsVal
       | T.length detailsVal > 2000 ->
           Left err400 { errBody = "details must be 1-2000 characters" }
-      | T.any isControl detailsVal ->
-          Left err400 { errBody = "details must not contain control characters" }
+      | T.any invalidPublicTextChar detailsVal ->
+          Left (badRequestText (publicTextCharacterMessage "details"))
       | otherwise ->
           Right (Just detailsVal)
 
@@ -971,8 +1273,8 @@ publicTrialsServer =
     publicSubjectsH = listActiveSubjects
 
     publicSlotsH :: Maybe Int -> AppM [TrialSlotDTO]
-    publicSlotsH Nothing = pure []
-    publicSlotsH (Just subjectIdInt) = do
+    publicSlotsH rawSubjectId = do
+      subjectIdInt <- either (liftIO . throwIO) pure (validatePublicTrialSlotsSubjectId rawSubjectId)
       _ <- requirePublicActiveSubject subjectIdInt
       trialSlotsForSubject (Just subjectIdInt)
 
@@ -994,11 +1296,10 @@ createOrFetchParty :: Maybe Text -> Maybe Text -> Maybe Text -> UTCTime -> AppM 
 createOrFetchParty mName mEmail mPhone now = do
   emailVal <- either (liftIO . throwIO) pure (validateRequiredEmail mEmail)
   phoneVal <- either (liftIO . throwIO) pure (validateOptionalPhone mPhone)
-  let
-      display = fromMaybe emailVal (cleanOptional mName)
-  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just emailVal] []
-  case mExisting of
-    Just (Entity pid party) -> do
+  display <- either (liftIO . throwIO) pure (validatePublicLeadDisplayName mName emailVal)
+  existing <- selectList [Models.PartyPrimaryEmail ==. Just emailVal] [LimitTo 2]
+  case existing of
+    [Entity pid party] -> do
       let updates = catMaybes
             [ if isJust (partyPrimaryPhone party) || isNothing phoneVal then Nothing else Just (Models.PartyPrimaryPhone =. phoneVal)
             , if isJust (partyWhatsapp party) || isNothing phoneVal then Nothing else Just (Models.PartyWhatsapp =. phoneVal)
@@ -1007,7 +1308,7 @@ createOrFetchParty mName mEmail mPhone now = do
       unless (null updates) $
         update pid updates
       pure pid
-    Nothing -> insert Party
+    [] -> insert Party
       { partyLegalName       = Nothing
       , partyDisplayName     = display
       , partyIsOrg           = False
@@ -1018,8 +1319,21 @@ createOrFetchParty mName mEmail mPhone now = do
       , partyInstagram       = Nothing
       , partyEmergencyContact = Nothing
       , partyNotes           = Nothing
+      , partyStripeCustomerId = Nothing
+      , partyCountryCode      = Nothing
+      , partyCountryId        = Nothing
       , partyCreatedAt       = now
       }
+    _ ->
+      liftIO $ throwIO err409 { errBody = "Multiple parties match this email" }
+
+validatePublicLeadDisplayName :: Maybe Text -> Text -> Either ServerError Text
+validatePublicLeadDisplayName rawName fallbackEmail =
+  fromMaybe fallbackEmail
+    <$> validateOptionalPublicTextField "displayName" maxPublicLeadDisplayNameChars rawName
+
+maxPublicLeadDisplayNameChars :: Int
+maxPublicLeadDisplayNameChars = 160
 
 composeFullName :: Text -> Text -> Maybe Text
 composeFullName firstName lastName =
@@ -1030,15 +1344,25 @@ composeFullName firstName lastName =
 publicLeadFallbackEmail :: Text
 publicLeadFallbackEmail = "public-interest@tdf.local"
 
+publicLeadFallbackDisplayName :: Text
+publicLeadFallbackDisplayName = "Public Trial Interest"
+
+publicLeadFallbackNotes :: Text
+publicLeadFallbackNotes = "System fallback party for anonymous public trial interests."
+
 ensurePublicLeadParty :: UTCTime -> AppM PartyId
 ensurePublicLeadParty now = do
-  mExisting <- selectFirst [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
-  case mExisting of
-    Just (Entity partyId _) -> pure partyId
-    Nothing ->
+  existing <- selectList [Models.PartyPrimaryEmail ==. Just publicLeadFallbackEmail] []
+  case existing of
+    [Entity partyId party] -> do
+      validatePublicLeadFallbackPartyId partyId
+      validatePublicLeadFallbackParty party
+      validatePublicLeadFallbackRelations partyId
+      pure partyId
+    [] ->
       insert Party
         { partyLegalName = Nothing
-        , partyDisplayName = "Public Trial Interest"
+        , partyDisplayName = publicLeadFallbackDisplayName
         , partyIsOrg = False
         , partyTaxId = Nothing
         , partyPrimaryEmail = Just publicLeadFallbackEmail
@@ -1046,9 +1370,72 @@ ensurePublicLeadParty now = do
         , partyWhatsapp = Nothing
         , partyInstagram = Nothing
         , partyEmergencyContact = Nothing
-        , partyNotes = Just "System fallback party for anonymous public trial interests."
+        , partyNotes = Just publicLeadFallbackNotes
+        , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
         , partyCreatedAt = now
         }
+    _ ->
+      liftIO $ throwIO err500
+        { errBody = "Anonymous public lead fallback party is ambiguous" }
+
+validatePublicLeadFallbackPartyId :: PartyId -> AppM ()
+validatePublicLeadFallbackPartyId partyId =
+  unless (fromSqlKey partyId > 0) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party id is invalid" }
+
+validatePublicLeadFallbackParty :: Party -> AppM ()
+validatePublicLeadFallbackParty party = do
+  unless (isAnonymousPublicLeadFallback party) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has non-anonymous profile data" }
+  unless (hasPublicLeadFallbackMarkers party) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has unexpected system marker fields" }
+
+isAnonymousPublicLeadFallback :: Party -> Bool
+isAnonymousPublicLeadFallback party =
+  not (partyIsOrg party)
+    && isNothing (partyLegalName party)
+    && isNothing (partyTaxId party)
+    && isNothing (partyPrimaryPhone party)
+    && isNothing (partyWhatsapp party)
+    && isNothing (partyInstagram party)
+    && isNothing (partyEmergencyContact party)
+
+hasPublicLeadFallbackMarkers :: Party -> Bool
+hasPublicLeadFallbackMarkers party =
+  partyDisplayName party == publicLeadFallbackDisplayName
+    && partyPrimaryEmail party == Just publicLeadFallbackEmail
+    && partyNotes party == Just publicLeadFallbackNotes
+
+validatePublicLeadFallbackRelations :: PartyId -> AppM ()
+validatePublicLeadFallbackRelations partyId = do
+  mArtistProfile <- selectFirst [Models.ArtistProfileArtistPartyId ==. partyId] []
+  mNonPublicLeadInterest <-
+    selectFirst
+      [ LeadInterestPartyId ==. partyId
+      , LeadInterestSource !=. "public_interest"
+      ]
+      []
+  mTrialRequest <- selectFirst [TrialRequestPartyId ==. partyId] []
+  mRole <- selectFirst [Catalog.PartySecurityRolePartyId ==. partyId] []
+  mCred <- selectFirst [Models.UserCredentialPartyId ==. partyId] []
+  mToken <- selectFirst [Models.ApiTokenPartyId ==. partyId] []
+  when (isJust mArtistProfile) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has artist profile links" }
+  when (isJust mNonPublicLeadInterest) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has non-public lead interest links" }
+  when (isJust mTrialRequest) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has trial request links" }
+  when (isJust mRole || isJust mCred || isJust mToken) $
+    liftIO $ throwIO err500
+      { errBody = "Anonymous public lead fallback party has account or role links, including API tokens" }
 
 ensureUserAccountForParty :: PartyId -> Maybe Text -> Text -> AppM (Maybe (Text, Text))
 ensureUserAccountForParty partyId mName emailVal = do
@@ -1065,8 +1452,14 @@ ensureUserAccountForParty partyId mName emailVal = do
         , Models.userCredentialPasswordHash = hashed
         , Models.userCredentialActive = True
         }
-      void $ upsert (PartyRole partyId Customer True) [Models.PartyRoleActive =. True]
-      void $ upsert (PartyRole partyId Fan True) [Models.PartyRoleActive =. True]
+      now <- liftIO getCurrentTime
+      requireAutomaticSecurityPolicy
+        "account.generated.customer"
+        partyId
+        Nothing
+        "trial-generated-account"
+        ("trial-generated-account:" <> T.pack (show (fromSqlKey partyId)))
+        now
       pure (Just (username, tempPassword))
 
 privateTrialsServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
@@ -1171,6 +1564,7 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
           ensureTeacherSelection teacherKey
+          ensureTeacherSubject teacherKey (trialRequestSubjectId req)
           update rid
             [ TrialRequestAssignedTeacherId =. Just teacherKey
             , TrialRequestAssignedAt        =. Just now
@@ -1191,6 +1585,7 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing  -> liftIO $ throwIO err404
         Just req -> do
           ensureTeacherSelection teacherK
+          ensureTeacherSubject teacherK (trialRequestSubjectId req)
           ensureSchedulableRoom roomK
           ensureRoomAllowed (trialRequestSubjectId req) roomK
           teacherFree <- teacherAvailableExceptTrialRequest teacherK startAt endAt rid
@@ -1248,13 +1643,14 @@ privateTrialsServer user@AuthedUser{..} =
       pure (map (availabilityEntityToDTO subjectMap teacherMap roomMap) records)
 
     availabilityUpsertH :: TrialAvailabilityUpsert -> AppM TrialAvailabilitySlotDTO
-    availabilityUpsertH TrialAvailabilityUpsert{..} = do
+    availabilityUpsertH rawInput = do
       ensureSchoolAccess
-      when (startAt >= endAt) $
-        liftIO $ throwIO err400 { errBody = "La hora de fin debe ser posterior al inicio." }
+      TrialAvailabilityUpsert{..} <-
+        either (liftIO . throwIO) pure (validateTrialAvailabilityUpsertInput rawInput)
       teacherKey <- resolveTeacherKey teacherId
       let isSelf = teacherKey == auPartyId
       subjectKey <- ensureSubjectExists subjectId
+      ensureTeacherSelection teacherKey
       roomKey <- parseRoomKey roomId
       ensureRoomAllowed subjectKey roomKey
       when (isSelf && not (hasModuleAccess ModuleAdmin user)) $
@@ -1346,7 +1742,9 @@ privateTrialsServer user@AuthedUser{..} =
     updateSubjectH :: Int -> SubjectUpdate -> AppM SubjectDTO
     updateSubjectH subjectIdInt SubjectUpdate{..} = do
       ensureModuleAccess ModuleAdmin
-      let sid = intKey subjectIdInt :: Key Subject
+      subjectIdValue <-
+        either (liftIO . throwIO) pure (validateSubjectPathId subjectIdInt)
+      let sid = intKey subjectIdValue :: Key Subject
       when (maybe False (T.null . T.strip) name) $ liftIO $ throwIO err400 { errBody = "El nombre es obligatorio" }
       mSubject <- get sid
       case mSubject of
@@ -1368,7 +1766,9 @@ privateTrialsServer user@AuthedUser{..} =
     deleteSubjectH :: Int -> AppM NoContent
     deleteSubjectH subjectIdInt = do
       ensureModuleAccess ModuleAdmin
-      let sid = intKey subjectIdInt :: Key Subject
+      subjectIdValue <-
+        either (liftIO . throwIO) pure (validateSubjectPathId subjectIdInt)
+      let sid = intKey subjectIdValue :: Key Subject
       mSubj <- get sid
       case mSubj of
         Nothing -> liftIO $ throwIO err404
@@ -1405,6 +1805,46 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404 { errBody = "Estudiante no encontrado" }
         Just _  -> pure key
 
+    ensureSellerExists :: Int -> AppM PartyId
+    ensureSellerExists sellerIdInt = do
+      let key = intKey sellerIdInt :: PartyId
+      mSeller <- get key
+      case mSeller of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Vendedor no encontrado" }
+        Just _  -> pure key
+
+    ensurePackageExists :: Int -> AppM PackageCatalogId
+    ensurePackageExists packageIdInt = do
+      let key = intKey packageIdInt :: PackageCatalogId
+      mPackage <- get key
+      case mPackage of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Paquete no encontrado" }
+        Just _  -> pure key
+
+    ensurePurchaseTrialRequestExists :: Int -> AppM TrialRequestId
+    ensurePurchaseTrialRequestExists trialRequestIdInt = do
+      let key = intKey trialRequestIdInt :: TrialRequestId
+      mTrialRequest <- get key
+      case mTrialRequest of
+        Nothing -> liftIO $ throwIO err404 { errBody = "Solicitud de prueba no encontrada" }
+        Just _  -> pure key
+
+    ensurePurchaseTrialRequestMatches
+      :: PartyId
+      -> Entity PackageCatalog
+      -> Maybe (Entity TrialRequest)
+      -> AppM ()
+    ensurePurchaseTrialRequestMatches _ _ Nothing = pure ()
+    ensurePurchaseTrialRequestMatches studentKey (Entity _ package) (Just (Entity _ trialRequest)) = do
+      when (trialRequestPartyId trialRequest /= studentKey) $
+        liftIO $
+          throwIO err422
+            { errBody = "La solicitud de prueba debe pertenecer al mismo estudiante que la compra" }
+      when (trialRequestSubjectId trialRequest /= packageCatalogSubjectId package) $
+        liftIO $
+          throwIO err422
+            { errBody = "La solicitud de prueba debe corresponder a la misma materia del paquete" }
+
     ensureBookingExists :: Int -> AppM Models.BookingId
     ensureBookingExists bookingIdInt
       | bookingIdInt <= 0 =
@@ -1422,13 +1862,15 @@ privateTrialsServer user@AuthedUser{..} =
       case mTeacher of
         Nothing -> liftIO $ throwIO err404 { errBody = "Profesor no encontrado" }
         Just _  -> do
-          hasTeacherRole <- recordExists
-            [ Models.PartyRolePartyId ==. teacherKey
-            , Models.PartyRoleRole ==. Teacher
-            , Models.PartyRoleActive ==. True
-            ]
+          hasTeacherRole <- hasCanonicalPartyRole teacherKey Teacher
           unless hasTeacherRole $
             liftIO $ throwIO err422 { errBody = "La persona seleccionada no está registrada como profesor" }
+
+    ensureCommissionTeacherExists :: Int -> AppM PartyId
+    ensureCommissionTeacherExists teacherIdInt = do
+      let teacherKey = intKey teacherIdInt :: PartyId
+      ensureTeacherSelection teacherKey
+      pure teacherKey
 
     ensureSchedulableRoom :: ResourceId -> AppM ()
     ensureSchedulableRoom roomKey = do
@@ -1537,13 +1979,16 @@ privateTrialsServer user@AuthedUser{..} =
     purchaseH rawInput = do
       ensureSchoolStaffAccess
       PurchaseIn{..} <- either (liftIO . throwIO) pure (validatePurchaseInput rawInput)
+      studentKey <- ensureStudentExists studentId
+      packageKey <- ensurePackageExists packageId
+      packageEntity <- getJustEntity packageKey
+      sellerKey <- traverse ensureSellerExists sellerId
+      commissionKey <- traverse ensureCommissionTeacherExists commissionedTeacherId
+      trialKey <- traverse ensurePurchaseTrialRequestExists trialRequestId
+      trialEntity <- traverse getJustEntity trialKey
+      ensurePurchaseTrialRequestMatches studentKey packageEntity trialEntity
       now <- liftIO getCurrentTime
-      let studentKey = intKey studentId
-          packageKey = intKey packageId
-          sellerKey  = maybeKey sellerId
-          commissionKey = maybeKey commissionedTeacherId
-          trialKey   = maybeKey trialRequestId
-          discount   = fromMaybe 0 discountCents
+      let discount   = fromMaybe 0 discountCents
           tax        = fromMaybe 0 taxCents
           total      = priceCents - discount + tax
       pid <- insert ClassPackagePurchase
@@ -1564,22 +2009,23 @@ privateTrialsServer user@AuthedUser{..} =
     classSessionsListH :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe UTCTime -> Maybe UTCTime -> Maybe Text -> AppM [ClassSessionDTO]
     classSessionsListH mSubject mTeacher mStudent mFrom mTo mStatus = do
       ensureSchoolAccess
+      (subjectIdFilter, teacherIdFilter, studentIdFilter, fromFilter, toFilter, statusFilter) <-
+        either (liftIO . throwIO) pure (validateClassSessionListFilters mSubject mTeacher mStudent mFrom mTo mStatus)
       when (not isSchoolStaff) $
-        case mTeacher of
+        case teacherIdFilter of
           Just tid | intKey tid /= auPartyId -> liftIO $ throwIO err403
           _ -> pure ()
       let filters =
-            maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) mSubject
+            maybe [] (\sid -> [ClassSessionSubjectId ==. intKey sid]) subjectIdFilter
             ++ if isSchoolStaff
-                then maybe [] (\tid -> [ClassSessionTeacherId ==. intKey tid]) mTeacher
+                then maybe [] (\tid -> [ClassSessionTeacherId ==. intKey tid]) teacherIdFilter
                 else [ClassSessionTeacherId ==. auPartyId]
-            ++ maybe [] (\pid -> [ClassSessionStudentId ==. intKey pid]) mStudent
-            ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) mFrom
-            ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) mTo
+            ++ maybe [] (\pid -> [ClassSessionStudentId ==. intKey pid]) studentIdFilter
+            ++ maybe [] (\startFrom -> [ClassSessionStartAt >=. startFrom]) fromFilter
+            ++ maybe [] (\endTo -> [ClassSessionStartAt <=. endTo]) toFilter
       sessions <- selectList filters [Asc ClassSessionStartAt]
       dtos <- buildClassSessionDTOs sessions
-      let normalized = T.toLower . T.strip
-      pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> normalized s == normalized st) dtos) mStatus
+      pure $ maybe dtos (\st -> filter (\ClassSessionDTO{status = s} -> s == st) dtos) statusFilter
 
     createClassH :: ClassSessionIn -> AppM ClassSessionOut
     createClassH ClassSessionIn{..} = do
@@ -1625,8 +2071,9 @@ privateTrialsServer user@AuthedUser{..} =
       pure (ClassSessionOut (entityKeyInt sid) (max 0 durationMinutes))
 
     updateClassH :: Int -> ClassSessionUpdate -> AppM ClassSessionDTO
-    updateClassH classId ClassSessionUpdate{..} = do
+    updateClassH rawClassId ClassSessionUpdate{..} = do
       ensureSchoolAccess
+      classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
       mSession <- get cid
       case mSession of
@@ -1648,6 +2095,11 @@ privateTrialsServer user@AuthedUser{..} =
               newEnd     = fromMaybe (Trials.classSessionEndAt sess) endAt
               newTeacher = maybe (Trials.classSessionTeacherId sess) intKey teacherId
               newRoom    = maybe (Trials.classSessionRoomId sess) intKey roomId
+          notesUpdate <- case notes of
+            Nothing -> pure Nothing
+            Just rawNotes ->
+              Just <$> either (liftIO . throwIO) pure
+                (validateOptionalClassSessionNotes (Just rawNotes))
           when (newEnd <= newStart) $
             liftIO $ throwIO err400 { errBody = "La hora de fin debe ser mayor a la de inicio" }
           ensureTeacherSelection newTeacher
@@ -1672,7 +2124,7 @@ privateTrialsServer user@AuthedUser{..} =
                 , maybe [] (\v   -> [ClassSessionEndAt     =. v])         endAt
                 , maybe [] (\rid -> [ClassSessionRoomId    =. intKey rid]) roomId
                 , maybe [] (\bid -> [ClassSessionBookingId =. Just bid])  newBooking
-                , maybe [] (\txt -> [ClassSessionNotes     =. Just txt])  notes
+                , maybe [] (\txt -> [ClassSessionNotes     =. txt])       notesUpdate
                 ]
           unless (null updates) $
             update cid updates
@@ -1683,8 +2135,9 @@ privateTrialsServer user@AuthedUser{..} =
             Nothing -> liftIO $ throwIO err500
 
     attendH :: Int -> AttendIn -> AppM ClassSessionOut
-    attendH classId AttendIn{..} = do
+    attendH rawClassId attendReq@AttendIn{..} = do
       ensureSchoolAccess
+      classId <- either (liftIO . throwIO) pure (validateClassSessionPathId rawClassId)
       let cid = intKey classId :: Key ClassSession
       mSession <- get cid
       case mSession of
@@ -1692,20 +2145,23 @@ privateTrialsServer user@AuthedUser{..} =
         Just sess -> do
           unless (isSchoolStaff || Trials.classSessionTeacherId sess == auPartyId) $
             liftIO $ throwIO err403
+          notesUpdate <- either (liftIO . throwIO) pure (resolveAttendNotesUpdate attendReq)
           let duration = classSessionConsumedMinutes sess
           update cid
-            [ ClassSessionAttended =. attended
-            , ClassSessionNotes    =. notes
-            ]
+            ( [ClassSessionAttended =. attended]
+                ++ maybe [] (\value -> [ClassSessionNotes =. value]) notesUpdate
+            )
           pure (ClassSessionOut (entityKeyInt cid) duration)
 
     commissionsH :: Maybe UTCTime -> Maybe UTCTime -> Maybe Int -> AppM [CommissionDTO]
     commissionsH mFrom mTo mTeacher = do
       ensureSchoolStaffAccess
+      (fromFilter, toFilter, teacherFilter) <-
+        either (liftIO . throwIO) pure (validateCommissionListFilters mFrom mTo mTeacher)
       let baseFilters = catMaybes
-            [ (CommissionRecognizedAt >=.) <$> mFrom
-            , (CommissionRecognizedAt <=.) <$> mTo
-            , (CommissionTeacherId ==.) . intKey <$> mTeacher
+            [ (CommissionRecognizedAt >=.) <$> fromFilter
+            , (CommissionRecognizedAt <=.) <$> toFilter
+            , (CommissionTeacherId ==.) . intKey <$> teacherFilter
             ]
       entities <- selectList baseFilters [Desc CommissionRecognizedAt]
       pure [ CommissionDTO
@@ -1720,9 +2176,7 @@ privateTrialsServer user@AuthedUser{..} =
     teachersH :: AppM [TeacherDTO]
     teachersH = do
       ensureSchoolAccess
-      -- Show any party that has the Teacher role, regardless of the active flag on the PartyRole entry.
-      teacherRoles <- selectList [Models.PartyRoleRole ==. Teacher] []
-      let teacherIds = map (Models.partyRolePartyId . entityVal) teacherRoles
+      teacherIds <- selectCanonicalPartyIdsByRole Teacher
 
       parties <- if null teacherIds
         then pure Map.empty
@@ -1834,21 +2288,21 @@ privateTrialsServer user@AuthedUser{..} =
     teacherSubjectsUpdateH :: Int -> TeacherSubjectsUpdate -> AppM TeacherDTO
     teacherSubjectsUpdateH teacherId TeacherSubjectsUpdate{..} = do
       ensureSchoolAccess
-      subjectIdsDistinct <- either (liftIO . throwIO) pure (validateTeacherSubjectIdsInput subjectIds)
+      validatedSubjectIds <- either (liftIO . throwIO) pure (validateTeacherSubjectIdsInput subjectIds)
       let teacherKey = intKey teacherId :: PartyId
       ensureTeacherOrStaff teacherKey
       mTeacher <- get teacherKey
       case mTeacher of
         Nothing -> liftIO $ throwIO err404
         Just party -> do
-          subjectEntities <- if null subjectIdsDistinct
+          subjectEntities <- if null validatedSubjectIds
             then pure []
             else selectList
-              ( [SubjectId <-. map intKey subjectIdsDistinct]
+              ( [SubjectId <-. map intKey validatedSubjectIds]
                 ++ if isSchoolStaff then [] else [SubjectActive ==. True]
               )
               []
-          when (not (null subjectIdsDistinct) && length subjectEntities /= length subjectIdsDistinct) $
+          when (not (null validatedSubjectIds) && length subjectEntities /= length validatedSubjectIds) $
             liftIO $ throwIO err404 { errBody = "Una o más materias no existen." }
 
           existingLinks <- selectList [TeacherSubjectTeacherId ==. teacherKey] []
@@ -1870,8 +2324,15 @@ privateTrialsServer user@AuthedUser{..} =
               , teacherSubjectLevelMax  = Nothing
               }
 
-          when (not (null desiredKeys) || not (null existingIds)) $
-            void $ upsert (PartyRole teacherKey Teacher True) [Models.PartyRoleActive =. True]
+          when (not (null desiredKeys) || not (null existingIds)) $ do
+            now <- liftIO getCurrentTime
+            requireAutomaticSecurityPolicy
+              "trial.teacher-subject.teacher"
+              teacherKey
+              (Just auPartyId)
+              "trials-admin"
+              ("teacher-subject:" <> T.pack (show (fromSqlKey teacherKey)))
+              now
 
           let subjectMap = Map.fromList [ (entityKey s, entityVal s) | s <- subjectEntities ]
               subjectsDTO =
@@ -1888,19 +2349,29 @@ privateTrialsServer user@AuthedUser{..} =
             }
 
     teacherStudentsListH :: Int -> AppM [StudentDTO]
-    teacherStudentsListH teacherId = do
+    teacherStudentsListH rawTeacherId = do
       ensureSchoolAccess
+      teacherId <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentTeacherIdInput rawTeacherId)
       let teacherKey = intKey teacherId :: PartyId
       ensureTeacherOrStaff teacherKey
       ids <- teacherStudentIdsFor teacherKey
       studentsByIds ids
 
     teacherStudentsAddH :: Int -> TeacherStudentLinkIn -> AppM NoContent
-    teacherStudentsAddH teacherId TeacherStudentLinkIn{..} = do
+    teacherStudentsAddH rawTeacherId TeacherStudentLinkIn{..} = do
       ensureSchoolAccess
+      (teacherId, studentIdVal) <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentLinkInput rawTeacherId studentId)
       now <- liftIO getCurrentTime
       let teacherKey = intKey teacherId :: PartyId
-          studentKey = intKey studentId :: PartyId
+          studentKey = intKey studentIdVal :: PartyId
       ensureTeacherOrStaff teacherKey
       mTeacher <- get teacherKey
       when (isNothing mTeacher) $
@@ -1908,13 +2379,24 @@ privateTrialsServer user@AuthedUser{..} =
       mStudent <- get studentKey
       when (isNothing mStudent) $
         liftIO $ throwIO err404
-      void $ upsert (PartyRole studentKey Student True) [Models.PartyRoleActive =. True]
+      requireAutomaticSecurityPolicy
+        "trial.teacher-student.student"
+        studentKey
+        (Just auPartyId)
+        "trials-admin"
+        ("teacher-student:" <> T.pack (show (fromSqlKey teacherKey)) <> ":" <> T.pack (show (fromSqlKey studentKey)))
+        now
       void $ upsert (TeacherStudent teacherKey studentKey True now) [TeacherStudentActive =. True]
       pure NoContent
 
     teacherStudentsDeleteH :: Int -> Int -> AppM NoContent
-    teacherStudentsDeleteH teacherId studentId = do
+    teacherStudentsDeleteH rawTeacherId rawStudentId = do
       ensureSchoolAccess
+      (teacherId, studentId) <-
+        either
+          (liftIO . throwIO)
+          pure
+          (validateTeacherStudentLinkInput rawTeacherId rawStudentId)
       let teacherKey = intKey teacherId :: PartyId
           studentKey = intKey studentId :: PartyId
       ensureTeacherOrStaff teacherKey
@@ -1944,8 +2426,7 @@ privateTrialsServer user@AuthedUser{..} =
       ensureSchoolAccess
       if isSchoolStaff
         then do
-          studentRoles <- selectList [Models.PartyRoleRole ==. Student, Models.PartyRoleActive ==. True] []
-          let ids = map (Models.partyRolePartyId . entityVal) studentRoles
+          ids <- selectCanonicalPartyIdsByRole Student
           studentsByIds ids
         else do
           ids <- teacherStudentIdsFor auPartyId
@@ -1957,13 +2438,20 @@ privateTrialsServer user@AuthedUser{..} =
       let fullNameVal = T.strip fullName
       when (T.null fullNameVal) $
         liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
+      notesValue <- either (liftIO . throwIO) pure (validateOptionalPublicTextField "notes" 2000 notes)
       now <- liftIO getCurrentTime
       partyId <- createOrFetchParty (Just fullNameVal) (Just email) phone now
-      void $ upsert (PartyRole partyId Student True) [Models.PartyRoleActive =. True]
+      requireAutomaticSecurityPolicy
+        "trial.student-created.student"
+        partyId
+        (Just auPartyId)
+        "trials-admin"
+        ("student-created:" <> T.pack (show (fromSqlKey partyId)))
+        now
       unless isSchoolStaff $
         void $ upsert (TeacherStudent auPartyId partyId True now) [TeacherStudentActive =. True]
-      when (isJust notes) $
-        update partyId [Models.PartyNotes =. fmap T.strip notes]
+      forM_ notesValue $ \txt ->
+        update partyId [Models.PartyNotes =. Just txt]
       Entity _ party <- getJustEntity partyId
       pure StudentDTO
         { studentId   = entityKeyInt partyId
@@ -1986,16 +2474,27 @@ privateTrialsServer user@AuthedUser{..} =
         unless owns $
           liftIO $ throwIO err403
 
-      let nameUpdate = displayName >>= (\txt -> let t = T.strip txt in if T.null t then Nothing else Just t)
-          notesUpdate = case notes of
-            Nothing -> Nothing
-            Just raw -> Just (cleanOptional (Just raw))
+      nameUpdate <- case displayName of
+        Nothing -> pure Nothing
+        Just rawName -> do
+          normalizedName <-
+            either
+              (liftIO . throwIO)
+              pure
+              (validateOptionalPublicTextField "displayName" maxPublicLeadDisplayNameChars (Just rawName))
+          case normalizedName of
+            Nothing ->
+              liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
+            Just nameVal ->
+              pure (Just nameVal)
       emailUpdate <- either (liftIO . throwIO) pure (validateEmailUpdate email)
       phoneUpdate <- either (liftIO . throwIO) pure (validateOptionalPhone phone)
+      notesUpdate <- case notes of
+        Nothing -> pure Nothing
+        Just raw ->
+          Just <$> either (liftIO . throwIO) pure
+            (validateOptionalPublicTextField "notes" 2000 (Just raw))
       ensureEmailAvailableForParty studentKey emailUpdate
-
-      when (isJust displayName && isNothing nameUpdate) $
-        liftIO $ throwIO err400 { errBody = "El nombre es obligatorio." }
 
       let updates =
             maybe [] (\emailVal -> [Models.PartyPrimaryEmail =. emailVal]) emailUpdate
@@ -2051,7 +2550,12 @@ trialsServer pool =
   in hoistServerWithContext trialsProxy ctxProxy nt server
   where
     nt :: AppM a -> Handler a
-    nt x = liftIO (runSqlPool x pool)
+    nt x = do
+      result <- liftIO (runTrialsAction x)
+      either throwError pure result
+
+    runTrialsAction :: AppM a -> IO (Either ServerError a)
+    runTrialsAction action = try (runSqlPool action pool)
 
     authedPrivateServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
     authedPrivateServer user = privateTrialsServer user

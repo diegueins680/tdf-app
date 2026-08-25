@@ -3,17 +3,36 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { MarketplaceOrderDTO, MarketplaceOrderUpdatePayload } from '../api/types';
+import type {
+  MarketplaceFulfillmentUpdatePayload,
+  MarketplaceOrderDTO,
+  MarketplaceOrderUpdatePayload,
+  MarketplaceRentalUpdatePayload,
+} from '../api/types';
 
 const listOrdersMock = jest.fn<(params?: { status?: string; limit?: number; offset?: number }) => Promise<MarketplaceOrderDTO[]>>();
 const updateOrderMock = jest.fn<
   (orderId: string, payload: MarketplaceOrderUpdatePayload) => Promise<MarketplaceOrderDTO>
 >();
+const updateFulfillmentMock = jest.fn<
+  (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
+const updateRentalMock = jest.fn<
+  (orderId: string, payload: MarketplaceRentalUpdatePayload) => Promise<MarketplaceOrderDTO>
+>();
 
 jest.unstable_mockModule('../api/marketplace', () => ({
+  getMarketplaceDepositIdempotencyKey: () => 'marketplace-deposit-idempotency-0001',
+  clearMarketplaceDepositIdempotencyKey: jest.fn(),
   Marketplace: {
     listOrders: (params?: { status?: string; limit?: number; offset?: number }) => listOrdersMock(params),
     updateOrder: (orderId: string, payload: MarketplaceOrderUpdatePayload) => updateOrderMock(orderId, payload),
+    updateFulfillment: (orderId: string, payload: MarketplaceFulfillmentUpdatePayload) => (
+      updateFulfillmentMock(orderId, payload)
+    ),
+    updateRental: (orderId: string, payload: MarketplaceRentalUpdatePayload) => (
+      updateRentalMock(orderId, payload)
+    ),
   },
 }));
 
@@ -31,6 +50,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 const { default: MarketplaceOrdersPage } = await import('./MarketplaceOrdersPage');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+const normalizeText = (value: string | null | undefined) => (value ?? '').replace(/\s+/g, ' ').trim();
 
 const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   let lastError: unknown;
@@ -82,7 +102,9 @@ const buildOrder = (overrides: Partial<MarketplaceOrderDTO> = {}): MarketplaceOr
   ...overrides,
 });
 
-const orderSearchLabel = 'Buscar por comprador, contacto o ID';
+const orderSearchLabel = 'Buscar por comprador, contacto o pedido';
+const firstOrderEmptyStateMessage =
+  'Todavía no hay órdenes. Comparte el marketplace para recibir la primera; cuando llegue, aparecerá aquí con estado, pago y datos del comprador.';
 
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
@@ -94,7 +116,6 @@ const renderPage = async (container: HTMLElement) => {
     root?.render(
       <MemoryRouter
         initialEntries={['/marketplace/ordenes']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <MarketplaceOrdersPage />
@@ -121,7 +142,7 @@ const renderPage = async (container: HTMLElement) => {
 
 const countLabelsByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('label')).filter((element) => {
-    const text = (element.textContent ?? '').replace('*', '').trim();
+    const text = normalizeText((element.textContent ?? '').replace('*', ''));
     return text === labelText;
   }).length;
 
@@ -142,6 +163,11 @@ const queryActionByText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('button, a')).find(
     (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
   ) ?? null;
+
+const countActionsByText = (root: ParentNode, labelText: string) =>
+  Array.from(root.querySelectorAll<HTMLElement>('button, a')).filter(
+    (element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim() === labelText,
+  ).length;
 
 const getInputByLabel = (root: ParentNode, labelText: string) => {
   const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
@@ -170,6 +196,28 @@ const setInputValue = async (input: HTMLInputElement, value: string) => {
   });
 };
 
+const setTextareaValue = async (textarea: HTMLTextAreaElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('HTMLTextAreaElement value setter not found');
+
+  await act(async () => {
+    valueSetter.call(textarea, value);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    textarea.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
+const getTextareaByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => (element.textContent ?? '').replace('*', '').trim() === labelText,
+  );
+  if (!label?.htmlFor) throw new Error(`Label not found: ${labelText}`);
+  const textarea = label.ownerDocument.getElementById(label.htmlFor);
+  if (!(textarea instanceof HTMLTextAreaElement)) throw new Error(`Textarea not found for label: ${labelText}`);
+  return textarea;
+};
+
 const clickActionByText = async (root: ParentNode, labelText: string) => {
   const action = queryActionByText(root, labelText);
   if (!(action instanceof HTMLElement)) {
@@ -194,7 +242,90 @@ const clickButtonByAriaLabel = async (root: ParentNode, ariaLabel: string) => {
   });
 };
 
+const clickCheckboxByLabel = async (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText(element.textContent) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement)) {
+    throw new Error(`Checkbox label not found: ${labelText}`);
+  }
+
+  const input = label.querySelector<HTMLInputElement>('input[type="checkbox"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error(`Checkbox input not found for label: ${labelText}`);
+  }
+
+  await act(async () => {
+    input.click();
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
+const selectOptionByLabel = async (root: ParentNode, labelText: string, optionText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText((element.textContent ?? '').replace('*', '')) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement) || !label.id) {
+    throw new Error(`Select label not found: ${labelText}`);
+  }
+
+  const trigger = document.body.querySelector<HTMLElement>(`[role="combobox"][aria-labelledby*="${label.id}"]`);
+  if (!(trigger instanceof HTMLElement)) {
+    throw new Error(`Select trigger not found for label: ${labelText}`);
+  }
+
+  await act(async () => {
+    trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+
+  const option = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]')).find(
+    (element) => normalizeText(element.textContent) === optionText,
+  );
+  if (!(option instanceof HTMLElement)) {
+    throw new Error(`Select option not found: ${optionText}`);
+  }
+
+  await act(async () => {
+    option.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
+const getSelectTriggerByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => normalizeText((element.textContent ?? '').replace('*', '')) === labelText,
+  );
+  if (!(label instanceof HTMLLabelElement) || !label.id) {
+    throw new Error(`Select label not found: ${labelText}`);
+  }
+
+  const trigger = document.body.querySelector<HTMLElement>(`[role="combobox"][aria-labelledby*="${label.id}"]`);
+  if (!(trigger instanceof HTMLElement)) {
+    throw new Error(`Select trigger not found for label: ${labelText}`);
+  }
+
+  return trigger;
+};
+
+const getOpenSelectOptionLabels = () =>
+  Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]'))
+    .map((element) => normalizeText(element.textContent))
+    .filter(Boolean);
+
 const clickFirstOrderRow = async (root: ParentNode) => {
+  const explicitOpenAction = queryActionByText(root, 'Abrir orden');
+  if (explicitOpenAction instanceof HTMLElement) {
+    await act(async () => {
+      explicitOpenAction.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await flushPromises();
+    });
+    return;
+  }
+
   const row = root.querySelector('tbody tr');
   if (!(row instanceof HTMLElement)) {
     throw new Error('Order row not found');
@@ -229,8 +360,12 @@ describe('MarketplaceOrdersPage', () => {
   beforeEach(() => {
     listOrdersMock.mockReset();
     updateOrderMock.mockReset();
+    updateFulfillmentMock.mockReset();
+    updateRentalMock.mockReset();
     listOrdersMock.mockResolvedValue([buildOrder()]);
     updateOrderMock.mockResolvedValue(buildOrder({ moStatus: 'paid', moPaidAt: '2030-01-01T13:00:00.000Z' }));
+    updateFulfillmentMock.mockResolvedValue(buildOrder());
+    updateRentalMock.mockResolvedValue(buildOrder());
   });
 
   it('replaces the first-order empty view with one guided state instead of list-only filter and export chrome', async () => {
@@ -251,9 +386,12 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
-        expect(container.textContent).toContain(
-          'Todavía no hay órdenes. Cuando llegue la primera, aquí aparecerán búsqueda, filtros y exportación para revisar la bandeja.',
+        expect(container.textContent).toContain(firstOrderEmptyStateMessage);
+        expect(container.textContent).not.toContain(
+          'La primera orden aparecerá aquí junto con su estado, pago y acciones de revisión.',
         );
+        expect(container.textContent).not.toContain('búsqueda, filtros y exportación');
+        expect(container.textContent).not.toContain('revisar la bandeja');
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(container.textContent).not.toContain('0 pagados');
         expect(container.textContent).not.toContain('0 pendientes');
@@ -277,9 +415,18 @@ describe('MarketplaceOrdersPage', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain('Cargando órdenes...');
+        expect(container.textContent).toContain('La bandeja aparecerá cuando termine esta primera carga.');
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(0);
+        expect(countLabelsByText(container, 'Método de pago')).toBe(0);
+        expect(countLabelsByText(container, 'Desde')).toBe(0);
+        expect(countLabelsByText(container, 'Hasta')).toBe(0);
         expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
+        expect(container.textContent).not.toContain('Haz clic en una fila para revisar estado, pago y datos del comprador.');
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).toBeNull();
+        expect(queryActionByText(container, 'Elegir…')).toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
       });
@@ -288,7 +435,41 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps the first marketplace order focused on the lone row instead of showing list filter chrome', async () => {
+  it('keeps an initial marketplace load failure attached to one contextual retry action', async () => {
+    listOrdersMock
+      .mockRejectedValueOnce(new Error('backend unavailable'))
+      .mockResolvedValueOnce([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('backend unavailable');
+        expect(queryActionByText(container, 'Reintentar órdenes')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(0);
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+      });
+
+      const initialCallCount = listOrdersMock.mock.calls.length;
+
+      await clickActionByText(container, 'Reintentar órdenes');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(container.textContent).toContain(firstOrderEmptyStateMessage);
+        expect(queryActionByText(container, 'Reintentar órdenes')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces the first marketplace order row with a focused summary and one explicit open action', async () => {
     listOrdersMock.mockResolvedValue([buildOrder()]);
 
     const container = document.createElement('div');
@@ -307,20 +488,98 @@ describe('MarketplaceOrdersPage', () => {
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
         expect(container.textContent).toContain(
-          'Solo hay una orden por ahora. Ábrela para revisar estado, pago y datos del comprador. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
+          'Solo hay una orden por ahora. Revisa estado, pago y datos del comprador desde este resumen. Cuando llegue la segunda, aquí aparecerán filtros y exportación.',
         );
+        expect(container.textContent).toContain('Pedido: order-1');
+        expect(container.textContent).toContain('Comprador: Ada Lovelace');
+        expect(container.textContent).toContain('Email: ada@example.com');
+        expect(container.textContent).toContain('Teléfono: +593999000111');
+        expect(container.textContent).toContain('Estado: Pendiente');
+        expect(container.textContent).toContain('Pago: PayPal');
+        expect(container.textContent).toContain('Total: USD $100.00');
+        expect(container.textContent).toContain('Items: 1 × Vintage Mic');
         expect(container.textContent).not.toContain('Atajos rápidos');
         expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('restores the refresh action once the page has a real order list to revisit', async () => {
+  it('uses one focused contact empty state in sparse single-order summaries', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-sparse',
+        moBuyerName: 'Sparse Buyer',
+        moBuyerEmail: '   ',
+        moBuyerPhone: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain('Comprador: Sparse Buyer');
+        expect(container.textContent).toContain('Sin email ni teléfono registrado.');
+        expect(container.textContent).not.toContain('Email:');
+        expect(container.textContent).not.toContain('Teléfono:');
+        expect(container.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('promotes contact to buyer identity when a marketplace order has no buyer name', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-email-only',
+        moBuyerName: '   ',
+        moBuyerEmail: 'buyer@example.com',
+        moBuyerPhone: '   ',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const summary = container.querySelector<HTMLElement>('[data-testid="marketplace-single-order-summary"]');
+
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).toContain('Comprador: buyer@example.com');
+        expect(summary?.textContent).not.toContain('Email:');
+        expect(summary?.textContent?.match(/buyer@example\.com/g) ?? []).toHaveLength(1);
+        expect(summary?.textContent).not.toContain('Comprador:  ');
+      });
+
+      await clickActionByText(container, 'Abrir orden');
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Comprador: buyer@example.com');
+        expect(dialog?.textContent).not.toContain('Email:');
+        expect(dialog?.textContent?.match(/buyer@example\.com/g) ?? []).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('restores the refresh action once the page has a real order list without adding permission chrome', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -341,11 +600,291 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
         );
         expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('opens order rows from the keyboard without adding repeated open buttons', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const rows = Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr'));
+        expect(rows).toHaveLength(2);
+        expect(countActionsByText(container, 'Abrir orden')).toBe(0);
+        expect(rows[0]?.getAttribute('tabindex')).toBe('0');
+        expect(rows[0]?.getAttribute('aria-label')).toBe('Abrir orden order-2 de Grace Hopper');
+      });
+
+      const firstRow = container.querySelector<HTMLTableRowElement>('tbody tr');
+      if (!firstRow) throw new Error('Order row not found');
+
+      await act(async () => {
+        firstRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Pedido order-2');
+        expect(dialog?.textContent).toContain('Comprador: Grace Hopper');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps order search phrased around visible order language without browser suggestion chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({ moOrderId: 'order-1' }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const searchInput = getInputByLabel(container, orderSearchLabel);
+
+        expect(countLabelsByText(container, orderSearchLabel)).toBe(1);
+        expect(countLabelsByText(container, 'Buscar por comprador, contacto o ID')).toBe(0);
+        expect(searchInput.getAttribute('autocomplete')).toBe('off');
+        expect(searchInput.getAttribute('spellcheck')).toBe('false');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps small default order lists focused until export has a scoped reason', async () => {
+    const paidOrders = [
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-3',
+        moCartId: 'cart-3',
+        moBuyerName: 'Katherine Johnson',
+        moBuyerEmail: 'katherine@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-03T12:30:00.000Z',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+    ];
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(
+        params?.status === 'paid'
+          ? paidOrders
+          : [
+            buildOrder({
+              moOrderId: 'order-1',
+              moStatus: 'pending',
+            }),
+            ...paidOrders,
+          ],
+      ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(getTableHeaders(container)).toContain('Estado');
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(getTableHeaders(container)).not.toContain('Estado');
+        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('limits the status menu to statuses present in the current order list', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      const trigger = getSelectTriggerByLabel(container, 'Estado del listado');
+      await act(async () => {
+        trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(getOpenSelectOptionLabels()).toEqual(['Todos', 'Pagado', 'Pendiente']);
+        expect(getOpenSelectOptionLabels()).not.toContain('PayPal pendiente');
+        expect(getOpenSelectOptionLabels()).not.toContain('Contactar');
+        expect(getOpenSelectOptionLabels()).not.toContain('Cancelado');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps a single filtered order focused without the duplicate header refresh action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain(
+          'Los filtros dejaron una sola orden visible. Revísala aquí y usa Limpiar filtros para volver a comparar pedidos.',
+        );
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(container.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps single-order filter context out of duplicate tray chips', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moPaymentProvider: 'datafast',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        const summary = container.querySelector('[data-testid="marketplace-single-order-summary"]');
+
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).toContain('Estado: Pagado');
+        expect(summary?.textContent).toContain('Pago: Tarjeta (Datafast)');
+        expect(container.querySelectorAll('[data-testid="marketplace-active-filter-chip"]')).toHaveLength(0);
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -379,7 +918,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'Aplica una vista base y reemplaza los filtros actuales antes de revisar resultados.',
         );
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
         expect(container.textContent).not.toContain('Atajos rápidos');
@@ -437,6 +976,314 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('drops the duplicate paid-only control once the list is already filtered to paid orders', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+      moPaidAt: null,
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+    const approvedOrder = buildOrder({
+      moOrderId: 'order-3',
+      moCartId: 'cart-3',
+      moBuyerName: 'Katherine Johnson',
+      moBuyerEmail: 'katherine@example.com',
+      moStatus: 'approved',
+      moPaymentProvider: 'datafast',
+      moPaidAt: '2030-01-03T12:30:00.000Z',
+      moCreatedAt: '2030-01-03T12:00:00.000Z',
+      moUpdatedAt: '2030-01-03T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(
+        params?.status === 'paid'
+          ? [paidOrder]
+          : [pendingOrder, paidOrder, approvedOrder],
+      ));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).not.toBeNull();
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Ocultar fechas y pago')).not.toBeNull();
+        expect(container.textContent).toContain('Solo con pago registrado');
+      });
+
+      await clickCheckboxByLabel(container, 'Solo con pago registrado');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Con pago');
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(queryActionByText(container, 'Ocultar fechas')).not.toBeNull();
+        expect(queryActionByText(container, 'Ocultar fechas y pago')).toBeNull();
+        expect(container.textContent).not.toContain('Solo con pago registrado');
+        expect(container.textContent).not.toContain('Con pago');
+        expect(container.textContent).toContain('Estado: Pagado');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('copies filter links without default filter params so shared views stay readable', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-3',
+        moCartId: 'cart-3',
+        moBuyerName: 'Katherine Johnson',
+        moBuyerEmail: 'katherine@example.com',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-03T12:30:00.000Z',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Copiar enlace de filtros')).not.toBeNull();
+        expect(container.textContent).toContain('Estado: Pagado');
+      });
+
+      await clickActionByText(container, 'Copiar enlace de filtros');
+
+      await waitForExpectation(() => {
+        expect(writeTextMock).toHaveBeenCalledTimes(1);
+        const copiedUrl = new URL(writeTextMock.mock.calls[0]?.[0] ?? '');
+        expect(copiedUrl.searchParams.get('status')).toBe('paid');
+        expect(copiedUrl.searchParams.has('provider')).toBe(false);
+        expect(copiedUrl.searchParams.has('paidOnly')).toBe(false);
+        expect(copiedUrl.searchParams.has('q')).toBe(false);
+        expect(copiedUrl.searchParams.has('from')).toBe(false);
+        expect(copiedUrl.searchParams.has('to')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps a lone active filter chip passive so the tray has one clear reset action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar otros filtros')).toBeNull();
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Estado: Pagado');
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps compound filter chips passive so the tray has one clear reset action', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+      moCreatedAt: '2030-01-01T12:00:00.000Z',
+      moUpdatedAt: '2030-01-01T12:00:00.000Z',
+    });
+    const paidOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-02T12:30:00.000Z',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [paidOrder] : [pendingOrder, paidOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Mostrar fechas y pago')).not.toBeNull();
+      });
+
+      await clickActionByText(container, 'Mostrar fechas y pago');
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(countLabelsByText(container, 'Desde')).toBe(1);
+      });
+
+      await setInputValue(getInputByLabel(container, 'Desde'), '2030-01-01');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(container.textContent).toContain('Desde: 2030-01-01');
+        expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+        expect(container.querySelectorAll('.MuiChip-deleteIcon')).toHaveLength(0);
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Estado: Pagado');
+        expect(container.textContent).not.toContain('Desde: 2030-01-01');
+        expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps active status filters visible when the server returns an empty filtered result', async () => {
+    const pendingOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'pending',
+    });
+    const contactOrder = buildOrder({
+      moOrderId: 'order-2',
+      moCartId: 'cart-2',
+      moBuyerName: 'Grace Hopper',
+      moBuyerEmail: 'grace@example.com',
+      moStatus: 'contact',
+      moCreatedAt: '2030-01-02T12:00:00.000Z',
+      moUpdatedAt: '2030-01-02T12:00:00.000Z',
+    });
+
+    listOrdersMock.mockImplementation((params) =>
+      Promise.resolve(params?.status === 'paid' ? [] : [pendingOrder, contactOrder]));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await selectOptionByLabel(container, 'Estado del listado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(listOrdersMock).toHaveBeenLastCalledWith({ status: 'paid', limit: 200 });
+        expect(container.textContent).toContain('Sin resultados en esta vista. 1 filtro activo.');
+        expect(container.textContent).toContain(
+          'No hay órdenes en la vista actual. Usa Limpiar filtros para volver a la bandeja completa.',
+        );
+        expect(container.textContent).toContain('Estado: Pagado');
+        expect(countLabelsByText(container, 'Estado del listado')).toBe(1);
+        expect(queryActionByText(container, 'Limpiar filtros')).not.toBeNull();
+        expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+        expect(container.textContent).not.toContain('Todavía no hay órdenes. Cuando llegue la primera');
+        expect(container.querySelector('tbody tr')).toBeNull();
+      });
+
+      await clickActionByText(container, 'Limpiar filtros');
+
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.textContent).not.toContain('Sin resultados en esta vista.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces a single real status filter with context copy when the current list already shares one status', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
@@ -469,6 +1316,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain(
           'Todos los pedidos visibles comparten el estado Pendiente. El filtro de estado aparecerá cuando esta vista mezcle más de un estado.',
         );
+        expect(getTableHeaders(container)).not.toContain('Estado');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
       });
     } finally {
@@ -777,6 +1625,89 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('omits buyer-email placeholders when the buyer identity already owns the customer cell', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'email-only',
+        moBuyerName: '   ',
+        moBuyerEmail: 'buyer@example.com',
+        moBuyerPhone: null,
+      }),
+      buildOrder({
+        moOrderId: 'named-no-email',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: '   ',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'named-with-email',
+        moCartId: 'cart-3',
+        moBuyerName: 'Katherine Johnson',
+        moBuyerEmail: 'katherine@example.com',
+        moBuyerPhone: null,
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const customerCells = getColumnTextsByHeader(container, 'Cliente');
+
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(3);
+        expect(customerCells[0]).toContain('Katherine Johnson');
+        expect(customerCells[0]).toContain('katherine@example.com');
+        expect(customerCells.slice(1)).toEqual(['Grace Hopper', 'buyer@example.com']);
+        expect(customerCells).not.toContain('Grace Hopper —');
+        expect(customerCells).not.toContain('buyer@example.com —');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not repeat phone-only buyer identities in the contact column', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'phone-only',
+        moBuyerName: '   ',
+        moBuyerEmail: '   ',
+        moBuyerPhone: '+593 999 000 111',
+      }),
+      buildOrder({
+        moOrderId: 'named-phone',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moBuyerPhone: '+593 999 000 222',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).toContain('Contacto');
+        expect(getColumnTextsByHeader(container, 'Contacto')).toEqual(['+593 999 000 222', '—']);
+        expect((container.textContent?.match(/\+593 999 000 111/g) ?? [])).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('shows the paid-at column only when the visible order list includes a payment timestamp', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
@@ -936,18 +1867,19 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).toContain('1 pagados');
         expect(container.textContent).toContain('1 pendientes');
         expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
-        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
       });
 
       const searchInput = getInputByLabel(container, orderSearchLabel);
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.textContent).not.toContain('1 pagados');
         expect(container.textContent).not.toContain('1 pendientes');
         expect(container.textContent).not.toContain('0 pendientes');
-        expect(queryActionByText(container, 'Exportar CSV')).not.toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -983,11 +1915,13 @@ describe('MarketplaceOrdersPage', () => {
       await setInputValue(searchInput, 'grace');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(searchInput.value).toBe('grace');
         expect(countLabelsByText(container, 'Vista rápida')).toBe(0);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Limpiar')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).toContain(
@@ -1003,11 +1937,61 @@ describe('MarketplaceOrdersPage', () => {
         expect(countLabelsByText(container, 'Vista rápida')).toBe(1);
         expect(container.textContent).not.toContain('Busca: grace');
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(queryActionByText(container, 'Limpiar')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('hides the generic refresh action while search is active so the field owns the recovery path', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moBuyerName: 'Ada Lovelace',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, 'grace');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('grace');
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).toBeNull();
+      });
+
+      await clickButtonByAriaLabel(container, 'Limpiar búsqueda');
+
+      await waitForExpectation(() => {
+        expect(searchInput.value).toBe('');
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
+        expect(container.querySelector('button[aria-label="Recargar órdenes"]')).not.toBeNull();
       });
     } finally {
       await cleanup();
@@ -1047,7 +2031,8 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('ada');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
       });
 
@@ -1068,7 +2053,8 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(searchInput.value).toBe('ada');
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
         expect(queryActionByText(container, 'Limpiar otros filtros')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
@@ -1115,7 +2101,8 @@ describe('MarketplaceOrdersPage', () => {
       await setInputValue(searchInput, '999000111');
 
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(container.querySelector('tbody tr')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
         expect(container.textContent).toContain('Ada Lovelace');
         expect(container.textContent).not.toContain('Grace Hopper');
         expect(container.textContent).not.toContain('No hay órdenes para la búsqueda actual.');
@@ -1164,7 +2151,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
         expect(container.textContent).not.toContain('La búsqueda activa se maneja desde el campo superior.');
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
         expect(listOrdersMock).toHaveBeenCalledTimes(1);
@@ -1174,7 +2161,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('uses row click as the primary table action and removes the duplicate action column', async () => {
+  it('uses row click as the primary table action and keeps copy helpers collapsed behind one labeled menu', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1212,8 +2199,323 @@ describe('MarketplaceOrdersPage', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
-        expect(document.body.querySelectorAll('button[aria-label^="Copiar ID del pedido "]')).toHaveLength(1);
-        expect(queryActionByText(document.body, 'Copiar resumen')).not.toBeNull();
+        expect(document.body.querySelectorAll('button[aria-label^="Copiar ID del pedido "]')).toHaveLength(0);
+        expect(queryActionByText(document.body, 'Copiar')).not.toBeNull();
+        expect(document.body.textContent).not.toContain('Copiar ID');
+        expect(document.body.textContent).not.toContain('Copiar resumen');
+      });
+
+      await clickActionByText(document.body, 'Copiar');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Copiar ID');
+        expect(document.body.textContent).toContain('Copiar resumen');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows full status history without repeating the latest change in the order summary', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-history',
+        moStatus: 'paid',
+        moPaidAt: '2030-01-02T12:30:00.000Z',
+        moStatusHistory: [
+          ['pending', '2030-01-01T12:00:00.000Z'],
+          ['paid', '2030-01-02T12:30:00.000Z'],
+        ],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Historial de estado');
+        expect(document.body.textContent).toContain('Pendiente');
+        expect(document.body.textContent).toContain('Pagado');
+        expect(document.body.textContent).not.toContain('Último cambio:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('omits the empty status-history break from ordinary order details', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-no-history',
+        moStatusHistory: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Detalle de la orden');
+        expect(dialog?.textContent).toContain('Items');
+        expect(dialog?.textContent).not.toContain('Historial de estado');
+        expect(dialog?.querySelectorAll('hr')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('omits empty optional identifiers from sparse order details', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-sparse',
+        moCartId: null,
+        moBuyerName: 'Sparse Buyer',
+        moBuyerEmail: '',
+        moBuyerPhone: null,
+        moPaypalOrderId: '   ',
+        moCreatedAt: '2030-01-03T12:00:00.000Z',
+        moUpdatedAt: '2030-01-03T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Comprador: Sparse Buyer');
+        expect(document.body.textContent).toContain('Sin email ni teléfono registrado.');
+        expect(document.body.textContent).not.toContain('Email:');
+        expect(document.body.textContent).not.toContain('Teléfono:');
+        expect(document.body.textContent).not.toContain('Carrito:');
+        expect(document.body.textContent).not.toContain('PayPal order:');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces one-item order detail tables with a compact item summary', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-one-item',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.textContent).toContain('Items: 1 × Vintage Mic');
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+
+        expect(dialog).not.toBeNull();
+        expect(dialog?.querySelector('[data-testid="marketplace-single-item-detail"]')).not.toBeNull();
+        expect(dialog?.textContent).toContain('Vintage Mic');
+        expect(dialog?.textContent).toContain('1 × USD $100.00 · Subtotal USD $100.00');
+        expect(dialog?.querySelector('table')).toBeNull();
+        expect(dialog?.textContent).not.toContain('Producto');
+        expect(dialog?.textContent).not.toContain('Cantidad');
+        expect(dialog?.textContent).not.toContain('Precio');
+        expect(dialog?.textContent).not.toContain('SubtotalSubtotal');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps empty order items out of the scan summary and explains them once in details', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-empty-items',
+        moItems: [],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        const summary = container.querySelector<HTMLElement>('[data-testid="marketplace-single-order-summary"]');
+        expect(summary).not.toBeNull();
+        expect(summary?.textContent).not.toContain('Items:');
+        expect(container.textContent).not.toContain('Items: Sin items');
+        expect(container.textContent).not.toContain('Sin items registrados para esta orden.');
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Detalle de la orden');
+        expect(dialog?.textContent).toContain('Items');
+        expect(dialog?.textContent).toContain('Sin items registrados para esta orden.');
+        expect(dialog?.textContent).not.toContain('Producto');
+        expect(dialog?.textContent).not.toContain('Cantidad');
+        expect(dialog?.textContent).not.toContain('Subtotal');
+        expect(dialog?.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('summarizes missing table items once when every visible order lacks item data', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'empty-items-1',
+        moItems: [],
+      }),
+      buildOrder({
+        moOrderId: 'empty-items-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moItems: [],
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(getTableHeaders(container)).not.toContain('Items');
+        expect(getColumnTextsByHeader(container, 'Items')).toEqual([]);
+        expect(container.querySelector('[data-testid="marketplace-orders-empty-items-summary"]')?.textContent?.trim()).toBe(
+          'Sin items registrados en las órdenes visibles.',
+        );
+        expect((container.textContent?.match(/Sin items registrados/g) ?? [])).toHaveLength(1);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        expect(dialog?.textContent).toContain('Sin items registrados para esta orden.');
+        expect(dialog?.querySelector('table')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('humanizes payment provider labels in the order detail and copied summary', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moPaymentProvider: 'datafast',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moPaymentProvider: 'paypal',
+        moCreatedAt: '2030-01-01T12:00:00.000Z',
+        moUpdatedAt: '2030-01-01T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Pago: Tarjeta (Datafast)');
+        expect(document.body.textContent).not.toContain('Pago: datafast');
+      });
+
+      await clickActionByText(document.body, 'Copiar');
+
+      await waitForExpectation(() => {
+        expect(
+          Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).some(
+            (item) => (item.textContent ?? '').trim() === 'Copiar resumen',
+          ),
+        ).toBe(true);
+      });
+
+      await act(async () => {
+        const copySummaryMenuItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find(
+          (item) => (item.textContent ?? '').trim() === 'Copiar resumen',
+        );
+        copySummaryMenuItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(writeTextMock).toHaveBeenCalledWith(expect.stringContaining('Pago: Tarjeta (Datafast)'));
+        expect(writeTextMock).not.toHaveBeenCalledWith(expect.stringContaining('Pago: datafast'));
       });
     } finally {
       await cleanup();
@@ -1300,6 +2602,133 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
+  it('keeps canonical payment read-only and applies only an allowed fulfillment transition', async () => {
+    const runtimeOrder = buildOrder({
+      moOrderId: 'order-1',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-01T13:00:00.000Z',
+      moCheckoutStatus: 'paid',
+      moFulfillmentMethod: 'pickup',
+      moFulfillmentStatus: 'ready_to_fulfill',
+      moHoldExpiresAt: '2030-01-01T12:15:00.000Z',
+      moTrackingReference: null,
+      moFulfillmentHistory: [['ready_to_fulfill', '2030-01-01T13:00:00.000Z']],
+    });
+    const updatedRuntimeOrder: MarketplaceOrderDTO = {
+      ...runtimeOrder,
+      moFulfillmentStatus: 'picking',
+      moFulfillmentHistory: [
+        ...(runtimeOrder.moFulfillmentHistory ?? []),
+        ['picking', '2030-01-01T13:10:00.000Z'],
+      ],
+    };
+    listOrdersMock.mockResolvedValueOnce([runtimeOrder]).mockResolvedValue([updatedRuntimeOrder]);
+    updateFulfillmentMock.mockResolvedValue(updatedRuntimeOrder);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Gestionar entrega');
+        expect(document.body.textContent).toContain('Lista para preparar');
+        expect(document.body.textContent).toContain('El pago y la entrega son estados separados.');
+        expect(countLabelsByText(document.body, 'Nuevo estado')).toBe(0);
+        expect(countLabelsByText(document.body, 'Proveedor de pago')).toBe(0);
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
+      });
+
+      await selectOptionByLabel(document.body, 'Siguiente estado de entrega', 'En preparación');
+      await setInputValue(getInputByLabel(document.body, 'Código de motivo'), 'warehouse_pick');
+      await setTextareaValue(getTextareaByLabel(document.body, 'Notas de operación'), 'Operador inició la preparación.');
+      await clickActionByText(document.body, 'Guardar transición de entrega');
+
+      await waitForExpectation(() => {
+        expect(updateFulfillmentMock).toHaveBeenCalledTimes(1);
+        expect(updateFulfillmentMock).toHaveBeenCalledWith('order-1', {
+          mfuStatus: 'picking',
+          mfuReasonCode: 'warehouse_pick',
+          mfuNotes: 'Operador inició la preparación.',
+        });
+        expect(updateOrderMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).toContain('En preparación');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('requires a condition report before transferring rental custody', async () => {
+    const rentalOrder = buildOrder({
+      moOrderKind: 'rental',
+      moStatus: 'paid',
+      moPaidAt: '2030-01-01T13:00:00.000Z',
+      moCheckoutStatus: 'paid',
+      moFulfillmentMethod: 'pickup',
+      moFulfillmentStatus: 'ready_for_handoff',
+      moRentalStartDate: '2030-01-10',
+      moRentalEndDate: '2030-01-12',
+      moRentalDurationDays: 3,
+      moRentalChargeUsdCents: 30000,
+      moSecurityDepositUsdCents: 5000,
+      moDepositStatus: 'collected',
+      moDepositDeductionUsdCents: 0,
+      moRentalTermsVersion: 'rental-v1',
+      moRentalTimezone: 'America/Guayaquil',
+      moFulfillmentHistory: [['ready_for_handoff', '2030-01-01T13:00:00.000Z']],
+    });
+    const checkedOutOrder = {
+      ...rentalOrder,
+      moFulfillmentStatus: 'checked_out',
+      moConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+      moFulfillmentHistory: [
+        ...(rentalOrder.moFulfillmentHistory ?? []),
+        ['checked_out', '2030-01-10T14:00:00.000Z'] as [string, string],
+      ],
+    };
+    listOrdersMock.mockResolvedValueOnce([rentalOrder]).mockResolvedValue([checkedOutOrder]);
+    updateRentalMock.mockResolvedValue(checkedOutOrder);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Gestionar renta');
+        expect(document.body.textContent).toContain('Pago, custodia y depósito son estados separados.');
+        expect(countLabelsByText(document.body, 'Proveedor de pago')).toBe(0);
+      });
+
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'En custodia del cliente');
+      expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
+      await setTextareaValue(
+        getTextareaByLabel(document.body, 'Condición al entregar'),
+        'Consola operativa; dos rayones preexistentes documentados.',
+      );
+      await clickActionByText(document.body, 'Guardar transición de renta');
+
+      await waitForExpectation(() => {
+        expect(updateRentalMock).toHaveBeenCalledWith('order-1', {
+          mruStatus: 'checked_out',
+          mruConditionOut: 'Consola operativa; dos rayones preexistentes documentados.',
+        });
+        expect(updateFulfillmentMock).not.toHaveBeenCalled();
+        expect(updateOrderMock).not.toHaveBeenCalled();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the payment shortcut available for non-paid orders that still need that action', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
@@ -1315,7 +2744,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
@@ -1336,7 +2766,7 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps missing-provider guidance hidden until a paid state needs it', async () => {
+  it('keeps the payment shortcut hidden until a provider can be saved with it', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1352,30 +2782,32 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
+        expect(document.body.textContent).toContain('Requerido antes de marcar una orden como pagada.');
         expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
-      });
-
-      await clickActionByText(document.body, 'Marcar pagado ahora');
-
-      await waitForExpectation(() => {
-        expect(document.body.textContent).toContain('No hay método de pago registrado.');
-        const saveButton = queryActionByText(document.body, 'Guardar cambios');
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
       });
 
       const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
       await setInputValue(providerInput, 'manual');
 
       await waitForExpectation(() => {
+        expect(document.body.textContent).not.toContain('Requerido antes de marcar una orden como pagada.');
+        expect(queryActionByText(document.body, 'Marcar pagado ahora')).not.toBeNull();
+      });
+
+      await clickActionByText(document.body, 'Marcar pagado ahora');
+
+      await waitForExpectation(() => {
         expect(document.body.textContent).not.toContain('No hay método de pago registrado.');
+        expect(countLabelsByText(document.body, 'Fecha de pago')).toBe(1);
         const saveButton = queryActionByText(document.body, 'Guardar cambios');
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(false);
@@ -1385,7 +2817,57 @@ describe('MarketplaceOrdersPage', () => {
     }
   });
 
-  it('keeps save disabled until the order editor has a real change', async () => {
+  it('collapses paid-state setup blockers into one warning when method and date are both still missing', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: null,
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).not.toContain(
+          'Completa el método de pago y la fecha del cobro para dejar la orden como pagada.',
+        );
+      });
+
+      await selectOptionByLabel(document.body, 'Nuevo estado', 'Pagado');
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'Completa el método de pago y la fecha del cobro para dejar la orden como pagada.',
+        );
+        expect(document.body.textContent).not.toContain(
+          'No hay método de pago registrado. Ingresa paypal, datafast o manual para dejar trazabilidad.',
+        );
+        expect(document.body.textContent).not.toContain(
+          'Agrega la fecha y hora del cobro si marcas la orden como pagada.',
+        );
+        const saveButton = queryActionByText(document.body, 'Guardar cambios');
+        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
+        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the save action hidden until the order editor has a real change', async () => {
     listOrdersMock.mockResolvedValue([
       buildOrder({
         moOrderId: 'order-1',
@@ -1401,15 +2883,17 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
 
       await waitForExpectation(() => {
-        const saveButton = queryActionByText(document.body, 'Guardar cambios');
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
       });
 
       const providerInput = getInputByLabel(document.body, 'Proveedor de pago');
@@ -1419,6 +2903,90 @@ describe('MarketplaceOrdersPage', () => {
         const saveButton = queryActionByText(document.body, 'Guardar cambios');
         expect(saveButton).toBeInstanceOf(HTMLButtonElement);
         expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')).toBeNull();
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the current order status as context instead of preselecting it as a new change', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: 'paypal',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain('Detalle de la orden');
+        expect(document.body.textContent).toContain('Estado:');
+        expect(document.body.textContent).toContain('Pendiente');
+        expect(normalizeText(getSelectTriggerByLabel(document.body, 'Nuevo estado').textContent)).toBe('Sin cambios');
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the current order status out of the change menu so no-op actions are not offered', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+        moStatus: 'pending',
+        moPaymentProvider: 'paypal',
+        moPaidAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+      });
+
+      await clickFirstOrderRow(container);
+
+      await waitForExpectation(() => {
+        expect(normalizeText(getSelectTriggerByLabel(document.body, 'Nuevo estado').textContent)).toBe('Sin cambios');
+        expect(document.body.textContent).toContain('Estado:');
+        expect(document.body.textContent).toContain('Pendiente');
+      });
+
+      const statusTrigger = getSelectTriggerByLabel(document.body, 'Nuevo estado');
+      await act(async () => {
+        statusTrigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const optionTexts = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"], [role="menuitem"]'))
+          .map((element) => normalizeText(element.textContent));
+
+        expect(optionTexts).toContain('Sin cambios');
+        expect(optionTexts).toContain('Pagado');
+        expect(optionTexts).not.toContain('Pendiente');
       });
     } finally {
       await cleanup();
@@ -1442,7 +3010,8 @@ describe('MarketplaceOrdersPage', () => {
 
     try {
       await waitForExpectation(() => {
-        expect(container.querySelectorAll('tbody tr')).toHaveLength(1);
+        expect(queryActionByText(container, 'Abrir orden')).not.toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
       });
 
       await clickFirstOrderRow(container);
@@ -1451,7 +3020,58 @@ describe('MarketplaceOrdersPage', () => {
         expect(document.body.textContent).toContain('Detalle de la orden');
         expect(queryActionByText(document.body, 'Marcar pagado ahora')).toBeNull();
         expect(queryActionByText(document.body, 'Registrar fecha de pago ahora')).toBeNull();
-        expect(queryActionByText(document.body, 'Guardar cambios')).not.toBeNull();
+        expect(queryActionByText(document.body, 'Guardar cambios')).toBeNull();
+        expect(document.body.querySelector('[data-testid="marketplace-order-editor-idle"]')?.textContent).toContain(
+          'Sin cambios pendientes.',
+        );
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replaces a one-row marketplace search result with the order summary instead of keeping table export chrome', async () => {
+    listOrdersMock.mockResolvedValue([
+      buildOrder({
+        moOrderId: 'order-1',
+      }),
+      buildOrder({
+        moOrderId: 'order-2',
+        moCartId: 'cart-2',
+        moBuyerName: 'Grace Hopper',
+        moBuyerEmail: 'grace@example.com',
+        moCreatedAt: '2030-01-02T12:00:00.000Z',
+        moUpdatedAt: '2030-01-02T12:00:00.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelectorAll('tbody tr')).toHaveLength(2);
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).toBeNull();
+      });
+
+      const searchInput = getInputByLabel(container, orderSearchLabel);
+      await setInputValue(searchInput, 'grace@example.com');
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'La búsqueda dejó una sola orden visible. Revísala aquí y usa Limpiar dentro del campo para volver a comparar pedidos.',
+        );
+        expect(container.textContent).not.toContain(
+          'Órdenes del marketplace. Solo Admin/Operación pueden editar estados y pagos.',
+        );
+        expect(container.querySelector('[data-testid="marketplace-single-order-summary"]')).not.toBeNull();
+        expect(container.textContent).toContain('Pedido: order-2');
+        expect(container.textContent).toContain('Comprador: Grace Hopper');
+        expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).not.toBeNull();
+        expect(queryActionByText(container, 'Exportar CSV')).toBeNull();
+        expect(container.querySelector('tbody tr')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -1482,7 +3102,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(listOrdersMock).toHaveBeenCalledWith({ status: undefined, limit: 200 });
         expect(container.querySelector('tbody tr')).not.toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
       });
@@ -1501,6 +3121,9 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
+        expect(container.textContent).not.toContain(
+          'La búsqueda activa se maneja desde el campo superior. Usa Limpiar ahí para volver a la bandeja completa.',
+        );
         expect(queryActionByText(container, 'Ir al marketplace')).toBeNull();
         expect(container.querySelector('tbody tr')).toBeNull();
       });
@@ -1512,7 +3135,7 @@ describe('MarketplaceOrdersPage', () => {
         expect(container.querySelector('button[aria-label="Limpiar búsqueda"]')).toBeNull();
         expect(queryActionByText(container, 'Copiar enlace de filtros')).toBeNull();
         expect(queryActionByText(container, 'Limpiar filtros')).toBeNull();
-        expect(container.textContent).toContain(
+        expect(container.textContent).not.toContain(
           'Los filtros activos aparecerán aquí cuando acotes la bandeja. Limpiar filtros aparecerá en ese momento.',
         );
       });

@@ -1,76 +1,79 @@
 import { jest } from '@jest/globals';
 
 const getMock = jest.fn<(path: string) => Promise<unknown>>();
+const warnMock = jest.fn();
 
 jest.unstable_mockModule('./client', () => ({
   get: getMock,
 }));
 
-const { Engineers } = await import('./engineers');
+jest.unstable_mockModule('../utils/logger', () => ({
+  logger: {
+    warn: warnMock,
+  },
+}));
 
-const ENGINEERS_CACHE_KEY = 'tdf-engineers-cache-v1';
+const { Engineers, parseEngineersJson } = await import('./engineers');
+
+describe('parseEngineersJson', () => {
+  it('enforces the JSON string precondition for untyped callers', () => {
+    expect(() => parseEngineersJson(42 as unknown as string)).toThrow(
+      'parseEngineersJson precondition failed: raw must be a string',
+    );
+  });
+
+  it('returns parsed values for valid JSON strings', () => {
+    expect(parseEngineersJson('[{"peId":1,"peName":"Alpha"}]')).toEqual([{ peId: 1, peName: 'Alpha' }]);
+  });
+
+  it('returns null for malformed JSON instead of throwing', () => {
+    expect(() => parseEngineersJson('{not valid json')).not.toThrow();
+    expect(parseEngineersJson('{not valid json')).toBeNull();
+  });
+});
 
 describe('Engineers.listPublic', () => {
-  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
-
   beforeEach(() => {
     getMock.mockReset();
-    warnSpy.mockClear();
+    warnMock.mockReset();
     window.localStorage.clear();
   });
 
-  afterAll(() => {
-    warnSpy.mockRestore();
+  afterEach(() => {
+    window.localStorage.clear();
   });
 
-  it('sanitizes live payloads and persists normalized cache', async () => {
-    getMock.mockResolvedValueOnce([
-      { peId: '2', peName: '  Ana  ' },
-      { peId: 2, peName: 'ana' },
-      { peId: 6, peName: 'Ana' },
-      { peId: 0, peName: 'Zero' },
-      { peId: -1, peName: 'Negative' },
-      { peId: 3.5, peName: 'Float' },
-      { peId: '4x', peName: 'Invalid text' },
-      { peId: 4, peName: ' Luis ' },
-      { peId: 5, peName: '   ' },
-    ]);
-
-    const result = await Engineers.listPublic();
-
-    expect(result).toEqual([
-      { peId: 2, peName: 'Ana' },
-      { peId: 6, peName: 'Ana' },
-      { peId: 4, peName: 'Luis' },
-    ]);
-    expect(JSON.parse(window.localStorage.getItem(ENGINEERS_CACHE_KEY) ?? '[]')).toEqual(result);
-  });
-
-  it('falls back to sanitized cache when the live request fails', async () => {
+  it('normalizes cached engineers when the live catalog fails', async () => {
     window.localStorage.setItem(
-      ENGINEERS_CACHE_KEY,
+      'tdf-engineers-cache-v1',
       JSON.stringify([
-        { peId: '8', peName: '  Marta  ' },
-        { peId: 8, peName: 'marta' },
-        { peId: 18, peName: 'Marta' },
-        { peId: -10, peName: 'Invalid negative' },
-        { peId: 'oops', peName: 'Invalid text' },
-        { peId: 11, peName: ' Leo ' },
-        { peId: 99, peName: '   ' },
+        { peId: '2', peName: 'Beta' },
+        { peId: 1, peName: ' Alpha ' },
+        { peId: 2, peName: 'Duplicate Beta' },
+        { peId: '0', peName: 'Invalid zero' },
+        { peId: '3', peName: '   ' },
       ]),
     );
-
     getMock.mockRejectedValueOnce(new Error('offline'));
 
-    const result = await Engineers.listPublic();
-
-    expect(result).toEqual([
-      { peId: 11, peName: 'Leo' },
-      { peId: 8, peName: 'Marta' },
-      { peId: 18, peName: 'Marta' },
+    await expect(Engineers.listPublic()).resolves.toEqual([
+      { peId: 1, peName: 'Alpha' },
+      { peId: 2, peName: 'Beta' },
     ]);
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(getMock).toHaveBeenCalledWith('/engineers');
+    expect(warnMock).toHaveBeenCalledWith(
       'Engineer catalog unavailable, using cached engineer list',
+      expect.any(Error),
+    );
+  });
+
+  it('falls back to manual entry when the cache JSON is malformed', async () => {
+    window.localStorage.setItem('tdf-engineers-cache-v1', '{not valid json');
+    getMock.mockRejectedValueOnce(new Error('offline'));
+
+    await expect(Engineers.listPublic()).resolves.toEqual([]);
+    expect(warnMock).toHaveBeenCalledWith(
+      'Engineer catalog unavailable, falling back to manual entry',
       expect.any(Error),
     );
   });

@@ -1,0 +1,63 @@
+- generic [ref=e4974]:
+  - generic [ref=e4977]:
+    - link [ref=e4982] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e4987]
+    - generic [ref=e4991]:
+      - link [ref=e5205] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e5001]
+      - link [ref=e5206] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e5016]
+      - link [ref=e5207] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e5033]
+      - link [ref=e5208] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e5048]
+      - link [ref=e5210] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e5215]
+      - link [ref=e5217] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e5081]
+      - link [ref=e5218] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e5096]
+      - link [ref=e5219] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e5113]:
+          - img "tdf.records.label's profile picture" [ref=e5114]
+    - generic [ref=e5120]:
+      - link [ref=e5220] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e5128]
+      - link [ref=e5221] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e5141]
+  - main [ref=e5150]:
+    - generic [ref=e5155]:
+      - navigation "Thread list" [ref=e5156]:
+        - generic [ref=e5157]:
+          - generic [ref=e5158]:
+            - button [ref=e5160] [cursor=pointer]:
+              - img "Back" [ref=e5163]
+            - generic [ref=e5165]: Hidden requests
+          - generic [ref=e5222]: Requests containing messages that may be offensive or unwanted are moved to this folder.
+          - button "user-profile-picture Instagram User Instagram User sent an attachment. 2 weeks ago" [ref=e5232] [cursor=pointer]:
+            - generic [ref=e5234]:
+              - img "user-profile-picture" [ref=e5238]
+              - generic [ref=e5241]:
+                - generic [ref=e5242]: Instagram User
+                - generic [ref=e5248]:
+                  - generic [ref=e5249]: Instagram User sent an attachment.
+                  - generic [ref=e5251]:
+                    - generic [ref=e5252]: ·
+                    - generic "2 weeks ago" [ref=e5257]: 2w
+          - generic [ref=e5258]:
+            - separator [ref=e5259]
+            - button "Delete 1" [ref=e5261] [cursor=pointer]
+      - generic [ref=e5264]:
+        - heading "Hidden requests" [active] [level=2] [ref=e5270]
+        - generic [ref=e5271]: These are message requests that may be offensive or unwanted.

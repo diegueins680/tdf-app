@@ -11,14 +11,15 @@ import Data.Aeson ((.=))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Either (isLeft)
+import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, utctDay)
 import Data.Time.Clock (addUTCTime, getCurrentTime)
 import Database.Persist hiding (Active)
-import Database.Persist.Sql (SqlBackend, SqlPersistT, rawExecute, runSqlPool, toSqlKey)
+import Database.Persist.Sql (SqlBackend, SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool, runSqlite)
-import Servant (ServerError (errBody, errHTTPCode), ServerT, (:<|>) (..))
+import Servant (ServerError (errBody, errHTTPCode), ServerT, getResponse, (:<|>) (..))
 import Servant.Multipart
   ( FileData (..)
   , FromMultipart (fromMultipart)
@@ -30,27 +31,68 @@ import Test.Hspec
 import Web.PathPieces (fromPathPiece)
 
 import qualified TDF.Models as M
+import TDF.API.Bands (BandsAPI)
 import TDF.API.Inventory (AssetUploadForm (..), InventoryAPI, InventoryPublicAPI)
-import TDF.API.Pipelines (PipelinesAPI)
 import TDF.API.Rooms (RoomsAPI)
 import TDF.API.Payments (PaymentCreate (..))
 import TDF.API.Types
   ( AssetCheckinRequest (..)
   , AssetCreate (..)
-  , AssetDTO (assetId, qrToken)
+  , BandCreate (..)
+  , BandDTO (bName)
+  , AssetDTO
+      ( assetId
+      , currentCheckoutAt
+      , currentCheckoutDisposition
+      , currentCheckoutDueAt
+      , currentCheckoutKind
+      , currentCheckoutHolderEmail
+      , currentCheckoutHolderPhone
+      , currentCheckoutPaymentAmountCents
+      , currentCheckoutPaymentCurrency
+      , currentCheckoutPaymentInstallments
+      , currentCheckoutPaymentOutstandingCents
+      , currentCheckoutPhotoUrl
+      , currentCheckoutPaymentType
+      , currentCheckoutTarget
+      , location
+      , qrToken
+      )
   , AssetCheckoutDTO
+      ( AssetCheckoutDTO
+      , checkedOutBy
+      , conditionIn
+      , conditionOut
+      , disposition
+      , dueAt
+      , holderEmail
+      , holderPhone
+      , notes
+      , paymentAmountCents
+      , paymentCurrency
+      , paymentInstallments
+      , paymentOutstandingCents
+      , paymentReference
+      , paymentType
+      , photoInUrl
+      , photoOutUrl
+      , returnedAt
+      , targetKind
+      , targetPartyRef
+      , termsAndConditions
+      )
   , AssetCheckoutRequest (..)
   , AssetQrDTO
+  , AssetUploadDTO
   , AssetUpdate (..)
-  , PipelineCardCreate (..)
-  , PipelineCardDTO (..)
-  , PipelineCardUpdate (..)
+  , Page
   , RoomCreate (..)
   , RoomDTO
   , RoomUpdate (..)
   , SessionInputRow (SessionInputRow)
+  , ServiceCatalogEnvelopeDTO (..)
   )
-import TDF.Auth (AuthedUser (..), modulesForRoles)
+import TDF.Auth (AuthedUser (..), ModuleAccess (..), modulesForRoles)
 import TDF.Config (AppConfig (..))
 import qualified TDF.Config as Config
 import TDF.DB (Env (..))
@@ -76,27 +118,38 @@ import TDF.ServerExtra (
     assetMatchesSearchQuery,
     extractMetaInbound,
     normalizeAssetSearchQuery,
+    validateAssetSearchQuery,
     normalizeAssetCategory,
     normalizeAssetCategoryUpdate,
     normalizeAssetCheckinFields,
     normalizeAssetNotesUpdate,
     normalizeAssetName,
     normalizeAssetNameUpdate,
+    normalizeBandName,
+    normalizeOptionalTextField,
+    normalizePipelineCardTitle,
+    normalizePublicQrCheckinRequest,
+    normalizePublicQrCheckoutRequest,
     validateAssetPhotoUrl,
     validateAssetPhotoUrlUpdate,
     normalizeRoomName,
     normalizeRoomNameUpdate,
+    normalizeServiceCatalogLocale,
+    normalizeMetaSenderLabelIds,
     validateSocialLimit,
     metaWebhookVerifyTokenCandidates,
     verifyMetaWebhook,
+    validateMetaInboundPayload,
     validateMetaWebhookChannel,
     validateMetaWebhookVerifyRequest,
     parseSocialBoolParam,
     parseSocialDirectionParam,
+    serviceCatalogResponse,
     resolveInstagramReplyContext,
     validateSocialReplyExternalId,
     socialReplyOutcomeFields,
     validateSocialReplySenderId,
+    validateInventoryAssetUploadSize,
     validateInventoryPageParams,
     validatePaymentAmountCents,
     validatePaymentPaidAt,
@@ -108,10 +161,11 @@ import TDF.ServerExtra (
     validatePaymentConcept,
     validatePaymentReference,
     validatePaymentPeriod,
+    validatePipelineCardPatchIntent,
+    validatePipelineCardSortOrder,
     validatePositivePaymentReferenceId,
     validateOptionalPositivePaymentReferenceId,
-    normalizeServiceCatalogName,
-    normalizeServiceCatalogNameUpdate,
+    validatePaymentPartyFilter,
     persistMetaInbound,
     validatePaymentMethod,
     parseUTCTimeText,
@@ -119,25 +173,26 @@ import TDF.ServerExtra (
     validateDistinctSessionRooms,
     validateDistinctBandMemberIds,
     validateSessionStatusInput,
+    validateSessionRequiredTextField,
+    validateSessionOptionalTextField,
+    validateSessionSampleRate,
+    validateSessionBitDepth,
     validateSessionTimeRange,
     validateSessionInputRowsWrite,
+    validatePublicQrUploadContext,
     normalizeCheckoutRequest,
     validateCheckoutTargets,
     validateCheckoutDueAt,
     validateCheckoutTargetReferences,
-    validateServiceCatalogCurrency,
-    validateServiceCatalogCurrencyUpdate,
-    validateServiceCatalogBillingUnit,
-    validateServiceCatalogBillingUnitUpdate,
-    validateServiceCatalogTaxBps,
-    validateServiceCatalogTaxBpsUpdate,
+    ensureModule,
     validateAssetCheckoutStatus,
     validateAssetStatusUpdate,
     validatePageParams,
+    sanitizePublicCheckoutDTO,
     validateSessionReferences,
+    bandsServer,
     inventoryPublicServer,
     inventoryServer,
-    pipelinesServer,
     roomsServer,
  )
 
@@ -161,6 +216,28 @@ mkAssetUploadFile fileName =
 
 spec :: Spec
 spec = do
+  describe "versioned service catalog responses" $ do
+    let envelope = ServiceCatalogEnvelopeDTO 2 42 "es" []
+
+    it "normalizes supported English locales and falls back to Spanish" $ do
+      normalizeServiceCatalogLocale (Just " EN-us ") `shouldBe` "en"
+      normalizeServiceCatalogLocale (Just "fr") `shouldBe` "es"
+      normalizeServiceCatalogLocale Nothing `shouldBe` "es"
+
+    it "returns the revisioned envelope when the client cache is stale" $ do
+      result <- runExceptT (serviceCatalogResponse (Just "\"service-catalog-41\"") envelope)
+      fmap (sceRevision . getResponse) result `shouldBe` Right 42
+
+    it "returns 304 for matching strong, weak, and wildcard ETags" $ do
+      let assertNotModified supplied = do
+            result <- runExceptT (serviceCatalogResponse (Just supplied) envelope)
+            case result of
+              Left serverError -> errHTTPCode serverError `shouldBe` 304
+              Right _ -> expectationFailure "Expected matching service catalog ETag to return 304"
+      assertNotModified "\"service-catalog-42\""
+      assertNotModified "W/\"service-catalog-42\""
+      assertNotModified "*"
+
   describe "PaymentCreate FromJSON" $ do
     it "accepts canonical payment create fields for payment ingestion" $
       case A.eitherDecode
@@ -185,6 +262,245 @@ spec = do
         "{\"pcPartyId\":42,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\",\"unexpected\":true}"
           :: Either String PaymentCreate)
         `shouldSatisfy` isLeft
+
+    it "rejects null optional payment fields instead of treating them as omitted" $ do
+      let basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid fieldName rawPayload =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err ->
+                err `shouldContain` (fieldName <> " must be omitted instead of null")
+              Right payload ->
+                expectationFailure
+                  ("Expected null optional payment field to fail, got: " <> show payload)
+
+      assertInvalid "pcOrderId" (basePaymentJson ("pcOrderId" .= A.Null))
+      assertInvalid "pcInvoiceId" (basePaymentJson ("pcInvoiceId" .= A.Null))
+      assertInvalid "pcReference" (basePaymentJson ("pcReference" .= A.Null))
+      assertInvalid "pcPeriod" (basePaymentJson ("pcPeriod" .= A.Null))
+      assertInvalid "pcAttachmentUrl" (basePaymentJson ("pcAttachmentUrl" .= A.Null))
+
+    it "normalizes payment text at the JSON boundary" $ do
+      let rawPayload =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= (" usd " :: Text)
+                , "pcMethod" .= (" cash " :: Text)
+                , "pcReference" .= ("  REC-42  " :: Text)
+                , "pcPaidAt" .= (" 2026-04-13 " :: Text)
+                , "pcConcept" .= (" Studio booking " :: Text)
+                , "pcPeriod" .= (" 2026-04 " :: Text)
+                , "pcAttachmentUrl" .= (" https://files.example.com/receipt.pdf " :: Text)
+                ]
+      case A.eitherDecode rawPayload of
+        Left err ->
+          expectationFailure ("Expected trimmed payment create payload to decode, got: " <> err)
+        Right payload -> do
+          pcCurrency payload `shouldBe` "USD"
+          pcMethod payload `shouldBe` "cash"
+          pcPaidAt payload `shouldBe` "2026-04-13"
+          pcConcept payload `shouldBe` "Studio booking"
+          pcReference payload `shouldBe` Just "REC-42"
+          pcPeriod payload `shouldBe` Just "2026-04"
+          pcAttachmentUrl payload `shouldBe` Just "https://files.example.com/receipt.pdf"
+
+    it "rejects malformed payment attachment URLs at the JSON boundary before handler fallbacks" $ do
+      let basePaymentJson attachmentUrlValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= ("USD" :: Text)
+                , "pcMethod" .= ("cash" :: Text)
+                , "pcPaidAt" .= ("2026-04-13" :: Text)
+                , "pcConcept" .= ("Studio booking" :: Text)
+                , "pcAttachmentUrl" .= attachmentUrlValue
+                ]
+          assertInvalid attachmentUrlValue expectedMessage =
+            case A.eitherDecode (basePaymentJson attachmentUrlValue) :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment attachment URL to fail, got: " <> show payload)
+
+      assertInvalid
+        ("proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("http://files.example.com/proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files/proof.pdf" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files.example.com/proof.pdf#page=2" :: Text)
+        "pcAttachmentUrl must be an absolute https URL without a fragment"
+      assertInvalid
+        ("https://files.example.com//proof.pdf" :: Text)
+        "pcAttachmentUrl path must not contain empty, dot, or dot-dot segments"
+
+    it "rejects blank or unsafe optional payment text before manual payment handler fallbacks" $ do
+      let basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed optional payment text to fail, got: " <> show payload)
+
+      assertInvalid
+        (basePaymentJson ("pcReference" .= ("   " :: Text)))
+        "pcReference must be omitted or a non-empty string"
+      assertInvalid
+        (basePaymentJson ("pcReference" .= ("REC\n42" :: Text)))
+        "pcReference must not contain control characters or hidden formatting characters"
+      assertInvalid
+        (basePaymentJson ("pcPeriod" .= ("2026" <> T.singleton '\x202E' <> "-04")))
+        "pcPeriod must not contain control characters or hidden formatting characters"
+      assertInvalid
+        ( basePaymentJson
+            ("pcAttachmentUrl" .= ("https://files.example.com/proof.pdf\NUL" :: Text))
+        )
+        "pcAttachmentUrl must not contain control characters or hidden formatting characters"
+
+    it "rejects non-positive ids and amounts before manual payment handler fallbacks" $ do
+      let assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        "{\"pcPartyId\":0,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcPartyId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcOrderId\":0,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcOrderId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcInvoiceId\":-7,\"pcAmountCents\":12500,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcInvoiceId must be a positive integer"
+      assertInvalid
+        "{\"pcPartyId\":42,\"pcAmountCents\":0,\"pcCurrency\":\"USD\",\"pcMethod\":\"cash\",\"pcPaidAt\":\"2026-04-13\",\"pcConcept\":\"Studio booking\"}"
+        "pcAmountCents must be a positive integer"
+
+    it "rejects blank or unsafe required text before manual payment handler fallbacks" $ do
+      let paymentCreateJson :: Text -> Text -> Text -> Text -> BL8.ByteString
+          paymentCreateJson currencyValue methodValue paidAtValue conceptValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= currencyValue
+                , "pcMethod" .= methodValue
+                , "pcPaidAt" .= paidAtValue
+                , "pcConcept" .= conceptValue
+                ]
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected malformed payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        (paymentCreateJson "   " "cash" "2026-04-13" "Studio booking")
+        "pcCurrency is required"
+      assertInvalid
+        (paymentCreateJson "ZZZ" "cash" "2026-04-13" "Studio booking")
+        "pcCurrency must be a valid ISO 4217 currency code"
+      assertInvalid
+        (paymentCreateJson "USD" "\n" "2026-04-13" "Studio booking")
+        "pcMethod is required"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13\NUL" "Studio booking")
+        "pcPaidAt must not contain control characters or hidden formatting characters"
+      assertInvalid
+        ( paymentCreateJson
+            "USD"
+            "cash"
+            "2026-04-13"
+            ("Studio" <> T.singleton '\x202E' <> " booking")
+        )
+        "pcConcept must not contain control characters or hidden formatting characters"
+
+    it "rejects oversized payment text at the JSON boundary before handler fallbacks" $ do
+      let paymentCreateJson :: Text -> Text -> Text -> Text -> BL8.ByteString
+          paymentCreateJson currencyValue methodValue paidAtValue conceptValue =
+            A.encode $
+              A.object
+                [ "pcPartyId" .= (42 :: Int)
+                , "pcAmountCents" .= (12500 :: Int)
+                , "pcCurrency" .= currencyValue
+                , "pcMethod" .= methodValue
+                , "pcPaidAt" .= paidAtValue
+                , "pcConcept" .= conceptValue
+                ]
+          basePaymentJson extraField =
+            A.encode $
+              A.object
+                ( [ "pcPartyId" .= (42 :: Int)
+                  , "pcAmountCents" .= (12500 :: Int)
+                  , "pcCurrency" .= ("USD" :: Text)
+                  , "pcMethod" .= ("cash" :: Text)
+                  , "pcPaidAt" .= ("2026-04-13" :: Text)
+                  , "pcConcept" .= ("Studio booking" :: Text)
+                  ]
+                    <> [extraField]
+                )
+          assertInvalid rawPayload expectedMessage =
+            case A.eitherDecode rawPayload :: Either String PaymentCreate of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ("Expected oversized payment create payload to fail, got: " <> show payload)
+
+      assertInvalid
+        (paymentCreateJson "USDD" "cash" "2026-04-13" "Studio booking")
+        "pcCurrency must be 3 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" (T.replicate 65 "a") "2026-04-13" "Studio booking")
+        "pcMethod must be 64 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13Z" "Studio booking")
+        "pcPaidAt must be 10 characters or fewer"
+      assertInvalid
+        (paymentCreateJson "USD" "cash" "2026-04-13" (T.replicate 241 "a"))
+        "pcConcept must be 240 characters or fewer"
+      assertInvalid
+        (basePaymentJson ("pcReference" .= T.replicate 161 "a"))
+        "pcReference must be 160 characters or fewer"
+      assertInvalid
+        (basePaymentJson ("pcPeriod" .= ("2026-044" :: Text)))
+        "pcPeriod must be 7 characters or fewer"
+      assertInvalid
+        ( basePaymentJson
+            ("pcAttachmentUrl" .= ("https://files.example.com/" <> T.replicate 2049 "a"))
+        )
+        "pcAttachmentUrl must be 2048 characters or fewer"
 
   describe "inventory checkout/check-in request JSON" $ do
     it "accepts canonical asset create and patch keys used by current clients" $ do
@@ -220,9 +536,28 @@ spec = do
           :: Either String AssetUpdate)
         `shouldSatisfy` isLeft
 
+    it "rejects explicit null asset photo fallbacks so asset creation defaults require omission" $
+      case (A.eitherDecode
+        "{\"cName\":\"Roland Juno-106\",\"cCategory\":\"Synth\",\"cPhotoUrl\":null}"
+          :: Either String AssetCreate) of
+        Left err -> err `shouldContain` "cPhotoUrl must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null asset photo fallback to be rejected, got: " <> show payload)
+
+    it
+      "rejects empty or null-only asset patch bodies before inventory handler fallback validation"
+      $ do
+      (A.eitherDecode "{}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"uNotes\":null}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"uPhotoUrl\":null}" :: Either String AssetUpdate)
+        `shouldSatisfy` isLeft
+
     it "accepts canonical inventory checkout keys used by current clients" $
       case A.eitherDecode
-        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
+        "{\"coTargetKind\":\"room\",\"coTargetRoom\":\"00000000-0000-0000-0000-000000000042\",\"coDisposition\":\"rental\",\"coTermsAndConditions\":\"Devuelve con estuche y fuente.\",\"coHolderEmail\":\"ops@example.com\",\"coHolderPhone\":\"0999999999\",\"coPaymentType\":\"bank_transfer\",\"coPaymentInstallments\":3,\"coPaymentReference\":\"TRX-009\",\"coPaymentAmount\":\"1200.50\",\"coPaymentCurrency\":\"usd\",\"coPaymentOutstanding\":\"400.25\",\"coConditionOut\":\"Excelente\",\"coPhotoUrl\":\"inventory/foto.jpg\",\"coNotes\":\"Cableado completo\"}" of
         Left err ->
           expectationFailure ("Expected canonical asset checkout payload to decode, got: " <> err)
         Right payload -> do
@@ -235,6 +570,9 @@ spec = do
           coPaymentType payload `shouldBe` Just "bank_transfer"
           coPaymentInstallments payload `shouldBe` Just 3
           coPaymentReference payload `shouldBe` Just "TRX-009"
+          coPaymentAmount payload `shouldBe` Just "1200.50"
+          coPaymentCurrency payload `shouldBe` Just "usd"
+          coPaymentOutstanding payload `shouldBe` Just "400.25"
           coConditionOut payload `shouldBe` Just "Excelente"
           coPhotoUrl payload `shouldBe` Just "inventory/foto.jpg"
           coNotes payload `shouldBe` Just "Cableado completo"
@@ -269,8 +607,18 @@ spec = do
           :: Either String AssetCheckinRequest)
         `shouldSatisfy` isLeft
 
+    it "rejects null check-in fields instead of treating them as omitted" $ do
+      (A.eitherDecode
+        "{\"ciConditionIn\":\"Returned OK\",\"ciNotes\":null}"
+          :: Either String AssetCheckinRequest)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode
+        "{\"ciPhotoUrl\":null}"
+          :: Either String AssetCheckinRequest)
+        `shouldSatisfy` isLeft
+
   describe "inventory asset upload multipart parsing" $ do
-    it "normalizes optional upload names so blank values keep filename fallbacks" $ do
+    it "trims explicit upload names and keeps omitted-name filename fallbacks" $ do
       case fromMultipart
         (mkAssetUploadMultipart [("name", "  Front Room.jpg  ")] [mkAssetUploadFile "camera.jpg"])
           :: Either String AssetUploadForm of
@@ -281,16 +629,28 @@ spec = do
           aufName payload `shouldBe` Just "Front Room.jpg"
 
       case fromMultipart
-        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "fallback.jpg"])
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "fallback.jpg"])
           :: Either String AssetUploadForm of
         Left err ->
-          expectationFailure ("Expected blank asset upload name to parse, got: " <> err)
+          expectationFailure ("Expected omitted asset upload name to parse, got: " <> err)
         Right payload ->
           aufName payload `shouldBe` Nothing
 
+    it "rejects explicit blank upload names instead of silently using browser filename fallbacks" $
+      case fromMultipart
+        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "fallback.jpg"])
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Asset upload name must not be blank"
+        Right payload ->
+          expectationFailure
+            ( "Expected blank asset upload name to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
     it "rejects uploads with no usable form name or browser filename" $
       case fromMultipart
-        (mkAssetUploadMultipart [("name", "   ")] [mkAssetUploadFile "   "])
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "   "])
           :: Either String AssetUploadForm of
         Left err ->
           err `shouldContain` "Either field name or uploaded file name must be provided"
@@ -299,6 +659,196 @@ spec = do
             ( "Expected unnamed asset upload multipart to be rejected, got file: "
                 <> T.unpack (fdFileName (aufFile payload))
             )
+
+    it "rejects extension-only upload names so stored inventory files always keep a real basename" $ do
+      let assertInvalid :: MultipartData Tmp -> Expectation
+          assertInvalid multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` "Asset upload file name must include a non-empty base name before the extension"
+              Right payload ->
+                expectationFailure
+                  ( "Expected extension-only asset upload metadata to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        (mkAssetUploadMultipart
+          [("name", ".jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        (mkAssetUploadMultipart
+          [("name", "----.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        (mkAssetUploadMultipart [] [mkAssetUploadFile ".jpg"])
+      assertInvalid
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "----.jpg"])
+
+    it "rejects leading, trailing, or repeated dots before inventory filename fallback storage" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected dotted asset upload filename to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart
+          [("name", "front..room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart
+          [("name", ".front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain leading, trailing, or repeated dots"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room..jpg"])
+
+    it "rejects browser filenames with control characters instead of silently rewriting them into stored asset names" $
+      case fromMultipart
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\nshot.jpg"])
+          :: Either String AssetUploadForm of
+        Left err ->
+          err `shouldContain` "Uploaded file name must not contain control characters"
+        Right payload ->
+          expectationFailure
+            ( "Expected control-character browser filename to be rejected, got file: "
+                <> T.unpack (fdFileName (aufFile payload))
+            )
+
+    it "rejects invisible Unicode formatting marks in upload names before storage can normalize them" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected unsafe asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+        (mkAssetUploadMultipart
+          [("name", "front-room\x202Eshot.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front-room\x202Eshot.jpg"])
+
+    it "rejects browser filenames with path separators instead of silently collapsing them into another stored asset name" $ do
+      let assertInvalid rawFileName =
+            case fromMultipart
+              (mkAssetUploadMultipart [] [mkAssetUploadFile rawFileName])
+                :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` "Uploaded file name must not contain path separators"
+              Right payload ->
+                expectationFailure
+                  ( "Expected path-like browser filename to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid "inventory/front-room.jpg"
+      assertInvalid "inventory\\\\front-room.jpg"
+
+    it "rejects URL-shaped upload names before storage sanitization rewrites their path intent" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected URL-shaped asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must not contain URL delimiters or percent-encoded path markers"
+        (mkAssetUploadMultipart
+          [("name", "front-room.jpg?download=.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not contain URL delimiters or percent-encoded path markers"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "front%2Froom.jpg"])
+
+    it "rejects explicit upload names that would be silently reshaped into a different stored filename" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected invalid asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload name must include a supported image extension"
+        (mkAssetUploadMultipart
+          [("name", "front-room")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload name must not contain path separators"
+        (mkAssetUploadMultipart
+          [("name", "folder/front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload name must not contain path separators"
+        (mkAssetUploadMultipart
+          [("name", "folder\\\\front-room.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Asset upload name must not contain control characters"
+        (mkAssetUploadMultipart
+          [("name", "front-room\nshot.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+
+    it "rejects hidden executable or document extensions before storage filename fallbacks" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err -> err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected dangerous asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart
+          [("name", "front-room.exe.jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "checkout-proof.SVG.jpg"])
+      assertInvalid
+        "Asset upload file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart
+          [("name", "front-room.svg .jpg")]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must not hide executable or document extensions"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile "checkout-proof. js.jpg"])
 
     it "rejects non-image asset uploads before inventory storage can persist them" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
@@ -327,6 +877,48 @@ spec = do
           [mkAssetUploadFile "front-room.jpg"]
         )
 
+    it "rejects unsafe MIME parameters before trusting the upload content type" $ do
+      let assertInvalid expectedMessage contentType =
+            case fromMultipart
+              (mkAssetUploadMultipart
+                []
+                [ (mkAssetUploadFile "front-room.jpg")
+                    { fdFileCType = contentType }
+                ]
+              )
+                :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected unsafe asset upload MIME type to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+
+      assertInvalid
+        "Asset upload MIME type must not contain control characters"
+        "image/jpeg;\nContent-Type: text/html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; filename=front-room.html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; filename*0=front-room; filename*1=.html"
+      assertInvalid
+        "Asset upload MIME type must not include filename parameters"
+        "image/jpeg; name=front-room.html"
+
+      case fromMultipart
+        (mkAssetUploadMultipart
+          []
+          [(mkAssetUploadFile "front-room.jpg") { fdFileCType = "image/jpeg; charset=binary" }]
+        )
+          :: Either String AssetUploadForm of
+        Left err ->
+          expectationFailure ("Expected safe MIME parameter to parse, got: " <> err)
+        Right payload ->
+          fdFileName (aufFile payload) `shouldBe` "front-room.jpg"
+
     it "rejects conflicting upload name and browser filename extensions" $
       case fromMultipart
         (mkAssetUploadMultipart
@@ -341,6 +933,29 @@ spec = do
             ( "Expected conflicting asset upload metadata to be rejected, got file: "
                 <> T.unpack (fdFileName (aufFile payload))
             )
+
+    it "rejects overlong effective upload names before storage hits filesystem limits" $ do
+      let assertInvalid :: String -> MultipartData Tmp -> Expectation
+          assertInvalid expectedMessage multipart =
+            case fromMultipart multipart :: Either String AssetUploadForm of
+              Left err ->
+                err `shouldContain` expectedMessage
+              Right payload ->
+                expectationFailure
+                  ( "Expected overlong asset upload name to be rejected, got file: "
+                      <> T.unpack (fdFileName (aufFile payload))
+                  )
+          longName = T.replicate 215 "a" <> ".jpg"
+
+      assertInvalid
+        "Asset upload file name must be 218 characters or fewer"
+        (mkAssetUploadMultipart
+          [("name", longName)]
+          [mkAssetUploadFile "camera.jpg"]
+        )
+      assertInvalid
+        "Uploaded file name must be 218 characters or fewer"
+        (mkAssetUploadMultipart [] [mkAssetUploadFile longName])
 
     it "rejects duplicate or unexpected upload parts instead of silently choosing one" $ do
       let assertInvalid :: String -> MultipartData Tmp -> Expectation
@@ -379,11 +994,52 @@ spec = do
           [(mkAssetUploadFile "file.jpg") { fdInputName = "photo" }]
         )
 
+  describe "validateInventoryAssetUploadSize" $ do
+    it "accepts non-empty inventory images up to the managed storage limit" $ do
+      validateInventoryAssetUploadSize 1 `shouldBe` Right ()
+      validateInventoryAssetUploadSize (10 * 1024 * 1024) `shouldBe` Right ()
+
+    it "rejects empty or oversized inventory images before proof uploads hit storage" $ do
+      let assertInvalid rawSize expectedMessage =
+            case validateInventoryAssetUploadSize rawSize of
+              Left serverErr -> do
+                errHTTPCode serverErr `shouldBe` 400
+                BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected invalid asset upload size to be rejected, got " <> show value)
+
+      assertInvalid (-1) "asset upload size is invalid"
+      assertInvalid 0 "asset upload must not be empty"
+      assertInvalid (10 * 1024 * 1024 + 1) "asset upload must be 10 MB or smaller"
+
   describe "inventory asset query filtering" $ do
     it "normalizes missing or blank queries to no filter" $ do
       normalizeAssetSearchQuery Nothing `shouldBe` Nothing
       normalizeAssetSearchQuery (Just "   ") `shouldBe` Nothing
       normalizeAssetSearchQuery (Just "  SYNTH  ") `shouldBe` Just "synth"
+      validateAssetSearchQuery Nothing `shouldBe` Right Nothing
+      validateAssetSearchQuery (Just "   ") `shouldBe` Right Nothing
+      validateAssetSearchQuery (Just "  SYNTH  ") `shouldBe` Right (Just "synth")
+
+    it "rejects malformed inventory search queries before broad list scans" $ do
+      let assertInvalid expectedMessage rawQuery =
+            case validateAssetSearchQuery (Just rawQuery) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure
+                  ("Expected invalid inventory search query, got " <> show value)
+      assertInvalid "q must be 120 characters or fewer" (T.replicate 121 "a")
+      assertInvalid
+        "q must not contain control characters"
+        ("Juno" <> T.singleton '\NUL' <> "106")
+      assertInvalid
+        "hidden formatting"
+        ("Juno" <> T.singleton '\x202E' <> "106")
+      assertInvalid
+        "non-ASCII spaces"
+        ("Juno" <> T.singleton '\x00A0' <> "106")
 
     it "matches name/category/brand/model/owner/notes case-insensitively once q is provided" $ do
       let synthAsset = fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" (Just "Analog poly")
@@ -394,6 +1050,352 @@ spec = do
       assetMatchesSearchQuery "tdf" synthAsset `shouldBe` True
       assetMatchesSearchQuery "analog" synthAsset `shouldBe` True
       assetMatchesSearchQuery "juno" drumAsset `shouldBe` False
+
+  describe "inventoryServer listAssets" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000926"
+        checkoutIdText = "00000000-0000-0000-0000-000000000927"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000928"
+
+    it "rejects invalid q parameters before querying inventory rows" $ do
+      result <- runInventoryListHandler (pure ()) (Just (T.replicate 121 "a")) Nothing Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "q must be 120 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected invalid inventory query to fail, got " <> show value)
+
+    it "rejects assets with multiple active checkout rows so list views cannot silently hide broken custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid inventory list asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid inventory list checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second inventory list checkout fixture key" >> fail "unreachable"
+      result <- runInventoryListHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        Nothing
+        Nothing
+        Nothing
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "listing assets"
+        Right value ->
+          expectationFailure ("Expected inventory list ambiguity to be rejected, got " <> show value)
+
+  describe "validatePublicQrUploadContext" $ do
+    let checkoutKey =
+          case (fromPathPiece "00000000-0000-0000-0000-000000000921" :: Maybe (Key ME.AssetCheckout)) of
+            Just key -> key
+            Nothing -> error "invalid public QR upload checkout fixture key"
+        assetKey =
+          case (fromPathPiece "00000000-0000-0000-0000-000000000922" :: Maybe (Key Asset)) of
+            Just key -> key
+            Nothing -> error "invalid public QR upload asset fixture key"
+        mkOpenCheckout target disposition =
+          Entity
+            checkoutKey
+            ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = target
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = disposition
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = UTCTime (fromGregorian 2026 4 24) 0
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+
+    it "allows uploads only for assets that can still complete a public checkout or return flow" $ do
+      validatePublicQrUploadContext Active Nothing `shouldBe` Right ()
+      validatePublicQrUploadContext Booked (Just (mkOpenCheckout TargetParty Loan)) `shouldBe` Right ()
+      validatePublicQrUploadContext Booked (Just (mkOpenCheckout TargetParty Rental)) `shouldBe` Right ()
+
+    it "reuses checkout-status validation when an idle asset is no longer publicly checkoutable" $
+      case validatePublicQrUploadContext Retired Nothing of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is retired and cannot be checked out"
+        Right value ->
+          expectationFailure ("Expected retired public QR upload context to be rejected, got " <> show value)
+
+    it "rejects booked assets without an active checkout so public proof uploads do not mask broken custody state as a new checkout conflict" $
+      case validatePublicQrUploadContext Booked Nothing of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "public QR proof upload"
+        Right value ->
+          expectationFailure ("Expected booked public QR upload state without an open checkout to be rejected, got " <> show value)
+
+    it "rejects uploads when the asset status contradicts an active public checkout" $
+      case validatePublicQrUploadContext Active (Just (mkOpenCheckout TargetParty Loan)) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset status is active but an active loan checkout exists"
+        Right value ->
+          expectationFailure ("Expected inconsistent public QR upload state to be rejected, got " <> show value)
+
+    it "rejects uploads for internal-only or terminal active checkout flows" $ do
+      let assertInvalid ctx =
+            case validatePublicQrUploadContext Active (Just ctx) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err)
+                  `shouldContain` "available for checkout or currently checked out to a party loan or rental"
+              Right value ->
+                expectationFailure ("Expected invalid public QR upload context to be rejected, got " <> show value)
+
+      assertInvalid (mkOpenCheckout TargetRoom Loan)
+      assertInvalid (mkOpenCheckout TargetParty Sale)
+
+  describe "inventoryPublicServer uploadByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000923"
+        checkoutIdText = "00000000-0000-0000-0000-000000000924"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000925"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcc0"
+        uploadForm =
+          AssetUploadForm
+            { aufFile = mkAssetUploadFile "checkout-proof.jpg"
+            , aufName = Just "checkout-proof.jpg"
+            }
+
+    it "revalidates upload shape at the handler boundary so forged non-image forms cannot bypass multipart checks" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      let invalidUploadForm =
+            AssetUploadForm
+              { aufFile = (mkAssetUploadFile "checkout-proof.jpg") { fdFileCType = "application/pdf" }
+              , aufName = Just "checkout-proof.jpg"
+              }
+      result <- runInventoryPublicUploadHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            , assetStatus = Active
+            }))
+        canonicalToken
+        invalidUploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Asset upload must be a raster image"
+        Right value ->
+          expectationFailure ("Expected forged non-image upload form to be rejected, got " <> show value)
+
+    it "rejects uploads when an active asset still has an open public checkout so proof files cannot mask inconsistent state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicUploadHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Active
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        uploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset status is active but an active loan checkout exists"
+        Right _ ->
+          expectationFailure "Expected inconsistent public QR upload state to be rejected"
+
+    it "rejects multiple active checkout rows so public proof uploads never target an ambiguous custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public upload checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second public upload checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicUploadHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Just "Devuelve completo"
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 10000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        uploadForm
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right _ ->
+          expectationFailure "Expected ambiguous public QR upload context to be rejected"
 
   describe "shared list pagination validation" $ do
     it "defaults omitted params and preserves explicit supported values" $ do
@@ -413,6 +1415,7 @@ spec = do
       assertInvalid "page must be greater than or equal to 1" (validatePageParams (Just (-2)) Nothing)
       assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 0))
       assertInvalid "pageSize must be between 1 and 100" (validatePageParams Nothing (Just 101))
+      assertInvalid "page is too large" (validatePageParams (Just maxBound) (Just 100))
 
   describe "asset name/category normalization" $ do
     it "trims meaningful asset names and categories on create and update" $ do
@@ -449,11 +1452,17 @@ spec = do
         "Asset name must not contain control characters"
         (normalizeAssetName "Roland\nJuno-106")
       assertInvalid
+        "Asset name must not contain control characters or hidden formatting characters"
+        (normalizeAssetName ("Roland" <> T.singleton '\x202E' <> "Juno-106"))
+      assertInvalid
         "Asset category must be 120 characters or fewer"
         (normalizeAssetCategory (T.replicate 121 "a"))
       assertInvalid
         "Asset category must not contain control characters"
         (normalizeAssetCategory "Synth\NULLead")
+      assertInvalid
+        "Asset category must not contain control characters or hidden formatting characters"
+        (normalizeAssetCategory ("Synth" <> T.singleton '\x200D' <> "Lead"))
 
   describe "validateAssetPhotoUrl" $ do
     it "treats omitted or blank asset photo inputs as absent and canonicalizes supported URL shapes" $ do
@@ -461,6 +1470,8 @@ spec = do
       validateAssetPhotoUrl (Just "   ") `shouldBe` Right Nothing
       validateAssetPhotoUrl (Just "  https://cdn.example.com/roland.jpg  ")
         `shouldBe` Right (Just "https://cdn.example.com/roland.jpg")
+      validateAssetPhotoUrl (Just "https://cdn.example.com/roland.jpg?v=2")
+        `shouldBe` Right (Just "https://cdn.example.com/roland.jpg?v=2")
       validateAssetPhotoUrl (Just " inventory/roland-juno.jpg ")
         `shouldBe` Right (Just "inventory/roland-juno.jpg")
       validateAssetPhotoUrl (Just "assets/inventory/roland-juno.jpg")
@@ -469,10 +1480,13 @@ spec = do
         `shouldBe` Right (Just "inventory/roland-juno.jpg")
 
     it "rejects malformed or unsupported asset photo inputs instead of storing opaque strings" $ do
-      let assertInvalid result = case result of
+      let expectedMessage =
+            "photoUrl must be an absolute https URL without a fragment "
+              <> "or an inventory asset path"
+          assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid asset photo URL error, got " <> show value)
       assertInvalid (validateAssetPhotoUrl (Just "roland-juno.jpg"))
@@ -480,8 +1494,38 @@ spec = do
       assertInvalid (validateAssetPhotoUrl (Just "ftp://cdn.example.com/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://cdn/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "https://2130706433/roland.jpg"))
+      assertInvalid
+        (validateAssetPhotoUrl (Just "https://cdn.example.com/roland.jpg#preview"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/manual.pdf"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/roland-photo"))
       assertInvalid (validateAssetPhotoUrl (Just "assets/serve/roland.jpg"))
       assertInvalid (validateAssetPhotoUrl (Just "inventory/../roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/.hidden.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/archive/.hidden.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/manual.pdf"))
+      assertInvalid (validateAssetPhotoUrl (Just "inventory/folder/no-extension"))
+
+    it "rejects ambiguous external asset photo URL paths before storing proof links" $ do
+      let expectedMessage = "photoUrl path must not contain empty, dot, or dot-dot segments"
+          assertInvalid result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected ambiguous asset photo URL path error, got " <> show value)
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory/../roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory/%2e%2e/roland.jpg"))
+      assertInvalid (validateAssetPhotoUrl (Just "https://cdn.example.com/inventory//roland.jpg"))
+
+    it "rejects oversized asset photo URLs before storing opaque inventory metadata" $ do
+      let oversizedUrl =
+            "https://cdn.example.com/" <> T.replicate 2049 "a" <> ".jpg"
+      case validateAssetPhotoUrl (Just oversizedUrl) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "photoUrl must be 2048 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized asset photo URL error, got " <> show value)
 
   describe "validateAssetPhotoUrlUpdate" $ do
     it "keeps omitted photo updates untouched, trims valid values, and treats blank strings as clear intents" $ do
@@ -493,14 +1537,20 @@ spec = do
         `shouldBe` Right (Just (Just "inventory/roland-juno.jpg"))
 
     it "rejects malformed explicit photo updates instead of silently ignoring them" $ do
-      let assertInvalid result = case result of
+      let expectedMessage =
+            "photoUrl must be an absolute https URL without a fragment "
+              <> "or an inventory asset path"
+          assertInvalid result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "photoUrl must be an absolute https URL or an inventory asset path"
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid asset photo update error, got " <> show value)
       assertInvalid (validateAssetPhotoUrlUpdate (Just "roland-juno.jpg"))
       assertInvalid (validateAssetPhotoUrlUpdate (Just "ftp://cdn.example.com/roland.jpg"))
+      assertInvalid
+        (validateAssetPhotoUrlUpdate (Just "https://cdn.example.com/roland.jpg#preview"))
+      assertInvalid (validateAssetPhotoUrlUpdate (Just "inventory/manual.pdf"))
 
   describe "normalizeAssetNotesUpdate" $ do
     it "preserves omitted notes, trims meaningful updates, and maps blanks to an explicit clear" $ do
@@ -539,6 +1589,26 @@ spec = do
       assertInvalid (normalizeRoomName "   ")
       assertInvalid (normalizeRoomNameUpdate (Just "   "))
 
+    it "rejects oversized or visually ambiguous room names before persistence" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid room name error, got " <> show value)
+      assertInvalid
+        "Room name must be 120 characters or fewer"
+        (normalizeRoomName (T.replicate 121 "a"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomName ("Sala" <> T.singleton '\NUL' <> "A"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomName ("Sala" <> T.singleton '\x202E' <> "A"))
+      assertInvalid
+        "Room name must not contain hidden formatting characters"
+        (normalizeRoomNameUpdate (Just ("Control" <> T.singleton '\x00A0' <> "Room")))
+
   describe "room write request JSON" $ do
     it "accepts canonical room create and patch keys used by current clients" $ do
       case A.eitherDecode
@@ -573,6 +1643,29 @@ spec = do
         "{\"ruName\":\"Control Room\",\"unexpected\":true}"
           :: Either String RoomUpdate)
         `shouldSatisfy` isLeft
+
+    it "rejects empty room patches at the JSON boundary before handler fallback" $ do
+      (A.eitherDecode "{}" :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+      (A.eitherDecode "{\"ruName\":null,\"ruIsBookable\":null}" :: Either String RoomUpdate)
+        `shouldSatisfy` isLeft
+
+    it "rejects null room patch fields instead of silently treating them as omitted" $ do
+      case A.eitherDecode
+        "{\"ruName\":null,\"ruIsBookable\":true}" :: Either String RoomUpdate of
+        Left err ->
+          err `shouldContain` "ruName must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null room name patch to be rejected, got: " <> show payload)
+
+      case A.eitherDecode
+        "{\"ruName\":\"Control Room\",\"ruIsBookable\":null}" :: Either String RoomUpdate of
+        Left err ->
+          err `shouldContain` "ruIsBookable must be omitted instead of null"
+        Right payload ->
+          expectationFailure
+            ("Expected null bookable room patch to be rejected, got: " <> show payload)
 
   describe "roomsServer duplicate name handling" $ do
     let existingRoomId = "00000000-0000-0000-0000-000000000701"
@@ -646,92 +1739,89 @@ spec = do
         Right value ->
           expectationFailure ("Expected canonical duplicate room patch to fail, got " <> show value)
 
-  describe "pipeline card write normalization" $ do
-    let pipelineType = "recording"
-        existingPipelineCardId = "00000000-0000-0000-0000-000000000801"
-
-    it "trims create fields before persistence so CRM cards do not store padded text" $ do
-      result <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "  Demo Lead  " (Just "  Ada  ") Nothing (Just 2) (Just "  Needs quote  "))
-      case result of
-        Left err ->
-          expectationFailure ("Expected trimmed pipeline card create to succeed, got " <> show err)
-        Right card -> do
-          pcTitle card `shouldBe` "Demo Lead"
-          pcArtist card `shouldBe` Just "Ada"
-          pcStage card `shouldBe` "Inquiry"
-          pcSortOrder card `shouldBe` 2
-          pcNotes card `shouldBe` Just "Needs quote"
-
-    it "maps blank optional patch text to explicit clears instead of persisting whitespace-only CRM metadata" $ do
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
+    it "rejects empty room patches instead of silently returning unchanged rooms" $ do
+      existingKey <- case (fromPathPiece existingRoomId :: Maybe (Key Room)) of
         Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      result <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Just "Ada"
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 3
-              , ME.pipelineCardNotes = Just "Needs quote"
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just "  Final Quote  ") (Just (Just "   ")) Nothing Nothing (Just (Just "   ")))
+        Nothing -> expectationFailure "invalid existing room fixture key" >> fail "unreachable"
+      result <- runRoomPatchHandler
+        (insertKey existingKey (fixtureRoom "Sala A"))
+        existingRoomId
+        (RoomUpdate Nothing Nothing)
       case result of
-        Left err ->
-          expectationFailure ("Expected pipeline card patch normalization to succeed, got " <> show err)
-        Right card -> do
-          pcTitle card `shouldBe` "Final Quote"
-          pcArtist card `shouldBe` Nothing
-          pcNotes card `shouldBe` Nothing
-          pcSortOrder card `shouldBe` 3
-
-    it "rejects blank titles on create and patch instead of creating unlabeled pipeline cards" $ do
-      createResult <- runPipelineCreateHandler
-        (pure ())
-        pipelineType
-        (PipelineCardCreate "   " Nothing Nothing Nothing Nothing)
-      case createResult of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
+          BL8.unpack (errBody err) `shouldContain` "Room patch requires at least one"
         Right value ->
-          expectationFailure ("Expected blank pipeline card create title to fail, got " <> show value)
+          expectationFailure ("Expected empty room patch to fail, got " <> show value)
 
-      existingKey <- case (fromPathPiece existingPipelineCardId :: Maybe (Key ME.PipelineCard)) of
-        Just key -> pure key
-        Nothing -> expectationFailure "invalid existing pipeline card fixture key" >> fail "unreachable"
-      patchResult <- runPipelinePatchHandler
-        (do
-            now <- liftIO getCurrentTime
-            insertKey existingKey ME.PipelineCard
-              { ME.pipelineCardServiceKind = M.Recording
-              , ME.pipelineCardTitle = "Initial lead"
-              , ME.pipelineCardArtist = Nothing
-              , ME.pipelineCardStage = "Inquiry"
-              , ME.pipelineCardSortOrder = 0
-              , ME.pipelineCardNotes = Nothing
-              , ME.pipelineCardCreatedAt = now
-              , ME.pipelineCardUpdatedAt = now
-              })
-        pipelineType
-        existingPipelineCardId
-        (PipelineCardUpdate (Just "   ") Nothing Nothing Nothing Nothing)
-      case patchResult of
+  describe "normalizeBandName" $ do
+    it "trims and collapses meaningful CRM band names before they are stored" $ do
+      normalizeBandName "  TDF   House \t Band  " `shouldBe` Right "TDF House Band"
+
+    it "rejects explicit blank band names instead of storing whitespace-only CRM records" $
+      case normalizeBandName "   " of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "Pipeline card title is required"
+          BL8.unpack (errBody err) `shouldContain` "Band name is required"
         Right value ->
-          expectationFailure ("Expected blank pipeline card patch title to fail, got " <> show value)
+          expectationFailure ("Expected invalid band name error, got " <> show value)
 
+  describe "bandsServer createBandH name handling" $ do
+    let existingBandId = "00000000-0000-0000-0000-000000000711"
+
+    it "normalizes band names before storing and returning the new CRM record" $ do
+      result <- runBandCreateHandler
+        (pure ())
+        (BandCreate "  TDF   House \t Band  " Nothing Nothing Nothing Nothing Nothing [])
+      case result of
+        Left err ->
+          expectationFailure ("Expected normalized band create to succeed, got " <> show err)
+        Right band ->
+          bName band `shouldBe` "TDF House Band"
+
+    it "rejects band creates that only differ by case or repeated whitespace" $ do
+      existingKey <- case (fromPathPiece existingBandId :: Maybe (Key Band)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing band fixture key" >> fail "unreachable"
+      result <- runBandCreateHandler
+        (insertKey existingKey (fixtureBand (toSqlKey 1) "TDF House Band"))
+        (BandCreate "  tdf   house   band  " Nothing Nothing Nothing Nothing Nothing [])
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "A band with this name already exists"
+        Right value ->
+          expectationFailure ("Expected canonical duplicate band create to fail, got " <> show value)
+
+  describe "canonical pipeline card write validation" $ do
+    it "trims canonical card text without persisting padded labels" $ do
+      case normalizePipelineCardTitle "  Demo Lead  " of
+        Left err -> expectationFailure ("Expected normalized title, got " <> show err)
+        Right value -> value `shouldBe` "Demo Lead"
+      normalizeOptionalTextField (Just "  Ada  ") `shouldBe` Just "Ada"
+      normalizeOptionalTextField (Just "   ") `shouldBe` Nothing
+
+    it "rejects blank or non-printing titles" $ do
+      let assertInvalid raw expected =
+            case normalizePipelineCardTitle raw of
+              Left err -> BL8.unpack (errBody err) `shouldContain` expected
+              Right value -> expectationFailure ("Expected invalid pipeline title, got " <> show value)
+      assertInvalid "   " "Pipeline card title is required"
+      assertInvalid "Demo\nLead" "Pipeline card title must not contain control characters"
+      assertInvalid ("Demo" <> T.singleton '\x200B' <> "Lead")
+        "Pipeline card title must not contain control characters or hidden formatting characters"
+
+    it "rejects negative ordering and empty canonical patches" $ do
+      case validatePipelineCardSortOrder (Just (-1)) of
+        Left err ->
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card sortOrder must be greater than or equal to 0"
+        Right value -> expectationFailure ("Expected negative sort order to fail, got " <> show value)
+      case validatePipelineCardPatchIntent Nothing Nothing Nothing Nothing Nothing of
+        Left err ->
+          BL8.unpack (errBody err)
+            `shouldContain` "Pipeline card patch requires at least one field to update"
+        Right () -> expectationFailure "Expected empty pipeline patch to fail"
   describe "validateAssetStatusUpdate" $ do
     it "accepts supported asset status variants" $ do
       validateAssetStatusUpdate (Just " booked ") `shouldBe` Right (Just Booked)
@@ -778,10 +1868,25 @@ spec = do
       assertInvalid "targetKind is required" (parseCheckoutTargetKind Nothing)
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "   "))
       assertInvalid "targetKind must be one of: party, room, session" (parseCheckoutTargetKind (Just "locker"))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just "party\n"))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just ("party" <> T.singleton '\x202E')))
+      assertInvalid
+        "targetKind must not contain control characters"
+        (parseCheckoutTargetKind (Just ("party" <> T.singleton '\x00A0')))
 
   describe "parseCheckoutDisposition" $ do
-    it "defaults omitted dispositions to loan and normalizes supported values" $ do
-      parseCheckoutDisposition Nothing `shouldBe` Right Loan
+    it "requires explicit dispositions and normalizes supported values" $ do
+      let assertInvalid expectedMessage result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expectedMessage
+            Right value ->
+              expectationFailure ("Expected invalid checkout disposition error, got " <> show value)
+      assertInvalid "disposition is required" (parseCheckoutDisposition Nothing)
       parseCheckoutDisposition (Just " rent ") `shouldBe` Right Rental
       parseCheckoutDisposition (Just "SALE") `shouldBe` Right Sale
 
@@ -794,6 +1899,15 @@ spec = do
               expectationFailure ("Expected invalid checkout disposition error, got " <> show value)
       assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "   "))
       assertInvalid "disposition must be one of" (parseCheckoutDisposition (Just "borrowed-forever"))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just "rent\t"))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just ("rent" <> T.singleton '\x202E')))
+      assertInvalid
+        "disposition must not contain control characters"
+        (parseCheckoutDisposition (Just ("rent" <> T.singleton '\x00A0')))
 
   describe "parseOptionalKeyField" $ do
     it "treats missing or blank optional ids as absent and trims valid identifiers" $ do
@@ -804,6 +1918,26 @@ spec = do
       (parseOptionalKeyField "targetRoom" (Just " 42 ") :: Either ServerError (Maybe (Key M.Party)))
         `shouldBe` Right (Just (toSqlKey 42))
 
+    it "rejects non-canonical UUID references before optional relation lookups" $ do
+      let canonicalRoomId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          uppercaseRoomId = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
+      case ( parseOptionalKeyField "targetRoom" (Just canonicalRoomId)
+               :: Either ServerError (Maybe (Key Room))
+           ) of
+        Right (Just _) -> pure ()
+        Right Nothing -> expectationFailure "Expected canonical UUID to parse"
+        Left err ->
+          expectationFailure ("Expected canonical UUID to parse, got " <> show err)
+      case ( parseOptionalKeyField "targetRoom" (Just uppercaseRoomId)
+               :: Either ServerError (Maybe (Key Room))
+           ) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "targetRoom must be a valid identifier"
+        Right value ->
+          expectationFailure
+            ("Expected non-canonical UUID reference to be rejected, got " <> show value)
+
     it "rejects malformed optional ids instead of silently treating them as missing" $
       case (parseOptionalKeyField "targetSession" (Just "abc") :: Either ServerError (Maybe (Key M.Party))) of
         Left err -> do
@@ -811,6 +1945,20 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "targetSession must be a valid identifier"
         Right value ->
           expectationFailure ("Expected invalid optional key input error, got " <> show value)
+
+    it "rejects non-positive numeric optional ids before relation lookups" $ do
+      let assertInvalid rawId =
+            case ( parseOptionalKeyField "targetParty" (Just rawId)
+                     :: Either ServerError (Maybe (Key M.Party))
+                 ) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "targetParty must be a valid identifier"
+              Right value ->
+                expectationFailure
+                  ("Expected non-positive optional key input error, got " <> show value)
+      assertInvalid "0"
+      assertInvalid "-1"
 
   describe "validateCheckoutTargets" $ do
     let roomId = case (fromPathPiece "00000000-0000-0000-0000-000000000042" :: Maybe (Key Room)) of
@@ -836,13 +1984,29 @@ spec = do
             Right value ->
               expectationFailure ("Expected contradictory checkout target to be rejected, got " <> show value)
       assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty Nothing Nothing Nothing)
-      assertInvalid "targetParty required for party checkout" (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
+      assertInvalid
+        "targetParty required for party checkout"
+        (validateCheckoutTargets TargetParty (Just "   ") Nothing Nothing)
       assertInvalid
         "targetParty must not contain control characters"
         (validateCheckoutTargets TargetParty (Just "Crew\nA") Nothing Nothing)
       assertInvalid
+        "targetParty must not contain control characters or hidden formatting characters"
+        (validateCheckoutTargets TargetParty (Just ("Crew" <> "\x202E" <> "A")) Nothing Nothing)
+      assertInvalid
+        "Unicode space lookalikes"
+        ( validateCheckoutTargets
+            TargetParty
+            (Just ("Backline" <> "\x00A0" <> "Crew"))
+            Nothing
+            Nothing
+        )
+      assertInvalid
         "targetParty must be 160 characters or fewer"
         (validateCheckoutTargets TargetParty (Just (T.replicate 161 "a")) Nothing Nothing)
+      assertInvalid
+        "targetParty must contain at least one letter or digit"
+        (validateCheckoutTargets TargetParty (Just " ---(  )--- ") Nothing Nothing)
       assertInvalid "targetRoom is only allowed for room checkout" (validateCheckoutTargets TargetParty (Just "Crew") (Just roomId) Nothing)
       assertInvalid "targetSession is only allowed for session checkout" (validateCheckoutTargets TargetParty (Just "Crew") Nothing (Just sessionId))
       assertInvalid "targetParty is only allowed for party checkout" (validateCheckoutTargets TargetRoom (Just "Crew") (Just roomId) Nothing)
@@ -899,6 +2063,10 @@ spec = do
       validateCheckoutDueAt now (Just now) `shouldBe` Right (Just now)
       validateCheckoutDueAt now (Just future) `shouldBe` Right (Just future)
 
+    it "accepts same-day midnight due values so date-only return fields do not degrade into false past-due errors" $ do
+      let sameDayMidnight = UTCTime (fromGregorian 2026 4 23) 0
+      validateCheckoutDueAt now (Just sameDayMidnight) `shouldBe` Right (Just sameDayMidnight)
+
     it "rejects already-expired due timestamps instead of creating overdue checkouts at insert time" $ do
       let past = addUTCTime (-60) now
       case validateCheckoutDueAt now (Just past) of
@@ -914,6 +2082,33 @@ spec = do
           Just key -> key
           Nothing -> error "invalid checkout room fixture key"
 
+    it "normalizes actionable holder email and phone fields before writing inventory custody records" $ do
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just " Ops@Example.com ")
+          (Just " +593 99 123 4567 ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err ->
+          expectationFailure ("Expected holder contact normalization to succeed, got " <> show err)
+        Right normalized -> do
+          ncrHolderEmail normalized `shouldBe` Just "ops@example.com"
+          ncrHolderPhone normalized `shouldBe` Just "+593991234567"
+
     it "trims meaningful condition and notes while preserving safe line breaks for inventory checkout writes" $ do
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
@@ -928,6 +2123,9 @@ spec = do
           (Just " transferencia ")
           (Just 3)
           (Just "  TRX-009  ")
+          (Just " 1200.50 ")
+          (Just " usd ")
+          (Just " 400.25 ")
           Nothing
           Nothing
           (Just "  Returned with stand  ")
@@ -942,8 +2140,43 @@ spec = do
           ncrPaymentType normalized `shouldBe` Just "bank_transfer"
           ncrPaymentInstallments normalized `shouldBe` Just 3
           ncrPaymentReference normalized `shouldBe` Just "TRX-009"
+          ncrPaymentAmountCents normalized `shouldBe` Just 120050
+          ncrPaymentCurrency normalized `shouldBe` Just "USD"
+          ncrPaymentOutstandingCents normalized `shouldBe` Just 40025
           ncrConditionOut normalized `shouldBe` Just "Returned with stand"
           ncrNotes normalized `shouldBe` Just "Cableado completo\n\tListo para sala"
+
+    it "rejects control or hidden formatting in checkout payment currencies before normalizing payment metadata" $ do
+      let assertInvalid rawCurrency =
+            case normalizeCheckoutRequest
+              (AssetCheckoutRequest
+                (Just "party")
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                (Just "sale")
+                Nothing
+                (Just "ops@example.com")
+                Nothing
+                (Just "card")
+                Nothing
+                Nothing
+                (Just "1200.00")
+                (Just rawCurrency)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "paymentCurrency must not contain control characters"
+              Right _ ->
+                expectationFailure
+                  "Expected unsafe checkout payment currency to be rejected"
+      assertInvalid "USD\n"
+      assertInvalid ("US" <> T.singleton '\x200D' <> "D")
 
     it "rejects oversized or unsafe-control checkout condition and notes instead of storing ambiguous movement text" $ do
       let assertInvalid expectedMessage req =
@@ -959,6 +2192,9 @@ spec = do
               (Just "party")
               Nothing
               (Just "Backline Crew")
+              Nothing
+              (Just "loan")
+              Nothing
               Nothing
               Nothing
               Nothing
@@ -984,8 +2220,170 @@ spec = do
       assertInvalid
         "notes must not contain control characters other than tabs or line breaks"
         baseRequest { coNotes = Just "Cableado\NULcompleto" }
+      assertInvalid
+        "hidden formatting characters"
+        baseRequest { coConditionOut = Just ("Returned" <> "\x202E" <> "OK") }
+      assertInvalid
+        "hidden formatting characters"
+        baseRequest { coTermsAndConditions = Just ("Return with case" <> "\x200B") }
+      assertInvalid
+        "holderEmail must be a valid email address"
+        baseRequest { coHolderEmail = Just "ops at example.com" }
+      assertInvalid
+        "holderPhone must be a valid phone number"
+        baseRequest { coHolderPhone = Just "call me maybe" }
+
+    it "rejects ambiguous holder email final domain labels before storing inventory custody records" $ do
+      let assertInvalid rawEmail =
+            case normalizeCheckoutRequest
+              (AssetCheckoutRequest
+                (Just "party")
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                (Just "loan")
+                Nothing
+                (Just rawEmail)
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing
+                Nothing) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "holderEmail must be a valid email address"
+              Right value ->
+                value `seq` expectationFailure "Expected ambiguous holder email to be rejected"
+
+      assertInvalid "ops@example.123"
+      assertInvalid "ops@example.c"
+
+    it "rejects hidden-format holder contacts before generic checkout contact validation" $ do
+      let hidden = T.singleton '\x202E'
+          assertInvalid expectedMessage request =
+            case normalizeCheckoutRequest request of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                value `seq` expectationFailure "Expected unsafe holder contact to be rejected"
+
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "loan")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+
+      assertInvalid
+        "holderEmail must not contain control characters or hidden formatting characters"
+        baseRequest { coHolderEmail = Just ("ops" <> hidden <> "@example.com") }
+      assertInvalid
+        "holderPhone must not contain control characters or hidden formatting characters"
+        baseRequest { coHolderPhone = Just ("+593" <> hidden <> "991234567") }
 
     it "rejects payment references without payment types so checkout financial metadata stays unambiguous" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "  TRX-009  ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentType"
+        Right value ->
+          value `seq` expectationFailure "Expected orphan payment reference to be rejected"
+
+    it "rejects payment references without amounts so checkout payment metadata cannot lose its money context" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          (Just "  TRX-009  ")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentAmount"
+        Right value ->
+          value `seq` expectationFailure "Expected amount-less payment reference to be rejected"
+
+    it "rejects payment types without amounts so checkout payment summaries cannot imply money that was never captured" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "paymentType requires paymentAmount"
+        Right value ->
+          value `seq` expectationFailure "Expected payment type without amount to be rejected"
+
+    it "rejects payment metadata for non-commercial dispositions so loans and repairs cannot carry sale-only fields" $
       case normalizeCheckoutRequest
         (AssetCheckoutRequest
           (Just "party")
@@ -996,18 +2394,194 @@ spec = do
           Nothing
           Nothing
           Nothing
+          (Just "cash")
           Nothing
           Nothing
-          (Just "  TRX-009  ")
+          Nothing
+          Nothing
+          Nothing
           Nothing
           Nothing
           Nothing
           Nothing) of
         Left err -> do
           errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "paymentReference requires paymentType"
+          BL8.unpack (errBody err) `shouldContain` "payment fields are only allowed for sale or rental checkout"
         Right value ->
-          value `seq` expectationFailure "Expected orphan payment reference to be rejected"
+          value `seq` expectationFailure "Expected loan checkout payment metadata to be rejected"
+
+    it "normalizes missing outstanding balances to zero once commercial checkout totals are otherwise explicit" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          (Just "SALE-001")
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          (Just "Equipo vendido tal como está")
+          Nothing) of
+        Left err ->
+          expectationFailure ("Expected checkout payment normalization to succeed, got " <> show err)
+        Right normalized -> do
+          ncrPaymentAmountCents normalized `shouldBe` Just 120000
+          ncrPaymentCurrency normalized `shouldBe` Just "USD"
+          ncrPaymentOutstandingCents normalized `shouldBe` Just 0
+
+    it "rejects due dates on sale checkouts so sold assets cannot carry return expectations" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          (Just (UTCTime (fromGregorian 2026 5 1) 0))
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "dueAt is not allowed for sale checkout"
+        Right value ->
+          value `seq` expectationFailure "Expected sale checkout dueAt to be rejected"
+
+    it "rejects incomplete or contradictory checkout money fields before storing unusable balances" $ do
+      let assertInvalid expectedMessage req =
+            case normalizeCheckoutRequest req of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right _ ->
+                expectationFailure "Expected invalid checkout financial metadata to fail, got a normalized payload"
+
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "sale")
+              Nothing
+              (Just "ops@example.com")
+              Nothing
+              (Just "card")
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+              Nothing
+
+      assertInvalid
+        "paymentInstallments requires paymentAmount"
+        baseRequest { coPaymentInstallments = Just 3 }
+      assertInvalid
+        "paymentAmount requires paymentCurrency"
+        baseRequest { coPaymentAmount = Just "1200" }
+      assertInvalid
+        "paymentCurrency requires paymentAmount"
+        baseRequest { coPaymentCurrency = Just "USD" }
+      assertInvalid
+        "paymentInstallments greater than 1 requires paymentOutstanding"
+        baseRequest
+          { coPaymentInstallments = Just 3
+          , coPaymentAmount = Just "100.00"
+          , coPaymentCurrency = Just "USD"
+          }
+      assertInvalid
+        "paymentOutstanding requires paymentAmount"
+        baseRequest { coPaymentOutstanding = Just "10.00" }
+      assertInvalid
+        "paymentOutstanding must be less than or equal to paymentAmount"
+        baseRequest
+          { coPaymentAmount = Just "100.00"
+          , coPaymentCurrency = Just "USD"
+          , coPaymentOutstanding = Just "150.00"
+          }
+
+    it "rejects rentals without paymentOutstanding so paid custody records cannot leave settlement status implicit" $
+      case normalizeCheckoutRequest
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "rental checkout requires paymentOutstanding"
+        Right value ->
+          value `seq` expectationFailure "Expected rental checkout without paymentOutstanding to be rejected"
+
+    it "rejects authenticated rental checkout writes without paymentOutstanding before they hit the database" $ do
+      let existingAssetId = "00000000-0000-0000-0000-000000000900"
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "rental checkout requires paymentOutstanding"
+        Right value ->
+          expectationFailure ("Expected rental checkout without paymentOutstanding to be rejected, got " <> show value)
 
   describe "normalizeAssetCheckinFields" $ do
     it "trims meaningful condition and notes before persisting a check-in" $ do
@@ -1042,9 +2616,158 @@ spec = do
         "notes must not contain control characters other than tabs or line breaks"
         (AssetCheckinRequest Nothing (Just "Cableado\NULverificado") Nothing)
 
+  describe "checkoutAssetH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000900"
+        roomIdText = "00000000-0000-0000-0000-000000000042"
+        checkoutIdText = "00000000-0000-0000-0000-000000000901"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000902"
+
+    it "requires an explicit disposition so authenticated checkout writes cannot silently default to loan" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "disposition is required"
+        Right value ->
+          expectationFailure ("Expected missing inventory checkout disposition to be rejected, got " <> show value)
+
+    it "rejects sale checkouts aimed at rooms so ownership transfers cannot be stored with internal-only targets" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckoutHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "room")
+          Nothing
+          Nothing
+          (Just roomIdText)
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200")
+          (Just "USD")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "sale checkout only supports party targets"
+        Right value ->
+          expectationFailure ("Expected room-targeted sale checkout to be rejected, got " <> show value)
+
+    it "rejects assets with multiple active checkouts so new checkout writes do not hide broken inventory state behind a generic conflict" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second checkout fixture key" >> fail "unreachable"
+      let insertOpenCheckout key checkedOutByRef checkedOutAtVal targetRef photoUrl =
+            insertKey key ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just targetRef
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = checkedOutByRef
+              , ME.assetCheckoutCheckedOutAt = checkedOutAtVal
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just photoUrl
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Open custody row"
+              }
+      result <- runInventoryCheckoutHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertOpenCheckout checkoutKey "1" (addUTCTime (-60) now) "Backline Crew" "inventory/checkout-1.jpg"
+            insertOpenCheckout secondCheckoutKey "2" now "Guest Synth Player" "inventory/checkout-2.jpg"
+        )
+        existingAssetId
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Another Borrower")
+          Nothing
+          (Just "loan")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right value ->
+          expectationFailure ("Expected ambiguous checkout state to block checkout creation, got " <> show value)
+
   describe "checkinAssetH" $ do
     let missingAssetId = "00000000-0000-0000-0000-000000000901"
         existingAssetId = "00000000-0000-0000-0000-000000000902"
+        checkoutIdText = "00000000-0000-0000-0000-000000000903"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000904"
         request = AssetCheckinRequest Nothing Nothing Nothing
 
     it "rejects unknown asset ids before collapsing them into missing checkout errors" $ do
@@ -1056,7 +2779,22 @@ spec = do
         Right value ->
           expectationFailure ("Expected missing asset check-in to fail, got " <> show value)
 
-    it "keeps the active-checkout 404 for real assets that are not currently checked out" $ do
+    it "returns a conflict for real assets that are not currently checked out" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned OK") Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is not currently checked out"
+        Right value ->
+          expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+
+    it "rejects blank check-ins before active-checkout fallback lookup" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
@@ -1066,13 +2804,409 @@ spec = do
         request
       case result of
         Left err -> do
-          errHTTPCode err `shouldBe` 404
-          BL8.unpack (errBody err) `shouldContain` "No active checkout"
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl"
         Right value ->
-          expectationFailure ("Expected idle asset check-in to fail, got " <> show value)
+          expectationFailure ("Expected blank check-in to fail before checkout lookup, got " <> show value)
+
+    it "rejects assets with multiple active checkouts so check-in never silently resolves only the newest custody row" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned OK") Nothing (Just "inventory/return.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right value ->
+          expectationFailure ("Expected inconsistent active checkouts to block check-in, got " <> show value)
+
+    it "rejects sale check-ins so retired ownership records cannot be silently closed" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Buyer"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/sale-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Factura entregada"
+              })
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned by buyer") Nothing (Just "inventory/return.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Sale checkouts cannot be checked in"
+        Right value ->
+          expectationFailure ("Expected sale asset check-in to be rejected, got " <> show value)
+
+    it "rejects blank active check-ins so ops cannot silently close custody rows without any return evidence" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Bring hard case"
+              })
+        existingAssetId
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "check-in requires at least one of ciConditionIn, ciNotes, or ciPhotoUrl"
+        Right value ->
+          expectationFailure ("Expected blank active check-in to be rejected, got " <> show value)
+
+    it "preserves checkout notes by appending labeled check-in notes instead of overwriting custody context" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Bring hard case"
+              })
+        existingAssetId
+        (AssetCheckinRequest (Just "Returned OK") (Just "Extra cable included") Nothing)
+      case result of
+        Left err ->
+          expectationFailure ("Expected check-in note merge to succeed, got " <> show err)
+        Right value -> do
+          conditionIn value `shouldBe` Just "Returned OK"
+          notes value `shouldBe` Just "Bring hard case\n\nCheck-in: Extra cable included"
+
+    it "rejects check-in notes that would overflow the shared movement notes field after preserving checkout context" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing checkout fixture key" >> fail "unreachable"
+      result <- runInventoryCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just (T.replicate 990 "a")
+              })
+        existingAssetId
+        (AssetCheckinRequest Nothing (Just "b") Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "notes must be 1000 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized merged check-in notes to be rejected, got " <> show value)
+
+  describe "getAssetH" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000906"
+        checkoutIdText = "00000000-0000-0000-0000-000000000911"
+        secondCheckoutIdText = "00000000-0000-0000-0000-000000000912"
+
+    it "rejects booked assets without an active checkout so detail reads do not fabricate a current holder state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset fixture key" >> fail "unreachable"
+      result <- runInventoryGetHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetStatus = Booked
+            }))
+        existingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "loading asset details"
+        Right value ->
+          expectationFailure ("Expected booked asset without active checkout to fail, got " <> show value)
+
+    it "rejects assets with multiple active checkouts so detail views do not silently report an arbitrary current holder" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid get asset checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece secondCheckoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second get asset checkout fixture key" >> fail "unreachable"
+      result <- runInventoryGetHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        existingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "loading asset details"
+        Right value ->
+          expectationFailure ("Expected ambiguous asset detail lookup to fail, got " <> show value)
+
+  describe "checkoutHistoryH" $ do
+    let missingAssetId = "00000000-0000-0000-0000-000000000907"
+
+    it "rejects unknown asset ids instead of collapsing them into empty history responses" $ do
+      result <- runInventoryCheckoutHistoryHandler (pure ()) missingAssetId
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 404
+          BL8.unpack (errBody err) `shouldContain` "Asset not found"
+        Right value ->
+          expectationFailure ("Expected missing asset history lookup to fail, got " <> show value)
 
   describe "patchAssetH" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000908"
+        missingRoomId = "00000000-0000-0000-0000-000000000099"
         request =
           AssetUpdate
             Nothing
@@ -1081,6 +3215,22 @@ spec = do
             Nothing
             (Just "Service notes\NULhere")
             Nothing
+
+    it "rejects empty asset patch bodies instead of returning unchanged records as a misleading success" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid empty patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetUpdate Nothing Nothing Nothing Nothing Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "Asset patch requires at least one field to update"
+        Right value ->
+          expectationFailure ("Expected empty asset patch body to fail, got " <> show value)
 
     it "rejects invalid notes on asset patch instead of persisting unreadable inventory metadata" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1097,6 +3247,22 @@ spec = do
             `shouldContain` "Asset notes must not contain control characters other than tabs or line breaks"
         Right value ->
           expectationFailure ("Expected invalid asset patch notes to fail, got " <> show value)
+
+    it "rejects unknown location ids on asset patch instead of persisting dangling room references" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid patch asset fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (insertKey assetKey (fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing))
+        existingAssetId
+        (AssetUpdate Nothing Nothing Nothing (Just missingRoomId) Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err)
+            `shouldContain` "locationId references an unknown room"
+        Right value ->
+          expectationFailure ("Expected unknown locationId asset patch to fail, got " <> show value)
 
     it "rejects patch requests that try to mark an available asset as booked without creating a checkout" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1141,6 +3307,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1161,6 +3330,87 @@ spec = do
             `shouldContain` "Asset status cannot change while an active checkout exists"
         Right value ->
           expectationFailure ("Expected contradictory asset status patch to fail, got " <> show value)
+
+    it "rejects assets with multiple active checkouts so metadata edits do not proceed against an ambiguous custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid multi-checkout patch asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000917" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first multi-checkout patch fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000918" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second multi-checkout patch fixture key" >> fail "unreachable"
+      result <- runInventoryPatchHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = addUTCTime (-60) now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-1.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "First custody row"
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Guest Synth Player"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "guest@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Scratched panel"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout-2.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Second custody row"
+              })
+        existingAssetId
+        (AssetUpdate (Just "Roland Juno-106 MKII") Nothing Nothing Nothing Nothing Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+          BL8.unpack (errBody err) `shouldContain` "patching asset metadata"
+        Right value ->
+          expectationFailure ("Expected ambiguous asset patch to fail, got " <> show value)
 
     it "still allows booked status no-ops on legacy rows so unrelated asset edits stay unblocked" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1220,6 +3470,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1265,6 +3518,29 @@ spec = do
         Right value ->
           expectationFailure ("Expected malformed QR token lookup to fail, got " <> show value)
 
+    it "rejects nil UUID QR tokens before a sentinel value can resolve an asset" $ do
+      result <- runInventoryResolveQrHandler (pure ()) "00000000-0000-0000-0000-000000000000"
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid asset QR token"
+        Right value ->
+          expectationFailure ("Expected nil UUID QR token lookup to fail, got " <> show value)
+
+    it "rejects non-exact QR token captures before trimming can resolve another path value" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid exact QR asset fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        (" " <> canonicalToken <> " ")
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid asset QR token"
+        Right value ->
+          expectationFailure ("Expected whitespace-padded QR token lookup to fail, got " <> show value)
+
     it "normalizes UUID casing so copied QR links still resolve the intended asset" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
@@ -1278,6 +3554,512 @@ spec = do
         Right asset -> do
           assetId asset `shouldBe` existingAssetId
           qrToken asset `shouldBe` Just canonicalToken
+
+    it "rejects duplicated QR token rows instead of resolving whichever asset sorts first" $ do
+      firstAssetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first QR asset fixture key" >> fail "unreachable"
+      secondAssetKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000907" :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second QR asset fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (do
+            insertKey firstAssetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                })
+            insertKey secondAssetKey
+              ((fixtureAsset "Moog Matriarch" "Synth" (Just "Moog") (Just "Matriarch") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                }))
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "resolves to multiple assets"
+        Right asset ->
+          expectationFailure ("Expected duplicate QR token lookup to fail, got " <> show asset)
+
+    it "rejects assets with multiple active checkouts so QR reads cannot silently pick whichever row sorts newest" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid existing asset fixture key" >> fail "unreachable"
+      firstCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000924" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first QR checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000925" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second QR checkout fixture key" >> fail "unreachable"
+      result <- runInventoryResolveQrHandler
+        (do
+            let firstCheckoutAt = UTCTime (fromGregorian 2035 5 1) 0
+                secondCheckoutAt = UTCTime (fromGregorian 2035 5 2) 0
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey firstCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = firstCheckoutAt
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Second crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = secondCheckoutAt
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Still good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right asset ->
+          expectationFailure ("Expected ambiguous QR lookup to fail, got " <> show asset)
+
+  describe "inventoryPublicServer loadByQrToken" $ do
+    let existingAssetId = "00000000-0000-0000-0000-000000000921"
+        canonicalToken = "00000000-0000-0000-0000-00000000dcbd"
+        checkoutIdText = "00000000-0000-0000-0000-000000000922"
+        roomIdText = "00000000-0000-0000-0000-000000000923"
+
+    it "rejects booked public QR assets without an active checkout so scans do not claim a custody state with no backing row" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            , assetStatus = Booked
+            }))
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "booked but no active checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "QR lookup"
+        Right asset ->
+          expectationFailure ("Expected booked public QR asset without active checkout to fail, got " <> show asset)
+
+    it "rejects public QR scans when the asset status contradicts the active checkout disposition" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let now = UTCTime (fromGregorian 2035 5 1) 0
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Active
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset status is active but an active loan checkout exists"
+          BL8.unpack (errBody err) `shouldContain` "QR lookup"
+        Right asset ->
+          expectationFailure ("Expected contradictory public QR asset state to fail, got " <> show asset)
+
+    it "redacts sensitive fields on public QR loads while keeping party checkout context readable" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      roomKey <- case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let now = UTCTime (fromGregorian 2035 5 1) 0
+                dueAt = addUTCTime (60 * 60 * 24) now
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                , assetLocationId = Just roomKey
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Just "bank_transfer"
+              , ME.assetCheckoutPaymentInstallments = Just 3
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 40000
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Just dueAt
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          location asset `shouldBe` Nothing
+          qrToken asset `shouldBe` Nothing
+          currentCheckoutKind asset `shouldBe` Just "party"
+          currentCheckoutTarget asset `shouldBe` Just "Backline Crew"
+          currentCheckoutDisposition asset `shouldBe` Just "rental"
+          currentCheckoutAt asset `shouldBe` Just (UTCTime (fromGregorian 2035 5 1) 0)
+          currentCheckoutDueAt asset `shouldBe` Just (UTCTime (fromGregorian 2035 5 2) 0)
+          currentCheckoutHolderEmail asset `shouldBe` Nothing
+          currentCheckoutHolderPhone asset `shouldBe` Nothing
+          currentCheckoutPaymentType asset `shouldBe` Nothing
+          currentCheckoutPaymentInstallments asset `shouldBe` Nothing
+          currentCheckoutPaymentAmountCents asset `shouldBe` Nothing
+          currentCheckoutPaymentCurrency asset `shouldBe` Nothing
+          currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
+          currentCheckoutPhotoUrl asset `shouldBe` Nothing
+
+    it "hides internal room or session checkout metadata on public QR loads instead of exposing partial internal movement details" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      roomKey <- case (fromPathPiece roomIdText :: Maybe (Key Room)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve room fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let now = UTCTime (fromGregorian 2035 5 3) 0
+                dueAt = addUTCTime (60 * 60 * 24) now
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetRoom
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Nothing
+              , ME.assetCheckoutTargetRoomId = Just roomKey
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Just dueAt
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Nothing
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          currentCheckoutKind asset `shouldBe` Nothing
+          currentCheckoutTarget asset `shouldBe` Nothing
+          currentCheckoutDisposition asset `shouldBe` Nothing
+          currentCheckoutAt asset `shouldBe` Nothing
+          currentCheckoutDueAt asset `shouldBe` Nothing
+
+    it "hides buyer identity on public QR loads for sold assets while still surfacing that the asset was sold" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let now = UTCTime (fromGregorian 2035 5 4) 0
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Cliente final"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Just "bank_transfer"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Just "SALE-001"
+              , ME.assetCheckoutPaymentAmountCents = Just 250000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold as-is"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-sale-proof.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err ->
+          expectationFailure ("Expected sold public QR resolve to succeed, got " <> show err)
+        Right asset -> do
+          assetId asset `shouldBe` existingAssetId
+          currentCheckoutKind asset `shouldBe` Nothing
+          currentCheckoutTarget asset `shouldBe` Nothing
+          currentCheckoutDisposition asset `shouldBe` Just "sale"
+          currentCheckoutAt asset `shouldBe` Nothing
+          currentCheckoutDueAt asset `shouldBe` Nothing
+          currentCheckoutHolderEmail asset `shouldBe` Nothing
+          currentCheckoutHolderPhone asset `shouldBe` Nothing
+          currentCheckoutPaymentType asset `shouldBe` Nothing
+          currentCheckoutPaymentInstallments asset `shouldBe` Nothing
+          currentCheckoutPaymentAmountCents asset `shouldBe` Nothing
+          currentCheckoutPaymentCurrency asset `shouldBe` Nothing
+          currentCheckoutPaymentOutstandingCents asset `shouldBe` Nothing
+          currentCheckoutPhotoUrl asset `shouldBe` Nothing
+
+    it "rejects assets with multiple active checkouts so public QR loads do not expose a fabricated single custody state" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public resolve asset fixture key" >> fail "unreachable"
+      firstCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000926" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid first public resolve checkout fixture key" >> fail "unreachable"
+      secondCheckoutKey <- case (fromPathPiece "00000000-0000-0000-0000-000000000927" :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid second public resolve checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicResolveQrHandler
+        (do
+            let firstCheckoutAt = UTCTime (fromGregorian 2035 5 5) 0
+                secondCheckoutAt = UTCTime (fromGregorian 2035 5 6) 0
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey firstCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Crew A"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "crew-a@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = firstCheckoutAt
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof-a.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              }
+            insertKey secondCheckoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Crew B"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "crew-b@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "2"
+              , ME.assetCheckoutCheckedOutAt = secondCheckoutAt
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Also good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/public-checkout-proof-b.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "multiple active checkouts"
+        Right asset ->
+          expectationFailure ("Expected ambiguous public QR load to fail, got " <> show asset)
+
+  describe "sanitizePublicCheckoutDTO" $ do
+    it "redacts private checkout metadata before public QR flows return a movement payload" $ do
+      let dueAtValue = UTCTime (fromGregorian 2035 5 1) 0
+          checkedOutAtValue = UTCTime (fromGregorian 2035 4 30) 0
+          returnedAtValue = UTCTime (fromGregorian 2035 5 2) 0
+          sanitized =
+            sanitizePublicCheckoutDTO
+              (AssetCheckoutDTO
+                "00000000-0000-0000-0000-000000000915"
+                "00000000-0000-0000-0000-000000000907"
+                "party"
+                Nothing
+                (Just "Backline Crew")
+                Nothing
+                "rental"
+                (Just "Devuelve con estuche y fuente.")
+                (Just "ops@example.com")
+                (Just "+593991234567")
+                (Just "card")
+                (Just 3)
+                (Just "TRX-009")
+                (Just 120050)
+                (Just "USD")
+                (Just 40025)
+                "42"
+                checkedOutAtValue
+                (Just dueAtValue)
+                (Just "Equipo completo")
+                (Just "inventory/checkout.jpg")
+                (Just "Returned OK")
+                (Just "inventory/checkin.jpg")
+                (Just returnedAtValue)
+                (Just "Solo visible para ops"))
+      targetKind sanitized `shouldBe` "party"
+      targetPartyRef sanitized `shouldBe` Just "Backline Crew"
+      disposition sanitized `shouldBe` "rental"
+      dueAt sanitized `shouldBe` Just dueAtValue
+      returnedAt sanitized `shouldBe` Just returnedAtValue
+      termsAndConditions sanitized `shouldBe` Nothing
+      holderEmail sanitized `shouldBe` Nothing
+      holderPhone sanitized `shouldBe` Nothing
+      paymentType sanitized `shouldBe` Nothing
+      paymentInstallments sanitized `shouldBe` Nothing
+      paymentReference sanitized `shouldBe` Nothing
+      paymentAmountCents sanitized `shouldBe` Nothing
+      paymentCurrency sanitized `shouldBe` Nothing
+      paymentOutstandingCents sanitized `shouldBe` Nothing
+      checkedOutBy sanitized `shouldBe` "redacted"
+      conditionOut sanitized `shouldBe` Nothing
+      photoOutUrl sanitized `shouldBe` Nothing
+      conditionIn sanitized `shouldBe` Nothing
+      photoInUrl sanitized `shouldBe` Nothing
+      notes sanitized `shouldBe` Nothing
 
   describe "inventoryPublicServer checkoutByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000907"
@@ -1299,6 +4081,43 @@ spec = do
             Nothing
             Nothing
             Nothing
+            Nothing
+            Nothing
+            Nothing
+
+    it "requires an explicit disposition on public QR links so missing fields cannot silently become loan checkouts" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          Nothing
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "disposition is required"
+        Right value ->
+          expectationFailure ("Expected public QR checkout without explicit disposition to be rejected, got " <> show value)
 
     it "rejects room or session targets on public QR links before external callers can attach internal references" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1315,6 +4134,74 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR room checkout to be rejected, got " <> show value)
 
+    it "rejects sale disposition on public QR links so anonymous scans cannot retire inventory" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "sale")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout does not allow sale disposition"
+        Right value ->
+          expectationFailure ("Expected public QR sale checkout to be rejected, got " <> show value)
+
+    it "rejects internal-only repair-style dispositions on public QR links so anonymous scans cannot create ambiguous inventory flows" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "repair")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout only supports loan or rental disposition"
+        Right value ->
+          expectationFailure ("Expected public QR repair checkout to be rejected, got " <> show value)
+
     it "requires holder contact on public QR links so anonymous custody records stay actionable" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
@@ -1328,6 +4215,9 @@ spec = do
           (Just "Backline Crew")
           Nothing
           (Just "loan")
+          (Just "Devuelve con estuche y fuente.")
+          Nothing
+          Nothing
           Nothing
           Nothing
           Nothing
@@ -1346,7 +4236,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without contact details to be rejected, got " <> show value)
 
-    it "requires a checkout photo on public QR links so anonymous custody records keep visual proof" $ do
+    it "requires checkout terms on public QR loan links so anonymous custody records always capture the agreement" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
         Just key -> pure key
         Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
@@ -1367,6 +4257,195 @@ spec = do
           Nothing
           Nothing
           Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Equipo completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coTermsAndConditions"
+        Right value ->
+          expectationFailure ("Expected public QR loan checkout without terms to be rejected, got " <> show value)
+
+    it "requires checkout terms on public QR rental links so anonymous paid custody records do not omit the agreed conditions" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "rental")
+          Nothing
+          (Just "ops@example.com")
+          Nothing
+          (Just "card")
+          Nothing
+          Nothing
+          (Just "1200.00")
+          (Just "USD")
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Equipo completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coTermsAndConditions"
+        Right value ->
+          expectationFailure ("Expected public QR rental checkout without terms to be rejected, got " <> show value)
+
+    it "requires explicit rental payment metadata on public QR links so anonymous paid custody records cannot be price-less" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      let dueAtValue = UTCTime (fromGregorian 2035 5 1) 0
+          baseRequest =
+            AssetCheckoutRequest
+              (Just "party")
+              Nothing
+              (Just "Backline Crew")
+              Nothing
+              (Just "rental")
+              (Just "Devuelve con estuche y fuente.")
+              (Just "ops@example.com")
+              Nothing
+              (Just "card")
+              Nothing
+              Nothing
+              (Just "1200.00")
+              (Just "USD")
+              Nothing
+              (Just "inventory/checkout.jpg")
+              (Just dueAtValue)
+              (Just "Equipo completo")
+              Nothing
+          assertInvalid expectedMessage req = do
+            result <- runInventoryPublicCheckoutHandler
+              (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+              canonicalToken
+              req
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` expectedMessage
+              Right value ->
+                expectationFailure ("Expected public QR rental checkout to be rejected, got " <> show value)
+
+      assertInvalid
+        "Public QR rental checkout requires coPaymentType"
+        baseRequest { coPaymentType = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentAmount"
+        baseRequest { coPaymentAmount = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentCurrency"
+        baseRequest { coPaymentCurrency = Nothing }
+      assertInvalid
+        "Public QR rental checkout requires coPaymentOutstanding"
+        baseRequest { coPaymentOutstanding = Nothing }
+
+    it "rejects malformed holder contact on public QR links before creating unusable custody rows" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          Nothing
+          (Just "ops at example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "holderEmail must be a valid email address"
+        Right value ->
+          expectationFailure ("Expected malformed public QR checkout contact to be rejected, got " <> show value)
+
+    it "requires an agreed return date on public QR links so anonymous custody records do not stay open-ended" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          (Just "Devuelve con estuche y fuente.")
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          Nothing
+          (Just "Equipo completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coDueAt"
+        Right value ->
+          expectationFailure ("Expected public QR checkout without dueAt to be rejected, got " <> show value)
+
+    it "requires a checkout photo on public QR links so anonymous custody records keep visual proof" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          (Just "Devuelve con estuche y fuente.")
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
           (Just "Sale completo")
           Nothing
           )
@@ -1377,12 +4456,199 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR checkout without photo to be rejected, got " <> show value)
 
+    it "requires an explicit checkout condition on public QR links so custody handoff records are not left ambiguous" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          (Just "Devuelve con estuche y fuente.")
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "inventory/checkout.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          Nothing
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR checkout requires coConditionOut"
+        Right value ->
+          expectationFailure ("Expected public QR checkout without condition text to be rejected, got " <> show value)
+
+    it "rejects externally hosted checkout proof on public QR links so anonymous custody evidence stays under managed storage" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public checkout asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckoutHandler
+        (insertKey assetKey ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing) { assetQrCode = Just canonicalToken }))
+        canonicalToken
+        (AssetCheckoutRequest
+          (Just "party")
+          Nothing
+          (Just "Backline Crew")
+          Nothing
+          (Just "loan")
+          (Just "Devuelve con estuche y fuente.")
+          (Just "ops@example.com")
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          Nothing
+          (Just "https://cdn.example.com/checkouts/juno-106.jpg")
+          (Just (UTCTime (fromGregorian 2035 5 1) 0))
+          (Just "Sale completo")
+          Nothing
+          )
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "uploaded inventory asset path"
+        Right value ->
+          expectationFailure ("Expected public QR checkout with external photo proof to be rejected, got " <> show value)
+
+    it "normalizes managed absolute checkout proof URLs returned by the public upload endpoint before public QR validation" $ do
+      cfg <- Config.loadConfig
+      let uploadUrl = Config.resolveConfiguredAssetsBase cfg <> "/inventory/checkout.jpg"
+      coPhotoUrl
+        (normalizePublicQrCheckoutRequest
+          cfg
+          (AssetCheckoutRequest
+            (Just "party")
+            Nothing
+            (Just "Backline Crew")
+            Nothing
+            (Just "loan")
+            Nothing
+            (Just "ops@example.com")
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            Nothing
+            (Just uploadUrl)
+            (Just (UTCTime (fromGregorian 2035 5 1) 0))
+            (Just "Equipo completo")
+            Nothing
+          ))
+        `shouldBe` Just "inventory/checkout.jpg"
+
   describe "inventoryPublicServer checkinByQrToken" $ do
     let existingAssetId = "00000000-0000-0000-0000-000000000910"
         canonicalToken = "00000000-0000-0000-0000-00000000dcbb"
         checkoutIdText = "00000000-0000-0000-0000-000000000915"
         roomIdText = "00000000-0000-0000-0000-000000000042"
-        request = AssetCheckinRequest (Just "Returned OK") Nothing Nothing
+        dueAtValue = UTCTime (fromGregorian 2035 6 1) 0
+        request = AssetCheckinRequest (Just "Returned OK") Nothing (Just "inventory/checkin.jpg")
+
+    it "redacts private checkout metadata from successful public QR check-in responses" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Rental
+              , ME.assetCheckoutTermsAndConditions = Just "Devuelve con estuche y fuente."
+              , ME.assetCheckoutHolderEmail = Just "ops@example.com"
+              , ME.assetCheckoutHolderPhone = Just "+593991234567"
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Just 3
+              , ME.assetCheckoutPaymentReference = Just "TRX-009"
+              , ME.assetCheckoutPaymentAmountCents = Just 120050
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 40025
+              , ME.assetCheckoutCheckedOutByRef = "42"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Just dueAtValue
+              , ME.assetCheckoutConditionOut = Just "Equipo completo"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Solo visible para ops"
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verificados")
+          (Just "inventory/checkin.jpg"))
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR check-in to succeed, got " <> show err)
+        Right checkout -> do
+          targetKind checkout `shouldBe` "party"
+          targetPartyRef checkout `shouldBe` Just "Backline Crew"
+          disposition checkout `shouldBe` "rental"
+          dueAt checkout `shouldBe` Just dueAtValue
+          returnedAt checkout `shouldSatisfy` isJust
+          termsAndConditions checkout `shouldBe` Nothing
+          holderEmail checkout `shouldBe` Nothing
+          holderPhone checkout `shouldBe` Nothing
+          paymentType checkout `shouldBe` Nothing
+          paymentInstallments checkout `shouldBe` Nothing
+          paymentReference checkout `shouldBe` Nothing
+          paymentAmountCents checkout `shouldBe` Nothing
+          paymentCurrency checkout `shouldBe` Nothing
+          paymentOutstandingCents checkout `shouldBe` Nothing
+          checkedOutBy checkout `shouldBe` "redacted"
+          conditionOut checkout `shouldBe` Nothing
+          photoOutUrl checkout `shouldBe` Nothing
+          conditionIn checkout `shouldBe` Nothing
+          photoInUrl checkout `shouldBe` Nothing
+          notes checkout `shouldBe` Nothing
+
+    it "returns a conflict when a valid public QR asset exists but has no active checkout" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (insertKey assetKey
+          ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+            { assetQrCode = Just canonicalToken
+            }))
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Asset is not currently checked out"
+        Right value ->
+          expectationFailure ("Expected idle public QR check-in to fail, got " <> show value)
 
     it "rejects public QR check-ins for internal room or session movements" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1415,6 +4681,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "1"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1434,6 +4703,57 @@ spec = do
           BL8.unpack (errBody err) `shouldContain` "Public QR check-in only supports party checkouts"
         Right value ->
           expectationFailure ("Expected public QR room check-in to be rejected, got " <> show value)
+
+    it "rejects public QR check-ins for internal party repair movements" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Taller externo"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = ME.Repair
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "1"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Pending repair"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/repair-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Only ops should close this movement"
+              })
+        canonicalToken
+        request
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Public QR check-in only supports party loan or rental checkouts"
+        Right value ->
+          expectationFailure ("Expected public QR repair check-in to be rejected, got " <> show value)
 
     it "requires a return condition on public QR check-ins before closing the active movement" $ do
       assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
@@ -1463,6 +4783,9 @@ spec = do
               , ME.assetCheckoutPaymentType = Nothing
               , ME.assetCheckoutPaymentInstallments = Nothing
               , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
               , ME.assetCheckoutCheckedOutByRef = "public-link"
               , ME.assetCheckoutCheckedOutAt = now
               , ME.assetCheckoutDueAt = Nothing
@@ -1483,6 +4806,248 @@ spec = do
         Right value ->
           expectationFailure ("Expected public QR check-in without condition to be rejected, got " <> show value)
 
+    it "rejects public QR sale check-ins so sold assets stay query-only even on direct API calls" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Retired
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Buyer"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Sale
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Just "buyer@example.com"
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Just "card"
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Just 120000
+              , ME.assetCheckoutPaymentCurrency = Just "USD"
+              , ME.assetCheckoutPaymentOutstandingCents = Just 0
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Sold"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/sale-checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Just "Factura entregada"
+              })
+        canonicalToken
+        (AssetCheckinRequest (Just "Returned by buyer") (Just "Should stay sold") (Just "inventory/return.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 409
+          BL8.unpack (errBody err) `shouldContain` "Sale checkouts cannot be checked in"
+        Right value ->
+          expectationFailure ("Expected public QR sale check-in to be rejected, got " <> show value)
+
+    it "requires a return photo on public QR check-ins so anonymous returns keep visual proof" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        (AssetCheckinRequest (Just "Returned OK") (Just "Cables verified") Nothing)
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Public QR check-in requires ciPhotoUrl"
+        Right value ->
+          expectationFailure ("Expected public QR check-in without photo to be rejected, got " <> show value)
+
+    it "rejects externally hosted return proof on public QR check-ins so anonymous custody evidence cannot point at arbitrary remote URLs" $ do
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verified")
+          (Just "https://cdn.example.com/checkins/juno-106.jpg"))
+      case result of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "uploaded inventory asset path"
+        Right value ->
+          expectationFailure ("Expected public QR check-in with external photo proof to be rejected, got " <> show value)
+
+    it "accepts managed absolute return proof URLs returned by the public upload endpoint" $ do
+      cfg <- Config.loadConfig
+      let uploadUrl = Config.resolveConfiguredAssetsBase cfg <> "/inventory/checkin.jpg"
+      ciPhotoUrl
+        (normalizePublicQrCheckinRequest
+          cfg
+          (AssetCheckinRequest
+            (Just "Returned OK")
+            (Just "Cables verified")
+            (Just uploadUrl)))
+        `shouldBe` Just "inventory/checkin.jpg"
+      assetKey <- case (fromPathPiece existingAssetId :: Maybe (Key Asset)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in asset fixture key" >> fail "unreachable"
+      checkoutKey <- case (fromPathPiece checkoutIdText :: Maybe (Key ME.AssetCheckout)) of
+        Just key -> pure key
+        Nothing -> expectationFailure "invalid public check-in checkout fixture key" >> fail "unreachable"
+      result <- runInventoryPublicCheckinHandler
+        (do
+            now <- liftIO getCurrentTime
+            insertKey assetKey
+              ((fixtureAsset "Roland Juno-106" "Synth" (Just "Roland") (Just "Juno-106") "TDF" Nothing)
+                { assetQrCode = Just canonicalToken
+                , assetStatus = Booked
+                })
+            insertKey checkoutKey ME.AssetCheckout
+              { ME.assetCheckoutAssetId = assetKey
+              , ME.assetCheckoutTargetKind = TargetParty
+              , ME.assetCheckoutTargetSessionId = Nothing
+              , ME.assetCheckoutTargetPartyRef = Just "Backline Crew"
+              , ME.assetCheckoutTargetRoomId = Nothing
+              , ME.assetCheckoutDisposition = Loan
+              , ME.assetCheckoutTermsAndConditions = Nothing
+              , ME.assetCheckoutHolderEmail = Nothing
+              , ME.assetCheckoutHolderPhone = Nothing
+              , ME.assetCheckoutPaymentType = Nothing
+              , ME.assetCheckoutPaymentInstallments = Nothing
+              , ME.assetCheckoutPaymentReference = Nothing
+              , ME.assetCheckoutPaymentAmountCents = Nothing
+              , ME.assetCheckoutPaymentCurrency = Nothing
+              , ME.assetCheckoutPaymentOutstandingCents = Nothing
+              , ME.assetCheckoutCheckedOutByRef = "public-link"
+              , ME.assetCheckoutCheckedOutAt = now
+              , ME.assetCheckoutDueAt = Nothing
+              , ME.assetCheckoutConditionOut = Just "Good"
+              , ME.assetCheckoutPhotoOutUrl = Just "inventory/checkout.jpg"
+              , ME.assetCheckoutPhotoDriveFileId = Nothing
+              , ME.assetCheckoutReturnedAt = Nothing
+              , ME.assetCheckoutConditionIn = Nothing
+              , ME.assetCheckoutPhotoInUrl = Nothing
+              , ME.assetCheckoutNotes = Nothing
+              })
+        canonicalToken
+        (AssetCheckinRequest
+          (Just "Returned OK")
+          (Just "Cables verified")
+          (Just uploadUrl))
+      case result of
+        Left err ->
+          expectationFailure ("Expected public QR check-in with managed upload URL to succeed, got " <> show err)
+        Right checkout -> do
+          targetKind checkout `shouldBe` "party"
+          targetPartyRef checkout `shouldBe` Just "Backline Crew"
+          disposition checkout `shouldBe` "loan"
+          returnedAt checkout `shouldSatisfy` isJust
+
+  describe "validateSessionRequiredTextField" $ do
+    it "trims required session text before persistence" $
+      validateSessionRequiredTextField "service" "  Grabacion live  "
+        `shouldBe` Right "Grabacion live"
+
+    it "rejects blank, oversized, or hidden required session text instead of storing ambiguous sessions" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid session required text error, got " <> show value)
+
+      assertInvalid "service is required"
+        (validateSessionRequiredTextField "service" "   ")
+      assertInvalid "engineerRef must not contain control characters or hidden formatting characters"
+        (validateSessionRequiredTextField "engineerRef" "Diego\nSaa")
+      assertInvalid "service must be 160 characters or fewer"
+        (validateSessionRequiredTextField "service" (T.replicate 161 "a"))
+
   describe "validateSessionStatusInput" $ do
     it "preserves omitted values and normalizes supported session statuses" $ do
       validateSessionStatusInput Nothing `shouldBe` Right Nothing
@@ -1498,6 +5063,37 @@ spec = do
               expectationFailure ("Expected invalid session status error, got " <> show value)
       assertInvalid (validateSessionStatusInput (Just "   "))
       assertInvalid (validateSessionStatusInput (Just "live"))
+
+  describe "session audio metadata validation" $ do
+    it "normalizes optional DAW text and bounds numeric audio fields before session writes" $ do
+      validateSessionOptionalTextField "daw" Nothing `shouldBe` Right Nothing
+      validateSessionOptionalTextField "daw" (Just "  Ableton Live  ")
+        `shouldBe` Right (Just "Ableton Live")
+      validateSessionOptionalTextField "daw" (Just "   ") `shouldBe` Right Nothing
+      validateSessionSampleRate (Just 48000) `shouldBe` Right (Just 48000)
+      validateSessionBitDepth (Just 24) `shouldBe` Right (Just 24)
+
+    it "rejects malformed audio metadata instead of persisting unusable session values" $ do
+      let assertInvalid expected result = case result of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` expected
+            Right value ->
+              expectationFailure ("Expected invalid audio metadata error, got " <> show value)
+
+      assertInvalid "sampleRate must be greater than zero"
+        (validateSessionSampleRate (Just 0))
+      assertInvalid "sampleRate must be 384000 or less"
+        (validateSessionSampleRate (Just 384001))
+      assertInvalid "bitDepth must be greater than zero"
+        (validateSessionBitDepth (Just (-1)))
+      assertInvalid "bitDepth must be 64 or less"
+        (validateSessionBitDepth (Just 128))
+      assertInvalid "daw must not contain control characters or hidden formatting characters"
+        ( validateSessionOptionalTextField
+            "daw"
+            (Just ("Logic" <> T.singleton '\x202E'))
+        )
 
   describe "validateSessionTimeRange" $ do
     it "accepts sessions whose end time is strictly after the start time" $ do
@@ -1521,7 +5117,8 @@ spec = do
           SessionInputRow
             1
             (Just "Lead vocal")
-            (Just "Voice")
+            (Just "00000000-0000-0000-0000-000000000042")
+            (Just "Voz")
             Nothing
             Nothing
             Nothing
@@ -1648,22 +5245,31 @@ spec = do
       assertInvalid "paymentMethod must be one of" (validatePaymentMethod "   ")
       assertInvalid "paymentMethod must be one of" (validatePaymentMethod "wire-transfer")
       assertInvalid "paymentMethod must not contain control characters" (validatePaymentMethod "cash\n")
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentMethod ("cash" <> "\x202E"))
 
   describe "validatePaymentCurrency" $ do
-    it "normalizes supported manual payment currencies to USD" $ do
-      validatePaymentCurrency "USD" `shouldBe` Right "USD"
-      validatePaymentCurrency " usd " `shouldBe` Right "USD"
+    let supported = ["USD", "EUR", "GBP"]
 
-    it "rejects blank, unsupported, or control-bearing payment currencies instead of silently coercing them to USD" $ do
+    it "normalizes configured ISO 4217 manual payment currencies" $ do
+      validatePaymentCurrency supported "USD" `shouldBe` Right "USD"
+      validatePaymentCurrency supported " eur " `shouldBe` Right "EUR"
+
+    it "rejects blank, unsupported, or control-bearing payment currencies before manual payment writes become ambiguous" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
               BL8.unpack (errBody err) `shouldContain` expectedMessage
             Right value ->
               expectationFailure ("Expected invalid payment currency error, got " <> show value)
-      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "   ")
-      assertInvalid "Only USD manual payments are currently supported" (validatePaymentCurrency "EUR")
-      assertInvalid "currency must not contain control characters" (validatePaymentCurrency "USD\n")
+      assertInvalid "currency is required" (validatePaymentCurrency supported "   ")
+      assertInvalid "Unsupported currency" (validatePaymentCurrency supported "JPY")
+      assertInvalid "valid ISO 4217" (validatePaymentCurrency supported "ZZZ")
+      assertInvalid "currency must not contain control characters" (validatePaymentCurrency supported "USD\n")
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentCurrency supported ("USD" <> "\x200B"))
 
   describe "validatePaymentAmountCents" $ do
     it "accepts positive payment amounts without rewriting them" $ do
@@ -1754,6 +5360,36 @@ spec = do
       assertInvalid (validatePaymentAttachmentUrl (Just "https://2130706433/proof.pdf"))
       assertInvalid (validatePaymentAttachmentUrl (Just "https://256.256.256.256/proof.pdf"))
 
+    it "rejects payment attachment fragments instead of storing browser-only proof references" $
+      case validatePaymentAttachmentUrl (Just "https://files.example.com/proof.pdf#page=2") of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "without a fragment"
+        Right value ->
+          expectationFailure ("Expected fragmented payment attachment URL error, got " <> show value)
+
+    it "rejects ambiguous payment attachment paths before storing manual payment rows" $ do
+      let assertInvalid rawUrl =
+            case validatePaymentAttachmentUrl (Just rawUrl) of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err)
+                  `shouldContain` "path must not contain empty, dot, or dot-dot segments"
+              Right value ->
+                expectationFailure ("Expected ambiguous payment attachment URL error, got " <> show value)
+      assertInvalid "https://files.example.com//proof.pdf"
+      assertInvalid "https://files.example.com/./proof.pdf"
+      assertInvalid "https://files.example.com/receipts/../proof.pdf"
+      assertInvalid "https://files.example.com/receipts/%2e%2e/proof.pdf"
+
+    it "rejects oversized payment attachment URLs before storing manual payment rows" $
+      case validatePaymentAttachmentUrl (Just ("https://files.example.com/" <> T.replicate 2049 "a")) of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "attachmentUrl must be 2048 characters or fewer"
+        Right value ->
+          expectationFailure ("Expected oversized payment attachment URL error, got " <> show value)
+
   describe "validatePaymentConcept" $ do
     it "trims meaningful concepts before storing manual payment rows" $ do
       validatePaymentConcept "  Honorarios abril  " `shouldBe` Right "Honorarios abril"
@@ -1766,7 +5402,7 @@ spec = do
         Right value ->
           expectationFailure ("Expected invalid payment concept error, got " <> show value)
 
-    it "rejects oversized or control-character concepts before storing manual payment rows" $ do
+    it "rejects oversized or unsafe-character concepts before storing manual payment rows" $ do
       let assertInvalid expectedMessage rawConcept =
             case validatePaymentConcept rawConcept of
               Left err -> do
@@ -1776,6 +5412,9 @@ spec = do
                 expectationFailure ("Expected invalid payment concept error, got " <> show value)
       assertInvalid "concept must be 240 characters or fewer" (T.replicate 241 "a")
       assertInvalid "concept must not contain control characters" "Honorarios\nabril"
+      assertInvalid
+        "hidden formatting characters"
+        ("Honorarios " <> "\x202E" <> "abril")
 
   describe "validatePaymentReference and validatePaymentPeriod" $ do
     it "normalizes optional manual payment labels before persistence" $ do
@@ -1784,7 +5423,7 @@ spec = do
       validatePaymentReference (Just "  REC-42  ") `shouldBe` Right (Just "REC-42")
       validatePaymentPeriod (Just "  2026-04  ") `shouldBe` Right (Just "2026-04")
 
-    it "rejects oversized or control-character optional payment labels" $ do
+    it "rejects malformed optional payment labels before they reach manual payment reporting" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
@@ -1798,11 +5437,48 @@ spec = do
         "reference must not contain control characters"
         (validatePaymentReference (Just "REC\n42"))
       assertInvalid
-        "period must be 80 characters or fewer"
-        (validatePaymentPeriod (Just (T.replicate 81 "a")))
+        "hidden formatting characters"
+        (validatePaymentReference (Just ("REC" <> "\x200B" <> "42")))
+      assertInvalid
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "2026-4"))
+      assertInvalid
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "abril-2026"))
+      assertInvalid
+        "period must be in YYYY-MM format"
+        (validatePaymentPeriod (Just "2026-13"))
       assertInvalid
         "period must not contain control characters"
         (validatePaymentPeriod (Just "2026\n04"))
+      assertInvalid
+        "hidden formatting characters"
+        (validatePaymentPeriod (Just ("2026" <> "\x202E" <> "-04")))
+
+  describe "validatePaymentPartyFilter" $ do
+    it "rejects unknown party filters instead of returning ambiguous empty payment lists" $ do
+      now <- getCurrentTime
+      runPaymentValidationSql $ do
+        (partyId, _, _, _, _, _, _, _) <- seedPaymentReferenceFixture now
+        noFilter <- validatePaymentPartyFilter Nothing
+        existingFilter <- validatePaymentPartyFilter (Just (fromSqlKey partyId))
+        invalidShape <- validatePaymentPartyFilter (Just 0)
+        missingParty <- validatePaymentPartyFilter (Just 999999)
+        liftIO $ do
+          noFilter `shouldBe` Right Nothing
+          existingFilter `shouldBe` Right (Just (fromSqlKey partyId))
+          case invalidShape of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "partyId must be a positive integer"
+            Right value ->
+              expectationFailure ("Expected invalid party filter shape to fail, got " <> show value)
+          case missingParty of
+            Left err -> do
+              errHTTPCode err `shouldBe` 400
+              BL8.unpack (errBody err) `shouldContain` "partyId references an unknown party"
+            Right value ->
+              expectationFailure ("Expected unknown party filter to fail, got " <> show value)
 
   describe "validatePaymentReferences" $ do
     it "accepts existing party, order, and invoice references when the invoice includes that order" $ do
@@ -1855,6 +5531,22 @@ spec = do
       assertInvalid 0
       assertInvalid 201
 
+  describe "normalizeMetaSenderLabelIds" $
+    it "drops blank sender ids and preserves first-seen order before capped profile fallback lookups" $ do
+      let normalized =
+            normalizeMetaSenderLabelIds $
+              [ " z-last "
+              , "   "
+              , "a-first"
+              , "z-last"
+              ]
+                <> map (\n -> "id-" <> T.pack (show (n :: Int))) [1 .. 30]
+      take 3 normalized `shouldBe` ["z-last", "a-first", "id-1"]
+      length normalized `shouldBe` 25
+      last normalized `shouldBe` "id-23"
+      normalized `shouldSatisfy` all (not . T.null)
+      filter (== "z-last") normalized `shouldBe` ["z-last"]
+
   describe "social reply identifier validation" $ do
     it "normalizes omitted and explicit reply ids without inventing fallbacks" $ do
       validateSocialReplySenderId " ig-user-1 "
@@ -1864,7 +5556,7 @@ spec = do
       validateSocialReplyExternalId (Just " msg-1 ")
         `shouldBe` Right (Just "msg-1")
 
-    it "rejects blank, whitespace, control, or oversized ids before reply dispatch" $ do
+    it "rejects blank, malformed, hidden, or oversized ids before reply dispatch" $ do
       let assertInvalid expectedMessage result = case result of
             Left err -> do
               errHTTPCode err `shouldBe` 400
@@ -1881,6 +5573,18 @@ spec = do
       assertInvalid
         "externalId must not contain control characters"
         (validateSocialReplyExternalId (Just ("msg" <> T.singleton '\NUL' <> "1")))
+      assertInvalid
+        "senderId must not contain hidden formatting characters"
+        (validateSocialReplySenderId ("ig" <> T.singleton '\x200D' <> "user"))
+      assertInvalid
+        "senderId must contain only ASCII characters"
+        (validateSocialReplySenderId "usuario-ñ")
+      assertInvalid
+        "senderId must be a Graph node id"
+        (validateSocialReplySenderId "ig-user/1")
+      assertInvalid
+        "senderId must be a Graph node id"
+        (validateSocialReplySenderId "---")
       assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId (T.replicate 257 "a"))
@@ -1950,7 +5654,7 @@ spec = do
               (verifyMetaWebhook MetaFacebook (Just "subscribe") (Just token) (Just "challenge-123"))
               env
       metaWebhookVerifyTokenCandidates MetaFacebook configured
-        `shouldBe` [Just "fb-secret"]
+        `shouldBe` [Just "fb-secret", Just "ig-secret"]
       case verify "fb-secret" of
         Left err ->
           expectationFailure
@@ -1958,12 +5662,56 @@ spec = do
         Right challenge ->
           challenge `shouldBe` "challenge-123"
       case verify "ig-secret" of
+        Left err ->
+          expectationFailure
+            ("Expected Instagram verify token fallback to be accepted, got " <> show (errHTTPCode err))
+        Right challenge ->
+          challenge `shouldBe` "challenge-123"
+
+    it "keeps Instagram webhook verification scoped to the explicit verify token" $ do
+      cfg <- Config.loadConfig
+      let configured =
+            cfg
+              { instagramVerifyToken = Just "ig-secret"
+              , instagramMessagingToken = Just "ig-msg-secret"
+              , instagramAppToken = Just "ig-app-secret"
+              }
+          env =
+            Env
+              { envPool = error "verifyMetaWebhook test does not use the database pool"
+              , envConfig = configured
+              }
+          verify :: Text -> Either ServerError Text
+          verify token =
+            runReaderT
+              (verifyMetaWebhook
+                MetaInstagram
+                (Just "subscribe")
+                (Just token)
+                (Just "challenge-123"))
+              env
+      metaWebhookVerifyTokenCandidates MetaInstagram configured
+        `shouldBe` [Just "ig-secret"]
+      case verify "ig-secret" of
+        Left err ->
+          expectationFailure
+            ("Expected Instagram verify token to be accepted, got " <> show (errHTTPCode err))
+        Right challenge ->
+          challenge `shouldBe` "challenge-123"
+      case verify "ig-msg-secret" of
         Left err -> do
           errHTTPCode err `shouldBe` 403
-          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for facebook"
+          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for instagram"
         Right challenge ->
           expectationFailure
-            ("Expected Instagram verify token to be rejected, got " <> T.unpack challenge)
+            ("Expected Instagram messaging token to be rejected, got " <> T.unpack challenge)
+      case verify "ig-app-secret" of
+        Left err -> do
+          errHTTPCode err `shouldBe` 403
+          BL8.unpack (errBody err) `shouldContain` "Meta verify token mismatch for instagram"
+        Right challenge ->
+          expectationFailure
+            ("Expected Instagram app token to be rejected, got " <> T.unpack challenge)
 
     it "rejects incomplete or ambiguous Meta webhook verification handshakes" $ do
       let assertInvalid expectedCode expectedMessage result =
@@ -1999,6 +5747,14 @@ spec = do
         403
         "Meta verify token not configured"
         (validate (Just "subscribe") (Just "challenge-123") (Just "secret") [Just "   "])
+      assertInvalid
+        403
+        "Meta verify token candidates conflict"
+        (validate
+          (Just "subscribe")
+          (Just "challenge-123")
+          (Just "secret")
+          [Just "secret", Just "other-secret"])
 
     it "rejects unsafe Meta webhook verification values before echoing or falling back" $ do
       let assertInvalid expectedCode expectedMessage result =
@@ -2020,12 +5776,48 @@ spec = do
         (validate (Just "challenge\nInjected: value") (Just "secret") [Just "secret"])
       assertInvalid
         400
-        "hub.verify_token must not contain control characters"
+        "hub.challenge must not contain whitespace"
+        (validate (Just "challenge 123") (Just "secret") [Just "secret"])
+      assertInvalid
+        400
+        "hub.challenge must not contain hidden formatting characters"
+        ( validate
+            (Just ("challenge" <> T.singleton '\x200B' <> "-123"))
+            (Just "secret")
+            [Just "secret"]
+        )
+      assertInvalid
+        400
+        "hub.verify_token must not contain whitespace or control characters"
         (validate (Just "challenge-123") (Just "secret\nInjected") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token must not contain whitespace or control characters"
+        (validate (Just "challenge-123") (Just "secret token") [Just "secret"])
+      assertInvalid
+        400
+        "hub.verify_token must not contain hidden formatting characters"
+        ( validate
+            (Just "challenge-123")
+            (Just ("secret" <> T.singleton '\x202E'))
+            [Just "secret"]
+        )
       assertInvalid
         403
         "Meta verify token is misconfigured"
         (validate (Just "challenge-123") (Just "secret") [Just "bad\nsecret", Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token is misconfigured"
+        (validate (Just "challenge-123") (Just "secret") [Just "bad secret", Just "secret"])
+      assertInvalid
+        403
+        "Meta verify token is misconfigured"
+        ( validate
+            (Just "challenge-123")
+            (Just "secret")
+            [Just ("secret" <> T.singleton '\x200D')]
+        )
 
   describe "validateMetaWebhookChannel" $ do
     it "accepts only route-matching Meta webhook object values" $ do
@@ -2056,6 +5848,76 @@ spec = do
       assertInvalid
         "Meta webhook object does not match the webhook endpoint"
         (validateMetaWebhookChannel MetaFacebook (A.object ["object" .= ("instagram" :: Text)]))
+
+  describe "validateMetaInboundPayload" $ do
+    it "rejects missing or empty Meta webhook entry arrays instead of accepting no-op payloads" $ do
+      let assertInvalid payload =
+            case validateMetaInboundPayload payload of
+              Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+                BL8.unpack (errBody err) `shouldContain` "entry"
+              Right events ->
+                expectationFailure
+                  ("Expected malformed Meta webhook payload to fail, got " <> show events)
+
+      assertInvalid (A.object ["object" .= ("instagram" :: Text)])
+      assertInvalid
+        ( A.object
+            [ "object" .= ("instagram" :: Text)
+            , "entry" .= ([] :: [A.Value])
+            ]
+        )
+
+    it "rejects malformed Meta webhook fields instead of treating them as an empty inbox batch" $ do
+      let payload =
+            A.object
+              [ "object" .= ("instagram" :: Text)
+              , "entry" .=
+                  [ A.object
+                      [ "messaging" .=
+                          [ A.object
+                              [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                              , "timestamp" .= ("not-a-timestamp" :: Text)
+                              , "message" .= A.object ["text" .= ("hola" :: Text)]
+                              ]
+                          ]
+                      ]
+                  ]
+              ]
+      case validateMetaInboundPayload payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+          BL8.unpack (errBody err) `shouldContain` "timestamp"
+        Right events ->
+          expectationFailure
+            ("Expected malformed Meta webhook payload to fail, got " <> show events)
+
+    it "rejects negative Meta webhook timestamps before fallback ids are built" $ do
+      let payload =
+            A.object
+              [ "object" .= ("instagram" :: Text)
+              , "entry" .=
+                  [ A.object
+                      [ "messaging" .=
+                          [ A.object
+                              [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                              , "timestamp" .= (-1 :: Int)
+                              , "message" .= A.object ["text" .= ("hola" :: Text)]
+                              ]
+                          ]
+                      ]
+                  ]
+              ]
+      case validateMetaInboundPayload payload of
+        Left err -> do
+          errHTTPCode err `shouldBe` 400
+          BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+          BL8.unpack (errBody err) `shouldContain` "negative timestamp"
+        Right events ->
+          expectationFailure
+            ("Expected negative Meta webhook timestamp to fail, got " <> show events)
 
   describe "social reply input validation" $ do
     it "trims valid sender and external ids before reply dispatch" $ do
@@ -2091,6 +5953,9 @@ spec = do
         "externalId must not contain whitespace"
         (validateSocialReplyExternalId (Just "mid.abc 123"))
       assertInvalid
+        "externalId must contain only ASCII characters"
+        (validateSocialReplyExternalId (Just "mid.ñ"))
+      assertInvalid
         "senderId must be 256 characters or fewer"
         (validateSocialReplySenderId longSenderId)
 
@@ -2103,133 +5968,36 @@ spec = do
       socialReplyOutcomeFields (Right (A.object ["ok" .= True]) :: Either Text A.Value)
         `shouldBe` ("sent", Nothing)
 
-  describe "normalizeServiceCatalogName" $ do
-    it "normalizes bounded service catalog names before create/update persistence" $ do
-      normalizeServiceCatalogName "  Mezcla Full  " `shouldBe` Right "Mezcla Full"
-      normalizeServiceCatalogNameUpdate Nothing `shouldBe` Right Nothing
-      normalizeServiceCatalogNameUpdate (Just "  Mezcla Full  ") `shouldBe` Right (Just "Mezcla Full")
+  describe "ensureModule" $ do
+    it "honors persisted module grants and rejects missing modules or duplicate roles" $ do
+      let missingModuleUser =
+            inventoryUser
+              { auRoles = [M.Fan]
+              , auModules = modulesForRoles [M.Fan]
+              }
+          independentlyGrantedUser =
+            inventoryUser
+              { auRoles = [M.Fan, M.Customer]
+              , auModules = modulesForRoles [M.Admin]
+              }
+          duplicatedRoleUser =
+            inventoryUser
+              { auRoles = [M.Reception, M.Reception]
+              , auModules = modulesForRoles [M.Reception]
+              }
+          assertRejected expected user = do
+            result <- runExceptT (ensureModule ModuleScheduling user)
+            case result of
+              Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err) `shouldContain` expected
+              Right () ->
+                expectationFailure "Expected module access to be rejected"
 
-    it "rejects malformed service catalog names before persistence" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid service catalog name error, got " <> show value)
-      assertInvalid "Nombre requerido" (normalizeServiceCatalogName "   ")
-      assertInvalid
-        "160 caracteres o menos"
-        (normalizeServiceCatalogName (T.replicate 161 "a"))
-      assertInvalid
-        "caracteres de control"
-        (normalizeServiceCatalogName "Podcast\nLive")
-      assertInvalid "Nombre requerido" (normalizeServiceCatalogNameUpdate (Just "   "))
-      assertInvalid
-        "caracteres de control"
-        (normalizeServiceCatalogNameUpdate (Just "Podcast\tLive"))
-
-  describe "validateServiceCatalogCurrency" $ do
-    it "defaults omitted values to USD and normalizes supported ISO codes" $ do
-      validateServiceCatalogCurrency Nothing `shouldBe` Right "USD"
-      validateServiceCatalogCurrency (Just " usd ") `shouldBe` Right "USD"
-      validateServiceCatalogCurrency (Just "eur") `shouldBe` Right "EUR"
-
-    it "rejects blank or malformed currency codes instead of storing ambiguous data" $ do
-      let assertInvalid result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
-            Right value ->
-              expectationFailure ("Expected invalid currency error, got " <> show value)
-      assertInvalid (validateServiceCatalogCurrency (Just "   "))
-      assertInvalid (validateServiceCatalogCurrency (Just "usdollars"))
-      assertInvalid (validateServiceCatalogCurrency (Just "12$"))
-
-  describe "validateServiceCatalogCurrencyUpdate" $ do
-    it "preserves omitted updates and normalizes meaningful ones" $ do
-      validateServiceCatalogCurrencyUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogCurrencyUpdate (Just " gbp ") `shouldBe` Right (Just "GBP")
-
-    it "rejects explicit blank updates instead of silently resetting the currency" $
-      case validateServiceCatalogCurrencyUpdate (Just "   ") of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "código ISO de 3 letras"
-        Right value ->
-          expectationFailure ("Expected invalid currency update error, got " <> show value)
-
-  describe "validateServiceCatalogBillingUnit" $ do
-    it "normalizes bounded billing units and treats omitted create values as empty" $ do
-      validateServiceCatalogBillingUnit Nothing `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnit (Just "   ") `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnit (Just "  por sesión  ")
-        `shouldBe` Right (Just "por sesión")
-
-    it "rejects malformed billing units before service catalog writes persist opaque labels" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid billing unit error, got " <> show value)
-      assertInvalid
-        "80 caracteres o menos"
-        (validateServiceCatalogBillingUnit (Just (T.replicate 81 "a")))
-      assertInvalid
-        "caracteres de control"
-        (validateServiceCatalogBillingUnit (Just "sesión\nextra"))
-
-  describe "validateServiceCatalogBillingUnitUpdate" $ do
-    it "preserves omitted and explicit-null updates while trimming meaningful billing units" $ do
-      validateServiceCatalogBillingUnitUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogBillingUnitUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
-      validateServiceCatalogBillingUnitUpdate (Just (Just "  por hora  "))
-        `shouldBe` Right (Just (Just "por hora"))
-
-    it "rejects blank or malformed updates instead of silently clearing billing units" $ do
-      let assertInvalid expected result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` expected
-            Right value ->
-              expectationFailure ("Expected invalid billing unit update error, got " <> show value)
-      assertInvalid
-        "debe omitirse, ser null, o contener texto"
-        (validateServiceCatalogBillingUnitUpdate (Just (Just "   ")))
-      assertInvalid
-        "caracteres de control"
-        (validateServiceCatalogBillingUnitUpdate (Just (Just "por\nhora")))
-
-  describe "validateServiceCatalogTaxBps" $ do
-    it "accepts omitted values and basis points within a 0..10000 percentage range" $ do
-      validateServiceCatalogTaxBps Nothing `shouldBe` Right Nothing
-      validateServiceCatalogTaxBps (Just 0) `shouldBe` Right (Just 0)
-      validateServiceCatalogTaxBps (Just 850) `shouldBe` Right (Just 850)
-      validateServiceCatalogTaxBps (Just 10000) `shouldBe` Right (Just 10000)
-
-    it "rejects negative or oversized tax percentages before they can be stored" $ do
-      let assertInvalid result = case result of
-            Left err -> do
-              errHTTPCode err `shouldBe` 400
-              BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
-            Right value ->
-              expectationFailure ("Expected invalid tax basis points error, got " <> show value)
-      assertInvalid (validateServiceCatalogTaxBps (Just (-1)))
-      assertInvalid (validateServiceCatalogTaxBps (Just 10001))
-
-  describe "validateServiceCatalogTaxBpsUpdate" $ do
-    it "preserves omitted and explicit-null updates" $ do
-      validateServiceCatalogTaxBpsUpdate Nothing `shouldBe` Right Nothing
-      validateServiceCatalogTaxBpsUpdate (Just Nothing) `shouldBe` Right (Just Nothing)
-      validateServiceCatalogTaxBpsUpdate (Just (Just 1200)) `shouldBe` Right (Just (Just 1200))
-
-    it "rejects invalid update values instead of storing impossible tax percentages" $
-      case validateServiceCatalogTaxBpsUpdate (Just (Just 15000)) of
-        Left err -> do
-          errHTTPCode err `shouldBe` 400
-          BL8.unpack (errBody err) `shouldContain` "entre 0 y 10000"
-        Right value ->
-          expectationFailure ("Expected invalid service catalog tax update error, got " <> show value)
+      runExceptT (ensureModule ModuleScheduling inventoryUser) `shouldReturn` Right ()
+      assertRejected "Missing required module access" missingModuleUser
+      runExceptT (ensureModule ModuleScheduling independentlyGrantedUser) `shouldReturn` Right ()
+      assertRejected "Role grants must be unique" duplicatedRoleUser
 
   describe "Meta inbox deletion handling" $ do
     it "uses the deterministic external id fallback when Meta sends a blank message id" $ do
@@ -2264,7 +6032,7 @@ spec = do
                 igInboundText inbound `shouldBe` "hola"
             _ -> expectationFailure ("Expected an inbound event, got " <> show events)
 
-    it "keeps malformed Meta message ids out of persisted webhook events" $ do
+    it "does not synthesize a Meta external id when both id and timestamp are absent" $ do
         let payload =
                 A.object
                     [ "object" .= ("instagram" :: Text)
@@ -2277,40 +6045,79 @@ spec = do
                                         [ A.object
                                             [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
                                             , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
-                                            , "timestamp" .= (1773630000 :: Int)
                                             , "message"
                                                 .= A.object
-                                                    [ "mid" .= ("mid with space" :: Text)
+                                                    [ "mid" .= ("   " :: Text)
                                                     , "text" .= ("hola" :: Text)
-                                                    ]
-                                            ]
-                                        ]
-                                , "changes"
-                                    .=
-                                        [ A.object
-                                            [ "field" .= ("messages" :: Text)
-                                            , "value"
-                                                .= A.object
-                                                    [ "from" .= A.object ["id" .= ("user-1" :: Text)]
-                                                    , "timestamp" .= (1773630001 :: Int)
-                                                    , "message"
-                                                        .= A.object
-                                                            [ "mid" .= ("bad mid" :: Text)
-                                                            , "is_deleted" .= True
-                                                            ]
                                                     ]
                                             ]
                                         ]
                                 ]
                             ]
                     ]
-            events = extractMetaInbound payload
-        case events of
-            [MetaInboundMessage inbound] -> do
-                igInboundExternalId inbound `shouldSatisfy` T.isPrefixOf "user-1-"
-                igInboundExternalId inbound `shouldNotBe` "mid with space"
-                igInboundText inbound `shouldBe` "hola"
-            _ -> expectationFailure ("Expected one valid inbound event, got " <> show events)
+        extractMetaInbound payload `shouldBe` []
+
+    it "rejects malformed explicit Meta message ids instead of falling back to timestamp hashes" $ do
+        let assertInvalid expectedMessage payload =
+                case validateMetaInboundPayload payload of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` "Invalid Meta webhook payload"
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right events ->
+                        expectationFailure
+                            ("Expected malformed Meta message id to fail, got " <> show events)
+
+        assertInvalid
+            "message.mid must not contain whitespace"
+            ( A.object
+                [ "object" .= ("instagram" :: Text)
+                , "entry"
+                    .=
+                        [ A.object
+                            [ "id" .= ("17841400000000000" :: Text)
+                            , "messaging"
+                                .=
+                                    [ A.object
+                                        [ "sender" .= A.object ["id" .= ("user-1" :: Text)]
+                                        , "recipient" .= A.object ["id" .= ("biz-1" :: Text)]
+                                        , "timestamp" .= (1773630000 :: Int)
+                                        , "message"
+                                            .= A.object
+                                                [ "mid" .= ("mid with space" :: Text)
+                                                , "text" .= ("hola" :: Text)
+                                                ]
+                                        ]
+                                    ]
+                            ]
+                        ]
+                ]
+            )
+        assertInvalid
+            "change.mid must not contain whitespace"
+            ( A.object
+                [ "object" .= ("instagram" :: Text)
+                , "entry"
+                    .=
+                        [ A.object
+                            [ "id" .= ("17841400000000000" :: Text)
+                            , "changes"
+                                .=
+                                    [ A.object
+                                        [ "field" .= ("messages" :: Text)
+                                        , "value"
+                                            .= A.object
+                                                [ "from" .= A.object ["id" .= ("user-1" :: Text)]
+                                                , "timestamp" .= (1773630001 :: Int)
+                                                , "mid" .= ("bad mid" :: Text)
+                                                , "is_deleted" .= True
+                                                ]
+                                        ]
+                                    ]
+                            ]
+                        ]
+                ]
+            )
 
     it "normalizes actor ids and drops ambiguous Meta webhook events before persistence" $ do
         let payload =
@@ -2516,6 +6323,41 @@ runInventoryCheckinHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (checkinHandlerFor inventoryUser rawId req) env)
 
+runInventoryCheckoutHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetCheckoutRequest
+  -> IO (Either ServerError AssetCheckoutDTO)
+runInventoryCheckoutHandler setup rawId req =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory checkout tests"
+            }
+    liftIO $ runExceptT (runReaderT (checkoutHandlerFor inventoryUser rawId req) env)
+
+runInventoryListHandler
+  :: SqlPersistT IO ()
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+  -> IO (Either ServerError (Page AssetDTO))
+runInventoryListHandler setup mq mp mps =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory list tests"
+            }
+    liftIO $ runExceptT (runReaderT (listAssetsHandlerFor inventoryUser mq mp mps) env)
+
 runInventoryPatchHandler
   :: SqlPersistT IO ()
   -> Text
@@ -2525,6 +6367,7 @@ runInventoryPatchHandler setup rawId req =
   runStdoutLoggingT $ do
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool initializeRoomSchema pool
     liftIO $ runSqlPool setup pool
     let env =
           Env
@@ -2532,6 +6375,38 @@ runInventoryPatchHandler setup rawId req =
             , envConfig = error "envConfig should be unused in inventory patch tests"
             }
     liftIO $ runExceptT (runReaderT (patchAssetHandlerFor inventoryUser rawId req) env)
+
+runInventoryGetHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetDTO)
+runInventoryGetHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory get tests"
+            }
+    liftIO $ runExceptT (runReaderT (getAssetHandlerFor inventoryUser rawId) env)
+
+runInventoryCheckoutHistoryHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError [AssetCheckoutDTO])
+runInventoryCheckoutHistoryHandler setup rawId =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in inventory checkout history tests"
+            }
+    liftIO $ runExceptT (runReaderT (checkoutHistoryHandlerFor inventoryUser rawId) env)
 
 runInventoryDeleteHandler
   :: SqlPersistT IO ()
@@ -2585,6 +6460,22 @@ runInventoryResolveQrHandler setup token =
             }
     liftIO $ runExceptT (runReaderT (resolveByQrHandlerFor inventoryUser token) env)
 
+runInventoryPublicResolveQrHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> IO (Either ServerError AssetDTO)
+runInventoryPublicResolveQrHandler setup token =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = error "envConfig should be unused in public inventory QR resolve tests"
+            }
+    liftIO $ runExceptT (runReaderT (publicResolveByQrHandlerFor token) env)
+
 runInventoryPublicCheckoutHandler
   :: SqlPersistT IO ()
   -> Text
@@ -2595,10 +6486,11 @@ runInventoryPublicCheckoutHandler setup token req =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
     liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
     let env =
           Env
             { envPool = pool
-            , envConfig = error "envConfig should be unused in public inventory checkout tests"
+            , envConfig = cfg
             }
     liftIO $ runExceptT (runReaderT (publicCheckoutHandlerFor token req) env)
 
@@ -2612,12 +6504,31 @@ runInventoryPublicCheckinHandler setup token req =
     pool <- createSqlitePool ":memory:" 1
     liftIO $ runSqlPool initializeInventoryCheckinSchema pool
     liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
     let env =
           Env
             { envPool = pool
-            , envConfig = error "envConfig should be unused in public inventory check-in tests"
+            , envConfig = cfg
             }
     liftIO $ runExceptT (runReaderT (publicCheckinHandlerFor token req) env)
+
+runInventoryPublicUploadHandler
+  :: SqlPersistT IO ()
+  -> Text
+  -> AssetUploadForm
+  -> IO (Either ServerError AssetUploadDTO)
+runInventoryPublicUploadHandler setup token uploadForm =
+  runStdoutLoggingT $ do
+    pool <- createSqlitePool ":memory:" 1
+    liftIO $ runSqlPool initializeInventoryCheckinSchema pool
+    liftIO $ runSqlPool setup pool
+    cfg <- liftIO Config.loadConfig
+    let env =
+          Env
+            { envPool = pool
+            , envConfig = cfg
+            }
+    liftIO $ runExceptT (runReaderT (publicUploadHandlerFor token uploadForm) env)
 
 runRoomCreateHandler
   :: SqlPersistT IO ()
@@ -2652,40 +6563,21 @@ runRoomPatchHandler setup rawId req =
             }
     liftIO $ runExceptT (runReaderT (patchRoomHandlerFor inventoryUser rawId req) env)
 
-runPipelineCreateHandler
+runBandCreateHandler
   :: SqlPersistT IO ()
-  -> Text
-  -> PipelineCardCreate
-  -> IO (Either ServerError PipelineCardDTO)
-runPipelineCreateHandler setup rawType req =
+  -> BandCreate
+  -> IO (Either ServerError BandDTO)
+runBandCreateHandler setup req =
   runStdoutLoggingT $ do
     pool <- createSqlitePool ":memory:" 1
-    liftIO $ runSqlPool initializePipelineSchema pool
+    liftIO $ runSqlPool initializeBandSchema pool
     liftIO $ runSqlPool setup pool
     let env =
           Env
             { envPool = pool
-            , envConfig = error "envConfig should be unused in pipeline tests"
+            , envConfig = error "envConfig should be unused in band tests"
             }
-    liftIO $ runExceptT (runReaderT (createPipelineHandlerFor inventoryUser rawType req) env)
-
-runPipelinePatchHandler
-  :: SqlPersistT IO ()
-  -> Text
-  -> Text
-  -> PipelineCardUpdate
-  -> IO (Either ServerError PipelineCardDTO)
-runPipelinePatchHandler setup rawType rawId req =
-  runStdoutLoggingT $ do
-    pool <- createSqlitePool ":memory:" 1
-    liftIO $ runSqlPool initializePipelineSchema pool
-    liftIO $ runSqlPool setup pool
-    let env =
-          Env
-            { envPool = pool
-            , envConfig = error "envConfig should be unused in pipeline tests"
-            }
-    liftIO $ runExceptT (runReaderT (patchPipelineHandlerFor inventoryUser rawType rawId req) env)
+    liftIO $ runExceptT (runReaderT (createBandHandlerFor inventoryUser req) env)
 
 inventoryUser :: AuthedUser
 inventoryUser =
@@ -2694,6 +6586,43 @@ inventoryUser =
     , auRoles = [M.Admin]
     , auModules = modulesForRoles [M.Admin]
     }
+
+listAssetsHandlerFor
+  :: AuthedUser
+  -> Maybe Text
+  -> Maybe Int
+  -> Maybe Int
+  -> InventoryTestM (Page AssetDTO)
+listAssetsHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          listAssets
+
+checkoutHandlerFor :: AuthedUser -> Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
+checkoutHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          checkoutAsset
 
 checkinHandlerFor :: AuthedUser -> Text -> AssetCheckinRequest -> InventoryTestM AssetCheckoutDTO
 checkinHandlerFor user =
@@ -2726,6 +6655,38 @@ patchAssetHandlerFor user =
       :<|> _refreshQr
       :<|> _resolveByQr ->
           patchAsset
+
+getAssetHandlerFor :: AuthedUser -> Text -> InventoryTestM AssetDTO
+getAssetHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> _checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          getAsset
+
+checkoutHistoryHandlerFor :: AuthedUser -> Text -> InventoryTestM [AssetCheckoutDTO]
+checkoutHistoryHandlerFor user =
+  case (inventoryServer user :: ServerT InventoryAPI InventoryTestM) of
+    _listAssets
+      :<|> _createAsset
+      :<|> _uploadAssetPhoto
+      :<|> _getAsset
+      :<|> _patchAsset
+      :<|> _deleteAsset
+      :<|> _checkoutAsset
+      :<|> _checkinAsset
+      :<|> checkoutHistory
+      :<|> _refreshQr
+      :<|> _resolveByQr ->
+          checkoutHistory
 
 deleteHandlerFor :: AuthedUser -> Text -> InventoryTestM ()
 deleteHandlerFor user =
@@ -2775,6 +6736,15 @@ resolveByQrHandlerFor user =
       :<|> resolveByQr ->
           resolveByQr
 
+publicResolveByQrHandlerFor :: Text -> InventoryTestM AssetDTO
+publicResolveByQrHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    loadByQr
+      :<|> _checkoutByQr
+      :<|> _checkinByQr
+      :<|> _uploadByQr ->
+          loadByQr
+
 publicCheckoutHandlerFor :: Text -> AssetCheckoutRequest -> InventoryTestM AssetCheckoutDTO
 publicCheckoutHandlerFor =
   case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
@@ -2793,6 +6763,15 @@ publicCheckinHandlerFor =
       :<|> _uploadByQr ->
           checkinByQr
 
+publicUploadHandlerFor :: Text -> AssetUploadForm -> InventoryTestM AssetUploadDTO
+publicUploadHandlerFor =
+  case (inventoryPublicServer :: ServerT InventoryPublicAPI InventoryTestM) of
+    _loadByQr
+      :<|> _checkoutByQr
+      :<|> _checkinByQr
+      :<|> uploadByQr ->
+          uploadByQr
+
 createRoomHandlerFor :: AuthedUser -> RoomCreate -> InventoryTestM RoomDTO
 createRoomHandlerFor user =
   case (roomsServer user :: ServerT RoomsAPI InventoryTestM) of
@@ -2809,29 +6788,16 @@ patchRoomHandlerFor user =
       :<|> patchRoom ->
           patchRoom
 
-createPipelineHandlerFor :: AuthedUser -> Text -> PipelineCardCreate -> InventoryTestM PipelineCardDTO
-createPipelineHandlerFor user rawType =
-  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
-    pipelineRoutes ->
-      case pipelineRoutes rawType of
-        _listCards
-          :<|> _listStages
-          :<|> createCard
-          :<|> _cardServer ->
-              createCard
+createBandHandlerFor :: AuthedUser -> BandCreate -> InventoryTestM BandDTO
+createBandHandlerFor user =
+  case (bandsServer user :: ServerT BandsAPI InventoryTestM) of
+    _listBands
+      :<|> createBand
+      :<|> _bandOptions
+      :<|> _getBand ->
+          createBand
 
-patchPipelineHandlerFor :: AuthedUser -> Text -> Text -> PipelineCardUpdate -> InventoryTestM PipelineCardDTO
-patchPipelineHandlerFor user rawType rawId =
-  case (pipelinesServer user :: ServerT PipelinesAPI InventoryTestM) of
-    pipelineRoutes ->
-      case pipelineRoutes rawType of
-        _listCards
-          :<|> _listStages
-          :<|> _createCard
-          :<|> cardRoutes ->
-              case cardRoutes rawId of
-                _getCard :<|> patchCard :<|> _deleteCard ->
-                  patchCard
+
 
 initializeMetaInboxSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializeMetaInboxSchema = do
@@ -2885,7 +6851,7 @@ initializeSessionReferenceValidationSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"band\" (\
-        \\"id\" uuid PRIMARY KEY,\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
         \\"party_id\" INTEGER NOT NULL,\
         \\"name\" VARCHAR NOT NULL,\
         \\"label_artist\" BOOLEAN NOT NULL,\
@@ -2966,6 +6932,9 @@ initializeInventoryCheckinSchema = do
         \\"payment_type\" VARCHAR NULL,\
         \\"payment_installments\" INTEGER NULL,\
         \\"payment_reference\" VARCHAR NULL,\
+        \\"payment_amount_cents\" INTEGER NULL,\
+        \\"payment_currency\" VARCHAR NULL,\
+        \\"payment_outstanding_cents\" INTEGER NULL,\
         \\"checked_out_by_ref\" VARCHAR NOT NULL,\
         \\"checked_out_at\" TIMESTAMP NOT NULL,\
         \\"due_at\" TIMESTAMP NULL,\
@@ -2976,6 +6945,52 @@ initializeInventoryCheckinSchema = do
         \\"condition_in\" VARCHAR NULL,\
         \\"photo_in_url\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL\
+        \)"
+        []
+
+initializeBandSchema :: SqlPersistT IO ()
+initializeBandSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"band\" (\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"name\" VARCHAR NOT NULL,\
+        \\"label_artist\" BOOLEAN NOT NULL,\
+        \\"primary_genre\" VARCHAR NULL,\
+        \\"home_city\" VARCHAR NULL,\
+        \\"photo_url\" VARCHAR NULL,\
+        \\"contract_flags\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_band_name\" UNIQUE (\"name\"),\
+        \CONSTRAINT \"unique_band_party\" UNIQUE (\"party_id\")\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"band_member\" (\
+        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
+        \\"band_id\" uuid NOT NULL,\
+        \\"party_id\" INTEGER NOT NULL,\
+        \\"role_in_band\" VARCHAR NULL,\
+        \CONSTRAINT \"unique_band_member\" UNIQUE (\"band_id\", \"party_id\")\
         \)"
         []
 
@@ -2995,22 +7010,6 @@ initializeRoomSchema = do
         \)"
         []
 
-initializePipelineSchema :: SqlPersistT IO ()
-initializePipelineSchema = do
-    rawExecute "PRAGMA foreign_keys = ON" []
-    rawExecute
-        "CREATE TABLE IF NOT EXISTS \"pipeline_card\" (\
-        \\"id\" uuid PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || '4' || substr(hex(randomblob(2)), 2) || '-' || substr('89ab', (abs(random()) % 4) + 1, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))),\
-        \\"service_kind\" VARCHAR NOT NULL,\
-        \\"title\" VARCHAR NOT NULL,\
-        \\"artist\" VARCHAR NULL,\
-        \\"stage\" VARCHAR NOT NULL,\
-        \\"sort_order\" INTEGER NOT NULL,\
-        \\"notes\" VARCHAR NULL,\
-        \\"created_at\" TIMESTAMP NOT NULL,\
-        \\"updated_at\" TIMESTAMP NOT NULL\
-        \)"
-        []
 
 initializePaymentValidationSchema :: SqlPersistT (NoLoggingT (ResourceT IO)) ()
 initializePaymentValidationSchema = do
@@ -3028,6 +7027,9 @@ initializePaymentValidationSchema = do
         \\"instagram\" VARCHAR NULL,\
         \\"emergency_contact\" VARCHAR NULL,\
         \\"notes\" VARCHAR NULL,\
+        \\"stripe_customer_id\" VARCHAR NULL,\
+        \\"country_code\" VARCHAR NULL,\
+        \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
@@ -3050,6 +7052,7 @@ initializePaymentValidationSchema = do
         \\"customer_id\" INTEGER NOT NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
         \\"artist_id\" INTEGER NULL REFERENCES \"party\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
         \\"catalog_id\" INTEGER NOT NULL REFERENCES \"service_catalog\" ON DELETE RESTRICT ON UPDATE RESTRICT,\
+        \\"service_offering_id\" VARCHAR NULL,\
         \\"service_kind\" VARCHAR NOT NULL,\
         \\"title\" VARCHAR NULL,\
         \\"description\" VARCHAR NULL,\
@@ -3197,6 +7200,9 @@ seedPaymentReferenceFixture now = do
     , M.partyInstagram = Nothing
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
     , M.partyCreatedAt = now
     }
   otherPartyId <- insert M.Party
@@ -3210,6 +7216,9 @@ seedPaymentReferenceFixture now = do
     , M.partyInstagram = Nothing
     , M.partyEmergencyContact = Nothing
     , M.partyNotes = Nothing
+    , M.partyStripeCustomerId = Nothing
+    , M.partyCountryCode = Nothing
+    , M.partyCountryId = Nothing
     , M.partyCreatedAt = now
     }
   catalogId <- insert M.ServiceCatalog
@@ -3234,6 +7243,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   samePartyOtherOrderId <- insert M.ServiceOrder
@@ -3248,6 +7258,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   otherOrderId <- insert M.ServiceOrder
@@ -3262,6 +7273,7 @@ seedPaymentReferenceFixture now = do
     , M.serviceOrderQuoteSentAt = Nothing
     , M.serviceOrderScheduledStart = Nothing
     , M.serviceOrderScheduledEnd = Nothing
+    , M.serviceOrderServiceOfferingId = Nothing
     , M.serviceOrderCreatedAt = now
     }
   let today = utctDay now
@@ -3349,7 +7361,7 @@ seedPaymentReferenceFixture now = do
     )
 
 fixtureAsset :: Text -> Text -> Maybe Text -> Maybe Text -> Text -> Maybe Text -> Asset
-fixtureAsset name category brand model owner notes =
+fixtureAsset name category brand model owner mNotes =
   Asset
     { assetName = name
     , assetCategory = category
@@ -3364,7 +7376,7 @@ fixtureAsset name category brand model owner notes =
     , assetOwner = owner
     , assetQrCode = Nothing
     , assetPhotoUrl = Nothing
-    , assetNotes = notes
+    , assetNotes = mNotes
     , assetWarrantyExpires = Nothing
     , assetMaintenancePolicy = None
     , assetNextMaintenanceDue = Nothing
@@ -3379,4 +7391,16 @@ fixtureRoom name =
     , roomChannelCount = Nothing
     , roomDefaultSampleRate = Nothing
     , roomPatchbayNotes = Nothing
+    }
+
+fixtureBand :: Key M.Party -> Text -> Band
+fixtureBand partyKey name =
+  Band
+    { bandPartyId = partyKey
+    , bandName = name
+    , bandLabelArtist = False
+    , bandPrimaryGenre = Nothing
+    , bandHomeCity = Nothing
+    , bandPhotoUrl = Nothing
+    , bandContractFlags = Nothing
     }

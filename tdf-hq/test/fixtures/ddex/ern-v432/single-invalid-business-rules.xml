@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: Missing required ISRC, invalid UPC format -->
+<ernNewReleaseMessage xmlns="http://ddex.net/xml/ern/432"
+                      MessageSchemaVersionId="ern/432"
+                      Language="en">
+  <MessageHeader>
+    <MessageId>MSG-INVALID-001</MessageId>
+    <MessageSender>
+      <PartyId>DPID:TDF001</PartyId>
+    </MessageSender>
+    <MessageRecipient>
+      <PartyId>DPID:DSP001</PartyId>
+    </MessageRecipient>
+    <MessageCreatedDateTime>2026-08-04T12:00:00Z</MessageCreatedDateTime>
+  </MessageHeader>
+  <PartyList>
+    <Party IsArtist="true">
+      <PartyId>
+        <DPID>DPID:ARTIST001</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>Test Artist</FullName>
+      </PartyName>
+    </Party>
+  </PartyList>
+  <ResourceList>
+    <SoundRecording>
+      <SoundRecordingType>NonMusicalWork</SoundRecordingType>
+      <!-- Missing ISRC - business rule violation -->
+      <ResourceReference>A1</ResourceReference>
+      <ReferenceTitle>
+        <TitleText>Invalid Track</TitleText>
+      </ReferenceTitle>
+      <Duration>PT3M30S</Duration>
+    </SoundRecording>
+  </ResourceList>
+  <ReleaseList>
+    <Release>
+      <!-- Invalid UPC format - should be 12 digits -->
+      <ReleaseId>
+        <UPC>INVALID</UPC>
+      </ReleaseId>
+      <ReleaseReference>R1</ReleaseReference>
+      <ReferenceTitle>
+        <TitleText>Invalid Release</TitleText>
+      </ReferenceTitle>
+      <ReleaseType>Single</ReleaseType>
+    </Release>
+  </ReleaseList>
+  <ResourceGroup>
+    <ResourceGroupContentItem>
+      <SequenceNumber>1</SequenceNumber>
+      <ResourceType>SoundRecording</ResourceType>
+      <ResourceReference>A1</ResourceReference>
+    </ResourceGroupContentItem>
+  </ResourceGroup>
+  <DealList>
+    <Deal>
+      <DealTerms>
+        <CommercialModelType>SubscriptionModel</CommercialModelType>
+        <TerritoryCode>Worldwide</TerritoryCode>
+        <ValidityStartDate>2026-08-04</ValidityStartDate>
+      </DealTerms>
+      <ReleaseReference>R1</ReleaseReference>
+    </Deal>
+  </DealList>
+</ernNewReleaseMessage>

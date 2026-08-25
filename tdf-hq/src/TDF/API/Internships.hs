@@ -8,6 +8,7 @@ import           Data.Text (Text)
 import           Servant
 
 import           TDF.API.Types
+import           TDF.API.InternAudit (InternAuditAPI)
 
 type InternshipsAPI =
   "internships" :>
@@ -24,8 +25,10 @@ type InternshipsAPI =
             (    Get '[JSON] [InternTaskDTO]
             :<|> ReqBody '[JSON] InternTaskCreate :> PostCreated '[JSON] InternTaskDTO
             )
-    :<|> "tasks" :> Capture "taskId" Text
-            :> ReqBody '[JSON] InternTaskUpdate :> Patch '[JSON] InternTaskDTO
+    :<|> "tasks" :> Capture "taskId" Text :>
+            (    ReqBody '[JSON] InternTaskUpdate :> Patch '[JSON] InternTaskDTO
+            :<|> DeleteNoContent
+            )
     :<|> "todos" :>
             (    Get '[JSON] [InternTodoDTO]
             :<|> ReqBody '[JSON] InternTodoCreate :> PostCreated '[JSON] InternTodoDTO
@@ -40,4 +43,5 @@ type InternshipsAPI =
             :<|> ReqBody '[JSON] InternPermissionCreate :> PostCreated '[JSON] InternPermissionDTO
             :<|> Capture "permissionId" Text :> ReqBody '[JSON] InternPermissionUpdate :> Patch '[JSON] InternPermissionDTO
             )
+    :<|> InternAuditAPI
     )

@@ -59,7 +59,7 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 };
 
 const buildMetadata = (overrides: Partial<CourseMetadata> = {}): CourseMetadata => ({
-  slug: 'produccion-musical-abr-2026',
+  slug: 'produccion-musical-jun-2026',
   title: 'Curso de Producción Musical',
   subtitle: 'Presencial',
   format: 'Presencial',
@@ -139,6 +139,37 @@ const clickButton = async (button: HTMLElement) => {
   });
 };
 
+const getInputByLabelText = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll<HTMLLabelElement>('label')).find(
+    (element) => text(element).replace('*', '').trim() === labelText,
+  );
+  if (!label) throw new Error(`Input label not found: ${labelText}`);
+
+  const inputId = label.htmlFor;
+  const input = inputId
+    ? label.ownerDocument.getElementById(inputId)
+    : label.querySelector('input,textarea');
+  if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement)) {
+    throw new Error(`Input not found for label: ${labelText}`);
+  }
+
+  return input;
+};
+
+const changeInputValue = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype =
+    input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Input value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 describe('CourseBuilderPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -167,6 +198,34 @@ describe('CourseBuilderPage', () => {
     upsertMock.mockResolvedValue(buildMetadata());
   });
 
+  it('waits for a real local edit before creating a browser draft', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getMetadataMock).toHaveBeenCalledWith('produccion-musical-jun-2026');
+        expect(window.localStorage.getItem('tdf-course-builder-draft')).toBeNull();
+        expect(text(container)).not.toContain('Hay un borrador local guardado.');
+      });
+
+      const detailsSection = document.getElementById('detalles');
+      if (!detailsSection) throw new Error('Details section not found');
+      await changeInputValue(getInputByLabelText(detailsSection, 'Título'), 'Curso editado por admin');
+
+      await waitForExpectation(() => {
+        const rawDraft = window.localStorage.getItem('tdf-course-builder-draft');
+        expect(rawDraft).not.toBeNull();
+        expect(JSON.parse(rawDraft ?? '{}')).toMatchObject({
+          title: 'Curso editado por admin',
+        });
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the course-builder shortcuts aligned with their sections and avoids repeating the slug in the header', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -187,7 +246,9 @@ describe('CourseBuilderPage', () => {
       await waitForExpectation(() => {
         expect(text(container)).toContain('Crear curso');
         expect(text(container)).not.toContain('Slug:');
-        expect(text(document.getElementById('detalles'))).toContain('Slug (auto)');
+        expect(text(document.getElementById('detalles'))).not.toContain('Slug (auto)');
+        expect(countLabelsByText(document.getElementById('detalles') ?? container, 'Landing URL')).toBe(1);
+        expect(text(document.getElementById('detalles'))).toContain('Slug sugerido:');
         expect(text(document.getElementById('detalles'))).toContain('Instructor principal');
         expect(text(document.getElementById('detalles'))).not.toContain('Cargar curso existente');
         expect(text(document.getElementById('sesiones'))).toContain('Sesiones');
@@ -254,7 +315,7 @@ describe('CourseBuilderPage', () => {
     }
   });
 
-  it('hides repeated row-session actions until there is more than one session to edit', async () => {
+  it('keeps duplicated session actions collapsed into one list-level duplicate control', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -263,6 +324,7 @@ describe('CourseBuilderPage', () => {
       await waitForExpectation(() => {
         expect(text(document.getElementById('sesiones'))).toContain('Sesiones');
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar')).toBe(0);
+        expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Duplicar última sesión')).toBe(0);
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Borrar')).toBe(0);
         expect(countButtonsByText(document.getElementById('sesiones') ?? container, 'Añadir sesión')).toBe(1);
       });
@@ -271,13 +333,14 @@ describe('CourseBuilderPage', () => {
 
       await waitForExpectation(() => {
         const sessionsSection = document.getElementById('sesiones') ?? container;
-        expect(countButtonsByText(sessionsSection, 'Duplicar')).toBe(2);
+        expect(countButtonsByText(sessionsSection, 'Duplicar')).toBe(0);
+        expect(countButtonsByText(sessionsSection, 'Duplicar última sesión')).toBe(1);
         expect(countButtonsByText(sessionsSection, 'Borrar')).toBe(2);
       });
     } finally {
       await cleanup();
     }
-  });
+  }, 15_000);
 
   it('keeps the technical publish payload hidden until an admin asks for it', async () => {
     const container = document.createElement('div');

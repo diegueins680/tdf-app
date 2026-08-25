@@ -4,11 +4,17 @@ interface EnrollmentSuccessDialogProps {
   open: boolean;
   onClose: () => void;
   message?: string;
+  title?: string;
 }
 
-const defaultMessage = 'Felicitaciones, tu inscripción fue recibida exitosamente. Bienvenido a TDF Records!';
+const defaultMessage = 'Recibimos tu solicitud. Revisa el estado de pago y del cupo antes de considerarlo confirmado.';
 
-export default function EnrollmentSuccessDialog({ open, onClose, message = defaultMessage }: EnrollmentSuccessDialogProps) {
+export default function EnrollmentSuccessDialog({
+  open,
+  onClose,
+  message = defaultMessage,
+  title = 'Solicitud recibida',
+}: EnrollmentSuccessDialogProps) {
   const titleId = 'enrollment-success-dialog-title';
   const descriptionId = 'enrollment-success-dialog-description';
 
@@ -21,7 +27,7 @@ export default function EnrollmentSuccessDialog({ open, onClose, message = defau
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
     >
-      <DialogTitle id={titleId}>¡Inscripción confirmada!</DialogTitle>
+      <DialogTitle id={titleId}>{title}</DialogTitle>
       <DialogContent>
         <DialogContentText id={descriptionId}>{message}</DialogContentText>
       </DialogContent>

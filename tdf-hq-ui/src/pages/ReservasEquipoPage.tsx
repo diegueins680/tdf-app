@@ -18,6 +18,7 @@ import type { AssetDTO, RoomDTO } from '../api/types';
 import { Inventory } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { buildInventoryScanUrl } from '../config/appConfig';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -103,7 +104,7 @@ export default function ReservasEquipoPage() {
                 Reservas de equipo
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Comparte el enlace público por activo para que el prestatario registre salida, responsable, fecha y foto.
+                Comparte el enlace público por activo para que el prestatario registre salida, responsable, fecha, foto y, si aplica, monto, moneda y saldo pendiente.
               </Typography>
             </Box>
           </Stack>
@@ -135,18 +136,22 @@ export default function ReservasEquipoPage() {
                 2. Envíalo al usuario que se lo lleva.
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                3. El usuario registra nombre, contacto, tipo de movimiento y foto del estado del equipo al salir.
+                3. El usuario registra nombre, contacto, tipo de movimiento, foto del estado del equipo y, en ventas o alquileres, pago, cuotas y saldo pendiente.
               </Typography>
             </Stack>
           </CardContent>
         </Card>
 
-        <Grid container spacing={2}>
-          {assets.map((asset) => {
-            const chip = statusChip(asset.status);
-            const currentTarget = formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
-            return (
-              <Grid key={asset.assetId} item xs={12} md={6} lg={4}>
+        <LazyPaginatedList
+          items={assets}
+          pagination={{ itemLabel: 'equipos', initialRowsPerPage: 12 }}
+          renderItems={(visibleAssets) => (
+            <Grid container spacing={2}>
+              {visibleAssets.map((asset) => {
+                const chip = statusChip(asset.status);
+                const currentTarget = formatCheckoutTargetDisplay(asset.currentCheckoutKind, asset.currentCheckoutTarget, roomMap);
+                return (
+                  <Grid key={asset.assetId} item xs={12} md={6} lg={4}>
                 <Card variant="outlined" sx={{ height: '100%' }}>
                   <CardContent>
                     <Stack spacing={1.25}>
@@ -189,12 +194,18 @@ export default function ReservasEquipoPage() {
                           {formatCheckoutPaymentSummary(
                             asset.currentCheckoutPaymentType,
                             asset.currentCheckoutPaymentInstallments,
+                            asset.currentCheckoutPaymentAmountCents,
+                            asset.currentCheckoutPaymentCurrency,
+                            asset.currentCheckoutPaymentOutstandingCents,
                           ) && (
                             <Typography variant="body2" color="text.secondary">
                               <strong>Pago:</strong>{' '}
                               {formatCheckoutPaymentSummary(
                                 asset.currentCheckoutPaymentType,
                                 asset.currentCheckoutPaymentInstallments,
+                                asset.currentCheckoutPaymentAmountCents,
+                                asset.currentCheckoutPaymentCurrency,
+                                asset.currentCheckoutPaymentOutstandingCents,
                               )}
                             </Typography>
                           )}
@@ -221,10 +232,12 @@ export default function ReservasEquipoPage() {
                     </Stack>
                   </CardContent>
                 </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          )}
+        />
       </Stack>
     </Box>
   );

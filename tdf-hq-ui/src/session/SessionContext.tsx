@@ -1,7 +1,11 @@
+import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
+import { getAnalyticsClient } from '../analytics/posthog';
+import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import type { LocalePreferences } from '../api/preferences';
 
 export interface SessionUser {
   username: string;
@@ -9,7 +13,9 @@ export interface SessionUser {
   roles: string[];
   apiToken?: string | null;
   modules?: string[];
+  featureFlags?: string[];
   partyId?: number;
+  preferences?: LocalePreferences;
 }
 
 export interface LoginOptions {
@@ -87,15 +93,21 @@ const normalizeSessionUser = (
     roles?: unknown;
     apiToken?: unknown;
     modules?: unknown;
+    featureFlags?: unknown;
     partyId?: unknown;
+    preferences?: unknown;
   },
 ): SessionUser => {
   const username = normalizeNonEmptyString(value.username) ?? 'usuario';
   const displayName = normalizeNonEmptyString(value.displayName) ?? username;
   const roles = normalizeStringArray(value.roles, { lowerCase: true, dedupeCaseInsensitive: true });
   const modules = normalizeStringArray(value.modules, { lowerCase: true, dedupeCaseInsensitive: true });
+  const featureFlags = normalizeStringArray(value.featureFlags, { dedupeCaseInsensitive: true });
   const apiToken = normalizeApiToken(value.apiToken);
   const partyId = normalizePositivePartyId(value.partyId);
+  const preferences = value.preferences && typeof value.preferences === 'object'
+    ? value.preferences as LocalePreferences
+    : undefined;
 
   return {
     username,
@@ -103,7 +115,9 @@ const normalizeSessionUser = (
     roles,
     ...(apiToken ? { apiToken } : {}),
     ...(modules.length > 0 ? { modules } : {}),
+    ...(featureFlags.length > 0 ? { featureFlags } : {}),
     ...(partyId !== undefined ? { partyId } : {}),
+    ...(preferences ? { preferences } : {}),
   };
 };
 
@@ -126,7 +140,9 @@ export const parseStoredSession = (raw: string): SessionUser | null => {
       displayName,
       roles: value['roles'],
       modules: value['modules'],
+      featureFlags: value['featureFlags'],
       partyId: value['partyId'],
+      preferences: value['preferences'],
     });
   } catch {
     return null;
@@ -179,7 +195,7 @@ function persistSession(value: SessionUser | null, scope: SessionStorageScope) {
     const target = scope === 'session' ? window.sessionStorage : window.localStorage;
     target.setItem(SESSION_STORAGE_KEY, serialized);
   } catch (error) {
-    console.warn('Failed to persist session', error);
+    logger.warn('Failed to persist session', error);
   }
 }
 
@@ -200,9 +216,27 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setSession(next);
   }, []);
 
+  const clearLocalSessionState = useCallback(() => {
+    sessionVersionRef.current += 1;
+    setLoading(false);
+    updateSessionState(null);
+    transientApiToken = null;
+  }, [updateSessionState]);
+
   useEffect(() => {
     persistSession(session, persistScope);
   }, [session, persistScope]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleAuthExpired = () => {
+      clearLocalSessionState();
+    };
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleAuthExpired);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleAuthExpired);
+    };
+  }, [clearLocalSessionState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,7 +258,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
             displayName: snapshot.displayName,
             roles: snapshot.roles,
             modules: snapshot.modules,
+            featureFlags: snapshot.featureFlags,
             partyId: snapshot.partyId,
+            preferences: snapshot.preferences,
             apiToken: prev?.apiToken,
           });
           currentSession = next;
@@ -232,7 +268,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         });
       } catch (error) {
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
-        console.warn('Failed to bootstrap session from server', error);
+        logger.warn('Failed to bootstrap session from server', error);
       } finally {
         if (!cancelled && versionAtStart === sessionVersionRef.current) {
           setLoading(false);
@@ -254,14 +290,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [updateSessionState]);
 
   const logout = useCallback(() => {
-    sessionVersionRef.current += 1;
-    setLoading(false);
-    updateSessionState(null);
-    transientApiToken = null;
+    clearLocalSessionState();
     void logoutSessionRequest().catch((error) => {
-      console.warn('Failed to clear server session', error);
+      logger.warn('Failed to clear server session', error);
     });
-  }, [updateSessionState]);
+  }, [clearLocalSessionState]);
 
   const setApiToken = useCallback((token: string | null) => {
     sessionVersionRef.current += 1;
@@ -279,6 +312,22 @@ export function SessionProvider({ children }: SessionProviderProps) {
       return updatedSession;
     });
   }, []);
+
+  // Identify the user in analytics whenever the session changes. Reset on
+  // logout so the next user does not inherit the previous distinct id.
+  useEffect(() => {
+    const analytics = getAnalyticsClient();
+    if (!analytics.ready) return;
+    if (session?.partyId != null) {
+      analytics.identify(String(session.partyId), {
+        username: session.username,
+        displayName: session.displayName,
+        roles: session.roles,
+      });
+    } else {
+      analytics.reset();
+    }
+  }, [session]);
 
   const value = useMemo<SessionContextValue>(
     () => ({ session, loading, login, logout, setApiToken }),

@@ -1,42 +1,90 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.API.Future where
 
-import           Data.Aeson   (ToJSON)
+import           Data.Aeson   (ToJSON (toJSON), object, (.=))
 import           Data.Text    (Text)
-import           GHC.Generics (Generic)
 import           Servant
 
 -- | Generic stub payload used while endpoints are being planned.
 data StubResponse = StubResponse
   { stubArea        :: Text
   , stubEndpoint    :: Text
+  , stubId          :: Text
+  , stubPath        :: Text
+  , stubMethod      :: Text
   , stubStatus      :: Text
+  , stubRequiredRole   :: Text
+  , stubRequiredRoles  :: [Text]
+  , stubRequiredModule :: Text
   , stubImplemented :: Bool
-  } deriving stock (Show, Generic)
+  } deriving stock (Show)
 
-instance ToJSON StubResponse
+instance ToJSON StubResponse where
+  toJSON response =
+    object
+      [ "stubArea" .= stubArea response
+      , "stubEndpoint" .= stubEndpoint response
+      , "stubId" .= stubId response
+      , "stubPath" .= stubPath response
+      , "stubMethod" .= stubMethod response
+      , "stubStatus" .= stubStatus response
+      , "stubRequiredRole" .= stubRequiredRole response
+      , "stubRequiredRoles" .= stubRequiredRoles response
+      , "stubRequiredModule" .= stubRequiredModule response
+      , "stubImplemented" .= stubImplemented response
+      ]
 
 -- | Minimal card metadata for the admin console preview.
 data AdminConsoleCard = AdminConsoleCard
   { cardId :: Text
   , title  :: Text
   , body   :: [Text]
-  } deriving stock (Show, Generic)
+  , implemented :: Bool
+  } deriving stock (Show)
 
-instance ToJSON AdminConsoleCard
+instance ToJSON AdminConsoleCard where
+  toJSON card =
+    object
+      [ "cardId" .= cardId card
+      , "title" .= title card
+      , "body" .= body card
+      , "implemented" .= implemented card
+      ]
 
 -- | Wrapper payload for the admin console endpoint.
 data AdminConsoleView = AdminConsoleView
-  { status :: Text
-  , cards  :: [AdminConsoleCard]
-  } deriving stock (Show, Generic)
+  { viewArea           :: Text
+  , viewEndpoint       :: Text
+  , viewId             :: Text
+  , viewPath           :: Text
+  , viewMethod         :: Text
+  , viewStatus         :: Text
+  , viewRequiredRole   :: Text
+  , viewRequiredRoles  :: [Text]
+  , viewRequiredModule :: Text
+  , viewImplemented    :: Bool
+  , cards              :: [AdminConsoleCard]
+  } deriving stock (Show)
 
-instance ToJSON AdminConsoleView
+instance ToJSON AdminConsoleView where
+  toJSON view =
+    object
+      [ "stubArea" .= viewArea view
+      , "stubEndpoint" .= viewEndpoint view
+      , "stubId" .= viewId view
+      , "stubPath" .= viewPath view
+      , "stubMethod" .= viewMethod view
+      , "stubStatus" .= viewStatus view
+      , "stubRequiredRole" .= viewRequiredRole view
+      , "stubRequiredRoles" .= viewRequiredRoles view
+      , "stubRequiredModule" .= viewRequiredModule view
+      , "stubImplemented" .= viewImplemented view
+      , "cards" .= cards view
+      ]
 
 -- Access & session management discovery endpoints
 type AccessStubAPI =
@@ -74,7 +122,7 @@ type InventoryStubAPI =
 
 -- Admin and platform discovery endpoints
 type AdminStubAPI =
-       "seed"    :> Get '[JSON] StubResponse
+       "seed-policy" :> Get '[JSON] StubResponse
   :<|> "console" :> Get '[JSON] AdminConsoleView
 
 -- Cross-cutting UI considerations
@@ -85,9 +133,14 @@ type CrossCuttingStubAPI =
   :<|> "design"     :> Get '[JSON] StubResponse
   :<|> "auditing"   :> Get '[JSON] StubResponse
 
+-- Canonical discovery index for planned stub endpoints.
+type FutureCatalogAPI =
+       "catalog" :> Get '[JSON] [StubResponse]
+
 -- Aggregate API exposed under /stubs/*
 type FutureAPI =
-       "access"      :> AccessStubAPI
+       FutureCatalogAPI
+  :<|> "access"      :> AccessStubAPI
   :<|> "crm"         :> CrmStubAPI
   :<|> "scheduling"  :> SchedulingStubAPI
   :<|> "packages"    :> PackagesStubAPI

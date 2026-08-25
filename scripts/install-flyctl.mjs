@@ -1,193 +1,81 @@
+#!/usr/bin/env node
 import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
-import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 import { promisify } from 'node:util';
 
 import { findExtractedFlyctlBinary, selectFlyctlDownloadUrl } from './lib/flyctl-cli.mjs';
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_RELEASE_API = 'https://api.github.com/repos/superfly/flyctl/releases/latest';
-const REQUEST_HEADERS = {
-  Accept: 'application/vnd.github+json',
-  'User-Agent': 'tdf-app-flyctl-installer',
-};
+const DEFAULT_RELEASE_API_URL = 'https://api.github.com/repos/superfly/flyctl/releases/latest';
 
-function createLogger(log) {
-  if (typeof log === 'function') {
-    return log;
+async function fetchJson(url, githubToken) {
+  const headers = githubToken ? { Authorization: `Bearer ${githubToken}` } : {};
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch flyctl release metadata: HTTP ${response.status}`);
   }
-
-  if (log && typeof log.log === 'function') {
-    return log.log.bind(log);
-  }
-
-  return () => {};
+  return response.json();
 }
 
-function buildRequestHeaders(githubToken) {
-  if (!githubToken) {
-    return REQUEST_HEADERS;
+async function fetchBytes(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download flyctl archive: HTTP ${response.status}`);
   }
-
-  return {
-    ...REQUEST_HEADERS,
-    Authorization: `Bearer ${githubToken}`,
-  };
+  return Buffer.from(await response.arrayBuffer());
 }
 
-function createHttpError(message, response) {
-  const error = new Error(`${message} (${response.status} ${response.statusText})`);
-  error.status = response.status;
-  return error;
-}
+export async function installFlyctl(options = {}) {
+  const {
+    githubToken = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? '',
+    installDir = path.join(process.cwd(), 'tmp', 'bin'),
+    log = console.log,
+    releaseApiUrl = DEFAULT_RELEASE_API_URL,
+  } = options;
 
-function isRetriableError(error) {
-  if (!error || typeof error !== 'object') {
-    return true;
-  }
-
-  if (typeof error.status !== 'number') {
-    return true;
-  }
-
-  return error.status === 429 || error.status >= 500;
-}
-
-async function withRetries(operationName, operation, { attempts = 5, initialDelayMs = 2_000, log } = {}) {
-  let waitMs = initialDelayMs;
-  let lastError;
-
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      if (attempt >= attempts || !isRetriableError(error)) {
-        throw error;
-      }
-
-      const message = error instanceof Error ? error.message : String(error);
-      log?.(`${operationName} attempt ${attempt} failed: ${message}. Retrying in ${waitMs}ms.`);
-      await delay(waitMs);
-      waitMs *= 2;
-    }
-  }
-
-  throw lastError;
-}
-
-async function fetchJson(url, githubToken, log, retryOptions) {
-  return withRetries(
-    'Fetch Fly release metadata',
-    async () => {
-      const response = await fetch(url, { headers: buildRequestHeaders(githubToken) });
-      if (!response.ok) {
-        throw createHttpError('Failed to fetch Fly release metadata', response);
-      }
-      return response.json();
-    },
-    { log, ...retryOptions },
+  const release = await fetchJson(releaseApiUrl, githubToken);
+  const downloadUrl = selectFlyctlDownloadUrl(
+    (release.assets ?? []).map((asset) => asset.browser_download_url),
   );
-}
+  if (!downloadUrl) {
+    throw new Error('Could not find a suitable flyctl release archive.');
+  }
 
-async function downloadFile(url, filePath, log, retryOptions) {
-  await withRetries(
-    'Download flyctl archive',
-    async () => {
-      const response = await fetch(url, { headers: REQUEST_HEADERS });
-      if (!response.ok) {
-        throw createHttpError('Failed to download flyctl', response);
-      }
-
-      const archiveBytes = Buffer.from(await response.arrayBuffer());
-      await fs.writeFile(filePath, archiveBytes);
-    },
-    { log, ...retryOptions },
-  );
-}
-
-export async function installFlyctl({
-  releaseApiUrl = DEFAULT_RELEASE_API,
-  installDir = path.join(os.homedir(), '.fly', 'bin'),
-  workDir,
-  skipVersionCheck = false,
-  githubToken,
-  retryAttempts = 5,
-  retryInitialDelayMs = 2_000,
-  log = console,
-} = {}) {
-  const logger = createLogger(log);
-  const retryOptions = {
-    attempts: retryAttempts,
-    initialDelayMs: retryInitialDelayMs,
-  };
-  const workspace = workDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'flyctl-')));
-  const shouldCleanupWorkspace = workDir == null;
-  const archivePath = path.join(workspace, 'flyctl.tar.gz');
-  const extractDir = path.join(workspace, 'extract');
-  const installPath = path.join(installDir, 'flyctl');
-
-  await fs.mkdir(workspace, { recursive: true });
-  await fs.mkdir(extractDir, { recursive: true });
-  await fs.mkdir(installDir, { recursive: true });
-
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'flyctl-install-'));
   try {
-    const release = await fetchJson(releaseApiUrl, githubToken, logger, retryOptions);
-    const assets = Array.isArray(release?.assets) ? release.assets : [];
-    const candidateUrls = assets.map((asset) => asset?.browser_download_url);
-    const downloadUrl = selectFlyctlDownloadUrl(candidateUrls);
-
-    if (!downloadUrl) {
-      throw new Error('Failed to resolve flyctl download URL');
-    }
-
-    logger(`Downloading flyctl from ${downloadUrl}`);
-    await downloadFile(downloadUrl, archivePath, logger, retryOptions);
+    const archivePath = path.join(tempDir, path.basename(new URL(downloadUrl).pathname));
+    const extractDir = path.join(tempDir, 'extract');
+    await fs.mkdir(extractDir, { recursive: true });
+    await fs.writeFile(archivePath, await fetchBytes(downloadUrl));
     await execFileAsync('tar', ['-xzf', archivePath, '-C', extractDir]);
 
-    const binPath = await findExtractedFlyctlBinary(extractDir);
-    if (!binPath) {
-      throw new Error('flyctl binary not found after extraction');
+    const extractedBinary = await findExtractedFlyctlBinary(extractDir);
+    if (!extractedBinary) {
+      throw new Error('Downloaded flyctl archive did not contain an executable flyctl binary.');
     }
 
-    await execFileAsync('install', ['-m', '755', binPath, installPath]);
-
-    let versionOutput = '';
-    if (!skipVersionCheck) {
-      const { stdout } = await execFileAsync(installPath, ['version']);
-      versionOutput = stdout.trim();
-      if (versionOutput !== '') {
-        logger(versionOutput);
-      }
-    }
-
-    return { binPath, downloadUrl, installPath, versionOutput };
+    await fs.mkdir(installDir, { recursive: true });
+    const binPath = path.join(installDir, path.basename(extractedBinary));
+    await fs.copyFile(extractedBinary, binPath);
+    await fs.chmod(binPath, 0o755);
+    log(`Installed flyctl to ${binPath}`);
+    return { downloadUrl, binPath };
   } finally {
-    if (shouldCleanupWorkspace) {
-      await fs.rm(workspace, { recursive: true, force: true });
-    }
+    await fs.rm(tempDir, { recursive: true, force: true });
   }
 }
 
 async function main() {
-  try {
-    await installFlyctl({
-      releaseApiUrl: process.env.FLYCTL_RELEASE_API || DEFAULT_RELEASE_API,
-      installDir: process.env.FLYCTL_INSTALL_DIR || path.join(os.homedir(), '.fly', 'bin'),
-      workDir: process.env.FLYCTL_WORK_DIR || undefined,
-      skipVersionCheck: process.env.FLYCTL_SKIP_VERSION_CHECK === '1',
-      githubToken: process.env.FLYCTL_RELEASE_GITHUB_TOKEN || process.env.GITHUB_TOKEN,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(message);
-    process.exitCode = 1;
-  }
+  const result = await installFlyctl();
+  console.log(result.binPath);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  await main();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
 }

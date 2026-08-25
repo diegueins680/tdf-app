@@ -1,0 +1,369 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e18]:
+    - generic [ref=f6e21]:
+      - link [ref=f6e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e31]
+      - generic [ref=f6e34]:
+        - link [ref=f6e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e44]
+        - link [ref=f6e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e54]
+        - link [ref=f6e61] [cursor=pointer]:
+          - /url: /direct/t/104340354294523
+          - generic [ref=f6e64]:
+            - img "Messages" [ref=f6e66]
+            - generic "Direct messaging - 1 new notification link" [ref=f6e69]: "1"
+        - link [ref=f6e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e80]
+        - link [ref=f6e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e92]
+        - link [ref=f6e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e103]
+        - link [ref=f6e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e113]
+        - link [ref=f6e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e125]:
+            - img "tdf.records.label's profile picture" [ref=f6e126]
+      - generic [ref=f6e127]:
+        - link [ref=f6e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e135]
+        - link [ref=f6e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e143]
+    - generic [ref=f6e146]:
+      - main [ref=f6e147]:
+        - generic [ref=f6e149]:
+          - generic [ref=f6e150]:
+            - generic [ref=f6e151]:
+              - button [ref=f6e156] [cursor=pointer]:
+                - link [ref=f6e158]:
+                  - img "jorgemolina.oficial's profile picture" [ref=f6e159]
+              - generic [ref=f6e160]:
+                - generic [ref=f6e161]:
+                  - generic [ref=f6e162]:
+                    - link [ref=f6e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "jorgemolina.oficial" [level=2] [ref=f6e165]
+                    - button [ref=f6e167] [cursor=pointer]:
+                      - img "Options" [ref=f6e169]
+                  - generic [ref=f6e173]: George Molina
+                  - generic [ref=f6e175]:
+                    - generic [ref=f6e177]:
+                      - generic [ref=f6e178]: "479"
+                      - text: posts
+                    - link "840 followers" [ref=f6e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e181]:
+                        - generic "840" [ref=f6e182]
+                        - text: followers
+                    - link "731 following" [ref=f6e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e185]:
+                        - generic [ref=f6e186]: "731"
+                        - text: following
+                - generic [ref=f6e187]:
+                  - generic [ref=f6e188]:
+                    - button "Mientras hago dibujitos ✏️ (Diseño Grafico)✏️ escucho 🎶 💚7️⃣0️⃣, tomando una ☕ de café (Creative Fuel)" [ref=f6e190] [cursor=pointer]
+                    - generic [ref=f6e191]:
+                      - button "Link icon tiktok.com/@jorgemolina.oficial and 1 more" [ref=f6e192] [cursor=pointer]:
+                        - generic [ref=f6e193]:
+                          - img "Link icon" [ref=f6e195]
+                          - generic [ref=f6e198]: tiktok.com/@jorgemolina.oficial and 1 more
+                      - link "Threads jorgemolina.oficial" [ref=f6e200] [cursor=pointer]:
+                        - /url: https://www.threads.com/@jorgemolina.oficial?xmt=AQG0nu3Fn_TqY8sffnuP-STL9gsrVd5xGR5WXTwI5XwC_wg
+                        - img "Threads" [ref=f6e202]
+                        - generic [ref=f6e204]: jorgemolina.oficial
+                  - link "Followed by aalmeida88, diii_ramirez + 2 more" [ref=f6e206] [cursor=pointer]:
+                    - /url: /jorgemolina.oficial/followers/mutualOnly
+                    - generic [ref=f6e208]:
+                      - generic [ref=f6e210]:
+                        - button [ref=f6e211]:
+                          - link [ref=f6e212]
+                        - button [ref=f6e213]:
+                          - link [ref=f6e214]
+                        - button [ref=f6e215]:
+                          - link [ref=f6e216]
+                      - generic [ref=f6e217]: Followed by aalmeida88, diii_ramirez + 2 more
+            - generic [ref=f6e222]:
+              - button "Following Down chevron icon" [ref=f6e224] [cursor=pointer]:
+                - generic [ref=f6e225]:
+                  - generic [ref=f6e226]: Following
+                  - img "Down chevron icon" [ref=f6e229]
+              - button "Message" [ref=f6e232] [cursor=pointer]
+              - button [ref=f6e234] [cursor=pointer]:
+                - img "Similar accounts" [ref=f6e236]
+            - menu [ref=f6e240]:
+              - list [ref=f6e244]:
+                - listitem [ref=f6e245]
+                - listitem [ref=f6e246]
+                - listitem [ref=f6e247]:
+                  - link "View Mi Yorch highlight" [ref=f6e250] [cursor=pointer]:
+                    - /url: /stories/highlights/18029589799356387/
+                    - button "jorgemolina.oficial's highlight story picture Mi Yorch" [ref=f6e251]:
+                      - button [ref=f6e252]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e255]
+                      - generic [ref=f6e256]: Mi Yorch
+                - listitem [ref=f6e259]:
+                  - link "View Verde 70 highlight" [ref=f6e262] [cursor=pointer]:
+                    - /url: /stories/highlights/17899389524551508/
+                    - button "jorgemolina.oficial's highlight story picture Verde 70" [ref=f6e263]:
+                      - button [ref=f6e264]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e267]
+                      - generic [ref=f6e268]: Verde 70
+                - listitem [ref=f6e271]:
+                  - link "View Musica highlight" [ref=f6e274] [cursor=pointer]:
+                    - /url: /stories/highlights/17931208124160511/
+                    - button "jorgemolina.oficial's highlight story picture Musica" [ref=f6e275]:
+                      - button [ref=f6e276]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e279]
+                      - generic [ref=f6e280]: Musica
+                - listitem [ref=f6e283]:
+                  - link "View Familia highlight" [ref=f6e286] [cursor=pointer]:
+                    - /url: /stories/highlights/17978790295558566/
+                    - button "jorgemolina.oficial's highlight story picture Familia" [ref=f6e287]:
+                      - button [ref=f6e288]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e291]
+                      - generic [ref=f6e292]: Familia
+                - listitem [ref=f6e295]:
+                  - link "View Chewie y Leia highlight" [ref=f6e298] [cursor=pointer]:
+                    - /url: /stories/highlights/17922799496192630/
+                    - button "jorgemolina.oficial's highlight story picture Chewie y Leia" [ref=f6e299]:
+                      - button [ref=f6e300]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e303]
+                      - generic [ref=f6e304]: Chewie y Leia
+                - listitem [ref=f6e307]:
+                  - link "View Sports highlight" [ref=f6e310] [cursor=pointer]:
+                    - /url: /stories/highlights/17956776241721859/
+                    - button "jorgemolina.oficial's highlight story picture Sports" [ref=f6e311]:
+                      - button [ref=f6e312]:
+                        - img "jorgemolina.oficial's highlight story picture" [ref=f6e315]
+                      - generic [ref=f6e316]: Sports
+          - generic [ref=f6e319]:
+            - tablist [ref=f6e320]:
+              - link [ref=f6e322] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/
+                - img "Posts" [ref=f6e324]
+              - link [ref=f6e335] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reels/
+                - img "Reels" [ref=f6e337]
+              - link [ref=f6e340] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reposts/
+                - img "Reposts" [ref=f6e342]
+              - link [ref=f6e345] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/tagged/
+                - img "Tagged" [ref=f6e347]
+            - tabpanel
+          - generic [ref=f6e354]:
+            - generic [ref=f6e355]:
+              - link [ref=f6e357] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reel/DbyPnLdx8df/
+                - 'img "MJ diciendo: \"yo no te amo, porque yo ni siquiera te conozco\" Y de fondo sonando este temazo Basta! 😭💔 #Enotrosmundos #spidermanbrandnewday #verde70 #cine #spiderman" [ref=f6e360]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e363] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/Dai0e78vI0U/
+                - img "Photo shared by George Molina on July 08, 2026 tagging @verde70oficial. May be a meme of text that says '\" @jorgemolina.oficial oficial No sé por qué esta canción me hace recordar mi juventud, si todavía estoy en mi juventud. \"'." [ref=f6e366]
+              - link [ref=f6e369] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reel/DaSp-cvR3OD/
+                - 'img "Hay mucha gente que se motiva al ver tu progreso. #running #ejercicio #motivacion" [ref=f6e372]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f6e374]:
+              - link [ref=f6e376] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DZyfi5cxO0M/
+                - 'img "Photo shared by George Molina on June 19, 2026 tagging @dariocastro_oficial, and @verde70oficial. May be a meme of text that says ''\" @jorgemolina @jorgemolina.oficial oficial A veces solo toca decir: Hay tantas cosas que no necesitamos... (personas que restan) Hay tantas cosas que no necesitamos... (gastos innecesarios) Hay tantas cosas que no necesitamos... (Culpa y miedo) Hay tantas cosas que no necesitamos... (Consumo excesivo) Y seguir con tu vida \"''." [ref=f6e379]'
+              - link [ref=f6e382] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DZtTGYkEdEt/
+                - 'img "Porqué me gusta tanto un concierto de Verde 70❓ POR TODO. ❗ Y parte de ese todo es esa fanaticada que aporta con su tiempo, energía y entusiasmo. Gracias por hacer posible que ese mar de globos amarillos ilumine el Fulgorama Tour en Quito.🟡 Al final ver a la banda y a los fans conectar de manera genuina en cada abrazo, en cada foto, cada conversación me llena de emoción. Gracias Verde 70, por hacernos sentir parte de esta historia Gracias a quienes permitieron que se haga realidad esta activación: @lakaris_sanchez @thomasmolina411 @diii_ramirez @flaktorres @wendycarolina482 @majito__jacome @yadi.salguero @santycevallos88 FUAAAA!" [ref=f6e385]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f6e388] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reel/DZbb5rVxiO-/
+                - 'img "Lo que vivimos el 4 de junio en Quito con el Fulgorama Tour 🟡 fue una experiencia completa, a la altura de un espectáculo internacional, y hasta lo supera.🔝 Una puesta en escena impecable, vestuarios impactantes, invitados de lujo y una conexión con el público que confirmó porqué Verde 70 sigue haciendo historia 🟡💚 Fanaticada Verde, cuál fue su momento TOP del concierto ❓ #fulgoramatour #verde70 #concierto #highlights #fans" [ref=f6e391]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f6e393]:
+              - link [ref=f6e395] [cursor=pointer]:
+                - /url: /flaktorres/reel/DZG3Vo3I_4-myreLXiyqhLTSc_pvDRKaUzsyJo0/
+                - 'img "Hoy vivimos algo hermoso: 🤩 fuimos invitadas al preestreno del cortometraje de Fulgorama. 🟡 Es uno de los videos más emotivos que ha sacado la Banda Verde 70, y no podía dejar de compartirlo con mi hermana.💚♥️💚 Fue un momento que guardo en el corazón. 🎉 #fulgoramatour2026 #v70 #UioFans" [ref=f6e398]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e401] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DZHFD4gOK5g/
+                - img "Photo shared by George Molina on June 02, 2026 tagging @verde70oficial. May be a doodle of diary and book." [ref=f6e404]
+              - link [ref=f6e407] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DYiGd-YAcAY/
+                - img "Photo shared by George Molina on May 19, 2026 tagging @lakaris_sanchez. May be an image of poster." [ref=f6e410]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f6e412]:
+              - link [ref=f6e414] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DYfiyfDkVnP/
+                - img "Photo by George Molina on May 18, 2026. May be a meme." [ref=f6e417]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f6e420] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/reel/DWsLCvHEZw6/
+                - 'img "Ecuatoriano que se respeta 🇪🇨 reconoce este solo 💚 @thomasmolina411 un Crack! 🎸 Gracias @chris_almeida_musica por el tutorial Ya queremos escucharla en vivo en #fulgoramatour @verde70oficial @dariocastro_oficial @cesargalarza.music #enlainmensidad #verde70 #siempreverdes #guitar" [ref=f6e423]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e426] [cursor=pointer]:
+                - /url: /jorgemolina.oficial/p/DVXWldeEW_M/
+                - img "Verde 70. Me tienes, me puedes, me dueles" [ref=f6e429]
+      - contentinfo [ref=f6e431]:
+        - generic [ref=f6e432]:
+          - generic [ref=f6e434]:
+            - link "Meta" [ref=f6e436] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f6e439] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f6e442] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f6e445] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f6e448] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f6e451] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f6e454] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f6e457] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f6e460] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f6e463] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f6e466] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f6e469] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f6e472] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f6e475] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f6e478] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f6e480]:
+            - generic [ref=f6e481] [cursor=pointer]:
+              - generic [ref=f6e482]:
+                - generic [ref=f6e483]: English
+                - img "Down chevron icon" [ref=f6e486]
+              - combobox "Switch Display Language" [ref=f6e488]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f6e489]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f6e492] [cursor=pointer]:
+              - generic "Messages - 1 new notification" [ref=f6e493]:
+                - generic [ref=f6e494]:
+                  - generic [ref=f6e496]:
+                    - img "Messages" [ref=f6e497]
+                    - generic "Direct messaging - 1 new notification link" [ref=f6e500]: "1"
+                  - generic [ref=f6e503]: Messages
+                - button "User avatar Martini 🍸" [ref=f6e506]:
+                  - img "User avatar" [ref=f6e509]
+            - generic [ref=f6e510]:
+              - generic [ref=f6e511]:
+                - generic [ref=f6e512]:
+                  - generic [ref=f6e514]:
+                    - status "Loading..." [ref=f6e516]
+                    - status "Loading..." [ref=f6e518]
+                  - button [active] [ref=f6e520] [cursor=pointer]:
+                    - img "Close" [ref=f6e522]
+                - separator [ref=f6e525]
+              - generic [ref=f6e526]:
+                - generic [ref=f6e527]:
+                  - status "Loading..." [ref=f6e529]
+                  - status "Loading..." [ref=f6e531]
+                - status "Loading..." [ref=f6e534]
+                - generic [ref=f6e535]:
+                  - status "Loading..." [ref=f6e537]
+                  - status "Loading..." [ref=f6e539]
+                - generic [ref=f6e540]:
+                  - status "Loading..." [ref=f6e542]
+                  - status "Loading..." [ref=f6e544]
+                - status "Loading..." [ref=f6e547]
+                - generic [ref=f6e548]:
+                  - status "Loading..." [ref=f6e550]
+                  - status "Loading..." [ref=f6e552]
+                - status "Loading..." [ref=f6e554]

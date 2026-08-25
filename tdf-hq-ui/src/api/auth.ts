@@ -1,10 +1,10 @@
 import type { components } from './generated/types';
-import type { SignupRole } from '../constants/roles';
 import { extractErrorDetails } from './errorMessage';
-import { env } from '../utils/env';
+import { resolveApiBase } from '../config/apiBase';
 
-const API_BASE = env.read('VITE_API_BASE') ?? '';
+const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
+const AUTH_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
 const RETRYABLE_UNAVAILABLE_STATUS = 503;
 const LOGIN_RETRY_DELAYS_MS = [1000, 2000, 5000];
 const MAX_RETRY_DELAY_MS = 15_000;
@@ -52,6 +52,19 @@ const readErrorMessage = async (res: Response, fallback: string): Promise<string
 
 const parseJson = <T>(res: Response) => res.json() as Promise<T>;
 
+const readConfiguredRetryDelayMs = (retryDelaysMs: readonly number[], attempt: number): number =>
+  retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
+
+const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(input, init);
+  } catch (err) {
+    const wrapped = new Error(AUTH_NETWORK_ERROR_MESSAGE);
+    (wrapped as Error & { cause?: unknown }).cause = err;
+    throw wrapped;
+  }
+};
+
 async function postAuthJson<T>(
   path: string,
   body: unknown,
@@ -59,27 +72,43 @@ async function postAuthJson<T>(
   options?: { retryDelaysMs?: readonly number[] },
 ): Promise<T> {
   const retryDelaysMs = options?.retryDelaysMs ?? [];
+  const maxAttempts = retryDelaysMs.length + 1;
 
-  for (let attempt = 0; ; attempt += 1) {
-    const res = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    let res: Response;
+    try {
+      res = await authFetch(`${API_BASE}${path}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      if (attempt < retryDelaysMs.length) {
+        const fallbackDelayMs = readConfiguredRetryDelayMs(retryDelaysMs, attempt);
+        attempt += 1;
+        await wait(fallbackDelayMs);
+        continue;
+      }
+      throw error;
+    }
 
     if (res.ok) {
       return parseJson<T>(res);
     }
 
     if (res.status === RETRYABLE_UNAVAILABLE_STATUS && attempt < retryDelaysMs.length) {
-      const fallbackDelayMs = retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
+      const fallbackDelayMs = readConfiguredRetryDelayMs(retryDelaysMs, attempt);
+      attempt += 1;
       await wait(readRetryDelayMs(res, fallbackDelayMs));
       continue;
     }
 
     throw new Error(await readErrorMessage(res, fallback));
   }
+
+  throw new Error(fallback);
 }
 
 export async function loginRequest(payload: LoginRequestDTO): Promise<LoginResponseDTO> {
@@ -95,7 +124,7 @@ export async function googleLoginRequest(payload: GoogleLoginRequestDTO): Promis
 }
 
 export async function requestPasswordReset(email: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/v1/password-reset`, {
+  const res = await authFetch(`${API_BASE}/v1/password-reset`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -114,7 +143,7 @@ export interface PasswordResetConfirmPayload {
 export async function confirmPasswordReset(
   payload: PasswordResetConfirmPayload,
 ): Promise<LoginResponseDTO> {
-  const res = await fetch(`${API_BASE}/v1/password-reset/confirm`, {
+  const res = await authFetch(`${API_BASE}/v1/password-reset/confirm`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -132,18 +161,15 @@ export interface SignupPayload {
   email: string;
   phone?: string;
   password: string;
-  internshipStartAt?: string;
-  internshipEndAt?: string;
-  internshipRequiredHours?: number;
-  internshipSkills?: string;
-  internshipAreas?: string;
-  roles?: SignupRole[];
+  marketingOptIn?: boolean;
+  termsAccepted: true;
+  termsVersion: string;
   fanArtistIds?: number[];
   claimArtistId?: number;
 }
 
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {
-  const res = await fetch(`${API_BASE}/signup`, {
+  const res = await authFetch(`${API_BASE}/signup`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

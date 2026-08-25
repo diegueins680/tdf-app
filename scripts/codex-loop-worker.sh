@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODE="${1:?usage: codex-loop-worker.sh <implement|ui-fix|formal-fix|ci-repair> <task-file>}"
-TASK_FILE="${2:?usage: codex-loop-worker.sh <implement|ui-fix|formal-fix|ci-repair> <task-file>}"
+MODE="${1:?usage: codex-loop-worker.sh <implement|logical-fix|formal-fix|ux-fix|ui-fix|ci-repair> <task-file>}"
+TASK_FILE="${2:?usage: codex-loop-worker.sh <implement|logical-fix|formal-fix|ux-fix|ui-fix|ci-repair> <task-file>}"
 REPO_ROOT="${CONTINUOUS_LOOP_REPO_ROOT:-$(pwd)}"
 ITERATION="${CONTINUOUS_LOOP_ITERATION:-unknown}"
 
@@ -20,13 +20,21 @@ case "$MODE" in
     TASK_LABEL="implementation"
     TASK_GOAL="Read the improvement idea and implement it with the smallest high-signal change that adds user value."
     ;;
+  logical-fix)
+    TASK_LABEL="logical correctness remediation"
+    TASK_GOAL="Read the logical correctness audit report and fix every listed issue in the codebase. Prefer explicit, predictable logic. Add or update tests that would have caught the flaw."
+    ;;
+  formal-fix)
+    TASK_LABEL="formal methods remediation"
+    TASK_GOAL="Read the formal methods audit report and fix every listed issue using explicit invariants, preconditions, postconditions, type contracts, and tests where appropriate."
+    ;;
+  ux-fix)
+    TASK_LABEL="UX quality remediation"
+    TASK_GOAL="Read the UX quality audit report and fix every listed issue. Make the UI simpler, more minimal, more intuitive, and more engaging. Reduce clutter and make affordances obvious."
+    ;;
   ui-fix)
     TASK_LABEL="UI remediation"
     TASK_GOAL="Read the UI audit report and fix every listed issue in the report."
-    ;;
-  formal-fix)
-    TASK_LABEL="formal remediation"
-    TASK_GOAL="Read the formal verification report and fix every listed issue using explicit invariants and tests where appropriate."
     ;;
   ci-repair)
     TASK_LABEL="CI remediation"
@@ -50,6 +58,7 @@ $TASK_GOAL
 Constraints:
 - Stay scoped to this subtask only.
 - You may inspect, edit, and test the repository locally.
+- Build and test the Haskell backend in tdf-hq/ with stack ONLY. The project uses lts-24.42 (GHC 9.10.3) via tdf-hq/stack.yaml; use 'stack build' and 'stack test' (run from inside tdf-hq/). Do NOT use cabal or the system GHC — that is a different toolchain the project does not use, its build artifacts (dist-newstyle/) are ignored, and a green cabal build does not mean a green project build.
 - Do not commit, push, pull, rebase, or start a long-running server.
 - Do not modify or stage unrelated user artifacts, especially pre-existing files under screencast/meta-app-review/output/ or screencast/meta-app-review/frame-check/.
 - Prefer the smallest defensible change over large speculative rewrites.
@@ -67,8 +76,36 @@ $(cat "$TASK_FILE")
 ---
 EOF
 
-cat "$PROMPT_FILE" | codex -a never -s workspace-write exec -C "$REPO_ROOT" --color never -o "$OUTPUT_FILE" -
+CODEX_STDERR="$(mktemp "${TMPDIR:-/tmp}/codex-loop-stderr.XXXXXX")"
+trap 'rm -f "$PROMPT_FILE" "$OUTPUT_FILE" "$CODEX_STDERR"' EXIT
+
+set +e
+cat "$PROMPT_FILE" | codex -a never -s workspace-write exec -C "$REPO_ROOT" --color never -o "$OUTPUT_FILE" - 2>"$CODEX_STDERR"
+CODEX_EXIT=$?
+set -e
+
 cat "$OUTPUT_FILE"
+cat "$CODEX_STDERR" >&2
+
+if [ "$CODEX_EXIT" -ne 0 ]; then
+  if grep -qi 'usage limit' "$OUTPUT_FILE" 2>/dev/null || grep -qi 'usage limit' "$CODEX_STDERR" 2>/dev/null; then
+    echo "RESULT: blocked" >> "$OUTPUT_FILE"
+    exit 0
+  fi
+  # Treat the codex backend image-generation defect as a recoverable per-iteration
+  # skip, not a hard crash. codex (gpt-5.5) sometimes offers its built-in
+  # image_generation tool bound to the non-existent model 'gpt-image-2', which the
+  # backend rejects with a 400 (image_generation_user_error). There is no codex
+  # config field to disable that tool, so a hard exit here trips the supervisor
+  # crash-loop breaker and takes the whole evergreen lane (Lane C) down. Soft-fail
+  # this signature so the supervisor cycles to the next idea and the lane stays live.
+  if grep -qiE 'image_generation_user_error|gpt-image-2' "$OUTPUT_FILE" 2>/dev/null \
+    || grep -qiE 'image_generation_user_error|gpt-image-2' "$CODEX_STDERR" 2>/dev/null; then
+    echo "RESULT: blocked" >> "$OUTPUT_FILE"
+    exit 0
+  fi
+  exit "$CODEX_EXIT"
+fi
 
 RESULT_MARKER="$(grep -Eo 'RESULT: (done|blocked)' "$OUTPUT_FILE" | tail -n1 || true)"
 

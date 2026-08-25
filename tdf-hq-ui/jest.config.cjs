@@ -12,17 +12,20 @@ module.exports = {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: path.join(__dirname, 'tsconfig.jest.json'), useESM: true }],
   },
   modulePaths: ['<rootDir>/node_modules', '<rootDir>/../node_modules'],
+  setupFiles: ['<rootDir>/jest.polyfills.cjs'],
   moduleNameMapper: {
     '^@mui/icons-material/(.*)$': '<rootDir>/src/__mocks__/muiIconMock.tsx',
     '^react$': '<rootDir>/node_modules/react',
     '^react-dom$': '<rootDir>/node_modules/react-dom',
     '^react/jsx-runtime$': '<rootDir>/node_modules/react/jsx-runtime.js',
     '^react/jsx-dev-runtime$': '<rootDir>/node_modules/react/jsx-dev-runtime.js',
+    '^webtorrent/dist/webtorrent\\.min\\.js(?:\\?url)?$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
+    '\\.(svg|png|jpe?g|gif|webp)$': '<rootDir>/src/__mocks__/assetUrlMock.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   setupFilesAfterEnv: [],
   reporters: [
     'default',
-    [require.resolve('@testomatio/reporter/lib/adapter/jest'), { apiKey: process.env.TESTOMATIO }],
+    [require.resolve('@testomatio/reporter/jest'), { apiKey: process.env.TESTOMATIO }],
   ],
 };

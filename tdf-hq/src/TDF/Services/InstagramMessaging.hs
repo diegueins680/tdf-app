@@ -2,23 +2,32 @@
 module TDF.Services.InstagramMessaging
   ( sendInstagramText
   , sendInstagramTextWithContext
+  , sendInstagramTextWithContextAndTag
+  , formatInstagramGraphHttpError
   ) where
 
 import           Control.Exception (SomeException, try)
 import           Data.Aeson (encode, object, (.=))
-import           Data.Char (isControl, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isControl
+  , isSpace
+  )
 import           Data.Maybe (isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
-import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, newManager, parseRequest, responseBody, responseStatus)
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
+import           TDF.DB (sharedTlsManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
-import           TDF.Config (AppConfig(..))
+import           TDF.Config (AppConfig(..), normalizeConfiguredApiBaseUrl)
 
 sendInstagramText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendInstagramText cfg recipientId body =
@@ -38,6 +47,10 @@ data InstagramAttempt = InstagramAttempt
 
 sendInstagramTextWithContext :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> IO (Either Text Text)
 sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId body =
+  sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body Nothing
+
+sendInstagramTextWithContextAndTag :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> Maybe Text -> IO (Either Text Text)
+sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body mTag =
   case validateInstagramMessagePayload recipientId body of
     Left err -> pure (Left err)
     Right (cleanRecipientId, cleanBody) ->
@@ -45,8 +58,8 @@ sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId b
         Left err ->
           pure (Left err)
         Right attempts -> do
-          manager <- newManager tlsManagerSettings
-          runAttempts manager cleanRecipientId cleanBody attempts []
+          manager <- pure sharedTlsManager
+          runAttempts manager cleanRecipientId cleanBody attempts mTag []
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =
@@ -71,6 +84,13 @@ validateInstagramRecipientId rawRecipientId =
           Left "Instagram recipient id must not contain control characters"
       | T.length recipientId > 256 ->
           Left "Instagram recipient id must be 256 characters or fewer"
+      | not (T.any isGraphNodeIdAtom recipientId)
+          || T.any (not . isGraphNodeIdChar) recipientId ->
+          Left
+            ( "Instagram recipient id must be a Graph node id using only "
+                <> "ASCII letters, numbers, '.', '_' or '-' with at least one "
+                <> "letter or number (256 chars max)"
+            )
       | otherwise ->
           Right recipientId
 
@@ -84,33 +104,52 @@ validateInstagramMessageBody rawBody =
           Left "Instagram message body must be 5000 characters or fewer"
       | T.any invalidMessageBodyControlChar messageBody ->
           Left "Instagram message body must not contain control characters"
+      | T.any invalidMessageBodyFormatChar messageBody ->
+          Left "Instagram message body must not contain hidden formatting or separator characters"
       | otherwise ->
           Right messageBody
 
 buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> Either Text [InstagramAttempt]
-buildAttempts cfg mTokenOverride mAccountIdOverride =
-  let base = T.dropWhileEnd (== '/') (instagramMessagingApiBase cfg)
-  in do
-    source <-
-      if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
-        then buildSource
-          "connected asset token"
-          "Instagram connected asset token"
-          "Instagram connected asset account id"
-          mTokenOverride
-          mAccountIdOverride
-        else buildSource
-          "configured fallback token"
-          "INSTAGRAM_MESSAGING_TOKEN"
-          "INSTAGRAM_MESSAGING_ACCOUNT_ID"
-          (instagramMessagingToken cfg)
-          (instagramMessagingAccountId cfg)
-    pure (nubAttempts (sourceAttempts base source))
+buildAttempts cfg mTokenOverride mAccountIdOverride = do
+  base <-
+    either (Left . T.pack) Right $
+      normalizeConfiguredApiBaseUrl
+        "INSTAGRAM_MESSAGING_API_BASE"
+        (T.unpack (instagramMessagingApiBase cfg))
+  let mConfiguredSource = buildSourceQuiet
+        "configured fallback token"
+        "INSTAGRAM_MESSAGING_TOKEN"
+        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+        (instagramMessagingToken cfg)
+        (instagramMessagingAccountId cfg)
+  if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+    then do
+      connectedSource <- buildSource
+        "connected asset token"
+        "Instagram connected asset token"
+        "Instagram connected asset account id"
+        mTokenOverride
+        mAccountIdOverride
+      pure (nubAttempts (sourceAttempts base connectedSource ++ maybe [] (sourceAttempts base) mConfiguredSource))
+    else do
+      source <- buildSource
+        "configured fallback token"
+        "INSTAGRAM_MESSAGING_TOKEN"
+        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
+        (instagramMessagingToken cfg)
+        (instagramMessagingAccountId cfg)
+      pure (nubAttempts (sourceAttempts base source))
   where
     buildSource attemptLabel tokenLabel accountIdLabel mToken mAccountId =
       InstagramAttemptSource attemptLabel
         <$> validateInstagramBearerToken tokenLabel mToken
         <*> validateInstagramAccountId accountIdLabel mAccountId
+
+    buildSourceQuiet attemptLabel tokenLabel accountIdLabel mToken mAccountId =
+      either (const Nothing) Just $
+        InstagramAttemptSource attemptLabel
+          <$> validateInstagramBearerToken tokenLabel mToken
+          <*> validateInstagramAccountId accountIdLabel mAccountId
 
 validateInstagramBearerToken :: Text -> Maybe Text -> Either Text Text
 validateInstagramBearerToken label mRawToken =
@@ -118,10 +157,17 @@ validateInstagramBearerToken label mRawToken =
     Nothing ->
       Left (label <> " no configurado")
     Just token
+      | T.length token > maxInstagramBearerTokenChars ->
+          Left (label <> " must be 4096 characters or fewer")
       | T.any invalidHeaderValueChar token ->
           Left (label <> " must not contain whitespace or control characters")
+      | T.any invalidHeaderTextChar token ->
+          Left (label <> " must contain visible ASCII characters only")
       | otherwise ->
           Right token
+
+maxInstagramBearerTokenChars :: Int
+maxInstagramBearerTokenChars = 4096
 
 validateInstagramAccountId :: Text -> Maybe Text -> Either Text Text
 validateInstagramAccountId label mRawAccountId =
@@ -143,8 +189,7 @@ validateInstagramAccountId label mRawAccountId =
 
 hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
 hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
-  isJust (mTokenOverride >>= nonEmptyText)
-    || isJust (mAccountIdOverride >>= nonEmptyText)
+  isJust mTokenOverride || isJust mAccountIdOverride
 
 nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
 nubAttempts =
@@ -166,14 +211,26 @@ sourceAttempts base source =
       (iasLabel source)
       (iasToken source)
       (base <> "/" <> iasAccountId source <> "/messages")
+  , InstagramAttempt
+      (iasLabel source <> " (me fallback)")
+      (iasToken source)
+      (base <> "/me/messages")
   ]
 
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
 
+invalidHeaderTextChar :: Char -> Bool
+invalidHeaderTextChar ch =
+  ch < '!' || ch > '~' || generalCategory ch == Format
+
 invalidMessageBodyControlChar :: Char -> Bool
 invalidMessageBodyControlChar ch =
   isControl ch && ch /= '\n' && ch /= '\r' && ch /= '\t'
+
+invalidMessageBodyFormatChar :: Char -> Bool
+invalidMessageBodyFormatChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 isGraphNodeIdChar :: Char -> Bool
 isGraphNodeIdChar ch =
@@ -191,16 +248,16 @@ maxInstagramAccountIdChars = 128
 maxInstagramMessageBodyChars :: Int
 maxInstagramMessageBodyChars = 5000
 
-runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> [Text] -> IO (Either Text Text)
-runAttempts _ _ _ [] [] = pure (Left "Instagram messaging failed without details")
-runAttempts _ _ _ [] errors = pure (Left (T.intercalate " | " (reverse errors)))
-runAttempts manager recipientId body (attempt:rest) errors = do
-  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt)
+runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> Maybe Text -> [Text] -> IO (Either Text Text)
+runAttempts _ _ _ [] _ [] = pure (Left "Instagram messaging failed without details")
+runAttempts _ _ _ [] _ errors = pure (Left (T.intercalate " | " (reverse errors)))
+runAttempts manager recipientId body (attempt:rest) mTag errors = do
+  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt) mTag
   case result of
     Right payload -> pure (Right payload)
     Left err ->
       let labelledError = "Send failed via " <> iaLabel attempt <> " at " <> iaUrl attempt <> ": " <> err
-      in runAttempts manager recipientId body rest (labelledError : errors)
+      in runAttempts manager recipientId body rest mTag (labelledError : errors)
 
 sendToEndpoint
   :: Manager
@@ -208,8 +265,9 @@ sendToEndpoint
   -> Text
   -> Text
   -> Text
+  -> Maybe Text
   -> IO (Either Text Text)
-sendToEndpoint manager token recipientId body urlTxt = do
+sendToEndpoint manager token recipientId body urlTxt mTag = do
   reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
   case reqE of
     Left err -> pure (Left (T.pack (show err)))
@@ -222,17 +280,180 @@ sendToEndpoint manager token recipientId body urlTxt = do
                 ]
             , requestBody = RequestBodyLBS (encode payload)
             }
-          payload = object
-            [ "recipient" .= object [ "id" .= recipientId ]
-            , "message" .= object [ "text" .= body ]
-            , "messaging_type" .= ("RESPONSE" :: Text)
-            ]
+          payload = case mTag of
+            Just tag -> object
+              [ "recipient" .= object [ "id" .= recipientId ]
+              , "message" .= object [ "text" .= body ]
+              , "messaging_type" .= ("MESSAGE_TAG" :: Text)
+              , "tag" .= tag
+              ]
+            Nothing -> object
+              [ "recipient" .= object [ "id" .= recipientId ]
+              , "message" .= object [ "text" .= body ]
+              , "messaging_type" .= ("RESPONSE" :: Text)
+              ]
       respE <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
       pure $ case respE of
         Left err -> Left (T.pack (show err))
         Right resp ->
           let status = statusCode (responseStatus resp)
-              bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
+              bodyTxt = decodeInstagramGraphBody (responseBody resp)
           in if status >= 200 && status < 300
                then Right bodyTxt
-               else Left ("HTTP " <> T.pack (show status) <> ": " <> bodyTxt)
+               else Left (formatInstagramGraphHttpError status (responseBody resp))
+
+formatInstagramGraphHttpError :: Int -> BL.ByteString -> Text
+formatInstagramGraphHttpError status bodyBytes =
+  "HTTP " <> T.pack (show status) <> suffix
+  where
+    bodyTxt = sanitizeInstagramGraphBody bodyBytes
+    suffix =
+      if T.null bodyTxt
+        then ""
+        else ": " <> bodyTxt
+
+sanitizeInstagramGraphBody :: BL.ByteString -> Text
+sanitizeInstagramGraphBody bodyBytes =
+  truncateInstagramGraphErrorBody
+    . redactInstagramGraphSecrets
+    . T.strip
+    . T.map sanitizeGraphErrorChar $
+    decodeInstagramGraphBody bodyBytes
+
+decodeInstagramGraphBody :: BL.ByteString -> Text
+decodeInstagramGraphBody =
+  TE.decodeUtf8With TEE.lenientDecode . BL.toStrict
+
+truncateInstagramGraphErrorBody :: Text -> Text
+truncateInstagramGraphErrorBody bodyTxt
+  | T.length bodyTxt <= maxInstagramGraphErrorBodyChars = bodyTxt
+  | otherwise = T.take maxInstagramGraphErrorBodyChars bodyTxt <> "..."
+
+sanitizeGraphErrorChar :: Char -> Char
+sanitizeGraphErrorChar ch
+  | isControl ch = ' '
+  | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+  | otherwise = ch
+
+redactInstagramGraphSecrets :: Text -> Text
+redactInstagramGraphSecrets =
+  redactInstagramGraphBearerTokens . redactInstagramGraphFields
+
+redactInstagramGraphBearerTokens :: Text -> Text
+redactInstagramGraphBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchInstagramGraphBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchInstagramGraphBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchInstagramGraphBearerToken previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) = consumeValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between
+            || T.null tokenValue
+            || not (T.any isInstagramGraphBearerTokenAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+isInstagramGraphBearerTokenAtom :: Char -> Bool
+isInstagramGraphBearerTokenAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+redactInstagramGraphFields :: Text -> Text
+redactInstagramGraphFields = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchSensitiveGraphField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchSensitiveGraphField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchSensitiveGraphField previous textValue
+  | not (isSecretFieldBoundary previous) = Nothing
+  | otherwise = firstMatch sensitiveInstagramGraphFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseSensitiveGraphField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+isSecretFieldBoundary :: Maybe Char -> Bool
+isSecretFieldBoundary Nothing = True
+isSecretFieldBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+sensitiveInstagramGraphFields :: [Text]
+sensitiveInstagramGraphFields =
+  [ "access_token"
+  , "fb_exchange_token"
+  , "client_secret"
+  , "appsecret_proof"
+  , "code"
+  ]
+
+parseSensitiveGraphField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseSensitiveGraphField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) = consumeOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || (separator == ':' && fieldName /= "code")
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) = consumeValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+consumeOptionalQuote :: Text -> (Text, Text)
+consumeOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedSecretValueEnd)
+
+isUnquotedSecretValueEnd :: Char -> Bool
+isUnquotedSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,}]" :: String)
+
+maxInstagramGraphErrorBodyChars :: Int
+maxInstagramGraphErrorBodyChars = 1000

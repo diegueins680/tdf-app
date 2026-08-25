@@ -1,0 +1,304 @@
+version: 1
+money:
+  representation: signed_integer_minor_units
+  required_currency: ISO_4217_uppercase
+  invariants:
+    - checkout.total_minor == sum(checkout_lines.total_minor) + checkout.fee_minor + checkout.tax_minor
+    - checkout_line.total_minor == checkout_line.quantity * checkout_line.unit_minor - checkout_line.discount_minor + checkout_line.tax_minor
+    - checkout snapshots are immutable after validated
+    - captured amount and currency equal the immutable checkout total and currency
+    - no browser request can transition a payment to paid or captured
+
+state_machines:
+  checkout:
+    initial: draft
+    transitions:
+      draft: [validated, cancelled]
+      validated: [holding, awaiting_payment, cancelled, expired]
+      holding: [awaiting_payment, cancelled, expired]
+      awaiting_payment: [processing, cancelled, expired, failed]
+      processing: [paid, failed, cancelled]
+      paid: [partially_refunded, refunded, disputed, chargeback]
+      partially_refunded: [partially_refunded, refunded, disputed, chargeback]
+      disputed: [paid, chargeback]
+      failed: []
+      cancelled: []
+      expired: []
+      refunded: []
+      chargeback: []
+  marketplace_sale_fulfillment:
+    initial: on_hold
+    method_specific_transitions:
+      pickup:
+        picking: [ready_for_pickup]
+      local_delivery:
+        picking: [shipped]
+      shipping:
+        picking: [shipped]
+    transitions:
+      on_hold: [ready_to_fulfill, cancelled, expired]
+      ready_to_fulfill: [picking, cancellation_requested]
+      picking: [ready_for_pickup, shipped, cancellation_requested]
+      ready_for_pickup: [delivered, cancellation_requested]
+      shipped: [delivered]
+      cancellation_requested: [cancelled]
+      delivered: [return_requested, closed]
+      return_requested: [return_authorized, closed]
+      return_authorized: [return_in_transit, returned]
+      return_in_transit: [returned]
+      returned: [closed]
+      cancelled: []
+      closed: []
+      expired: []
+    invariants:
+      - outbound fulfillment requires checkout in paid or partially_refunded
+      - payment paid transitions only on_hold to ready_to_fulfill
+      - paid never implies picked_up shipped delivered or closed
+      - an asset becomes sold only when fulfillment becomes delivered
+      - a returned asset restores custody but does not reactivate its listing
+      - pickup cannot transition through shipped and delivery cannot transition through ready_for_pickup
+  marketplace_rental_fulfillment:
+    initial: on_hold
+    transitions:
+      on_hold: [confirmed, cancelled, expired]
+      confirmed: [ready_for_handoff, cancellation_requested, no_show]
+      ready_for_handoff: [checked_out, cancellation_requested, no_show]
+      checked_out: [return_due, returned_pending_inspection, lost, disputed]
+      return_due: [returned_pending_inspection, lost, disputed]
+      returned_pending_inspection: [deposit_refund_due, damage_review]
+      damage_review: [deposit_refund_due, disputed]
+      deposit_refund_due: [closed]
+      cancellation_requested: [cancelled]
+      no_show: [cancelled]
+      lost: [disputed]
+      disputed: [damage_review, deposit_refund_due, closed]
+      cancelled: []
+      closed: []
+      expired: []
+    invariants:
+      - start and end dates are inclusive and end is not before start
+      - rental charge uses the approved snapshotted daily or weekly rate and integer minor units
+      - checkout total equals rental charge plus separately disclosed refundable deposit
+      - active date ranges for one asset cannot overlap
+      - verified payment only moves on_hold to confirmed and never changes custody
+      - checked_out requires an outbound condition report
+      - returned_pending_inspection requires an inbound condition report and restores TDF custody
+      - a deduction proposal is not provider or bank settlement evidence
+      - a nonzero deposit cannot close before refunded partially_refunded or forfeited evidence
+  service_booking_fulfillment:
+    initial: on_hold
+    transitions:
+      on_hold: [confirmed, cancelled, expired]
+      confirmed: [scheduled, reschedule_requested, cancellation_requested, no_show]
+      scheduled: [in_progress, reschedule_requested, cancellation_requested, no_show]
+      in_progress: [balance_due, overtime_review, disputed]
+      balance_due: [completed, disputed]
+      overtime_review: [balance_due, disputed]
+      reschedule_requested: [confirmed, cancellation_requested]
+      cancellation_requested: [cancelled]
+      disputed: [balance_due, cancelled]
+      completed: []
+      cancelled: []
+      no_show: [balance_due, cancelled]
+      expired: []
+    invariants:
+      - rate tax deposit duration and terms come from one approved immutable policy snapshot
+      - total deposit and balance use integer minor units and deposit plus balance equals total
+      - booking checkout contains the deposit only and never permits a client supplied total
+      - active allocations for the same room engineer or equipment resource cannot overlap
+      - legacy public staff and canonical bookings share the same exclusion backed calendar
+      - verified deposit payment only moves on_hold to confirmed and never starts or completes work
+      - paid requires succeeded matching provider evidence or approved manual evidence
+      - Datafast verification binds the exact stored checkout and resource path; PayPal verification binds the exact stored order and capture
+      - provider amount currency environment merchant and internal booking reference equal the immutable deposit checkout
+      - browser return and browser approval cannot transition payment
+      - failed provider attempts expire and release allocations at the original hold deadline
+      - payment first verified after allocation expiry creates a reconciliation exception and cannot silently reconfirm fulfillment
+      - balance due completion no show overtime cancellation and dispute remain explicit fulfillment states
+  event_ticket_fulfillment:
+    initial: seat_held
+    transitions:
+      seat_held: [issued, cancelled, expired]
+      issued: [transfer_requested, checked_in, cancelled, refunded]
+      transfer_requested: [issued, transferred, cancelled]
+      transferred: [transfer_requested, checked_in, refunded]
+      checked_in: []
+      cancelled: []
+      refunded: []
+      expired: []
+    invariants:
+      - quantity unit price promotion buyer fee organizer fee tax currency and terms are server calculated and immutable per order
+      - buyer and organizer fee allocations are distinct and organizer payable never exceeds net face value
+      - a manager identity browser return or provider resource id is not payment evidence
+      - seat_held to issued requires verified payment or an explicit zero-price entitlement
+      - verified payment never implies issuance transfer check-in attendance organizer settlement or payout
+      - provider succeeded status amount currency merchant order event environment and resource match immutable bindings
+      - active seat holds cannot exceed tier or event capacity and expiration releases inventory exactly once
+      - QR material is created only for issued tickets and remains customer scoped
+  quote:
+    initial: draft
+    transitions:
+      draft: [sent, cancelled]
+      sent: [viewed, accepted, cancelled, expired]
+      viewed: [accepted, cancelled, expired]
+      accepted: [deposit_due, cancelled]
+      deposit_due: [deposit_paid, cancelled, expired]
+      deposit_paid: [in_progress, cancelled, refunded, partially_refunded]
+      in_progress: [balance_due, cancelled]
+      balance_due: [completed, cancelled]
+      completed: []
+      cancelled: []
+      expired: []
+      partially_refunded: [refunded]
+      refunded: []
+  distribution:
+    initial: draft
+    transitions:
+      draft: [validation_failed, ready_for_review, archived]
+      validation_failed: [draft, archived]
+      ready_for_review: [rights_review, validation_failed, archived]
+      rights_review: [payment_due, ready_for_review, archived]
+      payment_due: [paid, archived]
+      paid: [scheduled, refunded, partially_refunded]
+      scheduled: [delivering, archived]
+      delivering: [acknowledged, partially_rejected, rejected]
+      acknowledged: [accepted, partially_rejected, rejected]
+      partially_rejected: [scheduled, accepted, takedown_requested]
+      rejected: [scheduled, archived]
+      accepted: [live, live_confirmation_pending, takedown_requested]
+      live_confirmation_pending: [live, takedown_requested]
+      live: [reporting, takedown_requested]
+      reporting: [reporting, takedown_requested]
+      takedown_requested: [takedown_completed]
+      takedown_completed: [archived]
+      partially_refunded: [refunded, scheduled]
+      refunded: [archived]
+      archived: []
+  royalty_statement:
+    initial: ingested
+    transitions:
+      ingested: [normalized, rejected]
+      normalized: [reconciled, variance_review]
+      variance_review: [reconciled, rejected]
+      reconciled: [allocated]
+      allocated: [review]
+      review: [issued, disputed]
+      issued: [payable, disputed, corrected]
+      payable: [paid, disputed, corrected]
+      paid: [disputed, corrected]
+      disputed: [review, corrected]
+      corrected: [review]
+      rejected: []
+  refund:
+    initial: requested
+    transitions:
+      requested: [approved, cancelled]
+      approved: [processing, cancelled]
+      processing: [succeeded, failed]
+      failed: [processing, cancelled]
+      succeeded: []
+      cancelled: []
+    invariants:
+      - requested_by != approved_by for approved processing or succeeded
+      - amount currency provider environment merchant checkout and payment attempt are immutable
+      - sum(allocations.amount_minor) == refund.amount_minor before succeeded
+      - checkout.refunded_minor + active_or_succeeded_refunds <= checkout.paid_minor
+      - succeeded requires an exact provider refund id amount currency and completion time
+  provider_event:
+    initial: pending
+    transitions:
+      pending: [processing]
+      processing: [processed, ignored, retry, dead_letter]
+      retry: [processing, dead_letter]
+      processed: []
+      ignored: []
+      dead_letter: []
+    invariants:
+      - production requires signature_verified
+      - provider environment merchant event_id event_type payload_hash and encrypted_payload are immutable
+      - duplicate event ids cannot replace immutable evidence
+      - a claim increments attempt_count exactly once
+
+payment_fulfillment_separation:
+  rule: payment transitions never directly imply fulfillment transitions
+  examples:
+    - paid != equipment_shipped
+    - paid != rental_handed_off
+    - paid != booking_completed
+    - paid != tickets_checked_in
+    - paid != distribution_sent
+    - acknowledged != distribution_live
+    - payable != payout_paid
+
+idempotency:
+  unique_scopes:
+    - checkout(domain_type, domain_id, client_request_key)
+    - marketplace_sale(cart_id, checkout_client_request_key)
+    - marketplace_rental(cart_id, checkout_client_request_key)
+    - marketplace_rental_active_range(asset_id, inclusive_date_range)
+    - service_booking(booking_id, checkout_client_request_key)
+    - service_booking_policy(service_offering_id, policy_version)
+    - service_booking_active_range(resource_id, utc_time_range)
+    - event_ticket_order(event_id, client_request_key)
+    - event_ticket_policy(event_id, policy_version)
+    - event_ticket_hold(tier_id, order_id, expires_at)
+    - provider_order(provider, merchant_account, provider_order_id)
+    - provider_resource(provider, merchant_account, provider_resource_id)
+    - provider_event(provider, merchant_account, provider_event_id)
+    - provider_operation(provider_attempt_id, operation, idempotency_key)
+    - refund(provider_attempt_id, provider_refund_id)
+    - hold(resource_type, resource_id, active_time_range)
+    - fulfillment_event(domain_type, domain_id, checkout_event_id)
+    - delivery(release_version_id, recipient_profile_id, operation)
+    - statement(source_report_id, beneficiary_id, allocation_version)
+  retry_rule: same key and same canonical request returns the original result; different request is conflict
+
+holds:
+  requirements:
+    - created and conflict-checked in one database transaction
+    - active ranges cannot overlap for exclusive resources
+    - ticket and course quantities cannot make remaining capacity negative
+    - expiration is monotonic and releases inventory exactly once
+    - paid checkout consumes its holds exactly once
+    - marketplace rental holds use an inclusive date range and conflict per asset
+    - public and staff service bookings use one UTC range and conflict per resource
+
+provider_verification:
+  required_bindings:
+    - provider mode is compatible with checkout mode
+    - merchant account or entity equals the stored binding
+    - provider order and resource equal stored references
+    - provider merchant reference equals internal checkout/order reference
+    - amount and currency equal immutable checkout snapshot
+    - provider status is an allowlisted success status
+    - event signature and timestamp are valid when a signature contract exists
+    - event or server verification has not already been applied
+  sandbox_rule: sandbox or mocked evidence cannot transition production rows
+
+manual_payment:
+  selection_state: awaiting_manual_confirmation
+  approval_requires:
+    - immutable evidence record and checksum
+    - authorized verifier distinct from submitter when configured
+    - verified amount currency payer and reference
+    - audit event and compensating correction path
+
+ledger:
+  invariants:
+    - every posted transaction has at least two entries
+    - sum(debits) == sum(credits) per transaction and currency
+    - posted entries are immutable
+    - refunds disputes chargebacks corrections and writeoffs use new compensating transactions
+    - provider receivable cash fees tax revenue and third_party_payable are distinct accounts
+    - payout cannot exceed available verified beneficiary balance
+
+rights_and_distribution:
+  invariants:
+    - split basis points total 10000 for each rights scope and territory/term version
+    - every participant acceptance references the exact split version
+    - deliverable release version is immutable
+    - every package references recipient profile version manifest assets checksums terms and message id
+    - updates and takedowns reference prior accepted delivery chains
+    - sent requires transport evidence; acknowledged requires recipient evidence; live requires store or partner evidence
+    - mocked or sandbox responses cannot transition production deliveries
+    - usage corrections append lineage and never overwrite financial history

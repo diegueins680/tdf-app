@@ -13,37 +13,54 @@ module TDF.Auth
   , hasSocialSyncAccess
   , hasSocialInboxAccess
   , hasModuleAccess
+  , validateModuleAccess
   , moduleName
+  , moduleRegistryCode
+  , moduleFromRegistryCode
   , modulesForRoles
   , loadAuthedUser
   , lookupUsernameFromToken
   , resolveUsernameFromLabel
   , extractToken
   , extractTokenFromHeaders
+  , parseBearerAuthorizationHeader
   , sessionCookieHeader
   , clearSessionCookieHeader
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (forM_, guard)
+import           Control.Monad              (forM, guard)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isControl, isSpace)
-import           Data.List                  (foldl')
-import           Data.Maybe                 (listToMaybe, maybeToList)
+import           Data.Char
+  ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
+import           Data.Maybe                 (maybeToList)
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
-import           Database.Persist           (Entity(..), getBy, selectList, upsert, (==.), (=.))
-import           Database.Persist.Sql       (SqlPersistT, runSqlPool)
+import           Database.Persist
+  ( Entity(..)
+  , SelectOpt(LimitTo)
+  , get
+  , getBy
+  , selectList
+  , toPersistValue
+  , (==.)
+  )
+import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
 
 import           TDF.DB                     (Env(..))
 import           TDF.Config                 (AppConfig(..))
+import qualified TDF.Catalog.Models         as Catalog
 import           TDF.Models
 
 -- | Enumeration of major application modules.
@@ -55,6 +72,7 @@ data ModuleAccess
   | ModuleAdmin
   | ModuleInternships
   | ModuleOps
+  | ModuleCatalog
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 moduleName :: ModuleAccess -> Text
@@ -65,6 +83,26 @@ moduleName ModuleInvoicing  = "Invoicing"
 moduleName ModuleAdmin      = "Admin"
 moduleName ModuleInternships = "Internships"
 moduleName ModuleOps        = "Ops"
+moduleName ModuleCatalog    = "Catalog"
+
+-- Stable identifiers are the compile-time authorization boundary. Display
+-- names, ordering and grants remain database-authoritative.
+moduleRegistryCode :: ModuleAccess -> Text
+moduleRegistryCode moduleTag = case moduleTag of
+  ModuleCRM -> "crm"
+  ModuleScheduling -> "scheduling"
+  ModulePackages -> "packages"
+  ModuleInvoicing -> "invoicing"
+  ModuleAdmin -> "admin"
+  ModuleInternships -> "internships"
+  ModuleOps -> "ops"
+  ModuleCatalog -> "catalog"
+
+moduleFromRegistryCode :: Text -> Maybe ModuleAccess
+moduleFromRegistryCode rawCode =
+  lookup
+    (T.toLower (T.strip rawCode))
+    [(moduleRegistryCode moduleTag, moduleTag) | moduleTag <- [minBound .. maxBound]]
 
 -- | Authenticated user with associated module access.
 data AuthedUser = AuthedUser
@@ -79,24 +117,46 @@ authContext env = mkAuthHandler (authWithToken env) :. EmptyContext
 
 -- | Check whether the user can access the given module.
 hasModuleAccess :: ModuleAccess -> AuthedUser -> Bool
-hasModuleAccess moduleTag AuthedUser{..} = moduleTag `Set.member` auModules
+hasModuleAccess moduleTag user@AuthedUser{..} =
+  hasCoherentRoleGrants user && moduleTag `Set.member` auModules
+
+validateModuleAccess :: ModuleAccess -> AuthedUser -> Either ServerError ()
+validateModuleAccess moduleTag user@AuthedUser{..}
+  | not (hasValidAuthPartyId user) =
+      Left err403 { errBody = "Valid authenticated party required" }
+  | not (rolesAreUnique auRoles) =
+      Left err403 { errBody = "Role grants must be unique" }
+  | hasModuleAccess moduleTag user =
+      Right ()
+  | otherwise =
+      Left err403
+        { errBody =
+            BL.fromStrict (TE.encodeUtf8 ("Missing access to module: " <> moduleName moduleTag))
+        }
 
 hasStrictAdminAccess :: AuthedUser -> Bool
-hasStrictAdminAccess AuthedUser{..} = Admin `elem` auRoles
+hasStrictAdminAccess user@AuthedUser{..} =
+  Admin `elem` auRoles
+    && all isStrictAdminRoleScope auRoles
+    && hasCoherentRoleGrants user
 
 hasOperationsAccess :: AuthedUser -> Bool
-hasOperationsAccess user@AuthedUser{..} =
-  hasModuleAccess ModuleAdmin user || any (`elem` auRoles) [Manager, Maintenance]
+hasOperationsAccess user =
+  hasModuleAccess ModuleOps user || hasModuleAccess ModuleAdmin user
 
 hasAiToolingAccess :: AuthedUser -> Bool
 hasAiToolingAccess = hasOperationsAccess
 
 hasSocialSyncAccess :: AuthedUser -> Bool
-hasSocialSyncAccess = hasStrictAdminAccess
+hasSocialSyncAccess user =
+  hasStrictAdminAccess user
+    && hasModuleAccess ModuleAdmin user
+    && hasCoherentRoleGrants user
 
 hasSocialInboxAccess :: AuthedUser -> Bool
 hasSocialInboxAccess user@AuthedUser{..} =
-  hasModuleAccess ModuleCRM user
+  hasCoherentRoleGrants user
+    && hasModuleAccess ModuleCRM user
     && any (`elem` auRoles)
       [ Admin
       , Manager
@@ -131,19 +191,22 @@ loadAuthedUser token = do
       | not (apiTokenActive tok) -> pure Nothing
       | not (isAuthenticatableApiTokenLabel (apiTokenLabel tok)) -> pure Nothing
       | otherwise -> do
-          roles <- selectList [PartyRolePartyId ==. apiTokenPartyId tok, PartyRoleActive ==. True] []
-          roleList <- ensureDefaultRoles (apiTokenPartyId tok) (map (partyRoleRole . entityVal) roles)
-          let modules  = modulesForRoles roleList
-          pure $ Just AuthedUser
-            { auPartyId = apiTokenPartyId tok
-            , auRoles   = roleList
-            , auModules = modules
-            }
+          canonicalRoles <- loadCanonicalRoles (apiTokenPartyId tok)
+          canonicalModules <- loadCanonicalModules (apiTokenPartyId tok)
+          pure $ do
+            roleList <- canonicalRoles
+            modules <- canonicalModules
+            guard (rolesAreUnique roleList)
+            pure AuthedUser
+              { auPartyId = apiTokenPartyId tok
+              , auRoles = roleList
+              , auModules = modules
+              }
 
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
 isAuthenticatableApiTokenLabel Nothing = True
 isAuthenticatableApiTokenLabel (Just rawLabel) =
-  not ("password-reset:" `T.isPrefixOf` T.strip rawLabel)
+  not ("password-reset:" `T.isPrefixOf` T.toLower (T.strip rawLabel))
 
 lookupUsernameFromToken :: Text -> SqlPersistT IO (Maybe Text)
 lookupUsernameFromToken token = do
@@ -161,27 +224,64 @@ lookupUsernameFromToken token = do
                   [ UserCredentialPartyId ==. apiTokenPartyId tok
                   , UserCredentialActive ==. True
                   ]
-                  []
-              pure (userCredentialUsername . entityVal <$> listToMaybe creds)
+                  [LimitTo 2]
+              pure $
+                case creds of
+                  [Entity _ cred] -> Just (userCredentialUsername cred)
+                  _               -> Nothing
     Nothing -> pure Nothing
 
 resolveUsernameFromLabel :: Text -> Maybe Text
 resolveUsernameFromLabel rawLabel =
   let trimmed = T.strip rawLabel
       attempt prefix = T.strip <$> T.stripPrefix prefix trimmed
-      resolved = attempt "password-login:" <|> attempt "password-reset:"
+      resolved =
+        attempt "password-login:"
+          <|> attempt "password-reset:"
+          <|> attempt "google-login:"
       nonEmpty txt =
         let stripped = T.strip txt
-        in if T.null stripped then Nothing else Just stripped
+        in
+          if T.null stripped
+              || T.length stripped > maxResolvedUsernameLabelChars
+              || T.any invalidResolvedUsernameLabelChar stripped
+            then Nothing
+            else Just stripped
   in resolved >>= nonEmpty
 
+maxResolvedUsernameLabelChars :: Int
+maxResolvedUsernameLabelChars = 254
+
+invalidResolvedUsernameLabelChar :: Char -> Bool
+invalidResolvedUsernameLabelChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || ch `elem` (":/\\?#" :: String)
+
 modulesForRoles :: [RoleEnum] -> Set ModuleAccess
-modulesForRoles = foldl' (flip (Set.union . modulesForRole)) Set.empty
+modulesForRoles = Set.unions . map modulesForRole
+
+rolesAreUnique :: [RoleEnum] -> Bool
+rolesAreUnique roles =
+  length roles == Set.size (Set.fromList roles)
+
+hasCoherentRoleGrants :: AuthedUser -> Bool
+hasCoherentRoleGrants user@AuthedUser{..} =
+  hasValidAuthPartyId user && rolesAreUnique auRoles
+
+hasValidAuthPartyId :: AuthedUser -> Bool
+hasValidAuthPartyId AuthedUser{..} =
+  fromSqlKey auPartyId > 0
+
+isStrictAdminRoleScope :: RoleEnum -> Bool
+isStrictAdminRoleScope role =
+  role `elem` [Admin, Fan, Customer]
 
 modulesForRole :: RoleEnum -> Set ModuleAccess
-modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
-modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships, ModuleOps]
-modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps]
+modulesForRole Admin      = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps, ModuleCatalog]
+modulesForRole Manager    = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleInternships, ModuleOps, ModuleCatalog]
+modulesForRole StudioManager = Set.fromList [ModuleCRM, ModuleScheduling, ModulePackages, ModuleInvoicing, ModuleAdmin, ModuleInternships, ModuleOps, ModuleCatalog]
 modulesForRole Reception  = Set.fromList [ModuleCRM, ModuleScheduling]
 modulesForRole Accounting = Set.singleton ModuleInvoicing
 modulesForRole Engineer   = Set.singleton ModuleScheduling
@@ -194,33 +294,46 @@ modulesForRole Webmaster  = Set.fromList [ModuleAdmin, ModuleCRM]
 modulesForRole Promotor   = Set.empty
 modulesForRole Promoter   = Set.empty
 modulesForRole Producer   = Set.fromList [ModuleCRM, ModuleScheduling]
+modulesForRole Agency     = Set.empty
 modulesForRole Songwriter = Set.empty
 modulesForRole DJ         = Set.empty
 modulesForRole Publicist  = Set.empty
 modulesForRole TourManager = Set.empty
-modulesForRole LabelRep    = Set.empty
+modulesForRole LabelRep    = Set.fromList [ModuleCatalog]
 modulesForRole StageManager = Set.empty
 modulesForRole RoadCrew    = Set.empty
 modulesForRole Photographer = Set.empty
-modulesForRole AandR      = Set.fromList [ModuleCRM, ModuleScheduling]
+modulesForRole AandR      = Set.fromList [ModuleCRM, ModuleScheduling, ModuleCatalog]
 modulesForRole Student    = Set.singleton ModuleScheduling
 modulesForRole Vendor     = Set.singleton ModulePackages
 modulesForRole Customer   = Set.singleton ModulePackages
-modulesForRole ReadOnly   = Set.singleton ModuleCRM
+modulesForRole ReadOnly   = Set.fromList [ModuleCRM, ModuleCatalog]
 modulesForRole Fan        = Set.empty
 modulesForRole Maintenance = Set.fromList [ModulePackages, ModuleScheduling, ModuleOps]
 
--- Ensure every authenticated user has baseline Fan and Customer roles active.
-defaultRoles :: [RoleEnum]
-defaultRoles = [Fan, Customer]
+loadCanonicalRoles :: PartyId -> SqlPersistT IO (Maybe [RoleEnum])
+loadCanonicalRoles pid = do
+  assignments <- selectList
+    [ Catalog.PartySecurityRolePartyId ==. pid
+    , Catalog.PartySecurityRoleActive ==. True
+    ]
+    []
+  decoded <- forM assignments $ \(Entity _ assignment) -> do
+    role <- get (Catalog.partySecurityRoleRoleId assignment)
+    pure $ do
+      persisted <- role
+      guard (Catalog.securityRoleActive persisted)
+      roleFromRegistryCode (Catalog.securityRoleCode persisted)
+  pure (Set.toAscList . Set.fromList <$> sequence decoded)
 
-ensureDefaultRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO [RoleEnum]
-ensureDefaultRoles pid roles = do
-  let existing = Set.fromList roles
-      missing  = filter (`Set.notMember` existing) defaultRoles
-  forM_ missing $ \r ->
-    upsert (PartyRole pid r True) [PartyRoleActive =. True]
-  pure (roles ++ missing)
+loadCanonicalModules :: PartyId -> SqlPersistT IO (Maybe (Set ModuleAccess))
+loadCanonicalModules pid = do
+  rows <- rawSql
+    "SELECT DISTINCT m.code FROM party_security_role psr JOIN security_role r ON r.id=psr.role_id JOIN role_permission rp ON rp.role_id=r.id JOIN security_permission p ON p.id=rp.permission_id JOIN security_action a ON a.id=p.action_id JOIN security_module m ON m.id=p.module_id WHERE psr.party_id=? AND psr.active=TRUE AND r.active=TRUE AND rp.active=TRUE AND p.active=TRUE AND a.active=TRUE AND m.active=TRUE AND p.resource_scope='module' AND a.code='access' ORDER BY m.code"
+    [toPersistValue pid]
+  pure (Set.fromList <$> traverse (moduleFromRegistryCode . unSingle) rows)
+  where
+    unSingle (Single value) = value
 
 extractToken :: AppConfig -> Request -> Either Text Text
 extractToken cfg req =
@@ -230,7 +343,15 @@ extractToken cfg req =
     [rawHeader] ->
       case TE.decodeUtf8' rawHeader of
         Left _ -> Left "Invalid Authorization header"
-        Right txt -> extractTokenFromHeaders cfg (Just txt) Nothing
+        Right txt ->
+          case cookieHeaders req of
+            [] -> extractTokenFromHeaders cfg (Just txt) Nothing
+            [rawCookieHeader] ->
+              case TE.decodeUtf8' rawCookieHeader of
+                Left _ -> Left "Missing or invalid auth token"
+                Right cookieHeader ->
+                  extractTokenFromHeaders cfg (Just txt) (Just cookieHeader)
+            _ -> Left "Multiple Cookie headers found"
     _ ->
       Left "Multiple Authorization headers found"
   where
@@ -258,32 +379,58 @@ extractToken cfg req =
 extractTokenFromHeaders :: AppConfig -> Maybe Text -> Maybe Text -> Either Text Text
 extractTokenFromHeaders AppConfig{sessionCookieName} mAuthorizationHeader mCookieHeader =
   case mAuthorizationHeader of
-    Just rawHeader ->
-      case T.words rawHeader of
-        [scheme, value]
-          | T.toLower scheme == "bearer" ->
-              validateAuthToken value
-        _ -> Left "Invalid Authorization header"
+    Just rawHeader -> do
+      value <- parseBearerAuthorizationHeader rawHeader
+      authToken <- validateAuthToken value
+      case maybe (Right Nothing) (lookupCookieIfPresent sessionCookieName) mCookieHeader of
+        Left err -> Left err
+        Right (Just cookieToken)
+          | cookieToken /= authToken ->
+              Left "Conflicting auth credentials found"
+        _ ->
+            Right authToken
     Nothing ->
       maybe
         (Left "Missing or invalid auth token")
         (lookupCookie sessionCookieName)
         mCookieHeader
 
+parseBearerAuthorizationHeader :: Text -> Either Text Text
+parseBearerAuthorizationHeader rawHeader =
+  let header = stripAsciiSpaces rawHeader
+  in case T.splitOn " " header of
+       [scheme, token]
+         | T.toLower scheme == "bearer" && not (T.null token) ->
+             Right token
+       _ ->
+         Left "Invalid Authorization header"
+
+stripAsciiSpaces :: Text -> Text
+stripAsciiSpaces =
+  T.dropAround (== ' ')
+
+lookupCookieIfPresent :: Text -> Text -> Either Text (Maybe Text)
+lookupCookieIfPresent cookieName rawHeader =
+  case matchingCookieValues cookieName rawHeader of
+    []      -> Right Nothing
+    [value] -> Just <$> validateAuthToken value
+    _       -> Left "Multiple session cookies found"
+
 lookupCookie :: Text -> Text -> Either Text Text
 lookupCookie cookieName rawHeader =
-  let pairs = map (breakOnEquals . T.strip) (T.splitOn ";" rawHeader)
-      matchingValues = do
-        (namePart, valuePart) <- pairs
-        let name = T.strip namePart
-            value = T.strip valuePart
-        guard (name == cookieName)
-        pure value
-  in case matchingValues of
-       [] -> Left "Missing or invalid auth token"
-       [value] ->
-         validateAuthToken value
-       _ -> Left "Multiple session cookies found"
+  case matchingCookieValues cookieName rawHeader of
+    [] -> Left "Missing or invalid auth token"
+    [value] ->
+      validateAuthToken value
+    _ -> Left "Multiple session cookies found"
+
+matchingCookieValues :: Text -> Text -> [Text]
+matchingCookieValues cookieName rawHeader = do
+  (namePart, valuePart) <- map (breakOnEquals . stripAsciiSpaces) (T.splitOn ";" rawHeader)
+  let name = stripAsciiSpaces namePart
+      value = stripAsciiSpaces valuePart
+  guard (name == cookieName)
+  pure value
   where
     breakOnEquals chunk =
       let (name, rest) = T.breakOn "=" chunk
@@ -291,7 +438,7 @@ lookupCookie cookieName rawHeader =
 
 validateAuthToken :: Text -> Either Text Text
 validateAuthToken rawToken =
-  let token = T.strip rawToken
+  let token = stripAsciiSpaces rawToken
   in if T.null token
        then Left "Missing or invalid auth token"
        else if T.length token > authTokenMaxLength
@@ -304,7 +451,12 @@ authTokenMaxLength :: Int
 authTokenMaxLength = 512
 
 invalidAuthTokenChar :: Char -> Bool
-invalidAuthTokenChar ch = isSpace ch || isControl ch
+invalidAuthTokenChar ch =
+  isSpace ch
+    || isControl ch
+    || ch < '!'
+    || ch > '~'
+    || ch `elem` ['"', ';', ',', '\\']
 
 sessionCookieHeader :: AppConfig -> Text -> Text
 sessionCookieHeader cfg token =
@@ -321,6 +473,7 @@ clearSessionCookieHeader AppConfig{..} =
         , "Expires=Thu, 01 Jan 1970 00:00:00 GMT"
         ]
         <> maybe [] (\domainVal -> ["Domain=" <> domainVal]) sessionCookieDomain
+        <> ["Secure" | sessionCookieSecure]
   in T.intercalate "; " segments
 
 cookieHeaderWithValue :: AppConfig -> Text -> Text

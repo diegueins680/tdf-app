@@ -1,3 +1,5 @@
+import type { components } from './generated/types';
+
 export interface PartyDTO {
   partyId: number;
   legalName?: string | null;
@@ -142,6 +144,9 @@ export interface AssetDTO {
   currentCheckoutDueAt?: string | null;
   currentCheckoutPaymentType?: string | null;
   currentCheckoutPaymentInstallments?: number | null;
+  currentCheckoutPaymentAmountCents?: number | null;
+  currentCheckoutPaymentCurrency?: string | null;
+  currentCheckoutPaymentOutstandingCents?: number | null;
   currentCheckoutPhotoUrl?: string | null;
 }
 
@@ -182,6 +187,18 @@ export interface MarketplaceItemDTO {
   miPriceDisplay: string;
   miMarkupPct: number;
   miCurrency: string;
+  miRentalWeeklyPriceUsdCents?: number | null;
+  miRentalWeeklyPriceDisplay?: string | null;
+  miRentalSecurityDepositUsdCents?: number | null;
+  miRentalSecurityDepositDisplay?: string | null;
+  miRentalMinDays?: number | null;
+  miRentalMaxDays?: number | null;
+  miRentalLateFeeUsdCents?: number | null;
+  miRentalLateFeeDisplay?: string | null;
+  miRentalCancellationWindowHours?: number | null;
+  miRentalTermsVersion?: string | null;
+  miRentalTermsSummary?: string | null;
+  miRentalTimezone?: string | null;
 }
 
 export interface MarketplaceCartItemDTO {
@@ -195,6 +212,14 @@ export interface MarketplaceCartItemDTO {
   mciSubtotalCents: number;
   mciUnitPriceDisplay: string;
   mciSubtotalDisplay: string;
+  mciPurpose: 'sale' | 'rent';
+  mciRentalStartDate?: string | null;
+  mciRentalEndDate?: string | null;
+  mciRentalDurationDays?: number | null;
+  mciRentalChargeCents?: number | null;
+  mciRentalChargeDisplay?: string | null;
+  mciSecurityDepositCents?: number | null;
+  mciSecurityDepositDisplay?: string | null;
 }
 
 export interface MarketplaceCartDTO {
@@ -230,9 +255,106 @@ export interface MarketplaceOrderDTO {
   moPaypalOrderId?: string | null;
   moPaypalPayerEmail?: string | null;
   moPaidAt?: string | null;
+  moLookupToken?: string | null;
+  moCheckoutStatus?: string | null;
+  moManualPaymentStatus?: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'requires_reconciliation' | null;
+  moManualPaymentSubmittedAt?: string | null;
+  moFulfillmentMethod?: string | null;
+  moFulfillmentStatus?: string | null;
+  moHoldExpiresAt?: string | null;
+  moTrackingReference?: string | null;
+  moFulfillmentHistory?: [string, string][];
+  moOrderKind?: 'sale' | 'rental' | null;
+  moRentalStartDate?: string | null;
+  moRentalEndDate?: string | null;
+  moRentalDurationDays?: number | null;
+  moRentalChargeUsdCents?: number | null;
+  moSecurityDepositUsdCents?: number | null;
+  moDepositStatus?: string | null;
+  moDepositDeductionUsdCents?: number | null;
+  moRentalTermsVersion?: string | null;
+  moRentalTimezone?: string | null;
+  moConditionOut?: string | null;
+  moConditionIn?: string | null;
   moCreatedAt: string;
   moUpdatedAt: string;
   moItems: MarketplaceOrderItemDTO[];
+}
+
+export interface MarketplaceManualEvidenceDTO {
+  mmeEvidenceId: string;
+  mmePaymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  mmeStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  mmeCustomerReference?: string | null;
+  mmeSubmittedAmountMinor?: number | null;
+  mmeCurrency?: string | null;
+  mmeSubmittedBy?: number | null;
+  mmeSubmittedAt?: string | null;
+  mmeReviewedBy?: number | null;
+  mmeReviewedAt?: string | null;
+  mmeReviewNotes?: string | null;
+}
+
+export interface MarketplaceCommerceDTO {
+  mpcOrderId: string;
+  mpcCheckoutId: string;
+  mpcPaymentStatus: string;
+  mpcHoldExpiresAt: string;
+  mpcOrderKind: 'sale' | 'rental';
+  mpcManualEvidence?: MarketplaceManualEvidenceDTO | null;
+}
+
+export type MarketplaceCustomerRequestType =
+  | 'sale_cancellation'
+  | 'sale_return'
+  | 'rental_cancellation'
+  | 'rental_extension'
+  | 'rental_dispute';
+
+export interface MarketplaceCustomerRequestSubmitPayload {
+  mcrsRequestType: MarketplaceCustomerRequestType;
+  mcrsReason: string;
+  mcrsRequestedEndDate?: string;
+  mcrsEvidenceUrl?: string;
+}
+
+export interface MarketplaceCustomerRequestDTO {
+  mcrRequestId: string;
+  mcrOrderId: string;
+  mcrOrderKind: 'sale' | 'rental';
+  mcrRequestType: MarketplaceCustomerRequestType;
+  mcrStatus: 'submitted' | 'needs_quote' | 'approved' | 'rejected';
+  mcrReason: string;
+  mcrRequestedEndDate?: string | null;
+  mcrEvidenceUrl?: string | null;
+  mcrRequestedAt: string;
+  mcrReviewedAt?: string | null;
+  mcrReviewNotes?: string | null;
+}
+
+export interface MarketplaceDepositSettlementSubmitPayload {
+  mdssSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdssExternalReference: string;
+  mdssEvidenceUrl: string;
+}
+
+export interface MarketplaceDepositSettlementDTO {
+  mdsSettlementId: string;
+  mdsOrderId: string;
+  mdsCheckoutId: string;
+  mdsCurrency: string;
+  mdsDepositAmountMinor: number;
+  mdsDeductionAmountMinor: number;
+  mdsRefundAmountMinor: number;
+  mdsSettlementMethod: 'bank_transfer' | 'cash' | 'pos' | 'forfeiture';
+  mdsExternalReference: string;
+  mdsEvidenceUrl: string;
+  mdsStatus: 'submitted' | 'verified' | 'rejected' | 'requires_reconciliation';
+  mdsSubmittedBy: number;
+  mdsSubmittedAt: string;
+  mdsReviewedBy?: number | null;
+  mdsReviewedAt?: string | null;
+  mdsReviewNotes?: string | null;
 }
 
 export interface MarketplaceOrderUpdatePayload {
@@ -247,12 +369,65 @@ export interface DatafastCheckoutDTO {
   dcWidgetUrl: string;
   dcAmount: string;
   dcCurrency: string;
+  dcLookupToken?: string | null;
+}
+
+export interface StripePaymentIntentDTO {
+  spiClientSecret: string;
+  spiPaymentIntentId?: string | null;
+  spiOrderId: string;
+  spiAmountCents: number;
+  spiCurrency: string;
+  spiPaymentSheet?: Record<string, unknown> | null;
+  spiLookupToken?: string | null;
 }
 
 export interface PaypalCreateDTO {
   pcOrderId: string;
   pcPaypalOrderId: string;
   pcApprovalUrl?: string | null;
+  pcLookupToken?: string | null;
+}
+
+export interface MarketplaceShippingAddress {
+  msaAddressLine1: string;
+  msaAddressLine2?: string;
+  msaCity: string;
+  msaProvince: string;
+  msaPostalCode?: string;
+  msaCountryCode: string;
+}
+
+export interface MarketplaceFulfillmentUpdatePayload {
+  mfuStatus: string;
+  mfuCarrier?: string;
+  mfuTrackingReference?: string;
+  mfuReasonCode?: string;
+  mfuNotes?: string;
+}
+
+export interface MarketplaceRentalUpdatePayload {
+  mruStatus: string;
+  mruConditionOut?: string;
+  mruConditionIn?: string;
+  mruEvidenceUrl?: string;
+  mruDepositDeductionUsdCents?: number;
+  mruReasonCode?: string;
+  mruNotes?: string;
+}
+
+export interface MarketplaceRentalTermsUpdatePayload {
+  mrtuDailyRateUsdCents: number;
+  mrtuWeeklyRateUsdCents: number | null;
+  mrtuSecurityDepositUsdCents: number;
+  mrtuLateFeeUsdCents: number;
+  mrtuMinDays: number;
+  mrtuMaxDays: number;
+  mrtuCancellationWindowHours: number;
+  mrtuTimezone: 'America/Guayaquil';
+  mrtuTermsVersion: string;
+  mrtuTermsSummary: string;
+  mrtuActive: boolean;
 }
 
 export interface PaypalCaptureRequest {
@@ -284,6 +459,15 @@ export interface LabelTrackDTO {
   ltUpdatedAt: string;
 }
 
+export interface LabelProjectNoteDTO {
+  lpnId: string;
+  lpnText: string;
+  lpnCompleted: boolean;
+  lpnCreatedAt: string;
+  lpnUpdatedAt: string;
+  lpnVersion: number;
+}
+
 export interface AssetCheckoutDTO {
   checkoutId: string;
   assetId: string;
@@ -298,6 +482,9 @@ export interface AssetCheckoutDTO {
   paymentType?: string | null;
   paymentInstallments?: number | null;
   paymentReference?: string | null;
+  paymentAmountCents?: number | null;
+  paymentCurrency?: string | null;
+  paymentOutstandingCents?: number | null;
   checkedOutBy: string;
   checkedOutAt: string;
   dueAt?: string | null;
@@ -319,6 +506,7 @@ export interface BookingDTO {
   partyId?: number | null;
   engineerPartyId?: number | null;
   engineerName?: string | null;
+  serviceOfferingId?: string | null;
   serviceType?: string | null;
   serviceOrderId?: number | null;
   serviceOrderTitle?: string | null;
@@ -327,6 +515,7 @@ export interface BookingDTO {
   resources: BookingResourceDTO[];
   courseSlug?: string | null;
   coursePrice?: number | null;
+  courseCurrency?: string | null;
   courseCapacity?: number | null;
   courseRemaining?: number | null;
   courseLocation?: string | null;
@@ -346,49 +535,8 @@ export interface HealthStatus {
   version?: string | null;
 }
 
-export type ServiceKind =
-  | 'Recording'
-  | 'Mixing'
-  | 'Mastering'
-  | 'Rehearsal'
-  | 'Classes'
-  | 'EventProduction';
-
-export type PricingModel = 'Hourly' | 'PerSong' | 'Package' | 'Quote' | 'Retainer';
-
-export interface ServiceCatalogDTO {
-  scId: number;
-  scName: string;
-  scKind: ServiceKind;
-  scPricingModel: PricingModel;
-  scRateCents?: number | null;
-  scCurrency: string;
-  scBillingUnit?: string | null;
-  scTaxBps?: number | null;
-  scActive: boolean;
-}
-
-export interface ServiceCatalogCreate {
-  sccName: string;
-  sccKind?: ServiceKind | null;
-  sccPricingModel?: PricingModel | null;
-  sccRateCents?: number | null;
-  sccCurrency?: string | null;
-  sccBillingUnit?: string | null;
-  sccTaxBps?: number | null;
-  sccActive?: boolean | null;
-}
-
-export interface ServiceCatalogUpdate {
-  scuName?: string;
-  scuKind?: ServiceKind | null;
-  scuPricingModel?: PricingModel | null;
-  scuRateCents?: number | null;
-  scuCurrency?: string | null;
-  scuBillingUnit?: string | null;
-  scuTaxBps?: number | null;
-  scuActive?: boolean | null;
-}
+export type ServiceCatalogDTO = components['schemas']['ServiceOffering'];
+export type ServiceDefaultResourceDTO = components['schemas']['ServiceDefaultResource'];
 
 export interface RoomDTO {
   roomId: string;
@@ -406,21 +554,55 @@ export interface RoomUpdate {
 }
 
 export interface PipelineCardDTO {
-  pcId: string;
-  pcTitle: string;
-  pcArtist?: string | null;
-  pcType: string;
-  pcStage: string;
-  pcSortOrder: number;
-  pcNotes?: string | null;
+  id: string;
+  title: string;
+  artist?: string | null;
+  serviceOfferingId: string;
+  serviceOfferingCode: string;
+  workflowId: string;
+  workflowStateId: string;
+  workflowStateCode: string;
+  workflowStateNameEs: string;
+  workflowStateNameEn: string;
+  sortOrder: number;
+  notes?: string | null;
 }
 
+export interface PipelineStageDTO {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  sortOrder: number;
+  terminal: boolean;
+}
+
+export interface PipelineServiceOfferingDTO {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+}
+
+export interface PipelineDefinitionDTO {
+  workflowId: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  revision: number;
+  serviceOfferings: PipelineServiceOfferingDTO[];
+  stages: PipelineStageDTO[];
+}
+
+export type PipelineSnapshotDTO = components['schemas']['PipelineSnapshot'];
+export type PipelineCardCreate = components['schemas']['PipelineCardCreate'];
+
 export interface PipelineCardUpdate {
-  pcuTitle?: string;
-  pcuArtist?: string | null;
-  pcuStage?: string;
-  pcuSortOrder?: number;
-  pcuNotes?: string | null;
+  title?: string;
+  artist?: string | null;
+  workflowStateId?: string;
+  sortOrder?: number;
+  notes?: string | null;
 }
 
 export interface ArtistProfileDTO {
@@ -436,8 +618,24 @@ export interface ArtistProfileDTO {
   apYoutubeUrl?: string | null;
   apWebsiteUrl?: string | null;
   apFeaturedVideoUrl?: string | null;
+  /** Presentation-only labels resolved by the backend. */
   apGenres?: string | null;
+  apGenreIds: string[];
   apHighlights?: string | null;
+  apOfficialName?: string | null;
+  apCountry?: string | null;
+  apInstagramUrl?: string | null;
+  apSocialLinks?: string | null;
+  apDiscography?: string | null;
+  apAchievements?: string | null;
+  apHeroOriginalUrl?: string | null;
+  apHeroSquareUrl?: string | null;
+  apHeroLandscapeUrl?: string | null;
+  apHeroResponsiveUrls?: string | null;
+  apHeroFocalPoint?: string | null;
+  apLastVerifiedAt?: string | null;
+  apConfidence?: number | null;
+  apReviewStatus?: string | null;
   apFollowerCount: number;
   apHasUserAccount?: boolean;
 }
@@ -503,6 +701,7 @@ export interface FanProfileDTO {
   fpDisplayName?: string | null;
   fpAvatarUrl?: string | null;
   fpFavoriteGenres?: string | null;
+  fpFavoriteGenreIds: string[];
   fpBio?: string | null;
   fpCity?: string | null;
 }
@@ -510,7 +709,7 @@ export interface FanProfileDTO {
 export interface FanProfileUpdate {
   fpuDisplayName?: string | null;
   fpuAvatarUrl?: string | null;
-  fpuFavoriteGenres?: string | null;
+  fpuFavoriteGenreIds: string[];
   fpuBio?: string | null;
   fpuCity?: string | null;
 }
@@ -522,6 +721,20 @@ export interface FanFollowDTO {
   ffSpotifyUrl?: string | null;
   ffYoutubeUrl?: string | null;
   ffStartedAt: string;
+}
+
+export interface ArtistFanDTO {
+  afFanId: number;
+  afDisplayName: string;
+  afAvatarUrl?: string | null;
+  afFollowedAt: string;
+}
+
+export interface ArtistFansResponse {
+  items: ArtistFanDTO[];
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 export interface PartyFollowDTO {
@@ -580,8 +793,12 @@ export interface ArtistProfileUpsert {
   apuYoutubeUrl?: string | null;
   apuWebsiteUrl?: string | null;
   apuFeaturedVideoUrl?: string | null;
-  apuGenres?: string | null;
+  apuGenreIds: string[];
   apuHighlights?: string | null;
+}
+
+export interface ArtistProfilePhotoUpdate {
+  apuHeroImageUrl: string;
 }
 
 export interface PaymentDTO {
@@ -644,6 +861,7 @@ export interface InternProjectDTO {
   ipTitle: string;
   ipDescription?: string | null;
   ipStatus: string;
+  ipActivationStatus?: string;
   ipStartAt?: string | null;
   ipDueAt?: string | null;
   ipCreatedAt: string;
@@ -652,10 +870,11 @@ export interface InternProjectDTO {
 
 export interface InternProjectCreate {
   ipcTitle: string;
-  ipcDescription?: string | null;
-  ipcStatus?: string | null;
-  ipcStartAt?: string | null;
-  ipcDueAt?: string | null;
+  ipcDescription?: string;
+  ipcStatus?: string;
+  ipcActivationStatus?: string;
+  ipcStartAt?: string;
+  ipcDueAt?: string;
 }
 
 export interface InternProjectUpdate {
@@ -673,9 +892,11 @@ export interface InternTaskDTO {
   itTitle: string;
   itDescription?: string | null;
   itStatus: string;
+  itActivationStatus?: string;
   itProgress: number;
   itAssignedTo?: number | null;
   itAssignedName?: string | null;
+  itProposedAssignee?: number | null;
   itDueAt?: string | null;
   itCreatedAt: string;
   itUpdatedAt: string;
@@ -684,12 +905,15 @@ export interface InternTaskDTO {
 export interface InternTaskCreate {
   itcProjectId: string;
   itcTitle: string;
-  itcDescription?: string | null;
-  itcAssignedTo?: number | null;
-  itcDueAt?: string | null;
+  itcDescription?: string;
+  itcAssignedTo?: number;
+  itcProposedAssignee?: number;
+  itcActivationStatus?: string;
+  itcDueAt?: string;
 }
 
 export interface InternTaskUpdate {
+  ituProjectId?: string | null;
   ituTitle?: string | null;
   ituDescription?: string | null;
   ituStatus?: string | null;
@@ -760,4 +984,516 @@ export interface InternPermissionCreate {
 export interface InternPermissionUpdate {
   ipuStatus?: string | null;
   ipuDecisionNotes?: string | null;
+}
+
+export type InternExecutionStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'passed'
+  | 'failed'
+  | 'blocked'
+  | 'not_applicable'
+  | 'ready_for_retest'
+  | 'verified';
+
+export interface InternAuditPlanDTO {
+  iapId: string;
+  iapProjectId: string;
+  iapTaskId: string;
+  iapEnvironment: string;
+  iapStatus: 'draft' | 'active' | 'completed' | 'cancelled';
+  iapDurationDays: number;
+  iapExpectedHoursMin: number;
+  iapExpectedHoursMax: number;
+  iapMidpointPercent: number;
+  iapProposedAssignee?: number | null;
+  iapFinalReviewRequired: boolean;
+  iapCompletionJustification?: string | null;
+  iapCompletionApprovedBy?: number | null;
+  iapCompletionApprovedAt?: string | null;
+  iapCaseCount: number;
+  iapExecutedCaseCount: number;
+  iapCriticalRemaining: number;
+  iapOpenBlockerCount: number;
+  iapFailedWithoutReport: number;
+  iapEvidenceMissing: number;
+  iapCalculatedProgress: number;
+  iapCanComplete: boolean;
+  iapCreatedAt: string;
+  iapUpdatedAt: string;
+}
+
+export interface InternTestExecutionDTO {
+  itexId: string;
+  itexTestCaseId: string;
+  itexExecutionNumber: number;
+  itexExecutorPartyId: number;
+  itexStatus: InternExecutionStatus;
+  itexActualResult?: string | null;
+  itexPersistedStateObserved?: string | null;
+  itexSideEffectsObserved?: string | null;
+  itexBlockerReason?: string | null;
+  itexEvidenceSummary?: string | null;
+  itexStartedAt?: string | null;
+  itexCompletedAt?: string | null;
+  itexCreatedAt: string;
+  itexUpdatedAt: string;
+}
+
+export interface InternTestCaseDTO {
+  itcId: string;
+  itcPlanId: string;
+  itcStableId: string;
+  itcModuleName: string;
+  itcFeatureName: string;
+  itcUserRole: string;
+  itcObjective: string;
+  itcBusinessPurpose: string;
+  itcPreconditions: string;
+  itcRequiredTestData: string;
+  itcEnvironment: string;
+  itcPlatform: string;
+  itcBrowserOrDevice: string;
+  itcLanguage: string;
+  itcDetailedSteps: string;
+  itcExpectedResult: string;
+  itcExpectedPersistedState: string;
+  itcExpectedSideEffects: string;
+  itcCleanupInstructions: string;
+  itcCriticality: 'low' | 'medium' | 'high' | 'critical';
+  itcEvidenceRequirement: 'light' | 'strong';
+  itcExploratoryCharter?: string | null;
+  itcApplicable: boolean;
+  itcSortOrder: number;
+  itcLatestExecution?: InternTestExecutionDTO | null;
+}
+
+export interface InternTestExecutionCreate {
+  itecStatus: InternExecutionStatus;
+  itecActualResult?: string | null;
+  itecPersistedStateObserved?: string | null;
+  itecSideEffectsObserved?: string | null;
+  itecBlockerReason?: string | null;
+  itecEvidenceSummary?: string | null;
+}
+
+export interface InternDailySummaryDTO {
+  idsId: string;
+  idsTaskId: string;
+  idsAuthorPartyId: number;
+  idsWorkDate: string;
+  idsMinutesWorked: number;
+  idsModulesTested: string;
+  idsCasesCompleted: number;
+  idsReportsCreated: number;
+  idsBlockers?: string | null;
+  idsNextStep: string;
+  idsCreatedAt: string;
+}
+
+export interface InternDailySummaryCreate {
+  idscWorkDate: string;
+  idscMinutesWorked: number;
+  idscModulesTested: string;
+  idscCasesCompleted: number;
+  idscReportsCreated: number;
+  idscBlockers?: string | null;
+  idscNextStep: string;
+}
+
+export interface InternFinalSummaryDTO {
+  ifsId: string;
+  ifsPlanId: string;
+  ifsAuthorPartyId: number;
+  ifsGeneratedSnapshot: string;
+  ifsConclusions?: string | null;
+  ifsSubmittedAt?: string | null;
+  ifsApprovedBy?: number | null;
+  ifsApprovedAt?: string | null;
+  ifsCreatedAt: string;
+  ifsUpdatedAt: string;
+}
+
+export type InternalReportType =
+  | 'error'
+  | 'suggestion'
+  | 'idea'
+  | 'question'
+  | 'accessibility'
+  | 'permissions'
+  | 'performance'
+  | 'content_translation';
+
+export type InternalReportState =
+  | 'draft'
+  | 'submitted'
+  | 'received'
+  | 'needs_information'
+  | 'confirmed'
+  | 'prioritized'
+  | 'in_progress'
+  | 'ready_for_retest'
+  | 'verified'
+  | 'closed'
+  | 'duplicate'
+  | 'discarded';
+
+export interface InternalFeedbackSummaryDTO {
+  ifsId: string;
+  ifsTitle: string;
+  ifsReportType: InternalReportType;
+  ifsState: InternalReportState;
+  ifsModuleName: string;
+  ifsFeatureName?: string | null;
+  ifsEnvironment: string;
+  ifsPlatform: string;
+  ifsProposedSeverityId?: string | null;
+  ifsAuthoritativeSeverityId?: string | null;
+  ifsPriority?: string | null;
+  ifsBlocking: boolean;
+  ifsReporterPartyId: number;
+  ifsReporterName: string;
+  ifsInternshipProjectId?: string | null;
+  ifsInternshipTaskId?: string | null;
+  ifsTestCaseId?: string | null;
+  ifsTestExecutionId?: string | null;
+  ifsDuplicateOf?: string | null;
+  ifsCreatedAt: string;
+  ifsUpdatedAt: string;
+}
+
+export interface InternalFeedbackEvidenceDTO {
+  ifeId: string;
+  ifeKind: string;
+  ifeOriginalFileName?: string | null;
+  ifeContentType?: string | null;
+  ifeSizeBytes?: number | null;
+  ifeExternalUrl?: string | null;
+  ifeCaption?: string | null;
+  ifeUploadedBy: number;
+  ifeCreatedAt: string;
+}
+
+export interface InternalFeedbackCommentDTO {
+  ifcmId: string;
+  ifcmAuthorPartyId: number;
+  ifcmAuthorName: string;
+  ifcmKind: string;
+  ifcmBody: string;
+  ifcmCreatedAt: string;
+}
+
+export interface InternalFeedbackHistoryDTO {
+  ifhId: string;
+  ifhActorPartyId: number;
+  ifhActorName: string;
+  ifhAction: string;
+  ifhPreviousState?: string | null;
+  ifhNewState?: string | null;
+  ifhMetadata?: string | null;
+  ifhCreatedAt: string;
+}
+
+export interface InternalFeedbackRetestDTO {
+  ifrtId: string;
+  ifrtExecutionId?: string | null;
+  ifrtTesterPartyId: number;
+  ifrtTesterName: string;
+  ifrtResult: 'passed' | 'failed' | 'blocked';
+  ifrtNotes?: string | null;
+  ifrtEvidenceSummary?: string | null;
+  ifrtCreatedAt: string;
+}
+
+export interface InternalFeedbackDTO {
+  ifrSummary: InternalFeedbackSummaryDTO;
+  ifrDescription: string;
+  ifrCategoryId?: string | null;
+  ifrUrlOrScreen?: string | null;
+  ifrDevice?: string | null;
+  ifrBrowser?: string | null;
+  ifrLanguage: string;
+  ifrAccountRole: string;
+  ifrReproductionSteps?: string | null;
+  ifrExpectedResult?: string | null;
+  ifrActualResult?: string | null;
+  ifrFrequency?: string | null;
+  ifrAssignedTo?: number | null;
+  ifrResolution?: string | null;
+  ifrRetestResult?: string | null;
+  ifrClosureReason?: string | null;
+  ifrGithubIssueUrl?: string | null;
+  ifrVideoLinks?: string | null;
+  ifrSubmittedAt?: string | null;
+  ifrClosedAt?: string | null;
+  ifrAuditPlanMutable: boolean;
+  ifrEvidence: InternalFeedbackEvidenceDTO[];
+  ifrComments: InternalFeedbackCommentDTO[];
+  ifrHistory: InternalFeedbackHistoryDTO[];
+  ifrRetests: InternalFeedbackRetestDTO[];
+  ifrPotentialDuplicates: InternalFeedbackSummaryDTO[];
+}
+
+export interface LegacyFeedbackDTO {
+  lfdId: string;
+  lfdTitle: string;
+  lfdDescription: string;
+  lfdCategoryId?: string | null;
+  lfdSeverityId?: string | null;
+  lfdContactEmail?: string | null;
+  lfdConsent: boolean;
+  lfdCreatedBy?: number | null;
+  lfdHasAttachment: boolean;
+  lfdCreatedAt: string;
+}
+
+export interface FanClubDTO {
+  fcId: number;
+  fcArtistId: number;
+  fcName: string;
+  fcDescription?: string | null;
+  fcOfficers: FanClubOfficerDTO[];
+  fcFollowerCount: number;
+  fcArtistImageUrl?: string | null;
+}
+
+export interface FanClubOfficerDTO {
+  fcoPartyId: number;
+  fcoFanName: string;
+  fcoAvatarUrl?: string | null;
+  fcoRole: string;
+  fcoElectedAt?: string | null;
+  fcoTermEndsAt?: string | null;
+}
+
+export interface FanClubPostDTO {
+  fcpId: number;
+  fcpParentId?: number | null;
+  fcpTitle?: string | null;
+  fcpContent: string;
+  fcpMediaUrls: string[];
+  fcpAuthorId: number;
+  fcpAuthorName: string;
+  fcpAvatarUrl?: string | null;
+  fcpIsPinned: boolean;
+  fcpIsHidden: boolean;
+  fcpReplies: number;
+  fcpReactions: ReactionSummaryDTO;
+  fcpCreatedAt: string;
+  fcpUpdatedAt?: string | null;
+}
+
+export interface FanClubEventDTO {
+  fceId: number;
+  fceTitle: string;
+  fceDescription?: string | null;
+  fceStartsAt?: string | null;
+  fceEndsAt?: string | null;
+  fceLocation?: string | null;
+  fceIsArtistConcert: boolean;
+  fceCreatedBy?: number | null;
+}
+
+export interface FanClubElectionDTO {
+  fceElectionId: number;
+  fceYear: number;
+  fceStatus: string;
+  fceCandidacyStartsAt?: string | null;
+  fceCandidacyEndsAt?: string | null;
+  fceVotingStartsAt?: string | null;
+  fceVotingEndsAt?: string | null;
+  fceMyCandidacies: FanClubCandidacyDTO[];
+  fceMyVotes: FanClubVoteDTO[];
+}
+
+export interface FanClubCandidacyDTO {
+  fccCandidacyId: number;
+  fccFanId: number;
+  fccFanName: string;
+  fccAvatarUrl?: string | null;
+  fccRole: string;
+  fccManifesto?: string | null;
+  fccVoteCount: number;
+}
+
+export interface FanClubVoteDTO {
+  fcvCandidacyId: number;
+  fcvRole: string;
+}
+
+export interface FanClubCreatePostReq {
+  fcpReqTitle?: string | null;
+  fcpReqContent: string;
+  fcpReqParentId?: number | null;
+  fcpReqMediaUrls?: string[];
+}
+
+export interface FanClubCreateEventReq {
+  fcevTitle: string;
+  fcevDescription?: string | null;
+  fcevStartsAt?: string | null;
+  fcevEndsAt?: string | null;
+  fcevLocation?: string | null;
+}
+
+export interface FanClubCreateElectionReq {
+  fcelYear: number;
+  fcelCandidacyStartsAt?: string | null;
+  fcelCandidacyEndsAt?: string | null;
+  fcelVotingStartsAt?: string | null;
+  fcelVotingEndsAt?: string | null;
+}
+
+export interface FanClubCreateCandidacyReq {
+  fccrRole: string;
+  fccrManifesto?: string | null;
+}
+
+export interface FanClubVoteReq {
+  fcvCandidacyIds: number[];
+}
+
+export interface FanClubMemberProfileDTO {
+  fcmpId: number;
+  fcmpPartyId: number;
+  fcmpClubId: number;
+  fcmpHandle?: string | null;
+  fcmpBio?: string | null;
+  fcmpAvatarUrl?: string | null;
+  fcmpDisplayName: string;
+  fcmpJoinedAt: string;
+}
+
+export interface FanClubMemoryDTO {
+  fcmId: number;
+  fcmMemberProfileId: number;
+  fcmMemberName: string;
+  fcmMemberAvatarUrl?: string | null;
+  fcmTitle: string;
+  fcmDescription?: string | null;
+  fcmMediaUrls: string[];
+  fcmIsHidden: boolean;
+  fcmIsDeleted: boolean;
+  fcmReactions: ReactionSummaryDTO;
+  fcmCreatedAt: string;
+}
+
+export interface FanClubMemoryReportDTO {
+  fcmrId: number;
+  fcmrReporterId: number;
+  fcmrMemoryId: number;
+  fcmrReason: string;
+  fcmrCreatedAt: string;
+}
+
+export interface ReactionSummaryDTO {
+  rsItems: ReactionSummaryItemDTO[];
+  rsTotal: number;
+  rsMyReactionTypeId: string | null;
+}
+
+export interface ReactionSummaryItemDTO {
+  rsiReactionTypeId: string;
+  rsiCode: string;
+  rsiNameEs: string;
+  rsiNameEn: string;
+  rsiDisplaySymbol: string;
+  rsiCount: number;
+}
+
+export interface FanClubFeedItemDTO {
+  fcfId: number;
+  fcfKind: string;
+  fcfTitle?: string | null;
+  fcfContent: string;
+  fcfAuthorId: number;
+  fcfAuthorName: string;
+  fcfAvatarUrl?: string | null;
+  fcfMediaUrls: string[];
+  fcfIsPinned: boolean;
+  fcfIsOfficer: boolean;
+  fcfIsHidden: boolean;
+  fcfReactions: ReactionSummaryDTO;
+  fcfCreatedAt: string;
+}
+
+export interface FanClubCreateMemoryReq {
+  fcmReqTitle: string;
+  fcmReqDescription?: string | null;
+  fcmReqMediaUrls: string[];
+}
+
+export interface FanClubMemoryReportReq {
+  fcmrReqReason: string;
+}
+
+export interface FanClubMemberProfileUpdate {
+  fcmpuHandle?: string | null;
+  fcmpuBio?: string | null;
+  fcmpuAvatarUrl?: string | null;
+}
+
+export interface FanClubInboxMessageDTO {
+  fcimId: number;
+  fcimFanId: number;
+  fcimFanName: string;
+  fcimFanAvatarUrl?: string | null;
+  fcimSubject?: string | null;
+  fcimBody: string;
+  fcimStatus: string;
+  fcimOfficerId?: number | null;
+  fcimOfficerName?: string | null;
+  fcimReplyBody?: string | null;
+  fcimCreatedAt: string;
+  fcimUpdatedAt?: string | null;
+}
+
+export interface FanClubInboxSendReq {
+  fcisReqSubject?: string | null;
+  fcisReqBody: string;
+}
+
+export interface FanClubInboxReplyReq {
+  fcirReqBody: string;
+}
+
+export interface FanClubInboxStatusReq {
+  fcistReqStatus: string;
+}
+
+export interface ContentReactionReq {
+  crrReactionTypeId: string;
+}
+
+export interface NotificationDTO {
+  nId: number;
+  nType: string;
+  nTitle: string;
+  nBody: string;
+  nTargetType?: string | null;
+  nTargetId?: number | null;
+  nIsRead: boolean;
+  nCreatedAt: string;
+}
+
+export interface NotificationCountDTO {
+  ncUnread: number;
+}
+
+export interface LeaderboardEntryDTO {
+  lbPartyId: number;
+  lbDisplayName: string;
+  lbAvatarUrl?: string | null;
+  lbTotalReactions: number;
+  lbBadges: CreatorBadgeDTO[];
+  lbRank: number;
+}
+
+export interface CreatorBadgeDTO {
+  cbBadgeTypeId: string;
+  cbCode: string;
+  cbNameEs: string;
+  cbNameEn: string;
+  cbAwardedAt: string;
+  cbExpiresAt?: string | null;
 }

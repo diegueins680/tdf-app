@@ -2,13 +2,30 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module TDF.API.Calendar where
 
 import           Servant
-import           Data.Aeson (FromJSON (parseJSON), Options, ToJSON, Value, defaultOptions, genericParseJSON, rejectUnknownFields)
+import           Data.Aeson
+  ( FromJSON (parseJSON)
+  , Options
+  , ToJSON
+  , Value(..)
+  , defaultOptions
+  , genericParseJSON
+  , rejectUnknownFields
+  , withObject
+  )
+import qualified Data.Aeson.Key as Key
+import qualified Data.Aeson.KeyMap as KeyMap
 import           Data.Aeson.Types (Parser)
-import           Data.Char (isControl)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
@@ -17,20 +34,90 @@ import           GHC.Generics (Generic)
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
 
-requiredNonBlank :: String -> Text -> Parser Text
-requiredNonBlank fieldName raw =
+requiredAuthorizationCode :: String -> Text -> Parser Text
+requiredAuthorizationCode fieldName raw =
   let trimmed = T.strip raw
   in if T.null trimmed
        then fail (fieldName <> " must not be blank")
        else if T.any isControl trimmed
          then fail (fieldName <> " must not contain control characters")
-         else pure trimmed
+       else if T.any isHiddenCalendarIdChar trimmed
+         then fail (fieldName <> " must not contain hidden formatting characters")
+       else if T.any isSpace trimmed
+         then fail (fieldName <> " must not contain whitespace")
+       else if T.length trimmed > maxCalendarAuthorizationCodeChars
+         then fail (fieldName <> " must be 4096 characters or fewer")
+       else pure trimmed
 
-optionalNonBlank :: Maybe Text -> Maybe Text
-optionalNonBlank raw =
-  case T.strip <$> raw of
-    Just trimmed | not (T.null trimmed) -> Just trimmed
-    _ -> Nothing
+maxCalendarAuthorizationCodeChars :: Int
+maxCalendarAuthorizationCodeChars = 4096
+
+normalizeCalendarId :: Text -> Either Text Text
+normalizeCalendarId raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then Left "calendarId must not be blank"
+       else if T.any isControl trimmed
+         then Left "calendarId must not contain control characters"
+       else if T.any isHiddenCalendarIdChar trimmed
+         then Left "calendarId must not contain hidden formatting characters"
+       else if T.any isCalendarIdUrlDelimiter trimmed
+         then Left "calendarId must not contain URL path or query delimiters"
+       else if T.any isSpace trimmed
+         then Left "calendarId must not contain whitespace"
+       else if T.length trimmed > maxCalendarIdChars
+         then Left "calendarId must be 1024 characters or fewer"
+       else Right trimmed
+
+maxCalendarIdChars :: Int
+maxCalendarIdChars = 1024
+
+isHiddenCalendarIdChar :: Char -> Bool
+isHiddenCalendarIdChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isCalendarIdUrlDelimiter :: Char -> Bool
+isCalendarIdUrlDelimiter ch =
+  ch `elem` ("/?" :: String)
+
+requiredCalendarId :: Text -> Parser Text
+requiredCalendarId raw =
+  either (fail . T.unpack) pure (normalizeCalendarId raw)
+
+optionalRedirectUri :: Maybe Text -> Parser (Maybe Text)
+optionalRedirectUri Nothing = pure Nothing
+optionalRedirectUri (Just raw) =
+  let redirectUriVal = T.strip raw
+  in if T.null redirectUriVal
+       then fail "redirectUri must be omitted instead of blank"
+       else if T.any isControl raw
+         then fail "redirectUri must not contain control characters"
+       else if T.any isHiddenCalendarIdChar raw
+         then fail "redirectUri must not contain hidden formatting characters"
+       else if T.any isSpace redirectUriVal
+         then fail "redirectUri must not contain whitespace"
+       else if T.length redirectUriVal > maxCalendarRedirectUriChars
+         then fail "redirectUri must be 2048 characters or fewer"
+       else pure (Just redirectUriVal)
+
+maxCalendarRedirectUriChars :: Int
+maxCalendarRedirectUriChars = 2048
+
+rejectNullTokenRedirectUri :: Value -> Parser ()
+rejectNullTokenRedirectUri =
+  withObject "TokenExchangeIn" $ \o ->
+    case KeyMap.lookup (Key.fromText "redirectUri") o of
+      Just Null -> fail "redirectUri must be omitted instead of null"
+      _ -> pure ()
+
+rejectNullSyncBounds :: Value -> Parser ()
+rejectNullSyncBounds =
+  withObject "SyncRequest" $ \o ->
+    let rejectNull fieldName =
+          case KeyMap.lookup (Key.fromText fieldName) o of
+            Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+            _ -> pure ()
+    in mapM_ rejectNull ["from", "to"]
 
 data AuthUrlResponse = AuthUrlResponse
   { url :: Text
@@ -44,12 +131,13 @@ data TokenExchangeIn = TokenExchangeIn
   } deriving (Show, Generic)
 instance FromJSON TokenExchangeIn where
   parseJSON value = do
+    rejectNullTokenRedirectUri value
     TokenExchangeIn rawCode rawRedirectUri rawCalendarId <-
       genericParseJSON strictObjectOptions value
     TokenExchangeIn
-      <$> requiredNonBlank "code" rawCode
-      <*> pure (optionalNonBlank rawRedirectUri)
-      <*> requiredNonBlank "calendarId" rawCalendarId
+      <$> requiredAuthorizationCode "code" rawCode
+      <*> optionalRedirectUri rawRedirectUri
+      <*> requiredCalendarId rawCalendarId
 
 data CalendarConfigDTO = CalendarConfigDTO
   { configId   :: Int
@@ -66,6 +154,7 @@ data SyncRequest = SyncRequest
   } deriving (Show, Generic)
 instance FromJSON SyncRequest where
   parseJSON value = do
+    rejectNullSyncBounds value
     SyncRequest rawCalendarId rawFrom rawTo <-
       genericParseJSON strictObjectOptions value
     case (rawFrom, rawTo) of
@@ -73,7 +162,7 @@ instance FromJSON SyncRequest where
         fail "to must be on or after from"
       _ ->
         SyncRequest
-          <$> requiredNonBlank "calendarId" rawCalendarId
+          <$> requiredCalendarId rawCalendarId
           <*> pure rawFrom
           <*> pure rawTo
 

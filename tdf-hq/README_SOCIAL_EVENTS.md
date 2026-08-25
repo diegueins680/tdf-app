@@ -18,16 +18,21 @@ AUTH=(-H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json")
 
 ## Event Model Extensions
 
-Event metadata now supports:
+Event records now use:
 
-- `eventType` (`party`, `concert`, `festival`, `conference`, `showcase`, `other`)
+- `eventTypeId` (UUID of an active, effective, published item in the persisted `event-types`
+  catalog)
 - `eventStatus` (`planning`, `announced`, `on_sale`, `live`, `completed`, `cancelled`)
 - `eventCurrency` (ISO-like code, default `USD`)
 - `eventBudgetCents` (optional total budget cap in cents)
 
+The type relationship is stored in `social_event.event_type_id`; `metadata.eventType`, codes,
+labels, and slugs are not accepted as write identities. Load the public `event-types` catalog (and
+its `social-event/global` scoped default) before constructing a create payload.
+
 Filter support on list endpoint:
 
-- `event_type`
+- `event_type_id`
 - `event_status`
 
 ## Events
@@ -35,11 +40,15 @@ Filter support on list endpoint:
 ### List Events
 
 ```bash
-curl -sS "${API_BASE}/social-events/events?city=Quito&event_type=festival&event_status=planning&start_after=2026-03-01T00:00:00Z&limit=20&offset=0" \
+curl -sS "${API_BASE}/social-events/events?city=Quito&event_type_id=11111111-1111-4111-8111-111111111111&event_status=planning&start_after=2026-03-01T00:00:00Z&limit=20&offset=0" \
   "${AUTH[@]}"
 ```
 
 ### Create Event
+
+`eventEnd` is optional. Omit it or send `null` when the official end or
+duration is not confirmed; the API does not infer a duration. When supplied,
+the end must be after `eventStart`.
 
 ```bash
 curl -sS -X POST "${API_BASE}/social-events/events" \
@@ -52,7 +61,7 @@ curl -sS -X POST "${API_BASE}/social-events/events" \
     "eventVenueId":"3",
     "eventPriceCents":2500,
     "eventCapacity":1200,
-    "eventType":"festival",
+    "eventTypeId":"11111111-1111-4111-8111-111111111111",
     "eventStatus":"planning",
     "eventCurrency":"USD",
     "eventBudgetCents":4500000,
@@ -73,7 +82,7 @@ curl -sS -X PUT "${API_BASE}/social-events/events/42" \
     "eventVenueId":"3",
     "eventPriceCents":3000,
     "eventCapacity":1200,
-    "eventType":"festival",
+    "eventTypeId":"11111111-1111-4111-8111-111111111111",
     "eventStatus":"on_sale",
     "eventCurrency":"USD",
     "eventBudgetCents":5000000,
@@ -208,8 +217,9 @@ Representative fields:
 ## Validation Rules (Selected)
 
 - Event budget (`eventBudgetCents`) must be `>= 0` when provided.
+- `eventTypeId` is required for create/update and must resolve to an active, effective,
+  non-deprecated, published event type. Unknown UUIDs and legacy strings return `422`.
 - Budget line planned cents (`eblPlannedCents`) must be `>= 0`.
 - Finance entry amount (`efeAmountCents`) must be `> 0`.
 - Finance entry direction must be `income` or `expense`.
 - Finance entry status must be one of `draft`, `posted`, `void`, `pending`.
-

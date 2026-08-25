@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import QrCodeIcon from '@mui/icons-material/QrCode';
@@ -40,9 +41,12 @@ import { Admin } from '../api/admin';
 import { Inventory, type AssetCheckinRequest, type AssetCheckoutRequest, type AssetQrDTO } from '../api/inventory';
 import { Rooms } from '../api/rooms';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
+import ConfirmDialog from '../components/ConfirmDialog';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import { buildPublicContentUrl } from '../services/googleDrive';
+import { useToast } from '../contexts/ToastContext';
 import { useSession } from '../session/SessionContext';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 
@@ -151,10 +155,27 @@ const STATUS_OPTIONS = [
   { value: 'OutForMaintenance', label: 'Mantenimiento' },
   { value: 'Retired', label: 'Retirados' },
 ];
+const SECONDARY_ASSET_ACTIONS_LABEL = 'QR, historial y mas';
+const SINGLE_ASSET_SETUP_GUIDANCE =
+  `Solo hay un asset por ahora. Usa prestamo/devolucion cuando este disponible o ${SECONDARY_ASSET_ACTIONS_LABEL} desde esta fila. Cuando el catalogo crezca, aqui apareceran buscador y filtros.`;
+const MULTI_ASSET_ACTIONS_GUIDANCE =
+  `Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. ${SECONDARY_ASSET_ACTIONS_LABEL} concentra editar, ver QR, historial y eliminar en una sola entrada por fila.`;
+
+function getAssetMovementState(status: string) {
+  const normalizedStatus = status.trim().toLowerCase();
+
+  return {
+    canCheckout: normalizedStatus === 'active',
+    canCheckin: normalizedStatus === 'booked',
+  };
+}
 
 export default function LabelAssetsPage() {
+  useDocumentTitle('Label / Activos');
   const qc = useQueryClient();
   const { session } = useSession();
+  const { showUndo } = useToast();
+  const deletedAssetRef = useRef<AssetDTO | null>(null);
   const modules = useMemo(
     () => buildAccessibleModuleSet(session?.roles, session?.modules),
     [session?.modules, session?.roles],
@@ -182,6 +203,8 @@ export default function LabelAssetsPage() {
   const [editingAsset, setEditingAsset] = useState<AssetDTO | null>(null);
   const [assetForm, setAssetForm] = useState<AssetFormState>(buildEmptyForm);
   const [assetFormError, setAssetFormError] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteAsset, setPendingDeleteAsset] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [history, setHistory] = useState<AssetCheckoutDTO[]>([]);
   const latestHistoryAssetIdRef = useRef<string | null>(null);
@@ -202,6 +225,9 @@ export default function LabelAssetsPage() {
     coPaymentType: '',
     coPaymentInstallments: null,
     coPaymentReference: '',
+    coPaymentAmount: '',
+    coPaymentCurrency: '',
+    coPaymentOutstanding: '',
     coPhotoUrl: '',
     coConditionOut: '',
     coNotes: '',
@@ -305,7 +331,19 @@ export default function LabelAssetsPage() {
     mutationFn: (assetId: string) => Inventory.remove(assetId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['assets'] });
-      setFeedback('Asset eliminado.');
+      const deletedAsset = deletedAssetRef.current;
+      if (deletedAsset) {
+        showUndo('Asset eliminado', () => {
+          void Inventory.create({
+            cName: deletedAsset.name,
+            cCategory: deletedAsset.category,
+            cPhotoUrl: deletedAsset.photoUrl ?? null,
+          }).then(() => {
+            void qc.invalidateQueries({ queryKey: ['assets'] });
+          });
+        });
+      }
+      deletedAssetRef.current = null;
     },
     onError: (err) => setFeedback(err instanceof Error ? err.message : 'No se pudo eliminar el asset.'),
   });
@@ -324,6 +362,9 @@ export default function LabelAssetsPage() {
       coPaymentType: '',
       coPaymentInstallments: null,
       coPaymentReference: '',
+      coPaymentAmount: '',
+      coPaymentCurrency: '',
+      coPaymentOutstanding: '',
       coPhotoUrl: '',
       coConditionOut: '',
       coNotes: '',
@@ -509,7 +550,8 @@ export default function LabelAssetsPage() {
   const showCategoryColumn = !showSingleCategorySummary && !sharedVisibleCategorySummary && categoryFilter === 'all';
   const showStatusColumn = !showSingleStatusSummary;
   const showLocationColumn = !sharedVisibleLocationSummary;
-  const showFilterCard = assetsQuery.isLoading || assets.length > 0;
+  const showSingleAssetSetupGuidance = !assetsQuery.isLoading && assets.length === 1 && filtersActiveCount === 0;
+  const showFilterCard = assetsQuery.isLoading || assets.length > 1 || filtersActiveCount > 0;
   const showRefreshAction = assetsQuery.isError || assets.length > 0;
 
   const handleOpenNew = () => {
@@ -527,9 +569,17 @@ export default function LabelAssetsPage() {
   };
 
   const handleDelete = (asset: AssetDTO) => {
-    const confirm = window.confirm(`¿Eliminar ${asset.name}? Esta acción no se puede deshacer.`);
-    if (!confirm) return;
-    deleteMutation.mutate(asset.assetId);
+    setPendingDeleteAsset(asset);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (pendingDeleteAsset) {
+      deletedAssetRef.current = pendingDeleteAsset;
+      deleteMutation.mutate(pendingDeleteAsset.assetId);
+    }
+    setDeleteConfirmOpen(false);
+    setPendingDeleteAsset(null);
   };
 
   const clearFilters = () => {
@@ -590,8 +640,10 @@ export default function LabelAssetsPage() {
   };
 
   const renderMovementAction = (asset: AssetDTO) => {
-    const isBooked = asset.status.toLowerCase() === 'booked';
-    return isBooked ? (
+    const movementState = getAssetMovementState(asset.status);
+
+    if (movementState.canCheckin) {
+      return (
       <Tooltip title="Registrar devolucion">
         <IconButton
           size="small"
@@ -601,7 +653,11 @@ export default function LabelAssetsPage() {
           <HowToRegIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-    ) : (
+      );
+    }
+
+    if (movementState.canCheckout) {
+      return (
       <Tooltip title="Registrar prestamo">
         <IconButton
           size="small"
@@ -611,7 +667,10 @@ export default function LabelAssetsPage() {
           <ExitToAppIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-    );
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -831,9 +890,14 @@ export default function LabelAssetsPage() {
             </Stack>
           )}
           {!assetsQuery.isLoading && assets.length > 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
-              Usa el boton de prestamo o devolucion para registrar movimientos rapidos. Abre Acciones para editar,
-              ver el QR, revisar el historial o eliminar el asset.
+            <Typography
+              variant={showSingleAssetSetupGuidance ? 'body2' : 'caption'}
+              color="text.secondary"
+              sx={{ display: 'block', mb: 1.5 }}
+            >
+              {showSingleAssetSetupGuidance
+                ? SINGLE_ASSET_SETUP_GUIDANCE
+                : MULTI_ASSET_ACTIONS_GUIDANCE}
             </Typography>
           )}
           {showFilteredEmptyState ? (
@@ -856,78 +920,88 @@ export default function LabelAssetsPage() {
               Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
             </Alert>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Asset</TableCell>
-                  {showCategoryColumn && <TableCell>Categoría</TableCell>}
-                  {showStatusColumn && <TableCell>Estado</TableCell>}
-                  {showLocationColumn && <TableCell>Ubicación</TableCell>}
-                  <TableCell align="right">Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredAssets.map((asset) => {
-                  const photoSrc = normalizePhotoUrl(asset.photoUrl);
-                  return (
-                    <TableRow key={asset.assetId} hover>
-                      <TableCell>
-                        <Stack direction="row" spacing={1.5} alignItems="center">
-                          {photoSrc && (
-                            <Box
-                              component="img"
-                              src={photoSrc}
-                              alt={asset.name}
-                              loading="lazy"
-                              sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 1,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                objectFit: 'cover',
-                                flexShrink: 0,
-                                bgcolor: 'grey.100',
-                              }}
-                            />
-                          )}
-                          <Stack spacing={0.25}>
-                            <Typography fontWeight={600}>{asset.name}</Typography>
-                            {(asset.brand ?? asset.model) && (
-                              <Typography variant="caption" color="text.secondary">
-                                {[asset.brand, asset.model].filter(Boolean).join(' · ')}
-                              </Typography>
-                            )}
-                            {asset.qrToken && (
-                              <Typography variant="caption" color="text.secondary">
-                                QR activo
-                              </Typography>
-                            )}
-                          </Stack>
-                        </Stack>
-                      </TableCell>
-                      {showCategoryColumn && <TableCell>{asset.category}</TableCell>}
-                      {showStatusColumn && <TableCell>{renderStatusChip(asset.status)}</TableCell>}
-                      {showLocationColumn && <TableCell>{displayLocation(asset)}</TableCell>}
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
-                          {renderMovementAction(asset)}
-                          <Button
-                            size="small"
-                            onClick={(event) => openActionsMenu(event, asset)}
-                            aria-label={`Abrir acciones para ${asset.name}`}
-                            aria-haspopup="menu"
-                            aria-expanded={actionsMenuTarget?.asset.assetId === asset.assetId ? 'true' : undefined}
-                          >
-                            Acciones
-                          </Button>
-                        </Stack>
-                      </TableCell>
+            <LazyPaginatedList
+              items={filteredAssets}
+              pagination={{
+                itemLabel: 'assets',
+                initialRowsPerPage: 25,
+                resetKey: [trimmedSearch, categoryFilter, statusFilter].join('|'),
+              }}
+              renderItems={(visibleAssets) => (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Asset</TableCell>
+                      {showCategoryColumn && <TableCell>Categoría</TableCell>}
+                      {showStatusColumn && <TableCell>Estado</TableCell>}
+                      {showLocationColumn && <TableCell>Ubicación</TableCell>}
+                      <TableCell align="right">Movimiento y mas</TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHead>
+                  <TableBody>
+                    {visibleAssets.map((asset) => {
+                      const photoSrc = normalizePhotoUrl(asset.photoUrl);
+                      return (
+                        <TableRow key={asset.assetId} hover>
+                          <TableCell>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              {photoSrc && (
+                                <Box
+                                  component="img"
+                                  src={photoSrc}
+                                  alt={asset.name}
+                                  loading="lazy"
+                                  sx={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    objectFit: 'cover',
+                                    flexShrink: 0,
+                                    bgcolor: 'grey.100',
+                                  }}
+                                />
+                              )}
+                              <Stack spacing={0.25}>
+                                <Typography fontWeight={600}>{asset.name}</Typography>
+                                {(asset.brand ?? asset.model) && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {[asset.brand, asset.model].filter(Boolean).join(' · ')}
+                                  </Typography>
+                                )}
+                                {asset.qrToken && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    QR activo
+                                  </Typography>
+                                )}
+                              </Stack>
+                            </Stack>
+                          </TableCell>
+                          {showCategoryColumn && <TableCell>{asset.category}</TableCell>}
+                          {showStatusColumn && <TableCell>{renderStatusChip(asset.status)}</TableCell>}
+                          {showLocationColumn && <TableCell>{displayLocation(asset)}</TableCell>}
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+                              {renderMovementAction(asset)}
+                              <Button
+                                size="small"
+                                onClick={(event) => openActionsMenu(event, asset)}
+                                aria-label={`Abrir ${SECONDARY_ASSET_ACTIONS_LABEL} para ${asset.name}`}
+                                aria-haspopup="menu"
+                                aria-expanded={actionsMenuTarget?.asset.assetId === asset.assetId ? 'true' : undefined}
+                              >
+                                {SECONDARY_ASSET_ACTIONS_LABEL}
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            />
           )}
         </CardContent>
       </Card>
@@ -1158,6 +1232,15 @@ export default function LabelAssetsPage() {
           </CardContent>
         </Card>
       )}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Eliminar activo"
+        description={`¿Eliminar ${pendingDeleteAsset?.name ?? ''}? Podrás deshacer la acción durante unos segundos.`}
+        severity="danger"
+        confirming={deleteMutation.isPending}
+      />
     </Box>
   );
 }

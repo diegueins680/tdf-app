@@ -28,6 +28,9 @@ Stored fields:
 
 This model is the single source for both admin CRUD and the PDF report preview/download flow.
 
+Production creates the table and its artist/day/time lookup index through the registered,
+idempotent migration `tdf-hq/sql/2026-08-05_artist_promotion_slots.sql`.
+
 ## Admin Endpoints
 
 Under `/admin/artists/:artistId/promotions`:

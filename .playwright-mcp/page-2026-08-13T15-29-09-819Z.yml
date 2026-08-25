@@ -1,0 +1,230 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link [ref=e925] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=e926]:
+        - generic [ref=e6]:
+          - generic [ref=e7]: MENÚ
+          - generic [ref=e9]:
+            - textbox [ref=e927]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e16]: ATAJOS
+            - list [ref=e19]:
+              - listitem [ref=e20]:
+                - link [ref=e928] [cursor=pointer]:
+                  - /url: /acerca
+                  - generic [ref=e24]:
+                    - generic [ref=e25]: Acerca de
+                    - paragraph [ref=e26]: Reciente · AYUDA
+              - listitem [ref=e27]:
+                - link [ref=e929] [cursor=pointer]:
+                  - /url: /estudio/pipelines
+                  - generic [ref=e31]:
+                    - generic [ref=e32]: Pipelines
+                    - paragraph [ref=e33]: Reciente · CREAR
+              - listitem [ref=e34]:
+                - link [ref=e930] [cursor=pointer]:
+                  - /url: /configuracion/cms
+                  - generic [ref=e38]:
+                    - generic [ref=e39]: CMS
+                    - paragraph [ref=e40]: Reciente · ADMIN
+              - listitem [ref=e41]:
+                - link [ref=e931] [cursor=pointer]:
+                  - /url: /inicio
+                  - generic [ref=e45]:
+                    - generic [ref=e46]: Inicio
+                    - paragraph [ref=e47]: Reciente · CREAR
+              - listitem [ref=e48]:
+                - link [ref=e932] [cursor=pointer]:
+                  - /url: /estudio/calendario
+                  - generic [ref=e52]:
+                    - generic [ref=e53]: Calendario
+                    - paragraph [ref=e54]: Reciente · CREAR
+              - listitem [ref=e55]:
+                - link [ref=e933] [cursor=pointer]:
+                  - /url: /escuela/clases
+                  - generic [ref=e59]:
+                    - generic [ref=e60]: Clases
+                    - paragraph [ref=e61]: Reciente · CREAR
+          - generic [ref=e63]:
+            - generic [ref=e64]: CREAR
+            - button [ref=e934] [cursor=pointer]
+          - generic [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: GENTE
+              - button [expanded] [ref=e935] [cursor=pointer]
+            - list [ref=e85]:
+              - listitem [ref=e86]:
+                - link [ref=e936] [cursor=pointer]:
+                  - /url: /fans
+                  - generic [ref=e90]: Comunidad
+                - button [ref=e937] [cursor=pointer]
+                - button [ref=e938] [cursor=pointer]
+              - listitem [ref=e98]:
+                - link [ref=e939] [cursor=pointer]:
+                  - /url: /marketplace
+                  - generic [ref=e102]: Tienda
+                - button [ref=e940] [cursor=pointer]
+                - button [ref=e941] [cursor=pointer]
+              - listitem [ref=e110]:
+                - link [ref=e942] [cursor=pointer]:
+                  - /url: /reservar
+                  - generic [ref=e114]: Reservar estudio
+                - button [ref=e943] [cursor=pointer]
+                - button [ref=e944] [cursor=pointer]
+              - listitem [ref=e122]:
+                - link [ref=e945] [cursor=pointer]:
+                  - /url: /trials
+                  - generic [ref=e126]: Agenda de pruebas
+                - button [ref=e946] [cursor=pointer]
+                - button [ref=e947] [cursor=pointer]
+              - listitem [ref=e134]:
+                - link [ref=e948] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+                  - generic [ref=e138]: Registro live sessions
+                - button [ref=e949] [cursor=pointer]
+                - button [ref=e950] [cursor=pointer]
+              - listitem [ref=e146]:
+                - link [ref=e951] [cursor=pointer]:
+                  - /url: /records
+                  - generic [ref=e150]: Lanzamientos públicos
+                - button [ref=e952] [cursor=pointer]
+                - button [ref=e953] [cursor=pointer]
+              - listitem [ref=e158]:
+                - link [ref=e954] [cursor=pointer]:
+                  - /url: /donar
+                  - generic [ref=e162]: Donaciones
+                - button [ref=e955] [cursor=pointer]
+                - button [ref=e956] [cursor=pointer]
+              - listitem [ref=e170]:
+                - link [ref=e957] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+                  - generic [ref=e174]: Domo Pululahua
+                - button [ref=e958] [cursor=pointer]
+                - button [ref=e959] [cursor=pointer]
+              - listitem [ref=e182]:
+                - link [ref=e960] [cursor=pointer]:
+                  - /url: /social
+                  - generic [ref=e186]: Conexiones
+                - button [ref=e961] [cursor=pointer]
+                - button [ref=e962] [cursor=pointer]
+              - listitem [ref=e194]:
+                - link [ref=e963] [cursor=pointer]:
+                  - /url: /social/instagram
+                  - generic [ref=e198]: Instagram
+                - button [ref=e964] [cursor=pointer]
+                - button [ref=e965] [cursor=pointer]
+              - listitem [ref=e206]:
+                - link [ref=e966] [cursor=pointer]:
+                  - /url: /social/inbox
+                  - generic [ref=e210]: Inbox social
+                - button [ref=e967] [cursor=pointer]
+                - button [ref=e968] [cursor=pointer]
+              - listitem [ref=e218]:
+                - link [ref=e969] [cursor=pointer]:
+                  - /url: /social/eventos
+                  - generic [ref=e222]: Eventos sociales
+                - button [ref=e970] [cursor=pointer]
+                - button [ref=e971] [cursor=pointer]
+              - listitem [ref=e230]:
+                - link [ref=e972] [cursor=pointer]:
+                  - /url: /chat
+                  - generic [ref=e234]: Chat
+                - button [ref=e973] [cursor=pointer]
+                - button [ref=e974] [cursor=pointer]
+              - listitem [ref=e242]:
+                - link [ref=e975] [cursor=pointer]:
+                  - /url: /crm/contactos
+                  - generic [ref=e246]: Contactos
+                - button [ref=e976] [cursor=pointer]
+                - button [ref=e977] [cursor=pointer]
+              - listitem [ref=e254]:
+                - link [ref=e978] [cursor=pointer]:
+                  - /url: /crm/empresas
+                  - generic [ref=e258]: Empresas
+                - button [ref=e979] [cursor=pointer]
+                - button [ref=e980] [cursor=pointer]
+              - listitem [ref=e266]:
+                - link [ref=e981] [cursor=pointer]:
+                  - /url: /crm/leads
+                  - generic [ref=e270]: Leads
+                - button [ref=e982] [cursor=pointer]
+                - button [ref=e983] [cursor=pointer]
+          - generic [ref=e279]:
+            - generic [ref=e280]: SELLO
+            - button [ref=e984] [cursor=pointer]
+          - generic [ref=e289]:
+            - generic [ref=e290]: OPERAR
+            - button [ref=e985] [cursor=pointer]
+          - generic [ref=e300]:
+            - generic [ref=e301]: ADMIN
+            - button [ref=e986] [cursor=pointer]
+          - generic [ref=e313]:
+            - generic [ref=e314]: HERRAMIENTAS
+            - button [ref=e987] [cursor=pointer]
+          - generic [ref=e323]:
+            - generic [ref=e324]: AYUDA
+            - button [ref=e988] [cursor=pointer]
+      - generic [ref=e332]:
+        - banner [ref=e333]:
+          - generic [ref=e334]:
+            - button [ref=e989] [cursor=pointer]
+            - link [ref=e990] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=e991] [cursor=pointer]:
+              - generic [ref=e344]: Buscar sección
+              - generic [ref=e345]: ⌘K
+            - generic [ref=e346]:
+              - button [ref=e992] [cursor=pointer]:
+                - generic [ref=e351]: Crear
+              - button [ref=e993] [cursor=pointer]
+              - button [ref=e994] [cursor=pointer]:
+                - generic [ref=e357]: D
+        - status [ref=e358]
+        - main [ref=e359]:
+          - generic [ref=e361]:
+            - generic [ref=e363]:
+              - generic [ref=e364]:
+                - heading [level=3] [ref=e995]: Contactos
+                - paragraph [ref=e366]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=e996] [cursor=pointer]: Nuevo contacto
+            - generic [ref=e374]:
+              - generic [ref=e377]:
+                - textbox [ref=e998]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                  - text: Festival Mestizónica
+                - button [ref=e999] [cursor=pointer]
+                - group
+              - generic [ref=e911]:
+                - generic [ref=e912]:
+                  - heading [level=6] [ref=e1000]: 1 coincidencia para "Festival Mestizónica"
+                  - paragraph [ref=e914]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=e915]:
+                  - generic [ref=e916]:
+                    - button [ref=e1001] [cursor=pointer]:
+                      - paragraph [ref=e918]: Festival Mestizónica
+                    - generic [ref=e919]: Empresa
+                  - paragraph [ref=e921]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=e922]: Completa el correo desde Acciones antes de crear el usuario.
+                - button [ref=e1002] [cursor=pointer]: Completar contacto
+          - generic [ref=e679]:
+            - status [ref=e680]:
+              - generic [ref=e683]: "API: online"
+            - button [ref=e1005] [cursor=pointer]
+    - generic [ref=e687]:
+      - button [ref=e1006] [cursor=pointer]
+      - button [ref=e1008] [cursor=pointer]
+      - button [ref=e1010] [cursor=pointer]
+      - button [ref=e1011] [cursor=pointer]
+      - button [ref=e1012] [cursor=pointer]
+      - button [ref=e1013] [cursor=pointer]
+      - generic [ref=e708]:
+        - generic [ref=e709]: "En pausa: Cosmic Cycles"
+        - text: Downtempo / Ambient
+  - menu [ref=e1016]:
+    - menuitem "Completar contacto" [active] [ref=e1017] [cursor=pointer]

@@ -11,6 +11,9 @@ module TDF.Routes.Courses
   , UTMTags(..)
   , CourseRegistrationRequest(..)
   , CourseRegistrationResponse(..)
+  , CourseCheckoutQuote(..)
+  , CourseCheckoutResponse(..)
+  , CoursePaypalCaptureRequest(..)
   , CourseRegistrationStatusUpdate(..)
   , CourseRegistrationNotesUpdate(..)
   , CourseRegistrationReceiptCreate(..)
@@ -20,21 +23,33 @@ module TDF.Routes.Courses
   , CourseUpsert(..)
   , CourseSessionIn(..)
   , CourseSyllabusIn(..)
+  , CoursePaymentIntentRequest(..)
+  , CourseCheckoutSessionRequest(..)
+  , CourseCheckoutSessionResponse(..)
   , CoursesPublicAPI
   , CoursesAdminAPI
   , WhatsAppHooksAPI
   , WhatsAppWebhookAPI
   ) where
 
-import           Data.Aeson (FromJSON(parseJSON), Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:!))
+import           Data.Char (isAlphaNum, isControl)
+import           Data.Aeson (FromJSON(parseJSON), Object, Options(..), ToJSON, Value(..), defaultOptions, genericParseJSON, (.:), (.:!))
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as AesonKeyMap
+import           Data.Aeson.Types (Parser)
 import           Data.Int (Int64)
 import           Data.Text (Text)
-import           Data.Time (Day)
+import qualified Data.Text as T
+import           Data.Time (Day, UTCTime)
+import qualified Data.ByteString.Lazy as BL
 import           GHC.Generics (Generic)
 import           Servant
 
+import           TDF.API.Types (RawJSON, rejectNullOptionalFields)
+import qualified TDF.API.Types as APITypes
 import           TDF.WhatsApp.Types (WAMetaWebhook)
 import qualified TDF.DTO
+import           TDF.DTO.SocialEventsDTO (StripePaymentIntentDTO)
 
 data CourseSession = CourseSession
   { label :: Text
@@ -88,7 +103,9 @@ data UTMTags = UTMTags
   } deriving (Show, Generic)
 
 instance FromJSON UTMTags where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "UTMTags" ["source", "medium", "campaign", "content"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON UTMTags
 
 data CourseRegistrationRequest = CourseRegistrationRequest
@@ -98,10 +115,16 @@ data CourseRegistrationRequest = CourseRegistrationRequest
   , source    :: Text
   , howHeard  :: Maybe Text
   , utm       :: Maybe UTMTags
+  , termsAccepted :: Maybe Bool
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationRequest where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationRequest"
+      ["fullName", "email", "phoneE164", "howHeard", "utm", "termsAccepted"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationRequest
 
 data CourseRegistrationResponse = CourseRegistrationResponse
@@ -111,20 +134,78 @@ data CourseRegistrationResponse = CourseRegistrationResponse
 
 instance ToJSON CourseRegistrationResponse
 
+data CourseCheckoutQuote = CourseCheckoutQuote
+  { policyVersion  :: Text
+  , currency       :: Text
+  , subtotalMinor  :: Int64
+  , taxMinor       :: Int64
+  , totalMinor     :: Int64
+  , dueNowMinor    :: Int64
+  , balanceMinor   :: Int64
+  , paymentSchedule :: Text
+  , termsVersion   :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON CourseCheckoutQuote
+
+data CourseCheckoutResponse = CourseCheckoutResponse
+  { registrationId   :: Int64
+  , courseSlug       :: Text
+  , checkoutId       :: Maybe Text
+  , lookupToken      :: Maybe Text
+  , paymentStatus    :: Text
+  , fulfillmentStatus :: Text
+  , holdExpiresAt    :: Maybe UTCTime
+  , quote            :: Maybe CourseCheckoutQuote
+  , paymentMethods   :: [Text]
+  , checkoutAvailable :: Bool
+  } deriving (Show, Generic)
+
+instance ToJSON CourseCheckoutResponse
+
+data CoursePaypalCaptureRequest = CoursePaypalCaptureRequest
+  { paypalOrderId :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON CoursePaypalCaptureRequest
+instance FromJSON CoursePaypalCaptureRequest where
+  parseJSON value = do
+    rejectNullOptionalFields "CoursePaypalCaptureRequest" [] value
+    genericParseJSON strictObjectOptions value
+
 data CourseRegistrationStatusUpdate = CourseRegistrationStatusUpdate
   { status :: Text
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationStatusUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    CourseRegistrationStatusUpdate rawStatus <-
+      genericParseJSON strictObjectOptions value
+    case normalizeCourseRegistrationStatusInput rawStatus of
+      Just statusVal -> pure CourseRegistrationStatusUpdate { status = statusVal }
+      Nothing -> fail "status must be one of: pending_payment, paid, cancelled"
 instance ToJSON CourseRegistrationStatusUpdate
+
+normalizeCourseRegistrationStatusInput :: Text -> Maybe Text
+normalizeCourseRegistrationStatusInput raw =
+  case T.toLower (T.filter isAlphaNum (T.strip raw)) of
+    "pendingpayment" -> Just "pending_payment"
+    "paid" -> Just "paid"
+    "cancelled" -> Just "cancelled"
+    "canceled" -> Just "cancelled"
+    _ -> Nothing
 
 data CourseRegistrationNotesUpdate = CourseRegistrationNotesUpdate
   { notes :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationNotesUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object obj) = do
+    case AesonKeyMap.lookup (AesonKey.fromText "notes") obj of
+      Nothing -> fail "CourseRegistrationNotesUpdate must include notes"
+      Just Null -> fail "notes must be a string; use an empty string to clear notes"
+      Just _ -> genericParseJSON strictObjectOptions value
+  parseJSON _ = fail "CourseRegistrationNotesUpdate must be an object"
 instance ToJSON CourseRegistrationNotesUpdate
 
 data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
@@ -135,7 +216,12 @@ data CourseRegistrationReceiptCreate = CourseRegistrationReceiptCreate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationReceiptCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationReceiptCreate"
+      ["fileName", "mimeType", "notes"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationReceiptCreate
 
 data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
@@ -146,8 +232,26 @@ data CourseRegistrationReceiptUpdate = CourseRegistrationReceiptUpdate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationReceiptUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object obj) = do
+    rejectNullCourseRegistrationReceiptUpdateFields obj
+    payload@(CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) <-
+      genericParseJSON strictObjectOptions value
+    case (fileUrlVal, fileNameVal, mimeTypeVal, notesVal) of
+      (Nothing, Nothing, Nothing, Nothing) ->
+        fail "CourseRegistrationReceiptUpdate must include at least one field"
+      _ ->
+        pure payload
+  parseJSON _ = fail "CourseRegistrationReceiptUpdate must be an object"
 instance ToJSON CourseRegistrationReceiptUpdate
+
+rejectNullCourseRegistrationReceiptUpdateFields :: Object -> Parser ()
+rejectNullCourseRegistrationReceiptUpdateFields obj =
+  mapM_ rejectNullField ["fileUrl", "fileName", "mimeType", "notes"]
+  where
+    rejectNullField fieldName =
+      case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+        Just Null -> fail (T.unpack fieldName <> " must be omitted instead of null")
+        _ -> pure ()
 
 data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
   { entryType      :: Maybe Text
@@ -159,7 +263,12 @@ data CourseRegistrationFollowUpCreate = CourseRegistrationFollowUpCreate
   } deriving (Show, Generic)
 
 instance FromJSON CourseRegistrationFollowUpCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseRegistrationFollowUpCreate"
+      ["entryType", "subject", "attachmentUrl", "attachmentName", "nextFollowUpAt"]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseRegistrationFollowUpCreate
 
 data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
@@ -173,6 +282,10 @@ data CourseRegistrationFollowUpUpdate = CourseRegistrationFollowUpUpdate
 
 instance FromJSON CourseRegistrationFollowUpUpdate where
   parseJSON value@(Object o) = do
+    rejectNullOptionalFields
+      "CourseRegistrationFollowUpUpdate"
+      ["entryType", "subject", "notes", "attachmentUrl", "attachmentName"]
+      value
     CourseRegistrationFollowUpUpdateParsed
       { entryType = parsedEntryType
       , subject = parsedSubject
@@ -181,14 +294,25 @@ instance FromJSON CourseRegistrationFollowUpUpdate where
       , attachmentName = parsedAttachmentName
       } <- genericParseJSON strictObjectOptions value
     nextFollowUpAtUpdate <- o .:! "nextFollowUpAt"
-    pure CourseRegistrationFollowUpUpdate
-      { entryType = parsedEntryType
-      , subject = parsedSubject
-      , notes = parsedNotes
-      , attachmentUrl = parsedAttachmentUrl
-      , attachmentName = parsedAttachmentName
-      , nextFollowUpAt = nextFollowUpAtUpdate
-      }
+    case
+      ( parsedEntryType
+      , parsedSubject
+      , parsedNotes
+      , parsedAttachmentUrl
+      , parsedAttachmentName
+      , nextFollowUpAtUpdate
+      ) of
+      (Nothing, Nothing, Nothing, Nothing, Nothing, Nothing) ->
+        fail "CourseRegistrationFollowUpUpdate must include at least one field"
+      _ ->
+        pure CourseRegistrationFollowUpUpdate
+          { entryType = parsedEntryType
+          , subject = parsedSubject
+          , notes = parsedNotes
+          , attachmentUrl = parsedAttachmentUrl
+          , attachmentName = parsedAttachmentName
+          , nextFollowUpAt = nextFollowUpAtUpdate
+          }
   parseJSON _ = fail "CourseRegistrationFollowUpUpdate must be an object"
 instance ToJSON CourseRegistrationFollowUpUpdate
 
@@ -210,7 +334,9 @@ data CourseSessionIn = CourseSessionIn
   , order :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON CourseSessionIn where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "CourseSessionIn" ["order"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseSessionIn
 
 data CourseSyllabusIn = CourseSyllabusIn
@@ -219,7 +345,9 @@ data CourseSyllabusIn = CourseSyllabusIn
   , order  :: Maybe Int
   } deriving (Show, Generic)
 instance FromJSON CourseSyllabusIn where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields "CourseSyllabusIn" ["order"] value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseSyllabusIn
 
 data CourseUpsert = CourseUpsert
@@ -246,12 +374,138 @@ data CourseUpsert = CourseUpsert
   , syllabus             :: [CourseSyllabusIn]
   } deriving (Show, Generic)
 instance FromJSON CourseUpsert where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CourseUpsert"
+      [ "subtitle"
+      , "format"
+      , "duration"
+      , "sessionStartHour"
+      , "sessionDurationHours"
+      , "locationLabel"
+      , "locationMapUrl"
+      , "whatsappCtaUrl"
+      , "landingUrl"
+      , "instructorName"
+      , "instructorBio"
+      , "instructorAvatarUrl"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 instance ToJSON CourseUpsert
+
+-- | Body for `POST /public/courses/:slug/registrations/:id/payment-intent`.
+--
+-- Type contract:
+-- * omitted @mobileSdkStripeVersion@ selects the web Payment Element response;
+-- * present @mobileSdkStripeVersion@ is stripped, non-empty, and control-free
+--   before it may be forwarded as Stripe's @Stripe-Version@ header.
+--
+-- Resource invariant: this DTO performs no acquisition and retains no external
+-- handles. The handler's Stripe HTTP calls use 'TDF.Services.Stripe.withStripeManager',
+-- which brackets manager allocation and cleanup.
+data CoursePaymentIntentRequest = CoursePaymentIntentRequest
+  { mobileSdkStripeVersion :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON CoursePaymentIntentRequest where
+  parseJSON value = do
+    rejectNullOptionalFields
+      "CoursePaymentIntentRequest"
+      ["mobileSdkStripeVersion"]
+      value
+    CoursePaymentIntentRequest rawMobileSdkStripeVersion <-
+      genericParseJSON strictObjectOptions value
+    checkedMobileSdkStripeVersion <-
+      traverse validateCourseMobileSdkStripeVersion rawMobileSdkStripeVersion
+    pure CoursePaymentIntentRequest
+      { mobileSdkStripeVersion = checkedMobileSdkStripeVersion
+      }
+instance ToJSON CoursePaymentIntentRequest
+
+validateCourseMobileSdkStripeVersion :: Text -> Parser Text
+validateCourseMobileSdkStripeVersion rawVersion =
+  let trimmed = T.strip rawVersion
+  in if T.null trimmed
+       then fail "mobileSdkStripeVersion must not be blank if provided"
+       else if T.any isControl trimmed
+         then fail "mobileSdkStripeVersion must not contain control characters"
+         else pure trimmed
+
+-- | Body for `POST /public/courses/:slug/registrations/:id/checkout-session`.
+--
+-- The hosted Stripe Checkout flow redirects the buyer back to one of two
+-- caller-supplied URLs (success or cancel). Both must be absolute https URLs.
+data CourseCheckoutSessionRequest = CourseCheckoutSessionRequest
+  { successUrl :: Text
+  , cancelUrl  :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON CourseCheckoutSessionRequest where
+  parseJSON value@(Object o) = do
+    rejectNullOptionalFields "CourseCheckoutSessionRequest" [] value
+    _ <- genericParseJSON strictObjectOptions value
+      :: Parser CourseCheckoutSessionRequest
+    rawSuccess <- o .: "successUrl"
+    rawCancel <- o .: "cancelUrl"
+    validatedSuccess <- validateCheckoutReturnUrl "successUrl" rawSuccess
+    validatedCancel <- validateCheckoutReturnUrl "cancelUrl" rawCancel
+    pure CourseCheckoutSessionRequest
+      { successUrl = validatedSuccess
+      , cancelUrl  = validatedCancel
+      }
+  parseJSON _ = fail "CourseCheckoutSessionRequest must be an object"
+instance ToJSON CourseCheckoutSessionRequest
+
+validateCheckoutReturnUrl :: String -> Text -> Parser Text
+validateCheckoutReturnUrl fieldName raw =
+  let trimmed = T.strip raw
+  in if T.null trimmed
+       then fail (fieldName <> " must not be blank")
+       else if not ("https://" `T.isPrefixOf` trimmed)
+         then fail (fieldName <> " must be an https URL")
+       else if T.any isControl trimmed
+         then fail (fieldName <> " must not contain control characters")
+       else pure trimmed
+
+data CourseCheckoutSessionResponse = CourseCheckoutSessionResponse
+  { sessionId  :: Text
+  , sessionUrl :: Text
+  } deriving (Show, Generic)
+instance FromJSON CourseCheckoutSessionResponse
+instance ToJSON CourseCheckoutSessionResponse
 
 type CoursesPublicAPI =
        "public" :> "courses" :> Capture "slug" Text :> Get '[JSON] CourseMetadata
-  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> ReqBody '[JSON] CourseRegistrationRequest :> PostCreated '[JSON] CourseRegistrationResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] CourseRegistrationRequest
+         :> PostCreated '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> Header "X-Order-Lookup-Token" Text
+         :> Get '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "datafast" :> "checkout"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] APITypes.DatafastCheckoutDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "datafast" :> "status"
+         :> Header "X-Order-Lookup-Token" Text
+         :> QueryParam' '[Required] "resourcePath" Text
+         :> Get '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "paypal" :> "create"
+         :> Header "X-Order-Lookup-Token" Text
+         :> Post '[JSON] APITypes.PaypalCreateDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64
+         :> "paypal" :> "capture"
+         :> Header "X-Order-Lookup-Token" Text
+         :> ReqBody '[JSON] CoursePaypalCaptureRequest
+         :> Post '[JSON] CourseCheckoutResponse
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "payment-intent"
+         :> ReqBody '[JSON] CoursePaymentIntentRequest :> Post '[JSON] StripePaymentIntentDTO
+  :<|> "public" :> "courses" :> Capture "slug" Text :> "registrations" :> Capture "registrationId" Int64 :> "checkout-session"
+         :> ReqBody '[JSON] CourseCheckoutSessionRequest :> Post '[JSON] CourseCheckoutSessionResponse
 
 type CoursesAdminAPI =
        "courses" :> ReqBody '[JSON] CourseUpsert :> Post '[JSON] CourseMetadata
@@ -275,11 +529,11 @@ type CoursesAdminAPI =
 
 type WhatsAppWebhookAPI =
        "webhooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
-  :<|> "webhooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+  :<|> "webhooks" :> "whatsapp" :> Header "X-Hub-Signature-256" Text :> ReqBody '[RawJSON] BL.ByteString :> Post '[JSON] NoContent
 
 type WhatsAppHooksAPI =
        "hooks" :> "whatsapp" :> QueryParam "hub.mode" Text :> QueryParam "hub.verify_token" Text :> QueryParam "hub.challenge" Text :> Get '[PlainText] Text
-  :<|> "hooks" :> "whatsapp" :> ReqBody '[JSON] WAMetaWebhook :> Post '[JSON] NoContent
+  :<|> "hooks" :> "whatsapp" :> Header "X-Hub-Signature-256" Text :> ReqBody '[RawJSON] BL.ByteString :> Post '[JSON] NoContent
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }

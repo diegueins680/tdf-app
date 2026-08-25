@@ -1,0 +1,164 @@
+- generic [ref=f30e9]:
+  - generic [ref=f30e12]:
+    - link [ref=f30e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e22]
+    - generic [ref=f30e25]:
+      - link [ref=f30e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e35]
+      - link [ref=f30e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e45]
+      - link [ref=f30e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f30e57]
+      - link [ref=f30e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e67]
+      - link [ref=f30e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e222]
+      - link [ref=f30e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e90]
+      - link [ref=f30e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e100]
+      - link [ref=f30e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e112]:
+          - img "tdf.records.label's profile picture" [ref=f30e113]
+    - generic [ref=f30e114]:
+      - link [ref=f30e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e122]
+      - link [ref=f30e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e130]
+  - main [ref=f30e134]:
+    - generic [ref=f30e230]:
+      - navigation "Thread list" [ref=f30e231]:
+        - generic [ref=f30e232]:
+          - generic [ref=f30e233]:
+            - button [ref=f30e234] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e236]
+              - img "Down chevron icon" [ref=f30e239]
+            - button [ref=f30e243] [cursor=pointer]:
+              - img "New message" [ref=f30e245]
+          - tablist [ref=f30e250]:
+            - tab "Primary" [selected] [ref=f30e251] [cursor=pointer]
+            - tab "General" [ref=f30e254] [cursor=pointer]
+            - tab "From ads" [ref=f30e257] [cursor=pointer]
+            - tab "Requests" [ref=f30e261] [cursor=pointer]
+          - generic [ref=f30e264]:
+            - generic [ref=f30e265]:
+              - button "Back" [ref=f30e2620] [cursor=pointer]:
+                - img "Back" [ref=f30e2623]
+              - generic [ref=f30e2626]:
+                - textbox "Clear search" [active] [ref=f30e2627]:
+                  - /placeholder: Search
+                  - text: planet_303
+                - button "Clear search" [ref=f30e2628] [cursor=pointer]:
+                  - img "Clear search" [ref=f30e2630]
+            - generic [ref=f30e2632]:
+              - button "Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest jam_estepez, planet_303" [ref=f30e2633] [cursor=pointer]:
+                - generic [ref=f30e2643]:
+                  - generic [ref=f30e2644]: Llama Este Pez, Fabro Alomìa Torres, Federico Molinari and Space Trip Fest
+                  - generic [ref=f30e2648]: jam_estepez, planet_303
+              - button "J, Space Trip Fest, Julieth Jadotte and 2 others azimute_musique, juano_music" [ref=f30e2649] [cursor=pointer]:
+                - generic [ref=f30e2659]:
+                  - generic [ref=f30e2660]: J, Space Trip Fest, Julieth Jadotte and 2 others
+                  - generic [ref=f30e2664]: azimute_musique, juano_music
+              - generic:
+                - heading "More accounts" [level=2]
+              - button "User avatar Fabro Alomìa Torres planet_303" [ref=f30e2665] [cursor=pointer]:
+                - generic [ref=f30e2666]:
+                  - img "User avatar" [ref=f30e2671]
+                  - generic [ref=f30e2674]:
+                    - generic [ref=f30e2675]: Fabro Alomìa Torres
+                    - generic [ref=f30e2679]: planet_303
+              - button "User avatar planet.303.4" [ref=f30e2680] [cursor=pointer]:
+                - generic [ref=f30e2681]:
+                  - img "User avatar" [ref=f30e2686]
+                  - generic [ref=f30e2687]: planet.303.4
+              - button "User avatar plan.et303" [ref=f30e2691] [cursor=pointer]:
+                - generic [ref=f30e2692]:
+                  - img "User avatar" [ref=f30e2697]
+                  - generic [ref=f30e2698]: plan.et303
+              - button "User avatar Gino82👍 planet3033" [ref=f30e2702] [cursor=pointer]:
+                - generic [ref=f30e2703]:
+                  - img "User avatar" [ref=f30e2708]
+                  - generic [ref=f30e2711]:
+                    - generic [ref=f30e2712]: Gino82👍
+                    - generic [ref=f30e2716]: planet3033
+              - 'button "User avatar Planet Sushi 🍣 ahora en Quito. planet_sushi1 🍣 #Sushi cómo nunca antes lo probaste 🍱Sabores de Japón en 🇪🇨 Más proteína Menos Arroz 👇🏻 📍Diego de Almagro y Santa María 🛵099-936-5199" [ref=f30e2717] [cursor=pointer]':
+                - generic [ref=f30e2718]:
+                  - img "User avatar" [ref=f30e2723]
+                  - generic [ref=f30e2726]:
+                    - generic [ref=f30e2727]: Planet Sushi 🍣 ahora en Quito.
+                    - generic [ref=f30e2731]: planet_sushi1
+                    - generic [ref=f30e2733]: "🍣 #Sushi cómo nunca antes lo probaste 🍱Sabores de Japón en 🇪🇨 Más proteína Menos Arroz 👇🏻 📍Diego de Almagro y Santa María 🛵099-936-5199"
+              - button "User avatar 藍色不憂傷🎵 planet.303 留存一點十三月的浪漫🪐💭" [ref=f30e2735] [cursor=pointer]:
+                - generic [ref=f30e2736]:
+                  - img "User avatar" [ref=f30e2741]
+                  - generic [ref=f30e2744]:
+                    - generic [ref=f30e2745]: 藍色不憂傷🎵
+                    - generic [ref=f30e2749]: planet.303
+                    - generic [ref=f30e2751]: 留存一點十三月的浪漫🪐💭
+      - generic [ref=f30e2441]:
+        - generic [ref=f30e2445]:
+          - link "Open the profile page of jam_estepez" [ref=f30e2446] [cursor=pointer]:
+            - /url: /jam_estepez/
+            - generic [ref=f30e2447]:
+              - img "user-profile-picture" [ref=f30e2451]
+              - generic [ref=f30e2452]:
+                - heading "Llama Este Pez" [level=2] [ref=f30e2454]
+                - generic [ref=f30e2456]: jam_estepez
+          - generic [ref=f30e2460]:
+            - button [ref=f30e2461] [cursor=pointer]:
+              - img "Audio call" [ref=f30e2463]
+            - button [ref=f30e2465] [cursor=pointer]:
+              - img "Video call" [ref=f30e2467]
+            - button [ref=f30e2470] [cursor=pointer]:
+              - img "Conversation information" [ref=f30e2472]
+        - generic [ref=f30e2476]:
+          - generic [ref=f30e2480]:
+            - generic [ref=f30e2481]:
+              - progressbar [ref=f30e2484]:
+                - img "Loading..." [ref=f30e2485]
+              - generic [ref=f30e2536]:
+                - generic [ref=f30e2537]: Aug 4, 2026, 12:41 PM
+                - group [ref=f30e2540]:
+                  - generic [ref=f30e2541]:
+                    - generic [ref=f30e2542]: Mentioned you in their story
+                    - link [ref=f30e2551] [cursor=pointer]:
+                      - /url: /stories/tdf.records.label/3956447068726305189?reel_id=archiveDay%3A17865033504637257&reel_owner_id=45696040941
+              - generic [ref=f30e2556]:
+                - generic [ref=f30e2557]: Wed 7:32 PM
+                - group [ref=f30e2560]:
+                  - generic [ref=f30e2565]:
+                    - generic [ref=f30e2568]:
+                      - text: Hola, Llama Este Pez
+                      - img "👋" [ref=f30e2570]
+                      - text: "Vimos tu interacción reciente con TDF y tus fechas electrónicas en Plaza Belmonte y Quito. En TDF puedes reunir perfil, música, lanzamientos, artistas y experiencias en un mismo lugar. Te invitamos a recorrerlo:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b" [ref=f30e2572] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+                      - text: "Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                    - link "TDF Records" [ref=f30e2573] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b
+            - generic [ref=f30e2578]: Seen
+          - generic [ref=f30e2589]:
+            - button [ref=f30e2592] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f30e2594]
+            - generic [ref=f30e2596]:
+              - textbox [ref=f30e2597]:
+                - paragraph [ref=f30e2598]
+              - generic: Message...
+            - generic [ref=f30e2599]:
+              - button [ref=f30e2600] [cursor=pointer]:
+                - img "Voice Clip" [ref=f30e2602]
+              - button [ref=f30e2605] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f30e2607]
+              - button [ref=f30e2612] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f30e2614]

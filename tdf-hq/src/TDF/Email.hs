@@ -9,6 +9,12 @@ module TDF.Email
   , sendMarketplaceOrderEmail
   , sendTestEmail
   , sendEngineerBookingEmail
+  -- Ticketing system emails
+  , sendTicketConfirmationEmail
+  , sendTicketTransferNotificationEmail
+  , sendWaitlistNotificationEmail
+  , sendRefundConfirmationEmail
+  , resolveRefundTimelineMessage
   ) where
 
 import           Control.Exception        (SomeException, throwIO, try)
@@ -30,9 +36,9 @@ import qualified Network.Mail.Mime        as Mime
 import qualified Network.Mail.SMTP        as SMTP
 import           System.Entropy           (getEntropy)
 import           System.IO                (stderr)
-import           Text.Printf              (printf)
 
 import           TDF.Config               (EmailConfig(..), defaultAppBase, resolveAppBase)
+import           TDF.Internationalization (currencyDecimalPlaces, currencyDefinition, formatMoney)
 
 generateTempPassword :: IO Text
 generateTempPassword = do
@@ -135,20 +141,22 @@ sendCoursePaymentReminderEmail
   -> Text   -- ^ recipient name
   -> Text   -- ^ recipient email
   -> Text   -- ^ course title
-  -> Double -- ^ course price (USD)
+  -> Double -- ^ course price in major units
+  -> Text   -- ^ ISO 4217 currency
+  -> Text   -- ^ locale
   -> Int    -- ^ remaining seats
   -> Text   -- ^ landing URL
   -> IO ()
-sendCoursePaymentReminderEmail Nothing _name _email _courseTitle _price _seats _landingUrl =
+sendCoursePaymentReminderEmail Nothing _name _email _courseTitle _price _currency _locale _seats _landingUrl =
   putStrLn "[Email] SMTP not configured; skipped course payment reminder."
-sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price seats landingUrl = do
+sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price currency locale seats landingUrl = do
   let subject   = "Completa tu pago - " <> courseTitle
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
       seatsLine
         | seats == 1 = "Solo queda 1 cupo disponible."
         | otherwise  = "Solo quedan " <> T.pack (show seats) <> " cupos disponibles."
       preheader = "Asegura tu cupo realizando el pago hoy mismo."
-      priceLine = "Valor del curso: " <> formatUsd price
+      priceLine = "Valor del curso: " <> formatCoursePrice locale currency price
       bodyLines =
         [ "Recibimos tu inscripción a " <> courseTitle <> "."
         , "Para asegurar tu cupo realiza tu pago hoy."
@@ -166,10 +174,11 @@ sendCoursePaymentReminderEmail (Just cfg) name email courseTitle price seats lan
       mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just landingUrl)
   sendMailWithLogging cfg toAddr subject mail
 
-formatUsd :: Double -> Text
-formatUsd amount =
-  let formatted = printf "%.2f" amount :: String
-  in "$" <> T.pack formatted <> " USD"
+formatCoursePrice :: Text -> Text -> Double -> Text
+formatCoursePrice locale currency amount =
+  let decimals = maybe 2 currencyDecimalPlaces (currencyDefinition currency)
+      minorUnits = round (amount * fromIntegral (10 ^ decimals :: Integer))
+  in formatMoney locale currency minorUnits
 
 -- Send marketplace order confirmation to buyer.
 sendMarketplaceOrderEmail
@@ -256,7 +265,7 @@ sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
       mail = buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl
   sendMailWithLogging cfg toAddr subject mail
 
--- | Send an email with a small audit trail for admins.
+-- | Send an email and record a small audit trail for admins.
 sendMailWithLogging :: EmailConfig -> Address -> Text -> Mime.Mail -> IO ()
 sendMailWithLogging cfg toAddr _subject mail = do
   let host = T.unpack (smtpHost cfg)
@@ -345,7 +354,7 @@ renderHtml preheader greeting bodyLines mCtaUrl =
         , ctaBlock
         , "<div style=\"margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;\">"
         , "<p style=\"margin:0 0 4px;color:#0f172a;font-weight:700;\">TDF Records</p>"
-        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Quito · Escuela &amp; Estudios</p>"
+        , "<p style=\"margin:0;color:#475569;font-size:13px;\">Escuela &amp; Estudios</p>"
         , "</div>"
         , "</td></tr></table></td></tr></table></body></html>"
         ]
@@ -365,3 +374,176 @@ escapeHtml = T.concatMap replaceChar
     replaceChar '"' = "&quot;"
     replaceChar '\'' = "&#39;"
     replaceChar c   = T.singleton c
+
+-- | Send ticket confirmation email after successful payment
+sendTicketConfirmationEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ event title
+  -> Text   -- ^ event date/time
+  -> Int    -- ^ ticket quantity
+  -> Text   -- ^ ticket tier name
+  -> Text   -- ^ order total (formatted, e.g. "$50.00")
+  -> [Text] -- ^ ticket codes
+  -> Maybe Text -- ^ optional app URL
+  -> IO ()
+sendTicketConfirmationEmail Nothing name email eventTitle _eventDate quantity tierName total _codes _appUrl = do
+  putStrLn $ "SMTP configuration missing; skipped ticket confirmation email for "
+    <> T.unpack name <> " <" <> T.unpack email <> ">."
+  putStrLn $ "Event: " <> T.unpack eventTitle
+  putStrLn $ "Quantity: " <> show quantity <> " x " <> T.unpack tierName
+  putStrLn $ "Total: " <> T.unpack total
+sendTicketConfirmationEmail (Just cfg) name email eventTitle eventDate quantity tierName total ticketCodes mAppUrl = do
+  let subject   = "Tus entradas para " <> eventTitle
+      preheader = "Confirmación de compra - " <> T.pack (show quantity) <> " entrada(s) para " <> eventTitle
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      ticketsUrl = case T.strip <$> mAppUrl of
+        Just exactUrl | "tdf://" `T.isPrefixOf` T.toLower exactUrl -> exactUrl
+        _ -> T.dropWhileEnd (== '/') (resolveAppBase mAppUrl) <> "/tickets"
+      bodyLines =
+        [ "¡Gracias por tu compra! Aquí están los detalles de tus entradas:"
+        , ""
+        , "Evento: " <> eventTitle
+        , "Fecha: " <> eventDate
+        , "Entradas: " <> T.pack (show quantity) <> " x " <> tierName
+        , "Total pagado: " <> total
+        , ""
+        , "Códigos de entrada:"
+        ] <> map ("• " <>) ticketCodes <>
+        [ ""
+        , "Puedes ver tus entradas y códigos QR en cualquier momento desde tu cuenta."
+        , "Presenta el código QR en tu dispositivo móvil en la entrada del evento."
+        , ""
+        , "Ver mis entradas: " <> ticketsUrl
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just ticketsUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- | Send transfer notification to ticket recipient
+sendTicketTransferNotificationEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ sender name
+  -> Text   -- ^ event title
+  -> Text   -- ^ event date/time
+  -> Text   -- ^ ticket code
+  -> Text   -- ^ transfer acceptance URL containing the pre-generated code
+  -> Maybe Text -- ^ optional app URL
+  -> IO ()
+sendTicketTransferNotificationEmail Nothing recipientName recipientEmail senderName eventTitle _eventDate ticketCode acceptUrl _appUrl = do
+  putStrLn $ "SMTP configuration missing; skipped transfer notification email for "
+    <> T.unpack recipientName <> " <" <> T.unpack recipientEmail <> ">."
+  putStrLn $ "From: " <> T.unpack senderName
+  putStrLn $ "Event: " <> T.unpack eventTitle
+  putStrLn $ "Ticket: " <> T.unpack ticketCode
+  putStrLn $ "Accept URL: " <> T.unpack acceptUrl
+sendTicketTransferNotificationEmail (Just cfg) recipientName recipientEmail senderName eventTitle eventDate ticketCode acceptUrl _mAppUrl = do
+  let subject   = senderName <> " te ha transferido una entrada"
+      preheader = "Has recibido una entrada para " <> eventTitle
+      greeting  = if T.null recipientName then "Hola," else "Hola " <> recipientName <> ","
+      bodyLines =
+        [ senderName <> " te ha transferido una entrada para el siguiente evento:"
+        , ""
+        , "Evento: " <> eventTitle
+        , "Fecha: " <> eventDate
+        , "Código de entrada: " <> ticketCode
+        , ""
+        , "IMPORTANTE: Debes aceptar esta transferencia dentro de las próximas 48 horas."
+        , "Si no aceptas la transferencia en este tiempo, expirará y la entrada volverá al remitente."
+        , ""
+        , "Para aceptar la entrada, haz clic en el siguiente enlace:"
+        , acceptUrl
+        ]
+      toAddr = Address (Just recipientName) recipientEmail
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just acceptUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- | Send waitlist notification when tickets become available
+sendWaitlistNotificationEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ event title
+  -> Text   -- ^ event date/time
+  -> Text   -- ^ tier name
+  -> Int    -- ^ quantity requested
+  -> Text   -- ^ reserved purchase URL
+  -> Text   -- ^ expiry time (formatted, e.g. "24 hours")
+  -> Maybe Text -- ^ optional app URL
+  -> IO ()
+sendWaitlistNotificationEmail Nothing name email eventTitle _eventDate tierName quantity reservedUrl expiry _appUrl = do
+  putStrLn $ "SMTP configuration missing; skipped waitlist notification email for "
+    <> T.unpack name <> " <" <> T.unpack email <> ">."
+  putStrLn $ "Event: " <> T.unpack eventTitle
+  putStrLn $ "Tier: " <> T.unpack tierName
+  putStrLn $ "Quantity: " <> show quantity
+  putStrLn $ "Reserved URL: " <> T.unpack reservedUrl
+  putStrLn $ "Expires: " <> T.unpack expiry
+sendWaitlistNotificationEmail (Just cfg) name email eventTitle eventDate tierName quantity reservedUrl expiry _mAppUrl = do
+  let subject   = "¡Entradas disponibles para " <> eventTitle <> "!"
+      preheader = "Las entradas que esperabas están disponibles - reserva garantizada por " <> expiry
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      bodyLines =
+        [ "¡Buenas noticias! Las entradas para el evento que agregaste a tu lista de espera están disponibles."
+        , ""
+        , "Evento: " <> eventTitle
+        , "Fecha: " <> eventDate
+        , "Tipo de entrada: " <> tierName
+        , "Cantidad solicitada: " <> T.pack (show quantity)
+        , ""
+        , "Hemos reservado estas entradas especialmente para ti por " <> expiry <> "."
+        , "Después de este tiempo, la reserva expirará y las entradas estarán disponibles para otros."
+        , ""
+        , "¡No pierdas esta oportunidad! Completa tu compra ahora:"
+        , reservedUrl
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines (Just reservedUrl)
+  sendMailWithLogging cfg toAddr subject mail
+
+-- | Send refund confirmation email
+sendRefundConfirmationEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Text   -- ^ event title
+  -> Text   -- ^ refund amount (formatted, e.g. "$50.00")
+  -> Text   -- ^ refund status ("approved" | "processed")
+  -> Maybe Text -- ^ optional processing timeline
+  -> Maybe Text -- ^ optional app URL
+  -> IO ()
+sendRefundConfirmationEmail Nothing name email eventTitle refundAmount status _timeline _appUrl = do
+  putStrLn $ "SMTP configuration missing; skipped refund confirmation email for "
+    <> T.unpack name <> " <" <> T.unpack email <> ">."
+  putStrLn $ "Event: " <> T.unpack eventTitle
+  putStrLn $ "Amount: " <> T.unpack refundAmount
+  putStrLn $ "Status: " <> T.unpack status
+sendRefundConfirmationEmail (Just cfg) name email eventTitle refundAmount status mTimeline _mAppUrl = do
+  let subject   = "Reembolso " <> (if status == "processed" then "procesado" else "aprobado") <> " - " <> eventTitle
+      preheader = "Tu reembolso de " <> refundAmount <> " ha sido " <> (if status == "processed" then "procesado" else "aprobado")
+      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+      statusMsg = if status == "processed"
+                  then "Tu reembolso ha sido procesado exitosamente."
+                  else "Tu solicitud de reembolso ha sido aprobada y está siendo procesada."
+      timelineMsg = resolveRefundTimelineMessage mTimeline
+      bodyLines =
+        [ statusMsg
+        , ""
+        , "Evento: " <> eventTitle
+        , "Monto del reembolso: " <> refundAmount
+        , ""
+        , timelineMsg
+        , "El reembolso se acreditará al método de pago original utilizado para la compra."
+        , ""
+        , "Si tienes alguna pregunta sobre este reembolso, por favor contáctanos."
+        ]
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines Nothing
+  sendMailWithLogging cfg toAddr subject mail
+
+resolveRefundTimelineMessage :: Maybe Text -> Text
+resolveRefundTimelineMessage =
+  fromMaybe "El reembolso aparecerá en tu cuenta en 5-10 días hábiles."

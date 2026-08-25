@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
   Alert,
-  Checkbox,
   Box,
   Button,
   Card,
@@ -17,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AddIcon from '@mui/icons-material/Add';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -28,7 +28,9 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { DateTime } from 'luxon';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   SocialEventsAPI,
   type SocialEventDTO,
@@ -41,8 +43,18 @@ import {
   type SocialTicketTierDTO,
 } from '../api/socialEvents';
 import { ContractsAPI } from '../api/contracts';
+import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { parseUnsignedSafeInt } from '../utils/ids';
+import {
+  getSocialEventCardActionUiState,
+  getSocialEventsCreateUiState,
+  getSocialEventsFinanceSummaryUiState,
+  getSocialEventsOverviewUiState,
+} from './socialEventsPageState';
+import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
+import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 
 interface InvitationState {
   partyId: string;
@@ -51,9 +63,12 @@ interface InvitationState {
 
 interface TicketPurchaseState {
   tierId: string;
-  quantity: string;
-  buyerName: string;
-  buyerEmail: string;
+}
+
+interface TicketCheckoutState {
+  eventId: string;
+  eventTitle: string;
+  tier: SocialTicketTierDTO;
 }
 
 interface TicketTierFormState {
@@ -95,21 +110,6 @@ interface ContractDraftState {
   currency: string;
   status: 'draft' | 'pending' | 'posted';
   notes: string;
-}
-
-interface EventDraftState {
-  title: string;
-  description: string;
-  startAt: string;
-  endAt: string;
-  venueId: string;
-  eventType: string;
-  eventStatus: string;
-  priceCents: string;
-  capacity: string;
-  currency: string;
-  ticketUrl: string;
-  isPublic: boolean;
 }
 
 const BUDGET_CATEGORY_OPTIONS = [
@@ -181,13 +181,23 @@ const PROJECT_BUDGET_TEMPLATE: {
   { code: 'EXP-SECURITY', name: 'Seguridad', type: 'expense', category: 'security' },
 ];
 
-const formatDate = (iso: string) =>
-  DateTime.fromISO(iso).setLocale('es').toFormat('EEE d LLL, HH:mm');
+const formatDate = (iso: string) => formatDateForUser(iso, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 const formatMoney = (amountCents?: number | null, currency?: string | null) => {
   if (typeof amountCents !== 'number') return 'Gratis';
-  const code = (currency ?? 'USD').toUpperCase();
-  return `${code} ${(amountCents / 100).toFixed(2)}`;
+  const code = (currency ?? resolveRuntimeCurrency()).toUpperCase();
+  return formatCurrencyForUser(amountCents / 100, code);
+};
+
+const ticketCheckoutTotal = (faceValueCents: number) => {
+  const platformFee = Math.max(0, Math.floor((faceValueCents * 400) / 10000));
+  return faceValueCents + Math.ceil(platformFee / 2);
 };
 
 const formatPercent = (value?: number | null) => {
@@ -217,25 +227,6 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
 };
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
-
-const buildInitialEventDraft = (): EventDraftState => {
-  const startAt = DateTime.local().plus({ hours: 1 }).startOf('hour');
-  const endAt = startAt.plus({ hours: 2 });
-  return {
-    title: '',
-    description: '',
-    startAt: startAt.toFormat("yyyy-LL-dd'T'HH:mm"),
-    endAt: endAt.toFormat("yyyy-LL-dd'T'HH:mm"),
-    venueId: '',
-    eventType: 'party',
-    eventStatus: 'planning',
-    priceCents: '',
-    capacity: '',
-    currency: 'USD',
-    ticketUrl: '',
-    isPublic: true,
-  };
-};
 
 const csvEscape = (value: string | number | boolean | null | undefined) =>
   `"${String(value ?? '').replace(/"/g, '""')}"`;
@@ -289,7 +280,7 @@ const buildEventFinanceCsvRows = (
   const eventTitle = event.eventTitle;
   const eventStart = event.eventStart;
   const eventEnd = event.eventEnd;
-  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? 'USD').toUpperCase();
+  const eventCurrency = (financeSummary?.efsCurrency ?? event.eventCurrency ?? resolveRuntimeCurrency()).toUpperCase();
 
   const summaryMetrics: [string, number | string | null | undefined][] = [
     ['budget_cents', financeSummary?.efsBudgetCents],
@@ -404,42 +395,76 @@ const buildEventFinanceCsvRows = (
 };
 
 export default function SocialEventsPage() {
+  useDocumentTitle('Social / Eventos');
   const qc = useQueryClient();
   const { session } = useSession();
+  const { locale } = useLocalePreferences();
+  const preferredCurrency = resolveRuntimeCurrency();
   const [city, setCity] = useState('');
   const [eventTypeFilter, setEventTypeFilter] = useState('');
-  const [eventStatusFilter, setEventStatusFilter] = useState('');
+  const [eventWorkflowStateFilter, setEventWorkflowStateFilter] = useState('');
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
+  const [ticketCheckout, setTicketCheckout] = useState<TicketCheckoutState | null>(null);
   const [ticketTierForms, setTicketTierForms] = useState<Record<string, TicketTierFormState>>({});
   const [budgetLineForms, setBudgetLineForms] = useState<Record<string, BudgetLineFormState>>({});
   const [financeEntryForms, setFinanceEntryForms] = useState<Record<string, FinanceEntryFormState>>({});
   const [contractDrafts, setContractDrafts] = useState<Record<string, ContractDraftState>>({});
   const [checkInCodes, setCheckInCodes] = useState<Record<string, string>>({});
   const [eventPosterFiles, setEventPosterFiles] = useState<Record<string, File | null>>({});
-  const [eventDraft, setEventDraft] = useState<EventDraftState>(() => buildInitialEventDraft());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => DateTime.local().toISODate() ?? '');
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
-  const eventsQueryKey = ['social-events', city, eventTypeFilter, eventStatusFilter, startAfter] as const;
+  const eventsQueryKey = ['social-events', city, eventTypeFilter, eventWorkflowStateFilter, startAfter] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
     queryFn: () =>
       SocialEventsAPI.listEvents({
         city: city.trim() || undefined,
-        eventType: eventTypeFilter || undefined,
-        eventStatus: eventStatusFilter || undefined,
+        eventTypeId: eventTypeFilter || undefined,
+        workflowStateId: eventWorkflowStateFilter || undefined,
         startAfter,
       }),
+    // This page already exposes an explicit refresh action. Retrying a failed
+    // request with the app-wide defaults (up to three additional 30s requests)
+    // leaves the page looking stuck for well over a minute when the API is
+    // restarting or the user's connection briefly drops.
+    retry: false,
   });
 
   const venuesQuery = useQuery({
     queryKey: ['social-venues', city],
     queryFn: () => SocialEventsAPI.listVenues({ city: city.trim() || undefined }),
+    retry: false,
   });
+  const eventTypesQuery = useQuery({
+    queryKey: ['catalog', 'event-types', 'social-events', locale],
+    queryFn: () => Catalogs.listItems('event-types', {
+      locale,
+      page: 1,
+      pageSize: 500,
+      includeInactive: true,
+    }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventWorkflowStatesQuery = useQuery({
+    queryKey: ['catalog', 'workflow-states', 'social-event-lifecycle', locale],
+    queryFn: () => Catalogs.getPublicWorkflowStates('social-event-lifecycle', locale),
+    staleTime: 5 * 60 * 1000,
+  });
+  const eventTypeById = useMemo(
+    () => new Map((eventTypesQuery.data?.items ?? []).map((item) => [item.id, item])),
+    [eventTypesQuery.data?.items],
+  );
+  const selectableEventTypes = useMemo(
+    () => (eventTypesQuery.data?.items ?? []).filter(
+      (item) => item.active && item.workflowState === 'published' && !item.deprecatedAt,
+    ),
+    [eventTypesQuery.data?.items],
+  );
 
   const venueById = useMemo(() => {
     const map = new Map<string, string>();
@@ -450,6 +475,18 @@ export default function SocialEventsPage() {
   }, [venuesQuery.data]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '';
+  const eventOverviewUiState = getSocialEventsOverviewUiState({
+    canCreateEvent: hasSession,
+    eventCount: events.length,
+    filtersActive: eventFiltersActive,
+  });
+  const eventCreateUiState = getSocialEventsCreateUiState({
+    canCreateEvent: hasSession,
+    eventCount: events.length,
+    filtersActive: eventFiltersActive,
+  });
+  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
 
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, SocialEventDTO[]>();
@@ -588,73 +625,40 @@ export default function SocialEventsPage() {
         : [],
   });
 
-  const createEventMutation = useMutation({
-    mutationFn: () => {
-      if (!hasSession) throw new Error('Inicia sesión para crear eventos.');
-      const title = eventDraft.title.trim();
-      if (!title) throw new Error('Título del evento requerido.');
-      const startIso = toUtcIso(eventDraft.startAt);
-      const endIso = toUtcIso(eventDraft.endAt);
-      const startAt = DateTime.fromISO(startIso);
-      const endAt = DateTime.fromISO(endIso);
-      if (!startAt.isValid || !endAt.isValid || startAt >= endAt) {
-        throw new Error('La fecha de fin debe ser posterior al inicio.');
-      }
-      const priceRaw = eventDraft.priceCents.trim();
-      const priceCents = parseOptionalUnsignedInt(priceRaw);
-      if (priceRaw !== '' && priceCents === null) {
-        throw new Error('Precio inválido (usa centavos).');
-      }
-      const capacityRaw = eventDraft.capacity.trim();
-      const capacity = parseOptionalUnsignedInt(capacityRaw);
-      if (capacityRaw !== '' && capacity === null) {
-        throw new Error('Capacidad inválida.');
-      }
-      const payload: SocialEventDTO = {
-        eventTitle: title,
-        eventDescription: eventDraft.description.trim() || null,
-        eventStart: startIso,
-        eventEnd: endIso,
-        eventVenueId: eventDraft.venueId.trim() || null,
-        eventPriceCents: priceCents,
-        eventCapacity: capacity,
-        eventType: eventDraft.eventType || null,
-        eventStatus: eventDraft.eventStatus || null,
-        eventCurrency: eventDraft.currency.trim().toUpperCase() || 'USD',
-        eventBudgetCents: null,
-        eventTicketUrl: eventDraft.ticketUrl.trim() || null,
-        eventImageUrl: null,
-        eventIsPublic: eventDraft.isPublic,
-        eventArtists: [],
-      };
-      return SocialEventsAPI.createEvent(payload);
-    },
-    onSuccess: (createdEvent) => {
-      const nextCalendarDate = dateKeyFromIso(createdEvent.eventStart);
-      if (nextCalendarDate) setSelectedCalendarDate(nextCalendarDate);
-      setEventDraft(buildInitialEventDraft());
-      qc.setQueryData<SocialEventDTO[]>(eventsQueryKey, (prev = []) => {
-        const createdId = createdEvent.eventId != null ? String(createdEvent.eventId) : null;
-        const withoutCreated = createdId
-          ? prev.filter((event) => String(event.eventId ?? '') !== createdId)
-          : prev;
-        return [createdEvent, ...withoutCreated];
-      });
-      void qc.invalidateQueries({ queryKey: ['social-events'] });
-      setFeedback({ kind: 'success', message: 'Evento creado y agregado al Event Calendar.' });
-    },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
-
   const rsvpMutation = useMutation({
     mutationFn: ({ eventId, status }: { eventId: string; status: SocialRsvpStatus }) => {
       if (!sessionPartyId) throw new Error('Inicia sesión para confirmar asistencia.');
       return SocialEventsAPI.rsvp(eventId, sessionPartyId, status);
     },
+    onMutate: async ({ eventId, status }) => {
+      await qc.cancelQueries({ queryKey: ['social-invitations', eventId] });
+      const previousInvitations = qc.getQueryData<SocialInvitationDTO[]>(['social-invitations', eventId]);
+      qc.setQueryData<SocialInvitationDTO[]>(['social-invitations', eventId], (old) => {
+        const filtered = (old ?? []).filter((inv) => String(inv.invitationToPartyId) !== String(sessionPartyId));
+        return [
+          ...filtered,
+          {
+            invitationToPartyId: String(sessionPartyId),
+            invitationStatus: status,
+            invitationEventId: eventId,
+          },
+        ];
+      });
+      return { previousInvitations };
+    },
     onSuccess: () => {
       setFeedback({ kind: 'success', message: 'RSVP registrado.' });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+    onError: (err: Error, _vars, context) => {
+      const eventId = (_vars as { eventId: string })?.eventId;
+      if (context?.previousInvitations !== undefined && eventId) {
+        qc.setQueryData(['social-invitations', eventId], context.previousInvitations);
+      }
+      setFeedback({ kind: 'error', message: err.message });
+    },
+    onSettled: (_data, _err, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
+    },
   });
 
   const inviteMutation = useMutation({
@@ -681,42 +685,29 @@ export default function SocialEventsPage() {
       if (!sessionPartyId) throw new Error('Inicia sesión para responder invitaciones.');
       return SocialEventsAPI.respondInvitation(eventId, invitationId, status);
     },
-    onSuccess: (_resp, { eventId }) => {
-      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
+    onMutate: async ({ eventId, invitationId, status }) => {
+      await qc.cancelQueries({ queryKey: ['social-invitations', eventId] });
+      const previousInvitations = qc.getQueryData<SocialInvitationDTO[]>(['social-invitations', eventId]);
+      qc.setQueryData<SocialInvitationDTO[]>(['social-invitations', eventId], (old) =>
+        (old ?? []).map((inv) =>
+          inv.invitationId === invitationId ? { ...inv, invitationStatus: status } : inv,
+        ),
+      );
+      return { previousInvitations };
+    },
+    onSuccess: () => {
       setFeedback({ kind: 'success', message: 'Respuesta enviada.' });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
-
-  const purchaseTicketsMutation = useMutation({
-    mutationFn: ({ eventId, fallbackTierId }: { eventId: string; fallbackTierId?: string }) => {
-      if (!sessionPartyId) throw new Error('Inicia sesión para comprar tickets.');
-      const draft = ticketPurchases[eventId] ?? {
-        tierId: fallbackTierId ?? '',
-        quantity: '1',
-        buyerName: '',
-        buyerEmail: '',
-      };
-      const quantity = parseOptionalUnsignedInt(draft.quantity);
-      if (!draft.tierId) throw new Error('Selecciona un tipo de ticket.');
-      if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
-      return SocialEventsAPI.buyTickets(eventId, {
-        ticketPurchaseTierId: draft.tierId,
-        ticketPurchaseQuantity: quantity,
-        ticketPurchaseBuyerName: draft.buyerName.trim() || null,
-        ticketPurchaseBuyerEmail: draft.buyerEmail.trim() || null,
-      });
+    onError: (err: Error, _vars, context) => {
+      const eventId = (_vars as { eventId: string })?.eventId;
+      if (context?.previousInvitations !== undefined && eventId) {
+        qc.setQueryData(['social-invitations', eventId], context.previousInvitations);
+      }
+      setFeedback({ kind: 'error', message: err.message });
     },
-    onSuccess: (order, { eventId }) => {
-      setTicketPurchases((prev) => ({ ...prev, [eventId]: { tierId: '', quantity: '1', buyerName: '', buyerEmail: '' } }));
-      void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
-      void qc.invalidateQueries({ queryKey: ['social-ticket-orders', eventId] });
-      setFeedback({
-        kind: 'success',
-        message: `Compra registrada (${order.ticketOrderQuantity} ticket${order.ticketOrderQuantity > 1 ? 's' : ''}).`,
-      });
+    onSettled: (_data, _err, { eventId }) => {
+      void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
   const createTierMutation = useMutation({
@@ -726,7 +717,7 @@ export default function SocialEventsPage() {
         name: '',
         price: '',
         quantity: '',
-        currency: 'USD',
+        currency: preferredCurrency,
       };
       const priceCents = parseOptionalUnsignedInt(draft.price);
       const quantity = parseOptionalUnsignedInt(draft.quantity);
@@ -738,7 +729,7 @@ export default function SocialEventsPage() {
         ticketTierName: draft.name.trim(),
         ticketTierDescription: null,
         ticketTierPriceCents: priceCents,
-        ticketTierCurrency: draft.currency.trim().toUpperCase() || 'USD',
+        ticketTierCurrency: draft.currency.trim().toUpperCase() || preferredCurrency,
         ticketTierQuantityTotal: quantity,
         ticketTierQuantitySold: 0,
         ticketTierSalesStart: null,
@@ -751,7 +742,7 @@ export default function SocialEventsPage() {
     onSuccess: (_resp, { eventId }) => {
       setTicketTierForms((prev) => ({
         ...prev,
-        [eventId]: { code: '', name: '', price: '', quantity: '', currency: 'USD' },
+        [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
       }));
       void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
       setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
@@ -871,14 +862,14 @@ export default function SocialEventsPage() {
         counterparty: '',
         concept: '',
         amountCents: '',
-        currency: 'USD',
+        currency: preferredCurrency,
         status: 'pending' as const,
         notes: '',
       };
       const amountCents = parseOptionalUnsignedInt(draft.amountCents);
       if (!draft.concept.trim()) throw new Error('Concepto de contrato requerido.');
       if (amountCents === null || amountCents <= 0) throw new Error('Monto de contrato inválido (usa centavos).');
-      const currency = draft.currency.trim().toUpperCase() || 'USD';
+      const currency = draft.currency.trim().toUpperCase() || preferredCurrency;
       const contractResponse = await ContractsAPI.create({
         kind: draft.kind.trim() || 'event_vendor_contract',
         eventId,
@@ -916,7 +907,7 @@ export default function SocialEventsPage() {
           counterparty: '',
           concept: '',
           amountCents: '',
-          currency: 'USD',
+          currency: preferredCurrency,
           status: 'pending',
           notes: '',
         },
@@ -955,7 +946,7 @@ export default function SocialEventsPage() {
         category: 'general',
         concept: '',
         amountCents: '',
-        currency: 'USD',
+        currency: preferredCurrency,
         status: 'posted',
         externalRef: '',
         notes: '',
@@ -971,7 +962,7 @@ export default function SocialEventsPage() {
         efeCategory: draft.category.trim() || 'general',
         efeConcept: draft.concept.trim(),
         efeAmountCents: amountCents,
-        efeCurrency: draft.currency.trim().toUpperCase() || 'USD',
+        efeCurrency: draft.currency.trim().toUpperCase() || preferredCurrency,
         efeStatus: draft.status,
         efeExternalRef: draft.externalRef.trim() || null,
         efeNotes: draft.notes.trim() || null,
@@ -989,7 +980,7 @@ export default function SocialEventsPage() {
           category: 'general',
           concept: '',
           amountCents: '',
-          currency: 'USD',
+          currency: preferredCurrency,
           status: 'posted',
           externalRef: '',
           notes: '',
@@ -1044,6 +1035,11 @@ export default function SocialEventsPage() {
                 <Typography variant="body2" color="text.secondary">
                   {formatMoney(order.ticketOrderAmountCents, order.ticketOrderCurrency)}
                 </Typography>
+                {order.ticketOrderBuyerPlatformFeeCents > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    Tarifa TDF: {formatMoney(order.ticketOrderBuyerPlatformFeeCents + order.ticketOrderOrganizerPlatformFeeCents, order.ticketOrderCurrency)}
+                  </Typography>
+                )}
               </Stack>
               {order.ticketOrderTickets.length > 0 && (
                 <Stack direction="row" spacing={0.75} flexWrap="wrap" sx={{ mt: 1 }}>
@@ -1098,206 +1094,118 @@ export default function SocialEventsPage() {
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          <TextField
-            label="Filtrar por ciudad"
-            size="small"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            sx={{ minWidth: 220 }}
-          />
-          <TextField
-            select
-            label="Tipo"
-            size="small"
-            value={eventTypeFilter}
-            onChange={(e) => setEventTypeFilter(e.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="party">Party</MenuItem>
-            <MenuItem value="concert">Concert</MenuItem>
-            <MenuItem value="festival">Festival</MenuItem>
-            <MenuItem value="showcase">Showcase</MenuItem>
-          </TextField>
-          <TextField
-            select
-            label="Estado"
-            size="small"
-            value={eventStatusFilter}
-            onChange={(e) => setEventStatusFilter(e.target.value)}
-            sx={{ minWidth: 150 }}
-          >
-            <MenuItem value="">Todos</MenuItem>
-            <MenuItem value="planning">Planning</MenuItem>
-            <MenuItem value="announced">Announced</MenuItem>
-            <MenuItem value="on_sale">On Sale</MenuItem>
-            <MenuItem value="live">Live</MenuItem>
-            <MenuItem value="completed">Completed</MenuItem>
-            <MenuItem value="cancelled">Cancelled</MenuItem>
-          </TextField>
-          <Button
-            variant="outlined"
-            startIcon={<RefreshIcon />}
-            onClick={() => {
-              void eventsQuery.refetch();
-              void venuesQuery.refetch();
-            }}
-            disabled={eventsQuery.isFetching}
-          >
-            Refrescar
-          </Button>
-          {!hasSession && (
+          {eventOverviewUiState.showFilters && (
+            <>
+              <TextField
+                label="Filtrar por ciudad"
+                size="small"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                sx={{ minWidth: 220 }}
+              />
+              <TextField
+                select
+                label="Tipo"
+                size="small"
+                value={eventTypeFilter}
+                onChange={(e) => setEventTypeFilter(e.target.value)}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {selectableEventTypes.map((item) => (
+                  <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                label="Estado"
+                size="small"
+                value={eventWorkflowStateFilter}
+                onChange={(e) => setEventWorkflowStateFilter(e.target.value)}
+                sx={{ minWidth: 150 }}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                {(eventWorkflowStatesQuery.data?.states ?? []).map((state) => (
+                  <MenuItem key={state.id} value={state.id}>{state.name}</MenuItem>
+                ))}
+              </TextField>
+            </>
+          )}
+          {showRefreshAction && (
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => {
+                void eventsQuery.refetch();
+                void venuesQuery.refetch();
+              }}
+              disabled={eventsQuery.isFetching}
+            >
+              Refrescar
+            </Button>
+          )}
+          {eventCreateUiState.showCreateToolbarAction && (
+            <Button
+              component={RouterLink}
+              to="/social/eventos/nuevo"
+              variant="contained"
+              startIcon={<AddIcon />}
+            >
+              Nuevo evento
+            </Button>
+          )}
+          {!hasSession && eventOverviewUiState.showFilters && (
             <Alert severity="info" sx={{ m: 0, py: 0.5 }}>
               Inicia sesión para RSVP, invitaciones, tickets y gestión financiera.
             </Alert>
           )}
         </Stack>
-        {hasSession ? (
-          <Card variant="outlined">
+        {eventCreateUiState.showCreateWelcome && (
+          <Card
+            variant="outlined"
+            sx={{
+              borderColor: 'primary.main',
+              background: (theme) =>
+                `linear-gradient(135deg, ${theme.palette.primary.main}12, transparent 65%)`,
+            }}
+          >
             <CardContent>
-              <Stack spacing={1.5}>
-                <Typography variant="h6" fontWeight={700}>Create Event</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Any logged in user can create events. Once created, events appear in the Event Calendar section.
-                </Typography>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField
-                    label="Título"
-                    size="small"
-                    value={eventDraft.title}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, title: e.target.value }))}
-                    sx={{ flex: 2 }}
-                  />
-                  <TextField
-                    label="Venue"
-                    size="small"
-                    select
-                    value={eventDraft.venueId}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, venueId: e.target.value }))}
-                    sx={{ flex: 1 }}
-                  >
-                    <MenuItem value="">Sin venue</MenuItem>
-                    {(venuesQuery.data ?? []).map((venue) => (
-                      <MenuItem key={venue.venueId ?? venue.venueName} value={venue.venueId ?? ''}>
-                        {venue.venueName}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    select
-                    label="Tipo"
-                    size="small"
-                    value={eventDraft.eventType}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, eventType: e.target.value }))}
-                    sx={{ width: 150 }}
-                  >
-                    <MenuItem value="party">Party</MenuItem>
-                    <MenuItem value="concert">Concert</MenuItem>
-                    <MenuItem value="festival">Festival</MenuItem>
-                    <MenuItem value="showcase">Showcase</MenuItem>
-                  </TextField>
-                  <TextField
-                    select
-                    label="Estado"
-                    size="small"
-                    value={eventDraft.eventStatus}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, eventStatus: e.target.value }))}
-                    sx={{ width: 150 }}
-                  >
-                    <MenuItem value="planning">Planning</MenuItem>
-                    <MenuItem value="announced">Announced</MenuItem>
-                    <MenuItem value="on_sale">On Sale</MenuItem>
-                    <MenuItem value="live">Live</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                  </TextField>
-                </Stack>
-                <TextField
-                  label="Descripción"
-                  size="small"
-                  value={eventDraft.description}
-                  onChange={(e) => setEventDraft((prev) => ({ ...prev, description: e.target.value }))}
-                  multiline
-                  minRows={2}
-                />
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-                  <TextField
-                    label="Inicio"
-                    size="small"
-                    type="datetime-local"
-                    value={eventDraft.startAt}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, startAt: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 220 }}
-                  />
-                  <TextField
-                    label="Fin"
-                    size="small"
-                    type="datetime-local"
-                    value={eventDraft.endAt}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, endAt: e.target.value }))}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 220 }}
-                  />
-                  <TextField
-                    label="Precio (centavos)"
-                    size="small"
-                    type="number"
-                    value={eventDraft.priceCents}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, priceCents: e.target.value }))}
-                    sx={{ width: 170 }}
-                  />
-                  <TextField
-                    label="Capacidad"
-                    size="small"
-                    type="number"
-                    value={eventDraft.capacity}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, capacity: e.target.value }))}
-                    sx={{ width: 130 }}
-                  />
-                  <TextField
-                    label="Moneda"
-                    size="small"
-                    value={eventDraft.currency}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, currency: e.target.value.toUpperCase() }))}
-                    sx={{ width: 110 }}
-                  />
-                </Stack>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-                  <TextField
-                    label="Ticket URL"
-                    size="small"
-                    value={eventDraft.ticketUrl}
-                    onChange={(e) => setEventDraft((prev) => ({ ...prev, ticketUrl: e.target.value }))}
-                    sx={{ flex: 1 }}
-                  />
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Checkbox
-                      size="small"
-                      checked={eventDraft.isPublic}
-                      onChange={(_, checked) => setEventDraft((prev) => ({ ...prev, isPublic: checked }))}
-                    />
-                    <Typography variant="body2" color="text.secondary">Evento público</Typography>
-                  </Stack>
-                  <Button
-                    variant="contained"
-                    onClick={() => createEventMutation.mutate()}
-                    disabled={createEventMutation.isPending || !hasSession}
-                  >
-                    Crear evento
-                  </Button>
-                </Stack>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={2}
+                alignItems={{ md: 'center' }}
+                justifyContent="space-between"
+              >
+                <Box>
+                  <Typography variant="h5" fontWeight={800}>
+                    Crea el primer evento con tu equipo
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {eventCreateUiState.createWelcomeDescription}
+                  </Typography>
+                </Box>
+                <Button
+                  component={RouterLink}
+                  to="/social/eventos/nuevo"
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  sx={{ flexShrink: 0 }}
+                >
+                  Empezar
+                </Button>
               </Stack>
             </CardContent>
           </Card>
-        ) : (
+        )}
+        {!hasSession && (
           <Alert severity="info">Inicia sesión para crear eventos.</Alert>
         )}
+        {eventOverviewUiState.showCalendar && (
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={1.5}>
               <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
-                <Typography variant="h6" fontWeight={700}>Event Calendar</Typography>
+                <Typography variant="h6" fontWeight={700}>Calendario de eventos</Typography>
                 <Chip size="small" label={`${events.length} evento${events.length === 1 ? '' : 's'}`} />
               </Stack>
               <Grid container spacing={2}>
@@ -1338,7 +1246,8 @@ export default function SocialEventsPage() {
                               {event.eventTitle}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {formatDate(event.eventStart)} - {formatDate(event.eventEnd)}
+                              {formatDate(event.eventStart)}
+                              {event.eventEnd ? ` - ${formatDate(event.eventEnd)}` : ' · fin por confirmar'}
                             </Typography>
                             {event.eventVenueId && (
                               <Typography variant="caption" color="text.secondary" display="block">
@@ -1360,6 +1269,7 @@ export default function SocialEventsPage() {
             </Stack>
           </CardContent>
         </Card>
+        )}
         {feedback && (
           <Alert severity={feedback.kind} onClose={() => setFeedback(null)}>
             {feedback.message}
@@ -1369,13 +1279,13 @@ export default function SocialEventsPage() {
 
       {eventsQuery.error ? (
         <Alert severity="error">No pudimos cargar los eventos. Intenta de nuevo.</Alert>
-      ) : eventsQuery.isLoading || venuesQuery.isLoading ? (
+      ) : eventsQuery.isLoading ? (
         <Stack direction="row" spacing={1.5} alignItems="center">
           <CircularProgress size={18} />
-          <Typography>Cargando eventos y venues...</Typography>
+          <Typography>Cargando eventos...</Typography>
         </Stack>
       ) : events.length === 0 ? (
-        <Alert severity="info">No hay eventos disponibles para este filtro.</Alert>
+        <Alert severity="info">{eventOverviewUiState.emptyEventsMessage}</Alert>
       ) : (
         <Grid container spacing={2}>
           {events.map((ev, index) => {
@@ -1387,18 +1297,30 @@ export default function SocialEventsPage() {
               String(ev.eventOrganizerPartyId) === sessionPartyId;
             const invitationForMe = invitationQueries[index]?.data?.[0] ?? null;
             const tiers = ticketTierQueries[index]?.data ?? [];
+            const eventCardActionUiState = getSocialEventCardActionUiState({
+              hasSession,
+              isOrganizer,
+              ticketTierCount: tiers.length,
+            });
             const orders = ticketOrderQueries[index]?.data ?? [];
             const budgetLines = budgetLineQueries[index]?.data ?? [];
             const financeEntries = financeEntryQueries[index]?.data ?? [];
             const financeSummary = financeSummaryQueries[index]?.data ?? null;
+            const financeSummaryUiState = financeSummary
+              ? getSocialEventsFinanceSummaryUiState(financeSummary)
+              : null;
             const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
+            const availableTiers = tiers.filter(
+              (tier) => Boolean(tier.ticketTierId) && tier.ticketTierActive && tierAvailability(tier) > 0,
+            );
             const purchaseDraft = ticketPurchases[eventId] ?? {
-              tierId: tiers[0]?.ticketTierId ?? '',
-              quantity: '1',
-              buyerName: '',
-              buyerEmail: '',
+              tierId: availableTiers[0]?.ticketTierId ?? '',
             };
-            const tierDraft = ticketTierForms[eventId] ?? { code: '', name: '', price: '', quantity: '', currency: 'USD' };
+            const selectedPurchaseTier =
+              availableTiers.find((tier) => String(tier.ticketTierId ?? '') === purchaseDraft.tierId)
+              ?? availableTiers[0]
+              ?? null;
+            const tierDraft = ticketTierForms[eventId] ?? { code: '', name: '', price: '', quantity: '', currency: preferredCurrency };
             const budgetDraft = budgetLineForms[eventId] ?? {
               code: '',
               name: '',
@@ -1414,7 +1336,7 @@ export default function SocialEventsPage() {
               category: 'general',
               concept: '',
               amountCents: '',
-              currency: ev.eventCurrency ?? 'USD',
+              currency: ev.eventCurrency ?? preferredCurrency,
               status: 'posted' as const,
               externalRef: '',
               notes: '',
@@ -1425,7 +1347,7 @@ export default function SocialEventsPage() {
               counterparty: '',
               concept: '',
               amountCents: '',
-              currency: ev.eventCurrency ?? 'USD',
+              currency: ev.eventCurrency ?? preferredCurrency,
               status: 'pending' as const,
               notes: '',
             };
@@ -1451,17 +1373,35 @@ export default function SocialEventsPage() {
                       <Stack direction="row" spacing={1} alignItems="center">
                         <Chip icon={<CalendarMonthIcon />} label={formatDate(ev.eventStart)} size="small" />
                         <Typography variant="caption" color="text.secondary">
-                          Termina {formatDate(ev.eventEnd)}
+                          {ev.eventEnd ? `Termina ${formatDate(ev.eventEnd)}` : 'Fin por confirmar'}
                         </Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
                         {ev.eventCapacity ? <Chip label={`Cupo: ${ev.eventCapacity}`} size="small" /> : null}
-                        {ev.eventType ? <Chip label={`Tipo: ${ev.eventType}`} size="small" color="secondary" variant="outlined" /> : null}
-                        {ev.eventStatus ? <Chip label={`Estado: ${ev.eventStatus}`} size="small" variant="outlined" /> : null}
+                        {ev.eventTypeId ? (
+                          <Chip
+                            label={`Tipo: ${eventTypeById.get(ev.eventTypeId)?.name ?? 'Tipo histórico no disponible'}`}
+                            size="small"
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        ) : null}
+                        {ev.eventWorkflowStateId ? (
+                          <Chip
+                            label={`Estado: ${locale.toLowerCase().startsWith('en') ? ev.eventWorkflowStateNameEn : ev.eventWorkflowStateNameEs}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ) : null}
                       </Stack>
                     </Stack>
 
                     <Typography variant="h6" fontWeight={800}>{ev.eventTitle}</Typography>
+                    {eventId && (
+                      <Button component={RouterLink} to={`/social/eventos/${eventId}`} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
+                        Abrir página del evento
+                      </Button>
+                    )}
                     {ev.eventVenueId && (
                       <Typography variant="body2" color="text.secondary">
                         {venueById.get(ev.eventVenueId) ?? 'Venue por definir'}
@@ -1474,12 +1414,12 @@ export default function SocialEventsPage() {
                     ) : null}
                     {typeof ev.eventPriceCents === 'number' && (
                       <Typography variant="body2" color="text.secondary">
-                        Cover referencial: {formatMoney(ev.eventPriceCents, ev.eventCurrency ?? 'USD')}
+                        Cover referencial: {formatMoney(ev.eventPriceCents, ev.eventCurrency ?? preferredCurrency)}
                       </Typography>
                     )}
                     {typeof ev.eventBudgetCents === 'number' && (
                       <Typography variant="body2" color="text.secondary">
-                        Presupuesto general: {formatMoney(ev.eventBudgetCents, ev.eventCurrency ?? 'USD')}
+                        Presupuesto general: {formatMoney(ev.eventBudgetCents, ev.eventCurrency ?? preferredCurrency)}
                       </Typography>
                     )}
                     {ev.eventDescription && (
@@ -1541,7 +1481,7 @@ export default function SocialEventsPage() {
                       </Stack>
                     )}
 
-                    {invitationForMe?.invitationStatus && (
+                    {eventCardActionUiState.showRsvpActions && invitationForMe?.invitationStatus && (
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                         <Chip label={`Invitación: ${invitationForMe.invitationStatus}`} size="small" color="secondary" sx={{ width: 'fit-content' }} />
                         {invitationForMe.invitationId && eventId && (
@@ -1567,170 +1507,170 @@ export default function SocialEventsPage() {
                       </Stack>
                     )}
 
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        startIcon={<CheckIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Accepted' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        Asistiré
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<HelpOutlineIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Maybe' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        Tal vez
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        startIcon={<ClearIcon />}
-                        onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Declined' })}
-                        disabled={rsvpMutation.isPending || !hasSession || !eventId}
-                      >
-                        No puedo
-                      </Button>
-                    </Stack>
-
-                    <Divider />
-
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>Invitar</Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <TextField
-                          label="Party ID"
-                          size="small"
-                          value={inviteDraft.partyId}
-                          onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, partyId: e.target.value } }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <TextField
-                          label="Mensaje (opcional)"
-                          size="small"
-                          value={inviteDraft.message}
-                          onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, message: e.target.value } }))}
-                          sx={{ flex: 2 }}
-                        />
+                    {eventCardActionUiState.showRsvpActions && (
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
                         <Button
                           variant="contained"
                           size="small"
-                          startIcon={<PersonAddAltIcon />}
-                          onClick={() => eventId && inviteMutation.mutate({ eventId })}
-                          disabled={inviteMutation.isPending || !hasSession || !eventId}
+                          startIcon={<CheckIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Accepted' })}
+                          disabled={rsvpMutation.isPending || !eventId}
                         >
-                          Enviar
+                          Asistiré
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<HelpOutlineIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Maybe' })}
+                          disabled={rsvpMutation.isPending || !eventId}
+                        >
+                          Tal vez
+                        </Button>
+                        <Button
+                          variant="text"
+                          size="small"
+                          startIcon={<ClearIcon />}
+                          onClick={() => eventId && rsvpMutation.mutate({ eventId, status: 'Declined' })}
+                          disabled={rsvpMutation.isPending || !eventId}
+                        >
+                          No puedo
                         </Button>
                       </Stack>
-                    </Stack>
+                    )}
 
-                    <Divider />
+                    {eventCardActionUiState.showInviteForm && (
+                      <>
+                        <Divider />
 
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>Tickets</Typography>
-                      {ticketTierQueries[index]?.error ? (
-                        <Alert severity="warning">No se pudieron cargar los tipos de ticket.</Alert>
-                      ) : tiers.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary">Aún no hay tipos de ticket para este evento.</Typography>
-                      ) : (
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          {tiers.map((tier) => (
-                            <Chip
-                              key={tier.ticketTierId ?? tier.ticketTierCode}
-                              icon={<ConfirmationNumberIcon />}
-                              label={`${tier.ticketTierName} · ${formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)} · Disp: ${tierAvailability(tier)}`}
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>Invitar</Typography>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <TextField
+                              label="Party ID"
                               size="small"
-                              variant={tier.ticketTierActive ? 'filled' : 'outlined'}
+                              value={inviteDraft.partyId}
+                              onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, partyId: e.target.value } }))}
+                              sx={{ flex: 1 }}
                             />
-                          ))}
-                        </Stack>
-                      )}
-
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        <TextField
-                          select
-                          label="Tipo"
-                          size="small"
-                          value={purchaseDraft.tierId}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, tierId: e.target.value },
-                          }))}
-                          sx={{ minWidth: 180 }}
-                        >
-                          {tiers.map((tier) => (
-                            <MenuItem
-                              key={tier.ticketTierId ?? tier.ticketTierCode}
-                              value={tier.ticketTierId ?? ''}
-                              disabled={!tier.ticketTierActive || tierAvailability(tier) <= 0}
+                            <TextField
+                              label="Mensaje (opcional)"
+                              size="small"
+                              value={inviteDraft.message}
+                              onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, message: e.target.value } }))}
+                              sx={{ flex: 2 }}
+                            />
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<PersonAddAltIcon />}
+                              onClick={() => eventId && inviteMutation.mutate({ eventId })}
+                              disabled={inviteMutation.isPending || !eventId}
                             >
-                              {tier.ticketTierName} ({formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)})
-                            </MenuItem>
-                          ))}
-                        </TextField>
-                        <TextField
-                          label="Cantidad"
-                          size="small"
-                          type="number"
-                          value={purchaseDraft.quantity}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, quantity: e.target.value },
-                          }))}
-                          sx={{ width: 110 }}
-                        />
-                        <TextField
-                          label="Nombre comprador"
-                          size="small"
-                          value={purchaseDraft.buyerName}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, buyerName: e.target.value },
-                          }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <TextField
-                          label="Email comprador"
-                          size="small"
-                          value={purchaseDraft.buyerEmail}
-                          onChange={(e) => setTicketPurchases((prev) => ({
-                            ...prev,
-                            [eventId]: { ...purchaseDraft, buyerEmail: e.target.value },
-                          }))}
-                          sx={{ flex: 1 }}
-                        />
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<SellIcon />}
-                          onClick={() => eventId && purchaseTicketsMutation.mutate({ eventId, fallbackTierId: tiers[0]?.ticketTierId ?? undefined })}
-                          disabled={purchaseTicketsMutation.isPending || !hasSession || !eventId || tiers.length === 0}
-                        >
-                          Comprar
-                        </Button>
-                      </Stack>
-                    </Stack>
+                              Enviar
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </>
+                    )}
 
-                    <Divider />
+                    {eventCardActionUiState.showTicketSection && (
+                      <>
+                        <Divider />
 
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {isOrganizer ? 'Órdenes del evento' : 'Mis órdenes'}
-                      </Typography>
-                      {ticketOrderQueries[index]?.isLoading ? (
-                        <Typography variant="body2" color="text.secondary">Cargando órdenes...</Typography>
-                      ) : ticketOrderQueries[index]?.error ? (
-                        <Alert severity="warning">No se pudieron cargar las órdenes de tickets.</Alert>
-                      ) : (
-                        renderOrders(orders, eventId, isOrganizer)
-                      )}
-                    </Stack>
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>Tickets</Typography>
+                          {ticketTierQueries[index]?.error ? (
+                            <Alert severity="warning">No se pudieron cargar los tipos de ticket.</Alert>
+                          ) : tiers.length === 0 ? (
+                            <Typography variant="body2" color="text.secondary">Aún no hay tipos de ticket para este evento.</Typography>
+                          ) : (
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                              {tiers.map((tier) => (
+                                <Chip
+                                  key={tier.ticketTierId ?? tier.ticketTierCode}
+                                  icon={<ConfirmationNumberIcon />}
+                                  label={`${tier.ticketTierName} · ${formatMoney(tier.ticketTierPriceCents, tier.ticketTierCurrency)} · Disp: ${tierAvailability(tier)}`}
+                                  size="small"
+                                  variant={tier.ticketTierActive ? 'filled' : 'outlined'}
+                                />
+                              ))}
+                            </Stack>
+                          )}
 
-                    {isOrganizer && (
+                          {eventCardActionUiState.showTicketPurchaseForm && (
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                select
+                                label="Tipo"
+                                size="small"
+                                value={selectedPurchaseTier?.ticketTierId ?? ''}
+                                onChange={(e) => setTicketPurchases((prev) => ({
+                                  ...prev,
+                                  [eventId]: { ...purchaseDraft, tierId: e.target.value },
+                                }))}
+                                sx={{ minWidth: 180 }}
+                              >
+                                {availableTiers.length === 0 && (
+                                  <MenuItem value="" disabled>
+                                    Sin tickets disponibles
+                                  </MenuItem>
+                                )}
+                                {tiers.map((tier) => (
+                                  <MenuItem
+                                    key={tier.ticketTierId ?? tier.ticketTierCode}
+                                    value={tier.ticketTierId ?? ''}
+                                    disabled={!tier.ticketTierActive || tierAvailability(tier) <= 0}
+                                  >
+                                    {tier.ticketTierName} ({formatMoney(ticketCheckoutTotal(tier.ticketTierPriceCents), tier.ticketTierCurrency)} final)
+                                  </MenuItem>
+                                ))}
+                              </TextField>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<SellIcon />}
+                                onClick={() => {
+                                  if (!sessionPartyId) {
+                                    setFeedback({ kind: 'error', message: 'Inicia sesión para comprar tickets.' });
+                                    return;
+                                  }
+                                  if (!eventId || !selectedPurchaseTier?.ticketTierId) {
+                                    setFeedback({ kind: 'error', message: 'Selecciona un tipo de ticket disponible.' });
+                                    return;
+                                  }
+                                  setTicketCheckout({ eventId, eventTitle: ev.eventTitle, tier: selectedPurchaseTier });
+                                }}
+                                disabled={!eventId || availableTiers.length === 0}
+                              >
+                                Comprar con tarjeta
+                              </Button>
+                            </Stack>
+                          )}
+                        </Stack>
+                      </>
+                    )}
+
+                    {eventCardActionUiState.showTicketOrders && (
+                      <>
+                        <Divider />
+
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {isOrganizer ? 'Órdenes del evento' : 'Mis órdenes'}
+                          </Typography>
+                          {ticketOrderQueries[index]?.isLoading ? (
+                            <Typography variant="body2" color="text.secondary">Cargando órdenes...</Typography>
+                          ) : ticketOrderQueries[index]?.error ? (
+                            <Alert severity="warning">No se pudieron cargar las órdenes de tickets.</Alert>
+                          ) : (
+                            renderOrders(orders, eventId, isOrganizer)
+                          )}
+                        </Stack>
+                      </>
+                    )}
+
+                    {eventCardActionUiState.showOrganizerTools && (
                       <>
                         <Divider />
                         <Stack spacing={1}>
@@ -1829,21 +1769,25 @@ export default function SocialEventsPage() {
                             ) : financeSummary ? (
                               <Stack spacing={1}>
                                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                                  <Chip size="small" label={`Ingresos: ${formatMoney(financeSummary.efsActualIncomeCents, financeSummary.efsCurrency)}`} color="success" />
-                                  <Chip size="small" label={`Gastos: ${formatMoney(financeSummary.efsActualExpenseCents, financeSummary.efsCurrency)}`} color="warning" />
-                                  <Chip size="small" label={`Neto: ${formatMoney(financeSummary.efsNetCents, financeSummary.efsCurrency)}`} />
-                                  <Chip size="small" label={`Utilización: ${formatPercent(financeSummary.efsBudgetUtilizationPct)}`} variant="outlined" />
-                                  <Chip size="small" label={`CxP: ${formatMoney(financeSummary.efsAccountsPayableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`CxC: ${formatMoney(financeSummary.efsAccountsReceivableCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Contratos comprometidos: ${formatMoney(financeSummary.efsContractCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Contratos pagados: ${formatMoney(financeSummary.efsContractPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Compras comprometidas: ${formatMoney(financeSummary.efsProcurementCommittedCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Compras pagadas: ${formatMoney(financeSummary.efsProcurementPaidCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Activos: ${formatMoney(financeSummary.efsAssetInvestmentCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Pasivo neto: ${formatMoney(financeSummary.efsLiabilityBalanceCents ?? 0, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Tickets pagados: ${formatMoney(financeSummary.efsTicketPaidRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
-                                  <Chip size="small" label={`Tickets reembolsados: ${formatMoney(financeSummary.efsTicketRefundedRevenueCents, financeSummary.efsCurrency)}`} variant="outlined" />
+                                  {financeSummaryUiState?.metrics.map((metric) => (
+                                    <Chip
+                                      key={metric.key}
+                                      size="small"
+                                      label={`${metric.label}: ${
+                                        metric.valueType === 'percent'
+                                          ? formatPercent(metric.value)
+                                          : formatMoney(metric.value, financeSummary.efsCurrency)
+                                      }`}
+                                      color={metric.color}
+                                      variant={metric.variant}
+                                    />
+                                  ))}
                                 </Stack>
+                                {financeSummaryUiState?.omittedEmptyDetailSummary && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {financeSummaryUiState.omittedEmptyDetailSummary}
+                                  </Typography>
+                                )}
                                 <Stack direction="row" spacing={1}>
                                   <Button
                                     size="small"
@@ -1874,7 +1818,7 @@ export default function SocialEventsPage() {
                                   <Stack key={line.eblId ?? line.eblCode} direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                                     <Chip size="small" label={`${line.eblCode} · ${line.eblType}`} />
                                     <Typography variant="caption" color="text.secondary">
-                                      Plan: {formatMoney(line.eblPlannedCents, ev.eventCurrency ?? 'USD')} · Real: {formatMoney(line.eblActualCents ?? 0, ev.eventCurrency ?? 'USD')}
+                                      Plan: {formatMoney(line.eblPlannedCents, ev.eventCurrency ?? preferredCurrency)} · Real: {formatMoney(line.eblActualCents ?? 0, ev.eventCurrency ?? preferredCurrency)}
                                     </Typography>
                                   </Stack>
                                 ))}
@@ -2312,6 +2256,20 @@ export default function SocialEventsPage() {
             );
           })}
         </Grid>
+      )}
+      {ticketCheckout && (
+        <StripeCheckoutModal
+          open
+          eventId={ticketCheckout.eventId}
+          eventTitle={ticketCheckout.eventTitle}
+          tier={ticketCheckout.tier}
+          onClose={() => setTicketCheckout(null)}
+          onSuccess={(orderId) => {
+            void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', ticketCheckout.eventId] });
+            void qc.invalidateQueries({ queryKey: ['social-ticket-orders', ticketCheckout.eventId] });
+            setFeedback({ kind: 'success', message: `Pago aprobado. Orden ${orderId}.` });
+          }}
+        />
       )}
     </Box>
   );

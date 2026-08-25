@@ -7,6 +7,7 @@
 - Dev script: `scripts/dev_run.sh` (exports env, builds, runs).
 
 ## Build, Run, and Dev
+- Toolchain: **stack only** — `stack.yaml` uses `lts-24.42` (GHC 9.10.3). Do **not** use `cabal` or the system GHC; it is a different toolchain the project does not use, its `dist-newstyle/` artifacts are ignored, and a green `cabal` build does not imply a green project build.
 - Env: `set -a; source config/default.env; set +a`.
 - Build: `stack setup` then `stack build`.
 - Run: `stack run` (or `bash scripts/dev_run.sh`).
@@ -41,7 +42,7 @@
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks
-- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, `VITE_TZ=America/Guayaquil`, and optional `VITE_API_DEMO_TOKEN`.
+- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Set `NODE_VERSION=20.19.4`, `VITE_API_BASE=https://the-dream-factory.koyeb.app`, and `VITE_TZ=America/Guayaquil`. Never place bearer credentials in `VITE_*` variables because they are public bundle configuration.
 - **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
 - **Koyeb (API)** – configure all `DB_*`, `SMTP_*`, `HQ_APP_URL`, and CORS vars (`ALLOW_ORIGINS`, `ALLOW_ALL_ORIGINS`). Without the CORS envs Cloudflare/Vercel frontends cannot talk to the API.
 - Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.

@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   Alert,
@@ -14,25 +15,19 @@ import {
   DialogContent,
   DialogTitle,
   Fade,
-  FormControl,
   FormControlLabel,
-  FormHelperText,
   IconButton,
   InputAdornment,
-  InputLabel,
   Link,
-  MenuItem,
-  OutlinedInput,
   Paper,
-  Select,
   Stack,
   TextField,
   Tooltip,
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material/Select';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -47,13 +42,34 @@ import { useThemeMode } from '../theme/AppThemeProvider';
 import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest } from '../api/auth';
 import { Meta } from '../api/meta';
 import { loadSessionSnapshot } from '../api/session';
-import { SELF_SIGNUP_ROLES, type SignupRole } from '../constants/roles';
 import { Fans } from '../api/fans';
 import type { ArtistProfileDTO } from '../api/types';
-import { buildSignupPayload, deriveEffectiveRoles, normalizeSignupRoles } from '../utils/roles';
+import { buildSignupPayload, deriveEffectiveRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
-import { pickLandingPath, readSafeRedirectPath } from '../utils/loginRouting';
+import {
+  readOnboardingIntent,
+  readSafeRedirectPath,
+  resolvePostAuthPath,
+  type OnboardingIntent,
+} from '../utils/loginRouting';
+import { useAnalytics } from '../analytics/useAnalytics';
+import { captureGrowthEvent } from '../analytics/growthAttribution';
+import { captureFirstValueOnce, markWebSignupCompleted } from '../analytics/onboardingProgress';
+
+const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
+// Mirrors the server's rejected Unicode categories: Control, Format,
+// LineSeparator, and ParagraphSeparator.
+// eslint-disable-next-line no-control-regex
+const hasUnsafePasswordCharacter = (value: string) => /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(value);
+const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
+  events: 'descubrir eventos',
+  follow_artists: 'seguir artistas',
+  artist_profile: 'crear o reclamar un perfil de artista',
+  internships: 'postular a prácticas',
+  learning: 'aprender o enseñar',
+  professional_tools: 'explorar herramientas profesionales',
+};
 
 const LANDING_LABELS: Record<string, string> = {
   '/configuracion/roles-permisos': 'Roles y permisos',
@@ -66,6 +82,9 @@ const LANDING_LABELS: Record<string, string> = {
   '/label/artistas': 'Sello / Artistas',
   '/operacion/inventario': 'Inventario',
   '/finanzas/pagos': 'Finanzas',
+  '/finanzas/creador-reporte-cuenta': 'Finanzas / Creador de reportes',
+  '/finanzas/reporte-esteban-munoz': 'Finanzas / Reporte Esteban',
+  '/finanzas/reporte-david-celaya': 'Finanzas / Reporte David',
   '/practicas': 'Prácticas',
   '/inicio': 'Inicio',
 };
@@ -146,16 +165,8 @@ const loadGoogleScript = () => {
   return googleScriptPromise;
 };
 
-const parseNonNegativeSafeInt = (value: string): number | undefined => {
-  const trimmed = value.trim();
-  if (trimmed === '') return undefined;
-  if (!/^\d+$/.test(trimmed)) return undefined;
-  const parsed = Number.parseInt(trimmed, 10);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) return undefined;
-  return parsed;
-};
-
 export default function LoginPage() {
+  const { t } = useTranslation();
   const servicePreparingMessage = 'Estamos activando el servicio. Apenas termine podrás iniciar sesión.';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -173,25 +184,28 @@ export default function LoginPage() {
     email: '',
     phone: '',
     password: '',
-    internshipStartAt: '',
-    internshipEndAt: '',
-    internshipRequiredHours: '',
-    internshipSkills: '',
-    internshipAreas: '',
   });
-  const [signupRoles, setSignupRoles] = useState<SignupRole[]>([]);
+  const [signupIntent, setSignupIntent] = useState<OnboardingIntent | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
-  const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
-  const googleClientId = import.meta.env['VITE_GOOGLE_CLIENT_ID'] ?? '';
+  const analytics = useAnalytics();
+  const passwordHint = 'Usa al menos 8 caracteres y como máximo 72 bytes UTF-8, sin caracteres de control ni formato oculto.';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
+  const signupNameInputRef = useRef<HTMLInputElement | null>(null);
+  const signupEmailInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
+  const googleCredentialHandlerRef = useRef<(response: { credential?: string }) => void | Promise<void>>(
+    () => undefined,
+  );
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
@@ -235,7 +249,7 @@ export default function LoginPage() {
         apiToken: fallback.apiToken,
       };
     } catch (error) {
-      console.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
+      logger.warn('No se pudo cargar la sesión autenticada desde el servidor', error);
       return fallback;
     }
   }, []);
@@ -268,7 +282,7 @@ export default function LoginPage() {
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
   });
   const googleLoginMutation = useMutation({
-    mutationFn: (payload: { idToken: string }) => googleLoginRequest(payload),
+    mutationFn: googleLoginRequest,
   });
   const resetMutation = useMutation({
     mutationFn: (email: string) => requestPasswordReset(email),
@@ -289,6 +303,7 @@ export default function LoginPage() {
   const redirectPath = useMemo(() => {
     return readSafeRedirectPath(location.search);
   }, [location.search]);
+  const requestedIntent = useMemo(() => readOnboardingIntent(location.search), [location.search]);
   const serviceStatus = String(healthQuery.data?.status ?? '').toLowerCase();
   const serviceChecking = healthQuery.isLoading && !healthQuery.data;
   const servicePreparing = serviceChecking || (serviceStatus !== '' && serviceStatus !== 'ok');
@@ -296,37 +311,16 @@ export default function LoginPage() {
 
   const signupPreset = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    const intent = (params.get('intent') ?? '').trim().toLowerCase();
+    const intent = readOnboardingIntent(location.search);
     const openSignup = params.get('signup') === '1'
-      || intent === 'artist'
-      || intent === 'artista'
-      || intent === 'intern'
-      || intent === 'practicante'
-      || intent === 'pasante';
-    const rolesRaw = params.getAll('roles');
-    const parsedRoles = rolesRaw.length > 0 ? normalizeSignupRoles(rolesRaw) : normalizeSignupRoles(params.get('roles') ?? '');
+      || intent !== null;
     const claimRaw = params.get('claimArtistId') ?? params.get('claim');
     const claimArtistId = parsePositiveSafeInt(claimRaw);
 
-    const baseRoles: SignupRole[] =
-      parsedRoles.length > 0
-        ? parsedRoles
-        : intent === 'artist' || intent === 'artista'
-          ? ['Artista']
-          : intent === 'intern' || intent === 'practicante' || intent === 'pasante'
-            ? ['Intern']
-            : [];
-    const ensureArtistRole: SignupRole[] =
-      claimArtistId
-        ? baseRoles.some((r) => r.toLowerCase().includes('artist'))
-          ? baseRoles
-          : [...baseRoles, 'Artista']
-        : baseRoles;
-
     return {
       openSignup,
-      roles: ensureArtistRole,
       claimArtistId,
+      intent,
     };
   }, [location.search]);
 
@@ -343,17 +337,30 @@ export default function LoginPage() {
       email: '',
       phone: '',
       password: '',
-      internshipStartAt: '',
-      internshipEndAt: '',
-      internshipRequiredHours: '',
-      internshipSkills: '',
-      internshipAreas: '',
     });
-    setSignupRoles(signupPreset.roles);
     setFavoriteArtistIds([]);
     setClaimArtistId(signupPreset.claimArtistId);
+    setSignupIntent(signupPreset.intent);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
+    captureGrowthEvent(analytics, 'signup_started', {
+      route: '/login',
+      entry: 'campaign_link',
+      intent: signupPreset.intent ?? 'general',
+    });
+    if (signupPreset.intent) {
+      captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent: signupPreset.intent });
+    }
     signupMutation.reset();
-  }, [location.search, signupPreset.claimArtistId, signupPreset.openSignup, signupPreset.roles, signupMutation]);
+  }, [analytics, location.search, signupPreset.claimArtistId, signupPreset.intent, signupPreset.openSignup, signupMutation]);
+
+  useEffect(() => {
+    captureGrowthEvent(analytics, 'auth_mode_viewed', {
+      route: '/login',
+      mode: signupPreset.openSignup ? 'signup' : 'login',
+      intent: requestedIntent ?? 'general',
+    });
+  }, [analytics, requestedIntent, signupPreset.openSignup]);
 
   const fanArtistsQuery = useQuery({
     queryKey: ['signup', 'artists'],
@@ -370,60 +377,43 @@ export default function LoginPage() {
     () => claimableArtists.find((artist) => artist.apArtistId === claimArtistId) ?? null,
     [claimArtistId, claimableArtists],
   );
-  const wantsInternRole = useMemo(
-    () => signupRoles.some((role) => role.toLowerCase() === 'intern'),
-    [signupRoles],
-  );
-  const requiredHoursError = useMemo(() => {
-    if (!wantsInternRole) return null;
-    const trimmed = signupForm.internshipRequiredHours.trim();
-    if (trimmed === '') return null;
-    return parseNonNegativeSafeInt(trimmed) !== undefined
-      ? null
-      : 'Ingresa un número entero no negativo.';
-  }, [signupForm.internshipRequiredHours, wantsInternRole]);
   const signupGuide = useMemo(() => {
-    const normalizedRoles = signupRoles.map((role) => role.toLowerCase());
-    const hasRoles = normalizedRoles.length > 0;
-    const hasArtist = normalizedRoles.some((role) => role.includes('artist') || role.includes('artista'));
-    const hasFan = normalizedRoles.includes('fan');
-    const hasIntern = normalizedRoles.includes('intern');
-
     const steps: string[] = [];
     let title = 'Primeros pasos sugeridos';
-    let note = '';
+    const note = 'Los roles adicionales se solicitan y revisan después de crear la cuenta.';
 
-    if (hasArtist) {
-      title = 'Ruta para artistas';
-      steps.push('Completa tu bio, géneros y enlaces principales.');
-      steps.push('Publica portada y video destacado.');
-      steps.push('Comparte tu URL pública con tu audiencia.');
-    } else if (hasIntern) {
-      title = 'Ruta para prácticas';
-      steps.push('Completa fechas, horas y áreas de interés.');
-      steps.push('Revisa tu plan de rotaciones con el equipo.');
-      steps.push('Comparte tus avances y objetivos.');
-    } else if (hasFan) {
-      title = 'Ruta para fans';
-      steps.push('Sigue a tus artistas favoritos.');
-      steps.push('Activa alertas de lanzamientos y eventos.');
-      steps.push('Reserva sesiones o transmisiones cuando quieras.');
-    } else if (hasRoles) {
-      steps.push('Accede al panel principal y configura tu perfil.');
-      steps.push('Explora los módulos disponibles para tu rol.');
+    if (claimArtistId) {
+      title = 'Reclamo verificado de artista';
+      steps.push('El backend comprobará que el correo coincida con el perfil disponible.');
+      steps.push('La política persistida de reclamo asignará el acceso si la comprobación es concluyente.');
+    } else if (favoriteArtistIds.length > 0) {
+      title = 'Tus artistas favoritos';
+      steps.push('Guardaremos estas relaciones sin convertirlas en permisos.');
+      steps.push('Podrás continuar a la comunidad con tu cuenta Customer.');
+    } else if (signupIntent === 'artist_profile') {
+      title = 'Perfil de artista';
+      steps.push('Crearemos tu cuenta Customer sin autoasignar permisos.');
+      steps.push('Después podrás reclamar un perfil verificable o enviar una solicitud revisada.');
+    } else if (signupIntent === 'internships') {
+      title = 'Postulación a prácticas';
+      steps.push('Crearemos tu cuenta base para identificar la solicitud.');
+      steps.push('Después abrirás la solicitud de acceso a Prácticas para revisión.');
+    } else if (signupIntent === 'follow_artists') {
+      title = 'Comunidad de fans';
+      steps.push('Crearemos tu cuenta Customer y abriremos la comunidad.');
+      steps.push('Podrás seguir artistas y guardar contenido inmediatamente.');
     } else {
-      title = 'Elige tu ruta';
-      steps.push('Selecciona un rol para personalizar tu panel.');
-      steps.push('Puedes ajustar tus roles más adelante.');
-      note = 'Sin roles: Fan';
+      steps.push('Crearemos la cuenta con la política base persistida.');
+      steps.push('Las asignaciones adicionales requieren el flujo de revisión correspondiente.');
     }
 
-    const landingRoles = hasRoles ? signupRoles : (['Fan'] as SignupRole[]);
-    const landingPath = redirectPath ?? pickLandingPath(landingRoles);
-    const landingLabel = LANDING_LABELS[landingPath] ?? landingPath;
+    const landingPath = resolvePostAuthPath(signupIntent, ['Customer'], [], redirectPath);
+    const landingLabel = landingPath.startsWith('/solicitudes-acceso/nueva')
+      ? 'Solicitud de acceso revisada'
+      : LANDING_LABELS[landingPath] ?? landingPath;
 
     return { title, steps, landingLabel, note };
-  }, [redirectPath, signupRoles]);
+  }, [claimArtistId, favoriteArtistIds.length, redirectPath, signupIntent]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -437,6 +427,7 @@ export default function LoginPage() {
     const normalizedIdentifier = identifier.trim();
     const normalizedPassword = password.trim();
     if (!normalizedIdentifier || !normalizedPassword) {
+      captureGrowthEvent(analytics, 'login_validation_failed', { route: '/login', reason: 'missing_credentials' });
       setFormError('Ingresa tu usuario o correo y la contraseña.');
       return;
     }
@@ -457,12 +448,13 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
-      const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
-      const targetPath = redirectPath ?? landingPath;
+      const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
       login(nextSession, { remember: rememberDevice });
+      captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
       navigate(targetPath, { replace: true });
     } catch (error) {
+      captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
     }
@@ -477,6 +469,12 @@ export default function LoginPage() {
         } else {
           setFormError(message);
         }
+        return;
+      }
+      if (signupDialogOpen && !termsAccepted) {
+        const termsErrorMessage = 'Acepta los términos y la política de privacidad para continuar con Google.';
+        setGoogleError(termsErrorMessage);
+        setSignupFeedback({ type: 'error', message: termsErrorMessage });
         return;
       }
       const credential = credentialResponse?.credential;
@@ -495,7 +493,14 @@ export default function LoginPage() {
       try {
         setGoogleStatus('Conectando con Google…');
         setGoogleError(null);
-        const response = await googleLoginMutation.mutateAsync({ idToken: credential });
+        const response = await googleLoginMutation.mutateAsync({
+          idToken: credential,
+          ...(signupDialogOpen ? {
+            marketingOptIn,
+            termsAccepted: true,
+            termsVersion: ACCOUNT_TERMS_VERSION,
+          } : {}),
+        });
         const nextSession = await buildResolvedSession({
           username: fallbackUsername,
           displayName: fallbackName,
@@ -504,14 +509,26 @@ export default function LoginPage() {
           modules: response.modules,
           partyId: response.partyId,
         });
-        const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
-        const targetPath = redirectPath ?? landingPath;
+        if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
+        const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
+        const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
+        const googleCreatedAccount = response.accountCreated === true;
+        captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
+          route: '/login',
+          method: 'google',
+          ...(googleCreatedAccount ? { intent: signupIntent ?? 'general' } : {}),
+        });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(targetPath, { replace: true });
+        navigate(googleTargetPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
+        captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
+          route: '/login',
+          method: 'google',
+          ...(signupDialogOpen ? { intent: signupIntent ?? 'general' } : {}),
+        });
         setGoogleError(message);
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
@@ -522,8 +539,12 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, servicePreparing, signupDialogOpen],
+    [analytics, buildResolvedSession, googleLoginMutation, login, marketingOptIn, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
+
+  useEffect(() => {
+    googleCredentialHandlerRef.current = handleGoogleCredential;
+  }, [handleGoogleCredential]);
 
   useEffect(() => {
     if (serviceStatus === 'ok') {
@@ -568,7 +589,9 @@ export default function LoginPage() {
         if (!googleInitRef.current) {
           google.initialize({
             client_id: googleClientId,
-            callback: handleGoogleCredential,
+            callback: (credentialResponse: { credential?: string }) => {
+              void googleCredentialHandlerRef.current(credentialResponse);
+            },
             ux_mode: 'popup',
             auto_select: false,
           });
@@ -596,13 +619,13 @@ export default function LoginPage() {
           setGoogleError(message);
           setGoogleStatus(null);
         }
-        console.warn('Google Sign-In initialization failed', error);
+        logger.warn('Google Sign-In initialization failed', error);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -648,7 +671,7 @@ export default function LoginPage() {
     try {
       await resetMutation.mutateAsync(emailValue);
     } catch (err) {
-      console.warn('Password reset request failed (silently returning success)', err);
+      logger.warn('Password reset request failed (silently returning success)', err);
     } finally {
       setResetFeedback({
         type: 'success',
@@ -657,7 +680,7 @@ export default function LoginPage() {
     }
   };
 
-  const openSignupDialog = (roles: SignupRole[] = []) => {
+  const openSignupDialog = (intent: OnboardingIntent | null = requestedIntent) => {
     setSignupDialogOpen(true);
     setSignupFeedback(null);
     setShowSignupPassword(false);
@@ -667,15 +690,18 @@ export default function LoginPage() {
       email: '',
       phone: '',
       password: '',
-      internshipStartAt: '',
-      internshipEndAt: '',
-      internshipRequiredHours: '',
-      internshipSkills: '',
-      internshipAreas: '',
     });
-    setSignupRoles(roles);
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
+    setSignupIntent(intent);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
+    captureGrowthEvent(analytics, 'signup_started', {
+      route: '/login',
+      entry: 'quick_route',
+      intent: intent ?? 'general',
+    });
+    if (intent) captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent });
     signupMutation.reset();
   };
 
@@ -683,18 +709,12 @@ export default function LoginPage() {
     setSignupDialogOpen(false);
     setSignupFeedback(null);
     setShowSignupPassword(false);
-    setSignupRoles([]);
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
+    setSignupIntent(null);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
     signupMutation.reset();
-  };
-
-  const handleSignupRoleChange = (event: SelectChangeEvent<SignupRole[]>) => {
-    const nextRoles = normalizeSignupRoles(event.target.value);
-    setSignupRoles(nextRoles);
-    if (!nextRoles.includes('Fan')) {
-      setFavoriteArtistIds([]);
-    }
   };
 
   const handleSignupSubmit = async () => {
@@ -705,32 +725,40 @@ export default function LoginPage() {
 
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'claim_unavailable', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
       return;
     }
 
-    if (requiredHoursError) {
-      setSignupFeedback({ type: 'error', message: requiredHoursError });
-      return;
-    }
-
-    const payload = buildSignupPayload(signupForm, signupRoles, favoriteArtistIds, claimArtistId ?? undefined);
-    const selectedRoles = payload.roles ?? [];
+    const payload = {
+      ...buildSignupPayload(signupForm, favoriteArtistIds, claimArtistId ?? undefined),
+      marketingOptIn,
+      termsAccepted: true as const,
+      termsVersion: ACCOUNT_TERMS_VERSION,
+    };
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
+      if (!payload.firstName && !payload.lastName) signupNameInputRef.current?.focus();
+      else signupEmailInputRef.current?.focus();
       return;
     }
-    if (payload.password.length < 8) {
-      setSignupFeedback({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres.' });
+    const passwordBytes = new TextEncoder().encode(payload.password.trim()).length;
+    if (Array.from(payload.password.trim()).length < 8 || passwordBytes > 72 || hasUnsafePasswordCharacter(payload.password)) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'invalid_password', intent: signupIntent ?? 'general' });
+      setSignupFeedback({ type: 'error', message: passwordHint });
+      return;
+    }
+    if (!termsAccepted) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'terms_not_accepted', intent: signupIntent ?? 'general' });
+      setSignupFeedback({ type: 'error', message: 'Acepta los términos y la política de privacidad para continuar.' });
       return;
     }
     setSignupFeedback(null);
     try {
       const response = await signupMutation.mutateAsync(payload);
-      const effectiveRoles = deriveEffectiveRoles(response.roles, selectedRoles);
-      const landingPath = pickLandingPath(effectiveRoles, response.modules);
-      const targetPath = redirectPath ?? landingPath;
-      const shouldFollowArtists = selectedRoles.includes('Fan') && favoriteArtistIds.length > 0;
+      const effectiveRoles = deriveEffectiveRoles(response.roles);
+      const shouldFollowArtists = favoriteArtistIds.length > 0;
       const selectedFanArtistIds = favoriteArtistIds;
       const nextSession = await buildResolvedSession({
         username: payload.email,
@@ -740,18 +768,33 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
+      markWebSignupCompleted(response.partyId);
+      const targetPath = resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath);
       login(nextSession, { remember: rememberDevice });
+      captureGrowthEvent(analytics, 'signup_completed', {
+        route: '/login',
+        method: 'password',
+        intent: signupIntent ?? 'general',
+        destination: targetPath.split('?')[0],
+      });
       if (shouldFollowArtists) {
         void Promise.all(
-          selectedFanArtistIds.map((artistId) =>
-            Fans.follow(artistId).catch((followErr) => {
-              console.warn('No se pudo seguir al artista después del registro', followErr);
-            }),
-          ),
-        );
+          selectedFanArtistIds.map(async (artistId) => {
+            try {
+              await Fans.follow(artistId);
+              return true;
+            } catch (followErr) {
+              logger.warn('No se pudo seguir al artista después del registro', followErr);
+              return false;
+            }
+          }),
+        ).then((results) => {
+          if (results.some(Boolean)) captureFirstValueOnce(analytics, nextSession.partyId, 'artist_followed');
+        });
       }
       navigate(targetPath, { replace: true });
     } catch (err) {
+      captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
@@ -762,7 +805,6 @@ export default function LoginPage() {
   if (loading && !session) {
     return (
       <Box
-        component="main"
         sx={{
           minHeight: '100vh',
           display: 'flex',
@@ -777,13 +819,12 @@ export default function LoginPage() {
   }
 
   if (session) {
-    const landing = redirectPath ?? pickLandingPath(session.roles ?? [], session.modules);
+    const landing = resolvePostAuthPath(requestedIntent, session.roles ?? [], session.modules, redirectPath);
     return <Navigate to={landing} replace />;
   }
 
   return (
     <Box
-      component="main"
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0b1224 0%, #0f172a 35%, #0b1224 100%)',
@@ -982,7 +1023,7 @@ export default function LoginPage() {
                     <Button
                       variant="outlined"
                       size="large"
-                      onClick={() => openSignupDialog()}
+                      onClick={() => openSignupDialog(null)}
                       sx={{ minWidth: 180, textTransform: 'none' }}
                     >
                       Crear cuenta general
@@ -1121,7 +1162,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => navigate('/artista/crear')}
+                              onClick={() => openSignupDialog('artist_profile')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1168,7 +1209,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => openSignupDialog(['Fan'])}
+                              onClick={() => openSignupDialog('follow_artists')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1215,7 +1256,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => openSignupDialog(['Intern'])}
+                              onClick={() => openSignupDialog('internships')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1231,8 +1272,8 @@ export default function LoginPage() {
                     </Stack>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
                       <Chip label="Menos de 3 minutos" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label="Roles editables" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
-                      <Chip label="Acceso inmediato" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label="Roles gobernados" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
+                      <Chip label="Asignación trazable" size="small" variant="outlined" sx={{ color: '#cbd5f5' }} />
                     </Stack>
                   </Stack>
                 </Paper>
@@ -1241,8 +1282,14 @@ export default function LoginPage() {
           </Box>
         </Stack>
       </Container>
-      <Dialog open={resetDialogOpen} onClose={closeResetDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Recuperar acceso</DialogTitle>
+      <Dialog
+        open={resetDialogOpen}
+        onClose={closeResetDialog}
+        fullWidth
+        maxWidth="xs"
+        aria-labelledby="login-reset-dialog-title"
+      >
+        <DialogTitle id="login-reset-dialog-title">{t('login.resetDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
@@ -1271,11 +1318,49 @@ export default function LoginPage() {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={signupDialogOpen} onClose={closeSignupDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Crear cuenta</DialogTitle>
+      <Dialog
+        open={signupDialogOpen}
+        onClose={closeSignupDialog}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="login-signup-dialog-title"
+      >
+        <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            {googleClientId && (
+            {signupIntent && (
+              <Alert severity="info">
+                Personalizaremos el siguiente paso para “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Esta elección no asigna permisos.
+              </Alert>
+            )}
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
+                />
+              )}
+              label={(
+                <Typography variant="body2">
+                  Acepto los{' '}
+                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
+                  {' '}y la{' '}
+                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
+                </Typography>
+              )}
+            />
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={marketingOptIn}
+                  onChange={(event) => setMarketingOptIn(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Quiero recibir novedades de TDF' }}
+                />
+              )}
+              label="Quiero recibir novedades de TDF (opcional)."
+            />
+            {googleClientId && termsAccepted && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   Crear e ingresar con Google
@@ -1299,6 +1384,7 @@ export default function LoginPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Nombre"
+                inputRef={signupNameInputRef}
                 value={signupForm.firstName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
                 fullWidth
@@ -1314,6 +1400,7 @@ export default function LoginPage() {
             </Stack>
             <TextField
               label="Correo *"
+              inputRef={signupEmailInputRef}
               type="email"
               value={signupForm.email}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
@@ -1321,94 +1408,9 @@ export default function LoginPage() {
               placeholder="tu.correo@tdf.com"
               sx={dialogFieldSx}
             />
-            <TextField
-              label="Celular (opcional)"
-              value={signupForm.phone}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
-              fullWidth
-              sx={dialogFieldSx}
-            />
-            <FormControl fullWidth sx={dialogFieldSx}>
-              <InputLabel id="signup-roles-label">Roles (opcional)</InputLabel>
-              <Select<SignupRole[]>
-                labelId="signup-roles-label"
-                multiple
-                value={signupRoles}
-                onChange={handleSignupRoleChange}
-                input={<OutlinedInput label="Roles (opcional)" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((role) => (
-                      <Chip key={role} label={role} size="small" />
-                    ))}
-                  </Box>
-                )}
-              >
-                {SELF_SIGNUP_ROLES.map((role) => (
-                  <MenuItem key={role} value={role}>
-                    <Checkbox checked={signupRoles.includes(role)} />
-                    <Typography variant="body2">{role}</Typography>
-                  </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>
-                Elige los roles que necesitas (Fan, Artista, Promotor, Manager, A&R, Producer, etc.). Roles administrativos o financieros (como Admin o Accounting) no se pueden autoseleccionar.
-                </FormHelperText>
-              </FormControl>
-            {wantsInternRole && (
-              <Stack spacing={1}>
-                <Typography variant="subtitle2">Detalles de prácticas</Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <TextField
-                    label="Inicio de prácticas"
-                    type="date"
-                    value={signupForm.internshipStartAt}
-                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipStartAt: event.target.value }))}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                    sx={dialogFieldSx}
-                  />
-                  <TextField
-                    label="Fin de prácticas"
-                    type="date"
-                    value={signupForm.internshipEndAt}
-                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipEndAt: event.target.value }))}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                    sx={dialogFieldSx}
-                  />
-                  <TextField
-                    label="Horas requeridas"
-                    type="number"
-                    value={signupForm.internshipRequiredHours}
-                    onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipRequiredHours: event.target.value }))}
-                    fullWidth
-                    inputProps={{ min: 0, step: 1 }}
-                    error={Boolean(requiredHoursError)}
-                    helperText={requiredHoursError ?? undefined}
-                    sx={dialogFieldSx}
-                  />
-                </Stack>
-                <TextField
-                  label="Habilidades"
-                  value={signupForm.internshipSkills}
-                  onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipSkills: event.target.value }))}
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  sx={dialogFieldSx}
-                />
-                <TextField
-                  label="Áreas de práctica de interés"
-                  value={signupForm.internshipAreas}
-                  onChange={(event) => setSignupForm((prev) => ({ ...prev, internshipAreas: event.target.value }))}
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  sx={dialogFieldSx}
-                />
-              </Stack>
-            )}
+            <Alert severity="info">
+              Crearemos una cuenta Customer. Cualquier acceso adicional requiere una solicitud revisada o una comprobación de perfil existente.
+            </Alert>
             {(claimableArtists.length > 0 || claimArtistId) && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>
@@ -1417,12 +1419,7 @@ export default function LoginPage() {
                   getOptionLabel={(option) => option.apDisplayName}
                   value={selectedClaim}
                   loading={fanArtistsQuery.isFetching}
-                  onChange={(_, option) => {
-                    setClaimArtistId(option?.apArtistId ?? null);
-                    if (option && !signupRoles.some((role) => role.toLowerCase().startsWith('artist'))) {
-                      setSignupRoles((prev) => [...prev, 'Artista']);
-                    }
-                  }}
+                  onChange={(_, option) => setClaimArtistId(option?.apArtistId ?? null)}
                   noOptionsText={fanArtistsQuery.isFetching ? 'Buscando artistas…' : 'No hay perfiles disponibles para reclamar'}
                   renderInput={(params) => (
                     <TextField
@@ -1447,8 +1444,7 @@ export default function LoginPage() {
                 )}
               </Stack>
             )}
-            {signupRoles.includes('Fan') && (
-              <Stack spacing={1}>
+            <Stack spacing={1}>
                 <Typography variant="subtitle2">¿De qué artistas o bandas eres fan?</Typography>
                 <Autocomplete<ArtistProfileDTO, true, false, false>
                   multiple
@@ -1482,8 +1478,7 @@ export default function LoginPage() {
                     No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde la comunidad.
                   </Alert>
                 )}
-              </Stack>
-            )}
+            </Stack>
             <TextField
               label="Contraseña *"
               type={showSignupPassword ? 'text' : 'password'}
@@ -1549,14 +1544,11 @@ export default function LoginPage() {
                 </Stack>
               </Stack>
             </Paper>
-            <Typography variant="body2" color="text.secondary">
-              Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
-            </Typography>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeSignupDialog}>Cancelar</Button>
-          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing}>
+          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
             {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
           </Button>
         </DialogActions>

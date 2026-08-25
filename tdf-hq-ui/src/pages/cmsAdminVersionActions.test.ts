@@ -42,9 +42,9 @@ describe('getCmsVersionRowActions', () => {
     });
   });
 
-  it('removes destructive row actions from the current live version', () => {
+  it('replaces current live row actions with passive row state even when the status is not published', () => {
     expect(getCmsVersionRowActions('draft', { isCurrentLive: true })).toEqual({
-      showPublish: true,
+      showPublish: false,
       showLoadInEditor: false,
       showDelete: false,
       loadedStateLabel: 'En vivo',
@@ -76,12 +76,12 @@ describe('getCmsVersionRowActions', () => {
     });
   });
 
-  it('prioritizes editor state when the live version is also loaded', () => {
+  it('keeps the live and editor states in one passive label when both apply', () => {
     expect(getCmsVersionRowActions('published', { isCurrentLive: true, isLoadedInEditor: true })).toEqual({
       showPublish: false,
       showLoadInEditor: false,
       showDelete: false,
-      loadedStateLabel: 'En formulario',
+      loadedStateLabel: 'En vivo y en formulario',
     });
   });
 });

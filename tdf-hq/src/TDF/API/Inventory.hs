@@ -6,6 +6,7 @@
 
 module TDF.API.Inventory where
 
+import           Control.Applicative ((<|>))
 import           Data.Text         (Text)
 import           Servant
 import           Servant.Multipart ( FileData
@@ -18,8 +19,12 @@ import           Servant.Multipart ( FileData
                                     , fdFileName
                                     , fdFileCType
                                     )
+import           Data.Char         ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+                                    , generalCategory
+                                    , isControl
+                                    )
 import qualified Data.Text         as T
-import           System.FilePath   (takeExtension)
+import           System.FilePath   (takeExtension, takeFileName)
 
 import           TDF.API.Types
 
@@ -28,24 +33,244 @@ data AssetUploadForm = AssetUploadForm
   , aufName :: Maybe Text
   }
 
+validateAssetUploadForm :: AssetUploadForm -> Either Text AssetUploadForm
+validateAssetUploadForm (AssetUploadForm file rawNameTxt) = do
+  nameTxt <- normalizeUploadName rawNameTxt
+  rejectAmbiguousFileName nameTxt file
+  validateBrowserFileName file
+  validateImageUpload nameTxt file
+  pure AssetUploadForm
+    { aufFile = file
+    , aufName = nameTxt
+    }
+
+normalizeUploadName :: Maybe Text -> Either Text (Maybe Text)
+normalizeUploadName Nothing = Right Nothing
+normalizeUploadName (Just rawValue) =
+  let trimmed = T.strip rawValue
+  in if T.null trimmed
+       then Left "Asset upload name must not be blank"
+       else validateUploadName trimmed
+
+validateUploadName :: Text -> Either Text (Maybe Text)
+validateUploadName rawName
+  | T.any isUnsafeUploadNameChar rawName =
+      Left "Asset upload name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+  | T.any isUrlDelimiterUploadNameChar rawName =
+      Left "Asset upload name must not contain URL delimiters or percent-encoded path markers"
+  | T.any isPathSeparator rawName =
+      Left "Asset upload name must not contain path separators"
+  | hasEmptyUploadNameSegment rawName =
+      Left "Asset upload file name must not contain leading, trailing, or repeated dots"
+  | T.null (imageExtension rawName) =
+      Left "Asset upload name must include a supported image extension"
+  | hasDangerousInnerUploadExtension rawName =
+      Left "Asset upload file name must not hide executable or document extensions"
+  | otherwise =
+      Right (Just rawName)
+
+isPathSeparator :: Char -> Bool
+isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasEmptyUploadNameSegment :: Text -> Bool
+hasEmptyUploadNameSegment rawName =
+  let name = T.strip rawName
+      segments = T.splitOn "." name
+  in not (T.null name)
+       && case segments of
+         ["", extensionOnly] | not (T.null extensionOnly) -> False
+         _ -> any T.null segments
+
+rejectAmbiguousFileName :: Maybe Text -> FileData Tmp -> Either Text ()
+rejectAmbiguousFileName nameTxt file =
+  case (nameTxt, T.strip (fdFileName file)) of
+    (Nothing, fileName) | T.null fileName ->
+      Left "Either field name or uploaded file name must be provided"
+    _ -> Right ()
+
+validateBrowserFileName :: FileData Tmp -> Either Text ()
+validateBrowserFileName file =
+  let fileName = T.strip (fdFileName file)
+  in if T.any isUnsafeUploadNameChar fileName
+       then Left "Uploaded file name must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+       else if T.length fileName > maxAssetUploadFileNameChars
+         then Left
+           ( "Uploaded file name must be "
+               <> T.pack (show maxAssetUploadFileNameChars)
+               <> " characters or fewer"
+           )
+       else if T.any isUrlDelimiterUploadNameChar fileName
+         then Left "Uploaded file name must not contain URL delimiters or percent-encoded path markers"
+       else if T.any isPathSeparator fileName
+         then Left "Uploaded file name must not contain path separators"
+         else if hasEmptyUploadNameSegment fileName
+           then Left "Uploaded file name must not contain leading, trailing, or repeated dots"
+         else if hasDangerousInnerUploadExtension fileName
+           then Left "Uploaded file name must not hide executable or document extensions"
+         else Right ()
+
+isUnsafeUploadNameChar :: Char -> Bool
+isUnsafeUploadNameChar ch =
+  isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+    || (generalCategory ch == Space && ch /= ' ')
+
+isUrlDelimiterUploadNameChar :: Char -> Bool
+isUrlDelimiterUploadNameChar ch =
+  ch == '?' || ch == '#' || ch == '%'
+
+validateImageUpload :: Maybe Text -> FileData Tmp -> Either Text ()
+validateImageUpload nameTxt file = do
+  allowedExts <- allowedImageExtensions (fdFileCType file)
+  ext <- resolveImageExtension nameTxt file
+  validateResolvedUploadNameLength nameTxt file
+  let providedExts =
+        filter (not . T.null)
+          [ maybe "" imageExtension nameTxt
+          , imageExtension (fdFileName file)
+          ]
+  case filter (`notElem` allowedExts) (ext : providedExts) of
+    [] -> Right ()
+    badExt : _
+      | badExt `elem` allImageExtensions ->
+          Left "Asset upload image extension must match its MIME type"
+      | otherwise ->
+          Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
+
+allowedImageExtensions :: Text -> Either Text [Text]
+allowedImageExtensions rawContentType
+  | T.any isUnsafeUploadNameChar rawContentType =
+      Left "Asset upload MIME type must not contain control characters, Unicode formatting marks, or non-ASCII spaces"
+  | hasUploadContentTypeNameParameter rawContentType =
+      Left "Asset upload MIME type must not include filename parameters"
+  | otherwise =
+      case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
+        "image/jpeg" -> Right [".jpg", ".jpeg"]
+        "image/png"  -> Right [".png"]
+        "image/webp" -> Right [".webp"]
+        "image/gif"  -> Right [".gif"]
+        _ ->
+          Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
+
+hasUploadContentTypeNameParameter :: Text -> Bool
+hasUploadContentTypeNameParameter contentType =
+  any isNameParameter (drop 1 (T.splitOn ";" contentType))
+  where
+    isNameParameter rawParameter =
+      let key = T.toLower (T.strip (fst (T.breakOn "=" rawParameter)))
+      in key `elem` ["name", "name*", "filename", "filename*"]
+           || "name*" `T.isPrefixOf` key
+           || "filename*" `T.isPrefixOf` key
+
+resolveImageExtension :: Maybe Text -> FileData Tmp -> Either Text Text
+resolveImageExtension nameTxt file =
+  let requestedExt = maybe "" imageExtension nameTxt
+      fallbackExt = imageExtension (fdFileName file)
+      ext = if T.null requestedExt then fallbackExt else requestedExt
+  in if T.null ext
+       then Left "Asset upload file name must include a supported image extension"
+       else Right ext
+
+validateResolvedUploadNameLength :: Maybe Text -> FileData Tmp -> Either Text ()
+validateResolvedUploadNameLength nameTxt file =
+  let fallbackName = nonEmptyBaseName (fdFileName file)
+      nameWithExt = applyExtension (nameTxt <|> fallbackName) fallbackName
+  in if not (hasNonEmptyUploadBaseName nameWithExt)
+       then Left "Asset upload file name must include a non-empty base name before the extension"
+       else if T.length nameWithExt > maxAssetUploadFileNameChars
+       then Left
+         ( "Asset upload file name must be "
+             <> T.pack (show maxAssetUploadFileNameChars)
+             <> " characters or fewer"
+         )
+       else Right ()
+
+hasNonEmptyUploadBaseName :: Text -> Bool
+hasNonEmptyUploadBaseName rawName =
+  let trimmed = T.strip rawName
+      ext = imageExtension trimmed
+      baseName =
+        if T.null ext
+          then trimmed
+          else T.dropEnd (T.length ext) trimmed
+  in T.any isUploadBaseNameAtom baseName
+
+isUploadBaseNameAtom :: Char -> Bool
+isUploadBaseNameAtom ch =
+  (ch >= 'A' && ch <= 'Z')
+    || (ch >= 'a' && ch <= 'z')
+    || (ch >= '0' && ch <= '9')
+
+nonEmptyBaseName :: Text -> Maybe Text
+nonEmptyBaseName rawName =
+  let baseName = T.pack (takeFileName (T.unpack (T.strip rawName)))
+  in if T.null baseName then Nothing else Just baseName
+
+applyExtension :: Maybe Text -> Maybe Text -> Text
+applyExtension mName fallback =
+  let resolved = maybe "upload" T.strip mName
+      extFromFallback = maybe "" imageExtension fallback
+      extFromName = imageExtension resolved
+  in if T.null extFromName && not (T.null extFromFallback)
+       then resolved <> extFromFallback
+       else resolved
+
+imageExtension :: Text -> Text
+imageExtension =
+  T.toLower . T.pack . takeExtension . T.unpack . T.strip
+
+allImageExtensions :: [Text]
+allImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+
+hasDangerousInnerUploadExtension :: Text -> Bool
+hasDangerousInnerUploadExtension rawName =
+  any (`elem` dangerousInnerUploadExtensionSegments) innerExtensions
+  where
+    parts = T.splitOn "." (T.toLower (T.strip rawName))
+    extensions = drop 1 parts
+    innerExtensions =
+      case reverse extensions of
+        [] -> []
+        (_finalExtension:rest) -> map T.strip (reverse rest)
+
+dangerousInnerUploadExtensionSegments :: [Text]
+dangerousInnerUploadExtensionSegments =
+  [ "bat"
+  , "cmd"
+  , "com"
+  , "exe"
+  , "htm"
+  , "html"
+  , "jar"
+  , "js"
+  , "mjs"
+  , "php"
+  , "ps1"
+  , "scr"
+  , "sh"
+  , "svg"
+  , "svgz"
+  , "xhtml"
+  ]
+
+maxAssetUploadFileNameChars :: Int
+maxAssetUploadFileNameChars = 218
+
 instance FromMultipart Tmp AssetUploadForm where
   fromMultipart multipart = do
     rejectUnexpectedParts multipart
     file <- lookupSingleFile "file" multipart
-    nameTxt <- optionalText "name" multipart
-    rejectAmbiguousFileName nameTxt file
-    validateImageUpload nameTxt file
-    pure AssetUploadForm
-      { aufFile = file
-      , aufName = nameTxt
-      }
+    rawNameTxt <- optionalText "name" multipart
+    case validateAssetUploadForm AssetUploadForm { aufFile = file, aufName = rawNameTxt } of
+      Left err -> Left (T.unpack err)
+      Right uploadForm -> Right uploadForm
     where
       optionalText field mp =
-        fmap (>>= normalizeInputText) (lookupSingleInput field mp)
-
-      normalizeInputText (Input _ rawValue) =
-        let trimmed = T.strip rawValue
-        in if T.null trimmed then Nothing else Just trimmed
+        do
+          mInput <- lookupSingleInput field mp
+          case mInput of
+            Nothing -> Right Nothing
+            Just (Input _ rawValue) -> Right (Just rawValue)
 
       lookupSingleInput field mp =
         case filter (\(Input inputName _) -> inputName == field) (inputs mp) of
@@ -58,50 +283,6 @@ instance FromMultipart Tmp AssetUploadForm where
           [] -> Left ("Missing file field: " <> T.unpack field)
           [file] -> Right file
           _ -> Left ("Duplicate file field: " <> T.unpack field)
-
-      rejectAmbiguousFileName nameTxt file =
-        case (nameTxt, T.strip (fdFileName file)) of
-          (Nothing, fileName) | T.null fileName ->
-            Left "Either field name or uploaded file name must be provided"
-          _ -> Right ()
-
-      validateImageUpload nameTxt file = do
-        allowedExts <- allowedImageExtensions (fdFileCType file)
-        ext <- resolveImageExtension nameTxt file
-        let providedExts =
-              filter (not . T.null)
-                [ maybe "" imageExtension nameTxt
-                , imageExtension (fdFileName file)
-                ]
-        case filter (`notElem` allowedExts) (ext : providedExts) of
-          [] -> Right ()
-          badExt : _
-            | badExt `elem` allImageExtensions ->
-                Left "Asset upload image extension must match its MIME type"
-            | otherwise ->
-                Left "Asset upload file name must end with .jpg, .jpeg, .png, .webp, or .gif"
-
-      allowedImageExtensions rawContentType =
-        case T.toLower (T.strip (fst (T.breakOn ";" rawContentType))) of
-          "image/jpeg" -> Right [".jpg", ".jpeg"]
-          "image/png"  -> Right [".png"]
-          "image/webp" -> Right [".webp"]
-          "image/gif"  -> Right [".gif"]
-          _ ->
-            Left "Asset upload must be a raster image (jpg, png, webp, or gif)"
-
-      resolveImageExtension nameTxt file =
-        let requestedExt = maybe "" imageExtension nameTxt
-            fallbackExt = imageExtension (fdFileName file)
-            ext = if T.null requestedExt then fallbackExt else requestedExt
-        in if T.null ext
-             then Left "Asset upload file name must include a supported image extension"
-             else Right ext
-
-      imageExtension =
-        T.toLower . T.pack . takeExtension . T.unpack . T.strip
-
-      allImageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
 
       rejectUnexpectedParts mp =
         case (unexpectedInputs, unexpectedFiles) of

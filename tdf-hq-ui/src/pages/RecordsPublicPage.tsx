@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import {
   Alert,
   Avatar,
@@ -27,34 +28,29 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
-import { recordings as defaultRecordings, releases as defaultReleases, sessionVideos as defaultSessions } from '../constants/recordsContent';
 import PublicBrandBar from '../components/PublicBrandBar';
-import { useCmsContents } from '../hooks/useCmsContent';
+import {
+  Records,
+  type RecordsRecordingDTO,
+  type RecordsReleaseDTO,
+  type RecordsResourceDTO,
+  type RecordsSessionDTO,
+} from '../api/records';
 import { Bookings } from '../api/bookings';
 import { Rooms } from '../api/rooms';
 import { Parties } from '../api/parties';
 import { Admin } from '../api/admin';
 import { Services } from '../api/services';
 import { Engineers } from '../api/engineers';
-import { setTransientApiToken, useSession } from '../session/SessionContext';
+import LazyPaginatedList from '../components/LazyPaginatedList';
+import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import EditIcon from '@mui/icons-material/Edit';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 
 const BOOKING_ZONE = 'America/Bogota';
 const DEFAULT_DURATION = 120;
-const FALLBACK_SERVICE_OPTIONS = [
-  { value: 'Vocal recording', label: 'Grabación vocal' },
-  { value: 'Band recording', label: 'Grabación de banda' },
-  { value: 'Band rehearsal', label: 'Ensayo de banda' },
-  { value: 'DJ booth rental', label: 'Cabina DJ' },
-  { value: 'Podcast / Voiceover', label: 'Podcast / Locución' },
-  { value: 'Producción musical', label: 'Producción musical' },
-  { value: 'Mezcla / Post', label: 'Mezcla / Post' },
-] as const;
-const FALLBACK_SERVICE_LABELS = Object.fromEntries(
-  FALLBACK_SERVICE_OPTIONS.map((option) => [option.value, option.label]),
-) as Record<string, string>;
 
 const parseDurationMinutes = (raw: string, fallback: number): number => {
   const parsed = Number(raw);
@@ -63,26 +59,10 @@ const parseDurationMinutes = (raw: string, fallback: number): number => {
   return Math.max(30, rounded);
 };
 
-const toObject = (value: unknown): Record<string, unknown> | null =>
-  value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
-
-const toText = (value: unknown): string | null => {
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return null;
-};
-
-const toNonEmptyText = (value: unknown): string | null => {
-  const text = toText(value);
-  if (!text) return null;
-  const trimmed = text.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
 const overlap = (startA: DateTime, endA: DateTime, startB: DateTime, endB: DateTime) =>
   endA > startB && startA < endB;
 
-function BookingRequestDialog({
+function _BookingRequestDialog({
   open,
   onClose,
   hasToken,
@@ -95,27 +75,27 @@ function BookingRequestDialog({
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [serviceType, setServiceType] = useState<string>('');
+  const [serviceOfferingId, setServiceOfferingId] = useState<string>('');
   const serviceCatalogQuery = useQuery({
     queryKey: ['service-catalog-public'],
     queryFn: () => Services.listPublic(),
     staleTime: 5 * 60 * 1000,
   });
-  const serviceOptions = useMemo(() => {
-    const names = (serviceCatalogQuery.data ?? [])
-      .filter((svc) => svc.scActive !== false)
-      .map((svc) => svc.scName);
-    return names.length > 0 ? names : FALLBACK_SERVICE_OPTIONS.map((option) => option.value);
-  }, [serviceCatalogQuery.data]);
-  const defaultServiceType = serviceOptions[0] ?? FALLBACK_SERVICE_OPTIONS[0]?.value ?? 'Recording';
-  const selectedServiceLabel = FALLBACK_SERVICE_LABELS[serviceType] ?? serviceType;
+  const serviceOptions = useMemo(
+    () => (serviceCatalogQuery.data ?? []).filter((service) => service.scActive),
+    [serviceCatalogQuery.data],
+  );
+  const defaultServiceOfferingId = serviceOptions[0]?.scId ?? '';
+  const selectedService = serviceOptions.find((service) => service.scId === serviceOfferingId) ?? null;
+  const selectedServiceLabel = selectedService?.scName ?? '';
   useEffect(() => {
-    if (!serviceType && defaultServiceType) {
-      setServiceType(defaultServiceType);
-    } else if (serviceOptions.length > 0 && serviceType && !serviceOptions.includes(serviceType)) {
-      setServiceType(defaultServiceType);
+    if (!serviceOfferingId && defaultServiceOfferingId) {
+      setServiceOfferingId(defaultServiceOfferingId);
+      setDuration(serviceOptions[0]?.scDefaultDurationMinutes ?? DEFAULT_DURATION);
+    } else if (serviceOptions.length > 0 && serviceOfferingId && !selectedService) {
+      setServiceOfferingId(defaultServiceOfferingId);
     }
-  }, [serviceOptions, serviceType, defaultServiceType]);
+  }, [defaultServiceOfferingId, selectedService, serviceOfferingId, serviceOptions]);
   const initialStartValue = useMemo(
     () =>
       DateTime.now()
@@ -239,11 +219,11 @@ function BookingRequestDialog({
           notes ||
           selectedRoomId ||
           engineerName ||
-          serviceType !== defaultServiceType ||
+          serviceOfferingId !== defaultServiceOfferingId ||
           startInput !== initialStartValue ||
           duration !== DEFAULT_DURATION,
       ),
-    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceType, startInput, duration, initialStartValue, defaultServiceType],
+    [contactName, email, phone, notes, selectedRoomId, engineerName, serviceOfferingId, startInput, duration, initialStartValue, defaultServiceOfferingId],
   );
 
   const formatRange = (isoStart: string, isoEnd: string) =>
@@ -258,6 +238,9 @@ function BookingRequestDialog({
       }
       if (!contactName.trim() || !email.trim()) {
         throw new Error('Agrega nombre y correo para continuar.');
+      }
+      if (!selectedService) {
+        throw new Error('Selecciona un servicio publicado para continuar.');
       }
       const party = await Parties.create({
         cDisplayName: contactName.trim(),
@@ -281,10 +264,9 @@ function BookingRequestDialog({
           await Admin.createUser({
             partyId: party.partyId,
             username: email.trim(),
-            roles: ['Customer'],
           });
         } catch (err) {
-          console.warn('No se pudo crear el usuario, continuando con la reserva', err);
+          logger.warn('No se pudo crear el usuario, continuando con la reserva', err);
         }
       }
 
@@ -297,7 +279,7 @@ function BookingRequestDialog({
         cbEndsAt: endIso ?? '',
         cbStatus: 'Tentative',
         cbNotes: augmentedNotes || null,
-        cbServiceType: serviceType,
+        cbServiceOfferingId: selectedService.scId,
         cbPartyId: party.partyId,
         cbEngineerPartyId: selectedEngineerPartyId,
         cbEngineerName: engineerName.trim() || null,
@@ -423,6 +405,7 @@ function BookingRequestDialog({
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
+                type="tel"
                 label="Teléfono"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -431,14 +414,19 @@ function BookingRequestDialog({
               <TextField
                 label="Servicio"
                 select
-                value={serviceType}
-                onChange={(e) => setServiceType(e.target.value)}
+                value={serviceOfferingId}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  setServiceOfferingId(nextId);
+                  const nextService = serviceOptions.find((service) => service.scId === nextId);
+                  if (nextService?.scDefaultDurationMinutes) setDuration(nextService.scDefaultDurationMinutes);
+                }}
                 fullWidth
                 helperText="Elige la opción que mejor describe tu sesión para prepararla mejor."
               >
-                {serviceOptions.map((opt) => (
-                  <MenuItem key={opt} value={opt}>
-                    {FALLBACK_SERVICE_LABELS[opt] ?? opt}
+                {serviceOptions.map((service) => (
+                  <MenuItem key={service.scId} value={service.scId}>
+                    {service.scName}
                   </MenuItem>
                 ))}
               </TextField>
@@ -620,24 +608,136 @@ const GradientCard = ({
   </Box>
 );
 
-type RecordingItem = typeof defaultRecordings[number];
-type ReleaseItem = (typeof defaultReleases)[number] & { primaryUrl?: string };
-type SessionItem = (typeof defaultSessions)[number] & { url?: string };
+interface RecordingItem {
+  title: string;
+  artist: string;
+  description: string;
+  image: string;
+  recordedAt: string;
+  vibe: string;
+  youtubeId?: string;
+  url?: string;
+  duration?: string;
+  sortOrder: number;
+}
+interface ReleaseLink {
+  platform: string;
+  url: string;
+  accent: string;
+}
 
-const defaultReleaseItems: ReleaseItem[] = defaultReleases.map((release) => ({
-  ...release,
-  primaryUrl: release.links?.[0]?.url,
-}));
+interface ReleaseItem {
+  title: string;
+  artist: string;
+  blurb: string;
+  cover: string;
+  releasedOn: string;
+  links: ReleaseLink[];
+  primaryUrl?: string;
+  duration?: string;
+  sortOrder: number;
+}
+interface SessionItem {
+  title: string;
+  guests: string;
+  youtubeId: string;
+  embedUrl: string;
+  duration: string;
+  description: string;
+  url: string;
+  sortOrder: number;
+}
 
-const defaultSessionItems: SessionItem[] = defaultSessions.map((session) => ({
-  ...session,
-  url: `https://www.youtube.com/watch?v=${session.youtubeId}`,
-}));
+const sortSessions = (items: SessionItem[]): SessionItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+
+const youtubeThumbnail = (youtubeId: string): string =>
+  `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+
+const sortRecordings = (items: RecordingItem[]): RecordingItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+
+const formatDurationMs = (ms?: number): string => {
+  if (ms == null || ms < 0) return '';
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+const primaryResource = (resources: RecordsResourceDTO[], kind?: RecordsResourceDTO['kind']) =>
+  resources.find((resource) => resource.primary && (!kind || resource.kind === kind))
+    ?? resources.find((resource) => !kind || resource.kind === kind);
+
+const resourceLink = (resource: RecordsResourceDTO): ReleaseLink => ({
+  platform: resource.label ?? (resource.providerCode === 'spotify' ? 'Spotify' : resource.providerCode === 'youtube' ? 'YouTube' : resource.providerCode),
+  url: resource.url,
+  accent: resource.providerCode === 'spotify' ? '#1db954' : resource.providerCode === 'youtube' ? '#ff0033' : '#a5b4fc',
+});
+
+const mapRecordsRelease = (release: RecordsReleaseDTO): ReleaseItem => {
+  const resource = primaryResource(release.resources, 'audio-track');
+  const duration = formatDurationMs(resource?.durationMs);
+  return {
+    title: release.title,
+    artist: release.contributors.map((contributor) => contributor.name).join(', ') || 'TDF Records',
+    releasedOn: release.releaseDate ?? duration,
+    duration: duration.length > 0 ? duration : undefined,
+    blurb: release.description ?? '',
+    cover: resource?.thumbnailUrl ?? '',
+    links: release.resources.map(resourceLink),
+    primaryUrl: resource?.url ?? release.resources[0]?.url,
+    sortOrder: release.sortOrder,
+  };
+};
+
+const mapRecordsRecording = (recording: RecordsRecordingDTO): RecordingItem | null => {
+  const resource = primaryResource(recording.resources, 'video');
+  if (!resource) return null;
+  const duration = formatDurationMs(recording.durationMs ?? resource.durationMs);
+  return {
+    title: recording.title,
+    artist: recording.contributors.map((contributor) => contributor.name).join(', '),
+    description: recording.description ?? '',
+    image: resource.thumbnailUrl ?? youtubeThumbnail(resource.externalCode),
+    recordedAt: duration,
+    vibe: 'Video',
+    youtubeId: resource.providerCode === 'youtube' ? resource.externalCode : undefined,
+    url: resource.url,
+    duration: duration || undefined,
+    sortOrder: recording.sortOrder,
+  };
+};
+
+const mapRecordsSession = (session: RecordsSessionDTO): SessionItem | null => {
+  const resource = primaryResource(session.resources, 'video');
+  if (resource?.providerCode !== 'youtube') return null;
+  return {
+    title: session.title,
+    guests: session.contributors.map((contributor) => contributor.name).join(', '),
+    youtubeId: resource.externalCode,
+    embedUrl: `https://www.youtube.com/embed/${resource.externalCode}`,
+    duration: formatDurationMs(resource.durationMs),
+    description: session.description ?? '',
+    url: resource.url,
+    sortOrder: session.sortOrder,
+  };
+};
+
+const sortReleases = (items: ReleaseItem[]): ReleaseItem[] =>
+  [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
 
 const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((item) => (
-      <Grid item key={item.title} xs={12} md={4}>
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'grabaciones', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((item) => (
+      <Grid item key={`${item.sortOrder}-${item.title}`} xs={12} md={4}>
         <Card
           sx={{
             height: '100%',
@@ -650,23 +750,51 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
           }}
         >
           <CardMedia
-            component="div"
+            component={item.url ? MuiLink : 'div'}
+            href={item.url}
+            target={item.url ? '_blank' : undefined}
+            rel={item.url ? 'noopener noreferrer' : undefined}
+            underline="none"
             sx={{
               pt: '60%',
               backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${item.image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              display: 'block',
+              position: 'relative',
+              '&::after': item.url
+                ? {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'radial-gradient(circle at center, rgba(15,23,42,0.05), rgba(15,23,42,0.35))',
+                  }
+                : undefined,
             }}
           />
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {item.recordedAt}
-              </Typography>
+              {(item.duration ?? item.recordedAt) && (
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {item.duration ?? item.recordedAt}
+                </Typography>
+              )}
             </Stack>
             <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.01em' }}>
-              {item.title}
+              {item.url ? (
+                <MuiLink
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  color="inherit"
+                >
+                  {item.title}
+                </MuiLink>
+              ) : (
+                item.title
+              )}
             </Typography>
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {item.artist}
@@ -674,19 +802,42 @@ const RecordingsGrid = ({ items }: { items: RecordingItem[] }) => (
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {item.description}
             </Typography>
+            {item.url && (
+              <Box sx={{ mt: 'auto' }}>
+                <Button
+                  component={MuiLink}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="outlined"
+                  size="small"
+                  startIcon={<PlayCircleOutlineIcon />}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Ver video
+                </Button>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Grid>
-    ))}
-  </Grid>
+        ))}
+      </Grid>
+    )}
+  />
 );
 
 const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((release) => {
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'releases', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((release) => {
       const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
+      const releaseMeta = release.duration ?? release.releasedOn;
       return (
-        <Grid item xs={12} md={6} key={release.title}>
+        <Grid item xs={12} md={6} key={`${release.sortOrder}-${release.title}`}>
           <Card
             sx={{
               display: 'flex',
@@ -702,7 +853,9 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
               sx={{
                 width: { xs: '100%', sm: 200 },
                 minHeight: 200,
-                backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`,
+                background: release.cover
+                  ? `linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35)), url(${release.cover})`
+                  : 'linear-gradient(135deg, rgba(29,185,84,0.28), rgba(59,130,246,0.2))',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 borderRight: { sm: '1px solid rgba(255,255,255,0.06)' },
@@ -710,10 +863,12 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
             />
             <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Chip label="Lanzamiento" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  {release.releasedOn}
-                </Typography>
+                <Chip label="Canción" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
+                {releaseMeta && (
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {releaseMeta}
+                  </Typography>
+                )}
               </Stack>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
                 {releaseHref ? (
@@ -733,9 +888,11 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                 {release.artist}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {release.blurb}
-              </Typography>
+              {release.blurb && (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {release.blurb}
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {release.links.map((link) => (
                   <Button
@@ -762,13 +919,19 @@ const ReleasesGrid = ({ items }: { items: ReleaseItem[] }) => (
           </Card>
         </Grid>
       );
-    })}
-  </Grid>
+        })}
+      </Grid>
+    )}
+  />
 );
 
 const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
-  <Grid container spacing={3}>
-    {items.map((video) => {
+  <LazyPaginatedList
+    items={items}
+    pagination={{ itemLabel: 'sesiones', initialRowsPerPage: 6 }}
+    renderItems={(visibleItems) => (
+      <Grid container spacing={3}>
+        {visibleItems.map((video) => {
       const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
       return (
         <Grid item xs={12} md={4} key={video.youtubeId}>
@@ -786,7 +949,7 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
             <Box sx={{ position: 'relative', pt: '56.25%', backgroundColor: '#0f1117' }}>
               <Box
                 component="iframe"
-                src={`https://www.youtube.com/embed/${video.youtubeId}`}
+                src={video.embedUrl}
                 title={video.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -827,136 +990,55 @@ const SessionsGrid = ({ items }: { items: SessionItem[] }) => (
           </Card>
         </Grid>
       );
-    })}
-  </Grid>
+        })}
+      </Grid>
+    )}
+  />
 );
 
 export default function RecordsPublicPage() {
-  const sessionsQuery = useCmsContents('records-session-', 'es');
-  const releasesQuery = useCmsContents('records-release-', 'es');
-  const recordingsQuery = useCmsContents('records-recording-', 'es');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const envVars = import.meta.env as Record<string, string | undefined>;
-  const bookingToken = envVars['VITE_PUBLIC_BOOKING_TOKEN'] ?? envVars['VITE_API_DEMO_TOKEN'] ?? '';
-  const hasBookingToken = Boolean(bookingToken);
+  const recordsFeedQuery = useQuery({
+    queryKey: ['records-feed', 'es'],
+    queryFn: () => Records.getFeed('es'),
+    staleTime: 5 * 60 * 1000,
+  });
   const { session } = useSession();
-  const canMaintainCms = useMemo(
-    () => canAccessPath('/configuracion/cms', session?.roles, session?.modules),
+  const canManageReleases = useMemo(
+    () => canAccessPath('/label/releases', session?.roles, session?.modules),
     [session?.modules, session?.roles],
   );
 
-  useEffect(() => {
-    if (session) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    if (!bookingToken) {
-      setTransientApiToken(null);
-      return undefined;
-    }
-    setTransientApiToken(String(bookingToken));
-    return () => {
-      setTransientApiToken(null);
-    };
-  }, [bookingToken, session]);
-
-  const sessions: SessionItem[] = useMemo(() => {
-    const mapped =
-      sessionsQuery.data
-        ?.map((entry): SessionItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const youtubeId =
-            toNonEmptyText(payload['youtubeId']) ??
-            toNonEmptyText(payload['youtubeID']) ??
-            toNonEmptyText(payload['id']);
-          if (!youtubeId) return null;
-          const url = toNonEmptyText(payload['url']) ?? `https://www.youtube.com/watch?v=${youtubeId}`;
-          return {
-            youtubeId,
-            title: toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle) ?? 'Sesión en vivo TDF',
-            duration: toText(payload['duration']) ?? '',
-            guests: toText(payload['guests']) ?? '',
-            description: toText(payload['description']) ?? '',
-            url,
-          };
-        })
-        .filter((item): item is SessionItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultSessionItems;
-  }, [sessionsQuery.data]);
-
-  const [firstDefaultRelease] = defaultReleaseItems;
-  const defaultReleaseCover = firstDefaultRelease?.cover ?? '';
-
-  const releases: ReleaseItem[] = useMemo(() => {
-    const mapped =
-      releasesQuery.data
-        ?.map((entry): ReleaseItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const linksRaw = Array.isArray(payload['links']) ? payload['links'] : [];
-          const links: ReleaseItem['links'] = linksRaw.flatMap((item) => {
-            const link = toObject(item);
-            if (!link) return [];
-            const url = toNonEmptyText(link['url']);
-            if (!url) return [];
-            return [{
-              platform: toNonEmptyText(link['platform']) ?? 'Enlace',
-              url,
-              accent: toNonEmptyText(link['accent']) ?? '#a5b4fc',
-            }];
-          });
-          const title = toNonEmptyText(payload['title']) ?? toNonEmptyText(entry.ccdTitle);
-          if (!title) return null;
-          return {
-            title,
-            artist: toNonEmptyText(payload['artist']) ?? 'TDF House Band',
-            releasedOn: toText(payload['releasedOn']) ?? toText(payload['date']) ?? '',
-            blurb: toText(payload['description']) ?? toText(payload['blurb']) ?? '',
-            cover: toNonEmptyText(payload['cover']) ?? toNonEmptyText(payload['image']) ?? defaultReleaseCover,
-            links,
-            primaryUrl: toNonEmptyText(payload['url']) ?? links[0]?.url,
-          };
-        })
-        .filter((item): item is ReleaseItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultReleaseItems;
-  }, [releasesQuery.data, defaultReleaseCover]);
-
-  const recordings: RecordingItem[] = useMemo(() => {
-    const mapped =
-      recordingsQuery.data
-        ?.map((entry): RecordingItem | null => {
-          const payload = toObject(entry.ccdPayload);
-          if (!payload) return null;
-          const title = toNonEmptyText(payload['title']);
-          const image = toNonEmptyText(payload['image']);
-          if (!title || !image) return null;
-          return {
-            title,
-            artist: toText(payload['artist']) ?? '',
-            recordedAt: toText(payload['recordedAt']) ?? toText(payload['date']) ?? '',
-            vibe: toText(payload['vibe']) ?? toText(payload['tag']) ?? 'En vivo',
-            description: toText(payload['description']) ?? '',
-            image,
-          };
-        })
-        .filter((item): item is RecordingItem => item != null) ?? [];
-    return mapped.length > 0 ? mapped : defaultRecordings;
-  }, [recordingsQuery.data]);
+  const sessions = useMemo(
+    () => sortSessions((recordsFeedQuery.data?.sessions ?? []).map(mapRecordsSession).filter((item): item is SessionItem => item != null)),
+    [recordsFeedQuery.data?.sessions],
+  );
+  const releases = useMemo(
+    () => sortReleases((recordsFeedQuery.data?.releases ?? []).map(mapRecordsRelease)),
+    [recordsFeedQuery.data?.releases],
+  );
+  const recordings = useMemo(
+    () => sortRecordings((recordsFeedQuery.data?.recordings ?? []).map(mapRecordsRecording).filter((item): item is RecordingItem => item != null)),
+    [recordsFeedQuery.data?.recordings],
+  );
+  const sessionsLoading = recordsFeedQuery.isLoading;
+  const releasesLoading = recordsFeedQuery.isLoading;
+  const recordingsLoading = recordsFeedQuery.isLoading;
+  const sessionsError = recordsFeedQuery.isError;
+  const releasesError = recordsFeedQuery.isError;
+  const recordingsError = recordsFeedQuery.isError;
 
   const heroTitle = 'Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar.';
-  const heroEyebrow = canMaintainCms ? 'TDF Records — CMS público' : 'TDF Records · Estudio y lanzamientos';
+  const heroEyebrow = 'TDF Records · Estudio y lanzamientos';
   const heroSubtitle =
     'Descubre lo que suena y se graba en TDF: sesiones recientes, lanzamientos oficiales y videos en vivo desde un solo lugar.';
-  const heroSupportText = hasBookingToken
-    ? 'Cuéntanos qué quieres grabar y te mostraremos disponibilidad, salas e ingenieros desde aquí.'
-    : 'La reserva directa no está disponible ahora mismo. Escríbenos por WhatsApp y coordinamos tu sesión manualmente.';
-  const heroCta = hasBookingToken ? 'Reservar sesión' : 'Coordinar por WhatsApp';
+  const heroSupportText =
+    'Cuéntanos qué quieres grabar mediante el formulario público seguro. El equipo confirmará disponibilidad antes de cualquier pago.';
+  const heroCta = 'Reservar sesión';
   const heroSecondaryCta = 'Ver lanzamientos';
   const recordingsIntro =
-    'Una selección de grabaciones recientes para mostrar el ambiente, el sonido y la energía del estudio.';
+    'Videos recientes del canal TDF Records que muestran el ambiente, el sonido y la energía del estudio.';
   const releasesIntro =
-    'Explora los lanzamientos más recientes de TDF Records y salta directo a la plataforma que prefieras.';
+    'Escucha canciones del playlist RELEASES by TDF y salta directo a Spotify.';
   const sessionsIntro =
     'Sesiones en vivo, tomas especiales y performances para descubrir el catálogo en movimiento.';
 
@@ -979,7 +1061,6 @@ export default function RecordsPublicPage() {
             'linear-gradient(135deg, rgba(12,18,28,0.9), rgba(12,18,28,0.6)), url(https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?auto=format&fit=crop&w=1800&q=80) center/cover',
         }}
       >
-        <BookingRequestDialog open={dialogOpen} onClose={() => setDialogOpen(false)} hasToken={hasBookingToken} />
         <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
             <PublicBrandBar tagline="TDF Records · Estudio · Lanzamientos · Sesiones" />
@@ -994,20 +1075,8 @@ export default function RecordsPublicPage() {
                 fontWeight: 700,
               }}
             />
-            {canMaintainCms && (
+            {canManageReleases && (
               <Stack direction="row" spacing={1}>
-                <Tooltip title="Abrir CMS (records-*)">
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms"
-                    variant="outlined"
-                    size="small"
-                    startIcon={<EditIcon />}
-                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: '#e5e7eb' }}
-                  >
-                    Gestionar CMS
-                  </Button>
-                </Tooltip>
                 <Tooltip title="Ir a CRUD de lanzamientos">
                   <Button
                     component={RouterLink}
@@ -1029,42 +1098,22 @@ export default function RecordsPublicPage() {
             </Typography>
             <Stack spacing={1.5}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                {hasBookingToken ? (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    sx={{
-                      bgcolor: '#7c3aed',
-                      color: '#f8fafc',
-                      fontWeight: 800,
-                      px: 3,
-                      textTransform: 'none',
-                      '&:hover': { bgcolor: '#6d28d9' },
-                    }}
-                    onClick={() => setDialogOpen(true)}
-                  >
-                    {heroCta}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    size="large"
-                    component="a"
-                    href={STUDIO_WHATSAPP_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    sx={{
-                      bgcolor: '#22c55e',
-                      color: '#08110d',
-                      fontWeight: 800,
-                      px: 3,
-                      textTransform: 'none',
-                      '&:hover': { bgcolor: '#16a34a' },
-                    }}
-                  >
-                    {heroCta}
-                  </Button>
-                )}
+                <Button
+                  variant="contained"
+                  size="large"
+                  component={RouterLink}
+                  to="/reservar"
+                  sx={{
+                    bgcolor: '#7c3aed',
+                    color: '#f8fafc',
+                    fontWeight: 800,
+                    px: 3,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: '#6d28d9' },
+                  }}
+                >
+                  {heroCta}
+                </Button>
                 <Button
                   variant="outlined"
                   size="large"
@@ -1098,32 +1147,13 @@ export default function RecordsPublicPage() {
             sx={{ mt: 6, flexWrap: 'wrap' }}
           >
             <GradientCard
-              title="Fotos del estudio"
-              actions={
-                canMaintainCms ? (
-                  <Tooltip title="Editar fotos (CMS records-recording-*)">
-                    <IconButton
-                      component={RouterLink}
-                      to="/configuracion/cms?slug=records-recording-"
-                      aria-label="Editar fotos del estudio en CMS"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
+              title="Videos recientes"
+              actions={null}
             >
               <Stack spacing={0.75} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
-                  Explora salas, sesiones y momentos detrás de cámaras capturados durante grabaciones recientes.
+                  Explora sesiones, DJ sets y momentos del canal TDF Records sin repetir videos ya destacados.
                 </Typography>
-                {canMaintainCms && (
-                  <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                    Edita este bloque desde Configuración → CMS con los slugs `records-recording-*`.
-                  </Typography>
-                )}
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 {recordings.slice(0, 3).map((item) => (
@@ -1138,25 +1168,11 @@ export default function RecordsPublicPage() {
             </GradientCard>
             <GradientCard
               title="Sesiones en vivo TDF"
-              actions={
-                canMaintainCms ? (
-                  <Tooltip title="Editar sesiones (CMS records-session-*)">
-                    <IconButton
-                      component={RouterLink}
-                      to="/configuracion/cms?slug=records-session-"
-                      aria-label="Editar sesiones en vivo TDF en CMS"
-                      size="small"
-                      sx={{ color: 'rgba(229,231,235,0.9)' }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                ) : null
-              }
+              actions={null}
             >
               <Stack spacing={1}>
                 {sessions.slice(0, 2).map((video) => {
-                  const sessionHref = video.url ?? `https://www.youtube.com/watch?v=${video.youtubeId}`;
+                  const sessionHref = video.url;
                   return (
                     <Stack key={video.youtubeId} direction="row" spacing={1} alignItems="center">
                       <Chip label="Sesión" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
@@ -1175,28 +1191,12 @@ export default function RecordsPublicPage() {
                   );
                 })}
               </Stack>
-              {canMaintainCms && (
-                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con los slugs `records-session-*`.
-                </Typography>
-              )}
             </GradientCard>
             <GradientCard
               title="Lanzamientos"
               actions={
-                canMaintainCms ? (
+                canManageReleases ? (
                   <Stack direction="row" spacing={0.5}>
-                    <Tooltip title="Editar lanzamientos (CMS records-release-*)">
-                      <IconButton
-                        component={RouterLink}
-                        to="/configuracion/cms?slug=records-release-"
-                        aria-label="Editar lanzamientos en CMS"
-                        size="small"
-                        sx={{ color: 'rgba(229,231,235,0.9)' }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Ir a CRUD de lanzamientos">
                       <IconButton
                         component={RouterLink}
@@ -1213,10 +1213,10 @@ export default function RecordsPublicPage() {
               }
             >
               <Stack spacing={1}>
-                {releases.map((release) => {
+                {releases.slice(0, 4).map((release) => {
                   const releaseHref = release.primaryUrl ?? release.links?.[0]?.url;
                   return (
-                    <Typography key={release.title} variant="body2" sx={{ fontWeight: 700 }}>
+                    <Typography key={`${release.sortOrder}-${release.title}`} variant="body2" sx={{ fontWeight: 700 }}>
                       {releaseHref ? (
                         <MuiLink
                           href={releaseHref}
@@ -1234,12 +1234,12 @@ export default function RecordsPublicPage() {
                     </Typography>
                   );
                 })}
+                {releases.length === 0 && (
+                  <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.82)' }}>
+                    Publica lanzamientos aprobados para activar este resumen.
+                  </Typography>
+                )}
               </Stack>
-              {canMaintainCms && (
-                <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)', mt: 1.5 }}>
-                  Edita este bloque desde Configuración → CMS con los slugs `records-release-*`.
-                </Typography>
-              )}
             </GradientCard>
           </Stack>
         </Container>
@@ -1250,31 +1250,27 @@ export default function RecordsPublicPage() {
           <SectionTitle
             title="Grabaciones recientes"
             kicker="Estudio"
-            actions={
-              canMaintainCms && (
-                <Button
-                  component={RouterLink}
-                  to="/configuracion/cms?slug=records-recording-"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                >
-                  Gestionar CMS
-                </Button>
-              )
-            }
+            actions={null}
           />
           <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {recordingsIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Edita este grid desde Configuración → CMS con los slugs `records-recording-*`.
-              </Typography>
-            )}
           </Stack>
-          <RecordingsGrid items={recordings} />
+          {recordingsLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando grabaciones publicadas…</Typography>
+            </Stack>
+          ) : recordingsError ? (
+            <Alert severity="warning">No pudimos cargar las grabaciones publicadas.</Alert>
+          ) : recordings.length > 0 ? (
+            <RecordingsGrid items={recordings} />
+          ) : (
+            <Alert severity="info">
+              No hay grabaciones publicadas en esta colección todavía.
+            </Alert>
+          )}
         </Box>
 
         <Box id="releases" sx={{ mb: 6 }}>
@@ -1282,17 +1278,8 @@ export default function RecordsPublicPage() {
             title="Lanzamientos TDF Records"
             kicker="Sello"
             actions={
-              canMaintainCms && (
+              canManageReleases && (
                 <Stack direction="row" spacing={1}>
-                  <Button
-                    component={RouterLink}
-                    to="/configuracion/cms?slug=records-release-"
-                    size="small"
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                  >
-                    CMS
-                  </Button>
                   <Button
                     component={RouterLink}
                     to="/label/releases"
@@ -1309,66 +1296,64 @@ export default function RecordsPublicPage() {
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {releasesIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Gestiona los enlaces y el contenido desde Configuración → CMS o desde el módulo de lanzamientos.
-              </Typography>
-            )}
           </Stack>
-          <ReleasesGrid items={releases} />
+          {releasesLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando lanzamientos publicados…</Typography>
+            </Stack>
+          ) : releasesError ? (
+            <Alert severity="warning">No pudimos cargar los lanzamientos publicados.</Alert>
+          ) : releases.length > 0 ? (
+            <ReleasesGrid items={releases} />
+          ) : (
+            <Alert
+              severity={canManageReleases ? 'info' : 'warning'}
+              action={
+                canManageReleases ? (
+                  <Button
+                    component={RouterLink}
+                    to="/label/releases"
+                    size="small"
+                    color="inherit"
+                  >
+                    Gestionar lanzamientos
+                  </Button>
+                ) : undefined
+              }
+            >
+              No hay lanzamientos publicados todavía.
+            </Alert>
+          )}
         </Box>
 
         <Box sx={{ mb: 6 }}>
           <SectionTitle
             title="Sesiones en vivo TDF"
             kicker="YouTube"
-            actions={
-              canMaintainCms && (
-                <Button
-                  component={RouterLink}
-                  to="/configuracion/cms?slug=records-session-"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                >
-                  Gestionar CMS
-                </Button>
-              )
-            }
+            actions={null}
           />
           <Stack spacing={0.75} sx={{ maxWidth: 760, mb: 3 }}>
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {sessionsIntro}
             </Typography>
-            {canMaintainCms && (
-              <Typography variant="caption" sx={{ color: 'rgba(148,163,184,0.92)' }}>
-                Inserta el ID de YouTube en los slugs `records-session-*` para embeber cada sesión aquí.
-              </Typography>
-            )}
           </Stack>
-          <SessionsGrid items={sessions} />
+          {sessionsLoading ? (
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ color: 'text.secondary' }}>
+              <CircularProgress size={20} color="inherit" />
+              <Typography variant="body2">Cargando sesiones publicadas…</Typography>
+            </Stack>
+          ) : sessionsError ? (
+            <Alert severity="warning">No pudimos cargar las sesiones publicadas.</Alert>
+          ) : sessions.length > 0 ? (
+            <SessionsGrid items={sessions} />
+          ) : (
+            <Alert severity="info">
+              No hay sesiones publicadas en esta colección todavía.
+            </Alert>
+          )}
         </Box>
 
-        {canMaintainCms && (
-          <GradientCard
-            title="Atajos de CMS"
-            actions={
-              <Button
-                component={RouterLink}
-                to="/configuracion/cms"
-                size="small"
-                variant="outlined"
-                startIcon={<EditIcon />}
-              >
-                Abrir CMS
-              </Button>
-            }
-          >
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-              Usa el panel en Configuración → CMS con los slugs `records-release-*`, `records-session-*` y `records-recording-*` para crear borradores, publicar y versionar contenido en es/en.
-            </Typography>
-          </GradientCard>
-        )}
       </Container>
     </Box>
   );

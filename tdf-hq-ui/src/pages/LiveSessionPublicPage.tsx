@@ -234,7 +234,7 @@ export default function LiveSessionPublicPage() {
                 )}
               </Stack>
               <Box sx={{ opacity: canUseForm ? 1 : 0.35, pointerEvents: canUseForm ? 'auto' : 'none' }}>
-                <LiveSessionIntakeForm variant="public" requireTerms />
+                <LiveSessionIntakeForm variant="public" />
               </Box>
             </Stack>
           </Paper>

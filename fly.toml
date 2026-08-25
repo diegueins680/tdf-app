@@ -1,13 +1,30 @@
 app = "tdf-hq"
+primary_region = "gru"
 
 [build]
   dockerfile = "tdf-hq/Dockerfile"
 
 [env]
   APP_PORT = "8080"
+  # The persisted deployment default is Spanish; keep runtime validation aligned.
+  DEFAULT_LOCALE = "es"
+  # Production schema changes are applied once by the guarded release lane.
   RUN_MIGRATIONS = "false"
-  ALLOW_ORIGINS = "https://tdf-app.pages.dev"
+  # Apply only checksum-pinned SQL from production-migrations.json at startup.
+  AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
+  # Enable only after the discovery schema and release have been verified.
+  EVENT_DISCOVERY_ENABLED = "false"
+  # Daily full-platform artist discovery. External research/media is scheduled
+  # separately with the same API-level lock and idempotency keys.
+  ARTIST_ENRICHMENT_ENABLED = "true"
+  ARTIST_ENRICHMENT_AUTO_PUBLISH = "false"
+  ARTIST_ENRICHMENT_HOUR_LOCAL = "4"
+  ARTIST_ENRICHMENT_BATCH_SIZE = "500"
+  ARTIST_ENRICHMENT_STALE_DAYS = "90"
   HQ_ASSETS_DIR = "/data/assets"
+  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
+  TZ = "America/Guayaquil"
+  # TICKETMASTER_API_KEY is set as a Fly secret (flyctl secrets set TICKETMASTER_API_KEY=...)
   # VITE_PAYPAL_CLIENT_ID is set as a Fly secret (flyctl secrets set VITE_PAYPAL_CLIENT_ID=...)
   # VITE_LIVE_SESSIONS_PUBLIC_TOKEN is set as a Fly secret (flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=...)
 
@@ -34,3 +51,15 @@ app = "tdf-hq"
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1

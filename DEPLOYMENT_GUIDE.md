@@ -84,6 +84,8 @@ DB_NAME=tdf_hq
 APP_PORT=8080
 RESET_DB=false
 SEED_DB=false
+RUN_MIGRATIONS=false
+EVENT_DISCOVERY_ENABLED=false
 
 # Web UI URL (for CORS)
 HQ_APP_URL=https://your-frontend-url.pages.dev
@@ -184,22 +186,39 @@ server {
 
 ## Backend Deployment (Fly.io)
 
-Fly powers the production `tdf-hq` API. Deployments must inject the git SHA so `/version` returns the running commit.
+Fly powers the production `tdf-hq` API. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
-The deployment flow is:
+Application startup never owns production schema changes. Both `RUN_MIGRATIONS` and `EVENT_DISCOVERY_ENABLED` remain `false` in `fly.toml` during a release. The release lane applies the reviewed, additive SQL migrations once before updating any API Machine, deploys an image pinned to the requested full git SHA, and verifies the running image digest, version payload, and healthy response.
 
-1. Build and push `diegueins680/tdf-hq:<commit-sha>` to Docker Hub with the helper script.
-2. Tell Fly to deploy that prebuilt image (`fly deploy --image ...`).
+### Guarded release commands
 
-Steps:
+Run these commands from the repository root. Use the same 40-character commit SHA throughout:
 
-1. Install Docker (with Buildx) and authenticate to Docker Hub (`docker login`). CI does this via `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` secrets.
-2. Install and authenticate Fly CLI (`fly auth login`).
-3. Run `scripts/fly-deploy.sh [fly deploy flags]` from the repo root. The script:
-   - Captures `git rev-parse HEAD`.
-   - Builds and pushes `diegueins680/tdf-hq:<sha>` (override via `DOCKER_IMAGE_REPO`/`DOCKER_IMAGE_TAG`).
-   - Calls `fly deploy --image ... --env SOURCE_COMMIT=... --env GIT_SHA=...`.
-4. For manual Fly commands, pass the same env vars (`--env SOURCE_COMMIT=$(git rev-parse HEAD) --env GIT_SHA=$(git rev-parse HEAD)`) and reference the pushed Docker Hub image to avoid re-building inside Fly.
+```bash
+# Local-only: show the immutable image and ordered release sequence.
+npm run release:backend:plan -- --sha <full-sha>
+
+# Read-only: verify production schema/data, image availability, and Fly state.
+npm run release:backend:preflight -- --sha <full-sha>
+
+# Mutating: apply pending migrations once and perform the rolling deployment.
+npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+```
+
+The execute command deliberately requires both `--execute` and an exact SHA confirmation. A failed preflight blocks migration and deployment. Do not bypass that refusal with direct Fly commands.
+
+For the ticket checkout and event-discovery release, the required order is:
+
+1. Verify the already repaired notification schema.
+2. Apply `tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql` to repair the previously unapplied ticketing base schema.
+3. Apply `tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql`.
+4. Apply `tdf-hq/sql/2026-07-12_event_discovery_imports.sql`.
+5. Roll out the pinned backend image with discovery still disabled.
+6. Verify each started API Machine, the public `/health` and `/version` endpoints, and logs before enabling any new background job.
+
+Before this release can execute, Fly must have `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set. The lane also requires every running Machine to have effective `RUN_MIGRATIONS=false` and `EVENT_DISCOVERY_ENABLED=false`. Disable any main-branch auto-deploy path before pushing this release work; schema application must happen only through the guarded lane.
+
+These migrations are additive. If application rollback is required, restore the previous pinned image and leave the new nullable columns/tables in place.
 
 ### Setting Secrets in Fly
 
@@ -211,6 +230,9 @@ flyctl secrets set VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 
 # Set live sessions token
 flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=your-token
+
+# Ticketmaster may be stored before rollout, but discovery stays disabled in fly.toml
+flyctl secrets set TICKETMASTER_API_KEY=your-consumer-key
 
 # List current secrets
 flyctl secrets list
@@ -242,10 +264,15 @@ flyctl status
 flyctl logs
 ```
 
+During application boot, `/health` can temporarily report a `starting` payload. Release verification must wait for `status: "ok"` and `db: "ok"`; an HTTP 200 alone is not sufficient. Fly uses the endpoint for rolling Machine health checks, while the release lane verifies the response body and exact `/version` SHA.
+
 The service is configured to:
+
 - Listen on `0.0.0.0:8080` (accepts connections from Fly's proxy)
 - Use `internal_port = 8080` in fly.toml for service binding
 - Expose ports 80 (HTTP) and 443 (HTTPS) via Fly's proxy
+- Roll Machines gradually and require the `/health` HTTP check
+- Keep startup migrations and Ticketmaster discovery disabled by default
 
 ## Frontend Deployment
 
@@ -286,10 +313,9 @@ VITE_INSTAGRAM_OAUTH_PROVIDER=facebook
 VITE_INSTAGRAM_SCOPES=instagram_basic,instagram_manage_messages,instagram_business_basic,instagram_business_manage_messages,pages_show_list,pages_read_engagement
 ```
 
-Optional for demo mode:
-```env
-VITE_API_DEMO_TOKEN=your-demo-token
-```
+Bearer credentials must never be configured as `VITE_*` variables because Vite embeds them in
+the public browser bundle. Use authenticated sessions for staff access and the purpose-built
+public APIs for guest flows.
 
 **Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
 
@@ -862,3 +888,482 @@ add_header Referrer-Policy "no-referrer-when-downgrade" always;
 ---
 
 **Need help?** Open an issue or contact the development team.
+
+---
+
+## Ticketing System Deployment (Stripe Integration)
+
+**Version:** 1.0.0
+**Date:** 2026-05-24
+**Status:** Production Ready ✅
+
+The TDF ticketing system requires additional configuration for Stripe payment processing, QR code generation, and email notifications.
+
+### Prerequisites for Ticketing
+
+- ✅ Stripe account (test and production keys)
+- ✅ Webhook endpoint with HTTPS
+- ✅ SMTP configured for ticket confirmation emails
+- ✅ Database migration completed
+
+### Step 1: Database Migration
+
+The ticketing system adds 8 new tables to the existing schema.
+
+#### Execute Migration
+
+```bash
+# Navigate to backend directory
+cd /Users/macpro/GitHub/tdf-app/tdf-hq
+
+# CRITICAL: Backup database first!
+pg_dump -h <DB_HOST> -U <DB_USER> -d <DB_NAME> > backup_pre_ticketing_$(date +%Y%m%d_%H%M%S).sql
+
+# Execute ticketing migration
+psql -h <DB_HOST> -U <DB_USER> -d <DB_NAME> -f sql/2026-05-24_ticketing_system_enhancements.sql
+
+# Expected output:
+# CREATE TABLE (8 times - promo_code, ticket_refund_request, etc.)
+# CREATE INDEX (multiple times)
+# ALTER TABLE (3 times - event_ticket_order, event_ticket, event_ticket_tier)
+```
+
+#### Verify Migration Success
+
+```bash
+# Connect to database
+psql -h <DB_HOST> -U <DB_USER> -d <DB_NAME>
+
+# Check new tables exist
+\dt
+
+# Should see these 8 new tables:
+# - promo_code
+# - promo_code_redemption
+# - ticket_refund_request
+# - ticket_transfer
+# - event_waitlist
+# - stripe_payment_intent
+# - stripe_webhook_event
+# - ticket_qr_code
+
+# Check modified tables
+\d event_ticket_order
+\d event_ticket
+\d event_ticket_tier
+```
+
+### Step 2: Stripe Configuration
+
+#### Get Stripe API Keys
+
+1. Log in to [Stripe Dashboard](https://dashboard.stripe.com)
+2. Navigate to **Developers** → **API Keys**
+3. Copy:
+   - **Publishable key** (starts with `pk_test_` or `pk_live_`)
+   - **Secret key** (starts with `sk_test_` or `sk_live_`)
+
+**Important:**
+- Use **test mode** keys for staging/development
+- Use **live mode** keys for production
+- Never commit keys to git
+
+#### Configure Webhook
+
+See detailed instructions in [STRIPE_WEBHOOK_SETUP.md](STRIPE_WEBHOOK_SETUP.md)
+
+**Quick Setup:**
+
+1. Go to **Developers** → **Webhooks** in Stripe Dashboard
+2. Click **Add endpoint**
+3. Configure:
+   - **URL:** `https://api.tdf-app.com/social-events/stripe/webhook`
+   - **Events:**
+     - ✅ `payment_intent.succeeded`
+     - ✅ `payment_intent.payment_failed`
+     - ✅ `charge.refunded`
+4. Copy the **Signing secret** (starts with `whsec_`)
+
+### Step 3: Backend Environment Variables
+
+Add these to your backend `.env` file:
+
+```env
+# Stripe Configuration (REQUIRED for ticketing)
+STRIPE_SECRET_KEY=sk_live_your_actual_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_live_your_actual_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
+
+# For staging/development, use test keys:
+# STRIPE_SECRET_KEY=sk_test_your_test_secret_key
+# STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key
+```
+
+**Koyeb/Fly.io Deployment:**
+
+```bash
+# Koyeb - Add as environment variables in service settings
+# Fly.io - Set as secrets
+flyctl secrets set STRIPE_SECRET_KEY=sk_live_...
+flyctl secrets set STRIPE_PUBLISHABLE_KEY=pk_live_...
+flyctl secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+### Step 4: Frontend Environment Variables
+
+Add to `tdf-hq-ui/.env` or hosting provider settings:
+
+```env
+# Stripe Configuration (Frontend)
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_your_actual_publishable_key
+
+# For staging/development:
+# VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key
+```
+
+**Cloudflare Pages:**
+1. Go to **Settings** → **Environment variables**
+2. Add `VITE_STRIPE_PUBLISHABLE_KEY`
+3. **Important:** Redeploy after adding variables
+
+**Vercel:**
+1. Go to **Settings** → **Environment Variables**
+2. Add `VITE_STRIPE_PUBLISHABLE_KEY`
+3. Trigger new deployment
+
+### Step 5: Deploy Backend with Ticketing
+
+```bash
+cd tdf-hq
+
+# Rebuild with new ticketing handlers
+stack clean
+stack build
+
+# Run tests (optional)
+stack test
+
+# Deploy to your hosting provider (see main deployment sections above)
+```
+
+**Verify Backend:**
+
+```bash
+# Test health endpoint
+curl https://your-api.com/health
+
+# Test Stripe payment intent creation (requires auth token)
+curl -X POST https://your-api.com/social-events/stripe/create-payment-intent \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  -d '{
+    "tppEventId": "test-event-id",
+    "tppTierId": "test-tier-id",
+    "tppQuantity": 1,
+    "tppBuyerEmail": "test@example.com",
+    "tppBuyerName": "Test User"
+  }'
+
+# Should return: {"spiClientSecret":"pi_xxx_secret_yyy","spiOrderId":"order-id"}
+```
+
+### Step 6: Test Stripe Webhook
+
+#### Local Testing with Stripe CLI
+
+```bash
+# Install Stripe CLI
+brew install stripe/stripe-cli/stripe
+
+# Login
+stripe login
+
+# Forward webhooks to local backend
+stripe listen --forward-to http://localhost:8080/social-events/stripe/webhook
+
+# In another terminal, trigger test events
+stripe trigger payment_intent.succeeded
+stripe trigger payment_intent.payment_failed
+stripe trigger charge.refunded
+```
+
+#### Production Testing
+
+```bash
+# In Stripe Dashboard → Developers → Webhooks
+# Click your webhook endpoint
+# Click "Send test webhook"
+# Select "payment_intent.succeeded"
+# Click "Send test webhook"
+
+# Check backend logs for:
+# "Received Stripe webhook: payment_intent.succeeded"
+# "Processing payment intent: pi_xxx"
+# "Generated 1 tickets for order: order-id"
+```
+
+### Step 7: End-to-End Purchase Test
+
+Complete purchase flow test:
+
+1. **Create Test Event:**
+   ```bash
+   # Create event with tickets via API or UI
+   ```
+
+2. **Purchase Ticket:**
+   - Go to event page in UI
+   - Click "Buy Tickets"
+   - Enter buyer details
+   - Use test card: `4242 4242 4242 4242`
+   - Expiry: Any future date (e.g., 12/34)
+   - CVC: Any 3 digits (e.g., 123)
+   - Submit payment
+
+3. **Verify Webhook Processing:**
+   ```bash
+   # Check Stripe Dashboard → Developers → Webhooks → Logs
+   # Should see HTTP 200 response
+   ```
+
+4. **Verify Ticket Generated:**
+   ```sql
+   -- Connect to database
+   SELECT * FROM event_ticket WHERE created_at > NOW() - INTERVAL '5 minutes';
+
+   -- Verify QR code generated
+   SELECT * FROM ticket_qr_code WHERE created_at > NOW() - INTERVAL '5 minutes';
+
+   -- Check webhook processed
+   SELECT * FROM stripe_webhook_event ORDER BY created_at DESC LIMIT 5;
+   ```
+
+5. **Verify Email Sent:**
+   - Check SMTP logs
+   - Verify confirmation email received with ticket details
+
+### Step 8: Test Refund Flow
+
+```bash
+# 1. Request refund (via API or UI)
+curl -X POST https://your-api.com/social-events/events/{eventId}/ticket-orders/{orderId}/refund \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  -d '{"reason": "Customer request"}'
+
+# 2. Admin approves refund
+curl -X POST https://your-api.com/social-events/events/{eventId}/refunds/{refundId}/approve \
+  -H "Authorization: Bearer ADMIN_AUTH_TOKEN"
+
+# 3. Verify refund in Stripe Dashboard
+# 4. Verify refund confirmation email sent
+```
+
+### Step 9: Test Ticket Transfer
+
+```bash
+# 1. Initiate transfer
+curl -X POST https://your-api.com/social-events/events/{eventId}/tickets/{ticketId}/transfer \
+  -H "Authorization: Bearer YOUR_AUTH_TOKEN" \
+  -d '{
+    "ttcToEmail": "recipient@example.com",
+    "ttcToName": "Recipient Name"
+  }'
+
+# 2. Verify transfer email sent to recipient
+# 3. Recipient accepts transfer via link in email
+# 4. Verify ticket holder updated in database
+```
+
+### Step 10: Mobile App QR Code Testing
+
+```bash
+# 1. Open ticket in mobile app
+# 2. Verify QR code displays correctly
+# 3. Scan QR code with check-in scanner
+# 4. Verify ticket checked in successfully
+# 5. Attempt duplicate scan - should be rejected
+```
+
+### Ticketing Deployment Checklist
+
+#### Pre-Deployment
+
+- [ ] Database backup created
+- [ ] Stripe test keys working in staging
+- [ ] Webhook endpoint accessible via HTTPS
+- [ ] SMTP credentials configured
+- [ ] Migration tested in staging environment
+
+#### Backend Deployment
+
+- [ ] Migration executed successfully
+- [ ] 8 new tables created (verify with `\dt`)
+- [ ] Environment variables set (STRIPE_SECRET_KEY, etc.)
+- [ ] Backend rebuilt and deployed
+- [ ] Health check responds
+- [ ] Stripe payment intent creation works
+
+#### Stripe Configuration
+
+- [ ] Webhook endpoint created in Stripe Dashboard
+- [ ] Events selected (payment_intent.succeeded, payment_failed, charge.refunded)
+- [ ] Webhook signing secret copied to backend .env
+- [ ] Test webhook sent successfully (HTTP 200)
+- [ ] Production keys configured (pk_live_, sk_live_)
+
+#### Frontend Deployment
+
+- [ ] VITE_STRIPE_PUBLISHABLE_KEY set
+- [ ] Frontend rebuilt with Stripe Elements
+- [ ] Stripe checkout form loads
+- [ ] Promo code validation works
+- [ ] Payment submission successful
+
+#### Mobile Deployment
+
+- [ ] QR code library installed (react-native-qrcode-svg)
+- [ ] Ticket display screen shows QR codes
+- [ ] QR scanner screen functional
+- [ ] Camera permissions configured
+
+#### Post-Deployment Testing
+
+- [ ] Complete end-to-end purchase flow
+- [ ] Ticket generated with QR code
+- [ ] Confirmation email received
+- [ ] Promo code applied correctly
+- [ ] Refund request/approval works
+- [ ] Ticket transfer works
+- [ ] QR code check-in works
+- [ ] Duplicate scan prevention works
+- [ ] Waitlist join/notify works
+
+### Monitoring Ticketing System
+
+#### Daily Checks
+
+```bash
+# Check webhook success rate
+# Stripe Dashboard → Developers → Webhooks → Your Endpoint → Logs
+# Should be >99% successful (HTTP 200)
+
+# Check payment success rate
+# Stripe Dashboard → Payments
+# Monitor failed payments
+
+# Check database health
+SELECT COUNT(*) FROM stripe_webhook_event WHERE created_at > NOW() - INTERVAL '24 hours';
+SELECT COUNT(*) FROM event_ticket WHERE created_at > NOW() - INTERVAL '24 hours';
+```
+
+#### Weekly Checks
+
+```sql
+-- Check for stuck orders (payment pending > 1 hour)
+SELECT * FROM event_ticket_order
+WHERE status = 'payment_pending'
+  AND created_at < NOW() - INTERVAL '1 hour';
+
+-- Check for failed webhooks
+SELECT * FROM stripe_webhook_event
+WHERE processed = false
+  AND created_at < NOW() - INTERVAL '10 minutes';
+
+-- Monitor refund requests
+SELECT COUNT(*) FROM ticket_refund_request
+WHERE status = 'pending';
+```
+
+### Troubleshooting Ticketing Issues
+
+#### Issue: Webhook Signature Verification Fails
+
+**Symptoms:**
+- Stripe webhooks return 401 Unauthorized
+- Backend logs show "Invalid webhook signature"
+
+**Solution:**
+1. Verify `STRIPE_WEBHOOK_SECRET` matches Stripe Dashboard
+2. Check for trailing whitespace in `.env` file
+3. Restart backend after updating `.env`
+4. Verify webhook URL is correct (no typos)
+
+#### Issue: Tickets Not Generated After Payment
+
+**Symptoms:**
+- Payment succeeds in Stripe
+- No tickets in database
+- No confirmation email sent
+
+**Solution:**
+1. Check Stripe Dashboard → Webhooks → Logs for failures
+2. Verify webhook endpoint returns HTTP 200
+3. Check backend logs for webhook processing errors
+4. Manually replay webhook from Stripe Dashboard
+
+#### Issue: QR Codes Not Scanning
+
+**Symptoms:**
+- QR code displays but scanner rejects it
+- "Invalid QR code" error
+
+**Solution:**
+1. Verify QR data format: `ticketId|eventId|email|timestamp|HMAC`
+2. Check HMAC secret configuration
+3. Regenerate QR code
+4. Verify scanner app has camera permissions
+
+#### Issue: Refunds Not Processing
+
+**Symptoms:**
+- Refund approved but not processed in Stripe
+- Refund status stuck at "approved"
+
+**Solution:**
+1. Check Stripe API logs for refund creation errors
+2. Verify STRIPE_SECRET_KEY has refund permissions
+3. Check payment_intent_id is correct
+4. Manually process refund in Stripe Dashboard
+
+### Rollback Ticketing System
+
+If you need to roll back the ticketing system:
+
+```bash
+# 1. Database rollback
+psql -h <DB_HOST> -U <DB_USER> -d <DB_NAME> < backup_pre_ticketing_YYYYMMDD_HHMMSS.sql
+
+# 2. Backend rollback
+# Deploy previous version without ticketing code
+
+# 3. Frontend rollback
+# Deploy previous version without Stripe Elements
+
+# 4. Remove Stripe webhook
+# Stripe Dashboard → Developers → Webhooks → Delete endpoint
+```
+
+### Ticketing Security Checklist
+
+- [ ] Stripe live keys configured (not test keys)
+- [ ] Webhook signature verification enabled
+- [ ] QR codes use HMAC signatures
+- [ ] Capacity management prevents overselling
+- [ ] Database uses row-level locking
+- [ ] Sensitive data not logged
+- [ ] CORS restricted to known origins
+- [ ] Rate limiting on checkout endpoints
+
+### Support Resources
+
+- [Ticketing System Summary](TICKETING_SYSTEM_SUMMARY.md) - Complete feature overview
+- [Stripe Webhook Setup](STRIPE_WEBHOOK_SETUP.md) - Detailed webhook configuration
+- [Implementation Status](TICKETING_IMPLEMENTATION_STATUS.md) - Development timeline
+- [Stripe Documentation](https://stripe.com/docs) - Official Stripe docs
+- [Stripe Support](https://support.stripe.com/) - Stripe help center
+
+---
+
+**Ticketing System Deployment Completed:** 2026-05-24
+**Version:** 1.0.0
+**Next Review:** 2026-06-24

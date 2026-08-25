@@ -8,6 +8,7 @@ module TDF.WhatsApp.History
   , OutgoingWhatsAppRecord(..)
   , WhatsAppDeliveryUpdate(..)
   , normalizeWhatsAppPhone
+  , normalizeWhatsAppDeliveryStatus
   , phoneLookupAliases
   , cleanMaybeText
   , resolvePartyPhones
@@ -21,7 +22,12 @@ module TDF.WhatsApp.History
 import           Control.Applicative ((<|>))
 import           Data.Aeson (Value, encode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isControl
+  , isSpace
+  )
 import           Data.List (nub)
 import           Data.Maybe (catMaybes, isJust, fromMaybe)
 import           Data.Text (Text)
@@ -87,13 +93,15 @@ data WhatsAppDeliveryUpdate = WhatsAppDeliveryUpdate
 normalizeWhatsAppPhone :: Text -> Maybe Text
 normalizeWhatsAppPhone raw =
   let trimmed = T.strip raw
-      onlyDigits = T.filter isDigit trimmed
+      onlyDigits = T.filter isAsciiDigit trimmed
       digitCount = T.length onlyDigits
       plusCount = T.count "+" trimmed
       plusIndex = T.findIndex (== '+') trimmed
-      firstDigitIndex = T.findIndex isDigit trimmed
+      firstDigitIndex = T.findIndex isAsciiDigit trimmed
       allowedPhoneChar ch =
-        isDigit ch || isSpace ch || ch `elem` ("+-()." :: String)
+        isAsciiDigit ch || ch == ' ' || ch `elem` ("+-()." :: String)
+      hasUnsafeWhitespace =
+        T.any (\ch -> isControl ch || (isSpace ch && ch /= ' ')) raw
       hasInvalidChars = T.any (not . allowedPhoneChar) trimmed
       plusIsValid =
         case plusIndex of
@@ -101,15 +109,19 @@ normalizeWhatsAppPhone raw =
           Just idx ->
             case firstDigitIndex of
               Nothing -> False
-              Just digitIdx -> plusCount == 1 && idx < digitIdx
+              Just digitIdx -> plusCount == 1 && idx == 0 && digitIdx == 1
   in
     if T.null onlyDigits
         || digitCount < 8
         || digitCount > 15
+        || hasUnsafeWhitespace
         || hasInvalidChars
         || not plusIsValid
       then Nothing
       else Just ("+" <> onlyDigits)
+
+isAsciiDigit :: Char -> Bool
+isAsciiDigit ch = ch >= '0' && ch <= '9'
 
 resolveWhatsAppContactSnapshot
   :: Maybe PartyId
@@ -126,9 +138,7 @@ resolveWhatsAppContactSnapshot mPartyId mPhone = do
           let aliases = phoneLookupAliases phoneVal
           in if null aliases
                then pure Nothing
-                 else selectFirst
-                 ([PartyWhatsapp <-. map Just aliases] ||. [PartyPrimaryPhone <-. map Just aliases])
-                 [Asc PartyId]
+               else selectUniquePartyByPhoneAliases aliases
   let displayNameVal =
         case mParty of
           Nothing -> Nothing
@@ -157,8 +167,13 @@ recordIncomingWhatsAppMessage
   -> SqlPersistT IO (Entity ME.WhatsAppMessage)
 recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
   snapshot <- resolveWhatsAppContactSnapshot Nothing (Just iwrSenderId)
-  let externalId = nonEmptyOr ("incoming-" <> T.pack (show now)) iwrExternalId
-      senderId = nonEmptyOr "unknown" iwrSenderId
+  let senderId = nonEmptyOr "unknown" iwrSenderId
+  externalId <-
+    maybe
+      (allocateGeneratedWhatsAppExternalId (generatedIncomingWhatsAppExternalIdBase senderId now))
+      pure
+      (normalizeStoredWhatsAppExternalId iwrExternalId)
+  let
       senderName = cleanMaybeText iwrSenderName <|> wcsDisplayName snapshot
       bodyVal = cleanMaybeText (Just iwrText)
       metadataVal = cleanMaybeText iwrMetadata
@@ -236,21 +251,28 @@ recordOutgoingWhatsAppMessage
   -> SqlPersistT IO (Entity ME.WhatsAppMessage)
 recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
   snapshot <- resolveWhatsAppContactSnapshot owrRecipientPartyId (Just owrRecipientPhone)
-  let recipientPhone = fromMaybe (nonEmptyOr "unknown" owrRecipientPhone) (normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot)
+  let recipientPhoneE164 = normalizeWhatsAppPhone owrRecipientPhone <|> wcsPhoneE164 snapshot
+      recipientPhone = fromMaybe "unknown" recipientPhoneE164
       fallbackExternalId = generatedWhatsAppExternalIdBase recipientPhone now
       providedExternalId = case sendResult of
         Left _ -> Nothing
-        Right resp -> cleanMaybeText (sendTextMessageId resp)
+        Right resp -> sendTextMessageId resp >>= normalizeStoredWhatsAppExternalId
+      missingProviderMessageId =
+        case sendResult of
+          Right _ -> providedExternalId == Nothing
+          Left _ -> False
   externalId <- maybe (allocateGeneratedWhatsAppExternalId fallbackExternalId) pure providedExternalId
   let
       isFailure =
         case sendResult of
           Left _ -> True
-          Right _ -> False
+          Right _ -> missingProviderMessageId
       deliveryStatus = if isFailure then "failed" else "sent"
       deliveryError =
         case sendResult of
           Left err -> cleanMaybeText (Just err)
+          Right _ | missingProviderMessageId ->
+            Just "WhatsApp provider response did not include a usable message id"
           Right _ -> Nothing
       transportPayload =
         case sendResult of
@@ -273,7 +295,7 @@ recordOutgoingWhatsAppMessage now OutgoingWhatsAppRecord{..} sendResult = do
     , ME.whatsAppMessageSenderName = senderName
     , ME.whatsAppMessagePartyId = partyId
     , ME.whatsAppMessageActorPartyId = owrActorPartyId
-    , ME.whatsAppMessagePhoneE164 = Just recipientPhone
+    , ME.whatsAppMessagePhoneE164 = recipientPhoneE164
     , ME.whatsAppMessageContactEmail = contactEmail
     , ME.whatsAppMessageText = bodyVal
     , ME.whatsAppMessageDirection = "outgoing"
@@ -316,10 +338,47 @@ generatedWhatsAppExternalIdBase :: Text -> UTCTime -> Text
 generatedWhatsAppExternalIdBase recipientPhone now =
   safeBase <> "-out-" <> T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" now)
   where
-    safeBase =
-      case cleanMaybeText (Just recipientPhone) of
-        Nothing -> "unknown"
-        Just value -> value
+    safeBase = fromMaybe "unknown" (normalizeWhatsAppPhone recipientPhone)
+
+generatedIncomingWhatsAppExternalIdBase :: Text -> UTCTime -> Text
+generatedIncomingWhatsAppExternalIdBase senderId now =
+  safeBase <> "-in-" <> T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" now)
+  where
+    safeBase = fromMaybe "unknown" (normalizeWhatsAppPhone senderId)
+
+normalizeStoredWhatsAppExternalId :: Text -> Maybe Text
+normalizeStoredWhatsAppExternalId raw =
+  let externalId = T.strip raw
+  in if T.null externalId
+        || T.length externalId > 512
+        || T.any isUnsafeStoredWhatsAppExternalIdChar externalId
+       then Nothing
+       else Just externalId
+
+isUnsafeStoredWhatsAppExternalIdChar :: Char -> Bool
+isUnsafeStoredWhatsAppExternalIdChar ch =
+  isSpace ch
+    || isControl ch
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+normalizeWhatsAppDeliveryStatus :: Text -> Text
+normalizeWhatsAppDeliveryStatus raw =
+  let status = T.toLower (T.strip raw)
+  in if T.null status
+        || T.length status > maxWhatsAppDeliveryStatusChars
+        || T.any (not . isWhatsAppDeliveryStatusChar) status
+       then "unknown"
+       else status
+
+maxWhatsAppDeliveryStatusChars :: Int
+maxWhatsAppDeliveryStatusChars = 64
+
+isWhatsAppDeliveryStatusChar :: Char -> Bool
+isWhatsAppDeliveryStatusChar ch =
+  isAsciiLower ch || isAsciiDigit ch || ch == '_' || ch == '-'
+
+isAsciiLower :: Char -> Bool
+isAsciiLower ch = ch >= 'a' && ch <= 'z'
 
 allocateGeneratedWhatsAppExternalId :: Text -> SqlPersistT IO Text
 allocateGeneratedWhatsAppExternalId baseExternalId = go (0 :: Int)
@@ -339,12 +398,12 @@ applyWhatsAppDeliveryUpdate
   -> WhatsAppDeliveryUpdate
   -> SqlPersistT IO (Maybe (Entity ME.WhatsAppMessage))
 applyWhatsAppDeliveryUpdate now WhatsAppDeliveryUpdate{..} = do
-  let externalId = nonEmptyOr "" wduExternalId
-      statusVal = nonEmptyOr "unknown" wduStatus
+  let mExternalId = normalizeStoredWhatsAppExternalId wduExternalId
+      statusVal = normalizeWhatsAppDeliveryStatus wduStatus
       updateTs = wduOccurredAt <|> Just now
-  if T.null externalId
-    then pure Nothing
-    else do
+  case mExternalId of
+    Nothing -> pure Nothing
+    Just externalId -> do
       mRow <- getBy (ME.UniqueWhatsAppMessage externalId)
       case mRow of
         Nothing -> pure Nothing
@@ -468,6 +527,16 @@ messageBelongsToParty partyKey phones msg =
   ME.whatsAppMessagePartyId msg == Just partyKey
     || maybe False (`elem` phones) (ME.whatsAppMessagePhoneE164 msg)
     || ME.whatsAppMessageSenderId msg `elem` concatMap phoneLookupAliases phones
+
+selectUniquePartyByPhoneAliases :: [Text] -> SqlPersistT IO (Maybe (Entity Party))
+selectUniquePartyByPhoneAliases aliases = do
+  parties <-
+    selectList
+      ([PartyWhatsapp <-. map Just aliases] ||. [PartyPrimaryPhone <-. map Just aliases])
+      [Asc PartyId, LimitTo 2]
+  case parties of
+    [party] -> pure (Just party)
+    _ -> pure Nothing
 
 setOptionalFieldUpdate :: PersistField typ => EntityField record (Maybe typ) -> Maybe typ -> Maybe (Update record)
 setOptionalFieldUpdate field = fmap (\value -> field =. Just value)

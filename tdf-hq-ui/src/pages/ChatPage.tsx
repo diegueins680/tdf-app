@@ -28,10 +28,12 @@ import AddCommentIcon from '@mui/icons-material/AddComment';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
 import { Meta } from '../api/meta';
 import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ChatMessageDTO, ChatThreadDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { countUnreadThreads, isThreadUnread, loadChatReadMap, markThreadSeen, subscribeToChatReadState } from '../utils/chatReadState';
@@ -45,7 +47,7 @@ function formatTimestamp(value?: string | null) {
 
 function truncate(value: string, max: number) {
   const trimmed = value.trim();
-  if (trimmed.length <= max) return trimmed;
+  if (max >= trimmed.length) return trimmed;
   return `${trimmed.slice(0, max - 1)}…`;
 }
 
@@ -55,7 +57,19 @@ interface FriendOption {
   subtitle: string;
 }
 
+type DraftByThread = Record<string, string>;
+
 const SELECTED_THREAD_STORAGE_KEY = 'tdf-chat-selected-thread-v1';
+
+type ChatPageDisplayContract = Readonly<{
+  threadLastMessagePreviewChars: number;
+}>;
+
+// Invariant: thread previews fit one list row and remain shorter than the full
+// message bubble rendered in the active conversation pane.
+const CHAT_PAGE_DISPLAY_CONTRACTS = {
+  threadLastMessagePreviewChars: 8 * 8,
+} as const satisfies ChatPageDisplayContract;
 
 const parsePositiveInt = (raw: string | null | undefined): number | null => {
   const trimmed = raw?.trim() ?? '';
@@ -86,21 +100,100 @@ const storeSelectedThreadId = (threadId: number | null) => {
   }
 };
 
+interface ThreadListItemProps {
+  thread: ChatThreadDTO;
+  selected: boolean;
+  unread: boolean;
+  onSelect: (threadId: number) => void;
+}
+
+function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemProps) {
+  const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : `Party #${thread.ctOtherPartyId}`;
+
+  return (
+    <ListItemButton
+      selected={selected}
+      tabIndex={0}
+      onClick={(event) => {
+        event.currentTarget.focus();
+        onSelect(thread.ctThreadId);
+      }}
+      sx={{ px: 2, py: 1.25 }}
+    >
+      <ListItemText
+        primary={
+          <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
+            <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
+              {displayName}
+              {unread && <FiberManualRecordIcon sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }} />}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {formatTimestamp(thread.ctLastMessageAt ?? thread.ctUpdatedAt)}
+            </Typography>
+          </Stack>
+        }
+        secondary={thread.ctLastMessage
+          ? truncate(thread.ctLastMessage, CHAT_PAGE_DISPLAY_CONTRACTS.threadLastMessagePreviewChars)
+          : 'Sin mensajes aún'}
+        secondaryTypographyProps={{ noWrap: true }}
+      />
+    </ListItemButton>
+  );
+}
+
+interface MessageBubbleProps {
+  message: ChatMessageDTO;
+  myPartyId: number | null;
+}
+
+function MessageBubble({ message, myPartyId }: MessageBubbleProps) {
+  const mine = myPartyId !== null && message.cmSenderPartyId === myPartyId;
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: mine ? 'flex-end' : 'flex-start',
+      }}
+    >
+      <Box
+        sx={{
+          px: 2,
+          py: 1.25,
+          borderRadius: 2,
+          maxWidth: '78%',
+          bgcolor: mine ? 'primary.main' : 'rgba(148,163,184,0.14)',
+          color: mine ? 'primary.contrastText' : 'text.primary',
+          border: mine ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(148,163,184,0.25)',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+        }}
+      >
+        <Typography variant="body2">{message.cmBody}</Typography>
+      </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, textAlign: mine ? 'right' : 'left' }}>
+        {formatTimestamp(message.cmCreatedAt)}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function ChatPage() {
   const qc = useQueryClient();
   const { session } = useSession();
   const location = useLocation();
   const navigate = useNavigate();
   const myPartyId = session?.partyId ?? null;
-  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(() => loadSelectedThreadId());
-  const [draftByThread, setDraftByThread] = useState<Record<string, string>>({});
+  const [selectedThreadId, setSelectedThreadId] = useState(() => loadSelectedThreadId());
+  const [draftByThread, setDraftByThread] = useState({} as DraftByThread);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatInput, setNewChatInput] = useState('');
-  const [newChatSelection, setNewChatSelection] = useState<FriendOption | null>(null);
-  const [newChatError, setNewChatError] = useState<string | null>(null);
-  const [bannerError, setBannerError] = useState<string | null>(null);
-  const [sendError, setSendError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [newChatSelection, setNewChatSelection] = useState(null as FriendOption | null);
+  const [newChatError, setNewChatError] = useState(null as string | null);
+  const [bannerError, setBannerError] = useState(null as string | null);
+  const [sendError, setSendError] = useState(null as string | null);
+  const messagesEndRef = useRef(null as HTMLDivElement | null);
   const requestParamConsumed = useRef(false);
   const [readVersion, setReadVersion] = useState(0);
 
@@ -139,10 +232,9 @@ export default function ChatPage() {
   }, [readVersion]);
   const unreadCount = useMemo(() => countUnreadThreads(threads, readMap), [readMap, threads]);
 
-  const friendOptions = useMemo<FriendOption[]>(() => {
+  const friendOptions: FriendOption[] = useMemo(() => {
     const partiesById = new Map((partiesQuery.data ?? []).map((p) => [p.partyId, p]));
-    const ids = new Set<number>();
-    (friendsQuery.data ?? []).forEach((row) => ids.add(row.pfFollowingId));
+    const ids = new Set((friendsQuery.data ?? []).map((row) => row.pfFollowingId));
     return Array.from(ids)
       .map((partyId) => {
         const party = partiesById.get(partyId);
@@ -153,13 +245,13 @@ export default function ChatPage() {
   }, [friendsQuery.data, partiesQuery.data]);
 
   useEffect(() => {
-    const first = threads.at(0);
+    const first = threads[0];
     if (!first) return;
     if (selectedThreadId && threads.some((t) => t.ctThreadId === selectedThreadId)) return;
     setSelectedThreadId(first.ctThreadId);
   }, [selectedThreadId, threads]);
 
-  const selectedThread = useMemo<ChatThreadDTO | null>(() => {
+  const selectedThread: ChatThreadDTO | null = useMemo(() => {
     if (!selectedThreadId) return null;
     return threads.find((t) => t.ctThreadId === selectedThreadId) ?? null;
   }, [selectedThreadId, threads]);
@@ -171,7 +263,7 @@ export default function ChatPage() {
     refetchInterval: 3_000,
   });
 
-  const messages = useMemo<ChatMessageDTO[]>(
+  const messages: ChatMessageDTO[] = useMemo(
     () => messagesQuery.data ?? [],
     [messagesQuery.data],
   );
@@ -188,13 +280,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (!selectedThreadId) return;
     if (!messagesQuery.data) return;
-    const lastMessageAt = messages.at(-1)?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
+    const lastMessageAt = messages[messages.length - 1]?.cmCreatedAt ?? selectedThread?.ctLastMessageAt ?? selectedThread?.ctUpdatedAt;
     if (!lastMessageAt) return;
     markThreadSeen(selectedThreadId, lastMessageAt);
   }, [messages, messagesQuery.data, selectedThread?.ctLastMessageAt, selectedThread?.ctUpdatedAt, selectedThreadId]);
 
-  const createThreadMutation = useMutation<ChatThreadDTO, Error, number>({
-    mutationFn: (otherPartyId) => ChatAPI.getOrCreateDmThread(otherPartyId),
+  const createThreadMutation = useMutation({
+    mutationFn: (otherPartyId: number) => ChatAPI.getOrCreateDmThread(otherPartyId),
     onSuccess: async (thread) => {
       setNewChatOpen(false);
       setNewChatInput('');
@@ -225,8 +317,8 @@ export default function ChatPage() {
     });
   }, [createThreadMutation, location.search, navigate]);
 
-  const sendMutation = useMutation<ChatMessageDTO, Error, string>({
-    mutationFn: (body) => ChatAPI.sendMessage(selectedThreadId!, body),
+  const sendMutation = useMutation({
+    mutationFn: (body: string) => ChatAPI.sendMessage(selectedThreadId!, body),
     onSuccess: async () => {
       setDraftByThread((prev) => {
         if (!selectedThreadId) return prev;
@@ -310,17 +402,37 @@ export default function ChatPage() {
           </Typography>
         </Box>
         <Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<AddCommentIcon />} onClick={handleStartChat}>
+          <Button
+            variant="outlined"
+            startIcon={<AddCommentIcon />}
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              handleStartChat();
+            }}
+          >
             Nuevo chat
           </Button>
           <Button
             variant="text"
             startIcon={<RefreshIcon />}
-            onClick={() => void qc.invalidateQueries({ queryKey: ['chat-threads'] })}
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              void qc.invalidateQueries({ queryKey: ['chat-threads'] });
+            }}
           >
             Refrescar
           </Button>
-          <Button variant="text" startIcon={<ChatBubbleOutlineIcon />} onClick={() => navigate('/social')}>
+          <Button
+            variant="text"
+            startIcon={<ChatBubbleOutlineIcon />}
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              navigate('/social');
+            }}
+          >
             Conexiones
           </Button>
         </Stack>
@@ -331,7 +443,15 @@ export default function ChatPage() {
           severity="error"
           sx={{ mb: 2 }}
           action={(
-            <Button color="inherit" size="small" onClick={() => setBannerError(null)}>
+            <Button
+              color="inherit"
+              size="small"
+              tabIndex={0}
+              onClick={(event) => {
+                event.currentTarget.focus();
+                setBannerError(null);
+              }}
+            >
               Cerrar
             </Button>
           )}
@@ -359,7 +479,11 @@ export default function ChatPage() {
                     <Button
                       color="inherit"
                       size="small"
-                      onClick={() => void qc.invalidateQueries({ queryKey: ['chat-threads'] })}
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        void qc.invalidateQueries({ queryKey: ['chat-threads'] });
+                      }}
                     >
                       Reintentar
                     </Button>
@@ -370,49 +494,37 @@ export default function ChatPage() {
               </Box>
             ) : threads.length === 0 ? (
               <Box sx={{ p: 2 }}>
-                <Alert severity="info">No tienes conversaciones todavía. Crea una con “Nuevo chat”.</Alert>
+                <EmptyState
+                  icon={<ChatBubbleOutlineIcon />}
+                  title="Sin conversaciones"
+                  description={'No tienes conversaciones todavía. Crea una con "Nuevo chat".'}
+                />
               </Box>
             ) : (
-              <List dense disablePadding sx={{ maxHeight: { xs: 360, md: 560 }, overflowY: 'auto' }}>
-                {threads.map((t) => {
-                  const unread = isThreadUnread(t, readMap);
-                  return (
-                  <ListItemButton
-                    key={t.ctThreadId}
-                    selected={t.ctThreadId === selectedThreadId}
-                    onClick={() => {
-                      setSelectedThreadId(t.ctThreadId);
-                      setSendError(null);
-                    }}
-                    sx={{ px: 2, py: 1.25 }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack direction="row" spacing={1} alignItems="baseline" justifyContent="space-between">
-                          <Typography fontWeight={700} sx={{ mr: 1 }} noWrap>
-                            {t.ctOtherDisplayName.trim() ? t.ctOtherDisplayName : `Party #${t.ctOtherPartyId}`}
-                            {unread && (
-                              <FiberManualRecordIcon
-                                sx={{ ml: 1, fontSize: 10, color: 'error.main', verticalAlign: 'middle' }}
-                              />
-                            )}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap>
-                            {formatTimestamp(t.ctLastMessageAt ?? t.ctUpdatedAt)}
-                          </Typography>
-                        </Stack>
-                      }
-                      secondary={
-                        t.ctLastMessage
-                          ? truncate(t.ctLastMessage, 64)
-                          : 'Sin mensajes aún'
-                      }
-                      secondaryTypographyProps={{ noWrap: true }}
-                    />
-                  </ListItemButton>
-                  );
-                })}
-              </List>
+              <LazyPaginatedList
+                items={threads}
+                loading={threadsQuery.isFetching}
+                pagination={{ itemLabel: 'conversaciones', initialRowsPerPage: 10 }}
+                renderItems={(visibleThreads) => (
+                  <List dense disablePadding>
+                    {visibleThreads.map((t) => {
+                      const unread = isThreadUnread(t, readMap);
+                      return (
+                        <ThreadListItem
+                          key={t.ctThreadId}
+                          thread={t}
+                          selected={t.ctThreadId === selectedThreadId}
+                          unread={unread}
+                          onSelect={(threadId) => {
+                            setSelectedThreadId(threadId);
+                            setSendError(null);
+                          }}
+                        />
+                      );
+                    })}
+                  </List>
+                )}
+              />
             )}
           </CardContent>
         </Card>
@@ -444,7 +556,15 @@ export default function ChatPage() {
                 <Alert
                   severity="error"
                   action={(
-                    <Button color="inherit" size="small" onClick={() => void messagesQuery.refetch()}>
+                    <Button
+                      color="inherit"
+                      size="small"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.currentTarget.focus();
+                        void messagesQuery.refetch();
+                      }}
+                    >
                       Reintentar
                     </Button>
                   )}
@@ -452,45 +572,16 @@ export default function ChatPage() {
                   {messagesError}
                 </Alert>
               ) : selectedThreadId && messages.length === 0 ? (
-                <Alert severity="info">Aún no hay mensajes. Escribe el primero.</Alert>
+                <EmptyState
+                  icon={<ChatBubbleOutlineIcon />}
+                  title="Sin mensajes"
+                  description="Aún no hay mensajes. Escribe el primero."
+                />
               ) : (
                 <Stack spacing={1.5}>
-                  {messages.map((m) => {
-                    const mine = myPartyId !== null && m.cmSenderPartyId === myPartyId;
-                    return (
-                      <Box
-                        key={m.cmId}
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: mine ? 'flex-end' : 'flex-start',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            px: 2,
-                            py: 1.25,
-                            borderRadius: 2,
-                            maxWidth: '78%',
-                            bgcolor: mine ? 'primary.main' : 'rgba(148,163,184,0.14)',
-                            color: mine ? 'primary.contrastText' : 'text.primary',
-                            border: mine ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(148,163,184,0.25)',
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                          }}
-                        >
-                          <Typography variant="body2">{m.cmBody}</Typography>
-                        </Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ mt: 0.25, textAlign: mine ? 'right' : 'left' }}
-                        >
-                          {formatTimestamp(m.cmCreatedAt)}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
+                  {messages.map((message) => (
+                    <MessageBubble key={message.cmId} message={message} myPartyId={myPartyId} />
+                  ))}
                   <div ref={messagesEndRef} />
                 </Stack>
               )}
@@ -524,7 +615,11 @@ export default function ChatPage() {
               <IconButton
                 color="primary"
                 aria-label="Enviar mensaje"
-                onClick={handleSend}
+                tabIndex={0}
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  handleSend();
+                }}
                 disabled={!selectedThreadId || sendMutation.isPending || !draft.trim()}
               >
                 <SendIcon />
@@ -574,7 +669,19 @@ export default function ChatPage() {
             {friendOptions.length === 0 && !friendsQuery.isLoading && (
               <Alert
                 severity="info"
-                action={<Button color="inherit" size="small" onClick={() => navigate('/social')}>Ir</Button>}
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.currentTarget.focus();
+                      navigate('/social');
+                    }}
+                  >
+                    Ir
+                  </Button>
+                }
               >
                 Agrega un amigo mutuo para chatear.
               </Alert>
@@ -583,8 +690,25 @@ export default function ChatPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setNewChatOpen(false)} disabled={createThreadMutation.isPending}>Cancelar</Button>
-          <Button variant="contained" onClick={handleCreateChat} disabled={createThreadMutation.isPending}>
+          <Button
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              setNewChatOpen(false);
+            }}
+            disabled={createThreadMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              handleCreateChat();
+            }}
+            disabled={createThreadMutation.isPending}
+          >
             Crear
           </Button>
         </DialogActions>

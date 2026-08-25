@@ -37,6 +37,8 @@ import { useNavigate } from 'react-router-dom';
 import { Bookings, type BookingUpdatePayload } from '../api/bookings';
 import { Parties } from '../api/parties';
 import type { BookingDTO, BookingResourceDTO, PartyDTO } from '../api/types';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import PageShell, { SkeletonCards } from '../components/PageShell';
 
 type StatusValue = 'Tentative' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'NoShow';
 
@@ -62,10 +64,10 @@ const STATUS_LOOKUP = STATUS_VARIANTS.reduce<Record<string, { label: string; col
   return acc;
 }, {});
 
-const TZ = import.meta.env?.['VITE_TZ'] ?? 'America/Guayaquil';
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25] as const;
 const ORDERS_PAGE_OVERVIEW_SUMMARY =
   'Revisa horario, servicio, booking, recursos y estado desde una sola tabla.';
+const MISSING_BOOKING_CONTEXT_LABEL = 'Sin booking asignado';
 
 const parseRowsPerPage = (value: string, fallback = 10): number => {
   const parsed = Number(value);
@@ -83,20 +85,26 @@ const formatDisplayedRowsLabel = ({
   count: number;
 }) => `${from}-${to} de ${count === -1 ? `más de ${to}` : count}`;
 
-function formatScheduleRange(start: string, end: string) {
-  const s = DateTime.fromISO(start, { zone: TZ });
-  const e = DateTime.fromISO(end, { zone: TZ });
+function formatScheduleRange(start: string, end: string, timezone: string, locale: string) {
+  const s = DateTime.fromISO(start, { zone: timezone }).setLocale(locale);
+  const e = DateTime.fromISO(end, { zone: timezone }).setLocale(locale);
   if (!s.isValid || !e.isValid) return '—';
   const datePart = s.toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY);
   const timeRange = `${s.toLocaleString(DateTime.TIME_SIMPLE)} → ${e.toLocaleString(DateTime.TIME_SIMPLE)}`;
   return `${datePart}, ${timeRange}`;
 }
 
+function getStatusPresentation(status: string) {
+  const trimmedStatus = status.trim();
+  const fallbackLabel = trimmedStatus === '' ? 'Desconocido' : trimmedStatus;
+  return STATUS_LOOKUP[trimmedStatus] ?? { label: fallbackLabel, color: 'default' as ChipProps['color'] };
+}
+
 function filterResources(resources: BookingResourceDTO[] | undefined, predicate: (role: string) => boolean) {
   if (!resources) return [];
-  return resources
+  return dedupeStrings(resources
     .filter((resource) => predicate(resource.brRole?.toLowerCase() ?? ''))
-    .map((resource) => resource.brRoomName);
+    .map((resource) => resource.brRoomName));
 }
 
 function dedupeStrings(values: (string | null | undefined)[]) {
@@ -127,20 +135,146 @@ const getSharedSummaryValue = (values: readonly string[]) => {
     : '';
 };
 
+function formatNaturalLanguageList(values: readonly string[], conjunction: 'y' | 'o' | 'ni') {
+  if (values.length === 0) return '';
+  if (values.length === 1) return values[0] ?? '';
+  if (values.length === 2) return `${values[0]} ${conjunction} ${values[1]}`;
+  return `${values.slice(0, -1).join(', ')} ${conjunction} ${values[values.length - 1]}`;
+}
+
+function buildCombinedSharedContextSummary(
+  contexts: readonly {
+    value: string;
+    singularLabel: string;
+    pluralLabel: string;
+  }[],
+) {
+  const visibleContexts = contexts.filter((context) => context.value !== '');
+
+  if (visibleContexts.length < 2) return '';
+
+  const summaryDetails = formatNaturalLanguageList(
+    visibleContexts.map((context) => `${context.singularLabel}: ${context.value}`),
+    'y',
+  );
+  const hiddenColumns = formatNaturalLanguageList(
+    visibleContexts.map((context) => context.pluralLabel),
+    'o',
+  );
+
+  return `Mostrando ${summaryDetails}. Las columnas volverán cuando ya no coincidan ${hiddenColumns}.`;
+}
+
+const hasDisplayValue = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed !== '' && trimmed !== '—';
+};
+
+const areAllDisplayValuesMissing = (values: readonly string[]) =>
+  values.length > 0 && values.every((value) => !hasDisplayValue(value));
+
+const isMissingBookingContext = (value: string) =>
+  normalizeComparableString(value) === normalizeComparableString(MISSING_BOOKING_CONTEXT_LABEL);
+
+const buildMissingContextSummary = ({
+  bookingsMissing,
+  engineersMissing,
+  roomsMissing,
+}: {
+  bookingsMissing: boolean;
+  engineersMissing: boolean;
+  roomsMissing: boolean;
+}) => {
+  if (bookingsMissing) {
+    if (!engineersMissing && !roomsMissing) {
+      return 'Sin booking asignado en esta vista. La columna volverá cuando alguna sesión tenga cliente, orden o título distinto del servicio.';
+    }
+
+    const missingItems = [
+      'booking',
+      engineersMissing ? 'ingeniero' : '',
+      roomsMissing ? 'sala' : '',
+    ].filter(Boolean);
+
+    return `Sin ${formatNaturalLanguageList(missingItems, 'ni')} asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos datos.`;
+  }
+
+  if (engineersMissing && roomsMissing) {
+    return 'Sin ingeniero ni sala asignados en esta vista. Las columnas volverán cuando alguna sesión tenga esos recursos.';
+  }
+
+  if (engineersMissing) {
+    return 'Sin ingeniero asignado en esta vista. La columna volverá cuando alguna sesión tenga ingeniero.';
+  }
+
+  if (roomsMissing) {
+    return 'Sin sala asignada en esta vista. La columna volverá cuando alguna sesión tenga sala.';
+  }
+
+  return '';
+};
+
+function getDistinctSessionTitle(title: string | null | undefined, service: string) {
+  const trimmedTitle = title?.trim() ?? '';
+  if (!trimmedTitle || trimmedTitle === '—') return '';
+  return normalizeComparableString(trimmedTitle) === normalizeComparableString(service) ? '' : trimmedTitle;
+}
+
+function buildBookingPrimary({
+  customerName,
+  partyDisplayName,
+  partyName,
+  serviceOrderId,
+  serviceOrderTitle,
+  sessionTitle,
+}: {
+  customerName?: string | null;
+  partyDisplayName?: string | null;
+  partyName?: string | null;
+  serviceOrderId?: number | null;
+  serviceOrderTitle?: string | null;
+  sessionTitle: string;
+}) {
+  const primaryCandidate = [
+    serviceOrderTitle,
+    customerName,
+    partyDisplayName,
+    partyName,
+    sessionTitle,
+  ]
+    .map((value) => value?.trim() ?? '')
+    .find((value) => value !== '');
+
+  return primaryCandidate ?? (serviceOrderId ? `SO #${serviceOrderId}` : MISSING_BOOKING_CONTEXT_LABEL);
+}
+
 function buildBookingSecondarySummary({
   bookingPrimary,
   partyNames,
+  sessionTitle,
   serviceOrderId,
 }: {
   bookingPrimary: string;
   partyNames: string[];
+  sessionTitle: string;
   serviceOrderId?: number | null;
 }) {
   const normalizedPrimary = normalizeComparableString(bookingPrimary);
   const secondaryParts = partyNames.filter((name) => normalizeComparableString(name) !== normalizedPrimary);
 
   if (serviceOrderId) {
-    secondaryParts.push(`SO #${serviceOrderId}`);
+    const serviceOrderLabel = `SO #${serviceOrderId}`;
+    if (normalizeComparableString(serviceOrderLabel) !== normalizedPrimary) {
+      secondaryParts.push(serviceOrderLabel);
+    }
+  }
+
+  if (
+    sessionTitle
+    && normalizeComparableString(sessionTitle) !== normalizedPrimary
+    && !secondaryParts.some((value) => normalizeComparableString(value) === normalizeComparableString(sessionTitle))
+  ) {
+    secondaryParts.push(sessionTitle);
   }
 
   return secondaryParts.join(' · ');
@@ -158,7 +292,12 @@ interface OrderRow {
   status: string;
 }
 
+function getOrderRowBookingSummary(row: Pick<OrderRow, 'bookingPrimary' | 'bookingSecondary'>) {
+  return row.bookingSecondary ? `${row.bookingPrimary} · ${row.bookingSecondary}` : row.bookingPrimary;
+}
+
 export default function OrdersPage() {
+  const { timezone, locale } = useLocalePreferences();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [page, setPage] = useState(0);
@@ -194,22 +333,26 @@ export default function OrdersPage() {
       const party = booking.partyId ? partyLookup.get(booking.partyId) : undefined;
       const partyNames = dedupeStrings([booking.customerName, booking.partyDisplayName, party?.displayName]);
       const serviceTitle = booking.serviceType ?? booking.title ?? '—';
+      const sessionTitle = getDistinctSessionTitle(booking.title, serviceTitle);
       const isRecording = serviceTitle.toLowerCase().includes('grab');
-      const bookingPrimary =
-        booking.serviceOrderTitle ??
-        booking.customerName ??
-        booking.partyDisplayName ??
-        party?.displayName ??
-        `Booking #${booking.bookingId}`;
+      const bookingPrimary = buildBookingPrimary({
+        customerName: booking.customerName,
+        partyDisplayName: booking.partyDisplayName,
+        partyName: party?.displayName,
+        serviceOrderId: booking.serviceOrderId,
+        serviceOrderTitle: booking.serviceOrderTitle,
+        sessionTitle,
+      });
       const bookingSecondarySummary = buildBookingSecondarySummary({
         bookingPrimary,
         partyNames,
+        sessionTitle,
         serviceOrderId: booking.serviceOrderId,
       });
 
       return {
         bookingId: booking.bookingId,
-        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? ''),
+        schedule: formatScheduleRange(booking.startsAt ?? '', booking.endsAt ?? '', timezone, locale),
         service: serviceTitle,
         isRecording,
         bookingPrimary,
@@ -219,17 +362,24 @@ export default function OrdersPage() {
         status: booking.status,
       };
     });
-  }, [bookings, partyLookup]);
+  }, [bookings, locale, partyLookup, timezone]);
 
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);
   const showInitialLoadingState = bookingsQuery.isLoading && bookingsQuery.data == null;
+  const showInitialErrorState = Boolean(bookingsQuery.error) && totalRows === 0;
+  const showStaleErrorState = Boolean(bookingsQuery.error) && totalRows > 0;
   const showFirstSessionEmptyState = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 0;
   const singleRow = !bookingsQuery.isLoading && !bookingsQuery.error && totalRows === 1
     ? (rows[0] ?? null)
     : null;
   const showSingleSessionSummary = singleRow != null;
-  const showRefreshAction = Boolean(bookingsQuery.error) || totalRows > 0;
+  const showSingleSessionBookingContext = singleRow ? !isMissingBookingContext(singleRow.bookingPrimary) : false;
+  const showSingleSessionServiceContext = singleRow ? hasDisplayValue(singleRow.service) : false;
+  const showRefreshAction = totalRows > 1 && !showStaleErrorState;
+  const showHeaderCreateSessionAction =
+    !showInitialLoadingState && !showInitialErrorState && !showFirstSessionEmptyState;
+  const showInlineCreateSessionAction = showFirstSessionEmptyState;
 
   useEffect(() => {
     if (page > maxPage) {
@@ -243,13 +393,110 @@ export default function OrdersPage() {
     return rows.slice(start, end);
   }, [rows, page, rowsPerPage]);
   const showPagination = totalRows > rowsPerPage;
-  const showLiveSessionsColumn = paginatedRows.some((row) => row.isRecording);
+  const visibleRecordingRowsCount = paginatedRows.filter((row) => row.isRecording).length;
+  const showSharedLiveSessionsAction =
+    visibleRecordingRowsCount > 1 && visibleRecordingRowsCount === paginatedRows.length;
+  const showLiveSessionsColumn = visibleRecordingRowsCount > 0 && !showSharedLiveSessionsAction;
+  const sharedServiceSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => row.service)),
+    [rows],
+  );
+  const showServiceColumn = sharedServiceSummary === '';
+  const sharedBookingSummary = useMemo(
+    () => {
+      if (rows.every((row) => isMissingBookingContext(getOrderRowBookingSummary(row)))) {
+        return '';
+      }
+
+      return getSharedSummaryValue(rows.map((row) => getOrderRowBookingSummary(row)));
+    },
+    [rows],
+  );
+  const allBookingsMissing = useMemo(
+    () => rows.length > 0 && rows.every((row) => isMissingBookingContext(getOrderRowBookingSummary(row))),
+    [rows],
+  );
+  const showBookingColumn = !allBookingsMissing && sharedBookingSummary === '';
+  const sharedEngineerSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => row.engineers)),
+    [rows],
+  );
+  const allEngineersMissing = useMemo(
+    () => areAllDisplayValuesMissing(rows.map((row) => row.engineers)),
+    [rows],
+  );
+  const showEngineerColumn = !allEngineersMissing && sharedEngineerSummary === '';
   const sharedRoomsSummary = useMemo(
     () => getSharedSummaryValue(rows.map((row) => row.rooms)),
     [rows],
   );
-  const showRoomsColumn = sharedRoomsSummary === '';
-  const rowActionSummary = rows.some((row) => row.isRecording)
+  const allRoomsMissing = useMemo(
+    () => areAllDisplayValuesMissing(rows.map((row) => row.rooms)),
+    [rows],
+  );
+  const showRoomsColumn = !allRoomsMissing && sharedRoomsSummary === '';
+  const sharedStatusSummary = useMemo(
+    () => getSharedSummaryValue(rows.map((row) => getStatusPresentation(row.status).label)),
+    [rows],
+  );
+  const showStatusColumn = sharedStatusSummary === '';
+  const missingContextSummary = useMemo(
+    () => buildMissingContextSummary({
+      bookingsMissing: allBookingsMissing,
+      engineersMissing: allEngineersMissing,
+      roomsMissing: allRoomsMissing,
+    }),
+    [allBookingsMissing, allEngineersMissing, allRoomsMissing],
+  );
+  const combinedSharedContextSummary = useMemo(
+    () =>
+      buildCombinedSharedContextSummary([
+        {
+          pluralLabel: 'servicios',
+          singularLabel: 'un solo servicio',
+          value: sharedServiceSummary,
+        },
+        {
+          pluralLabel: 'bookings',
+          singularLabel: 'un solo booking',
+          value: sharedBookingSummary,
+        },
+        {
+          pluralLabel: 'ingenieros',
+          singularLabel: 'un solo ingeniero',
+          value: sharedEngineerSummary,
+        },
+        {
+          pluralLabel: 'salas',
+          singularLabel: 'una sola sala',
+          value: sharedRoomsSummary,
+        },
+        {
+          pluralLabel: 'estados',
+          singularLabel: 'un solo estado',
+          value: sharedStatusSummary,
+        },
+      ]),
+    [sharedBookingSummary, sharedEngineerSummary, sharedRoomsSummary, sharedServiceSummary, sharedStatusSummary],
+  );
+  const hasSharedContextSummary = Boolean(
+    combinedSharedContextSummary
+      || sharedServiceSummary
+      || sharedBookingSummary
+      || sharedEngineerSummary
+      || sharedRoomsSummary
+      || sharedStatusSummary,
+  );
+  const visibleTableColumnCount = 1
+    + (showServiceColumn ? 1 : 0)
+    + (showBookingColumn ? 1 : 0)
+    + (showEngineerColumn ? 1 : 0)
+    + (showRoomsColumn ? 1 : 0)
+    + (showStatusColumn ? 1 : 0)
+    + (showLiveSessionsColumn ? 1 : 0);
+  const rowActionSummary = showSharedLiveSessionsAction
+    ? 'Todas las sesiones visibles son de grabación. Usa Live Sessions una vez para revisar capturas o selecciona una fila para editar.'
+    : showLiveSessionsColumn
     ? 'Haz clic en una fila para editar la sesión. Live Sessions aparece solo en sesiones de grabación.'
     : 'Haz clic en una fila para editar la sesión y revisar horario, servicio, recursos y estado.';
   const pageSummary = totalRows === 0
@@ -266,6 +513,14 @@ export default function OrdersPage() {
 
   const handleCreateSession = () => {
     navigate('/estudio/calendario');
+  };
+
+  const handleOpenLiveSessions = () => {
+    navigate('/estudio/live-sessions');
+  };
+
+  const handleRefresh = () => {
+    void bookingsQuery.refetch();
   };
 
   const updateMutation = useMutation<BookingDTO, Error, { id: number; payload: BookingUpdatePayload }>({
@@ -293,9 +548,7 @@ export default function OrdersPage() {
   const mutationError = updateMutation.error?.message ?? null;
 
   const renderStatus = (status: string) => {
-    const trimmedStatus = status.trim();
-    const fallbackLabel = trimmedStatus === '' ? 'Desconocido' : trimmedStatus;
-    const config = STATUS_LOOKUP[status] ?? { label: fallbackLabel, color: 'default' as ChipProps['color'] };
+    const config = getStatusPresentation(status);
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 
@@ -307,22 +560,17 @@ export default function OrdersPage() {
   };
 
   return (
-    <Stack gap={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2} alignItems={{ md: 'center' }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>Sesiones</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {pageSummary}
-          </Typography>
-        </Box>
-        <Stack direction="row" gap={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+    <PageShell
+      title="Sesiones"
+      subtitle={pageSummary}
+      loading={showInitialLoadingState}
+      actions={(
+        <Stack direction="row" gap={1}>
           {showRefreshAction && (
             <Tooltip title="Actualizar lista">
               <span>
                 <IconButton
-                  onClick={() => {
-                    void bookingsQuery.refetch();
-                  }}
+                  onClick={handleRefresh}
                   disabled={bookingsQuery.isFetching}
                   color="primary"
                   aria-label="Actualizar lista de sesiones"
@@ -332,39 +580,70 @@ export default function OrdersPage() {
               </span>
             </Tooltip>
           )}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
-            Nueva sesión
-          </Button>
+          {showSharedLiveSessionsAction && (
+            <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={handleOpenLiveSessions}>
+              Live Sessions
+            </Button>
+          )}
+          {showHeaderCreateSessionAction && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateSession}>
+              Nueva sesión
+            </Button>
+          )}
         </Stack>
-      </Stack>
+      )}
+    >
 
-      {bookingsQuery.error && (
-        <Alert severity="error">{bookingsQuery.error.message}</Alert>
+      {showStaleErrorState && bookingsQuery.error && (
+        <Alert
+          severity="error"
+          action={(
+            <Button color="inherit" size="small" onClick={handleRefresh} disabled={bookingsQuery.isFetching}>
+              Reintentar carga
+            </Button>
+          )}
+        >
+          No se pudieron actualizar las sesiones: {bookingsQuery.error.message}.
+        </Alert>
       )}
 
       <Paper variant="outlined">
-        {showInitialLoadingState ? (
-          <Stack spacing={1} sx={{ p: 3 }}>
+        {showInitialErrorState ? (
+          <Stack spacing={1.5} sx={{ p: 3 }} alignItems="flex-start">
             <Typography variant="h6" fontWeight={700}>
-              Cargando sesiones…
+              No se pudieron cargar las sesiones
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking,
-              recursos y estado desde una sola vista.
+              Reintenta la carga para recuperar la tabla. El resumen comparativo volverá cuando la lista responda.
             </Typography>
+            <Button variant="outlined" onClick={handleRefresh} disabled={bookingsQuery.isFetching}>
+              Reintentar carga
+            </Button>
           </Stack>
+        ) : showInitialLoadingState ? (
+          <SkeletonCards
+            count={3}
+            label="Cargando sesiones… La tabla aparecerá cuando termine esta primera carga para que puedas comparar horario, servicio, booking, recursos y estado desde una sola vista."
+          />
         ) : showFirstSessionEmptyState ? (
           <Stack spacing={1} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={700}>
               Primeras sesiones
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Todavía no hay sesiones registradas. Usa Nueva sesión para cargar la primera y volver a esta vista cuando
-              necesites revisar horario, servicio, booking, recursos y estado en una sola tabla.
+              Todavía no hay sesiones registradas. Crea la primera desde Nueva sesión; la vista comparativa aparecerá
+              cuando exista una segunda sesión.
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              La tabla y la paginación aparecerán cuando exista al menos una sesión para comparar.
-            </Typography>
+            {showInlineCreateSessionAction && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateSession}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Nueva sesión
+              </Button>
+            )}
           </Stack>
         ) : showSingleSessionSummary && singleRow ? (
           <Stack spacing={2} sx={{ p: 3 }}>
@@ -391,23 +670,31 @@ export default function OrdersPage() {
               <Typography variant="body2">
                 <Box component="span" sx={{ fontWeight: 600 }}>Horario:</Box> {singleRow.schedule}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
-              </Typography>
-              {singleRow.bookingSecondary && (
+              {showSingleSessionServiceContext && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Servicio:</Box> {singleRow.service}
+                </Typography>
+              )}
+              {showSingleSessionBookingContext && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Booking:</Box> {singleRow.bookingPrimary}
+                </Typography>
+              )}
+              {showSingleSessionBookingContext && singleRow.bookingSecondary && (
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Detalle:</Box> {singleRow.bookingSecondary}
                 </Typography>
               )}
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleRow.engineers}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleRow.rooms}
-              </Typography>
+              {hasDisplayValue(singleRow.engineers) && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Ingeniero:</Box> {singleRow.engineers}
+                </Typography>
+              )}
+              {hasDisplayValue(singleRow.rooms) && (
+                <Typography variant="body2" color="text.secondary">
+                  <Box component="span" sx={{ fontWeight: 600 }}>Salas:</Box> {singleRow.rooms}
+                </Typography>
+              )}
               <Stack direction="row" spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   <Box component="span" sx={{ fontWeight: 600 }}>Estado:</Box>
@@ -425,28 +712,66 @@ export default function OrdersPage() {
           </Stack>
         ) : (
           <>
-            {sharedRoomsSummary && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 3, pt: 2 }}>
-                {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
-              </Typography>
+            {(missingContextSummary || hasSharedContextSummary) && (
+              <Stack spacing={0.5} sx={{ px: 3, pt: 2 }}>
+                {missingContextSummary && (
+                  <Typography variant="caption" color="text.secondary">
+                    {missingContextSummary}
+                  </Typography>
+                )}
+                {hasSharedContextSummary
+                  ? combinedSharedContextSummary ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {combinedSharedContextSummary}
+                    </Typography>
+                  ) : (
+                    <>
+                      {sharedServiceSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo servicio: ${sharedServiceSummary}. La columna volverá cuando esta vista mezcle servicios distintos.`}
+                        </Typography>
+                      )}
+                      {sharedBookingSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo booking: ${sharedBookingSummary}. La columna volverá cuando esta vista mezcle bookings distintos.`}
+                        </Typography>
+                      )}
+                      {sharedEngineerSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo ingeniero: ${sharedEngineerSummary}. La columna volverá cuando esta vista mezcle ingenieros distintos.`}
+                        </Typography>
+                      )}
+                      {sharedRoomsSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando una sola sala: ${sharedRoomsSummary}. La columna volverá cuando esta vista mezcle salas distintas.`}
+                        </Typography>
+                      )}
+                      {sharedStatusSummary && (
+                        <Typography variant="caption" color="text.secondary">
+                          {`Mostrando un solo estado: ${sharedStatusSummary}. La columna volverá cuando esta vista mezcle estados distintos.`}
+                        </Typography>
+                      )}
+                    </>
+                  ) : null}
+              </Stack>
             )}
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Horario</TableCell>
-                    <TableCell>Servicio</TableCell>
-                    <TableCell>Booking</TableCell>
-                    <TableCell>Ingeniero</TableCell>
+                    {showServiceColumn && <TableCell>Servicio</TableCell>}
+                    {showBookingColumn && <TableCell>Booking</TableCell>}
+                    {showEngineerColumn && <TableCell>Ingeniero</TableCell>}
                     {showRoomsColumn && <TableCell>Salas</TableCell>}
-                    <TableCell>Estado</TableCell>
+                    {showStatusColumn && <TableCell>Estado</TableCell>}
                     {showLiveSessionsColumn && <TableCell align="right">Live Sessions</TableCell>}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {bookingsQuery.isLoading && (
                     <TableRow>
-                      <TableCell colSpan={showLiveSessionsColumn ? 7 : 6} align="center">
+                      <TableCell colSpan={visibleTableColumnCount} align="center">
                         Cargando sesiones…
                       </TableCell>
                     </TableRow>
@@ -471,16 +796,18 @@ export default function OrdersPage() {
                           {row.schedule}
                         </Typography>
                       </TableCell>
-                      <TableCell>{row.service}</TableCell>
-                      <TableCell sx={{ minWidth: 220 }}>
-                        <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
-                        {row.bookingSecondary && (
-                          <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>{row.engineers}</TableCell>
+                      {showServiceColumn && <TableCell>{row.service}</TableCell>}
+                      {showBookingColumn && (
+                        <TableCell sx={{ minWidth: 220 }}>
+                          <Typography variant="body2" fontWeight={600}>{row.bookingPrimary}</Typography>
+                          {row.bookingSecondary && (
+                            <Typography variant="body2" color="text.secondary">{row.bookingSecondary}</Typography>
+                          )}
+                        </TableCell>
+                      )}
+                      {showEngineerColumn && <TableCell>{row.engineers}</TableCell>}
                       {showRoomsColumn && <TableCell>{row.rooms}</TableCell>}
-                      <TableCell>{renderStatus(row.status ?? '')}</TableCell>
+                      {showStatusColumn && <TableCell>{renderStatus(row.status ?? '')}</TableCell>}
                       {showLiveSessionsColumn && (
                         <TableCell align="right">
                           {row.isRecording ? (
@@ -488,7 +815,7 @@ export default function OrdersPage() {
                               <IconButton
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  navigate('/estudio/live-sessions');
+                                  handleOpenLiveSessions();
                                 }}
                                 aria-label={`Abrir Live Sessions para sesión ${row.bookingId}`}
                               >
@@ -528,7 +855,7 @@ export default function OrdersPage() {
         saving={updateMutation.isPending}
         errorMessage={mutationError}
       />
-    </Stack>
+    </PageShell>
   );
 }
 
@@ -541,29 +868,30 @@ interface OrderEditDialogProps {
   errorMessage: string | null;
 }
 
+const buildOrderEditFormState = (booking: BookingDTO | null) => ({
+  title: booking?.title ?? '',
+  status: normalizeStatusValue(booking?.status),
+  notes: booking?.notes ?? '',
+});
+
 function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessage }: OrderEditDialogProps) {
-  const [form, setForm] = useState({
-    title: '',
-    serviceType: '',
-    status: normalizeStatusValue('Tentative'),
-    notes: '',
-  });
+  const initialForm = useMemo(() => buildOrderEditFormState(booking), [booking]);
+  const [form, setForm] = useState(() => buildOrderEditFormState(null));
+  const hasChanges =
+    form.title !== initialForm.title
+    || form.status !== initialForm.status
+    || form.notes !== initialForm.notes;
 
   useEffect(() => {
     if (!booking) return;
-    setForm({
-      title: booking.title ?? '',
-      serviceType: booking.serviceType ?? '',
-      status: normalizeStatusValue(booking.status),
-      notes: booking.notes ?? '',
-    });
-  }, [booking]);
+    setForm(initialForm);
+  }, [booking, initialForm]);
 
   if (!booking) {
     return null;
   }
 
-  const handleFieldChange = (field: 'title' | 'serviceType' | 'notes') =>
+  const handleFieldChange = (field: 'title' | 'notes') =>
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((prev) => ({ ...prev, [field]: event.target.value }));
     };
@@ -574,9 +902,9 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!hasChanges) return;
     const payload: BookingUpdatePayload = {
       ubTitle: form.title,
-      ubServiceType: form.serviceType,
       ubStatus: form.status,
       ubNotes: form.notes,
     };
@@ -606,9 +934,9 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
             />
             <TextField
               label="Servicio"
-              value={form.serviceType}
-              onChange={handleFieldChange('serviceType')}
-              disabled={saving}
+              value={booking.serviceType ?? '—'}
+              helperText="El servicio se cambia desde Agenda usando una oferta publicada."
+              disabled
             />
             <FormControl fullWidth disabled={saving}>
               <InputLabel id="booking-status-label">Estado</InputLabel>
@@ -638,7 +966,7 @@ function OrderEditDialog({ booking, open, onClose, onSubmit, saving, errorMessag
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button type="submit" variant="contained" disabled={saving}>
+          <Button type="submit" variant="contained" disabled={saving || !hasChanges}>
             Guardar cambios
           </Button>
         </DialogActions>

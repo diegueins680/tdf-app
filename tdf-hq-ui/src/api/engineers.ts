@@ -1,9 +1,12 @@
+import { logger } from '../utils/logger';
 import { get } from './client';
 
 export interface PublicEngineer {
   peId: number;
   peName: string;
 }
+
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 const ENGINEERS_CACHE_KEY = 'tdf-engineers-cache-v1';
 
@@ -22,8 +25,8 @@ const normalizePositiveEngineerId = (value: unknown): number | null => {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!/^\d+$/.test(trimmed)) return null;
-    const parsed = Number.parseInt(trimmed, 10);
-    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+    const engineerId = Number.parseInt(trimmed, 10);
+    return Number.isSafeInteger(engineerId) && engineerId > 0 ? engineerId : null;
   }
   return null;
 };
@@ -53,8 +56,11 @@ const readCachedEngineers = (): PublicEngineer[] => {
   try {
     const raw = window.localStorage.getItem(ENGINEERS_CACHE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    return normalizeEngineers(parsed);
+    const cachedPayload = parseEngineersJson(raw);
+    if (cachedPayload === null) {
+      return [];
+    }
+    return normalizeEngineers(cachedPayload);
   } catch {
     return [];
   }
@@ -78,11 +84,28 @@ export const Engineers = {
     } catch (error) {
       const cached = readCachedEngineers();
       if (cached.length > 0) {
-        console.warn('Engineer catalog unavailable, using cached engineer list', error);
+        logger.warn('Engineer catalog unavailable, using cached engineer list', error);
         return cached;
       }
-      console.warn('Engineer catalog unavailable, falling back to manual entry', error);
+      logger.warn('Engineer catalog unavailable, falling back to manual entry', error);
       return cached;
     }
   },
 };
+/**
+ * Contract:
+ * - Precondition: raw is a JSON string from browser storage or another text source.
+ * - Postcondition: returns the parsed JSON value for valid JSON, or null for malformed JSON.
+ * - Invariant: parsing is side-effect free and never mutates engineer cache state.
+ */
+export function parseEngineersJson(raw: string): JsonValue {
+  if (typeof raw !== 'string') {
+    throw new TypeError('parseEngineersJson precondition failed: raw must be a string');
+  }
+
+  try {
+    return JSON.parse(raw) as JsonValue;
+  } catch {
+    return null;
+  }
+}

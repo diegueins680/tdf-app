@@ -1,0 +1,319 @@
+- generic [ref=f37e3]:
+  - link "Saltar al contenido principal" [ref=f37e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f37e5]:
+    - generic [ref=f37e7]:
+      - generic [ref=f37e8]:
+        - link "Ir a TDF" [ref=f37e9] [cursor=pointer]:
+          - /url: /tdf
+          - img "TDF Records logo"
+        - navigation "Navegación principal" [ref=f37e10]:
+          - link "TDF" [ref=f37e11] [cursor=pointer]:
+            - /url: /tdf
+          - link "Comunidad" [ref=f37e12] [cursor=pointer]:
+            - /url: /fans
+          - link "Tienda" [ref=f37e13] [cursor=pointer]:
+            - /url: /marketplace
+          - link "Domo" [ref=f37e14] [cursor=pointer]:
+            - /url: /domo-del-pululahua
+          - link "Reservar" [ref=f37e15] [cursor=pointer]:
+            - /url: /reservar
+          - link "DJ Booth" [ref=f37e16] [cursor=pointer]:
+            - /url: /dj-booth
+          - link "Lanzamientos" [ref=f37e17] [cursor=pointer]:
+            - /url: /records
+      - generic [ref=f37e18]:
+        - link "Ingresar" [ref=f37e19] [cursor=pointer]:
+          - /url: /login?redirect=%2Ffans
+        - button "Más opciones" [ref=f37e20] [cursor=pointer]
+  - main [ref=f37e23]:
+    - generic "Opciones para visitantes desde Instagram" [ref=f37e24]:
+      - generic [ref=f37e25]:
+        - generic [ref=f37e26]:
+          - generic [ref=f37e27]: TDF desde Instagram
+          - paragraph [ref=f37e31]: Reservas, cursos y clases en un solo lugar.
+        - generic [ref=f37e32]:
+          - link [ref=f37e33] [cursor=pointer]:
+            - /url: /reservar?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+          - link [ref=f37e37] [cursor=pointer]:
+            - /url: /dj-booth?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+          - link [ref=f37e41] [cursor=pointer]:
+            - /url: /curso/produccion-musical?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+          - link [ref=f37e45] [cursor=pointer]:
+            - /url: /trials?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+          - link [ref=f37e49] [cursor=pointer]:
+            - /url: /curso/produccion-musical-jun-2026?utm_source=instagram&utm_medium=social&utm_campaign=instagram_public_links
+    - generic [ref=f37e54]:
+      - generic [ref=f37e55]:
+        - heading "Comunidad — Conecta con tus artistas" [level=3] [ref=f37e56]
+        - paragraph [ref=f37e57]: Sigue a tus artistas favoritos, recibe lanzamientos y escucha sus playlists oficiales en Spotify y YouTube.
+      - alert [ref=f37e58]:
+        - generic [ref=f37e62]:
+          - generic [ref=f37e63]: Primeros pasos
+          - generic [ref=f37e64]:
+            - paragraph [ref=f37e65]: "Sigue estos pasos rápidos para sacar provecho:"
+            - generic [ref=f37e66]:
+              - button "Seguir artistas" [ref=f37e67] [cursor=pointer]
+              - button "Ver lanzamientos" [ref=f37e69] [cursor=pointer]
+              - link "Reservar estudio" [ref=f37e71] [cursor=pointer]:
+                - /url: /reservar
+              - link "DJ Booth" [ref=f37e73] [cursor=pointer]:
+                - /url: /dj-booth
+              - link "Editar CMS" [ref=f37e75] [cursor=pointer]:
+                - /url: /configuracion/cms
+        - button "Close" [ref=f37e78] [cursor=pointer]
+      - generic [ref=f37e81]:
+        - generic [ref=f37e84]:
+          - heading "Experiencias y reservas" [level=6] [ref=f37e88]
+          - paragraph [ref=f37e89]: Agenda sesiones privadas, escuchas guiadas o transmisiones con tus artistas favoritos.
+          - generic [ref=f37e90]:
+            - link "Reservar ahora" [ref=f37e91] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=f37e92] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Sesión en vivo" [ref=f37e93] [cursor=pointer]:
+              - /url: /live-sessions/registro
+        - generic [ref=f37e96]:
+          - heading "Membresías y niveles" [level=6] [ref=f37e100]
+          - paragraph [ref=f37e101]: Accede a beneficios, lanzamientos anticipados y contenido exclusivo por artista.
+          - generic [ref=f37e102]:
+            - link "Ver membresías" [ref=f37e103] [cursor=pointer]:
+              - /url: /marketplace?category=packages
+            - link "Gestionar lanzamientos" [ref=f37e104] [cursor=pointer]:
+              - /url: /label/releases
+        - generic [ref=f37e107]:
+          - heading "Tienda" [level=6] [ref=f37e111]
+          - paragraph [ref=f37e112]: Compra merch, paquetes digitales y ediciones limitadas directo del artista o del sello.
+          - generic [ref=f37e113]:
+            - link "Abrir tienda" [ref=f37e114] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Lanzamientos del sello" [ref=f37e115] [cursor=pointer]:
+              - /url: /records
+        - generic [ref=f37e118]:
+          - heading "Radio y audio" [level=6] [ref=f37e122]
+          - paragraph [ref=f37e123]: Únete a transmisiones en vivo o escucha la radio curada mientras sigues artistas.
+          - generic [ref=f37e124]:
+            - link "Abrir radio" [ref=f37e125] [cursor=pointer]:
+              - /url: /fans#radio
+            - link "Ver mi perfil" [ref=f37e126] [cursor=pointer]:
+              - /url: /perfil/9
+      - generic [ref=f37e127]:
+        - generic [ref=f37e129]:
+          - paragraph [ref=f37e130]: Feed de lanzamientos listo.
+          - generic [ref=f37e131]:
+            - generic [ref=f37e132]:
+              - heading "Novedades de tus artistas" [level=6] [ref=f37e133]
+              - paragraph [ref=f37e134]: Escucha novedades y abre videos sin salir del hub.
+            - generic [ref=f37e135]: 0 lanzamientos
+          - alert [ref=f37e137]:
+            - generic [ref=f37e141]: Sigue al menos un artista para ver novedades recientes aquí.
+            - link "Crear lanzamiento" [ref=f37e143] [cursor=pointer]:
+              - /url: /label/releases
+        - generic [ref=f37e145]:
+          - generic [ref=f37e147]:
+            - heading "Panel del sello" [level=6] [ref=f37e148]
+            - generic [ref=f37e150]:
+              - text: Artistas que sigues
+              - heading "0" [level=6] [ref=f37e151]
+            - paragraph [ref=f37e152]: Revisa lanzamientos, perfiles y activos del hub desde un solo lugar.
+            - link "Gestionar lanzamientos" [ref=f37e153] [cursor=pointer]:
+              - /url: /label/releases
+          - generic [ref=f37e155]:
+            - heading "Sugerencias para seguir" [level=6] [ref=f37e156]
+            - paragraph [ref=f37e157]: Ya sigues a todos los artistas activos en el hub.
+      - generic [ref=f37e159]:
+        - generic [ref=f37e160]:
+          - heading "Tu perfil fan" [level=6] [ref=f37e161]
+          - paragraph [ref=f37e162]: Personaliza cómo te ve la comunidad cuando sigues a un artista.
+        - generic [ref=f37e163]:
+          - generic [ref=f37e164]:
+            - button "Editar avatar" [ref=f37e169] [cursor=pointer]
+            - generic [ref=f37e172]:
+              - generic: Avatar (pega enlace o sube)
+              - generic [ref=f37e173]:
+                - textbox "Avatar (pega enlace o sube)" [ref=f37e174]:
+                  - /placeholder: https://...
+                - group:
+                  - generic: Avatar (pega enlace o sube)
+            - button "Subir imagen" [ref=f37e176] [cursor=pointer]
+          - generic [ref=f37e177]:
+            - generic [ref=f37e178]:
+              - generic [ref=f37e179]:
+                - generic: Nombre público
+                - generic [ref=f37e180]:
+                  - textbox "Nombre público" [ref=f37e181]
+                  - group:
+                    - generic: Nombre público
+              - generic [ref=f37e182]:
+                - generic: Ciudad
+                - generic [ref=f37e183]:
+                  - textbox "Ciudad" [ref=f37e184]
+                  - group:
+                    - generic: Ciudad
+            - generic [ref=f37e186]:
+              - generic: Géneros favoritos
+              - generic [ref=f37e187]:
+                - textbox "Géneros favoritos" [ref=f37e188]
+                - group:
+                  - generic: Géneros favoritos
+            - generic [ref=f37e189]:
+              - generic: Bio
+              - generic [ref=f37e190]:
+                - textbox "Bio" [ref=f37e191]
+                - group:
+                  - generic: Bio
+        - button "Guardar perfil" [ref=f37e192] [cursor=pointer]
+      - generic [ref=f37e195]:
+        - generic [ref=f37e196]:
+          - heading "Perfil de artista" [level=6] [ref=f37e197]
+          - paragraph [ref=f37e198]: Cualquier usuario puede convertirse en artista y publicar su perfil.
+        - progressbar [ref=f37e199]
+        - generic [ref=f37e202]:
+          - generic [ref=f37e203]:
+            - generic [ref=f37e204]:
+              - generic: Nombre artístico
+              - generic [ref=f37e205]:
+                - textbox "Nombre artístico" [ref=f37e206]
+                - group:
+                  - generic: Nombre artístico
+            - generic [ref=f37e207]:
+              - generic: Slug público
+              - generic [ref=f37e208]:
+                - textbox "Slug público" [ref=f37e209]:
+                  - /placeholder: mi-proyecto
+                - group:
+                  - generic: Slug público
+              - paragraph [ref=f37e210]: "URL pública: /a/9"
+          - generic [ref=f37e211]:
+            - generic: Ciudad
+            - generic [ref=f37e212]:
+              - textbox "Ciudad" [ref=f37e213]
+              - group:
+                - generic: Ciudad
+          - generic [ref=f37e214]:
+            - generic: Bio
+            - generic [ref=f37e215]:
+              - textbox "Bio" [ref=f37e216]
+              - group:
+                - generic: Bio
+          - generic [ref=f37e217]:
+            - paragraph [ref=f37e218]: Portada principal (hosteada)
+            - generic [ref=f37e219]:
+              - generic [ref=f37e220]:
+                - button [ref=f37e221] [cursor=pointer]
+                - button "Conectar Drive" [ref=f37e225] [cursor=pointer]
+              - button [ref=f37e226] [cursor=pointer]:
+                - paragraph [ref=f37e227]: Arrastra archivos aquí o haz clic para seleccionarlos
+            - generic [ref=f37e228]:
+              - generic: URL de portada (opcional)
+              - generic [ref=f37e229]:
+                - textbox "URL de portada (opcional)" [ref=f37e230]:
+                  - /placeholder: https://
+                - group:
+                  - generic: URL de portada (opcional)
+            - generic [ref=f37e231]: Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
+          - generic [ref=f37e232]:
+            - generic [ref=f37e233]:
+              - generic: Spotify URL
+              - generic [ref=f37e234]:
+                - textbox "Spotify URL" [ref=f37e235]
+                - group:
+                  - generic: Spotify URL
+            - generic [ref=f37e236]:
+              - generic: Spotify Artist ID
+              - generic [ref=f37e237]:
+                - textbox "Spotify Artist ID" [ref=f37e238]
+                - group:
+                  - generic: Spotify Artist ID
+          - generic [ref=f37e239]:
+            - generic [ref=f37e240]:
+              - generic: YouTube URL
+              - generic [ref=f37e241]:
+                - textbox "YouTube URL" [ref=f37e242]
+                - group:
+                  - generic: YouTube URL
+            - generic [ref=f37e243]:
+              - generic: YouTube Channel ID
+              - generic [ref=f37e244]:
+                - textbox "YouTube Channel ID" [ref=f37e245]
+                - group:
+                  - generic: YouTube Channel ID
+          - generic [ref=f37e246]:
+            - generic [ref=f37e247]:
+              - generic: Sitio web
+              - generic [ref=f37e248]:
+                - textbox "Sitio web" [ref=f37e249]
+                - group:
+                  - generic: Sitio web
+            - generic [ref=f37e250]:
+              - generic: Video destacado
+              - generic [ref=f37e251]:
+                - textbox "Video destacado" [ref=f37e252]
+                - group:
+                  - generic: Video destacado
+          - generic [ref=f37e253]:
+            - generic [ref=f37e254]:
+              - generic: Géneros (separados por coma)
+              - generic [ref=f37e255]:
+                - textbox "Géneros (separados por coma)" [ref=f37e256]
+                - group:
+                  - generic: Géneros (separados por coma)
+            - generic [ref=f37e257]:
+              - generic: Highlights
+              - generic [ref=f37e258]:
+                - textbox "Highlights" [ref=f37e259]
+                - group:
+                  - generic: Highlights
+        - generic [ref=f37e260]:
+          - link [ref=f37e261] [cursor=pointer]:
+            - /url: /a/9
+          - button [ref=f37e265] [cursor=pointer]
+          - button "Actualizar perfil de artista" [ref=f37e269] [cursor=pointer]
+      - generic [ref=f37e271]:
+        - progressbar [ref=f37e272]
+        - heading "Cargando catálogo de artistas" [level=6] [ref=f37e275]
+        - paragraph [ref=f37e276]: Estamos trayendo perfiles, géneros y lanzamientos para este hub.
+        - link "Ver lanzamientos mientras tanto" [ref=f37e277] [cursor=pointer]:
+          - /url: /records
+      - alert [ref=f37e278]:
+        - generic [ref=f37e282]: Pronto encontrarás artistas disponibles para seguir.
+  - contentinfo [ref=f37e283]:
+    - generic [ref=f37e285]:
+      - generic [ref=f37e286]:
+        - heading "TDF Records" [level=6] [ref=f37e287]
+        - paragraph [ref=f37e288]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+        - generic [ref=f37e289]:
+          - link "Ver lanzamientos" [ref=f37e290] [cursor=pointer]:
+            - /url: /records
+          - link "Reservar estudio" [ref=f37e291] [cursor=pointer]:
+            - /url: /reservar
+      - navigation "Explorar TDF" [ref=f37e292]:
+        - generic [ref=f37e293]: Explorar
+        - generic [ref=f37e294]:
+          - link "TDF" [ref=f37e295] [cursor=pointer]:
+            - /url: /tdf
+          - link "Comunidad" [ref=f37e296] [cursor=pointer]:
+            - /url: /fans
+          - link "Tienda" [ref=f37e297] [cursor=pointer]:
+            - /url: /marketplace
+          - link "Domo" [ref=f37e298] [cursor=pointer]:
+            - /url: /domo-del-pululahua
+          - link "Reservar" [ref=f37e299] [cursor=pointer]:
+            - /url: /reservar
+          - link "DJ Booth" [ref=f37e300] [cursor=pointer]:
+            - /url: /dj-booth
+          - link "Lanzamientos" [ref=f37e301] [cursor=pointer]:
+            - /url: /records
+          - link "Sugerencias" [ref=f37e302] [cursor=pointer]:
+            - /url: /feedback
+          - link "Donar" [ref=f37e303] [cursor=pointer]:
+            - /url: /donar
+      - generic [ref=f37e304]:
+        - generic [ref=f37e305]: Gestión de mensajes
+        - generic [ref=f37e306]:
+          - link "Consentimiento WhatsApp" [ref=f37e307] [cursor=pointer]:
+            - /url: /whatsapp/consentimiento
+          - link "Confirmación WhatsApp" [ref=f37e308] [cursor=pointer]:
+            - /url: /whatsapp/ok
+      - link "Ir a login" [ref=f37e310] [cursor=pointer]:
+        - /url: /login?redirect=%2Ffans

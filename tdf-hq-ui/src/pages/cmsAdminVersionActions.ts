@@ -13,10 +13,17 @@ export const getCmsVersionRowActions = (
   }: { isCurrentLive?: boolean; isLoadedInEditor?: boolean } = {},
 ): CmsVersionRowActions => {
   const isPublished = status.trim().toLowerCase() === 'published';
-  const loadedStateLabel = isLoadedInEditor ? 'En formulario' : isCurrentLive ? 'En vivo' : null;
+  const loadedStateLabel =
+    isCurrentLive && isLoadedInEditor
+      ? 'En vivo y en formulario'
+      : isLoadedInEditor
+        ? 'En formulario'
+        : isCurrentLive
+          ? 'En vivo'
+          : null;
 
   return {
-    showPublish: !isPublished && !isLoadedInEditor,
+    showPublish: !isPublished && !isLoadedInEditor && !isCurrentLive,
     showLoadInEditor: !loadedStateLabel,
     showDelete: !isCurrentLive && !isLoadedInEditor,
     loadedStateLabel,

@@ -8,10 +8,16 @@ import {
   Card,
   CardContent,
   CardMedia,
+  Checkbox,
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControlLabel,
   Grid,
   Link,
   MenuItem,
@@ -27,17 +33,28 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import HeadsetIcon from '@mui/icons-material/Headset';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import type { CourseMetadata, CourseRegistrationRequest } from '../api/courses';
+import type { CourseCheckoutResponse, CourseMetadata, CourseRegistrationRequest } from '../api/courses';
 import { Courses } from '../api/courses';
+import type { DatafastCheckoutDTO } from '../api/types';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { useCmsContent } from '../hooks/useCmsContent';
 import { COURSE_COHORTS, COURSE_DEFAULTS, PUBLIC_BASE } from '../config/appConfig';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  formatCurrencyForUser,
+  formatDateForUser,
+  resolveRuntimeCurrency,
+  resolveRuntimeFormatOptions,
+} from '../utils/formatters';
 
 const isAbsoluteUrl = (url: string) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
 const normalizeCourseSlugs = (slugs: string[]) =>
   Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
+const trimToUndefined = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? undefined : trimmed;
+};
 
 const formatCourseDate = (value?: string | null) => {
   if (!value) return '—';
@@ -45,16 +62,14 @@ const formatCourseDate = (value?: string | null) => {
   if (match) {
     const [, y, m, d] = match;
     const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12));
-    return dt.toLocaleDateString('es-EC', {
+    return new Intl.DateTimeFormat(resolveRuntimeFormatOptions().locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       timeZone: 'UTC',
-    });
+    }).format(dt);
   }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+  return formatDateForUser(value, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const getSessionDates = (sessions?: CourseMetadata['sessions']) => {
@@ -134,6 +149,32 @@ const resolvePublicImageUrl = (
 const isProductionCourseSlug = (slug?: string) =>
   !slug || slug === 'produccion-musical' || slug.startsWith('produccion-musical-');
 
+const createCourseIdempotencyKey = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `course-checkout-${crypto.randomUUID()}`;
+  }
+  return `course-checkout-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const courseLookupStorageKey = (slug: string, registrationId: number) =>
+  `tdf:course-checkout:${slug}:${registrationId}`;
+
+const saveCourseLookupToken = (slug: string, registrationId: number, token: string) => {
+  try {
+    window.localStorage.setItem(courseLookupStorageKey(slug, registrationId), token);
+  } catch {
+    // Private browsing or storage policy may deny persistence; the live response still works.
+  }
+};
+
+const loadCourseLookupToken = (slug: string, registrationId: number): string | null => {
+  try {
+    return window.localStorage.getItem(courseLookupStorageKey(slug, registrationId));
+  } catch {
+    return null;
+  }
+};
+
 const badgeStyle = {
   bgcolor: 'rgba(255,255,255,0.1)',
   color: '#f8fafc',
@@ -161,19 +202,35 @@ export default function CourseProductionLandingPage() {
   const formRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { slug: routeSlug } = useParams<{ slug: string }>();
+  const { slug: routeSlug, registrationId: routeRegistrationId } = useParams<{
+    slug: string;
+    registrationId: string;
+  }>();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [howHeard, setHowHeard] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [checkout, setCheckout] = useState<CourseCheckoutResponse | null>(null);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
+  const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
+  const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
+  const datafastFormRef = useRef<HTMLDivElement | null>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
+  const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
+  const paypalButtonRef = useRef<HTMLDivElement | null>(null);
+  const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
+  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const productionSlugs = useMemo(() => {
     const cleaned = normalizeCourseSlugs(COURSE_COHORTS);
     return cleaned.length ? cleaned : [COURSE_DEFAULTS.slug];
   }, []);
   const pathSlug = useMemo(() => {
-    const trimmed = routeSlug?.trim();
-    return trimmed || undefined;
+    return trimToUndefined(routeSlug);
   }, [routeSlug]);
   const availableSlugs = useMemo(() => {
     if (!pathSlug || pathSlug === 'produccion-musical') return productionSlugs;
@@ -245,10 +302,34 @@ export default function CourseProductionLandingPage() {
   }, [location.search]);
 
   const registrationMutation = useMutation({
-    mutationFn: (payload: CourseRegistrationRequest) => Courses.register(selectedSlug, payload),
+    mutationFn: (payload: CourseRegistrationRequest) => {
+      const fingerprint = JSON.stringify({ selectedSlug, payload });
+      if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
+        checkoutIdempotency.current = { fingerprint, key: createCourseIdempotencyKey() };
+      }
+      return Courses.register(selectedSlug, payload, checkoutIdempotency.current.key);
+    },
+    onSuccess: (response) => {
+      setCheckout(response);
+      const token = response.lookupToken?.trim();
+      if (token) saveCourseLookupToken(selectedSlug, response.registrationId, token);
+      if (response.checkoutAvailable) {
+        navigate(`/curso/${encodeURIComponent(selectedSlug)}/orden/${response.registrationId}`, {
+          replace: true,
+        });
+      }
+    },
   });
+  const previousSelectedSlugRef = useRef(selectedSlug);
   useEffect(() => {
+    if (previousSelectedSlugRef.current === selectedSlug) return;
+    previousSelectedSlugRef.current = selectedSlug;
     registrationMutation.reset();
+    setShowSuccessDialog(false);
+    setCheckout(null);
+    setPaymentError(null);
+    setTermsAccepted(false);
+    checkoutIdempotency.current = null;
   }, [registrationMutation, selectedSlug]);
 
   const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
@@ -260,6 +341,7 @@ export default function CourseProductionLandingPage() {
       source: 'landing',
       howHeard: howHeard.trim() ? howHeard.trim() : undefined,
       utm: utmParams,
+      termsAccepted,
     };
     registrationMutation.mutate(payload);
   };
@@ -295,6 +377,181 @@ export default function CourseProductionLandingPage() {
     if (submitted) setShowSuccessDialog(true);
   }, [submitted]);
 
+  const checkoutLookupToken = useMemo(() => {
+    if (!checkout) return null;
+    return checkout.lookupToken
+      ?? loadCourseLookupToken(checkout.courseSlug, checkout.registrationId);
+  }, [checkout]);
+
+  useEffect(() => {
+    const registrationId = Number(routeRegistrationId);
+    if (!Number.isSafeInteger(registrationId) || registrationId <= 0 || !pathSlug) return;
+    const token = loadCourseLookupToken(pathSlug, registrationId);
+    if (!token) {
+      setPaymentError('No encontramos el acceso seguro de esta orden en este navegador.');
+      return;
+    }
+    const params = new URLSearchParams(location.search);
+    const resourcePath = params.get('resourcePath') ?? params.get('id');
+    setPaymentBusy(true);
+    setPaymentError(null);
+    const request = resourcePath
+      ? Courses.confirmDatafastStatus(pathSlug, registrationId, resourcePath, token)
+      : Courses.getCheckout(pathSlug, registrationId, token);
+    request
+      .then((response) => {
+        setCheckout(response);
+        if (resourcePath) {
+          navigate(location.pathname, { replace: true });
+        }
+      })
+      .catch(() => {
+        setPaymentError(
+          resourcePath
+            ? 'No pudimos verificar la respuesta de Datafast. El pago no se muestra como confirmado.'
+            : 'No pudimos consultar esta orden de curso.',
+        );
+      })
+      .finally(() => setPaymentBusy(false));
+  }, [location.pathname, location.search, navigate, pathSlug, routeRegistrationId]);
+
+  const datafastReturnUrl = useMemo(() => {
+    if (!checkout || typeof window === 'undefined') return '';
+    return new URL(
+      `/curso/${encodeURIComponent(checkout.courseSlug)}/orden/${checkout.registrationId}`,
+      window.location.origin,
+    ).toString();
+  }, [checkout]);
+
+  const handleDatafastPayment = async () => {
+    if (!checkout || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerCheckout = await Courses.createDatafastCheckout(
+        checkout.courseSlug,
+        checkout.registrationId,
+        checkoutLookupToken,
+      );
+      setDatafastCheckout(providerCheckout);
+      setDatafastDialogOpen(true);
+      setDatafastWidgetKey((current) => current + 1);
+    } catch {
+      setPaymentError('No pudimos iniciar Datafast. La inscripción sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  const handlePaypalPayment = async () => {
+    if (!checkout || !checkoutLookupToken) {
+      setPaymentError('No encontramos el acceso seguro de esta orden.');
+      return;
+    }
+    if (!paypalClientId) {
+      setPaymentError('PayPal no está configurado en este navegador.');
+      return;
+    }
+    setPaymentBusy(true);
+    setPaymentError(null);
+    try {
+      const providerOrder = await Courses.createPaypalOrder(
+        checkout.courseSlug,
+        checkout.registrationId,
+        checkoutLookupToken,
+      );
+      setPaypalOrderId(providerOrder.pcPaypalOrderId);
+      setPaypalDialogOpen(true);
+    } catch {
+      setPaymentError('No pudimos iniciar PayPal. La inscripción sigue sin pago confirmado.');
+    } finally {
+      setPaymentBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
+    if (datafastFormRef.current) datafastFormRef.current.innerHTML = '';
+    window.wpwlOptions = { locale: 'es', style: 'card' };
+    const script = document.createElement('script');
+    script.src = datafastCheckout.dcWidgetUrl;
+    script.async = true;
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar Datafast. No se confirmó ningún pago.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
+
+  useEffect(() => {
+    const paypalOffered = checkout?.paymentMethods.includes('paypal') ?? false;
+    if (!paypalOffered || !paypalClientId || typeof window === 'undefined') return;
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkout?.quote?.currency ?? 'USD')}`;
+    script.async = true;
+    script.onload = () => setPaypalReady(true);
+    script.onerror = () => setPaymentError(
+      'No se pudo cargar PayPal. La inscripción continúa sin pago.',
+    );
+    document.body.appendChild(script);
+    return () => script.remove();
+  }, [checkout?.paymentMethods, checkout?.quote?.currency, paypalClientId]);
+
+  useEffect(() => {
+    if (
+      !paypalDialogOpen
+      || !paypalReady
+      || !paypalOrderId
+      || !checkout
+      || !checkoutLookupToken
+      || !paypalButtonRef.current
+      || typeof window === 'undefined'
+      || !window.paypal
+    ) return;
+    paypalButtonRef.current.innerHTML = '';
+    const buttons = window.paypal.Buttons({
+      createOrder: () => paypalOrderId,
+      onApprove: async (data) => {
+        if (data.orderID !== paypalOrderId) {
+          setPaymentError('PayPal devolvió una referencia distinta. No se capturó el pago.');
+          return;
+        }
+        setPaymentBusy(true);
+        try {
+          const response = await Courses.capturePaypalOrder(
+            checkout.courseSlug,
+            checkout.registrationId,
+            paypalOrderId,
+            checkoutLookupToken,
+          );
+          setCheckout(response);
+          setPaypalDialogOpen(false);
+          setPaypalOrderId(null);
+          setPaymentError(
+            response.paymentStatus === 'paid'
+              ? null
+              : 'PayPal respondió, pero el servidor todavía no confirmó el pago.',
+          );
+        } catch {
+          setPaymentError('No pudimos verificar PayPal. No mostramos la inscripción como pagada.');
+        } finally {
+          setPaymentBusy(false);
+        }
+      },
+      onCancel: () => setPaymentError('Cancelaste PayPal. La inscripción continúa sin pago.'),
+      onError: () => setPaymentError('PayPal no completó la operación. No se confirmó ningún pago.'),
+    });
+    void buttons.render(paypalButtonRef.current);
+    return () => buttons.close?.();
+  }, [checkout, checkoutLookupToken, paypalDialogOpen, paypalOrderId, paypalReady]);
+
   return (
     <Box
       sx={{
@@ -305,7 +562,14 @@ export default function CourseProductionLandingPage() {
       }}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
-        <EnrollmentSuccessDialog open={showSuccessDialog} onClose={() => setShowSuccessDialog(false)} />
+        <EnrollmentSuccessDialog
+          open={showSuccessDialog}
+          onClose={() => setShowSuccessDialog(false)}
+          title={checkout?.checkoutAvailable ? 'Cupo retenido temporalmente' : 'Solicitud recibida'}
+          message={checkout?.checkoutAvailable
+            ? 'Creamos una retención temporal. Tu inscripción sigue pendiente hasta que el servidor verifique el pago.'
+            : 'Recibimos tus datos, pero el checkout no está habilitado y todavía no se reservó ni pagó un cupo.'}
+        />
         <Stack spacing={4}>
           {metaQuery.error && (
             <Alert severity="error">
@@ -342,6 +606,8 @@ export default function CourseProductionLandingPage() {
                 onEmailChange={setEmail}
                 onPhoneChange={setPhone}
                 onHowHeardChange={setHowHeard}
+                termsAccepted={termsAccepted}
+                onTermsAcceptedChange={setTermsAccepted}
                 submitting={submitting}
                 submitted={submitted}
                 submitError={submitError}
@@ -351,6 +617,16 @@ export default function CourseProductionLandingPage() {
                 selectedSlug={selectedSlug}
                 onSlugChange={handleSelectedSlugChange}
               />
+              {checkout && (
+                <CourseCheckoutCard
+                  checkout={checkout}
+                  paymentBusy={paymentBusy}
+                  paymentError={paymentError}
+                  paypalAvailable={Boolean(paypalClientId && paypalReady)}
+                  onDatafast={() => void handleDatafastPayment()}
+                  onPaypal={() => void handlePaypalPayment()}
+                />
+              )}
               <InstructorCard meta={meta} />
               {meta?.locationLabel && meta?.locationMapUrl && (
                 <LocationCard label={meta.locationLabel} mapUrl={meta.locationMapUrl} />
@@ -358,8 +634,163 @@ export default function CourseProductionLandingPage() {
             </Grid>
           </Grid>
         </Stack>
+        <Dialog
+          open={datafastDialogOpen}
+          onClose={() => setDatafastDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar curso con Datafast</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                El formulario es alojado por Datafast. Al volver, TDF verificará importe, moneda, comercio y referencia en el servidor antes de confirmar el pago.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              {datafastCheckout && datafastReturnUrl && (
+                <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
+                  <form
+                    action={datafastReturnUrl}
+                    className="paymentWidgets"
+                    data-brands="VISA MASTER DINERS AMEX DISCOVER"
+                  />
+                </Box>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDatafastWidgetKey((current) => current + 1)}>
+              Reintentar carga
+            </Button>
+            <Button onClick={() => setDatafastDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={paypalDialogOpen}
+          onClose={() => setPaypalDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Pagar curso con PayPal</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <Alert severity="info" variant="outlined">
+                Aprobar en PayPal no basta: TDF captura y verifica la orden en el servidor antes de mostrar el pago como confirmado.
+              </Alert>
+              {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+              <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPaypalDialogOpen(false)} color="inherit">Cerrar</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
+  );
+}
+
+function CourseCheckoutCard({
+  checkout,
+  paymentBusy,
+  paymentError,
+  paypalAvailable,
+  onDatafast,
+  onPaypal,
+}: {
+  checkout: CourseCheckoutResponse;
+  paymentBusy: boolean;
+  paymentError: string | null;
+  paypalAvailable: boolean;
+  onDatafast: () => void;
+  onPaypal: () => void;
+}) {
+  const paid = checkout.paymentStatus === 'paid';
+  const held = checkout.fulfillmentStatus === 'seat_held';
+  const quote = checkout.quote;
+  return (
+    <Card
+      sx={{
+        mt: 3,
+        background: 'rgba(15,23,42,0.94)',
+        border: '1px solid rgba(147,197,253,0.28)',
+        color: '#e2e8f0',
+      }}
+    >
+      <CardContent>
+        <Stack spacing={1.5}>
+          <Typography variant="h6" fontWeight={800}>
+            Estado de tu inscripción
+          </Typography>
+          {!checkout.checkoutAvailable && (
+            <Alert severity="info" variant="outlined">
+              Solicitud recibida. El checkout no está habilitado y no se reservó ni pagó un cupo.
+            </Alert>
+          )}
+          {checkout.checkoutAvailable && paid && (
+            <Alert severity="success" variant="outlined">
+              Pago verificado por el servidor. Tu cupo está inscrito; esto no significa que el curso haya sido completado.
+            </Alert>
+          )}
+          {checkout.checkoutAvailable && !paid && (
+            <Alert severity={held ? 'warning' : 'info'} variant="outlined">
+              {held
+                ? 'Cupo retenido temporalmente. Todavía no está pagado ni inscrito.'
+                : `Estado de cupo: ${checkout.fulfillmentStatus}. El pago no está confirmado.`}
+            </Alert>
+          )}
+          {quote && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+              <Chip
+                label={`Total: ${formatCurrencyForUser(quote.totalMinor / 100, quote.currency)}`}
+                size="small"
+              />
+              <Chip
+                label={`A pagar ahora: ${formatCurrencyForUser(quote.dueNowMinor / 100, quote.currency)}`}
+                size="small"
+              />
+              {quote.balanceMinor > 0 && (
+                <Chip
+                  label={`Saldo posterior: ${formatCurrencyForUser(quote.balanceMinor / 100, quote.currency)}`}
+                  size="small"
+                />
+              )}
+            </Stack>
+          )}
+          {checkout.holdExpiresAt && !paid && (
+            <Typography variant="body2" sx={{ color: 'rgba(226,232,240,0.78)' }}>
+              La retención vence {formatDateForUser(checkout.holdExpiresAt, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}.
+            </Typography>
+          )}
+          {paymentError && <Alert severity="warning">{paymentError}</Alert>}
+          {checkout.checkoutAvailable && !paid && checkout.paymentMethods.length === 0 && (
+            <Alert severity="info" variant="outlined">
+              No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
+            </Alert>
+          )}
+          {checkout.checkoutAvailable && !paid && (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              {checkout.paymentMethods.includes('datafast') && (
+                <Button variant="contained" disabled={paymentBusy} onClick={onDatafast}>
+                  Pagar con Datafast
+                </Button>
+              )}
+              {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
+                <Button variant="outlined" disabled={paymentBusy} onClick={onPaypal}>
+                  Pagar con PayPal
+                </Button>
+              )}
+            </Stack>
+          )}
+          <Typography variant="caption" sx={{ color: 'rgba(226,232,240,0.62)' }}>
+            Orden de curso #{checkout.registrationId}. Pago y cumplimiento académico son estados separados.
+          </Typography>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -488,7 +919,9 @@ function Hero({
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Typography variant="h4" fontWeight={800} sx={{ color: '#cbd5f5' }}>
-            {loading ? '—' : `$${meta?.price?.toFixed(0) ?? '150'} ${meta?.currency ?? 'USD'}`}
+            {loading
+              ? '—'
+              : formatCurrencyForUser(meta?.price ?? 150, meta?.currency ?? resolveRuntimeCurrency())}
           </Typography>
           <Stack spacing={0.5}>
             <Typography variant="body1" sx={{ color: 'rgba(226,232,240,0.75)' }}>
@@ -546,8 +979,8 @@ function Info({ meta, loading }: { meta?: CourseMetadata; loading: boolean }) {
       ? meta.includes
       : ['Material de apoyo', 'Seguimiento del instructor', 'Certificado de participación', 'Grupo de WhatsApp'];
   const focusLabel = meta?.daws?.length ? `Enfoque: ${meta.daws.join(', ')}` : 'Programa práctico';
-  const durationLabel = meta?.duration?.trim() || 'Duración por confirmar';
-  const formatLabel = meta?.format?.trim() || 'Curso TDF';
+  const durationLabel = trimToUndefined(meta?.duration) ?? 'Duración por confirmar';
+  const formatLabel = trimToUndefined(meta?.format) ?? 'Curso TDF';
   return (
     <Stack spacing={3}>
       <Card
@@ -644,6 +1077,8 @@ function FormCard({
   onEmailChange,
   onPhoneChange,
   onHowHeardChange,
+  termsAccepted,
+  onTermsAcceptedChange,
   submitting,
   submitted,
   submitError,
@@ -663,6 +1098,8 @@ function FormCard({
   onEmailChange: (val: string) => void;
   onPhoneChange: (val: string) => void;
   onHowHeardChange: (val: string) => void;
+  termsAccepted: boolean;
+  onTermsAcceptedChange: (value: boolean) => void;
   submitting: boolean;
   submitted: boolean;
   submitError: string | null;
@@ -802,6 +1239,7 @@ function FormCard({
                 InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.75)' } }}
               />
               <TextField
+                type="tel"
                 label="WhatsApp (opcional)"
                 value={phone}
                 onChange={(e) => onPhoneChange(e.target.value)}
@@ -845,10 +1283,27 @@ function FormCard({
                 }}
                 InputLabelProps={{ sx: { color: 'rgba(226,232,240,0.68)' } }}
               />
+              <FormControlLabel
+                control={(
+                  <Checkbox
+                    checked={termsAccepted}
+                    onChange={(event) => onTermsAcceptedChange(event.target.checked)}
+                    required
+                    disabled={disableInputs}
+                    sx={{ color: 'rgba(226,232,240,0.72)' }}
+                  />
+                )}
+                label="Acepto la versión de términos y política de cancelación que el servidor asociará a esta orden."
+                sx={{
+                  alignItems: 'flex-start',
+                  color: 'rgba(226,232,240,0.78)',
+                  '& .MuiFormControlLabel-label': { fontSize: '0.82rem', pt: 0.75 },
+                }}
+              />
               <Button
                 type="submit"
                 variant="contained"
-                disabled={disableInputs || submitting}
+                disabled={disableInputs || submitting || !termsAccepted}
                 startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <CelebrationIcon />}
                 sx={{ mt: 1 }}
           >

@@ -78,6 +78,12 @@ export function CheckoutDialog({
       formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)
         ? `Pago: ${formatCheckoutPaymentSummary(form.coPaymentType, form.coPaymentInstallments)}`
         : null,
+      form.coPaymentAmount
+        ? `Monto: ${[form.coPaymentCurrency?.trim().toUpperCase(), form.coPaymentAmount].filter(Boolean).join(' ')}`
+        : null,
+      form.coPaymentOutstanding
+        ? `Saldo pendiente: ${[form.coPaymentCurrency?.trim().toUpperCase(), form.coPaymentOutstanding].filter(Boolean).join(' ')}`
+        : null,
       form.coPaymentReference ? `Referencia: ${form.coPaymentReference}` : null,
       form.coTermsAndConditions ? `Términos: ${form.coTermsAndConditions}` : null,
       form.coNotes ? `Notas: ${form.coNotes}` : null,
@@ -89,8 +95,9 @@ export function CheckoutDialog({
     }
   };
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Check-out · {asset.name}</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth aria-labelledby="checkout-dialog-title">
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <DialogTitle id="checkout-dialog-title">Check-out · {asset.name}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Estado: {asset.status} · Ubicación: {asset.location ?? '—'}
@@ -104,8 +111,20 @@ export function CheckoutDialog({
             )}.{' '}
             Tipo: {getCheckoutDispositionLabel(activeCheckout?.disposition)}.{' '}
             {activeCheckout?.dueAt ? `Retorno pactado: ${formatDue(activeCheckout.dueAt)}` : 'Sin fecha de devolución.'}
-            {formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)
-              ? ` Pago: ${formatCheckoutPaymentSummary(activeCheckout?.paymentType, activeCheckout?.paymentInstallments)}.`
+            {formatCheckoutPaymentSummary(
+              activeCheckout?.paymentType,
+              activeCheckout?.paymentInstallments,
+              activeCheckout?.paymentAmountCents,
+              activeCheckout?.paymentCurrency,
+              activeCheckout?.paymentOutstandingCents,
+            )
+              ? ` Pago: ${formatCheckoutPaymentSummary(
+                  activeCheckout?.paymentType,
+                  activeCheckout?.paymentInstallments,
+                  activeCheckout?.paymentAmountCents,
+                  activeCheckout?.paymentCurrency,
+                  activeCheckout?.paymentOutstandingCents,
+                )}.`
               : ''}
             {' '}Registra el check-in antes de asignarlo de nuevo.
           </Alert>
@@ -138,6 +157,15 @@ export function CheckoutDialog({
                   : null,
                 coPaymentReference: checkoutSupportsPaymentDetails(e.target.value)
                   ? (form.coPaymentReference ?? '')
+                  : '',
+                coPaymentAmount: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentAmount ?? '')
+                  : '',
+                coPaymentCurrency: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentCurrency ?? '')
+                  : '',
+                coPaymentOutstanding: checkoutSupportsPaymentDetails(e.target.value)
+                  ? (form.coPaymentOutstanding ?? '')
                   : '',
               })
             }
@@ -224,6 +252,7 @@ export function CheckoutDialog({
             type="email"
           />
           <TextField
+            type="tel"
             label="Teléfono del responsable"
             value={form.coHolderPhone ?? ''}
             onChange={(e) => onFormChange({ ...form, coHolderPhone: e.target.value })}
@@ -300,6 +329,29 @@ export function CheckoutDialog({
                 helperText="Déjalo vacío si el pago no aplica o no se pactó en cuotas."
               />
               <TextField
+                label="Monto total"
+                type="number"
+                value={form.coPaymentAmount ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentAmount: e.target.value })}
+                inputProps={{ min: 0, step: '0.01' }}
+                helperText="Ej.: 1200.50"
+              />
+              <TextField
+                label="Moneda"
+                value={form.coPaymentCurrency ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentCurrency: e.target.value.toUpperCase() })}
+                inputProps={{ maxLength: 3 }}
+                helperText="Código ISO de 3 letras. Ej.: USD, EUR."
+              />
+              <TextField
+                label="Saldo pendiente"
+                type="number"
+                value={form.coPaymentOutstanding ?? ''}
+                onChange={(e) => onFormChange({ ...form, coPaymentOutstanding: e.target.value })}
+                inputProps={{ min: 0, step: '0.01' }}
+                helperText="Déjalo en 0.00 si ya quedó pagado por completo."
+              />
+              <TextField
                 label="Referencia de pago"
                 value={form.coPaymentReference ?? ''}
                 onChange={(e) => onFormChange({ ...form, coPaymentReference: e.target.value })}
@@ -356,10 +408,11 @@ export function CheckoutDialog({
       <DialogActions>
         <Button onClick={() => void copySummary()}>Copiar resumen</Button>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading || Boolean(activeCheckout)}>
+        <Button type="submit" variant="contained" disabled={loading || Boolean(activeCheckout)}>
           {activeCheckout ? 'Pendiente de check-in' : loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
+      </form>
     </Dialog>
   );
 }
@@ -387,8 +440,9 @@ export function CheckinDialog({
 }) {
   if (!asset) return null;
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Check-in · {asset.name}</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth aria-labelledby="checkin-dialog-title">
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <DialogTitle id="checkin-dialog-title">Check-in · {asset.name}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
@@ -434,10 +488,11 @@ export function CheckinDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={loading}>
+        <Button type="submit" variant="contained" disabled={loading}>
           {loading ? 'Guardando…' : 'Confirmar'}
         </Button>
       </DialogActions>
+      </form>
     </Dialog>
   );
 }

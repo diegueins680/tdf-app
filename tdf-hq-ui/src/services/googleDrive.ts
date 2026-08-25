@@ -34,11 +34,9 @@ const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_FILES_ENDPOINT = 'https://www.googleapis.com/drive/v3/files';
 const GOOGLE_UPLOAD_ENDPOINT = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-const getClientId = () =>
-  (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_CLIENT_ID'];
-const getRedirectUri = () =>
-  (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_REDIRECT_URI'];
-const getFolderId = () => (import.meta.env as Record<string, string | undefined>)['VITE_GOOGLE_DRIVE_FOLDER_ID'];
+const getClientId = () => import.meta.env?.VITE_GOOGLE_DRIVE_CLIENT_ID;
+const getRedirectUri = () => import.meta.env?.VITE_GOOGLE_DRIVE_REDIRECT_URI;
+const getFolderId = () => import.meta.env?.VITE_GOOGLE_DRIVE_FOLDER_ID;
 const createNonce = () => crypto.randomUUID().replace(/-/g, '');
 
 const sanitizeReturnTo = (value?: string | null) => {

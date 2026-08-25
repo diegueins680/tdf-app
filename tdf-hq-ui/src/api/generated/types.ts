@@ -4,6 +4,168 @@
  */
 
 export interface paths {
+    "/social-events/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List social events using canonical catalog identifiers */
+        get: operations["listSocialEvents"];
+        put?: never;
+        /** Create a social event using a canonical event type identifier */
+        post: operations["createSocialEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/moments/{momentId}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle a persisted reaction type on an event moment */
+        post: operations["reactToSocialEventMoment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/pilot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read accumulated pilot state */
+        get: operations["getEventResearchPilot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/pilot/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an explicit, immutable pilot approval */
+        post: operations["approveEventResearchPilot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List research runs and checkpoints */
+        get: operations["listEventResearchRuns"];
+        put?: never;
+        /** Idempotently start a research run by run key */
+        post: operations["createEventResearchRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Commit a run checkpoint or terminal status */
+        put: operations["updateEventResearchRun"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List accumulated research candidates */
+        get: operations["listEventResearchCandidates"];
+        /**
+         * Idempotently create, update, or reverify a candidate
+         * @description Uses provider plus external identifier as the canonical key. It never publishes a social event.
+         */
+        put: operations["upsertEventResearchCandidate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/candidates/{candidateId}/materialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Idempotently materialize an approved high-confidence candidate
+         * @description Resolves or creates related venue and artist entities, links the provider reference, links the candidate, and appends one immutable audit change in a single transaction. Replays return the existing link without changing manually edited event fields. A missing official event end is allowed; all other publication blockers are rejected.
+         */
+        post: operations["materializeEventResearchCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/event-research/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable candidate change records */
+        get: operations["listEventResearchChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/version": {
         parameters: {
             query?: never;
@@ -134,10 +296,45 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Clear current session
-         * @description Clears the browser session cookie for the current user.
+         * Revoke and clear current session
+         * @description Revokes every valid bearer token or session cookie presented with the request, then expires the browser session cookie. The operation is idempotent and also succeeds for an anonymous request.
          */
         post: operations["logoutSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get locale preferences */
+        get: operations["getLocalePreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/currency-conversions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update locale preferences */
+        put: operations["updateLocalePreferences"];
+        /** Record an audited currency conversion */
+        post: operations["recordCurrencyConversion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -178,10 +375,133 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create course registration
-         * @description Stores a registration for the specified course. Landing submissions use source=landing and include UTM tags.
+         * Create course registration and seat hold
+         * @description Creates an idempotent canonical checkout and atomic expiring seat hold when course commerce is enabled. When the production domain gate is disabled, it preserves the legacy lead without claiming a seat or payment.
          */
         post: operations["createCourseRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Track a course checkout and enrollment
+         * @description Returns customer-safe payment and enrollment states. Invalid identifiers and lookup tokens share the same not-found response.
+         */
+        get: operations["getCourseCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound Datafast course checkout */
+        post: operations["createCourseDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/datafast/status": {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        /**
+         * Verify Datafast status server to server
+         * @description A browser return never marks payment paid; the server binds and verifies resource path, order, amount, currency, merchant, and environment.
+         */
+        get: operations["confirmCourseDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a bound PayPal course order */
+        post: operations["createCoursePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/courses/{slug}/registrations/{registrationId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Capture and verify a bound PayPal course order */
+        post: operations["captureCoursePaypalOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -526,6 +846,204 @@ export interface paths {
         patch: operations["updateCourseRegistrationStatus"];
         trace?: never;
     };
+    "/admin/artists/enrichment/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inspect artist enrichment inventory and review queues */
+        get: operations["getArtistEnrichmentOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List artist enrichment runs */
+        get: operations["listArtistEnrichmentRuns"];
+        put?: never;
+        /** Start or safely resume artist enrichment */
+        post: operations["runArtistEnrichment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Checkpoint an external enrichment run */
+        patch: operations["updateArtistEnrichmentRun"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/artists/{artistId}/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rerun enrichment for one artist */
+        post: operations["rerunArtistEnrichment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestions/{suggestionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve, edit, or reject one field suggestion */
+        patch: operations["decideArtistEnrichmentSuggestion"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Persist field-level research provenance */
+        post: operations["createArtistResearchSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an idempotent field suggestion */
+        post: operations["createArtistEnrichmentSuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register a validated Google Drive artist image derivative */
+        post: operations["createArtistMediaAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/suggestion-sets/{artistId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve or reject all pending suggestions for one artist */
+        patch: operations["decideArtistEnrichmentSuggestionSet"];
+        trace?: never;
+    };
+    "/admin/artists/enrichment/identity-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Persist an idempotent externally researched identity candidate */
+        post: operations["createArtistIdentityCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/artists/enrichment/identity-candidates/{candidateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resolve an ambiguous artist identity candidate */
+        patch: operations["decideArtistIdentityCandidate"];
+        trace?: never;
+    };
     "/fans/artists": {
         parameters: {
             query?: never;
@@ -538,6 +1056,26 @@ export interface paths {
          * @description Returns fan-facing artist profiles with bio, location, and follower counts.
          */
         get: operations["listFanArtists"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search public artist profiles
+         * @description Filters public artists by free text and canonical persisted genre ID.
+         */
+        get: operations["searchPublicArtists"];
         put?: never;
         post?: never;
         delete?: never;
@@ -684,6 +1222,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/fans/me/clubs/{artistId}/posts/{postId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club post reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/clubs/{artistId}/memories/{memoryId}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle a persisted Fan Club memory reaction
+         * @description Accepts only the canonical UUID of an active, published item in the `content-reaction-types` catalog.
+         */
+        post: operations["reactToFanClubMemory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/clubs/{artistId}/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the Fan Club reaction leaderboard
+         * @description Returns creator badges as canonical persisted UUID relationships with bilingual read-only presentation.
+         */
+        get: operations["getFanClubLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/parties": {
         parameters: {
             query?: never;
@@ -734,26 +1332,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/parties/{partyId}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add party role
-         * @description Activates a single role for the provided party id. Useful to grant extra capabilities (Artist, Student, etc.).
-         */
-        post: operations["addPartyRole"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -774,7 +1352,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/users/{userId}/roles": {
+    "/label/project-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active operational project notes */
+        get: operations["listLabelProjectNotes"];
+        put?: never;
+        /** Create an operational project note */
+        post: operations["createLabelProjectNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/label/project-notes/{projectNoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Deactivate an operational project note */
+        delete: operations["deactivateLabelProjectNote"];
+        options?: never;
+        head?: never;
+        /** Update an operational project note with optimistic locking */
+        patch: operations["updateLabelProjectNote"];
+        trace?: never;
+    };
+    "/cms/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resolve published authored content by persisted URL slug
+         * @description The slug is a public URL alias resolver only; it is never accepted by administrative writes as canonical identity.
+         */
+        get: operations["getPublicCmsContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/contents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published CMS content for URL resolution */
+        get: operations["listPublicCmsContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List CMS versions by canonical authored-content UUID */
+        get: operations["listAdminCmsContent"];
+        put?: never;
+        /** Create a CMS draft for canonical authored content */
+        post: operations["createCmsDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content/{cmsContentId}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -782,12 +1453,741 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
+        put?: never;
         /**
-         * Replace roles for a user
-         * @description Assigns the provided set of roles to the credential identified by `userId`.
+         * Publish an eligible CMS draft
+         * @description The draft must have a canonical authored-content ID and its author cannot approve it.
          */
-        put: operations["updateUserRoles"];
+        post: operations["publishCmsDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/admin/content/{cmsContentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post?: never;
+        /** Archive an unpublished CMS version */
+        delete: operations["archiveCmsDraft"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/catalog/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published canonical service offerings */
+        get: operations["listPublicServiceOfferings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List canonical service offerings for scheduling administration */
+        get: operations["listServiceOfferings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a versioned canonical pipeline snapshot
+         * @description Returns every active pipeline definition and canonical card in one request for offline clients and bounded prefetching.
+         */
+        get: operations["getPipelineSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List persisted pipeline definitions
+         * @description Returns internal workflow UUIDs, bilingual labels, bound service offerings, and ordered persisted states. There is no slug or service-kind relationship.
+         */
+        get: operations["listPipelineDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        /** List cards in a persisted pipeline workflow */
+        get: operations["listPipelineCards"];
+        put?: never;
+        /** Create a card with canonical service and state IDs */
+        post: operations["createPipelineCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}/stages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List ordered states for a persisted pipeline workflow */
+        get: operations["listPipelineStages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{workflowId}/{cardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one canonical pipeline card */
+        get: operations["getPipelineCard"];
+        put?: never;
+        post?: never;
+        /** Delete an unreferenced operational card */
+        delete: operations["deletePipelineCard"];
+        options?: never;
+        head?: never;
+        /** Update a card or move it by workflow-state UUID */
+        patch: operations["updatePipelineCard"];
+        trace?: never;
+    };
+    "/catalogs/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public catalog definitions */
+        get: operations["listPublicCatalogDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch-load public catalogs */
+        get: operations["batchPublicCatalogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/{catalogCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search published items in one public catalog */
+        get: operations["listPublicCatalogItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/{catalogCode}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve a published public catalog item by canonical UUID */
+        get: operations["getPublicCatalogItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogs/workflows/{workflowCode}/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a public persisted workflow and its effective behavior metadata
+         * @description Only active, non-sensitive workflow definitions explicitly marked for public reading are exposed. Defaults, capabilities, and transitions remain database-authoritative.
+         */
+        get: operations["getPublicWorkflowStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/definitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List catalog definitions visible to an administrator */
+        get: operations["listAdminCatalogDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/content-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted, governed content types and strict schemas */
+        get: operations["listContentTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/workflow-states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted workflow states and localized labels */
+        get: operations["listWorkflowStates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/authored-contents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List canonical authored-content definitions
+         * @description Returns persisted URL aliases, explicit routes, and their governed content-type schemas. Structured Records entities are not CMS content.
+         */
+        get: operations["listAuthoredContents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Batch-load catalogs for administration */
+        get: operations["batchAdminCatalogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search catalog items for administration */
+        get: operations["listAdminCatalogItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve an administrable catalog item by canonical UUID */
+        get: operations["getAdminCatalogItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List catalog revisions */
+        get: operations["listCatalogRevisions"];
+        put?: never;
+        /** Create a catalog draft revision */
+        post: operations["createCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a catalog revision for review */
+        post: operations["submitCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve and publish a catalog revision */
+        post: operations["approveCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/revisions/{revisionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a catalog revision */
+        post: operations["rejectCatalogRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/items/{itemId}/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Activate or deactivate a catalog item */
+        patch: operations["setCatalogItemActivation"];
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reorder catalog items by canonical UUID */
+        post: operations["reorderCatalogItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a reversible, audited catalog merge revision */
+        post: operations["mergeCatalogItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Load privacy-conscious aggregate catalog usage */
+        get: operations["getCatalogUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export a catalog as CSV */
+        get: operations["exportCatalogCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/{catalogCode}/import.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate or import catalog CSV */
+        post: operations["importCatalogCsv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/records/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Load the typed public Records feed
+         * @description Returns published releases, recordings, sessions, editorial collections, credits, and external resources using canonical persisted IDs and explicit relationships.
+         */
+        get: operations["getPublicRecordsFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List persisted security roles */
+        get: operations["listSecurityRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/party-role-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List canonical party-role assignments */
+        get: operations["listPartyRoleAssignments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List security grant revisions */
+        get: operations["listSecurityGrantRevisions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable security audit events */
+        get: operations["listSecurityAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/party-role-revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a party-role grant draft */
+        post: operations["createPartyRoleGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/role-permission-revisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a role-permission grant draft */
+        post: operations["createRolePermissionGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a security revision for review */
+        post: operations["submitSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve and publish a security revision
+         * @description Normal approval requires a different actor. Documented emergency self-approval is capability-gated and audited.
+         */
+        post: operations["approveSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalog/security/revisions/{revisionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a security revision */
+        post: operations["rejectSecurityGrantRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/fans/me/role-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request the persisted Fan role for the authenticated account
+         * @description Creates a submitted security revision for the caller only. It does not grant access until a distinct authorized reviewer approves it.
+         */
+        post: operations["requestMyFanRole"];
         delete?: never;
         options?: never;
         head?: never;
@@ -953,6 +2353,103 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/radio/auto-stop-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List published browser-broadcast auto-stop options
+         * @description Returns the specialized persisted options in deterministic order. Exactly one active global option is marked as the broadcast default.
+         */
+        get: operations["listRadioAutoStopOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search active radio streams
+         * @description Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+         */
+        get: operations["searchRadioStreams"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register or reactivate a radio stream */
+        post: operations["upsertActiveRadioStream"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import radio stream sources
+         * @description Provider country and genre text are retained as review evidence and mapped only when exactly one active persisted reference matches.
+         */
+        post: operations["importRadioStreams"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/streams/refresh-metadata": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh radio metadata
+         * @description Refreshes station names and observes provider genre text without storing it as a relationship.
+         */
+        post: operations["refreshRadioStreamMetadata"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/radio/streams/now-playing": {
         parameters: {
             query?: never;
@@ -973,10 +2470,4265 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/radio/transmissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a radio transmission
+         * @description Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+         */
+        post: operations["createRadioTransmission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current user's radio presence */
+        get: operations["getRadioPresence"];
+        put?: never;
+        /** Set current user's radio presence */
+        post: operations["setRadioPresence"];
+        /** Clear current user's radio presence */
+        delete: operations["clearRadioPresence"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/radio/presence/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a party's radio presence */
+        get: operations["getPartyRadioPresence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/live-sessions/intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a Live Session intake
+         * @description Creates a Live Session intake using canonical persisted genre and instrument UUIDs. Musicians and setlist are JSON-encoded strings inside the multipart form. Copied genre, instrument, role, label, code, and slug fields are rejected.
+         */
+        post: operations["createLiveSessionIntake"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit product feedback
+         * @description Creates feedback using canonical persisted category and severity UUIDs. Legacy category, severity, copied label, code, and slug fields are rejected. Authentication is optional.
+         */
+        post: operations["submitFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the reporter's private reports or all reports for an authorized administrator */
+        get: operations["listInternalFeedback"];
+        put?: never;
+        /** Save an internal report draft linked to the existing feedback record */
+        post: operations["createInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export access-scoped reports as CSV */
+        get: operations["exportInternalFeedbackCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/export.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export access-scoped reports as JSON */
+        get: operations["exportInternalFeedbackJson"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read legacy public feedback without exposing storage paths */
+        get: operations["listLegacyFeedbackForAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        /** Read one authorized internal report with evidence, discussion, history, and retests */
+        get: operations["getInternalFeedback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update reporter draft/information or administrator triage fields */
+        patch: operations["updateInternalFeedback"];
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a draft and record receipt without a real external notification */
+        post: operations["submitInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a comment, information request, or information response */
+        post: operations["commentOnInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an authorized small evidence file */
+        post: operations["uploadInternalFeedbackEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link externally stored HTTPS video or evidence */
+        post: operations["linkInternalFeedbackEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence/{evidenceId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an authorized private evidence file */
+        get: operations["downloadInternalFeedbackEvidence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/retests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append a requested retest result without replacing history */
+        post: operations["retestInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List access-scoped internship audit plans */
+        get: operations["listInternAuditPlans"];
+        put?: never;
+        /** Create an inactive audit plan for an existing draft project and task */
+        post: operations["createInternAuditPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        /** Read calculated plan progress and completion readiness */
+        get: operations["getInternAuditPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Record an authorized plan status or completion exception */
+        patch: operations["updateInternAuditPlan"];
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly activate and assign an approved draft plan */
+        post: operations["activateInternAuditPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List structured cases and their latest execution */
+        get: operations["listInternTestCases"];
+        put?: never;
+        /** Add a structured case while the plan remains a draft */
+        post: operations["createInternTestCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/daily-summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List session summaries for the plan */
+        get: operations["listInternAuditDailySummaries"];
+        put?: never;
+        /** Record the assigned intern's end-of-session summary */
+        post: operations["createInternAuditDailySummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/final-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the structured final summary */
+        get: operations["getInternAuditFinalSummary"];
+        /** Save conclusions or submit the final summary */
+        put: operations["updateInternAuditFinalSummary"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/test-cases/{testCaseId}/executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List every preserved execution and retest */
+        get: operations["listInternTestExecutions"];
+        put?: never;
+        /** Append a test execution */
+        post: operations["createInternTestExecution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/test-executions/{executionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update only a non-terminal in-progress execution */
+        patch: operations["updateInternTestExecution"];
+        trace?: never;
+    };
+    "/ddex/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the governed DDEX runtime registry
+         * @description Returns active persisted standard versions, executable message types, deployment support, document and operational workflow states, and technical operation registries. IDs are canonical; labels, ordering, and codes are read-only database-authoritative metadata.
+         */
+        get: operations["getDdexReferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List DDEX documents by canonical workflow state */
+        get: operations["listDdexDocuments"];
+        put?: never;
+        /** Upload a DDEX document */
+        post: operations["uploadDdexDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Read one DDEX document with canonical references */
+        get: operations["getDdexDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/raw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Download the private source document */
+        get: operations["downloadDdexRawDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/validation-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start governed validation for a DDEX document */
+        post: operations["validateDdexDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/validation-runs/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Read the latest validation report for a DDEX document */
+        get: operations["getLatestDdexValidationReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        /** Preview a DDEX import */
+        get: operations["previewDdexDocument"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/documents/{documentId}/import-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the persisted DDEX import preview */
+        post: operations["createDdexImportPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/import-plans/{importPlanId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Resolve typed DDEX import conflicts */
+        patch: operations["resolveDdexImportPlan"];
+        trace?: never;
+    };
+    "/ddex/import-plans/{importPlanId}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit an approved DDEX import plan */
+        post: operations["commitDdexImportPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request an export using a canonical governed standard version */
+        post: operations["createDdexExport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/exports/{exportId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exportId: components["parameters"]["DdexExportId"];
+            };
+            cookie?: never;
+        };
+        /** Download a rendered DDEX export */
+        get: operations["downloadDdexExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ddex/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List partners and canonical standard-version policies */
+        get: operations["listDdexPartners"];
+        put?: never;
+        /** Create a partner with canonical standard-version policies */
+        post: operations["createDdexPartner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public equipment sale and rental listings */
+        get: operations["listMarketplaceItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/{listingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        /** Read one public equipment listing */
+        get: operations["getMarketplaceItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/{listingId}/rental-terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace and approve the active server-side rental rate and terms
+         * @description Operations-only full replacement. Public rental checkout is available only while the terms record is active and approved; existing orders retain immutable price and terms-version snapshots.
+         */
+        put: operations["updateMarketplaceRentalTerms"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a guest marketplace cart */
+        post: operations["createMarketplaceCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        /** Read a guest marketplace cart */
+        get: operations["getMarketplaceCart"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add, replace, or remove one unique sale or dated rental asset
+         * @description Sale and rental assets use separate carts. Rentals require both inclusive dates and an approved active server-side terms version; quantities greater than one are rejected.
+         */
+        post: operations["upsertMarketplaceCartItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an unpaid manual-payment marketplace order and atomic asset hold
+         * @description The Idempotency-Key binds an immutable sale or dated-rental checkout snapshot. Rental terms and identity fields are required for rentals; the full document number is validated and discarded. Selecting bank transfer never confirms payment.
+         */
+        post: operations["checkoutMarketplaceCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/stripe/payment-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Marketplace Stripe rail (fail-closed compatibility endpoint)
+         * @description This endpoint cannot create a payment until Stripe is connected to the canonical verified-payment runtime.
+         */
+        post: operations["createMarketplaceStripePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a canonical Datafast sale or rental checkout */
+        post: operations["createMarketplaceDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a marketplace Datafast resource server-to-server
+         * @description Browser return parameters never mark an order paid. Amount, currency, merchant transaction, environment, order, and stored resource are verified first.
+         */
+        get: operations["confirmMarketplaceDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/cart/{cartId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a canonical PayPal sale or rental order */
+        post: operations["createMarketplacePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify an approved marketplace PayPal order
+         * @description Capture is idempotent and cannot change payment state until amount, currency, merchant, internal order, environment, and capture resource all match.
+         */
+        post: operations["captureMarketplacePaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List marketplace orders for authorized operations staff */
+        get: operations["listMarketplaceOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Track a guest marketplace order */
+        get: operations["getMarketplaceOrder"];
+        /**
+         * Update legacy marketplace order metadata
+         * @description Canonical sale orders cannot be marked paid through this endpoint; payment is provider-verified only.
+         */
+        put: operations["updateMarketplaceOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit customer bank-transfer evidence without marking the order paid
+         * @description Requires the scoped guest lookup token. The reference is private finance evidence and remains submitted or under review until an independent staff member verifies it.
+         */
+        post: operations["submitMarketplaceManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List customer requests for a securely tracked marketplace order */
+        get: operations["listMarketplaceCustomerRequests"];
+        put?: never;
+        /**
+         * Submit an idempotent marketplace customer request
+         * @description Submitting a request never changes payment state. Staff review is required before supported cancellation, return, or dispute transitions. Rental extensions require a separate availability check, versioned quote, and payable change order and cannot be directly approved.
+         */
+        post: operations["submitMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Read protected marketplace checkout and manual-payment evidence */
+        get: operations["getMarketplaceCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject marketplace manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval verifies the active hold and immutable order, checkout, attempt, amount, currency, environment and evidence bindings before atomically posting payment, receipt and ledger entries. Payment never implies fulfillment or custody transfer.
+         */
+        post: operations["reviewMarketplaceManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/fulfillment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Apply a validated physical-fulfillment transition
+         * @description Payment is a separate state machine. Delivery and pickup transitions update asset custody only through database-enforced transitions.
+         */
+        put: operations["updateMarketplaceFulfillment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/rental": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Apply a validated rental custody or inspection transition
+         * @description Payment, physical custody, and refundable-deposit settlement remain separate. Condition reports are required at handoff and return; a proposed deduction creates a due state and never fabricates a refund.
+         */
+        put: operations["updateMarketplaceRental"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List protected customer-operation requests for staff review */
+        get: operations["listMarketplaceCustomerRequestsAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/customer-requests/{requestId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review a marketplace customer request
+         * @description Approval atomically applies only the supported domain transition. Payment is never changed. Rental extensions cannot be directly approved.
+         */
+        post: operations["reviewMarketplaceCustomerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List rental-deposit settlement evidence */
+        get: operations["listMarketplaceDepositSettlements"];
+        put?: never;
+        /**
+         * Submit evidence for a manual rental-deposit settlement
+         * @description Amount, currency, deposit, and approved deduction are loaded from the canonical checkout and rental snapshot. Submission does not claim a provider refund and requires independent staff verification.
+         */
+        post: operations["submitMarketplaceDepositSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently verify or reject rental-deposit settlement evidence
+         * @description Verification posts a balanced liability settlement, updates the returned-funds total, and issues a manual credit-note reference. It does not call or claim a provider refund.
+         */
+        post: operations["reviewMarketplaceDepositSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active mixing and mastering packages */
+        get: operations["listServiceStorefrontPackages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        /** Read one active service package */
+        get: operations["getServiceStorefrontPackage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an unpaid service order from authoritative package pricing
+         * @description The Idempotency-Key prevents duplicate orders. The response contains a lookup token only when the order is first created.
+         */
+        post: operations["createServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** Track a service order with its unguessable lookup token */
+        get: operations["getServiceStorefrontOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/stripe/payment-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an optional Stripe payment intent
+         * @description This rail is capability-gated and is not an Ecuador-critical dependency.
+         */
+        post: operations["createServiceStorefrontStripePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a Datafast checkout resource */
+        post: operations["createServiceStorefrontDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a Datafast resource server-to-server
+         * @description A browser return alone never marks the order paid. The server verifies resource, amount, currency, merchant, and internal order binding.
+         */
+        get: operations["confirmServiceStorefrontDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover a PayPal order */
+        post: operations["createServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify an approved PayPal order
+         * @description The internal order and PayPal resource are rebound and verified server-to-server before payment state changes.
+         */
+        post: operations["captureServiceStorefrontPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/paypal/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receive a PayPal webhook into the encrypted idempotent event inbox
+         * @description All PayPal transmission headers and the exact raw event are verified with PayPal before a production event may affect payment state.
+         */
+        post: operations["receiveServiceStorefrontPaypalWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select a manual payment method without confirming payment */
+        post: operations["selectServiceStorefrontManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/services/storefront/order/{orderId}/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a service-order revision */
+        post: operations["createServiceStorefrontRevision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List service orders for operations */
+        get: operations["adminListServiceStorefrontOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Apply a validated service fulfillment transition */
+        put: operations["adminUpdateServiceStorefrontOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all service packages */
+        get: operations["adminListServiceStorefrontPackages"];
+        put?: never;
+        /** Create a versioned service package */
+        post: operations["adminCreateServiceStorefrontPackage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/packages/{packageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Update a service package */
+        put: operations["adminUpdateServiceStorefrontPackage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        /** List immutable refund requests for an order */
+        get: operations["adminListServiceStorefrontRefunds"];
+        put?: never;
+        /**
+         * Request a full or partial refund
+         * @description The amount defaults to the server-calculated unreserved captured balance. Requesting does not contact the provider.
+         */
+        post: operations["adminRequestServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/refunds/{refundId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve and submit a PayPal refund
+         * @description The approver must differ from the requester. Success is recorded only after PayPal returns an exact completed refund.
+         */
+        post: operations["adminApproveServiceStorefrontRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/services/storefront/orders/{orderId}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare an order binding with the provider without changing payment state */
+        post: operations["adminReconcileServiceStorefrontOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List redacted provider-event inbox records
+         * @description Strict-admin operational view. Encrypted payloads and merchant-account references are never returned.
+         */
+        get: operations["adminListCommerceProviderEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/commerce/provider-events/{eventId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Requeue one dead-letter provider event with immutable operator evidence
+         * @description Requeueing does not mark an order paid. The bounded worker reprocesses only the original signature-verified encrypted payload.
+         */
+        post: operations["adminReplayCommerceProviderEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check authoritative room availability and approved booking price
+         * @description Availability is advisory until checkout atomically creates the exclusion-backed hold. Quote is omitted when no approved active commerce policy exists.
+         */
+        get: operations["getPublicBookingAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an honest unpaid tentative booking
+         * @description Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+         */
+        post: operations["createPublicTentativeBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a canonical confirmation-deposit checkout and atomic resource hold
+         * @description Requires an approved versioned policy. The response is awaiting_payment; creating it does not mean the deposit is paid or the session confirmed.
+         */
+        post: operations["createPublicBookingCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read customer-safe booking checkout status
+         * @description Unknown orders and invalid lookup tokens return the same response to resist enumeration.
+         */
+        get: operations["getPublicBookingCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound Datafast checkout
+         * @description Requires the scoped guest lookup capability. Creating a hosted checkout never marks the deposit paid or confirms fulfillment.
+         */
+        post: operations["createPublicBookingDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify the booking deposit against Datafast server-to-server
+         * @description A browser return is not payment evidence. The supplied path must exactly match the stored checkout binding; only the server-held merchant credential queries Datafast.
+         */
+        get: operations["confirmPublicBookingDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay the booking deposit's bound PayPal order
+         * @description Uses an immutable provider request ID and does not mark the booking paid.
+         */
+        post: operations["createPublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and server-verify the booking deposit's bound PayPal order
+         * @description Browser approval alone is not success. The server validates order, merchant, amount, currency, capture ID, and internal booking reference before payment transition.
+         */
+        post: operations["capturePublicBookingPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/manual-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Select a manual bank-transfer attempt
+         * @description Selection creates awaiting-evidence state only. It never confirms payment or fulfillment and is blocked while an online payment attempt is active.
+         */
+        post: operations["selectPublicBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/public/orders/{bookingId}/manual-payment/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a bank-transfer reference for independent review
+         * @description The customer reference is immutable during review and cannot mark the checkout paid. Amount and currency come exclusively from the stored checkout.
+         */
+        post: operations["submitPublicBookingManualEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/commerce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read protected booking commerce and manual-evidence details */
+        get: operations["getServiceBookingCommerce"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}/manual-payment/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Independently approve or reject manual-payment evidence
+         * @description The reviewer must differ from the submitter. Approval atomically verifies immutable bindings, posts the ledger and receipt, and confirms the deposit only while the booking hold remains active.
+         */
+        post: operations["reviewServiceBookingManualPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search the public, current, moderated music directory */
+        get: operations["searchDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["suggestDirectoryQuery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/taxonomies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDirectoryTaxonomies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/party-profiles/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve an artist's public directory profile without exposing Party data in the response */
+        get: operations["getPublicDirectoryProfileByParty"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{slug}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPublicDirectoryReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/classifieds/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicClassified"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/events/{eventId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/venues/{venueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDirectoryVenue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/age-assurance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setDirectoryAgeAssurance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManagedDirectoryProfiles"];
+        put?: never;
+        post: operations["createDirectoryProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateDirectoryProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionDirectoryProfile"];
+        trace?: never;
+    };
+    "/directory/classifieds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManagedClassifieds"];
+        put?: never;
+        post: operations["createClassified"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/classifieds/{classifiedId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionClassified"];
+        trace?: never;
+    };
+    "/directory/classifieds/{classifiedId}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listClassifiedApplications"];
+        put?: never;
+        post: operations["createClassifiedApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionClassifiedApplication"];
+        trace?: never;
+    };
+    "/directory/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryInvitations"];
+        put?: never;
+        post: operations["createDirectoryInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/invitations/{invitationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["transitionDirectoryInvitation"];
+        trace?: never;
+    };
+    "/directory/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["contactDirectoryProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/review-eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryFavorites"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/favorites/{targetKind}/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["saveDirectoryFavorite"];
+        post?: never;
+        delete: operations["deleteDirectoryFavorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/saved-searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSavedDirectorySearches"];
+        put?: never;
+        post: operations["createSavedDirectorySearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createDirectoryVerificationRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reportDirectoryContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryClaimsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/claims/{claimId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["decideDirectoryClaim"];
+        trace?: never;
+    };
+    "/directory/admin/verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryVerificationsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/verifications/{verificationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["decideDirectoryVerification"];
+        trace?: never;
+    };
+    "/directory/admin/moderation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDirectoryModerationQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/moderation/{caseId}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decideDirectoryModerationCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/admin/merges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mergeDirectoryProfiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/{targetKind}/{targetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List public reviews backed by completed interactions */
+        get: operations["listPublicExperienceReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews/eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List this account's completed, not-yet-reviewed interactions */
+        get: operations["listExperienceReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish one review for an eligible completed interaction */
+        post: operations["createExperienceReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the payable ticket storefront for one public event
+         * @description Returns server-authoritative active tiers and availability. Zero-price entitlements use a separate staff-controlled flow and are not exposed as payable tiers.
+         */
+        get: operations["getPublicEventTicketStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Atomically hold ticket inventory and create an immutable guest checkout
+         * @description Price, discounts, fee allocation, tax, terms version, capacity, and hold expiry are calculated by the server. This operation never marks payment successful or issues a ticket.
+         */
+        post: operations["createPublicEventTicketCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a guest ticket order using its unguessable lookup token */
+        get: operations["getPublicEventTicketCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound Datafast checkout */
+        post: operations["createPublicEventTicketDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a bound Datafast ticket payment server-to-server
+         * @description A browser return is not payment evidence. Amount, currency, merchant, internal order, checkout ID, and exact stored resource path must match before payment can be recorded and tickets issued.
+         */
+        get: operations["confirmPublicEventTicketDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the ticket order's bound PayPal order */
+        post: operations["createPublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify the exact bound PayPal ticket order
+         * @description Approval in the browser is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, internal order, and provider binding before payment and ticket issuance transitions.
+         */
+        post: operations["capturePublicEventTicketPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read the authoritative Domo quote capability and approved rate-card limits
+         * @description Prices are intentionally omitted. A payable quote is calculated only by the server from exactly one independently approved active rate-card version.
+         */
+        get: operations["getPublicDomoStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Calculate an immutable Domo quote and atomically hold the requested date
+         * @description Guest count, duration, add-ons, tax, deposit, balance, policy, rate-card version, and hold expiry are server-authoritative. Creation starts in holding state and never means acceptance or payment.
+         */
+        post: operations["createPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a customer-safe Domo quote using its unguessable lookup token */
+        get: operations["getPublicDomoQuote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the exact versioned Domo quote and open its deposit checkout
+         * @description Acceptance records the terms version and changes payment from holding to awaiting_payment; it never records payment.
+         */
+        post: operations["acceptPublicDomoQuote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/datafast/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the deposit checkout's strongly bound Datafast resource */
+        post: operations["createPublicDomoDatafastCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/datafast/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify a bound Datafast Domo deposit server-to-server
+         * @description A browser return is not payment evidence. Amount, currency, merchant, quote, checkout, environment, and exact stored resource path must match before the deposit and date-reserved transitions.
+         */
+        get: operations["confirmPublicDomoDatafastStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/paypal/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or recover the deposit checkout's bound PayPal order */
+        post: operations["createPublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/domo/quotes/{quoteId}/paypal/capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Capture and verify the exact bound PayPal Domo deposit
+         * @description Browser approval is not success. TDF captures server-to-server and verifies capture status, amount, currency, payee merchant, quote, checkout, environment, and provider binding before recording the deposit and reserving the date.
+         */
+        post: operations["capturePublicDomoPaypalOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PublicDomoStorefront: {
+            checkoutAvailable: boolean;
+            unavailableReason?: string | null;
+            rateCardVersion?: string | null;
+            currency?: string | null;
+            eventTypes: string[];
+            maximumGuests?: number | null;
+            maximumDurationHours?: number | null;
+            maximumSetupHours?: number | null;
+            quoteHoldMinutes?: number | null;
+            timezone: string;
+        };
+        PublicDomoQuoteCreateRequest: {
+            customerName: string;
+            /** Format: email */
+            customerEmail: string;
+            customerPhone?: string;
+            eventType: string;
+            guests: number;
+            /** Format: date-time */
+            startsAt: string;
+            durationHours: number;
+            setupHours: number;
+            catering: boolean;
+            production: boolean;
+            transport: boolean;
+            notes?: string;
+        };
+        PublicDomoQuoteAcceptRequest: {
+            /** @enum {boolean} */
+            termsAccepted: true;
+        };
+        PublicDomoQuoteLine: {
+            code: string;
+            description: string;
+            quantity: number;
+            /** Format: int64 */
+            unitAmountMinor: number;
+            /** Format: int64 */
+            subtotalMinor: number;
+        };
+        PublicDomoQuote: {
+            /** Format: uuid */
+            quoteId: string;
+            /** Format: uuid */
+            checkoutId: string;
+            lookupToken?: string | null;
+            /** @enum {string} */
+            quoteStatus: "draft" | "sent" | "viewed" | "accepted" | "deposit_due" | "deposit_paid" | "in_progress" | "balance_due" | "completed" | "cancelled" | "expired";
+            /** @enum {string} */
+            paymentStatus: "holding" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "date_held" | "date_reserved" | "in_progress" | "balance_due" | "completed" | "cancelled" | "expired";
+            rateCardVersion: string;
+            currency: string;
+            eventType: string;
+            guests: number;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: date-time */
+            setupStartsAt: string;
+            lines: components["schemas"]["PublicDomoQuoteLine"][];
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            timezone: string;
+            termsVersion: string;
+            /** Format: date-time */
+            holdExpiresAt: string;
+            /** Format: date-time */
+            termsAcceptedAt?: string | null;
+            /** Format: date-time */
+            depositPaidAt?: string | null;
+            paymentMethods: ("datafast" | "paypal")[];
+        };
+        PublicDomoPaypalCaptureRequest: {
+            paypalOrderId: string;
+        };
+        PublicEventTicketTier: {
+            /** Format: int64 */
+            tierId: number;
+            code: string;
+            name: string;
+            description?: string | null;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            currency: string;
+            remaining: number;
+            /** Format: date-time */
+            salesStart?: string | null;
+            /** Format: date-time */
+            salesEnd?: string | null;
+            transfersAllowed: boolean;
+        };
+        PublicEventTicketStorefront: {
+            /** Format: int64 */
+            eventId: number;
+            title: string;
+            description?: string | null;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string | null;
+            timezone?: string | null;
+            venueName?: string | null;
+            venueAddress?: string | null;
+            tiers: components["schemas"]["PublicEventTicketTier"][];
+            checkoutAvailable: boolean;
+            unavailableReason?: string | null;
+        };
+        PublicEventTicketCheckoutRequest: {
+            /** Format: int64 */
+            tierId: number;
+            quantity: number;
+            buyerName: string;
+            /** Format: email */
+            buyerEmail: string;
+            buyerPhone?: string;
+            promoCode?: string;
+            /** @enum {boolean} */
+            termsAccepted: true;
+        };
+        PublicEventTicketQuote: {
+            policyVersion: string;
+            currency: string;
+            quantity: number;
+            /** Format: int64 */
+            unitPriceMinor: number;
+            /** Format: int64 */
+            grossFaceValueMinor: number;
+            /** Format: int64 */
+            discountMinor: number;
+            /** Format: int64 */
+            netFaceValueMinor: number;
+            /** Format: int64 */
+            buyerPlatformFeeMinor: number;
+            /** Format: int64 */
+            organizerPlatformFeeMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            checkoutTotalMinor: number;
+            /** Format: int64 */
+            organizerPayableMinor: number;
+            /** Format: int64 */
+            platformFeeMinor: number;
+            termsVersion: string;
+        };
+        PublicEventTicket: {
+            /** Format: int64 */
+            ticketId: number;
+            ticketCode: string;
+            status: string;
+            holderName?: string | null;
+        };
+        PublicEventTicketCheckout: {
+            /** Format: int64 */
+            orderId: number;
+            /** Format: int64 */
+            eventId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            lookupToken?: string | null;
+            /** @enum {string} */
+            paymentStatus: "holding" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "seat_held" | "issued" | "transfer_requested" | "transferred" | "checked_in" | "cancelled" | "refunded" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicEventTicketQuote"];
+            paymentMethods: ("datafast" | "paypal")[];
+            /** @description Empty until fulfillment issues tickets after verified payment. */
+            tickets: components["schemas"]["PublicEventTicket"][];
+        };
+        PublicEventTicketPaypalCaptureRequest: {
+            paypalOrderId: string;
+        };
+        BookingResource: {
+            brRoomId: string;
+            brRoomName: string;
+            brRole: string;
+        };
+        Booking: {
+            /** Format: int64 */
+            bookingId: number;
+            title: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            status: string;
+            notes?: string | null;
+            /** Format: int64 */
+            partyId?: number | null;
+            /** Format: int64 */
+            engineerPartyId?: number | null;
+            engineerName?: string | null;
+            /** Format: uuid */
+            serviceOfferingId?: string | null;
+            serviceType?: string | null;
+            /** Format: int64 */
+            serviceOrderId?: number | null;
+            serviceOrderTitle?: string | null;
+            customerName?: string | null;
+            partyDisplayName?: string | null;
+            resources: components["schemas"]["BookingResource"][];
+        };
+        PublicBookingCreate: {
+            pbFullName: string;
+            /** Format: email */
+            pbEmail: string;
+            pbPhone?: string | null;
+            /** Format: uuid */
+            pbServiceOfferingId: string;
+            /** Format: date-time */
+            pbStartsAt: string;
+            pbDurationMinutes?: number;
+            pbNotes?: string | null;
+            /** Format: int64 */
+            pbEngineerPartyId?: number | null;
+            pbEngineerName?: string | null;
+            pbResourceIds?: string[] | null;
+        };
+        PublicBookingCheckoutCreate: {
+            pbcFullName: string;
+            /** Format: email */
+            pbcEmail: string;
+            pbcPhone?: string | null;
+            /** Format: uuid */
+            pbcServiceOfferingId: string;
+            /** Format: date-time */
+            pbcStartsAt: string;
+            pbcDurationMinutes: number;
+            pbcNotes?: string | null;
+            /** Format: int64 */
+            pbcEngineerPartyId?: number | null;
+            pbcEngineerName?: string | null;
+            pbcResourceIds?: string[] | null;
+            /** @enum {boolean} */
+            pbcTermsAccepted: true;
+        };
+        PublicBookingQuote: {
+            policyVersion: string;
+            currency: string;
+            durationMinutes: number;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            depositBps: number;
+            termsVersion: string;
+        };
+        PublicBookingAvailability: {
+            available: boolean;
+            reason: string | null;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            resourceIds: string[];
+            resourceNames: string[];
+            quote: components["schemas"]["PublicBookingQuote"] | null;
+        };
+        PublicBookingCheckout: {
+            booking: components["schemas"]["Booking"];
+            /** Format: uuid */
+            checkoutId: string;
+            /** @description Returned only by creation; subsequent status responses return null. */
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "on_hold" | "confirmed" | "scheduled" | "in_progress" | "balance_due" | "completed" | "reschedule_requested" | "cancellation_requested" | "cancelled" | "no_show" | "overtime_review" | "disputed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string;
+            quote: components["schemas"]["PublicBookingQuote"];
+            /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
+            paymentMethods: ("datafast" | "paypal" | "bank_transfer")[];
+            manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
+        };
+        PublicBookingManualPaymentCreate: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer";
+        };
+        PublicBookingManualEvidenceCreate: {
+            customerReference: string;
+        };
+        PublicBookingManualPayment: {
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string | null;
+        };
+        ServiceBookingManualReview: {
+            /** @enum {string} */
+            action: "approve" | "reject";
+            reviewNotes: string;
+        };
+        ServiceBookingManualEvidence: {
+            /** Format: uuid */
+            evidenceId: string;
+            /** @enum {string} */
+            paymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            status: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            customerReference: string | null;
+            /** Format: int64 */
+            submittedAmountMinor: number | null;
+            currency: string | null;
+            /** Format: int64 */
+            submittedBy: number | null;
+            /** Format: date-time */
+            submittedAt: string | null;
+            /** Format: int64 */
+            reviewedBy: number | null;
+            /** Format: date-time */
+            reviewedAt: string | null;
+            reviewNotes: string | null;
+        };
+        ServiceBookingCommerce: {
+            /** Format: int64 */
+            bookingId: number;
+            /** Format: uuid */
+            checkoutId: string;
+            paymentStatus: string;
+            fulfillmentStatus: string;
+            /** Format: int64 */
+            depositMinor: number;
+            currency: string;
+            /** Format: date-time */
+            holdExpiresAt: string;
+            manualEvidence: components["schemas"]["ServiceBookingManualEvidence"] | null;
+        };
+        PublicBookingPaypalCapture: {
+            paypalOrderId: string;
+        };
+        MarketplaceItem: {
+            /** Format: uuid */
+            miListingId: string;
+            /** Format: uuid */
+            miAssetId: string;
+            miTitle: string;
+            /** @enum {string} */
+            miPurpose: "sale" | "rent";
+            miCategory: string;
+            miBrand: string | null;
+            miModel: string | null;
+            /** Format: uri */
+            miPhotoUrl: string | null;
+            miStatus: string | null;
+            miCondition: string | null;
+            /** @description Authoritative unit price in integer minor units. */
+            miPriceUsdCents: number;
+            miPriceDisplay: string;
+            miMarkupPct: number;
+            miCurrency: string;
+            miRentalWeeklyPriceUsdCents: number | null;
+            miRentalWeeklyPriceDisplay: string | null;
+            miRentalSecurityDepositUsdCents: number | null;
+            miRentalSecurityDepositDisplay: string | null;
+            miRentalMinDays: number | null;
+            miRentalMaxDays: number | null;
+            miRentalLateFeeUsdCents: number | null;
+            miRentalLateFeeDisplay: string | null;
+            miRentalCancellationWindowHours: number | null;
+            /** @description Only present when an approved active rate/terms version permits public rental checkout. */
+            miRentalTermsVersion: string | null;
+            miRentalTermsSummary: string | null;
+            miRentalTimezone: string | null;
+        };
+        MarketplaceCartItem: {
+            /** Format: uuid */
+            mciListingId: string;
+            mciTitle: string;
+            mciCategory: string;
+            mciBrand: string | null;
+            mciModel: string | null;
+            mciQuantity: number;
+            mciUnitPriceUsdCents: number;
+            mciSubtotalCents: number;
+            mciUnitPriceDisplay: string;
+            mciSubtotalDisplay: string;
+            /** @enum {string} */
+            mciPurpose: "sale" | "rent";
+            /** Format: date */
+            mciRentalStartDate: string | null;
+            /** Format: date */
+            mciRentalEndDate: string | null;
+            mciRentalDurationDays: number | null;
+            mciRentalChargeCents: number | null;
+            mciRentalChargeDisplay: string | null;
+            mciSecurityDepositCents: number | null;
+            mciSecurityDepositDisplay: string | null;
+        };
+        MarketplaceCart: {
+            /** Format: uuid */
+            mcCartId: string;
+            mcItems: components["schemas"]["MarketplaceCartItem"][];
+            mcCurrency: string;
+            mcSubtotalCents: number;
+            mcSubtotalDisplay: string;
+        };
+        MarketplaceCartItemUpdate: {
+            /** Format: uuid */
+            mciuListingId: string;
+            /** @description Zero removes the item; one selects the unique physical asset. */
+            mciuQuantity: number;
+            /**
+             * Format: date
+             * @description Inclusive rental start; must be supplied together with the end date.
+             */
+            mciuRentalStartDate?: string;
+            /**
+             * Format: date
+             * @description Inclusive rental end; must be supplied together with the start date.
+             */
+            mciuRentalEndDate?: string;
+        };
+        MarketplaceShippingAddress: {
+            msaAddressLine1: string;
+            msaAddressLine2?: string;
+            msaCity: string;
+            msaProvince: string;
+            msaPostalCode?: string;
+            msaCountryCode: string;
+        };
+        MarketplaceCheckoutRequest: {
+            mcrBuyerName: string;
+            /** Format: email */
+            mcrBuyerEmail: string;
+            mcrBuyerPhone?: string;
+            /**
+             * @default pickup
+             * @enum {string}
+             */
+            mcrFulfillmentMethod: "pickup" | "local_delivery" | "shipping";
+            mcrShippingAddress?: components["schemas"]["MarketplaceShippingAddress"];
+            /** @description Must be true for a rental and omitted for a sale. */
+            mcrRentalTermsAccepted?: boolean;
+            /**
+             * @description Required for a rental and omitted for a sale.
+             * @enum {string}
+             */
+            mcrIdentityDocumentType?: "cedula" | "passport" | "ruc";
+            /** @description Validated for rental handoff and discarded after retaining only its type and last four characters. */
+            mcrIdentityDocumentNumber?: string;
+        };
+        MarketplaceOrderItem: {
+            /** Format: uuid */
+            moiListingId: string;
+            moiTitle: string;
+            moiQuantity: number;
+            moiUnitPriceUsdCents: number;
+            moiSubtotalCents: number;
+            moiUnitPriceDisplay: string;
+            moiSubtotalDisplay: string;
+        };
+        /** @description State code followed by its UTC transition timestamp. */
+        MarketplaceStateHistoryEntry: (string)[];
+        MarketplaceOrder: {
+            /** Format: uuid */
+            moOrderId: string;
+            /** Format: uuid */
+            moCartId: string | null;
+            moCurrency: string;
+            moTotalUsdCents: number;
+            moTotalDisplay: string;
+            /** @description Domain payment projection; fulfillment status is separate. */
+            moStatus: string;
+            moStatusHistory: components["schemas"]["MarketplaceStateHistoryEntry"][];
+            moBuyerName: string;
+            /** @description Valid email for staff responses; intentionally blank in redacted guest tracking responses. */
+            moBuyerEmail: string;
+            moBuyerPhone: string | null;
+            /** @enum {string|null} */
+            moPaymentProvider: "datafast" | "paypal" | "stripe" | "bank_transfer" | "cash" | "pos" | null;
+            moPaypalOrderId: string | null;
+            /** Format: email */
+            moPaypalPayerEmail: string | null;
+            /** Format: date-time */
+            moPaidAt: string | null;
+            /** @description Returned only when the order is first created. */
+            moLookupToken: string | null;
+            moCheckoutStatus: string | null;
+            /**
+             * @description Customer-safe evidence state; approved still requires the canonical checkout to report paid before payment is confirmed.
+             * @enum {string|null}
+             */
+            moManualPaymentStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected" | "requires_reconciliation" | null;
+            /** Format: date-time */
+            moManualPaymentSubmittedAt: string | null;
+            /** @enum {string|null} */
+            moFulfillmentMethod: "pickup" | "local_delivery" | "shipping" | null;
+            /** @enum {string|null} */
+            moFulfillmentStatus: "on_hold" | "ready_to_fulfill" | "picking" | "ready_for_pickup" | "shipped" | "delivered" | "cancellation_requested" | "cancelled" | "return_requested" | "return_authorized" | "return_in_transit" | "returned" | "closed" | "expired" | null;
+            /** Format: date-time */
+            moHoldExpiresAt: string | null;
+            moTrackingReference: string | null;
+            moFulfillmentHistory: components["schemas"]["MarketplaceStateHistoryEntry"][];
+            /** @enum {string|null} */
+            moOrderKind: "sale" | "rental" | null;
+            /** Format: date */
+            moRentalStartDate: string | null;
+            /** Format: date */
+            moRentalEndDate: string | null;
+            moRentalDurationDays: number | null;
+            moRentalChargeUsdCents: number | null;
+            /** @description Refundable deposit collected separately from the rental charge. */
+            moSecurityDepositUsdCents: number | null;
+            /** @enum {string|null} */
+            moDepositStatus: "awaiting_payment" | "collected" | "inspection_pending" | "deduction_proposed" | "refund_due" | "partial_refund_due" | "refunded" | "partially_refunded" | "forfeited" | "disputed" | null;
+            moDepositDeductionUsdCents: number | null;
+            moRentalTermsVersion: string | null;
+            moRentalTimezone: string | null;
+            moConditionOut: string | null;
+            moConditionIn: string | null;
+            /** Format: date-time */
+            moCreatedAt: string;
+            /** Format: date-time */
+            moUpdatedAt: string;
+            moItems: components["schemas"]["MarketplaceOrderItem"][];
+        };
+        MarketplaceManualEvidenceSubmit: {
+            mmesCustomerReference: string;
+        };
+        MarketplaceManualPaymentReview: {
+            /** @enum {string} */
+            mmprAction: "approve" | "reject";
+            mmprReviewNotes: string;
+        };
+        MarketplaceCustomerRequestSubmit: {
+            /** @enum {string} */
+            mcrsRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            mcrsReason: string;
+            /** Format: date */
+            mcrsRequestedEndDate?: string;
+            mcrsEvidenceUrl?: string;
+        };
+        MarketplaceCustomerRequestReview: {
+            /** @enum {string} */
+            mcrrAction: "approve" | "reject" | "needs_quote";
+            mcrrReviewNotes: string;
+        };
+        MarketplaceCustomerRequest: {
+            /** Format: uuid */
+            mcrRequestId: string;
+            /** Format: uuid */
+            mcrOrderId: string;
+            /** @enum {string} */
+            mcrOrderKind: "sale" | "rental";
+            /** @enum {string} */
+            mcrRequestType: "sale_cancellation" | "sale_return" | "rental_cancellation" | "rental_extension" | "rental_dispute";
+            /** @enum {string} */
+            mcrStatus: "submitted" | "needs_quote" | "approved" | "rejected";
+            mcrReason: string;
+            /** Format: date */
+            mcrRequestedEndDate: string | null;
+            mcrEvidenceUrl: string | null;
+            /** Format: date-time */
+            mcrRequestedAt: string;
+            /** Format: date-time */
+            mcrReviewedAt: string | null;
+            mcrReviewNotes: string | null;
+        };
+        MarketplaceDepositSettlementSubmit: {
+            /** @enum {string} */
+            mdssSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdssExternalReference: string;
+            mdssEvidenceUrl: string;
+        };
+        MarketplaceDepositSettlementReview: {
+            /** @enum {string} */
+            mdsrAction: "approve" | "reject" | "requires_reconciliation";
+            mdsrReviewNotes: string;
+        };
+        MarketplaceDepositSettlement: {
+            /** Format: uuid */
+            mdsSettlementId: string;
+            /** Format: uuid */
+            mdsOrderId: string;
+            /** Format: uuid */
+            mdsCheckoutId: string;
+            mdsCurrency: string;
+            /** Format: int64 */
+            mdsDepositAmountMinor: number;
+            /** Format: int64 */
+            mdsDeductionAmountMinor: number;
+            /** Format: int64 */
+            mdsRefundAmountMinor: number;
+            /** @enum {string} */
+            mdsSettlementMethod: "bank_transfer" | "cash" | "pos" | "forfeiture";
+            mdsExternalReference: string;
+            mdsEvidenceUrl: string;
+            /** @enum {string} */
+            mdsStatus: "submitted" | "verified" | "rejected" | "requires_reconciliation";
+            /** Format: int64 */
+            mdsSubmittedBy: number;
+            /** Format: date-time */
+            mdsSubmittedAt: string;
+            /** Format: int64 */
+            mdsReviewedBy: number | null;
+            /** Format: date-time */
+            mdsReviewedAt: string | null;
+            mdsReviewNotes: string | null;
+        };
+        MarketplaceManualEvidence: {
+            /** Format: uuid */
+            mmeEvidenceId: string;
+            /** @enum {string} */
+            mmePaymentMethod: "bank_transfer" | "cash" | "pos";
+            /** @enum {string} */
+            mmeStatus: "awaiting_evidence" | "submitted" | "under_review" | "approved" | "rejected";
+            mmeCustomerReference: string | null;
+            /** Format: int64 */
+            mmeSubmittedAmountMinor: number | null;
+            mmeCurrency: string | null;
+            /** Format: int64 */
+            mmeSubmittedBy: number | null;
+            /** Format: date-time */
+            mmeSubmittedAt: string | null;
+            /** Format: int64 */
+            mmeReviewedBy: number | null;
+            /** Format: date-time */
+            mmeReviewedAt: string | null;
+            mmeReviewNotes: string | null;
+        };
+        MarketplaceCommerce: {
+            /** Format: uuid */
+            mpcOrderId: string;
+            /** Format: uuid */
+            mpcCheckoutId: string;
+            mpcPaymentStatus: string;
+            /** Format: date-time */
+            mpcHoldExpiresAt: string;
+            /** @enum {string} */
+            mpcOrderKind: "sale" | "rental";
+            mpcManualEvidence: components["schemas"]["MarketplaceManualEvidence"] | null;
+        };
+        MarketplacePaypalCapture: {
+            /** Format: uuid */
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        MarketplaceOrderUpdate: {
+            mouStatus?: string;
+            mouPaymentProvider?: string | null;
+            /** Format: date-time */
+            mouPaidAt?: string | null;
+        };
+        MarketplaceFulfillmentUpdate: {
+            /** @enum {string} */
+            mfuStatus: "on_hold" | "ready_to_fulfill" | "picking" | "ready_for_pickup" | "shipped" | "delivered" | "cancellation_requested" | "cancelled" | "return_requested" | "return_authorized" | "return_in_transit" | "returned" | "closed" | "expired";
+            mfuCarrier?: string;
+            mfuTrackingReference?: string;
+            mfuReasonCode?: string;
+            mfuNotes?: string;
+        };
+        MarketplaceRentalUpdate: {
+            /** @enum {string} */
+            mruStatus: "on_hold" | "confirmed" | "ready_for_handoff" | "checked_out" | "return_due" | "returned_pending_inspection" | "damage_review" | "deposit_refund_due" | "closed" | "cancellation_requested" | "cancelled" | "no_show" | "lost" | "disputed" | "expired";
+            mruConditionOut?: string;
+            mruConditionIn?: string;
+            /** Format: uri */
+            mruEvidenceUrl?: string;
+            mruDepositDeductionUsdCents?: number;
+            mruReasonCode?: string;
+            mruNotes?: string;
+        };
+        MarketplaceRentalTermsUpdate: {
+            mrtuDailyRateUsdCents: number;
+            mrtuWeeklyRateUsdCents: number | null;
+            mrtuSecurityDepositUsdCents: number;
+            mrtuLateFeeUsdCents: number;
+            mrtuMinDays: number;
+            mrtuMaxDays: number;
+            mrtuCancellationWindowHours: number;
+            /** @enum {string} */
+            mrtuTimezone: "America/Guayaquil";
+            mrtuTermsVersion: string;
+            mrtuTermsSummary: string;
+            mrtuActive: boolean;
+        };
+        ServiceStorefrontPackage: {
+            /** Format: uuid */
+            sspId: string;
+            /** @enum {string} */
+            sspServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspTier: string;
+            sspName: string;
+            sspDescription: string | null;
+            /** @description Authoritative price per song in integer minor units. */
+            sspPriceUsdCents: number;
+            sspCurrency: string;
+            sspMinSongCount: number;
+            sspMaxSongCount: number;
+            sspTurnaroundDays: number;
+            sspRevisionCount: number;
+            sspDeliverables: string[] | null;
+            sspFeatures: string[] | null;
+            sspActive: boolean;
+            sspSortOrder: number;
+        };
+        ServiceStorefrontPackageCreate: {
+            /** @enum {string} */
+            sspcServiceKind: "Mixing" | "Mastering" | "Bundle";
+            sspcTier: string;
+            sspcName: string;
+            sspcDescription?: string | null;
+            sspcPriceUsdCents: number;
+            sspcCurrency?: string | null;
+            sspcMinSongCount?: number | null;
+            sspcMaxSongCount?: number | null;
+            sspcTurnaroundDays?: number | null;
+            sspcRevisionCount?: number | null;
+            sspcDeliverables?: string[] | null;
+            sspcFeatures?: string[] | null;
+            sspcSortOrder?: number | null;
+        };
+        ServiceStorefrontPackageUpdate: {
+            sspuName?: string | null;
+            sspuDescription?: string | null;
+            sspuPriceUsdCents?: number | null;
+            sspuMinSongCount?: number | null;
+            sspuMaxSongCount?: number | null;
+            sspuTurnaroundDays?: number | null;
+            sspuRevisionCount?: number | null;
+            sspuDeliverables?: string[] | null;
+            sspuFeatures?: string[] | null;
+            sspuActive?: boolean | null;
+            sspuSortOrder?: number | null;
+        };
+        ServiceStorefrontOrderCreate: {
+            /** Format: uuid */
+            ssocPackageId: string;
+            ssocBuyerName: string;
+            /** Format: email */
+            ssocBuyerEmail: string;
+            ssocBuyerPhone?: string | null;
+            ssocArtistName?: string | null;
+            ssocGenre?: string | null;
+            ssocSongCount?: number | null;
+            ssocNotes?: string | null;
+            /** Format: uri */
+            ssocReferenceTrackUrl?: string | null;
+            /** Format: date */
+            ssocDeadline?: string | null;
+        };
+        ServiceStorefrontOrder: {
+            /** Format: uuid */
+            ssoId: string;
+            ssoOrderNumber: string;
+            ssoBuyerName: string;
+            /** Format: email */
+            ssoBuyerEmail: string;
+            ssoBuyerPhone: string | null;
+            ssoArtistName: string | null;
+            /** Format: uuid */
+            ssoPackageId: string;
+            ssoServiceKind: string;
+            ssoTier: string;
+            ssoPriceUsdCents: number;
+            ssoCurrency: string;
+            ssoStatus: string;
+            ssoPaymentProvider: string | null;
+            ssoLookupToken: string | null;
+            /** Format: date-time */
+            ssoPaidAt: string | null;
+            ssoGenre: string | null;
+            ssoSongCount: number;
+            ssoNotes: string | null;
+            /** Format: uri */
+            ssoReferenceTrackUrl: string | null;
+            /** Format: date */
+            ssoDeadline: string | null;
+            /** Format: uri */
+            ssoDeliverablesUrl: string | null;
+            /** Format: date-time */
+            ssoCreatedAt: string;
+            /** Format: date-time */
+            ssoUpdatedAt: string;
+        };
+        ServiceStorefrontOrderUpdate: {
+            ssouStatus?: string | null;
+            /** Format: uri */
+            ssouDeliverablesUrl?: string | null;
+            ssouNotes?: string | null;
+        };
+        ServiceStorefrontPaypalCapture: {
+            pcCaptureOrderId: string;
+            pcCapturePaypalId: string;
+        };
+        ServiceStorefrontManualPaymentCreate: {
+            /** @enum {string} */
+            ssmPaymentMethod: "bank_transfer" | "cash" | "pos";
+        };
+        ServiceStorefrontRevisionCreate: {
+            ssrcFeedback: string;
+        };
+        ServiceStorefrontRevision: {
+            /** Format: uuid */
+            ssrId: string;
+            /** Format: uuid */
+            ssrOrderId: string;
+            ssrRevisionNumber: number;
+            ssrFeedback: string;
+            ssrStatus: string;
+            /** Format: date-time */
+            ssrCreatedAt: string;
+            /** Format: date-time */
+            ssrCompletedAt: string | null;
+        };
+        ServiceStorefrontRefundCreate: {
+            ssrfcAmountUsdCents?: number | null;
+            ssrfcReasonCode: string;
+        };
+        ServiceStorefrontRefund: {
+            /** Format: uuid */
+            ssrfId: string;
+            /** Format: uuid */
+            ssrfOrderId: string;
+            /** @enum {string} */
+            ssrfProvider: "paypal" | "datafast" | "stripe";
+            ssrfProviderRefundId: string | null;
+            /** @enum {string} */
+            ssrfStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+            ssrfAmountUsdCents: number;
+            ssrfCurrency: string;
+            ssrfReasonCode: string;
+            /** Format: int64 */
+            ssrfRequestedBy: number;
+            /** Format: int64 */
+            ssrfApprovedBy: number | null;
+            /** Format: date-time */
+            ssrfCreatedAt: string;
+            /** Format: date-time */
+            ssrfCompletedAt: string | null;
+        };
+        ServiceStorefrontReconciliation: {
+            /** Format: uuid */
+            ssrecOrderId: string;
+            ssrecProvider: string;
+            ssrecProviderReference: string;
+            ssrecExpectedAmount: number;
+            ssrecActualAmount: number | null;
+            ssrecCurrency: string;
+            ssrecMatched: boolean;
+            /** Format: date-time */
+            ssrecCheckedAt: string;
+        };
+        CommerceProviderEvent: {
+            /** Format: uuid */
+            cpeId: string;
+            /** @enum {string} */
+            cpeProvider: "paypal" | "datafast" | "stripe" | "bank_transfer" | "cash" | "pos" | "cardano";
+            /** @enum {string} */
+            cpeEnvironment: "sandbox" | "production";
+            cpeProviderEventId: string;
+            cpeEventType: string;
+            cpeProviderResourceId: string | null;
+            /** @enum {string} */
+            cpeStatus: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+            cpeAttemptCount: number;
+            /** Format: uuid */
+            cpeCheckoutId: string | null;
+            /** Format: uuid */
+            cpePaymentAttemptId: string | null;
+            /** Format: uuid */
+            cpeRefundId: string | null;
+            /** Format: date-time */
+            cpeReceivedAt: string;
+            /** Format: date-time */
+            cpeProviderCreatedAt: string | null;
+            /** Format: date-time */
+            cpeProcessingStartedAt: string | null;
+            /** Format: date-time */
+            cpeLastAttemptAt: string | null;
+            /** Format: date-time */
+            cpeNextAttemptAt: string | null;
+            /** Format: date-time */
+            cpeProcessedAt: string | null;
+            cpeErrorSummary: string | null;
+        };
+        CommerceProviderEventReplayCreate: {
+            cperReason: string;
+        };
+        DatafastCheckout: {
+            dcOrderId: string;
+            dcCheckoutId: string;
+            /** Format: uri */
+            dcWidgetUrl: string;
+            dcAmount: string;
+            dcCurrency: string;
+            /** @description Returned only when the guest order is first created. */
+            dcLookupToken: string | null;
+        };
+        PaypalCreate: {
+            pcOrderId: string;
+            pcPaypalOrderId: string;
+            /** Format: uri */
+            pcApprovalUrl: string | null;
+            /** @description Returned only when the guest order is first created. */
+            pcLookupToken: string | null;
+        };
+        PaymentSheetParams: {
+            psCustomerId: string;
+            psEphemeralKeySecret: string;
+            psPaymentIntentClientSecret: string;
+            psPublishableKey: string;
+        };
+        StripePaymentIntent: {
+            spiClientSecret: string;
+            spiOrderId: string;
+            spiAmountCents: number;
+            spiCurrency: string;
+            spiPaymentSheet: components["schemas"]["PaymentSheetParams"] | null;
+            /** @description Returned only when the guest order is first created. */
+            spiLookupToken: string | null;
+        };
+        DdexStandardVersion: {
+            /** Format: uuid */
+            ddexStandardVersionId: string;
+            readonly ddexStandardCode: string;
+            readonly ddexVersionCode: string;
+            readonly ddexStandardVersionName: string;
+            readonly ddexStandardVersionNameEs: string;
+            readonly ddexStandardVersionNameEn: string;
+            readonly ddexStandardSourceVersion: string;
+            /** Format: uri */
+            readonly ddexStandardSourceUri: string;
+            readonly ddexStandardDetectionEnabled: boolean;
+            readonly ddexStandardValidationEnabled: boolean;
+            readonly ddexStandardImportEnabled: boolean;
+            readonly ddexStandardExportEnabled: boolean;
+            readonly ddexStandardVersionRevision: number;
+        };
+        DdexMessageType: {
+            /** Format: uuid */
+            ddexMessageTypeId: string;
+            /** Format: uuid */
+            ddexMessageTypeStandardVersionId: string;
+            readonly ddexMessageTypeCode: string;
+            readonly ddexMessageTypeName: string;
+            readonly ddexMessageTypeNameEs: string;
+            readonly ddexMessageTypeNameEn: string;
+            readonly ddexMessageTypeRuntimeSupported: boolean;
+            readonly ddexMessageTypeRevision: number;
+        };
+        DdexDocumentState: {
+            /** Format: uuid */
+            ddexDocumentStateId: string;
+            readonly ddexDocumentStateCode: string;
+            readonly ddexDocumentStateName: string;
+            readonly ddexDocumentStateNameEs: string;
+            readonly ddexDocumentStateNameEn: string;
+            readonly ddexDocumentStateSortOrder: number;
+            readonly ddexDocumentStateTerminal: boolean;
+            readonly ddexDocumentStateRevision: number;
+        };
+        DdexOperationalState: {
+            /** Format: uuid */
+            ddexOperationalStateId: string;
+            readonly ddexOperationalStateCode: string;
+            readonly ddexOperationalStateName: string;
+            readonly ddexOperationalStateNameEs: string;
+            readonly ddexOperationalStateNameEn: string;
+            readonly ddexOperationalStateSortOrder: number;
+            readonly ddexOperationalStateTerminal: boolean;
+            readonly ddexOperationalStateRevision: number;
+        };
+        DdexOperationalWorkflow: {
+            /** Format: uuid */
+            ddexOperationalWorkflowId: string;
+            readonly ddexOperationalWorkflowCode: string;
+            readonly ddexOperationalWorkflowName: string;
+            readonly ddexOperationalWorkflowNameEs: string;
+            readonly ddexOperationalWorkflowNameEn: string;
+            readonly ddexOperationalWorkflowSensitive: boolean;
+            /** Format: int64 */
+            readonly ddexOperationalWorkflowRevision: number;
+            ddexOperationalWorkflowStates: components["schemas"]["DdexOperationalState"][];
+        };
+        DdexOperation: {
+            /** Format: uuid */
+            ddexOperationId: string;
+            readonly ddexOperationCode: string;
+            readonly ddexOperationName: string;
+            readonly ddexOperationNameEs: string;
+            readonly ddexOperationNameEn: string;
+            readonly ddexOperationDescription: string | null;
+            readonly ddexOperationDescriptionEs: string | null;
+            readonly ddexOperationDescriptionEn: string | null;
+            readonly ddexOperationSortOrder: number;
+            readonly ddexOperationRevision: number;
+        };
+        DdexValidationReference: {
+            /** Format: uuid */
+            ddexValidationReferenceId: string;
+            readonly ddexValidationReferenceCode: string;
+            readonly ddexValidationReferenceName: string;
+            readonly ddexValidationReferenceNameEs: string;
+            readonly ddexValidationReferenceNameEn: string;
+            readonly ddexValidationReferenceDescription: string | null;
+            readonly ddexValidationReferenceDescriptionEs: string | null;
+            readonly ddexValidationReferenceDescriptionEn: string | null;
+            readonly ddexValidationReferenceSortOrder: number;
+            readonly ddexValidationReferenceRevision: number;
+        };
+        DdexReferenceSnapshot: {
+            /** Format: int64 */
+            ddexReferenceRevision: number;
+            /** @enum {string} */
+            ddexReferenceLocale: "es" | "en";
+            ddexReferenceStandardVersions: components["schemas"]["DdexStandardVersion"][];
+            ddexReferenceMessageTypes: components["schemas"]["DdexMessageType"][];
+            ddexReferenceDocumentStates: components["schemas"]["DdexDocumentState"][];
+            ddexReferenceOperationalWorkflows: components["schemas"]["DdexOperationalWorkflow"][];
+            ddexReferenceJobOperations: components["schemas"]["DdexOperation"][];
+            ddexReferenceImportOperations: components["schemas"]["DdexOperation"][];
+            ddexReferenceValidationResults: components["schemas"]["DdexValidationReference"][];
+            ddexReferenceValidationSeverities: components["schemas"]["DdexValidationReference"][];
+            ddexReferenceValidationLayers: components["schemas"]["DdexValidationReference"][];
+        };
+        DdexDocument: {
+            /** Format: int64 */
+            ddexDocumentId: number;
+            ddexDocumentFileName: string;
+            readonly ddexDocumentSha256: string;
+            /** Format: uuid */
+            ddexDocumentStandardVersionId: string;
+            readonly ddexDocumentStandardCode: string;
+            readonly ddexDocumentVersionCode: string;
+            /** Format: uuid */
+            ddexDocumentMessageTypeId: string | null;
+            readonly ddexDocumentMessageTypeCode: string | null;
+            /** Format: uuid */
+            ddexDocumentWorkflowStateId: string;
+            readonly ddexDocumentWorkflowStateCode: string;
+            readonly ddexDocumentWorkflowStateNameEs: string;
+            readonly ddexDocumentWorkflowStateNameEn: string;
+            ddexDocumentMessageId: string | null;
+            ddexDocumentSenderId: string | null;
+            ddexDocumentRecipientId: string | null;
+            /** Format: date-time */
+            ddexDocumentCreatedAt: string;
+        };
+        DdexUploadRequest: {
+            uploadFileName: string;
+            uploadContentType: string;
+            /** Format: byte */
+            uploadContentBase64: string;
+        };
+        DdexValidationRun: {
+            /** Format: int64 */
+            validationRunId: number;
+            /** Format: int64 */
+            validationRunDocumentId: number;
+            /** Format: uuid */
+            validationRunWorkflowStateId: string;
+            readonly validationRunWorkflowStateCode: string;
+            readonly validationRunWorkflowStateNameEs: string;
+            readonly validationRunWorkflowStateNameEn: string;
+            /** Format: date-time */
+            validationRunStartedAt: string;
+            /** Format: date-time */
+            validationRunFinishedAt: string | null;
+        };
+        DdexValidationIssue: {
+            /** Format: uuid */
+            readonly issueSeverityId: string;
+            readonly issueSeverityCode: string;
+            readonly issueSeverityNameEs: string;
+            readonly issueSeverityNameEn: string;
+            /** Format: uuid */
+            readonly issueLayerId: string;
+            readonly issueLayerCode: string;
+            readonly issueLayerNameEs: string;
+            readonly issueLayerNameEn: string;
+            readonly issueCode: string;
+            readonly issueMessage: string;
+            readonly issueLine: number | null;
+            readonly issueColumn: number | null;
+        };
+        DdexValidationReport: {
+            /** Format: int64 */
+            reportRunId: number;
+            reportIssues: components["schemas"]["DdexValidationIssue"][];
+            readonly reportIsValid: boolean;
+        };
+        DdexImportConflict: {
+            /** Format: int64 */
+            conflictId: number;
+            readonly conflictEntityType: string;
+            readonly conflictIdentifier: string;
+            readonly conflictDescription: string;
+        };
+        DdexImportPlan: {
+            /** Format: int64 */
+            importPlanId: number;
+            /** Format: int64 */
+            importPlanDocumentId: number;
+            /** Format: uuid */
+            importPlanWorkflowStateId: string;
+            readonly importPlanWorkflowStateCode: string;
+            readonly importPlanWorkflowStateNameEs: string;
+            readonly importPlanWorkflowStateNameEn: string;
+            importPlanConflicts: components["schemas"]["DdexImportConflict"][];
+            importPlanChanges: string[];
+        };
+        DdexConflictResolution: {
+            /** Format: int64 */
+            resolutionConflictId: number;
+            /** @description Parser discriminant for the currently unavailable resolution operation. */
+            resolutionAction: string;
+            /** Format: int64 */
+            resolutionTargetId: number | null;
+        };
+        DdexImportPlanResolution: {
+            /** Format: int64 */
+            resolutionPlanId: number;
+            resolutionConflicts: components["schemas"]["DdexConflictResolution"][];
+        };
+        DdexDownloadResponse: {
+            downloadFileName: string;
+            downloadContentType: string;
+            /** Format: byte */
+            downloadContentBase64: string;
+        };
+        DdexExportRequest: {
+            /** Format: int64 */
+            exportReleaseId: number;
+            /** Format: int64 */
+            exportPartnerId: number;
+            /**
+             * Format: uuid
+             * @description Canonical governed standard-version relationship; version strings and slugs are rejected.
+             */
+            exportStandardVersionId: string;
+        };
+        DdexExport: {
+            /** Format: int64 */
+            ddexExportId: number;
+            /** Format: int64 */
+            ddexExportReleaseId: number;
+            /** Format: int64 */
+            ddexExportPartnerId: number;
+            /** Format: uuid */
+            ddexExportWorkflowStateId: string;
+            readonly ddexExportWorkflowStateCode: string;
+            readonly ddexExportWorkflowStateNameEs: string;
+            readonly ddexExportWorkflowStateNameEn: string;
+            readonly ddexExportXmlChecksum: string;
+            /** Format: date-time */
+            ddexExportCreatedAt: string;
+        };
+        DdexPartner: {
+            /** Format: int64 */
+            ddexPartnerId: number;
+            ddexPartnerName: string;
+            ddexPartnerDpid: string | null;
+            ddexPartnerAllowedStandardVersions: components["schemas"]["DdexStandardVersion"][];
+        };
+        DdexPartnerCreateRequest: {
+            partnerName: string;
+            partnerDpid: string | null;
+            partnerAllowedStandardVersionIds: string[];
+        };
+        PipelineStage: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            sortOrder: number;
+            terminal: boolean;
+        };
+        PipelineServiceOffering: {
+            /** Format: uuid */
+            id: string;
+            readonly code: string;
+            readonly nameEs: string;
+            readonly nameEn: string;
+        };
+        PipelineDefinition: {
+            /** Format: uuid */
+            workflowId: string;
+            readonly code: string;
+            nameEs: string;
+            nameEn: string;
+            /** Format: int64 */
+            revision: number;
+            serviceOfferings: components["schemas"]["PipelineServiceOffering"][];
+            stages: components["schemas"]["PipelineStage"][];
+        };
+        PipelineSnapshot: {
+            /** Format: int64 */
+            revision: number;
+            definitions: components["schemas"]["PipelineDefinition"][];
+            cards: components["schemas"]["PipelineCard"][];
+        };
+        PipelineCard: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            artist?: string | null;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            readonly serviceOfferingCode: string;
+            /** Format: uuid */
+            workflowId: string;
+            /** Format: uuid */
+            workflowStateId: string;
+            readonly workflowStateCode: string;
+            readonly workflowStateNameEs: string;
+            readonly workflowStateNameEn: string;
+            sortOrder: number;
+            notes?: string | null;
+        };
+        PipelineCardCreate: {
+            title: string;
+            artist?: string;
+            /** Format: uuid */
+            serviceOfferingId: string;
+            /**
+             * Format: uuid
+             * @description Omit to use the one persisted active initial state.
+             */
+            workflowStateId?: string;
+            sortOrder?: number;
+            notes?: string;
+        };
+        PipelineCardUpdate: {
+            title?: string;
+            artist?: string | null;
+            /**
+             * Format: uuid
+             * @description The backend enforces the persisted transition relation.
+             */
+            workflowStateId?: string;
+            sortOrder?: number;
+            notes?: string | null;
+        };
+        EventMomentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `reaction-types` catalog.
+             */
+            emrrReactionTypeId: string;
+        };
+        ContentReactionRequest: {
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published item in the `content-reaction-types` catalog.
+             */
+            crrReactionTypeId: string;
+        };
+        ContentReactionSummaryItem: {
+            /** Format: uuid */
+            rsiReactionTypeId: string;
+            readonly rsiCode: string;
+            readonly rsiNameEs: string;
+            readonly rsiNameEn: string;
+            readonly rsiDisplaySymbol: string;
+            readonly rsiCount: number;
+        };
+        ContentReactionSummary: {
+            rsItems: components["schemas"]["ContentReactionSummaryItem"][];
+            readonly rsTotal: number;
+            /** Format: uuid */
+            readonly rsMyReactionTypeId: string | null;
+        };
+        CreatorBadge: {
+            /** Format: uuid */
+            cbBadgeTypeId: string;
+            readonly cbCode: string;
+            readonly cbNameEs: string;
+            readonly cbNameEn: string;
+            /** Format: date-time */
+            readonly cbAwardedAt: string;
+            /** Format: date-time */
+            readonly cbExpiresAt?: string | null;
+        };
+        LeaderboardEntry: {
+            /** Format: int64 */
+            lbPartyId: number;
+            lbDisplayName: string;
+            lbAvatarUrl?: string | null;
+            lbTotalReactions: number;
+            lbBadges: components["schemas"]["CreatorBadge"][];
+            lbRank: number;
+        };
+        EventMomentReaction: {
+            /** Format: uuid */
+            emrReactionTypeId: string;
+            readonly emrReactionCode: string;
+            readonly emrReactionNameEs: string;
+            readonly emrReactionNameEn: string;
+            readonly emrReactionEmoji: string;
+            emrPartyId: string;
+            /** Format: date-time */
+            emrCreatedAt?: string | null;
+        };
+        EventMomentComment: {
+            emcId?: string | null;
+            emcMomentId?: string | null;
+            emcAuthorPartyId?: string | null;
+            emcAuthorName: string;
+            emcBody: string;
+            /** Format: date-time */
+            emcCreatedAt?: string | null;
+            /** Format: date-time */
+            emcUpdatedAt?: string | null;
+        };
+        EventMoment: {
+            emId?: string | null;
+            emEventId?: string | null;
+            emAuthorPartyId?: string | null;
+            emAuthorName: string;
+            emCaption?: string | null;
+            emMediaUrl: string;
+            emMediaType: string;
+            emMediaWidth?: number | null;
+            emMediaHeight?: number | null;
+            emMediaDurationMs?: number | null;
+            /** Format: date-time */
+            emCreatedAt?: string | null;
+            /** Format: date-time */
+            emUpdatedAt?: string | null;
+            emReactions: components["schemas"]["EventMomentReaction"][];
+            emComments: components["schemas"]["EventMomentComment"][];
+        };
+        EventResearchPilot: {
+            erPilotApproved: boolean;
+            /** Format: date-time */
+            erPilotApprovedAt?: string | null;
+            erPilotApprovedByPartyId?: string | null;
+            erPilotApprovalReference?: string | null;
+            /** @enum {integer} */
+            erPilotMaxActiveCandidates: 20;
+            erPilotActiveCandidates: number;
+            /** Format: date-time */
+            erPilotUpdatedAt: string;
+        };
+        EventResearchRunCreate: {
+            erRunKey: string;
+            erRunReconciliation: boolean;
+            erRunCheckpoint?: string | null;
+        };
+        EventResearchRunUpdate: {
+            /** @enum {string} */
+            erRunStatus: "running" | "completed" | "failed";
+            erRunCheckpoint?: string | null;
+            erRunCounters: {
+                [key: string]: unknown;
+            };
+            erRunErrorSummary?: string | null;
+        };
+        EventResearchRun: components["schemas"]["EventResearchRunCreate"] & components["schemas"]["EventResearchRunUpdate"] & {
+            erRunId: string;
+            /** Format: date-time */
+            erRunStartedAt: string;
+            /** Format: date-time */
+            erRunUpdatedAt: string;
+            /** Format: date-time */
+            erRunFinishedAt?: string | null;
+            erRunCreatedByPartyId: string;
+        };
+        EventResearchEvidence: {
+            /** Format: uri */
+            erEvidenceUrl: string;
+            erEvidenceKind: string;
+            /** Format: date-time */
+            erEvidenceConsultedAt: string;
+            erEvidenceNotes?: string | null;
+        };
+        EventResearchCandidateWrite: {
+            erCandidateProvider: string;
+            erCandidateExternalId: string;
+            erCandidateRunId: string;
+            erCandidateSourceId?: string | null;
+            /** @enum {string} */
+            erCandidateReviewState: "draft" | "review" | "discarded";
+            erCandidateTitle: string;
+            /** Format: date-time */
+            erCandidateStartTime?: string | null;
+            /** Format: date-time */
+            erCandidateEndTime?: string | null;
+            /** @example America/Guayaquil */
+            erCandidateTimezone: string;
+            erCandidateVenueName?: string | null;
+            erCandidateCity?: string | null;
+            erCandidateProvince?: string | null;
+            erCandidateCountryCode: string;
+            /** Format: uri */
+            erCandidateSourceUrl: string;
+            /** Format: uri */
+            erCandidateInfoUrl?: string | null;
+            /** Format: uri */
+            erCandidatePurchaseUrl?: string | null;
+            erCandidatePayload: {
+                [key: string]: unknown;
+            };
+            erCandidateEvidence: components["schemas"]["EventResearchEvidence"][];
+            /** @enum {string} */
+            erCandidateConfidence: "high" | "medium" | "low";
+            erCandidateManagedFields: string[];
+            /** Format: date-time */
+            erCandidateVerifiedAt: string;
+        };
+        EventResearchCandidate: components["schemas"]["EventResearchCandidateWrite"] & {
+            erCandidateId: string;
+            erCandidateEventId?: string | null;
+            erCandidateContentHash: string;
+            erCandidateIsPilot: boolean;
+            /** Format: date-time */
+            erCandidateCreatedAt: string;
+            /** Format: date-time */
+            erCandidateUpdatedAt: string;
+        };
+        EventResearchMaterializationRequest: {
+            /** @description Open research run that identifies and checkpoints this materialization execution. */
+            erMaterializationRunId: string;
+            /** @description Publish only when the candidate satisfies the approved high-confidence gate. */
+            erMaterializationPublish: boolean;
+        };
+        EventResearchMaterialization: {
+            erMaterializationRunId: string;
+            erMaterializationCandidateId: string;
+            erMaterializationEventId: string;
+            erMaterializationVenueId: string;
+            erMaterializationArtistIds: string[];
+            erMaterializationChangeId: string;
+            erMaterializationCreated: boolean;
+            erMaterializationPublished: boolean;
+        };
+        EventResearchChange: {
+            erChangeId: string;
+            erChangeRunId: string;
+            erChangeCandidateId?: string | null;
+            erChangeEventId?: string | null;
+            /** @enum {string} */
+            erChangeAction: "created" | "updated" | "verified" | "discarded" | "materialized";
+            erChangeBeforeValue?: {
+                [key: string]: unknown;
+            } | null;
+            erChangeAfterValue?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uri */
+            erChangeSourceUrl: string;
+            /** @enum {string} */
+            erChangeConfidence: "high" | "medium" | "low";
+            /** Format: date-time */
+            erChangeConsultedAt: string;
+            erChangeExternalId: string;
+            erChangeResult: string;
+            /** Format: date-time */
+            erChangeCreatedAt: string;
+        };
+        SocialEvent: {
+            eventId?: string | null;
+            eventOrganizerPartyId?: string | null;
+            eventTitle: string;
+            eventDescription?: string | null;
+            /** Format: date-time */
+            eventStart: string;
+            /**
+             * Format: date-time
+             * @description Optional confirmed end. Omit it or send null when no official end or duration is known; clients must not infer one.
+             */
+            eventEnd?: string | null;
+            /** @example America/Guayaquil */
+            eventTimezone?: string | null;
+            eventVenueId?: string | null;
+            eventPriceCents?: number | null;
+            eventCapacity?: number | null;
+            /**
+             * Format: uuid
+             * @description Canonical relationship to the persisted `event-types` catalog.
+             */
+            eventTypeId: string;
+            /**
+             * Format: uuid
+             * @description Canonical social-event workflow relationship. Creation may omit it to use the persisted initial default.
+             */
+            eventWorkflowStateId?: string | null;
+            readonly eventWorkflowStateCode?: string | null;
+            readonly eventWorkflowStateNameEs?: string | null;
+            readonly eventWorkflowStateNameEn?: string | null;
+            readonly eventPublicListable?: boolean | null;
+            readonly eventTicketPurchaseEnabled?: boolean | null;
+            eventCurrency?: string | null;
+            eventBudgetCents?: number | null;
+            /** Format: uri */
+            eventTicketUrl?: string | null;
+            /** Format: uri */
+            eventImageUrl?: string | null;
+            eventIsPublic?: boolean | null;
+            eventArtists: {
+                [key: string]: unknown;
+            }[];
+        };
         Version: {
             /** @description Application name. */
             name?: string;
@@ -1002,15 +6754,18 @@ export interface components {
              * @example admin@tdf.com
              */
             username: string;
-            /**
-             * Format: password
-             * @example changeme123
-             */
+            /** Format: password */
             password: string;
         };
         GoogleLoginRequest: {
             /** @description Google ID token returned by Google Identity Services */
             idToken: string;
+            /** @description Optional consent to receive TDF product and marketing updates when creating an account. */
+            marketingOptIn?: boolean;
+            /** @description Account terms acceptance when Google is used from signup. */
+            termsAccepted?: boolean;
+            /** @description Version of the account terms accepted during Google signup. */
+            termsVersion?: string;
         };
         SignupRequest: {
             /** @example Diego */
@@ -1022,20 +6777,27 @@ export interface components {
              * @example ops@tdfrecords.com
              */
             email: string;
-            /** @example +593 99 555 1122 */
+            /** @example +1 415 555 2671 */
             phone?: string | null;
             /**
              * Format: password
              * @example changeme123
              */
             password: string;
-            /** @description Optional roles (non-admin) to assign during signup. */
-            roles?: components["schemas"]["Role"][];
-            /** @description Artist or band ids the fan wants to follow immediately after signup. */
+            /** @description Optional consent to receive TDF product and marketing updates. */
+            marketingOptIn?: boolean;
+            /**
+             * @description Required account terms acceptance paired with termsVersion.
+             * @enum {boolean}
+             */
+            termsAccepted: true;
+            /** @description Version of the account terms accepted during signup. */
+            termsVersion: string;
+            /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
             /**
              * Format: int64
-             * @description Optional existing artist profile to claim when it is not already assigned to a user.
+             * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
              */
             claimArtistId?: number | null;
         };
@@ -1046,6 +6808,8 @@ export interface components {
             partyId?: number;
             roles?: components["schemas"]["Role"][];
             modules?: string[];
+            /** @description Present on Google authentication to distinguish a newly created account from an existing login. */
+            accountCreated?: boolean;
         };
         SessionResponse: {
             username: string;
@@ -1054,6 +6818,69 @@ export interface components {
             partyId: number;
             roles: components["schemas"]["Role"][];
             modules: string[];
+            /** @description Enabled public feature-flag identifiers; never contains configuration secrets. */
+            featureFlags: string[];
+            preferences: components["schemas"]["LocalePreferences"];
+        };
+        LocalePreferences: {
+            /**
+             * Format: uuid
+             * @description Canonical persisted locale identity.
+             */
+            localeId: string;
+            /**
+             * @description Presentation code resolved from localeId; never accepted as write identity.
+             * @example en
+             */
+            readonly locale: string;
+            /**
+             * Format: uuid
+             * @description Canonical persisted currency identity.
+             */
+            currencyId: string;
+            /**
+             * @description ISO presentation code resolved from currencyId; never accepted as write identity.
+             * @example USD
+             */
+            readonly currency: string;
+            /** @example Europe/Berlin */
+            timezone: string;
+            /**
+             * Format: uuid
+             * @description Canonical persisted country identity selected by the user.
+             */
+            countryId?: string | null;
+            /** @description Presentation and external-wire code resolved from countryId; legacy rows may use preserved migration evidence until backfilled. */
+            readonly countryCode?: string | null;
+        };
+        LocalePreferencesUpdate: {
+            /**
+             * Format: uuid
+             * @description Canonical active deployment-enabled locale identity.
+             */
+            localeId: string;
+            /**
+             * Format: uuid
+             * @description Canonical active deployment-enabled currency identity.
+             */
+            currencyId: string;
+            timezone: string;
+            /**
+             * Format: uuid
+             * @description Canonical active country identity. Null explicitly clears the preference.
+             */
+            countryId?: string | null;
+        };
+        CurrencyConversionAuditCreate: {
+            sourceCurrency: string;
+            targetCurrency: string;
+            /** Format: int64 */
+            sourceMinorUnits: number;
+            /** Format: int64 */
+            targetMinorUnits: number;
+            /** Format: double */
+            exchangeRate: number;
+            rateSource: string;
         };
         /**
          * @description Assigned platform role.
@@ -1062,20 +6889,672 @@ export interface components {
         Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
         UserRoleSummary: {
             /** Format: int64 */
-            id?: number;
-            name?: string;
+            id: number;
+            /** Format: int64 */
+            partyId: number;
+            name: string;
             /** Format: email */
             email?: string | null;
             phone?: string | null;
-            roles?: components["schemas"]["Role"][];
-            /** @enum {string} */
-            status?: "Active" | "Inactive";
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        UserRoleUpdate: {
-            /** @description Complete list of roles that should remain active. */
             roles: components["schemas"]["Role"][];
+            /** @enum {string} */
+            status: "Active" | "Inactive";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CmsContentDraft: {
+            /** Format: uuid */
+            contentId: string;
+            locale: string;
+            title?: string;
+            /** @description May be omitted; new CMS writes always enter the draft workflow state. */
+            status?: string;
+            /** @description Validated against the strict, versioned schema of the referenced persisted content type. */
+            payload?: Record<string, never>;
+        };
+        CmsContent: {
+            id: number;
+            /**
+             * Format: uuid
+             * @description Canonical authored-content relationship. Null/omitted only on preserved legacy rows.
+             */
+            contentId?: string;
+            /** @description Persisted presentation alias copied into the immutable historical version; never a write identifier. */
+            slug: string;
+            locale: string;
+            version: number;
+            status: string;
+            title?: string;
+            payload?: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        LabelProjectNote: {
+            /** Format: uuid */
+            lpnId: string;
+            lpnText: string;
+            lpnCompleted: boolean;
+            /** Format: date-time */
+            lpnCreatedAt: string;
+            /** Format: date-time */
+            lpnUpdatedAt: string;
+            lpnVersion: number;
+        };
+        LabelProjectNoteCreate: {
+            lpncText: string;
+        };
+        LabelProjectNoteUpdate: {
+            lpnuText?: string;
+            lpnuCompleted?: boolean;
+            lpnuExpectedVersion: number;
+        };
+        CatalogDefinition: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            classification: string;
+            entityKind: string;
+            name: string;
+            description?: string;
+            publicRead: boolean;
+            sensitive: boolean;
+            orderingMode: string;
+            sourceName?: string;
+            sourceVersion?: string;
+            /** Format: date */
+            sourceEffectiveDate?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            /** Format: int64 */
+            cacheRevision: number;
+            active: boolean;
+            version: number;
+        };
+        CatalogItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            catalogId: string;
+            catalogCode: string;
+            kind: string;
+            code: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            searchAliases: string[];
+            currentSlug?: string;
+            /** Format: uuid */
+            parentId?: string;
+            sortOrder: number;
+            active: boolean;
+            workflowState: string;
+            /** Format: date-time */
+            deprecatedAt?: string;
+            /** Format: uuid */
+            replacementId?: string;
+            externalCode?: string;
+            sourceVersion?: string;
+            /** @description Persisted short visual marker supplied only by typed catalogs such as reaction types. */
+            displaySymbol?: string;
+            /** Format: int64 */
+            usageCount: number;
+            version: number;
+        };
+        CatalogPage: {
+            catalog: components["schemas"]["CatalogDefinition"];
+            items: components["schemas"]["CatalogItem"][];
+            /** @description Effective persisted defaults for this catalog, scoped explicitly and related by canonical entity UUID. */
+            defaults: components["schemas"]["CatalogDefault"][];
+            page: number;
+            pageSize: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            revision: number;
+            locale: string;
+        };
+        CatalogDefault: {
+            /** Format: uuid */
+            entityId: string;
+            scopeKind: string;
+            scopeId: string;
+            /** Format: uuid */
+            localeId?: string;
+            /** Format: date-time */
+            effectiveFrom?: string;
+            /** Format: date-time */
+            effectiveUntil?: string;
+            version: number;
+        };
+        CatalogBatch: {
+            catalogs: components["schemas"]["CatalogPage"][];
+            /** Format: int64 */
+            revision: number;
+            locale: string;
+        };
+        ContentType: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            entityKind: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            /** @description Strict, versioned schema metadata owned by the persisted content type. */
+            schema: {
+                [key: string]: unknown;
+            };
+            schemaVersion: number;
+            publicRoutePattern?: string;
+            adminRoutePattern?: string;
+            publicRead: boolean;
+            active: boolean;
+            workflowState: string;
+            version: number;
+        };
+        WorkflowState: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            workflowId: string;
+            workflowCode: string;
+            code: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            sortOrder: number;
+            terminal: boolean;
+            active: boolean;
+            initialContexts: string[];
+            capabilities: string[];
+            transitions: components["schemas"]["WorkflowTransition"][];
+            version: number;
+        };
+        WorkflowTransition: {
+            /** Format: uuid */
+            toStateId: string;
+            /** @description True only when the backend may execute this transition directly without a permission-bound review flow. */
+            directExecutionAllowed: boolean;
+            requiresReview: boolean;
+            requiresDistinctApprover: boolean;
+            /** Format: date-time */
+            effectiveFrom?: string;
+            /** Format: date-time */
+            effectiveUntil?: string;
+            version: number;
+        };
+        WorkflowStates: {
+            workflowCode: string;
+            locale: string;
+            /** Format: int64 */
+            revision: number;
+            states: components["schemas"]["WorkflowState"][];
+        };
+        AuthoredContent: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** Format: uuid */
+            contentTypeId: string;
+            contentTypeCode: string;
+            entityKind: string;
+            name: string;
+            nameEs: string;
+            nameEn: string;
+            description?: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            /** @description Persisted current URL alias; never a canonical relationship identifier. */
+            currentSlug: string;
+            publicRoute?: string;
+            schema: {
+                [key: string]: unknown;
+            };
+            schemaVersion: number;
+            sortOrder: number;
+            active: boolean;
+            workflowState: string;
+            revision: number;
+            version: number;
+        };
+        CatalogDraft: {
+            /** Format: uuid */
+            entityId?: string;
+            baseVersion?: number;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            searchAliasesEs: string[];
+            searchAliasesEn: string[];
+            /** @description Presentation-only URL alias; never a relationship or canonical identifier. */
+            currentSlug?: string;
+            /** Format: uuid */
+            parentId?: string;
+            sortOrder: number;
+            externalCode?: string;
+            sourceVersion?: string;
+            serviceOffering?: components["schemas"]["ServiceOfferingDraft"];
+            radioAutoStop?: components["schemas"]["RadioAutoStopDraft"];
+            appearanceMode?: components["schemas"]["AppearanceModeDraft"];
+            /** @description Typed persisted visual marker. Currently accepted only by the reaction-types adapter. */
+            displaySymbol?: string;
+            /** @description Reassigns the explicitly scoped global default when true. Accepted only by catalogs whose typed adapter declares a global default scope. */
+            globalDefault?: boolean;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        ServiceOfferingDraft: {
+            /** Format: uuid */
+            categoryId: string;
+            /** Format: uuid */
+            pricingModelId: string;
+            rateCents?: number;
+            /** Format: uuid */
+            currencyId: string;
+            billingUnitEs?: string;
+            billingUnitEn?: string;
+            /** Format: uuid */
+            taxRateId?: string;
+            defaultDurationMinutes?: number;
+            requiresEngineer: boolean;
+            defaultResources: components["schemas"]["ServiceOfferingDefaultResourceDraft"][];
+        };
+        RadioAutoStopDraft: {
+            durationMinutes: number;
+            defaultForBroadcast: boolean;
+        };
+        AppearanceModeDraft: {
+            defaultForApplication: boolean;
+        };
+        ServiceOfferingDefaultResourceDraft: {
+            resourceId: string;
+            /** Format: uuid */
+            selectionModeId: string;
+            sortOrder: number;
+        };
+        ServiceOffering: {
+            /** Format: uuid */
+            scId: string;
+            scCode: string;
+            scName: string;
+            scNameEs: string;
+            scNameEn: string;
+            /** Format: uuid */
+            scCategoryId: string;
+            /** @description Persisted service category code for display; category relations use IDs in writes. */
+            scKind: string;
+            /** @description Persisted pricing-model code for display; draft relations use pricingModelId. */
+            scPricingModel: string;
+            /** Format: uuid */
+            scPricingModelId: string;
+            scRateCents?: number | null;
+            scCurrency: string;
+            /** Format: uuid */
+            scCurrencyId: string;
+            scBillingUnit?: string | null;
+            scTaxRateCode?: string | null;
+            /** Format: uuid */
+            scTaxRateId?: string | null;
+            scDefaultDurationMinutes?: number | null;
+            scRequiresEngineer: boolean;
+            scDefaultResources: components["schemas"]["ServiceDefaultResource"][];
+            scSortOrder: number;
+            scActive: boolean;
+        };
+        ServiceCatalogEnvelope: {
+            sceSchemaVersion: number;
+            /** Format: int64 */
+            sceRevision: number;
+            sceLocale: string;
+            sceItems: components["schemas"]["ServiceOffering"][];
+        };
+        ServiceDefaultResource: {
+            sdrResourceId: string;
+            sdrResourceName: string;
+            /** Format: uuid */
+            sdrSelectionModeId: string;
+            /** @enum {string} */
+            sdrSelectionMode: "all" | "first-available";
+            sdrSortOrder: number;
+        };
+        CatalogRevision: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            catalogId: string;
+            catalogCode: string;
+            /** Format: uuid */
+            entityId: string;
+            workflowState: string;
+            baseVersion: number;
+            proposedVersion: number;
+            draft: components["schemas"]["CatalogDraft"];
+            /** Format: int64 */
+            createdBy: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            reviewedBy?: number;
+            /** Format: date-time */
+            reviewedAt?: string;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** Format: date-time */
+            approvedAt?: string;
+            reviewerNotes?: string;
+            rejectionReason?: string;
+            /** Format: date-time */
+            scheduledPublishAt?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        CatalogReview: {
+            notes: string;
+            /** Format: date-time */
+            scheduledPublishAt?: string;
+            emergencyOverride: boolean;
+        };
+        CatalogActivation: {
+            active: boolean;
+            /** Format: uuid */
+            replacementId?: string;
+            reason: string;
+            expectedVersion: number;
+            correlationId: string;
+        };
+        CatalogReorder: {
+            orderedItemIds: string[];
+            /** Format: int64 */
+            expectedCatalogRevision: number;
+            reason: string;
+            correlationId: string;
+        };
+        CatalogMerge: {
+            /** Format: uuid */
+            sourceItemId: string;
+            /** Format: uuid */
+            targetItemId: string;
+            reason: string;
+            correlationId: string;
+        };
+        CatalogUsage: {
+            /** Format: uuid */
+            itemId?: string;
+            /** Format: date */
+            day: string;
+            /** Format: int64 */
+            selectionCount: number;
+            /** Format: int64 */
+            historicalReferenceCount: number;
+            /** Format: int64 */
+            replacementCount: number;
+            /** Format: int64 */
+            noResultSearchCount: number;
+            /** Format: int64 */
+            formFailureCount: number;
+        };
+        CatalogImportResult: {
+            /** Format: uuid */
+            importJobId: string;
+            dryRun: boolean;
+            status: string;
+            totalRows: number;
+            acceptedRows: number;
+            rejectedRows: number;
+            ambiguousRows: number;
+            errors: string[];
+        };
+        RecordsContributor: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "artist" | "group" | "credited-ensemble" | "guest";
+            name: string;
+        };
+        RecordsResource: {
+            /** Format: uuid */
+            id: string;
+            providerCode: string;
+            /** @enum {string} */
+            kind: "audio-track" | "video" | "playlist" | "channel";
+            externalCode: string;
+            /** Format: uri */
+            url: string;
+            label?: string;
+            durationMs?: number;
+            /** Format: uri */
+            thumbnailUrl?: string;
+            relationKind: string;
+            primary: boolean;
+            sortOrder: number;
+        };
+        RecordsCollection: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @enum {string} */
+            kind: "release" | "recording" | "session";
+            name: string;
+            description?: string;
+            publicRoute?: string;
+            resources: components["schemas"]["RecordsResource"][];
+            revision: number;
+        };
+        RecordsRelease: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            releaseTypeId: string;
+            /** Format: date */
+            releaseDate?: string;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsRecording: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            recordingTypeId: string;
+            durationMs?: number;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsSession: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            /** @description Presentation-only current URL alias; never a canonical relationship. */
+            slug?: string;
+            title: string;
+            description?: string;
+            /** Format: uuid */
+            sessionTypeId: string;
+            /** Format: date-time */
+            recordedAt?: string;
+            contributors: components["schemas"]["RecordsContributor"][];
+            resources: components["schemas"]["RecordsResource"][];
+            sortOrder: number;
+            revision: number;
+        };
+        RecordsFeed: {
+            locale: string;
+            /** Format: int64 */
+            revision: number;
+            collections: components["schemas"]["RecordsCollection"][];
+            releases: components["schemas"]["RecordsRelease"][];
+            recordings: components["schemas"]["RecordsRecording"][];
+            sessions: components["schemas"]["RecordsSession"][];
+        };
+        SecurityRole: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            nameEs: string;
+            nameEn: string;
+            descriptionEs?: string;
+            descriptionEn?: string;
+            emergencyAdministrator: boolean;
+            systemRole: boolean;
+            selfAssignable: boolean;
+            automaticAssignable: boolean;
+            active: boolean;
+            moduleCodes: string[];
+            permissionCodes: string[];
+            version: number;
+        };
+        SecurityPartyRoleAssignment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            partyId: number;
+            /** Format: uuid */
+            roleId: string;
+            roleCode: string;
+            roleNameEs: string;
+            active: boolean;
+            /** Format: int64 */
+            grantedBy?: number;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** @enum {string} */
+            approvalMode: "normal" | "emergency" | "bootstrap" | "system-policy";
+            /** Format: uuid */
+            sourceRevisionId?: string;
+            /** Format: uuid */
+            sourcePolicyId?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            revokedAt?: string;
+            version: number;
+        };
+        PartyRoleGrantDraft: {
+            /** Format: int64 */
+            partyId: number;
+            /** Format: uuid */
+            roleId: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        RolePermissionGrantDraft: {
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
+        };
+        SecurityGrantReview: {
+            notes: string;
+            emergencyOverrideReason?: string;
+        };
+        SecurityGrantRevision: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            changeKind: "party-role" | "role-permission";
+            /** Format: int64 */
+            partyId?: number;
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId?: string;
+            desiredActive: boolean;
+            expectedVersion: number;
+            workflowState: string;
+            /** Format: int64 */
+            createdBy: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            submittedAt?: string;
+            /** Format: int64 */
+            reviewedBy?: number;
+            /** Format: date-time */
+            reviewedAt?: string;
+            /** Format: int64 */
+            approvedBy?: number;
+            /** Format: date-time */
+            approvedAt?: string;
+            reviewerNotes?: string;
+            rejectionReason?: string;
+            approvalMode: string;
+            emergencyReason?: string;
+            sourcePlatform: string;
+            correlationId: string;
+            reason: string;
+            result?: string;
+            version: number;
+        };
+        SecurityAuditEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            revisionId?: string;
+            /** Format: uuid */
+            sourcePolicyId?: string;
+            entityKind: string;
+            /** Format: int64 */
+            partyId?: number;
+            /** Format: uuid */
+            roleId: string;
+            /** Format: uuid */
+            permissionId?: string;
+            operation: string;
+            previousActive?: boolean;
+            newActive?: boolean;
+            /** Format: int64 */
+            actorId?: number;
+            /** Format: int64 */
+            reviewerId?: number;
+            /** Format: int64 */
+            approverId?: number;
+            /** Format: date-time */
+            occurredAt: string;
+            sourcePlatform: string;
+            reason?: string;
+            correlationId: string;
+            approvalMode: string;
+            result: string;
+        };
+        SelfFanRoleRequest: {
+            reason: string;
+            sourcePlatform: string;
+            correlationId: string;
         };
         Party: {
             /** Format: int64 */
@@ -1136,7 +7615,7 @@ export interface components {
         WhatsAppConsentRequest: {
             /**
              * @description Phone number in E.164 format.
-             * @example +593995413168
+             * @example +14155552671
              */
             phone: string;
             name?: string | null;
@@ -1196,9 +7675,6 @@ export interface components {
             uEmergencyContact?: string | null;
             uNotes?: string | null;
         };
-        RoleAssignmentRequest: {
-            role: components["schemas"]["Role"];
-        };
         UserAccount: {
             /** Format: int64 */
             userId?: number;
@@ -1224,22 +7700,22 @@ export interface components {
              */
             uacPassword?: string | null;
             uacActive?: boolean | null;
-            uacRoles?: components["schemas"]["Role"][] | null;
         };
         UpdateUserAccountRequest: {
             uauUsername?: string | null;
             /** Format: password */
             uauPassword?: string | null;
             uauActive?: boolean | null;
-            uauRoles?: components["schemas"]["Role"][] | null;
         };
         ArtistProfile: {
             /** Format: int64 */
-            apArtistId?: number;
-            apDisplayName?: string;
+            apArtistId: number;
+            apDisplayName: string;
+            apOfficialName?: string | null;
             apSlug?: string | null;
             apBio?: string | null;
             apCity?: string | null;
+            apCountry?: string | null;
             /** Format: uri */
             apHeroImageUrl?: string | null;
             apSpotifyArtistId?: string | null;
@@ -1252,19 +7728,344 @@ export interface components {
             apWebsiteUrl?: string | null;
             /** Format: uri */
             apFeaturedVideoUrl?: string | null;
-            apGenres?: string | null;
+            /** @description Presentation-only Spanish labels resolved from apGenreIds; historical text may be returned for an unmapped legacy record. */
+            readonly apGenres?: string | null;
+            /** @description Canonical persisted genre identifiers in display order. */
+            apGenreIds: string[];
             apHighlights?: string | null;
+            /** Format: uri */
+            apInstagramUrl?: string | null;
+            /** @description JSON object containing additional official social URLs. */
+            apSocialLinks?: string | null;
+            /** @description JSON array of corroborated relevant releases. */
+            apDiscography?: string | null;
+            apAchievements?: string | null;
+            /** Format: uri */
+            apHeroOriginalUrl?: string | null;
+            /** Format: uri */
+            apHeroSquareUrl?: string | null;
+            /** Format: uri */
+            apHeroLandscapeUrl?: string | null;
+            /** @description JSON responsive AVIF/WebP source set. */
+            apHeroResponsiveUrls?: string | null;
+            apHeroFocalPoint?: string | null;
+            /** Format: date-time */
+            apLastVerifiedAt?: string | null;
+            /** Format: double */
+            apConfidence?: number | null;
+            /** @enum {string} */
+            apReviewStatus?: "unverified" | "pending" | "verified" | "rejected" | "ambiguous";
             /**
              * Format: int64
              * @description Total followers captured in the Fan Hub.
              */
-            apFollowerCount?: number;
+            apFollowerCount: number;
             /** @description Whether this artist is already assigned to a user account. */
-            apHasUserAccount?: boolean;
+            apHasUserAccount: boolean;
+        };
+        ArtistEnrichmentRunRequest: {
+            /** @enum {string} */
+            aerrMode: "dry_run" | "production";
+            /** Format: int64 */
+            aerrArtistId?: number | null;
+            aerrResumeRunKey?: string | null;
+            aerrBatchSize?: number | null;
+            aerrStaleDays?: number | null;
+        };
+        ArtistEnrichmentRunUpdate: {
+            /** @enum {string} */
+            aeruStatus?: "running" | "completed" | "failed" | "cancelled" | "blocked";
+            aeruPhase?: string;
+            aeruCheckpoint?: string;
+            aeruCounters?: string;
+            aeruErrorSummary?: string;
+        };
+        ArtistEnrichmentRun: {
+            /** Format: int64 */
+            aerId: number;
+            aerRunKey: string;
+            /** @enum {string} */
+            aerMode: "dry_run" | "production";
+            aerScope: string;
+            /** Format: int64 */
+            aerRequestedArtistId?: number | null;
+            /** @enum {string} */
+            aerStatus: "running" | "completed" | "failed" | "cancelled" | "blocked";
+            aerPhase: string;
+            aerCheckpoint?: string | null;
+            aerCounters?: string | null;
+            aerErrorSummary?: string | null;
+            /** Format: date-time */
+            aerStartedAt: string;
+            /** Format: date-time */
+            aerHeartbeatAt: string;
+            /** Format: date-time */
+            aerFinishedAt?: string | null;
+        };
+        ArtistEnrichmentDecision: {
+            /** @enum {string} */
+            aedDecision: "approve" | "reject";
+            /** @description Edited field value for suggestions; for identity approval, an existing artist party ID or `new` to explicitly create a distinct profile. */
+            aedEditedValue?: string | null;
+            aedNote?: string | null;
+        };
+        ArtistEnrichmentSuggestion: {
+            /** Format: int64 */
+            aesId: number;
+            /** Format: int64 */
+            aesArtistId?: number | null;
+            /** Format: int64 */
+            aesInventoryReferenceId?: number | null;
+            aesArtistName?: string | null;
+            aesFieldName: string;
+            aesCurrentValue?: string | null;
+            aesProposedValue?: string | null;
+            /** Format: double */
+            aesConfidence: number;
+            /** @enum {string} */
+            aesStatus: "pending" | "approved" | "rejected" | "superseded" | "auto_applied";
+            aesAutoPublish: boolean;
+            aesEvidence: string;
+            /** Format: date-time */
+            aesCreatedAt: string;
+            /** Format: date-time */
+            aesUpdatedAt: string;
+            /** Format: date-time */
+            aesDecidedAt?: string | null;
+            /** Format: int64 */
+            aesDecidedBy?: number | null;
+            aesDecisionNote?: string | null;
+        };
+        ArtistEnrichmentSuggestionCreate: {
+            /** Format: int64 */
+            aescArtistId?: number | null;
+            /** Format: int64 */
+            aescInventoryReferenceId?: number | null;
+            aescFieldName: string;
+            aescCurrentValue?: string | null;
+            aescProposedValue?: string | null;
+            /** Format: double */
+            aescConfidence: number;
+            aescAutoPublish?: boolean | null;
+            aescEvidence: string;
+        };
+        ArtistInventoryReference: {
+            /** Format: int64 */
+            airId: number;
+            airSourceType: string;
+            airSourceRecordId: string;
+            airOriginalName: string;
+            airNormalizedName: string;
+            /** Format: int64 */
+            airArtistId?: number | null;
+            /** Format: int64 */
+            airSocialArtistId?: number | null;
+            /** @description JSON array retaining original spellings. */
+            airAliases?: string | null;
+            airEvidence?: string | null;
+            /** Format: double */
+            airConfidence?: number | null;
+            airDisposition: string;
+            /** Format: date-time */
+            airFirstSeenAt: string;
+            /** Format: date-time */
+            airLastSeenAt: string;
+        };
+        ArtistResearchSourceCreate: {
+            /** Format: int64 */
+            arscArtistId?: number | null;
+            /** Format: int64 */
+            arscInventoryReferenceId?: number | null;
+            /** Format: uri */
+            arscSourceUrl: string;
+            arscSourceType: string;
+            /** Format: date-time */
+            arscRetrievedAt?: string | null;
+            /** @description Comma-separated field names supported by this source. */
+            arscSupportedFields: string;
+            arscAttribution?: string | null;
+            arscContentHash?: string | null;
+        };
+        ArtistResearchSource: {
+            /** Format: int64 */
+            arsId: number;
+            /** Format: int64 */
+            arsArtistId?: number | null;
+            /** Format: int64 */
+            arsInventoryReferenceId?: number | null;
+            /** Format: uri */
+            arsSourceUrl: string;
+            arsSourceType: string;
+            /** Format: date-time */
+            arsRetrievedAt: string;
+            arsSupportedFields: string;
+            arsAttribution?: string | null;
+            arsContentHash?: string | null;
+        };
+        ArtistFieldChange: {
+            /** Format: int64 */
+            afcId: number;
+            /** Format: int64 */
+            afcArtistId: number;
+            /** Format: int64 */
+            afcSuggestionId?: number | null;
+            afcFieldName: string;
+            afcPreviousValue?: string | null;
+            afcNewValue?: string | null;
+            afcEvidence: string;
+            /** Format: double */
+            afcConfidence: number;
+            afcActor: string;
+            /** Format: date-time */
+            afcChangedAt: string;
+        };
+        ArtistProfileEnrichment: {
+            /** Format: int64 */
+            apeArtistId: number;
+            apeArtistName: string;
+            apeOfficialName?: string | null;
+            apeCountry?: string | null;
+            /** Format: uri */
+            apeInstagramUrl?: string | null;
+            apeSocialLinks?: string | null;
+            apeDiscography?: string | null;
+            apeAchievements?: string | null;
+            /** Format: uri */
+            apeHeroOriginalUrl?: string | null;
+            /** Format: uri */
+            apeHeroSquareUrl?: string | null;
+            /** Format: uri */
+            apeHeroLandscapeUrl?: string | null;
+            apeHeroResponsiveUrls?: string | null;
+            apeHeroFocalPoint?: string | null;
+            /** Format: date-time */
+            apeLastVerifiedAt?: string | null;
+            /** Format: double */
+            apeConfidence?: number | null;
+            /** @enum {string} */
+            apeReviewStatus: "unverified" | "pending" | "verified" | "rejected" | "ambiguous";
+            apeMissingFields: string[];
+            apeBrokenFields: string[];
+        };
+        ArtistIdentityCandidate: {
+            /** Format: int64 */
+            aicId: number;
+            /** Format: int64 */
+            aicInventoryReferenceId: number;
+            /** Format: int64 */
+            aicArtistId?: number | null;
+            aicProvider: string;
+            aicExternalId?: string | null;
+            /** Format: uri */
+            aicCandidateUrl?: string | null;
+            aicEvidence: string;
+            /** Format: double */
+            aicConfidence: number;
+            /** @enum {string} */
+            aicStatus: "pending" | "approved" | "rejected" | "superseded";
+            /** Format: date-time */
+            aicCreatedAt: string;
+            /** Format: date-time */
+            aicUpdatedAt: string;
+            /** Format: date-time */
+            aicDecidedAt?: string | null;
+            /** Format: int64 */
+            aicDecidedBy?: number | null;
+            aicDecisionNote?: string | null;
+        };
+        ArtistIdentityCandidateCreate: {
+            /** Format: int64 */
+            aiccInventoryReferenceId: number;
+            /** Format: int64 */
+            aiccArtistId?: number | null;
+            aiccProvider: string;
+            aiccExternalId?: string | null;
+            /** Format: uri */
+            aiccCandidateUrl?: string | null;
+            aiccEvidence: string;
+            /** Format: double */
+            aiccConfidence: number;
+        };
+        ArtistMediaAssetCreate: {
+            /** Format: int64 */
+            amacArtistId: number;
+            /** @enum {string} */
+            amacAssetKind: "original" | "square" | "landscape" | "responsive";
+            /** Format: uri */
+            amacSourceUrl: string;
+            amacSourceAttribution: string;
+            /** Format: date-time */
+            amacRetrievedAt?: string | null;
+            amacSourceContentHash: string;
+            amacSourceWidth: number;
+            amacSourceHeight: number;
+            /** @enum {string} */
+            amacSourceMimeType: "image/jpeg" | "image/png" | "image/avif" | "image/webp";
+            /** Format: int64 */
+            amacSourceByteSize: number;
+            amacContentHash: string;
+            amacWidth: number;
+            amacHeight: number;
+            /** @enum {string} */
+            amacMimeType: "image/avif" | "image/webp";
+            /** Format: int64 */
+            amacByteSize: number;
+            /** @enum {string} */
+            amacRightsStatus: "authorized" | "licensed";
+            amacDriveFileId: string;
+            /** Format: uri */
+            amacPublicUrl: string;
+            /** Format: int64 */
+            amacParentAssetId?: number | null;
+            amacFocalPoint?: string | null;
+        };
+        ArtistMediaAsset: {
+            /** Format: int64 */
+            amaId: number;
+            /** Format: int64 */
+            amaArtistId: number;
+            amaAssetKind: string;
+            /** Format: uri */
+            amaSourceUrl: string;
+            amaSourceAttribution: string;
+            /** Format: date-time */
+            amaRetrievedAt: string;
+            amaSourceContentHash: string;
+            amaSourceWidth: number;
+            amaSourceHeight: number;
+            amaSourceMimeType: string;
+            /** Format: int64 */
+            amaSourceByteSize: number;
+            amaContentHash: string;
+            amaWidth: number;
+            amaHeight: number;
+            amaMimeType: string;
+            /** Format: int64 */
+            amaByteSize: number;
+            amaRightsStatus: string;
+            amaDriveFileId: string;
+            /** Format: uri */
+            amaPublicUrl: string;
+            /** Format: int64 */
+            amaParentAssetId?: number | null;
+            amaFocalPoint?: string | null;
+            /** Format: date-time */
+            amaCreatedAt: string;
+        };
+        ArtistEnrichmentOverview: {
+            aeoProfiles: components["schemas"]["ArtistProfileEnrichment"][];
+            aeoInventory: components["schemas"]["ArtistInventoryReference"][];
+            aeoSources: components["schemas"]["ArtistResearchSource"][];
+            aeoSuggestions: components["schemas"]["ArtistEnrichmentSuggestion"][];
+            aeoChanges: components["schemas"]["ArtistFieldChange"][];
+            aeoRuns: components["schemas"]["ArtistEnrichmentRun"][];
+            aeoIdentityCandidates: components["schemas"]["ArtistIdentityCandidate"][];
+            aeoMedia: components["schemas"]["ArtistMediaAsset"][];
         };
         ArtistProfileUpsert: {
             /** Format: int64 */
             apuArtistId: number;
+            apuDisplayName?: string | null;
             apuSlug?: string | null;
             apuBio?: string | null;
             apuCity?: string | null;
@@ -1280,7 +8081,8 @@ export interface components {
             apuWebsiteUrl?: string | null;
             /** Format: uri */
             apuFeaturedVideoUrl?: string | null;
-            apuGenres?: string | null;
+            /** @description Canonical active published genre identifiers. Copied labels and slugs are rejected. */
+            apuGenreIds: string[];
             apuHighlights?: string | null;
         };
         ArtistRelease: {
@@ -1301,11 +8103,13 @@ export interface components {
         };
         FanProfile: {
             /** Format: int64 */
-            fpArtistId?: number;
+            fpArtistId: number;
             fpDisplayName?: string | null;
             /** Format: uri */
             fpAvatarUrl?: string | null;
-            fpFavoriteGenres?: string | null;
+            /** @description Localized presentation labels derived from canonical genre memberships; legacy labels are returned only for unmigrated historical rows. */
+            readonly fpFavoriteGenres?: string | null;
+            fpFavoriteGenreIds: string[];
             fpBio?: string | null;
             fpCity?: string | null;
         };
@@ -1313,7 +8117,7 @@ export interface components {
             fpuDisplayName?: string | null;
             /** Format: uri */
             fpuAvatarUrl?: string | null;
-            fpuFavoriteGenres?: string | null;
+            fpuFavoriteGenreIds: string[];
             fpuBio?: string | null;
             fpuCity?: string | null;
         };
@@ -1371,18 +8175,57 @@ export interface components {
             fullName?: string | null;
             /** Format: email */
             email?: string | null;
-            /** @example +593999001122 */
+            /** @example +442079460018 */
             phoneE164?: string | null;
             /** @description landing | whatsapp | other keyword */
             source: string;
             howHeard?: string | null;
             utm?: components["schemas"]["UTMTags"];
+            /** @description Must be true to create a canonical payable seat hold. Omitted only for non-checkout legacy intake such as WhatsApp leads. */
+            termsAccepted?: boolean | null;
         };
         CourseRegistrationResponse: {
             /** Format: int64 */
             id?: number;
             /** @enum {string} */
             status?: "pending_payment" | "paid" | "cancelled";
+        };
+        CourseCheckoutQuote: {
+            policyVersion: string;
+            currency: string;
+            /** Format: int64 */
+            subtotalMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            /** Format: int64 */
+            dueNowMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            /** @enum {string} */
+            paymentSchedule: "full" | "deposit";
+            termsVersion: string;
+        };
+        CourseCheckoutResponse: {
+            /** Format: int64 */
+            registrationId: number;
+            courseSlug: string;
+            /** Format: uuid */
+            checkoutId: string | null;
+            lookupToken: string | null;
+            /** @enum {string} */
+            paymentStatus: "not_started" | "awaiting_payment" | "processing" | "paid" | "failed" | "cancelled" | "expired" | "partially_refunded" | "refunded" | "disputed" | "chargeback";
+            /** @enum {string} */
+            fulfillmentStatus: "lead_received" | "seat_held" | "enrolled" | "waitlisted" | "transfer_requested" | "transferred" | "cancelled" | "completed" | "expired";
+            /** Format: date-time */
+            holdExpiresAt: string | null;
+            quote: components["schemas"]["CourseCheckoutQuote"] | null;
+            paymentMethods: ("datafast" | "paypal")[];
+            checkoutAvailable: boolean;
+        };
+        CoursePaypalCaptureRequest: {
+            paypalOrderId: string;
         };
         CourseRegistrationStatusUpdate: {
             /** @enum {string} */
@@ -1406,6 +8249,647 @@ export interface components {
             expiresIn: number;
             tokenType?: string | null;
         };
+        /** @enum {string} */
+        InternalReportState: "draft" | "submitted" | "received" | "needs_information" | "confirmed" | "prioritized" | "in_progress" | "ready_for_retest" | "verified" | "closed" | "duplicate" | "discarded";
+        /** @enum {string} */
+        InternalReportType: "error" | "suggestion" | "idea" | "question" | "accessibility" | "permissions" | "performance" | "content_translation";
+        InternalFeedbackCreate: {
+            ifcTitle: string;
+            ifcDescription: string;
+            /** Format: uuid */
+            ifcCategoryId: string;
+            /** Format: uuid */
+            ifcProposedSeverityId: string;
+            ifcReportType: components["schemas"]["InternalReportType"];
+            ifcModuleName: string;
+            ifcFeatureName?: string | null;
+            /** @enum {string} */
+            ifcEnvironment: "staging" | "test" | "local" | "production-read-only";
+            ifcUrlOrScreen?: string | null;
+            ifcPlatform: string;
+            ifcDevice?: string | null;
+            ifcBrowser?: string | null;
+            ifcLanguage: string;
+            ifcAccountRole: string;
+            ifcReproductionSteps?: string | null;
+            ifcExpectedResult?: string | null;
+            ifcActualResult?: string | null;
+            ifcFrequency?: string | null;
+            /** Format: uuid */
+            ifcTestCaseId?: string | null;
+            /** Format: uuid */
+            ifcTestExecutionId?: string | null;
+            /** Format: uuid */
+            ifcInternshipProjectId?: string | null;
+            /** Format: uuid */
+            ifcInternshipTaskId?: string | null;
+            ifcBlocking?: boolean;
+            ifcVideoLinks?: string | null;
+        };
+        /** @description Reporter fields are accepted only for owned drafts/information responses. Authoritative fields are administrator-only. */
+        InternalFeedbackUpdate: {
+            ifuTitle?: string;
+            ifuDescription?: string;
+            /** Format: uuid */
+            ifuCategoryId?: string;
+            /** Format: uuid */
+            ifuProposedSeverityId?: string;
+            ifuReportType?: components["schemas"]["InternalReportType"];
+            ifuModuleName?: string;
+            ifuFeatureName?: string | null;
+            ifuEnvironment?: string;
+            ifuUrlOrScreen?: string | null;
+            ifuPlatform?: string;
+            ifuDevice?: string | null;
+            ifuBrowser?: string | null;
+            ifuLanguage?: string;
+            ifuAccountRole?: string;
+            ifuReproductionSteps?: string | null;
+            ifuExpectedResult?: string | null;
+            ifuActualResult?: string | null;
+            ifuFrequency?: string | null;
+            ifuBlocking?: boolean;
+            ifuVideoLinks?: string | null;
+            ifuState?: components["schemas"]["InternalReportState"];
+            /** Format: uuid */
+            ifuAuthoritativeSeverityId?: string | null;
+            /** @enum {string|null} */
+            ifuPriority?: "low" | "medium" | "high" | "urgent" | null;
+            /** Format: int64 */
+            ifuAssignedTo?: number | null;
+            /** Format: uuid */
+            ifuDuplicateOf?: string | null;
+            ifuResolution?: string | null;
+            ifuRetestResult?: string | null;
+            ifuClosureReason?: string | null;
+            /** Format: uri */
+            ifuGithubIssueUrl?: string | null;
+        };
+        InternalFeedbackSummary: {
+            /** Format: uuid */
+            ifsId: string;
+            ifsTitle: string;
+            ifsReportType: components["schemas"]["InternalReportType"];
+            ifsState: components["schemas"]["InternalReportState"];
+            ifsModuleName: string;
+            ifsFeatureName?: string | null;
+            ifsEnvironment: string;
+            ifsPlatform: string;
+            /** Format: uuid */
+            ifsProposedSeverityId?: string | null;
+            /** Format: uuid */
+            ifsAuthoritativeSeverityId?: string | null;
+            ifsPriority?: string | null;
+            ifsBlocking: boolean;
+            /** Format: int64 */
+            ifsReporterPartyId: number;
+            ifsReporterName: string;
+            /** Format: uuid */
+            ifsInternshipProjectId?: string | null;
+            /** Format: uuid */
+            ifsInternshipTaskId?: string | null;
+            /** Format: uuid */
+            ifsTestCaseId?: string | null;
+            /** Format: uuid */
+            ifsTestExecutionId?: string | null;
+            /** Format: uuid */
+            ifsDuplicateOf?: string | null;
+            /** Format: date-time */
+            ifsCreatedAt: string;
+            /** Format: date-time */
+            ifsUpdatedAt: string;
+        };
+        InternalFeedbackEvidence: {
+            /** Format: uuid */
+            ifeId: string;
+            /** @enum {string} */
+            ifeKind: "attachment" | "external_link" | "video_link" | "retest";
+            ifeOriginalFileName?: string | null;
+            ifeContentType?: string | null;
+            ifeSizeBytes?: number | null;
+            /** Format: uri */
+            ifeExternalUrl?: string | null;
+            ifeCaption?: string | null;
+            /** Format: int64 */
+            ifeUploadedBy: number;
+            /** Format: date-time */
+            ifeCreatedAt: string;
+        };
+        InternalFeedbackEvidenceLinkCreate: {
+            /** Format: uri */
+            ifelUrl: string;
+            ifelCaption?: string | null;
+            /** @enum {string|null} */
+            ifelKind?: "external_link" | "video_link" | "retest" | null;
+        };
+        InternalFeedbackCommentCreate: {
+            /** @enum {string|null} */
+            ifccKind?: "comment" | "information_request" | "information_response" | null;
+            ifccBody: string;
+        };
+        InternalFeedbackComment: {
+            /** Format: uuid */
+            ifcmId: string;
+            /** Format: int64 */
+            ifcmAuthorPartyId: number;
+            ifcmAuthorName: string;
+            ifcmKind: string;
+            ifcmBody: string;
+            /** Format: date-time */
+            ifcmCreatedAt: string;
+        };
+        InternalFeedbackHistory: {
+            /** Format: uuid */
+            ifhId: string;
+            /** Format: int64 */
+            ifhActorPartyId: number;
+            ifhActorName: string;
+            ifhAction: string;
+            ifhPreviousState?: string | null;
+            ifhNewState?: string | null;
+            ifhMetadata?: string | null;
+            /** Format: date-time */
+            ifhCreatedAt: string;
+        };
+        InternalFeedbackRetestCreate: {
+            /** Format: uuid */
+            ifrcExecutionId?: string | null;
+            /** @enum {string} */
+            ifrcResult: "passed" | "failed" | "blocked";
+            ifrcNotes?: string | null;
+            ifrcEvidenceSummary?: string | null;
+        };
+        InternalFeedbackRetest: {
+            /** Format: uuid */
+            ifrtId: string;
+            /** Format: uuid */
+            ifrtExecutionId?: string | null;
+            /** Format: int64 */
+            ifrtTesterPartyId: number;
+            ifrtTesterName: string;
+            ifrtResult: string;
+            ifrtNotes?: string | null;
+            ifrtEvidenceSummary?: string | null;
+            /** Format: date-time */
+            ifrtCreatedAt: string;
+        };
+        InternalFeedback: {
+            ifrSummary: components["schemas"]["InternalFeedbackSummary"];
+            ifrDescription: string;
+            /** Format: uuid */
+            ifrCategoryId?: string | null;
+            ifrUrlOrScreen?: string | null;
+            ifrDevice?: string | null;
+            ifrBrowser?: string | null;
+            ifrLanguage: string;
+            ifrAccountRole: string;
+            ifrReproductionSteps?: string | null;
+            ifrExpectedResult?: string | null;
+            ifrActualResult?: string | null;
+            ifrFrequency?: string | null;
+            /** Format: int64 */
+            ifrAssignedTo?: number | null;
+            ifrResolution?: string | null;
+            ifrRetestResult?: string | null;
+            ifrClosureReason?: string | null;
+            /** Format: uri */
+            ifrGithubIssueUrl?: string | null;
+            ifrVideoLinks?: string | null;
+            /** Format: date-time */
+            ifrSubmittedAt?: string | null;
+            /** Format: date-time */
+            ifrClosedAt?: string | null;
+            /** @description False when the owning internship audit is completed or cancelled and the report is read-only. */
+            ifrAuditPlanMutable: boolean;
+            ifrEvidence: components["schemas"]["InternalFeedbackEvidence"][];
+            ifrComments: components["schemas"]["InternalFeedbackComment"][];
+            ifrHistory: components["schemas"]["InternalFeedbackHistory"][];
+            ifrRetests: components["schemas"]["InternalFeedbackRetest"][];
+            ifrPotentialDuplicates: components["schemas"]["InternalFeedbackSummary"][];
+        };
+        LegacyFeedback: {
+            /** Format: uuid */
+            lfdId: string;
+            lfdTitle: string;
+            lfdDescription: string;
+            /** Format: uuid */
+            lfdCategoryId?: string | null;
+            /** Format: uuid */
+            lfdSeverityId?: string | null;
+            /** Format: email */
+            lfdContactEmail?: string | null;
+            lfdConsent: boolean;
+            /** Format: int64 */
+            lfdCreatedBy?: number | null;
+            lfdHasAttachment: boolean;
+            /** Format: date-time */
+            lfdCreatedAt: string;
+        };
+        InternAuditPlanCreate: {
+            /** Format: uuid */
+            iapcProjectId: string;
+            /** Format: uuid */
+            iapcTaskId: string;
+            /** @enum {string} */
+            iapcEnvironment: "staging";
+            iapcDurationDays?: number;
+            iapcExpectedHoursMin?: number;
+            iapcExpectedHoursMax?: number;
+            iapcMidpointPercent?: number;
+            /** Format: int64 */
+            iapcProposedAssignee?: number | null;
+            iapcFinalReviewRequired?: boolean;
+        };
+        InternAuditPlanUpdate: {
+            iapuCompletionJustification?: string | null;
+            iapuApproveException?: boolean;
+            /**
+             * @description Activation is intentionally available only through the explicit activate endpoint.
+             * @enum {string}
+             */
+            iapuStatus?: "draft" | "completed" | "cancelled";
+        };
+        InternAuditPlan: {
+            /** Format: uuid */
+            iapId: string;
+            /** Format: uuid */
+            iapProjectId: string;
+            /** Format: uuid */
+            iapTaskId: string;
+            iapEnvironment: string;
+            iapStatus: string;
+            iapDurationDays: number;
+            iapExpectedHoursMin: number;
+            iapExpectedHoursMax: number;
+            iapMidpointPercent: number;
+            /** Format: int64 */
+            iapProposedAssignee?: number | null;
+            iapFinalReviewRequired: boolean;
+            iapCompletionJustification?: string | null;
+            /** Format: int64 */
+            iapCompletionApprovedBy?: number | null;
+            /** Format: date-time */
+            iapCompletionApprovedAt?: string | null;
+            iapCaseCount: number;
+            iapExecutedCaseCount: number;
+            iapCriticalRemaining: number;
+            iapOpenBlockerCount: number;
+            iapFailedWithoutReport: number;
+            iapEvidenceMissing: number;
+            iapCalculatedProgress: number;
+            iapCanComplete: boolean;
+            /** Format: date-time */
+            iapCreatedAt: string;
+            /** Format: date-time */
+            iapUpdatedAt: string;
+        };
+        InternTestCaseCreate: {
+            itccStableId: string;
+            itccModuleName: string;
+            itccFeatureName: string;
+            itccUserRole: string;
+            itccObjective: string;
+            itccBusinessPurpose: string;
+            itccPreconditions: string;
+            itccRequiredTestData: string;
+            /** @enum {string} */
+            itccEnvironment: "staging";
+            itccPlatform: string;
+            itccBrowserOrDevice: string;
+            /** @enum {string} */
+            itccLanguage: "es" | "en";
+            itccDetailedSteps: string;
+            itccExpectedResult: string;
+            itccExpectedPersistedState: string;
+            itccExpectedSideEffects: string;
+            itccCleanupInstructions: string;
+            /** @enum {string} */
+            itccCriticality: "low" | "medium" | "high" | "critical";
+            /** @enum {string} */
+            itccEvidenceRequirement: "light" | "strong";
+            itccExploratoryCharter?: string | null;
+            itccApplicable?: boolean;
+            itccSortOrder?: number;
+        };
+        InternTestCase: {
+            /** Format: uuid */
+            itcId: string;
+            /** Format: uuid */
+            itcPlanId: string;
+            itcLatestExecution?: components["schemas"]["InternTestExecution"];
+        } & {
+            itcStableId: string;
+            itcModuleName: string;
+            itcFeatureName: string;
+            itcUserRole: string;
+            itcObjective: string;
+            itcBusinessPurpose: string;
+            itcPreconditions: string;
+            itcRequiredTestData: string;
+            itcEnvironment: string;
+            itcPlatform: string;
+            itcBrowserOrDevice: string;
+            itcLanguage: string;
+            itcDetailedSteps: string;
+            itcExpectedResult: string;
+            itcExpectedPersistedState: string;
+            itcExpectedSideEffects: string;
+            itcCleanupInstructions: string;
+            itcCriticality: string;
+            itcEvidenceRequirement: string;
+            itcExploratoryCharter?: string | null;
+            itcApplicable: boolean;
+            itcSortOrder: number;
+        };
+        InternTestExecutionCreate: {
+            /** @enum {string} */
+            itecStatus: "pending" | "in_progress" | "passed" | "failed" | "blocked" | "not_applicable" | "ready_for_retest" | "verified";
+            itecActualResult?: string | null;
+            itecPersistedStateObserved?: string | null;
+            itecSideEffectsObserved?: string | null;
+            itecBlockerReason?: string | null;
+            itecEvidenceSummary?: string | null;
+        };
+        InternTestExecutionUpdate: {
+            /** @enum {string} */
+            iteuStatus?: "pending" | "in_progress" | "passed" | "failed" | "blocked" | "not_applicable" | "ready_for_retest" | "verified";
+            iteuActualResult?: string | null;
+            iteuPersistedStateObserved?: string | null;
+            iteuSideEffectsObserved?: string | null;
+            iteuBlockerReason?: string | null;
+            iteuEvidenceSummary?: string | null;
+        };
+        InternTestExecution: {
+            /** Format: uuid */
+            itexId: string;
+            /** Format: uuid */
+            itexTestCaseId: string;
+            itexExecutionNumber: number;
+            /** Format: int64 */
+            itexExecutorPartyId: number;
+            itexStatus: string;
+            itexActualResult?: string | null;
+            itexPersistedStateObserved?: string | null;
+            itexSideEffectsObserved?: string | null;
+            itexBlockerReason?: string | null;
+            itexEvidenceSummary?: string | null;
+            /** Format: date-time */
+            itexStartedAt?: string | null;
+            /** Format: date-time */
+            itexCompletedAt?: string | null;
+            /** Format: date-time */
+            itexCreatedAt: string;
+            /** Format: date-time */
+            itexUpdatedAt: string;
+        };
+        InternDailySummaryCreate: {
+            /** Format: date */
+            idscWorkDate: string;
+            idscMinutesWorked: number;
+            idscModulesTested: string;
+            idscCasesCompleted: number;
+            idscReportsCreated: number;
+            idscBlockers?: string | null;
+            idscNextStep: string;
+        };
+        InternDailySummary: {
+            /** Format: uuid */
+            idsId: string;
+            /** Format: uuid */
+            idsTaskId: string;
+            /** Format: int64 */
+            idsAuthorPartyId: number;
+            /** Format: date */
+            idsWorkDate: string;
+            idsMinutesWorked: number;
+            idsModulesTested: string;
+            idsCasesCompleted: number;
+            idsReportsCreated: number;
+            idsBlockers?: string | null;
+            idsNextStep: string;
+            /** Format: date-time */
+            idsCreatedAt: string;
+        };
+        InternFinalSummaryUpdate: {
+            ifsuConclusions?: string | null;
+            ifsuSubmit?: boolean;
+        };
+        InternFinalSummary: {
+            /** Format: uuid */
+            ifsId: string;
+            /** Format: uuid */
+            ifsPlanId: string;
+            /** Format: int64 */
+            ifsAuthorPartyId: number;
+            /** @description JSON snapshot generated from executions and reports */
+            ifsGeneratedSnapshot: string;
+            ifsConclusions?: string | null;
+            /** Format: date-time */
+            ifsSubmittedAt?: string | null;
+            /** Format: int64 */
+            ifsApprovedBy?: number | null;
+            /** Format: date-time */
+            ifsApprovedAt?: string | null;
+            /** Format: date-time */
+            ifsCreatedAt: string;
+            /** Format: date-time */
+            ifsUpdatedAt: string;
+        };
+        FeedbackMultipart: {
+            title: string;
+            description: string;
+            /**
+             * Format: uuid
+             * @description Canonical ID from the published feedback-categories catalog.
+             */
+            categoryId: string;
+            /**
+             * Format: uuid
+             * @description Canonical ID from the published feedback-severities catalog.
+             */
+            severityId: string;
+            /** Format: email */
+            contactEmail?: string;
+            consent: boolean;
+            /** Format: binary */
+            attachment?: string;
+        };
+        LiveSessionMusician: {
+            /** Format: int64 */
+            partyId?: number | null;
+            name: string;
+            /** Format: email */
+            email?: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published instrument.
+             */
+            instrumentId?: string | null;
+            notes?: string | null;
+            /** @description Must agree with whether partyId is supplied. */
+            isExisting: boolean;
+        };
+        LiveSessionSong: {
+            title: string;
+            bpm?: number | null;
+            songKey?: string | null;
+            lyrics?: string | null;
+            sortOrder?: number | null;
+        };
+        LiveSessionIntakeMultipart: {
+            bandName: string;
+            bandDescription?: string | null;
+            /**
+             * Format: uuid
+             * @description Canonical UUID of an active published genre.
+             */
+            primaryGenreId?: string | null;
+            inputList?: string | null;
+            /** Format: email */
+            contactEmail?: string | null;
+            contactPhone?: string | null;
+            /** Format: date */
+            sessionDate?: string | null;
+            availability?: string | null;
+            /** @enum {boolean} */
+            acceptedTerms: true;
+            termsVersion: string;
+            /**
+             * @description JSON-encoded array of 1 to 50 LiveSessionMusician objects. Only instrumentId is accepted for the instrument relationship; instrument and role are invalid fields.
+             * @example [{"name":"Ana","instrumentId":"5f710f45-ca5d-450f-a7da-6c7de20b3a4d","isExisting":false}]
+             */
+            musicians: string;
+            /**
+             * @description JSON-encoded array of at most 100 LiveSessionSong objects.
+             * @example [{"title":"Canción uno","bpm":120,"sortOrder":0}]
+             */
+            setlist?: string | null;
+            /**
+             * Format: binary
+             * @description Optional rider file, limited by the backend to 10 MiB.
+             */
+            rider?: string | null;
+        };
+        RadioAutoStopOptions: {
+            /** Format: uuid */
+            catalogId: string;
+            /** Format: int64 */
+            revision: number;
+            options: components["schemas"]["RadioAutoStopOption"][];
+        };
+        RadioAutoStopOption: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            label: string;
+            description?: string;
+            durationMinutes: number;
+            defaultForBroadcast: boolean;
+            version: number;
+        };
+        RadioStream: {
+            /** Format: int64 */
+            rsId: number;
+            rsName: string | null;
+            /** Format: uri */
+            rsStreamUrl: string;
+            /**
+             * Format: uuid
+             * @description Immutable canonical country UUID.
+             */
+            rsCountryId: string | null;
+            /** @description Spanish presentation label resolved exclusively from rsCountryId. Retained legacy text is never exposed as a canonical country. */
+            readonly rsCountry: string | null;
+            /**
+             * Format: uuid
+             * @description Immutable canonical genre UUID.
+             */
+            rsGenreId: string | null;
+            /** @description Spanish presentation label resolved exclusively from rsGenreId. Retained legacy text is never exposed as a canonical genre. */
+            readonly rsGenre: string | null;
+            rsActive: boolean;
+            /** Format: date-time */
+            rsLastCheckedAt: string | null;
+        };
+        RadioStreamUpsert: {
+            /** Format: uri */
+            rsuStreamUrl: string;
+            rsuName?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+             */
+            rsuCountryId?: string;
+            /** @description Explicitly clears an existing country relation. It cannot be combined with rsuCountryId; omission preserves the existing relation. */
+            rsuClearCountry?: boolean;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active published genre. Labels and slugs are rejected.
+             */
+            rsuGenreId?: string;
+            /** @description Explicitly clears an existing genre relation. It cannot be combined with rsuGenreId; omission preserves the existing relation. */
+            rsuClearGenre?: boolean;
+        };
+        RadioImportRequest: {
+            rirSources?: string[];
+            rirLimit?: number;
+        };
+        RadioImportResult: {
+            rirProcessed: number;
+            rirInserted: number;
+            rirUpdated: number;
+            rirSources: string[];
+            rirFailed: number;
+            rirFailedSources: string[];
+        };
+        RadioMetadataRefreshRequest: {
+            rmrLimit?: number;
+            rmrOnlyMissing?: boolean;
+        };
+        RadioMetadataRefreshResult: {
+            rmrProcessed: number;
+            rmrUpdated: number;
+            rmrFailed: number;
+        };
+        RadioTransmissionRequest: {
+            rtrName?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active published genre. Labels and slugs are rejected.
+             */
+            rtrGenreId?: string;
+            /**
+             * Format: uuid
+             * @description Immutable UUID of an active country reference. Codes, labels, and slugs are rejected.
+             */
+            rtrCountryId?: string;
+        };
+        RadioTransmissionInfo: {
+            /** Format: int64 */
+            rtiStreamId: number;
+            /** Format: uri */
+            rtiStreamUrl: string;
+            rtiIngestUrl: string;
+            rtiStreamKey: string;
+            /** Format: uri */
+            rtiWhipUrl: string;
+        };
+        RadioPresence: {
+            /** Format: int64 */
+            rpPartyId: number;
+            /** Format: uri */
+            rpStreamUrl: string;
+            rpStationName: string | null;
+            rpStationId: string | null;
+            /** Format: date-time */
+            rpUpdatedAt: string;
+        };
+        RadioPresenceUpsert: {
+            /** Format: uri */
+            rpuStreamUrl: string;
+            rpuStationName?: string;
+            rpuStationId?: string;
+        };
         RadioNowPlayingRequest: {
             /**
              * @description Stream URL to inspect (http/https).
@@ -1415,21 +8899,1608 @@ export interface components {
         };
         RadioNowPlayingResult: {
             /** @description Current StreamTitle metadata when available. */
-            rnpTitle?: string | null;
+            rnpTitle: string | null;
             /** @description Parsed artist name when StreamTitle includes a separator. */
-            rnpArtist?: string | null;
+            rnpArtist: string | null;
             /** @description Parsed track title when StreamTitle includes a separator. */
-            rnpTrack?: string | null;
+            rnpTrack: string | null;
+        };
+        /** @enum {string} */
+        FeatureAccessRequestStatus: "pending" | "approved" | "rejected" | "cancelled" | "expired";
+        FeatureAccessRequestHistory: {
+            /** Format: int64 */
+            id: number;
+            transition: string;
+            fromStatus?: components["schemas"]["FeatureAccessRequestStatus"] | null;
+            toStatus: components["schemas"]["FeatureAccessRequestStatus"];
+            note?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FeatureAccessRequest: {
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int64
+             * @description Internal subject identifier; clients must not expose it unnecessarily.
+             */
+            requesterPartyId: number;
+            featureId: string;
+            action: string;
+            roleContext: string[];
+            moduleContext: string[];
+            status: components["schemas"]["FeatureAccessRequestStatus"];
+            reviewerGroup: string;
+            justification?: string | null;
+            reviewerNotes?: string | null;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            decidedAt?: string | null;
+            /** Format: date-time */
+            cancelledAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            history: components["schemas"]["FeatureAccessRequestHistory"][];
+        };
+        FeatureAccessRequestCreate: {
+            featureId: string;
+            action: string;
+            justification?: string | null;
+        };
+        FeatureAccessRequestDecision: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            notes?: string | null;
+        };
+        FeatureAccessRequestCancel: {
+            cancellationNote?: string | null;
+        };
+        NavigationPreference: {
+            featureId: string;
+            favorite: boolean;
+            pinned: boolean;
+            pinOrder?: number | null;
+            /** Format: date-time */
+            lastVisitedAt?: string | null;
+            useCount: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        NavigationPreferenceUpdate: {
+            favorite: boolean;
+            pinned: boolean;
+            pinOrder?: number | null;
+        };
+        /** @enum {string} */
+        OperationsStatus: "new" | "seen" | "assigned" | "in_progress" | "waiting" | "resolved" | "archived";
+        /** @enum {string} */
+        OperationsPriority: "urgent" | "high" | "normal" | "low";
+        /** @enum {string} */
+        OperationsSlaState: "on_track" | "at_risk" | "due" | "breached" | "paused";
+        OperationsWorkItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            sourceSystem: string;
+            sourceChannel: string;
+            entityType: string;
+            entityId?: string | null;
+            uncorrelated: boolean;
+            correlationKey: string;
+            titleEs: string;
+            titleEn: string;
+            descriptionEs: string;
+            descriptionEn: string;
+            status: components["schemas"]["OperationsStatus"];
+            priority: components["schemas"]["OperationsPriority"];
+            recommendedPriority: components["schemas"]["OperationsPriority"];
+            /** @enum {string} */
+            severity: "critical" | "error" | "warning" | "info";
+            seen: boolean;
+            /** Format: int64 */
+            firstSeenBy?: number | null;
+            /** Format: date-time */
+            firstSeenAt?: string | null;
+            /** Format: int64 */
+            assigneePartyId?: number | null;
+            responsibleTeam?: string | null;
+            /** Format: int64 */
+            customerPartyId?: number | null;
+            serviceKey?: string | null;
+            /** Format: int64 */
+            amountMinor?: number | null;
+            currency?: string | null;
+            paymentState?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            dueAt?: string | null;
+            /** Format: date-time */
+            snoozedUntil?: string | null;
+            waitingReason?: string | null;
+            waitingExternalDependency: boolean;
+            /** Format: date-time */
+            resumeAt?: string | null;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+            /** Format: date-time */
+            archivedAt?: string | null;
+            slaState: components["schemas"]["OperationsSlaState"];
+            /** Format: int64 */
+            version: number;
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        OperationsWorkItemPage: {
+            items: components["schemas"]["OperationsWorkItem"][];
+            nextCursor?: string | null;
+            hasMore: boolean;
+        };
+        OperationsWorkItemEvent: {
+            /** Format: int64 */
+            id: number;
+            eventType: string;
+            /** Format: int64 */
+            actorPartyId?: number | null;
+            actorRole?: string | null;
+            bodyEs: string;
+            bodyEn: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        OperationsNote: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            authorPartyId: number;
+            body: string;
+            mentionedPartyIds: number[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            editedAt?: string | null;
+        };
+        OperationsWorkItemDetail: {
+            workItem: components["schemas"]["OperationsWorkItem"];
+            events: components["schemas"]["OperationsWorkItemEvent"][];
+            notes: components["schemas"]["OperationsNote"][];
+            allowedTransitions: components["schemas"]["OperationsStatus"][];
+            sourceRecordUrl?: string | null;
+            quickActions: string[];
+        };
+        OperationsMetrics: {
+            /** Format: int64 */
+            newRegistrations: number;
+            /** Format: int64 */
+            registrationsRequiringAttention: number;
+            /** Format: int64 */
+            reservationsAwaitingConfirmation: number;
+            /** Format: int64 */
+            todaySessions: number;
+            /** Format: int64 */
+            schedulingConflicts: number;
+            /** Format: int64 */
+            unpaidInvoices: number;
+            /** Format: int64 */
+            overdueInvoices: number;
+            /** Format: int64 */
+            paymentsAwaitingVerification: number;
+            /** Format: int64 */
+            revenueReceivedTodayMinor: number;
+            /** Format: int64 */
+            unassignedWork: number;
+            /** Format: int64 */
+            slaBreaches: number;
+            /** Format: double */
+            averageFirstResponseSeconds?: number | null;
+            /** Format: double */
+            averageResolutionSeconds?: number | null;
+            /** Format: int64 */
+            integrationFailures: number;
+            currency: string;
+            /** Format: date-time */
+            calculatedAt: string;
+        };
+        OperationsVersionedCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            reason?: string | null;
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsTransitionCommand: components["schemas"]["OperationsVersionedCommand"] & {
+            targetStatus: components["schemas"]["OperationsStatus"];
+            waitingExternalDependency?: boolean | null;
+            /** Format: date-time */
+            resumeAt?: string | null;
+        };
+        OperationsAssignmentCommand: components["schemas"]["OperationsVersionedCommand"] & {
+            /** Format: int64 */
+            assigneePartyId?: number | null;
+            responsibleTeam?: string | null;
+        };
+        OperationsPriorityCommand: {
+            /** Format: int64 */
+            expectedVersion: number;
+            priority: components["schemas"]["OperationsPriority"];
+            reason: string;
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsNoteCreate: {
+            body: string;
+            mentionedPartyIds: number[];
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsManualWorkItemCreate: {
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            entityType: string;
+            entityId?: string | null;
+            uncorrelated: boolean;
+            correlationKey: string;
+            titleEs: string;
+            titleEn: string;
+            descriptionEs: string;
+            descriptionEn: string;
+            priority: components["schemas"]["OperationsPriority"];
+            responsibleTeam?: string | null;
+            /** Format: int64 */
+            customerPartyId?: number | null;
+            serviceKey?: string | null;
+            /** Format: int64 */
+            amountMinor?: number | null;
+            currency?: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsApprovalCreate: {
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            /** Format: uuid */
+            workItemId?: string | null;
+            actionType: string;
+            targetEntityType: string;
+            targetEntityId: string;
+            /** Format: int64 */
+            amountMinor?: number | null;
+            currency?: string | null;
+            reason: string;
+            idempotencyKey: string;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsApprovalDecision: {
+            /** @enum {string} */
+            decision: "approved" | "rejected";
+            reason: string;
+            /** @enum {string} */
+            expectedDecision: "pending";
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsApproval: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            /** Format: uuid */
+            workItemId?: string | null;
+            actionType: string;
+            targetEntityType: string;
+            targetEntityId: string;
+            /** Format: int64 */
+            amountMinor?: number | null;
+            currency?: string | null;
+            /** Format: int64 */
+            requesterPartyId: number;
+            requesterRole: string;
+            requestReason: string;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: int64 */
+            approverPartyId?: number | null;
+            approverRole?: string | null;
+            decision: string;
+            decisionReason?: string | null;
+            /** Format: date-time */
+            decidedAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            executionStatus: string;
+        };
+        OperationsIntegrationFailure: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            branchId?: string | null;
+            provider: string;
+            direction: string;
+            sourceRecordType: string;
+            sourceRecordId: string;
+            failureCode: string;
+            redactedSummary: string;
+            retryable: boolean;
+            status: string;
+            attemptCount: number;
+            /** Format: date-time */
+            lastAttemptAt?: string | null;
+            /** Format: date-time */
+            nextAttemptAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        OperationsReplayCommand: {
+            reason: string;
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsStreamEvent: {
+            /** Format: int64 */
+            id: number;
+            eventType: string;
+            /** Format: uuid */
+            workItemId?: string | null;
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            createdAt: string;
+        };
+        OperationsStreamBatch: {
+            events: components["schemas"]["OperationsStreamEvent"][];
+            /** Format: int64 */
+            lastEventId?: number | null;
+            retryAfterMs: number;
+        };
+        OperationsSavedView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: int64 */
+            ownerPartyId?: number | null;
+            name: string;
+            shared: boolean;
+            filters: {
+                [key: string]: unknown;
+            };
+            columns: string[];
+            widgets: string[];
+            subscribedEventTypes: string[];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        OperationsSavedViewCreate: {
+            /** Format: uuid */
+            organizationId: string;
+            name: string;
+            shared: boolean;
+            filters: {
+                [key: string]: unknown;
+            };
+            columns: string[];
+            widgets: string[];
+            subscribedEventTypes: string[];
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsPushSubscriptionCreate: {
+            /** Format: uuid */
+            organizationId: string;
+            /** @enum {string} */
+            platform: "ios" | "android" | "web";
+            deviceToken: string;
+            requestId: string;
+            sourceClient: string;
+        };
+        OperationsPushSubscription: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            platform: string;
+            active: boolean;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        DirectoryEntityType: "profile" | "classified" | "event" | "venue";
+        /** @description Safe public location; exact residential address and private coordinates are structurally absent. */
+        PublicLocation: {
+            /** Format: uuid */
+            cityId?: string | null;
+            city?: string | null;
+            countryCode?: string | null;
+            sector?: string | null;
+            latitude?: number | null;
+            longitude?: number | null;
+            /** @enum {string|null} */
+            precision?: "country" | "region" | "metro" | "city" | "sector" | "commercial_exact" | null;
+            distanceKm?: number | null;
+        };
+        DirectorySearchItem: {
+            id: string;
+            type: components["schemas"]["DirectoryEntityType"];
+            slug: string;
+            title: string;
+            subtitle?: string | null;
+            summary?: string | null;
+            /** Format: uri */
+            imageUrl?: string | null;
+            location: components["schemas"]["PublicLocation"];
+            modality?: {
+                onsite?: boolean;
+                remote?: boolean;
+                travel?: boolean;
+            };
+            taxonomy: {
+                professionIds: string[];
+                serviceIds: string[];
+                instrumentIds: string[];
+                genreIds: string[];
+            };
+            score: number;
+            scoreBreakdown: {
+                [key: string]: number | null;
+            };
+            sponsored: boolean;
+            sponsorDisclosure?: string | null;
+            /** Format: date-time */
+            effectiveAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+        };
+        DirectoryFacets: {
+            entityTypes: {
+                [key: string]: number;
+            };
+            cities: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                count: number;
+            }[];
+            total: number;
+        };
+        DirectorySearchResponse: {
+            items: components["schemas"]["DirectorySearchItem"][];
+            /** @description Always separate and explicitly labeled */
+            sponsoredItems: components["schemas"]["DirectorySearchItem"][];
+            facets: components["schemas"]["DirectoryFacets"];
+            nextCursor?: string | null;
+        };
+        ApiError: {
+            error: string;
+            code?: string;
+            correlationId?: string;
+        };
+        DirectorySuggestion: {
+            label: string;
+            canonicalQuery: string;
+            suggestionKind: string;
+            entityId?: string | null;
+        };
+        TaxonomyItem: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            slug?: string | null;
+            name: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            requirements?: {
+                [key: string]: unknown;
+            };
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            countryId?: string;
+            /** Format: uuid */
+            currencyId?: string;
+            symbol?: string;
+            minorUnits?: number;
+            latitude?: number | null;
+            longitude?: number | null;
+        };
+        DirectoryTaxonomies: {
+            locale: string;
+            professions: components["schemas"]["TaxonomyItem"][];
+            classifiedCategories: components["schemas"]["TaxonomyItem"][];
+            compensationTypes: components["schemas"]["TaxonomyItem"][];
+            serviceOfferings: components["schemas"]["TaxonomyItem"][];
+            currencies: components["schemas"]["TaxonomyItem"][];
+            instruments: components["schemas"]["TaxonomyItem"][];
+            genres: components["schemas"]["TaxonomyItem"][];
+            languages: components["schemas"]["TaxonomyItem"][];
+            cities: components["schemas"]["TaxonomyItem"][];
+        };
+        /** @enum {string} */
+        DirectoryProfileKind: "person" | "artist" | "band" | "project" | "organization" | "company" | "venue" | "studio" | "agency" | "label" | "distributor" | "school";
+        DirectoryPortfolioItem: {
+            /** @enum {string} */
+            itemType: "audio" | "video" | "image" | "release" | "credit" | "document" | "other";
+            title: string;
+            /** Format: uri-reference */
+            url: string;
+            description?: string | null;
+            /** Format: uri-reference */
+            thumbnailUrl?: string | null;
+        };
+        DirectoryProfileLink: {
+            label: string;
+            /** Format: uri-reference */
+            url: string;
+        };
+        PublicTaxonomyMembership: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            headline?: string | null;
+            yearsExperience?: number | null;
+            proficiency?: string | null;
+            /** Format: int64 */
+            rateMinMinor?: number | null;
+            /** Format: int64 */
+            rateMaxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
+        /** @description Public projection excludes Party PII and directory_private_location. */
+        PublicDirectoryProfile: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["DirectoryProfileKind"];
+            name: string;
+            slug: string;
+            bio?: string | null;
+            experience?: string | null;
+            creditsSummary?: string | null;
+            portfolio?: components["schemas"]["DirectoryPortfolioItem"][];
+            links?: components["schemas"]["DirectoryProfileLink"][];
+            equipment?: string | null;
+            rates?: {
+                /** Format: int64 */
+                minMinor?: number;
+                /** Format: int64 */
+                maxMinor?: number | null;
+                /** Format: uuid */
+                currencyId?: string | null;
+            } | null;
+            availability: {
+                status: string;
+                onsite: boolean;
+                remote: boolean;
+                travel: boolean;
+                radiusKm?: number | null;
+            };
+            locations: components["schemas"]["PublicLocation"][];
+            professions: components["schemas"]["PublicTaxonomyMembership"][];
+            instruments: components["schemas"]["PublicTaxonomyMembership"][];
+            genres: components["schemas"]["PublicTaxonomyMembership"][];
+            services: components["schemas"]["PublicTaxonomyMembership"][];
+            languages: components["schemas"]["PublicTaxonomyMembership"][];
+            verification: {
+                type: string;
+                status: string;
+                /** Format: date-time */
+                verifiedAt?: string | null;
+            }[];
+            reputation: {
+                completeness?: number;
+                responseRate?: number;
+                medianResponseMinutes?: number;
+                completed?: number;
+                reviewAverage?: number;
+                reviewCount?: number;
+            };
+            canonicalUrl: string;
+        };
+        /** @enum {string} */
+        DirectoryInteractionType: "booking" | "service_order" | "marketplace_order" | "event_collaboration" | "confirmed_collaboration";
+        DirectoryProfileReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        PublicDirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            rating: number;
+            body?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewPage: {
+            summary: {
+                /** Format: uuid */
+                profileId: string;
+                average?: number | null;
+                count: number;
+            };
+            items: components["schemas"]["PublicDirectoryReview"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
+        /** @description Published, current, moderated classified. */
+        PublicClassified: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            slug: string;
+            description: string;
+            category: components["schemas"]["PublicTaxonomyMembership"];
+            author: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+            };
+            modality: {
+                onsite: boolean;
+                remote: boolean;
+                travel: boolean;
+            };
+            locations: components["schemas"]["PublicLocation"][];
+            compensation?: {
+                /** Format: uuid */
+                typeId?: string;
+                /** Format: int64 */
+                minMinor?: number | null;
+                /** Format: int64 */
+                maxMinor?: number | null;
+                /** Format: uuid */
+                currencyId?: string | null;
+                negotiable?: boolean;
+            } | null;
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** Format: date-time */
+            expiresAt: string;
+            canonicalUrl: string;
+        };
+        /** @description Public-listable event with approximate location. */
+        PublicDirectoryEvent: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            description?: string | null;
+            /** Format: date-time */
+            startTime: string;
+            /** Format: date-time */
+            endTime?: string | null;
+            timezone: string;
+            /** Format: int64 */
+            priceCents?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            capacity?: number | null;
+            venue?: {
+                /** Format: int64 */
+                id?: number;
+                name?: string;
+            } | null;
+            location: components["schemas"]["PublicLocation"];
+            canonicalUrl: string;
+        };
+        /** @description Venue used by public events; address and contact fields are structurally absent. */
+        PublicDirectoryVenue: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            capacity?: number | null;
+            location: components["schemas"]["PublicLocation"];
+            canonicalUrl: string;
+        };
+        AgeAssuranceRequest: {
+            adultAttestation: boolean;
+            /** Format: int64 */
+            guardianPartyId?: number;
+        };
+        DirectoryProfessionInput: {
+            /** Format: uuid */
+            professionId: string;
+            headline?: string | null;
+            yearsExperience?: number | null;
+            /** Format: int64 */
+            rateMinMinor?: number | null;
+            /** Format: int64 */
+            rateMaxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
+        DirectoryInstrumentInput: {
+            /** Format: uuid */
+            instrumentId: string;
+            /** @enum {string|null} */
+            proficiency?: "beginner" | "intermediate" | "advanced" | "professional" | "virtuoso" | null;
+        };
+        DirectoryLanguageInput: {
+            /** Format: uuid */
+            languageId: string;
+            /** @enum {string|null} */
+            proficiency?: "basic" | "conversational" | "professional" | "native" | null;
+        };
+        DirectoryServiceAreaInput: {
+            /** Format: uuid */
+            countryId: string;
+            /** Format: uuid */
+            subdivisionId?: string | null;
+            /** Format: uuid */
+            cityId?: string | null;
+            /** Format: uuid */
+            metropolitanAreaId?: string | null;
+            /** @description Public only when intentionally supplied; never an exact address. */
+            sectorLabel?: string | null;
+            serviceRadiusKm?: number | null;
+            primaryLocation: boolean;
+            onsite: boolean;
+        };
+        /** @description Private editor projection available only through an explicit active manager grant. */
+        ManagedDirectoryProfile: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["DirectoryProfileKind"];
+            name: string;
+            slug: string;
+            bio: string | null;
+            experienceSummary: string | null;
+            creditsSummary: string | null;
+            portfolio: components["schemas"]["DirectoryPortfolioItem"][];
+            links: components["schemas"]["DirectoryProfileLink"][];
+            equipmentSummary: string | null;
+            rates: {
+                /** Format: int64 */
+                minMinor: number | null;
+                /** Format: int64 */
+                maxMinor: number | null;
+                /** Format: uuid */
+                currencyId: string | null;
+            } | null;
+            /** @enum {string} */
+            availabilityStatus: "available" | "limited" | "unavailable" | "ask";
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            travelRadiusKm: number | null;
+            professionIds: string[];
+            professionDetails: components["schemas"]["DirectoryProfessionInput"][];
+            instrumentIds: string[];
+            instrumentDetails: components["schemas"]["DirectoryInstrumentInput"][];
+            genreIds: string[];
+            serviceOfferingIds: string[];
+            languages: components["schemas"]["DirectoryLanguageInput"][];
+            serviceAreas: components["schemas"]["DirectoryServiceAreaInput"][];
+            status: string;
+            visibility: string;
+            moderationStatus: string;
+            /** Format: int64 */
+            version: number;
+            capabilities: {
+                [key: string]: boolean;
+            };
+        };
+        DirectoryProfileUpsert: {
+            profileKind: components["schemas"]["DirectoryProfileKind"];
+            publicName: string;
+            slug: string;
+            bio?: string;
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            experienceSummary?: string;
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            creditsSummary?: string;
+            /** @description Omit to preserve on update; send [] to clear. */
+            portfolio?: components["schemas"]["DirectoryPortfolioItem"][];
+            /** @description Omit to preserve on update; send [] to clear. */
+            links?: components["schemas"]["DirectoryProfileLink"][];
+            /** @description Omit to preserve on update; send an empty string to clear. */
+            equipmentSummary?: string;
+            /**
+             * Format: int64
+             * @description Omit both rate fields and currencyId to preserve on update.
+             */
+            rateMinMinor?: number;
+            /** Format: int64 */
+            rateMaxMinor?: number;
+            /**
+             * Format: uuid
+             * @description Required with rateMinMinor and invalid without it.
+             */
+            currencyId?: string;
+            /** @description Explicitly clears all profile-level rates on update. */
+            clearRates?: boolean;
+            /** @enum {string} */
+            availabilityStatus?: "available" | "limited" | "unavailable" | "ask";
+            professionIds: string[];
+            /** @description Detail ids must be present in professionIds. */
+            professionDetails?: components["schemas"]["DirectoryProfessionInput"][];
+            instrumentIds: string[];
+            /** @description Detail ids must be present in instrumentIds. */
+            instrumentDetails?: components["schemas"]["DirectoryInstrumentInput"][];
+            genreIds: string[];
+            serviceOfferingIds: string[];
+            /** @description Omit to preserve on update; send [] to clear. */
+            languages?: components["schemas"]["DirectoryLanguageInput"][];
+            /** @description Omit to use the backward-compatible single-location fields; send [] only for remote-only profiles. */
+            serviceAreas?: components["schemas"]["DirectoryServiceAreaInput"][];
+            /**
+             * Format: uuid
+             * @description Country of the primary service area; retained as a required compatibility field.
+             */
+            countryId: string;
+            /**
+             * Format: uuid
+             * @description Backward-compatible primary city when serviceAreas is omitted.
+             */
+            cityId?: string;
+            /**
+             * Format: uuid
+             * @description Backward-compatible primary metropolitan area when serviceAreas is omitted.
+             */
+            metropolitanAreaId?: string;
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            travelRadiusKm?: number;
+        };
+        StatusRequest: {
+            status: string;
+            reason?: string;
+        };
+        ManagedClassified: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            authorProfileId: string;
+            title: string;
+            slug: string;
+            status: string;
+            moderationStatus: string;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: int64 */
+            version: number;
+        };
+        ClassifiedCreate: {
+            /** Format: uuid */
+            authorProfileId: string;
+            /** Format: uuid */
+            categoryId: string;
+            title: string;
+            slug: string;
+            description: string;
+            professionIds: string[];
+            instrumentIds: string[];
+            genreIds: string[];
+            countryIds: string[];
+            cityIds: string[];
+            metropolitanAreaIds: string[];
+            onsite: boolean;
+            remote: boolean;
+            availableToTravel: boolean;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            experienceLevel?: string;
+            /** Format: uuid */
+            compensationTypeId?: string;
+            /** Format: int64 */
+            budgetMinMinor?: number;
+            /** Format: int64 */
+            budgetMaxMinor?: number;
+            /** Format: uuid */
+            currencyId?: string;
+            budgetNegotiable: boolean;
+            /** Format: uuid */
+            serviceOfferingId?: string;
+            /** Format: int64 */
+            serviceAdId?: number;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        /** @description Private to participants and authorized admins */
+        ClassifiedApplication: {
+            [key: string]: unknown;
+        };
+        ApplicationCreate: {
+            /** Format: uuid */
+            applicantProfileId: string;
+            message: string;
+            portfolio: {
+                [key: string]: unknown;
+            }[];
+            availability?: string;
+            /** Format: int64 */
+            proposedAmountMinor?: number;
+            /** Format: uuid */
+            currencyId?: string;
+        };
+        DirectoryClassifiedReference: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            slug: string;
+            status: string;
+        };
+        /** @description Participant-scoped invitation; contains public profile labels but no Party PII. */
+        DirectoryInvitation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** Format: uuid */
+            classifiedId?: string | null;
+            message: string;
+            /** @enum {string} */
+            status: "pending" | "accepted" | "declined" | "withdrawn" | "blocked" | "conversation_open" | "converted" | "expired";
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int64 */
+            version: number;
+            /** @enum {string} */
+            participantRole: "sender" | "target" | "admin";
+            senderProfile: components["schemas"]["DirectoryProfileReference"];
+            targetProfile: components["schemas"]["DirectoryProfileReference"];
+            classified?: components["schemas"]["DirectoryClassifiedReference"] | null;
+        };
+        InvitationCreate: {
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** Format: uuid */
+            classifiedId?: string;
+            message: string;
+        };
+        DirectoryContact: {
+            /** Format: uuid */
+            senderProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            /** @enum {string} */
+            contextKind: "profile" | "classified" | "application" | "invitation";
+            /** Format: uuid */
+            contextId: string;
+            message: string;
+        };
+        DirectoryReviewEligibility: {
+            /** Format: uuid */
+            interactionId: string;
+            interactionKind: components["schemas"]["DirectoryInteractionType"];
+            /** Format: date-time */
+            verifiedAt: string;
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryReviewCreate: {
+            /** Format: uuid */
+            interactionId: string;
+            /** Format: uuid */
+            authorProfileId: string;
+            /** Format: uuid */
+            subjectProfileId: string;
+            rating: number;
+            body?: string | null;
+        };
+        DirectoryReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            interactionId: string;
+            rating: number;
+            body?: string | null;
+            /** @enum {string} */
+            status: "pending" | "published" | "hidden" | "removed";
+            /** Format: date-time */
+            createdAt: string;
+            verifiedInteractionType: components["schemas"]["DirectoryInteractionType"];
+            authorProfile: components["schemas"]["DirectoryProfileReference"];
+            subjectProfile: components["schemas"]["DirectoryProfileReference"];
+        };
+        DirectoryFavorite: {
+            targetKind: components["schemas"]["DirectoryEntityType"];
+            targetId: string;
+            /** Format: date-time */
+            createdAt: string;
+            result?: components["schemas"]["DirectorySearchItem"];
+        };
+        SavedSearchCreate: {
+            name: string;
+            canonicalQuery: {
+                [key: string]: unknown;
+            };
+            alertsEnabled: boolean;
+            /** @enum {string} */
+            alertFrequency: "instant" | "daily" | "weekly" | "off";
+        };
+        SavedDirectorySearch: components["schemas"]["SavedSearchCreate"] & {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            lastEvaluatedAt?: string | null;
+        };
+        ClaimCreate: {
+            /** Format: uuid */
+            profileId: string;
+            /** @enum {string} */
+            claimType: "profile" | "organization" | "venue" | "administration" | "credit";
+            evidence: {
+                [key: string]: unknown;
+            }[];
+        };
+        VerificationCreate: {
+            /** Format: uuid */
+            profileId: string;
+            /** @enum {string} */
+            verificationType: "identity" | "organization" | "venue" | "ownership" | "administration" | "professional_credit";
+            evidence: {
+                [key: string]: unknown;
+            }[];
+        };
+        ReportCreate: {
+            /** @enum {string} */
+            targetKind: "profile" | "classified" | "application" | "invitation" | "event" | "venue" | "message" | "review";
+            targetId: string;
+            reasonCode: string;
+            details?: string;
+        };
+        ModerationDecision: {
+            /** @enum {string} */
+            decision: "dismiss" | "warn" | "pause" | "remove" | "suspend" | "close";
+            reasonCode: string;
+            notes: string;
+        };
+        ProfileMerge: {
+            /** Format: uuid */
+            sourceProfileId: string;
+            /** Format: uuid */
+            targetProfileId: string;
+            reason: string;
+        };
+        /** @enum {string} */
+        ExperienceReviewTargetKind: "event" | "marketplace_listing" | "service_offering" | "service_package";
+        ExperienceReviewSummary: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            average?: number | null;
+            /** Format: int64 */
+            count: number;
+        };
+        /** @enum {string} */
+        ExperienceReviewSourceKind: "event_ticket_order" | "marketplace_order" | "service_booking" | "service_storefront_order";
+        ExperienceReviewAuthor: {
+            name: string;
+            /** Format: uri */
+            avatarUrl?: string | null;
+        };
+        ExperienceReview: {
+            /** Format: uuid */
+            id: string;
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            rating: number;
+            body?: string | null;
+            /** @enum {string} */
+            status: "published" | "hidden" | "removed";
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {boolean} */
+            verified: true;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            author: components["schemas"]["ExperienceReviewAuthor"];
+        };
+        /** @description Public projection; the private source identifier is never returned. */
+        PublicExperienceReview: components["schemas"]["ExperienceReview"];
+        ExperienceReviewPage: {
+            summary: components["schemas"]["ExperienceReviewSummary"];
+            items: components["schemas"]["PublicExperienceReview"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
+        ExperienceReviewEligibility: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            targetTitle: string;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            /** @description Private evidence identifier; available only to the eligible account. */
+            sourceId: string;
+            /** Format: date-time */
+            completedAt: string;
+        };
+        ExperienceReviewCreate: {
+            targetKind: components["schemas"]["ExperienceReviewTargetKind"];
+            targetId: string;
+            sourceKind: components["schemas"]["ExperienceReviewSourceKind"];
+            sourceId: string;
+            rating: number;
+            body?: string | null;
         };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description Invalid input */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+        /** @description Not found or not publicly eligible */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ApiError"];
+            };
+        };
+    };
+    parameters: {
+        PublicEventId: number;
+        PublicEventTicketOrderId: number;
+        /** @description Immutable canonical UUID of the Domo quote runtime. */
+        PublicDomoQuoteId: string;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        PublicOrderLookupToken: string;
+        PublicBookingId: number;
+        CatalogCode: string;
+        /** @description Immutable canonical UUID of a persisted catalog item. */
+        CatalogItemId: string;
+        /** @description Immutable UUID of a persisted catalog revision. */
+        CatalogRevisionId: string;
+        /** @description Positive numeric identifier of one immutable CMS version. */
+        CmsContentId: number;
+        /** @description Immutable UUID of the persisted security grant revision. */
+        SecurityRevisionId: string;
+        /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+        PipelineWorkflowId: string;
+        DdexDocumentId: number;
+        DdexImportPlanId: number;
+        DdexExportId: number;
+        MarketplaceListingId: string;
+        MarketplaceCartId: string;
+        /** @description Canonical marketplace sale or rental order UUID. */
+        MarketplaceOrderId: string;
+        ServiceStorefrontPackageId: string;
+        /** @description Public order number or canonical UUID accepted by the service storefront. */
+        ServiceStorefrontOrderId: string;
+        /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+        OrderLookupToken: string;
+        /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+        IdempotencyKey: string;
+        SearchQuery: string;
+        /** @description Opaque stable keyset cursor */
+        Cursor: string;
+        Limit: number;
+        Slug: string;
+        "parameters-IdempotencyKey": string;
+        ProfileId: string;
+        ClassifiedId: string;
+        TargetKind: components["schemas"]["DirectoryEntityType"];
+        TargetId: string;
+        "parameters-TargetKind": components["schemas"]["ExperienceReviewTargetKind"];
+        "parameters-TargetId": string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listSocialEvents: {
+        parameters: {
+            query?: {
+                /** @description Stable UUID of a persisted event type. Codes, labels, and slugs are not accepted as relationships. */
+                event_type_id?: string;
+                /** @description Stable UUID of an active state in the persisted `social-event-lifecycle` workflow. */
+                workflow_state_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialEvent"][];
+                };
+            };
+            /** @description Unknown event type identifier */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createSocialEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SocialEvent"];
+            };
+        };
+        responses: {
+            /** @description Event created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocialEvent"];
+                };
+            };
+            /** @description Event type is unknown, inactive, ineffective, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToSocialEventMoment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                momentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventMomentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Moment with canonical reaction references */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventMoment"];
+                };
+            };
+            /** @description Reaction type UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pilot approval and active-candidate count */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approveEventResearchPilot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    erPilotApprovalReference: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Approved pilot state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchPilot"];
+                };
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The pilot has a different existing approval reference */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchRuns: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"][];
+                };
+            };
+        };
+    };
+    createEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunCreate"];
+            };
+        };
+        responses: {
+            /** @description Existing or newly created run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+        };
+    };
+    updateEventResearchRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchRun"];
+                };
+            };
+            /** @description A completed run cannot be reopened */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchCandidates: {
+        parameters: {
+            query?: {
+                provider?: string;
+                review_state?: "draft" | "review" | "discarded";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Research candidates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"][];
+                };
+            };
+        };
+    };
+    upsertEventResearchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchCandidateWrite"];
+            };
+        };
+        responses: {
+            /** @description Upserted candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchCandidate"];
+                };
+            };
+            /** @description Pilot cap reached or a closed run received a material change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    materializeEventResearchCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventResearchMaterializationRequest"];
+            };
+        };
+        responses: {
+            /** @description Existing or newly materialized event link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchMaterialization"];
+                };
+            };
+            /** @description Malformed candidate identifier or request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Candidate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Pilot not approved, candidate ineligible, or entity identity ambiguous */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventResearchChanges: {
+        parameters: {
+            query?: {
+                run_id?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Auditable candidate changes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResearchChange"][];
+                };
+            };
+        };
+    };
     getVersion: {
         parameters: {
             query?: never;
@@ -1598,11 +10669,112 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Session cleared */
+            /** @description Presented session credentials revoked and browser cookie cleared */
             200: {
                 headers: {
                     /** @description Expired session cookie. */
                     "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLocalePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user locale, currency, and timezone preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalePreferences"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLocalePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalePreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalePreferences"];
+                };
+            };
+            /** @description Unsupported locale, currency, timezone, or country */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordCurrencyConversion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurrencyConversionAuditCreate"];
+            };
+        };
+        responses: {
+            /** @description Conversion recorded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid currency, amount, rate, or source */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -1641,7 +10813,10 @@ export interface operations {
     createCourseRegistration: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 slug: string;
             };
@@ -1653,13 +10828,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Registration stored */
+            /** @description Registration checkout or honest gated lead state */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CourseRegistrationResponse"];
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
                 };
             };
             /** @description Invalid payload */
@@ -1671,6 +10846,247 @@ export interface operations {
             };
             /** @description Course not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No approved active policy, duplicate attendee, or no seat remains */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout domain or provider configuration unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCourseCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Course checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCourseDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted Datafast checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmCourseDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verified or still-pending checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider response failed verification */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or course checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureCoursePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                slug: string;
+                registrationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoursePaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Verified or still-processing checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourseCheckoutResponse"];
+                };
+            };
+            /** @description Course order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding mismatch or expired hold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider capture failed verification */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2137,6 +11553,313 @@ export interface operations {
             };
         };
     };
+    getArtistEnrichmentOverview: {
+        parameters: {
+            query?: {
+                status?: string;
+                artistId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Complete enrichment overview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentOverview"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listArtistEnrichmentRuns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recent runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"][];
+                };
+            };
+        };
+    };
+    runArtistEnrichment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Run result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    updateArtistEnrichmentRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunUpdate"];
+            };
+        };
+        responses: {
+            /** @description Durable updated run state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    rerunArtistEnrichment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Artist-scoped run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentRun"];
+                };
+            };
+        };
+    };
+    decideArtistEnrichmentSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                suggestionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Idempotent decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"];
+                };
+            };
+        };
+    };
+    createArtistResearchSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistResearchSourceCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent provenance record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistResearchSource"];
+                };
+            };
+        };
+    };
+    createArtistEnrichmentSuggestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentSuggestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or existing suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"];
+                };
+            };
+        };
+    };
+    createArtistMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistMediaAssetCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or existing media asset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistMediaAsset"];
+                };
+            };
+        };
+    };
+    decideArtistEnrichmentSuggestionSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated suggestion set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistEnrichmentSuggestion"][];
+                };
+            };
+        };
+    };
+    createArtistIdentityCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistIdentityCandidateCreate"];
+            };
+        };
+        responses: {
+            /** @description Candidate queued for review or automatic approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistIdentityCandidate"];
+                };
+            };
+        };
+    };
+    decideArtistIdentityCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArtistEnrichmentDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistIdentityCandidate"];
+                };
+            };
+        };
+    };
     listFanArtists: {
         parameters: {
             query?: never;
@@ -2154,6 +11877,36 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ArtistProfile"][];
                 };
+            };
+        };
+    };
+    searchPublicArtists: {
+        parameters: {
+            query?: {
+                q?: string;
+                genreId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching artist profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistProfile"][];
+                };
+            };
+            /** @description Invalid UUID or obsolete text genre parameter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2372,6 +12125,133 @@ export interface operations {
             };
         };
     };
+    reactToFanClubPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                postId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or post not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reactToFanClubMemory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistId: number;
+                memoryId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContentReactionRequest"];
+            };
+        };
+        responses: {
+            /** @description Current canonical reaction summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentReactionSummary"];
+                };
+            };
+            /** @description Malformed UUID or obsolete string reaction field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Artist club or memory not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reaction UUID is unknown, inactive, deprecated, or unpublished */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getFanClubLeaderboard: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                artistId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked Fan Club members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardEntry"][];
+                };
+            };
+            /** @description Artist club not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listParties: {
         parameters: {
             query?: never;
@@ -2478,37 +12358,6 @@ export interface operations {
             };
         };
     };
-    addPartyRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                partyId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleAssignmentRequest"];
-            };
-        };
-        responses: {
-            /** @description Role assigned */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Party not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     listUsers: {
         parameters: {
             query?: never;
@@ -2529,30 +12378,1671 @@ export interface operations {
             };
         };
     };
-    updateUserRoles: {
+    listLabelProjectNotes: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                userId: number;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active notes in deterministic status and update order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"][];
+                };
             };
+            /** @description Administrator or webmaster access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UserRoleUpdate"];
+                "application/json": components["schemas"]["LabelProjectNoteCreate"];
             };
         };
         responses: {
-            /** @description Roles replaced */
+            /** @description Persisted project note. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"];
+                };
+            };
+            /** @description Invalid or empty text. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Administrator or webmaster access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deactivateLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Note deactivated without hard deletion. */
             204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-            /** @description User not found */
+            /** @description The note was already deactivated. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateLabelProjectNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectNoteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabelProjectNoteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated project note. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LabelProjectNote"];
+                };
+            };
+            /** @description The expected version is stale. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The note was already deactivated. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicCmsContent: {
+        parameters: {
+            query: {
+                slug: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published content or the existing missing sentinel response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+        };
+    };
+    listPublicCmsContent: {
+        parameters: {
+            query?: {
+                locale?: string;
+                /** @description URL-compatibility search only; it does not determine an entity type. */
+                slugPrefix?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published authored content versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"][];
+                };
+            };
+        };
+    };
+    listAdminCmsContent: {
+        parameters: {
+            query?: {
+                contentId?: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Historical versions, including inactive versions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"][];
+                };
+            };
+        };
+    };
+    createCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CmsContentDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created after persisted content-type schema validation. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+            /** @description Direct publication, inactive content, or an invalid governed relationship was rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    publishCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Positive numeric identifier of one immutable CMS version. */
+                cmsContentId: components["parameters"]["CmsContentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published revision. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CmsContent"];
+                };
+            };
+            /** @description Prohibited author self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Legacy slug-only or structured Records content was rejected. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    archiveCmsDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Positive numeric identifier of one immutable CMS version. */
+                cmsContentId: components["parameters"]["CmsContentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draft archived without hard deletion. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Published, legacy slug-only, or structured Records content cannot be deleted. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicServiceOfferings: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned published offerings with persisted operational defaults. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceCatalogEnvelope"];
+                };
+            };
+            /** @description The client already holds this service catalog revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listServiceOfferings: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware versioned offerings; writes use catalog revisions. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceCatalogEnvelope"];
+                };
+            };
+            /** @description The client already holds this service catalog revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling access is required. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPipelineSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware pipeline registry and cards. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineSnapshot"];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineDefinitions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active pipeline workflows available to the caller. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineDefinition"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical cards ordered for the board. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown, inactive, or unbound workflow UUID. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineCardCreate"];
+            };
+        };
+        responses: {
+            /** @description Card created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description A copied service kind, stage string, inactive ID, or cross-workflow ID was rejected. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.create` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPipelineStages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active bilingual workflow states. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineStage"][];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Card details. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description The caller lacks the persisted `pipeline.read` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deletePipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Card removed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.delete` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updatePipelineCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of an active persisted pipeline workflow. Codes and slugs are not accepted as relationships. */
+                workflowId: components["parameters"]["PipelineWorkflowId"];
+                cardId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineCardUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineCard"];
+                };
+            };
+            /** @description Invalid state UUID, disallowed transition, copied stage string, or empty patch. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller lacks the persisted `pipeline.update` capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicCatalogDefinitions: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public, active catalog definitions visible in the requested locale. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDefinition"][];
+                };
+            };
+        };
+    };
+    batchPublicCatalogs: {
+        parameters: {
+            query: {
+                code: string[];
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Previously received catalog ETag. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned catalog batch suitable for client caching. */
+            200: {
+                headers: {
+                    /** @description Revision token for conditional refresh. */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogBatch"];
+                };
+            };
+            /** @description The requested catalog revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicCatalogItems: {
+        parameters: {
+            query?: {
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: {
+                /** @description Previously received catalog ETag. */
+                "If-None-Match"?: string;
+            };
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deterministically ordered published items. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
+                };
+            };
+            /** @description The requested catalog revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicCatalogItem: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published catalog item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Catalog or item not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicWorkflowStates: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                workflowCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned public workflow-state snapshot. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowStates"];
+                };
+            };
+            /** @description The caller already has the current workflow revision. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The workflow is missing, inactive, sensitive, or not marked for public reading. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminCatalogDefinitions: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active public and protected catalog definitions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogDefinition"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listContentTypes: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active content types with localized labels, route metadata, and versioned schemas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentType"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listWorkflowStates: {
+        parameters: {
+            query?: {
+                /** @description Optional persisted workflow definition code. */
+                workflowCode?: string;
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active workflow states ordered by their persisted sort order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowState"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAuthoredContents: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active authored content ordered by persisted sort order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthoredContent"][];
+                };
+            };
+            /** @description Missing persisted catalog.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    batchAdminCatalogs: {
+        parameters: {
+            query?: {
+                code?: string[];
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+                includeInactive?: boolean;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-filtered catalog batch. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogBatch"];
+                };
+            };
+            /** @description The requested catalog revision is already cached. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminCatalogItems: {
+        parameters: {
+            query?: {
+                locale?: string;
+                q?: string;
+                page?: number;
+                pageSize?: number;
+                includeInactive?: boolean;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deterministically ordered active and optionally inactive items. */
+            200: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogPage"];
+                };
+            };
+            /** @description The requested catalog revision is already cached. */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getAdminCatalogItem: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                /** @description Immutable canonical UUID of a persisted catalog item. */
+                itemId: components["parameters"]["CatalogItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Catalog item including administrative lifecycle metadata. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Catalog or item not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listCatalogRevisions: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revisions ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"][];
+                };
+            };
+        };
+    };
+    createCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft revision created without changing the published item. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Duplicate open revision, correlation, or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision entered review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+        };
+    };
+    approveCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReview"];
+            };
+        };
+        responses: {
+            /** @description Revision approved and published. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Missing approval capability or prohibited self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid workflow state or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectCatalogRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of a persisted catalog revision. */
+                revisionId: components["parameters"]["CatalogRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReview"];
+            };
+        };
+        responses: {
+            /** @description Revision rejected without mutating the published item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+        };
+    };
+    setCatalogItemActivation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+                /** @description Immutable canonical UUID of a persisted catalog item. */
+                itemId: components["parameters"]["CatalogItemId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogActivation"];
+            };
+        };
+        responses: {
+            /** @description Updated catalog item. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Invalid replacement or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reorderCatalogItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogReorder"];
+            };
+        };
+        responses: {
+            /** @description Ordering updated. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Incomplete item set or stale catalog revision. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeCatalogItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogMerge"];
+            };
+        };
+        responses: {
+            /** @description Merge revision created for governed review. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogRevision"];
+                };
+            };
+            /** @description Invalid or identical merge targets. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getCatalogUsage: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Aggregate usage rows without personal data. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogUsage"][];
+                };
+            };
+        };
+    };
+    exportCatalogCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bilingual catalog export. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    importCatalogCsv: {
+        parameters: {
+            query?: {
+                dryRun?: boolean;
+            };
+            header?: never;
+            path: {
+                catalogCode: components["parameters"]["CatalogCode"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/plain": string;
+            };
+        };
+        responses: {
+            /** @description Import validation or execution summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResult"];
+                };
+            };
+        };
+    };
+    getPublicRecordsFeed: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: {
+                /** @description Previously received Records feed ETag. */
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The deterministically ordered, localized Records feed. */
+            200: {
+                headers: {
+                    /** @description Revision token for conditional refresh. */
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecordsFeed"];
+                };
+            };
+            /** @description The requested Records feed revision is already cached by the client. */
+            304: {
+                headers: {
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSecurityRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active roles visible to an authorized security administrator. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityRole"][];
+                };
+            };
+            /** @description Missing persisted security.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPartyRoleAssignments: {
+        parameters: {
+            query?: {
+                partyId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current active and inactive versioned assignments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityPartyRoleAssignment"][];
+                };
+            };
+            /** @description Missing persisted security.read capability. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSecurityGrantRevisions: {
+        parameters: {
+            query?: {
+                workflowState?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Security revisions ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"][];
+                };
+            };
+        };
+    };
+    listSecurityAuditEvents: {
+        parameters: {
+            query?: {
+                partyId?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable audit events ordered newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityAuditEvent"][];
+                };
+            };
+        };
+    };
+    createPartyRoleGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartyRoleGrantDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created; it grants no access until separately approved. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description Version conflict, duplicate correlation id, or no effective change. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createRolePermissionGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolePermissionGrantDraft"];
+            };
+        };
+        responses: {
+            /** @description Draft created; it grants no access until separately approved. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    submitSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Revision entered review. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    approveSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecurityGrantReview"];
+            };
+        };
+        responses: {
+            /** @description Revision published and canonical grant updated. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description Missing approval capability or prohibited self-approval. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state or optimistic-lock conflict. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rejectSecurityGrantRevision: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Immutable UUID of the persisted security grant revision. */
+                revisionId: components["parameters"]["SecurityRevisionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecurityGrantReview"];
+            };
+        };
+        responses: {
+            /** @description Revision rejected without changing the canonical grant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+        };
+    };
+    requestMyFanRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelfFanRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description Request entered the security review queue. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityGrantRevision"];
+                };
+            };
+            /** @description The role is already active or an equivalent request is already pending. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2873,6 +14363,161 @@ export interface operations {
             };
         };
     };
+    listRadioAutoStopOptions: {
+        parameters: {
+            query?: {
+                /** @description Preferred label locale. Spanish is used unless the locale starts with `en`. */
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published auto-stop options and the canonical default */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioAutoStopOptions"];
+                };
+            };
+            /** @description Catalog, publication state, or its single effective default is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchRadioStreams: {
+        parameters: {
+            query?: {
+                /** @description Canonical persisted country UUID; copied codes, labels, and slugs are not accepted. */
+                countryId?: string;
+                /** @description Canonical persisted genre UUID; copied labels and slugs are not accepted. */
+                genreId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active radio streams in deterministic update order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioStream"][];
+                };
+            };
+            /** @description Unknown or inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertActiveRadioStream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioStreamUpsert"];
+            };
+        };
+        responses: {
+            /** @description Canonical radio stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioStream"];
+                };
+            };
+            /** @description Invalid stream metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    importRadioStreams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Import batch result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioImportResult"];
+                };
+            };
+            /** @description Invalid source list or batch limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refreshRadioStreamMetadata: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioMetadataRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Refresh batch result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioMetadataRefreshResult"];
+                };
+            };
+            /** @description Invalid refresh limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getRadioNowPlaying: {
         parameters: {
             query?: never;
@@ -2897,6 +14542,5872 @@ export interface operations {
             };
             /** @description Invalid stream url */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createRadioTransmission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioTransmissionRequest"];
+            };
+        };
+        responses: {
+            /** @description Transmission endpoints */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioTransmissionInfo"];
+                };
+            };
+            /** @description Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current presence or null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioPresence"] | null;
+                };
+            };
+        };
+    };
+    setRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RadioPresenceUpsert"];
+            };
+        };
+        responses: {
+            /** @description Updated presence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioPresence"];
+                };
+            };
+            /** @description Invalid presence metadata */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    clearRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Presence cleared */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPartyRadioPresence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Party presence or null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RadioPresence"] | null;
+                };
+            };
+            /** @description Invalid party identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createLiveSessionIntake: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["LiveSessionIntakeMultipart"];
+            };
+        };
+        responses: {
+            /** @description Intake created */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid multipart data, canonical reference, or terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A supplied musician identity is ambiguous */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Feedback accepted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid multipart data, catalog reference, consent, or attachment */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternalFeedback: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+                q?: string;
+                mine?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access-scoped reports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackSummary"][];
+                };
+            };
+            /** @description Intern/reporting access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Invalid report or traceability fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reporter cannot use the requested task/test relationship */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exportInternalFeedbackCsv: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    exportInternalFeedbackJson: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackSummary"][];
+                };
+            };
+        };
+    };
+    listLegacyFeedbackForAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Legacy feedback */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegacyFeedback"][];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Internal report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Unknown or private report */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Attempt to modify an authoritative field */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Received report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Report is not a valid draft */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    commentOnInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackCommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Comment recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackComment"];
+                };
+            };
+        };
+    };
+    uploadInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    caption?: string;
+                    /** Format: binary */
+                    attachment: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Evidence stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackEvidence"];
+                };
+            };
+            /** @description Invalid type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    linkInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackEvidenceLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Evidence link stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackEvidence"];
+                };
+            };
+        };
+    };
+    downloadInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+                evidenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Unknown */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    retestInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackRetestCreate"];
+            };
+        };
+        responses: {
+            /** @description Retest recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackRetest"];
+                };
+            };
+            /** @description Report is not ready for retest */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternAuditPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit plans */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"][];
+                };
+            };
+        };
+    };
+    createInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternAuditPlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft plan */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Unknown or unauthorized plan */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternAuditPlanUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+        };
+    };
+    activateInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Activated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Plan cannot be safely activated */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternTestCases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Test cases */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestCase"][];
+                };
+            };
+        };
+    };
+    createInternTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestCaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Test case created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestCase"];
+                };
+            };
+            /** @description Active plans are immutable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternAuditDailySummaries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Daily summaries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternDailySummary"][];
+                };
+            };
+        };
+    };
+    createInternAuditDailySummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternDailySummaryCreate"];
+            };
+        };
+        responses: {
+            /** @description Daily summary recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternDailySummary"];
+                };
+            };
+        };
+    };
+    getInternAuditFinalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Final summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternFinalSummary"];
+                };
+            };
+        };
+    };
+    updateInternAuditFinalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternFinalSummaryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Final summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternFinalSummary"];
+                };
+            };
+        };
+    };
+    listInternTestExecutions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Executions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"][];
+                };
+            };
+        };
+    };
+    createInternTestExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestExecutionCreate"];
+            };
+        };
+        responses: {
+            /** @description Execution appended */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"];
+                };
+            };
+        };
+    };
+    updateInternTestExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestExecutionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Execution updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"];
+                };
+            };
+            /** @description Terminal executions are immutable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDdexReferences: {
+        parameters: {
+            query?: {
+                locale?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permission-aware governed DDEX snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexReferenceSnapshot"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDdexDocuments: {
+        parameters: {
+            query?: {
+                workflowStateId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching DDEX documents */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDocument"][];
+                };
+            };
+            /** @description The workflow state identifier is not a canonical lowercase UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DdexUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage integration is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DDEX document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDocument"];
+                };
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadDdexRawDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Private file storage integration is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    validateDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Governed validation execution is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLatestDdexValidationReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Latest persisted validation report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexValidationReport"];
+                };
+            };
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    previewDdexDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.read` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Typed import preview generation is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDdexImportPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: components["parameters"]["DdexDocumentId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Typed import planning is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resolveDdexImportPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DdexImportPlanResolution"];
+            };
+        };
+        responses: {
+            /** @description Unknown or malformed request properties */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict resolution is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    commitDdexImportPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importPlanId: components["parameters"]["DdexImportPlanId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Import commit execution is not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDdexExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DdexExportRequest"];
+            };
+        };
+        responses: {
+            /** @description Unknown properties or malformed canonical UUID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing persisted `catalog.export` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Partner is inactive or does not allow the export-enabled version */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Export rendering and private storage are not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    downloadDdexExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exportId: components["parameters"]["DdexExportId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Missing persisted `catalog.export` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Export rendering and private storage are not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDdexPartners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DDEX partners */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexPartner"][];
+                };
+            };
+        };
+    };
+    createDdexPartner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DdexPartnerCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Partner created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexPartner"];
+                };
+            };
+            /** @description Unknown properties */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing persisted `catalog.import` capability */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A supplied standard version is inactive or not detection-enabled */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active public listings with authoritative server prices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"][];
+                };
+            };
+        };
+    };
+    getMarketplaceItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public listing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"];
+                };
+            };
+            /** @description Listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceRentalTerms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listingId: components["parameters"]["MarketplaceListingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalTermsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated public listing projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceItem"];
+                };
+            };
+            /** @description Invalid price */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Listing is not an active rental listing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Empty cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+        };
+    };
+    getMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current cart snapshot */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+            /** @description Cart not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertMarketplaceCartItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCartItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated cart with server-calculated totals */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCart"];
+                };
+            };
+            /** @description Invalid listing */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cart or listing not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Asset is no longer available */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    checkoutMarketplaceCart: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Created or idempotently recovered order awaiting manual confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency conflict or asset is already held */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The matching marketplace sales or rentals capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceStripePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Stripe marketplace checkout is disabled; use Datafast or PayPal */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplaceDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Bound hosted checkout and one-time guest lookup token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Invalid cart */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast did not create a verifiable checkout resource */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or the matching marketplace capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmMarketplaceDatafastStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current payment and separate fulfillment state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence conflicts with the immutable checkout */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast status could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMarketplacePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MarketplaceCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Bound PayPal order, approval URL, and one-time guest lookup token */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Invalid cart */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal did not create an order */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or the matching marketplace capability is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureMarketplacePaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplacePaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current payment and separate fulfillment state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence conflicts with the immutable checkout */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture or server verification failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceOrders: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders with payment and fulfillment state kept distinct */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"][];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMarketplaceOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Direct paid transition is prohibited for canonical orders */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualEvidenceSubmit"];
+            };
+        };
+        responses: {
+            /** @description Customer-safe order with truthful manual-review status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transfer reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence conflicts with the immutable checkout or is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceCustomerRequests: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe cancellation, return, extension, and dispute requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestSubmit"];
+            };
+        };
+        responses: {
+            /** @description Persisted request with truthful review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid request type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state changed or a matching request is already pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMarketplaceCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Protected finance projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Historical or ambiguous checkout requires reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceManualPaymentReview"];
+            };
+        };
+        responses: {
+            /** @description Current protected commerce projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceFulfillment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceFulfillmentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated fulfillment state and immutable history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transition payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical sale order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition is invalid or payment is not verified */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMarketplaceRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceRentalUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated rental state and immutable history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceOrder"];
+                };
+            };
+            /** @description Invalid transition or condition/deposit payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical rental order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceCustomerRequestsAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests and review evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"][];
+                };
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceCustomerRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceCustomerRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceCustomerRequest"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request or domain state changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMarketplaceDepositSettlements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable manual settlement evidence and review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"][];
+                };
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementSubmit"];
+            };
+        };
+        responses: {
+            /** @description Submitted settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid manual method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Deposit snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual deposit settlement is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewMarketplaceDepositSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Canonical marketplace sale or rental order UUID. */
+                orderId: components["parameters"]["MarketplaceOrderId"];
+                settlementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarketplaceDepositSettlementReview"];
+            };
+        };
+        responses: {
+            /** @description Reviewed settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceDepositSettlement"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operations and invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Separation-of-duties */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active packages ordered by their configured sort order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+        };
+    };
+    getServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Package pricing and fulfillment policy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Created or idempotently recovered unpaid order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-key payload conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe order state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontStripePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Hosted or tokenized payment-intent parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StripePaymentIntent"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stripe capability is disabled */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast rejected or did not create the resource */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmServiceStorefrontDatafastStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current order state after provider verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast status could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order and approval URL */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing provider binding conflicts with the order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal rejected or did not create the order */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    captureServiceStorefrontPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current order state after server verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider evidence did not match the immutable order snapshot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capture or server verification failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receiveServiceStorefrontPaypalWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "PayPal-Transmission-Id": string;
+                "PayPal-Transmission-Time": string;
+                "PayPal-Cert-Url": string;
+                "PayPal-Auth-Algo": string;
+                "PayPal-Transmission-Sig": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Event was verified and processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required signature header or event envelope is invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal signature verification failed */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event identifier conflicts with different raw evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Webhook capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectServiceStorefrontManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Order remains awaiting manual confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Unsupported manual payment method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createServiceStorefrontRevision: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRevisionCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted revision request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRevision"];
+                };
+            };
+            /** @description Order not found or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order state does not permit a revision */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontOrders: {
+        parameters: {
+            query?: {
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Matching service orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontOrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated service order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontOrder"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontPackages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active and inactive packages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminCreateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageCreate"];
+            };
+        };
+        responses: {
+            /** @description Created package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminUpdateServiceStorefrontPackage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                packageId: components["parameters"]["ServiceStorefrontPackageId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontPackageUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated package */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontPackage"];
+                };
+            };
+            /** @description Invalid pricing or quantity policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Package not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListServiceStorefrontRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refund history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"][];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminRequestServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceStorefrontRefundCreate"];
+            };
+        };
+        responses: {
+            /** @description Requested refund awaiting independent approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Invalid amount or reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Paid order or capture binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Amount exceeds the unreserved captured balance or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminApproveServiceStorefrontRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current truthful refund state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontRefund"];
+                };
+            };
+            /** @description Strict Admin role required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state or provider evidence mismatch */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refund capability is disabled for this environment */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal request failed; refund remains processing or failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReconcileServiceStorefrontOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Public order number or canonical UUID accepted by the service storefront. */
+                orderId: components["parameters"]["ServiceStorefrontOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read-only provider comparison; mismatches create an operator exception */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceStorefrontReconciliation"];
+                };
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Order or provider binding not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider reconciliation capability is unavailable */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status could not be read */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminListCommerceProviderEvents: {
+        parameters: {
+            query?: {
+                status?: "pending" | "processing" | "processed" | "retry" | "dead_letter" | "ignored";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redacted provider-event records ordered newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"][];
+                };
+            };
+            /** @description Invalid filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    adminReplayCommerceProviderEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommerceProviderEventReplayCreate"];
+            };
+        };
+        responses: {
+            /** @description Event moved from dead_letter to retry with an immutable action record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommerceProviderEvent"];
+                };
+            };
+            /** @description Invalid event ID or replay reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is not currently dead-lettered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingAvailability: {
+        parameters: {
+            query: {
+                serviceOfferingId: string;
+                startsAt: string;
+                durationMinutes: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Availability and optional server-authoritative quote */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingAvailability"];
+                };
+            };
+            /** @description Invalid schedule input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Service offering is not selectable */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicTentativeBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Tentative booking created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Resource was reserved by another request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid service relationship */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingCheckoutCreate"];
+            };
+        };
+        responses: {
+            /** @description Canonical checkout and temporary resource hold */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Domain checkout is disabled in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicBookingCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Order-Lookup-Token": string;
+            };
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted-checkout resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or Datafast rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicBookingDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Binding conflict or verified late payment requires staff reconciliation */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal Orders v2 resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired/already-paid booking or immutable provider-binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking domain or PayPal rail is disabled/misconfigured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicBookingPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingPaypalCapture"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified payment and separate fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or PayPal order/binding conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider failure or amount/currency/reference mismatch */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    selectPublicBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualPaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Awaiting-evidence checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Expired booking or another payment rail is active */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual bank transfer is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPublicBookingManualEvidence: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicBookingManualEvidenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Evidence submitted; payment remains unconfirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicBookingCheckout"];
+                };
+            };
+            /** @description Invalid reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Manual payment was not selected or different evidence is already under review */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getServiceBookingCommerce: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Booking payment and separate fulfillment projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invoicing access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewServiceBookingManualPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: components["parameters"]["PublicBookingId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServiceBookingManualReview"];
+            };
+        };
+        responses: {
+            /** @description Current truthful booking commerce state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceBookingCommerce"];
+                };
+            };
+            /** @description Invalid action or review notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invoicing access required or separation of duties failed */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Canonical booking commerce order not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Evidence */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchDirectory: {
+        parameters: {
+            query?: {
+                q?: components["parameters"]["SearchQuery"];
+                entityType?: components["schemas"]["DirectoryEntityType"];
+                cityId?: string;
+                /** @description Consented ephemeral search latitude */
+                latitude?: number;
+                /** @description Consented ephemeral search longitude */
+                longitude?: number;
+                radiusKm?: number;
+                professionId?: string;
+                serviceId?: string;
+                instrumentId?: string;
+                genreId?: string;
+                remote?: boolean;
+                available?: boolean;
+                dateFrom?: string;
+                dateTo?: string;
+                /** @description Opaque stable keyset cursor */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Organic results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectorySearchResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    suggestDirectoryQuery: {
+        parameters: {
+            query?: {
+                q?: components["parameters"]["SearchQuery"];
+                cityId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Canonical taxonomy and entity suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectorySuggestion"][];
+                };
+            };
+        };
+    };
+    getDirectoryTaxonomies: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en" | "pt";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Database-governed directory options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryTaxonomies"];
+                };
+            };
+        };
+    };
+    getPublicDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public profile projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryProfile"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicDirectoryProfileByParty: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public profile projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryProfile"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listPublicDirectoryReviews: {
+        parameters: {
+            query?: {
+                /** @description Last visible review id from the previous stable page */
+                cursor?: string;
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published reviews backed by verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewPage"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicClassified: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: components["parameters"]["Slug"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published and unexpired classified */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicClassified"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicDirectoryEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public-listable event without privileged browser credentials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryEvent"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicDirectoryVenue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Safe public venue projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDirectoryVenue"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setDirectoryAgeAssurance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgeAssuranceRequest"];
+            };
+        };
+        responses: {
+            /** @description Restricted age-assurance state; adult attestation is not identity verification */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listManagedDirectoryProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicitly managed profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"][];
+                };
+            };
+        };
+    };
+    createDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Draft profile with an explicit manager grant */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
+            };
+        };
+    };
+    updateDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: components["parameters"]["ProfileId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Updated explicitly managed profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
+            };
+        };
+    };
+    transitionDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: components["parameters"]["ProfileId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Transitioned profile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedDirectoryProfile"];
+                };
+            };
+        };
+    };
+    listManagedClassifieds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Classifieds authored by explicitly managed profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedClassified"][];
+                };
+            };
+        };
+    };
+    createClassified: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClassifiedCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft classified */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedClassified"];
+                };
+            };
+        };
+    };
+    transitionClassified: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Classified state transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listClassifiedApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private participant-scoped applications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"][];
+                };
+            };
+        };
+    };
+    createClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                classifiedId: components["parameters"]["ClassifiedId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent application */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+        };
+    };
+    transitionClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Participant-authorized transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryInvitations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Participant-scoped invitations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryInvitation"][];
+                };
+            };
+        };
+    };
+    createDirectoryInvitation: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationCreate"];
+            };
+        };
+        responses: {
+            /** @description Preference-checked invitation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryInvitation"];
+                };
+            };
+        };
+    };
+    transitionDirectoryInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Participant-authorized transition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    contactDirectoryProfile: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryContact"];
+            };
+        };
+        responses: {
+            /** @description Existing chat thread linked to directory context */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryReviewEligibility: {
+        parameters: {
+            query?: {
+                authorProfileId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private review directions for explicitly managed profiles and verified completed interactions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReviewEligibility"][];
+                };
+            };
+        };
+    };
+    createDirectoryReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DirectoryReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent review backed by an eligible verified completed interaction */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryReview"];
+                };
+            };
+            /** @description Interaction is not eligible or was already reviewed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryFavorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user's favorites */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryFavorite"][];
+                };
+            };
+        };
+    };
+    saveDirectoryFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["TargetKind"];
+                targetId: components["parameters"]["TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Idempotently saved favorite */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteDirectoryFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["TargetKind"];
+                targetId: components["parameters"]["TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Favorite removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSavedDirectorySearches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Saved searches and alert preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedDirectorySearch"][];
+                };
+            };
+        };
+    };
+    createSavedDirectorySearch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedSearchCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent saved search; alert deliveries are deduplicated by result version */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDirectoryClaim: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimCreate"];
+            };
+        };
+        responses: {
+            /** @description Submitted claim; it grants no management before approval */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createDirectoryVerificationRequest: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerificationCreate"];
+            };
+        };
+        responses: {
+            /** @description Submitted independent verification request */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reportDirectoryContent: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportCreate"];
+            };
+        };
+        responses: {
+            /** @description Deduplicated community report */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryClaimsForReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only claim queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claimId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Reviewed claim; only approval can create a manager grant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryVerificationsForReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only verification queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                verificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Independent verification decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listDirectoryModerationQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin-only moderation cases and reports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideDirectoryModerationCase: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerationDecision"];
+            };
+        };
+        responses: {
+            /** @description Auditable moderation decision */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    mergeDirectoryProfiles: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileMerge"];
+            };
+        };
+        responses: {
+            /** @description Non-destructive */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicExperienceReviews: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                targetKind: components["parameters"]["parameters-TargetKind"];
+                targetId: components["parameters"]["parameters-TargetId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stable page of published verified reviews and its aggregate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReviewPage"];
+                };
+            };
+            /** @description Invalid target kind or identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Review target not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listExperienceReviewEligibility: {
+        parameters: {
+            query?: {
+                targetKind?: components["schemas"]["ExperienceReviewTargetKind"];
+                targetId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private eligibility evidence for the authenticated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReviewEligibility"][];
+                };
+            };
+            /** @description Invalid or incomplete target filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createExperienceReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperienceReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Idempotent published verified review */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperienceReview"];
+                };
+            };
+            /** @description Invalid review payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Interaction is ineligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Daily review limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public event ticket storefront */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketStorefront"];
+                };
+            };
+            /** @description Event is not publicly eligible for ticket purchase */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Guest ticket order with a temporary inventory hold; lookupToken is returned only on creation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Invalid buyer */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or tier is not public */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Capacity */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicEventTicketCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Customer-safe payment and fulfillment state; ticket references appear only after issuance */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicEventTicketDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified checkout state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Hold expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or event ticket checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicEventTicketPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                eventId: components["parameters"]["PublicEventId"];
+                orderId: components["parameters"]["PublicEventTicketOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEventTicketPaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified checkout and fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventTicketCheckout"];
+                };
+            };
+            /** @description Order not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal capture or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicDomoStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public Domo quote capability; checkoutAvailable remains false until all environment and rate-card gates pass */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoStorefront"];
+                };
+            };
+        };
+    };
+    createPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Immutable quote and temporary date hold; lookupToken is returned only on creation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Customer or event input is invalid under the approved rate-card policy */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requested venue window is already held or reserved */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authoritative Domo quotes or an approved active rate card are unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current quote, payment, and venue-fulfillment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    acceptPublicDomoQuote: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoQuoteAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted quote awaiting a separately verified deposit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote hold expired or quote cannot be accepted in its current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicDomoDatafastCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound Datafast hosted checkout */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DatafastCheckout"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is unaccepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datafast or Domo checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPublicDomoDatafastStatus: {
+        parameters: {
+            query: {
+                resourcePath: string;
+            };
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-verified quote, checkout, and venue state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or verified payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider status or immutable payment fields could not be verified */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createPublicDomoPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bound PayPal order awaiting customer approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaypalCreate"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Quote is unaccepted */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal or Domo checkout is disabled */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    capturePublicDomoPaypalOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                /** @description Immutable canonical UUID of the Domo quote runtime. */
+                quoteId: components["parameters"]["PublicDomoQuoteId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicDomoPaypalCaptureRequest"];
+            };
+        };
+        responses: {
+            /** @description Current server-verified quote, checkout, and venue state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDomoQuote"];
+                };
+            };
+            /** @description Quote not found or lookup token does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider binding mismatch or verified payment arrived after hold expiry */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPal capture or immutable payment fields could not be verified */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

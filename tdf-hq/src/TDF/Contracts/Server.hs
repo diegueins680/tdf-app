@@ -4,6 +4,7 @@
 module TDF.Contracts.Server
   ( server
   , decodeStoredContract
+  , decodeStoredContractFor
   , validateContractId
   , validateContractPayload
   , validateContractSendPayload
@@ -16,7 +17,7 @@ import           Data.Aeson.Types (withObject)
 import qualified Data.Aeson.Key as K
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Lazy as BL
-import           Data.Char (isAsciiLower, isDigit)
+import           Data.Char (isAsciiLower, isDigit, isSpace)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -134,7 +135,7 @@ loadContract cid = do
     then pure (Right Nothing)
     else do
       bytes <- BL.readFile path
-      pure (Just <$> decodeStoredContract bytes)
+      pure (Just <$> decodeStoredContractFor cid bytes)
 
 decodeStoredContract :: BL.ByteString -> Either Text StoredContract
 decodeStoredContract bytes =
@@ -142,11 +143,22 @@ decodeStoredContract bytes =
     Left _ -> Left "Stored contract payload is unreadable"
     Right stored -> validateStoredContract stored
 
+decodeStoredContractFor :: Text -> BL.ByteString -> Either Text StoredContract
+decodeStoredContractFor rawExpectedId bytes = do
+  expectedId <- validateRequestedContractId rawExpectedId
+  stored <- decodeStoredContract bytes
+  if scId stored == expectedId
+    then Right stored
+    else Left "Stored contract id does not match requested contract id"
+
 validateStoredContract :: StoredContract -> Either Text StoredContract
 validateStoredContract stored@StoredContract{..} = do
-  contractId <- validateStoredContractId scId
-  storedKind <- validateStoredContractKind scKind
+  contractId <- validateCanonicalStoredContractId scId
+  storedKind <- validateCanonicalStoredContractKind scKind
   (payloadKind, normalizedPayload) <- firstServerErrorText (validateContractPayload scPayload)
+  if scPayload /= normalizedPayload
+    then Left "Stored contract payload is not canonical"
+    else Right ()
   if storedKind /= payloadKind
     then Left "Stored contract kind does not match payload kind"
     else
@@ -157,11 +169,35 @@ validateStoredContract stored@StoredContract{..} = do
           , scPayload = normalizedPayload
           }
 
+validateCanonicalStoredContractId :: Text -> Either Text Text
+validateCanonicalStoredContractId rawId = do
+  contractId <- validateStoredContractId rawId
+  if rawId == contractId
+    then Right contractId
+    else Left "Stored contract id is not canonical"
+
 validateStoredContractId :: Text -> Either Text Text
 validateStoredContractId rawId =
   case UUID.fromText (T.strip rawId) of
-    Just uuid -> Right (toText uuid)
+    Just uuid
+      | isNilUuid uuid -> Left "Stored contract id is invalid"
+      | otherwise -> Right (toText uuid)
     Nothing -> Left "Stored contract id is invalid"
+
+validateRequestedContractId :: Text -> Either Text Text
+validateRequestedContractId rawId =
+  case validateStoredContractId rawId of
+    Left _ -> Left "Requested contract id is invalid"
+    Right contractId
+      | rawId == contractId -> Right contractId
+      | otherwise -> Left "Requested contract id is not canonical"
+
+validateCanonicalStoredContractKind :: Text -> Either Text Text
+validateCanonicalStoredContractKind rawKind = do
+  kind <- validateStoredContractKind rawKind
+  if rawKind == kind
+    then Right kind
+    else Left "Stored contract kind is not canonical"
 
 validateStoredContractKind :: Text -> Either Text Text
 validateStoredContractKind rawKind =
@@ -175,12 +211,17 @@ firstServerErrorText =
 
 validateContractId :: Text -> Either ServerError Text
 validateContractId raw =
-  case UUID.fromText (T.strip raw) of
-    Just uuid -> Right (toText uuid)
-    Nothing ->
+  case validateRequestedContractId raw of
+    Right contractId -> Right contractId
+    Left _ -> invalidContractId
+  where
+    invalidContractId =
       Left err400
         { errBody = "Invalid contract id"
         }
+
+isNilUuid :: UUID.UUID -> Bool
+isNilUuid uuid = toText uuid == "00000000-0000-0000-0000-000000000000"
 
 validateContractSendPayload :: A.Value -> Either ServerError Text
 validateContractSendPayload (A.Object payloadObj)
@@ -207,19 +248,32 @@ validateContractSendPayload _ =
 
 validateContractPayload :: A.Value -> Either ServerError (Text, A.Value)
 validateContractPayload (A.Object payloadObj) =
-  case KM.lookup "kind" payloadObj of
-    Nothing ->
+  case reservedPayloadKey of
+    Just reservedKey ->
       Left err400
-        { errBody = "Contract payload must include a kind field"
+        { errBody = BL.fromStrict (TE.encodeUtf8 ("Contract payload must not include server-managed field: " <> reservedKey))
         }
-    Just (A.String rawKind) ->
-      case normalizeContractKind rawKind of
-        Left err -> Left err
-        Right kindText ->
-          Right (kindText, A.Object (KM.insert "kind" (A.String kindText) payloadObj))
-    Just _ ->
-      invalidKind
+    Nothing ->
+      case KM.lookup "kind" payloadObj of
+        Nothing ->
+          Left err400
+            { errBody = "Contract payload must include a kind field"
+            }
+        Just (A.String rawKind) ->
+          case normalizeContractKind rawKind of
+            Left err -> Left err
+            Right kindText ->
+              let normalizedPayload = A.Object (KM.insert "kind" (A.String kindText) payloadObj)
+              in do
+                validateContractPayloadForPdf normalizedPayload
+                Right (kindText, normalizedPayload)
+        Just _ ->
+          invalidKind
   where
+    reservedPayloadKey =
+      case filter (`KM.member` payloadObj) ["id", "created_at"] of
+        [] -> Nothing
+        (key:_) -> Just (K.toText key)
     invalidKind =
       Left err400
         { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
@@ -228,6 +282,46 @@ validateContractPayload _ =
   Left err400
     { errBody = "Contract payload must be a JSON object"
     }
+
+validateContractPayloadForPdf :: A.Value -> Either ServerError ()
+validateContractPayloadForPdf payload
+  | BL.length (A.encode payload) > fromIntegral maxContractPayloadBytes =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                "Contract payload must be "
+                  <> T.pack (show maxContractPayloadBytes)
+                  <> " bytes or fewer"
+        }
+  | containsLatexVerbatimTerminator payload =
+      Left err400
+        { errBody = "Contract payload text must not include the LaTeX verbatim terminator"
+        }
+  | otherwise =
+      Right ()
+
+maxContractPayloadBytes :: Int
+maxContractPayloadBytes = 256 * 1024
+
+containsLatexVerbatimTerminator :: A.Value -> Bool
+containsLatexVerbatimTerminator (A.String value) =
+  any isLatexVerbatimTerminatorAt (T.tails value)
+containsLatexVerbatimTerminator (A.Object payloadObj) =
+  any (containsLatexVerbatimTerminator . A.String . K.toText) (KM.keys payloadObj)
+    || any containsLatexVerbatimTerminator (KM.elems payloadObj)
+containsLatexVerbatimTerminator (A.Array payloadValues) =
+  any containsLatexVerbatimTerminator payloadValues
+containsLatexVerbatimTerminator _ =
+  False
+
+isLatexVerbatimTerminatorAt :: Text -> Bool
+isLatexVerbatimTerminatorAt value =
+  case T.stripPrefix "\\end" value of
+    Just rest ->
+      "{verbatim}" `T.isPrefixOf` T.dropWhile isSpace rest
+    Nothing ->
+      False
 
 normalizeContractEmail :: Text -> Maybe Text
 normalizeContractEmail rawEmail =
@@ -240,10 +334,8 @@ isValidContractEmail candidate =
     [localPart, domain] ->
       T.length candidate <= 254
         && isValidContractEmailLocalPart localPart
-        && not (T.null domain)
         && not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate)
-        && T.isInfixOf "." domain
-        && all isValidContractEmailDomainLabel (T.splitOn "." domain)
+        && isValidContractEmailDomain domain
     _ -> False
 
 isValidContractEmailLocalPart :: Text -> Bool
@@ -259,6 +351,17 @@ isValidContractEmailLocalChar :: Char -> Bool
 isValidContractEmailLocalChar c =
   isAsciiLower c || isDigit c || c `elem` ("!#$%&'*+/=?^_`{|}~.-" :: String)
 
+isValidContractEmailDomain :: Text -> Bool
+isValidContractEmailDomain domain =
+  not (T.null domain)
+    && T.isInfixOf "." domain
+    && all isValidContractEmailDomainLabel labels
+    && case reverse labels of
+      finalLabel : _ -> isValidContractEmailFinalDomainLabel finalLabel
+      [] -> False
+  where
+    labels = T.splitOn "." domain
+
 isValidContractEmailDomainLabel :: Text -> Bool
 isValidContractEmailDomainLabel label =
   not (T.null label)
@@ -266,6 +369,10 @@ isValidContractEmailDomainLabel label =
     && not (T.isPrefixOf "-" label)
     && not (T.isSuffixOf "-" label)
     && T.all isValidContractEmailDomainChar label
+
+isValidContractEmailFinalDomainLabel :: Text -> Bool
+isValidContractEmailFinalDomainLabel label =
+  T.length label >= 2 && T.any isAsciiLower label
 
 isValidContractEmailDomainChar :: Char -> Bool
 isValidContractEmailDomainChar c = isAsciiLower c || isDigit c || c == '-'
@@ -284,12 +391,16 @@ normalizeContractKind rawKind
       Left err400
         { errBody = "Contract payload kind must include at least one ASCII letter or number"
         }
-  | T.all validKindChar kindText =
-      Right kindText
-  | otherwise =
+  | not (T.all validKindChar kindText) =
       Left err400
         { errBody = "Contract payload kind must be a non-empty slug using ASCII letters, numbers, hyphens, or underscores"
         }
+  | not (isKindMeaningfulChar (T.head kindText) && isKindMeaningfulChar (T.last kindText)) =
+      Left err400
+        { errBody = "Contract payload kind must start and end with an ASCII letter or number"
+        }
+  | otherwise =
+      Right kindText
   where
     kindText = T.toLower (T.strip rawKind)
     isKindMeaningfulChar c = isAsciiLower c || isDigit c

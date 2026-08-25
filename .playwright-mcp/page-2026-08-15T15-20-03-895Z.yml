@@ -1,0 +1,254 @@
+- generic [ref=f30e9]:
+  - generic [ref=f30e12]:
+    - link [ref=f30e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e22]
+    - generic [ref=f30e25]:
+      - link [ref=f30e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e35]
+      - link [ref=f30e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e45]
+      - link [ref=f30e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f30e57]
+      - link [ref=f30e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e67]
+      - link [ref=f30e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e222]
+      - link [ref=f30e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e90]
+      - link [ref=f30e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e100]
+      - link [ref=f30e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e112]:
+          - img "tdf.records.label's profile picture" [ref=f30e113]
+    - generic [ref=f30e114]:
+      - link [ref=f30e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e122]
+      - link [ref=f30e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e130]
+  - main [ref=f30e134]:
+    - generic [ref=f30e230]:
+      - navigation "Thread list" [ref=f30e231]:
+        - generic [ref=f30e232]:
+          - generic [ref=f30e233]:
+            - button [ref=f30e234] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e236]
+              - img "Down chevron icon" [ref=f30e239]
+            - button [ref=f30e243] [cursor=pointer]:
+              - img "New message" [ref=f30e245]
+          - tablist [ref=f30e250]:
+            - tab "Primary" [selected] [ref=f30e251] [cursor=pointer]
+            - tab "General" [ref=f30e254] [cursor=pointer]
+            - tab "From ads" [ref=f30e257] [cursor=pointer]
+            - tab "Requests" [ref=f30e261] [cursor=pointer]
+          - generic [ref=f30e267]:
+            - img "Search" [ref=f30e269]
+            - textbox "Search" [ref=f30e272]
+          - generic [ref=f30e273]:
+            - generic [ref=f30e275]:
+              - list [ref=f30e277]:
+                - listitem [ref=f30e278]
+                - listitem [ref=f30e279]:
+                  - button "Current obsession... Your note" [ref=f30e281] [cursor=pointer]:
+                    - generic [ref=f30e282]:
+                      - generic [ref=f30e283]: Current obsession...
+                      - generic [ref=f30e289]:
+                        - link [ref=f30e291]
+                        - generic [ref=f30e292]: Your note
+                - listitem [ref=f30e294]:
+                  - button "Hoy @collide.party 🙂‍↕️⭐️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=f30e297] [cursor=pointer]:
+                    - generic [ref=f30e298]:
+                      - generic [ref=f30e306]:
+                        - text: Hoy
+                        - link "@collide.party" [ref=f30e307]:
+                          - /url: /collide.party/
+                        - text: 🙂‍↕️⭐️
+                      - generic [ref=f30e308]:
+                        - link [ref=f30e310]:
+                          - img "anajusegovia's profile picture" [ref=f30e311]
+                        - generic [ref=f30e312]: Ana Julia/ DJ JU🫧
+                - listitem [ref=f30e315]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Kuervo mío Explicit Sal y Mileto Sold Out! Pronto nos vemos apu.wasi.cultura's profile picture Apu Wasi Gastro-Cultura" [ref=f30e318] [cursor=pointer]:
+                    - generic [ref=f30e319]:
+                      - generic [ref=f30e325]:
+                        - generic [ref=f30e326]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e328]
+                          - generic [ref=f30e332]: Kuervo mío
+                          - img "Explicit" [ref=f30e334]
+                        - generic [ref=f30e336]: Sal y Mileto
+                        - generic [ref=f30e337]: Sold Out! Pronto nos vemos
+                      - generic [ref=f30e338]:
+                        - link [ref=f30e340]:
+                          - img "apu.wasi.cultura's profile picture" [ref=f30e341]
+                        - generic [ref=f30e342]: Apu Wasi Gastro-Cultura
+                - listitem [ref=f30e345]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Guataquí (Berroche) Martina Camargo 🪷 dannygallardo9643's profile picture Daniela Gallardo" [ref=f30e348] [cursor=pointer]:
+                    - generic [ref=f30e349]:
+                      - generic [ref=f30e355]:
+                        - generic [ref=f30e356]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e358]
+                          - generic [ref=f30e362]: Guataquí (Berroche)
+                        - generic [ref=f30e363]: Martina Camargo
+                        - generic [ref=f30e364]: 🪷
+                      - generic [ref=f30e365]:
+                        - link [ref=f30e367]:
+                          - img "dannygallardo9643's profile picture" [ref=f30e368]
+                        - generic [ref=f30e369]: Daniela Gallardo
+                - listitem [ref=f30e372]:
+                  - button "Done djzeret's profile picture Zeret 🧑‍🩰Dj" [ref=f30e375] [cursor=pointer]:
+                    - generic [ref=f30e376]:
+                      - generic [ref=f30e377]: Done
+                      - generic [ref=f30e384]:
+                        - link [ref=f30e386]:
+                          - img "djzeret's profile picture" [ref=f30e387]
+                        - generic [ref=f30e388]: Zeret 🧑‍🩰Dj
+                - listitem [ref=f30e391]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Johny Santiago Javier blue_records333's profile picture Blue Records" [ref=f30e394] [cursor=pointer]:
+                    - generic [ref=f30e395]:
+                      - generic [ref=f30e401]:
+                        - generic [ref=f30e402]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e404]
+                          - generic [ref=f30e408]: Johny
+                        - generic [ref=f30e409]: Santiago Javier
+                      - generic [ref=f30e410]:
+                        - link [ref=f30e412]:
+                          - img "blue_records333's profile picture" [ref=f30e413]
+                        - generic [ref=f30e414]: Blue Records
+                - listitem [ref=f30e417]:
+                  - button "I miss the old kanye luis_cdvg's profile picture misticbafu" [ref=f30e420] [cursor=pointer]:
+                    - generic [ref=f30e421]:
+                      - generic [ref=f30e422]: I miss the old kanye
+                      - generic [ref=f30e429]:
+                        - link [ref=f30e431]:
+                          - img "luis_cdvg's profile picture" [ref=f30e432]
+                        - generic [ref=f30e433]: misticbafu
+                - listitem [ref=f30e436]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Up There Dyed Soundorom Si estuviera en Ecuador seguramente hoy sería todo @bassick_uio purohueso999's profile picture Li.lith" [ref=f30e439] [cursor=pointer]:
+                    - generic [ref=f30e440]:
+                      - generic [ref=f30e446]:
+                        - generic [ref=f30e447]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e449]
+                          - generic [ref=f30e453]: Up There
+                        - generic [ref=f30e454]: Dyed Soundorom
+                        - generic [ref=f30e456]:
+                          - text: Si estuviera en Ecuador seguramente hoy sería todo
+                          - link "@bassick_uio" [ref=f30e457]:
+                            - /url: /bassick_uio/
+                      - generic [ref=f30e458]:
+                        - link [ref=f30e460]:
+                          - img "purohueso999's profile picture" [ref=f30e461]
+                        - generic [ref=f30e462]: Li.lith
+                - listitem [ref=f30e465]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Count In Fives The Horrors passionpoison84's profile picture Pablo Yépez" [ref=f30e468] [cursor=pointer]:
+                    - generic [ref=f30e469]:
+                      - generic [ref=f30e475]:
+                        - generic [ref=f30e476]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e478]
+                          - generic [ref=f30e482]: Count In Fives
+                        - generic [ref=f30e483]: The Horrors
+                      - generic [ref=f30e484]:
+                        - link [ref=f30e486]:
+                          - img "passionpoison84's profile picture" [ref=f30e487]
+                        - generic [ref=f30e488]: Pablo Yépez
+              - button "Next" [ref=f30e491] [cursor=pointer]
+            - generic [ref=f30e496]:
+              - 'button "user-profile-picture Tentáculos You: ¡Gracias por compartirnos el video! 🙌 Nos gustó la estética electrónica y meditativa. ¿Ya pudieron explorar el registro como promotores en TDF? Si les interesa, cuéntennos brevemente qué tipo de encuentros están organizando y vemos cómo presentar su proyecto y posibles colaboraciones. 17 minutes ago" [ref=f30e500] [cursor=pointer]':
+                - generic [ref=f30e502]:
+                  - img "user-profile-picture" [ref=f30e506]
+                  - generic [ref=f30e509]:
+                    - generic [ref=f30e510]: Tentáculos
+                    - generic [ref=f30e516]:
+                      - generic [ref=f30e517]: "You: ¡Gracias por compartirnos el video! 🙌 Nos gustó la estética electrónica y meditativa. ¿Ya pudieron explorar el registro como promotores en TDF? Si les interesa, cuéntennos brevemente qué tipo de encuentros están organizando y vemos cómo presentar su proyecto y posibles colaboraciones."
+                      - generic [ref=f30e519]:
+                        - generic [ref=f30e520]: ·
+                        - generic "17 minutes ago" [ref=f30e525]: 17m
+              - 'button "user-profile-picture HNO You: ¡Buenísimo! 🙌 ¿Alcanzaste a crear tu perfil? Si ya quedó listo, dinos únicamente con qué nombre aparece en TDF y revisamos que esté bien vinculado. Si te trabaste en algún paso, cuéntanos cuál y te ayudamos. 18 minutes ago" [ref=f30e529] [cursor=pointer]':
+                - generic [ref=f30e531]:
+                  - img "user-profile-picture" [ref=f30e535]
+                  - generic [ref=f30e538]:
+                    - generic [ref=f30e539]: HNO
+                    - generic [ref=f30e545]:
+                      - generic [ref=f30e546]: "You: ¡Buenísimo! 🙌 ¿Alcanzaste a crear tu perfil? Si ya quedó listo, dinos únicamente con qué nombre aparece en TDF y revisamos que esté bien vinculado. Si te trabaste en algún paso, cuéntanos cuál y te ayudamos."
+                      - generic [ref=f30e548]:
+                        - generic [ref=f30e549]: ·
+                        - generic "18 minutes ago" [ref=f30e554]: 18m
+              - 'button "user-profile-picture Blue Records You: ¡Buenísimo! 🙌 ¿Pudieron crear la cuenta? Si ya quedó lista, dígannos únicamente con qué nombre aparece el perfil en TDF y revisamos que esté bien vinculado. Si tuvieron algún problema en el registro, cuéntennos en qué paso y les ayudamos. 18 minutes ago" [ref=f30e558] [cursor=pointer]':
+                - generic [ref=f30e560]:
+                  - img "user-profile-picture" [ref=f30e564]
+                  - generic [ref=f30e567]:
+                    - generic [ref=f30e568]: Blue Records
+                    - generic [ref=f30e574]:
+                      - generic [ref=f30e575]: "You: ¡Buenísimo! 🙌 ¿Pudieron crear la cuenta? Si ya quedó lista, dígannos únicamente con qué nombre aparece el perfil en TDF y revisamos que esté bien vinculado. Si tuvieron algún problema en el registro, cuéntennos en qué paso y les ayudamos."
+                      - generic [ref=f30e577]:
+                        - generic [ref=f30e578]: ·
+                        - generic "18 minutes ago" [ref=f30e583]: 18m
+              - 'button "user-profile-picture Las Abejas - Club de Vinilos You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records a day ago" [ref=f30e587] [cursor=pointer]':
+                - generic [ref=f30e589]:
+                  - img "user-profile-picture" [ref=f30e593]
+                  - generic [ref=f30e596]:
+                    - generic [ref=f30e597]: Las Abejas - Club de Vinilos
+                    - generic [ref=f30e603]:
+                      - generic [ref=f30e604]: "You: Hola, Las Abejas 👋 Vimos que empezaron a seguir a TDF y su espacio de vinilos y sesiones en San Blas. En TDF pueden encontrar perfiles, artistas, lanzamientos y experiencias de la escena en un mismo lugar. Les invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no les interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f30e606]:
+                        - generic [ref=f30e607]: ·
+                        - generic "a day ago" [ref=f30e612]: 1d
+              - 'button "user-profile-picture ▪️ KINO CAVALIER▫️▪️ You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records a day ago" [ref=f30e616] [cursor=pointer]':
+                - generic [ref=f30e618]:
+                  - img "user-profile-picture" [ref=f30e622]
+                  - generic [ref=f30e625]:
+                    - generic [ref=f30e626]: ▪️ KINO CAVALIER▫️▪️
+                    - generic [ref=f30e632]:
+                      - generic [ref=f30e633]: "You: Hola, Kino 👋 Vimos que empezaste a seguir a TDF y tu trabajo de cámara en una pieza musical realizada en Pichincha. En TDF puedes reunir tu perfil profesional con artistas, lanzamientos y experiencias de la escena en un mismo lugar. Te invitamos a explorarla: https://tdf-app.pages.dev/login?signup=1&roles=Photographer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribir. — TDF Records"
+                      - generic [ref=f30e635]:
+                        - generic [ref=f30e636]: ·
+                        - generic "a day ago" [ref=f30e641]: 1d
+              - button "user-profile-picture George Molina Liked a message a day ago" [ref=f30e645] [cursor=pointer]:
+                - generic [ref=f30e647]:
+                  - img "user-profile-picture" [ref=f30e651]
+                  - generic [ref=f30e654]:
+                    - generic [ref=f30e655]: George Molina
+                    - generic [ref=f30e661]:
+                      - generic [ref=f30e662]: Liked a message
+                      - generic [ref=f30e664]:
+                        - generic [ref=f30e665]: ·
+                        - generic "a day ago" [ref=f30e670]: 1d
+              - button "user-profile-picture KIRMANA RECORDS Liked a message a day ago" [ref=f30e674] [cursor=pointer]:
+                - generic [ref=f30e676]:
+                  - img "user-profile-picture" [ref=f30e680]
+                  - generic [ref=f30e683]:
+                    - generic [ref=f30e684]: KIRMANA RECORDS
+                    - generic [ref=f30e690]:
+                      - generic [ref=f30e691]: Liked a message
+                      - generic [ref=f30e693]:
+                        - generic [ref=f30e694]: ·
+                        - generic "a day ago" [ref=f30e699]: 1d
+              - button "user-profile-picture Beto Graciaaaaas locoo a day ago" [ref=f30e703] [cursor=pointer]:
+                - generic [ref=f30e705]:
+                  - img "user-profile-picture" [ref=f30e709]
+                  - generic [ref=f30e712]:
+                    - generic [ref=f30e713]: Beto
+                    - generic [ref=f30e719]:
+                      - generic [ref=f30e720]: Graciaaaaas locoo
+                      - generic [ref=f30e722]:
+                        - generic [ref=f30e723]: ·
+                        - generic "a day ago" [ref=f30e728]: 1d
+              - button [ref=f30e751] [cursor=pointer]:
+                - generic [ref=f30e753]:
+                  - status "Loading..." [ref=f30e756]
+                  - generic [ref=f30e759]:
+                    - status "Loading..." [ref=f30e761]
+                    - status "Loading..." [ref=f30e763]
+      - generic [ref=f30e768]:
+        - heading "Your messages" [level=2] [ref=f30e775]
+        - generic [ref=f30e776]: Send a message to start a chat.
+        - button "Send message" [ref=f30e780] [cursor=pointer]

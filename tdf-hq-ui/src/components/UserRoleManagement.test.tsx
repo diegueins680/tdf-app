@@ -2,22 +2,79 @@ import { jest } from '@jest/globals';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 
-type UserSummary = {
+interface UserSummary {
   id?: number | null;
+  partyId?: number | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
   status?: 'Active' | 'Inactive' | null;
   roles?: string[] | null;
-};
+}
+
+interface SecurityRoleSummary {
+  id: string;
+  code: string;
+  nameEs: string;
+  nameEn: string;
+  emergencyAdministrator: boolean;
+  systemRole: boolean;
+  active: boolean;
+  moduleCodes: string[];
+  permissionCodes: string[];
+  version: number;
+}
+
+interface SecurityAssignmentSummary {
+  id: string;
+  partyId: number;
+  roleId: string;
+  roleCode: string;
+  roleNameEs: string;
+  active: boolean;
+  approvalMode: string;
+  createdAt: string;
+  version: number;
+}
+
+interface PartyRoleGrantDraft {
+  partyId: number;
+  roleId: string;
+  desiredActive: boolean;
+  expectedVersion: number;
+  reason: string;
+  sourcePlatform: string;
+  correlationId: string;
+}
+
+const securityRoles: SecurityRoleSummary[] = ['Admin', 'Engineer', 'Manager', 'Reception', 'Teacher'].map(
+  (code, index) => ({
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    code,
+    nameEs: code,
+    nameEn: code,
+    emergencyAdministrator: code === 'Admin',
+    systemRole: true,
+    active: true,
+    moduleCodes: [],
+    permissionCodes: [],
+    version: 1,
+  }),
+);
 
 const getUsersMock = jest.fn<() => Promise<UserSummary[]>>();
-const updateUserRolesMock = jest.fn<(userId: number, roles: string[]) => Promise<void>>();
+const getSecurityRolesMock = jest.fn<() => Promise<SecurityRoleSummary[]>>();
+const getPartyRoleAssignmentsMock = jest.fn<(partyId: number) => Promise<SecurityAssignmentSummary[]>>();
+const createPartyRoleRevisionMock = jest.fn<(payload: PartyRoleGrantDraft) => Promise<{ id: string }>>();
+const submitSecurityRevisionMock = jest.fn<(revisionId: string) => Promise<{ id: string }>>();
 
 jest.unstable_mockModule('../api/generated/client', () => ({
   apiClient: {
     getUsers: () => getUsersMock(),
-    updateUserRoles: (userId: number, roles: string[]) => updateUserRolesMock(userId, roles),
+    getSecurityRoles: () => getSecurityRolesMock(),
+    getPartyRoleAssignments: (partyId: number) => getPartyRoleAssignmentsMock(partyId),
+    createPartyRoleRevision: (payload: PartyRoleGrantDraft) => createPartyRoleRevisionMock(payload),
+    submitSecurityRevision: (revisionId: string) => submitSecurityRevisionMock(revisionId),
   },
 }));
 
@@ -65,6 +122,7 @@ const renderComponent = async (container: HTMLElement) => {
 
 const buildUser = (overrides: Partial<UserSummary> = {}): UserSummary => ({
   id: 101,
+  partyId: 101,
   name: 'Ada Lovelace',
   email: 'ada@example.com',
   phone: '+593999000111',
@@ -95,6 +153,18 @@ const getMenuItemByText = (labelText: string) => {
   return item;
 };
 
+const getMenuHeaderByTestId = (testId: string) => {
+  const header = document.body.querySelector<HTMLElement>(`[data-testid="${testId}"]`);
+
+  if (header) return header;
+
+  throw new Error(`Menu header not found: ${testId}`);
+};
+
+const expectToAppearBefore = (first: HTMLElement, second: HTMLElement) => {
+  expect(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+};
+
 const countExactText = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll<HTMLElement>('*')).filter(
     (element) => buttonText(element) === labelText,
@@ -114,6 +184,12 @@ const getContactCellText = (row: Element) => {
     throw new Error('Contact cell not found');
   }
   return buttonText(contactCell);
+};
+
+const setTextAreaValue = (element: HTMLTextAreaElement, value: string) => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  setter?.call(element, value);
+  element.dispatchEvent(new Event('input', { bubbles: true }));
 };
 
 describe('UserRoleManagement', () => {
@@ -138,9 +214,15 @@ describe('UserRoleManagement', () => {
 
   beforeEach(() => {
     getUsersMock.mockReset();
-    updateUserRolesMock.mockReset();
+    getSecurityRolesMock.mockReset();
+    getPartyRoleAssignmentsMock.mockReset();
+    createPartyRoleRevisionMock.mockReset();
+    submitSecurityRevisionMock.mockReset();
     getUsersMock.mockResolvedValue([]);
-    updateUserRolesMock.mockResolvedValue();
+    getSecurityRolesMock.mockResolvedValue(securityRoles);
+    getPartyRoleAssignmentsMock.mockResolvedValue([]);
+    createPartyRoleRevisionMock.mockResolvedValue({ id: 'security-revision-1' });
+    submitSecurityRevisionMock.mockResolvedValue({ id: 'security-revision-1' });
   });
 
   it('replaces the blank first-run table with setup guidance for admins', async () => {
@@ -159,6 +241,40 @@ describe('UserRoleManagement', () => {
         expect(container.querySelector('table')).toBeNull();
         expect(container.querySelectorAll('thead th')).toHaveLength(0);
         expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('ignores blank API fallback users so first-run guidance stays focused', async () => {
+    getUsersMock.mockResolvedValue([
+      {
+        id: null,
+        name: '   ',
+        email: '   ',
+        phone: null,
+        status: null,
+        roles: ['   '],
+      },
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getUsersMock).toHaveBeenCalledTimes(1);
+        expect(container.textContent).toContain('Roles y permisos');
+        expect(container.textContent).toContain(
+          'Todavía no hay usuarios administrables. Cuando exista el primero, verás sus datos clave y roles editables aquí.',
+        );
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).not.toContain('Sin nombre');
+        expect(container.textContent).not.toContain('Sin email ni teléfono');
+        expect(container.textContent).not.toContain('Sin roles');
+        expect(container.querySelector('button[aria-label^="Asignar roles de"]')).toBeNull();
       });
     } finally {
       await cleanup();
@@ -201,19 +317,23 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: estado aparecerá cuando aporte contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).not.toContain('Active');
         expect(container.textContent).not.toContain('Editar roles');
+        expect(container.querySelectorAll('[data-testid="role-edit-affordance-icon"]')).toHaveLength(0);
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
         expect(adaRow.textContent).not.toContain('ID 101');
         expect(adaRow.textContent).toContain('ada@example.com');
         expect(getContactCellText(adaRow)).toBe('ada@example.com');
         expect(adaRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]')).not.toBeNull();
+        expect(
+          adaRow.querySelector('button[aria-label="Editar roles de Ada Lovelace"]')?.getAttribute('title'),
+        ).toBe('Editar roles de Ada Lovelace. Roles actuales: Admin.');
         expect(adaRow.textContent).not.toContain('Sin email ni teléfono');
 
         const graceRow = getRowByName(container, 'Grace Hopper');
@@ -260,7 +380,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: contacto y estado aparecerán cuando aporten contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(countExactText(container, 'Roles editables')).toBe(1);
@@ -318,6 +438,25 @@ describe('UserRoleManagement', () => {
         expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Editar roles de Grace Hopper (ID 213)"]')).toBeNull();
       });
+
+      const duplicateEditButton = container.querySelector('button[aria-label="Editar roles de Ana Admin (ID 212)"]');
+      if (!(duplicateEditButton instanceof HTMLButtonElement)) {
+        throw new Error('Duplicate edit roles button not found');
+      }
+
+      await act(async () => {
+        duplicateEditButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const dialog = document.body.querySelector('[role="dialog"]');
+        if (!(dialog instanceof HTMLElement)) {
+          throw new Error('Edit roles dialog not found');
+        }
+
+        expect(dialog.querySelector('h2')?.textContent).toBe('Editar roles de Ana Admin (ID 212)');
+      });
     } finally {
       await cleanup();
     }
@@ -374,7 +513,40 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Editar roles de Grace Hopper');
-        expect(document.body.textContent).toContain('Guardar');
+        expect(getButtonsByText(document.body, 'Cerrar')).toHaveLength(1);
+        expect(getButtonsByText(document.body, 'Enviar a revisión')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps a single first-user summary explicit when contact info is still missing', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 302,
+        name: 'Grace Hopper',
+        email: '   ',
+        phone: null,
+        roles: ['Admin'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('table')).toBeNull();
+        expect(container.textContent).toContain(
+          'Primer usuario administrable. Revisa sus datos clave y edita roles aquí; cuando exista el segundo, volverá la tabla comparativa.',
+        );
+        expect(container.textContent).toContain('Grace Hopper');
+        expect(container.textContent).toContain('Sin email ni teléfono');
+        expect(container.textContent).not.toContain('undefined');
+        expect(container.textContent).not.toContain('null');
+        expect(container.textContent).not.toContain('grace@example.com');
       });
     } finally {
       await cleanup();
@@ -572,13 +744,15 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('No roles');
       });
 
-      const editButton = container.querySelector('button[aria-label="Editar roles de Nina Sin Roles"]');
-      if (!(editButton instanceof HTMLButtonElement)) {
-        throw new Error('Edit roles button not found');
+      const assignButton = container.querySelector('button[aria-label="Asignar roles de Nina Sin Roles"]');
+      if (!(assignButton instanceof HTMLButtonElement)) {
+        throw new Error('Assign roles button not found');
       }
+      expect(assignButton.getAttribute('title')).toBe('Asignar roles de Nina Sin Roles. Roles actuales: Sin roles.');
+      expect(container.querySelector('button[aria-label="Editar roles de Nina Sin Roles"]')).toBeNull();
 
       await act(async () => {
-        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        assignButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         await flushPromises();
       });
 
@@ -593,7 +767,9 @@ describe('UserRoleManagement', () => {
           throw new Error('Roles select not found');
         }
 
+        expect(dialog.querySelector('h2')?.textContent).toBe('Asignar roles de Nina Sin Roles');
         expect(buttonText(rolesSelect)).toBe('Sin roles');
+        expect(dialog.textContent).not.toContain('Editar roles de Nina Sin Roles');
         expect(dialog.textContent).not.toContain('No roles');
       });
     } finally {
@@ -601,7 +777,64 @@ describe('UserRoleManagement', () => {
     }
   });
 
-  it('keeps save disabled until the admin makes a real role change', async () => {
+  it('pins currently assigned roles to the top of the editor menu so admins verify before adding new access', async () => {
+    getUsersMock.mockResolvedValue([
+      buildUser({
+        id: 307,
+        name: 'Linus QA',
+        email: 'linus@example.com',
+        roles: ['Teacher', 'Reception'],
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderComponent(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.querySelector('button[aria-label="Editar roles de Linus QA"]')).not.toBeNull();
+      });
+
+      const editButton = container.querySelector('button[aria-label="Editar roles de Linus QA"]');
+      if (!(editButton instanceof HTMLButtonElement)) {
+        throw new Error('Edit roles button not found');
+      }
+
+      await act(async () => {
+        editButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      const rolesSelect = document.body.querySelector('[role="combobox"]');
+      if (!(rolesSelect instanceof HTMLElement)) {
+        throw new Error('Roles select not found');
+      }
+
+      await act(async () => {
+        rolesSelect.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const currentRolesHeader = getMenuHeaderByTestId('role-editor-current-roles-header');
+        const availableRolesHeader = getMenuHeaderByTestId('role-editor-available-roles-header');
+        const receptionOption = getMenuItemByText('Reception');
+        const teacherOption = getMenuItemByText('Teacher');
+        const adminOption = getMenuItemByText('Admin');
+
+        expectToAppearBefore(currentRolesHeader, receptionOption);
+        expectToAppearBefore(receptionOption, adminOption);
+        expectToAppearBefore(teacherOption, adminOption);
+        expectToAppearBefore(teacherOption, availableRolesHeader);
+        expectToAppearBefore(availableRolesHeader, adminOption);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('keeps the save action hidden until the admin makes a real role change', async () => {
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 304,
@@ -633,12 +866,14 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain(
-          'Sin cambios pendientes. Modifica la selección para habilitar Guardar cambios.',
+          'Sin cambios pendientes. Modifica la selección para preparar una revisión.',
         );
-        const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
-        expect(saveButton).toBeInstanceOf(HTMLButtonElement);
-        expect((saveButton as HTMLButtonElement).disabled).toBe(true);
-        expect(updateUserRolesMock).not.toHaveBeenCalled();
+        const closeButton = getButtonsByText(document.body, 'Cerrar')[0];
+        expect(closeButton).toBeInstanceOf(HTMLButtonElement);
+        expect((closeButton as HTMLButtonElement).disabled).toBe(false);
+        expect(getButtonsByText(document.body, 'Enviar a revisión')).toHaveLength(0);
+        expect(getButtonsByText(document.body, 'Descartar cambios')).toHaveLength(0);
+        expect(createPartyRoleRevisionMock).not.toHaveBeenCalled();
       });
     } finally {
       await cleanup();
@@ -692,15 +927,15 @@ describe('UserRoleManagement', () => {
 
       await waitForExpectation(() => {
         expect(document.body.textContent).toContain('Cambio pendiente: agregar Manager.');
-        expect(document.body.textContent).not.toContain('Listo para guardar esta actualización de permisos.');
+        expect(document.body.textContent).not.toContain('Listo para enviar esta actualización a revisión.');
       });
     } finally {
       await cleanup();
     }
   });
 
-  it('keeps failed role saves inside the edit dialog so admins can retry without losing the list', async () => {
-    updateUserRolesMock.mockRejectedValue(new Error('No se pudieron guardar permisos'));
+  it('keeps failed role revision submissions inside the dialog so admins can retry without losing the list', async () => {
+    createPartyRoleRevisionMock.mockRejectedValue(new Error('No se pudo crear la revisión'));
     getUsersMock.mockResolvedValue([
       buildUser({
         id: 307,
@@ -751,7 +986,16 @@ describe('UserRoleManagement', () => {
         await flushPromises();
       });
 
-      const saveButton = getButtonsByText(document.body, 'Guardar cambios')[0];
+      const reasonInput = document.body.querySelector('textarea');
+      if (!(reasonInput instanceof HTMLTextAreaElement)) {
+        throw new Error('Change reason input not found');
+      }
+      await act(async () => {
+        setTextAreaValue(reasonInput, 'Acceso requerido para coordinar el catálogo');
+        await flushPromises();
+      });
+
+      const saveButton = getButtonsByText(document.body, 'Enviar a revisión')[0];
       if (!(saveButton instanceof HTMLButtonElement)) {
         throw new Error('Save roles button not found');
       }
@@ -762,16 +1006,24 @@ describe('UserRoleManagement', () => {
       });
 
       await waitForExpectation(() => {
-        expect(updateUserRolesMock).toHaveBeenCalledWith(307, ['Admin', 'Manager']);
+        expect(createPartyRoleRevisionMock).toHaveBeenCalledWith(expect.objectContaining({
+          partyId: 101,
+          roleId: securityRoles.find((role) => role.code === 'Manager')?.id,
+          desiredActive: true,
+          expectedVersion: 0,
+          reason: 'Acceso requerido para coordinar el catálogo',
+          sourcePlatform: 'web',
+        }));
+        expect(submitSecurityRevisionMock).not.toHaveBeenCalled();
 
         const dialog = document.body.querySelector('[role="dialog"]');
         if (!(dialog instanceof HTMLElement)) {
           throw new Error('Edit roles dialog not found');
         }
 
-        expect(dialog.textContent).toContain('No se pudieron guardar permisos');
+        expect(dialog.textContent).toContain('No se pudo crear la revisión');
         expect(dialog.textContent).toContain('Cambio pendiente: agregar Manager.');
-        const retrySaveButton = getButtonsByText(dialog, 'Guardar cambios')[0];
+        const retrySaveButton = getButtonsByText(dialog, 'Enviar a revisión')[0];
         expect(retrySaveButton).toBeInstanceOf(HTMLButtonElement);
         expect((retrySaveButton as HTMLButtonElement).disabled).toBe(false);
         expect(container.textContent).toContain('Roles y permisos');
@@ -809,7 +1061,7 @@ describe('UserRoleManagement', () => {
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain('Editar aquí');
         expect(container.textContent).toContain(
-          'Vista actual: la columna Estado solo marca las cuentas inactivas; las activas quedan implícitas.',
+          'Vista compacta: Estado solo marca cuentas inactivas; las activas quedan implícitas.',
         );
 
         const adaRow = getRowByName(container, 'Ada Lovelace');
@@ -849,7 +1101,7 @@ describe('UserRoleManagement', () => {
       await waitForExpectation(() => {
         expect(getHeaders(container)).toEqual(['Usuario', 'Contacto', 'Roles editables']);
         expect(container.textContent).toContain(
-          'Vista actual: todas las cuentas administrables están inactivas; la columna de estado volverá cuando haya cuentas activas e inactivas para comparar.',
+          'Vista compacta: todas las cuentas están inactivas; Estado volverá cuando exista una cuenta activa para comparar.',
         );
         expect(countExactText(container, 'Roles editables')).toBe(1);
         expect(countExactText(container, 'Inactivo')).toBe(0);
@@ -883,7 +1135,7 @@ describe('UserRoleManagement', () => {
     try {
       await waitForExpectation(() => {
         expect(container.textContent).toContain(
-          'Vista actual: la columna de contacto sigue oculta hasta que exista al menos un email o teléfono y la columna de estado sigue oculta mientras todas las cuentas sigan activas.',
+          'Vista compacta: contacto y estado aparecerán cuando aporten contexto.',
         );
         expect(container.textContent).not.toContain('Haz clic sobre los roles para editarlos sin salir de esta tabla.');
         expect(container.textContent).not.toContain(

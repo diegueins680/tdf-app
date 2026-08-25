@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 
 const listInternsMock = jest.fn<() => Promise<unknown[]>>();
 const getProfileMock = jest.fn<() => Promise<Record<string, unknown> | null>>();
@@ -87,7 +88,9 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={qc}>
-        <InternshipsPage />
+        <MemoryRouter>
+          <InternshipsPage />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     await flushPromises();
@@ -113,6 +116,38 @@ const hasLabel = (root: ParentNode, labelText: string) =>
     const text = (element.textContent ?? '').replace('*', '').trim();
     return text === labelText;
   });
+
+const getInputByLabel = (root: ParentNode, labelText: string) => {
+  const label = Array.from(root.querySelectorAll('label')).find((element) => {
+    const text = (element.textContent ?? '').replace('*', '').trim();
+    return text === labelText;
+  });
+  if (!label) throw new Error(`Could not find label: ${labelText}`);
+
+  const inputId = label.getAttribute('for');
+  const input = inputId ? document.getElementById(inputId) : null;
+  if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) return input;
+
+  const nearbyInput = label.parentElement?.querySelector('input, textarea');
+  if (nearbyInput instanceof HTMLInputElement || nearbyInput instanceof HTMLTextAreaElement) {
+    return nearbyInput;
+  }
+
+  throw new Error(`Could not find input for label: ${labelText}`);
+};
+
+const setInputValue = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  const prototype = input instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Input value setter not found');
+
+  await act(async () => {
+    valueSetter.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+  });
+};
 
 const buildProject = (overrides: Record<string, unknown> = {}) => ({
   ipId: 'project-1',
@@ -246,6 +281,82 @@ describe('InternshipsPage', () => {
     updatePermissionMock.mockResolvedValue({});
   });
 
+  it('replaces the empty playbook assignee picker with unassigned first-run guidance', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Playbook de prácticas');
+        expect(container.textContent).toContain(
+          'Todavía no hay pasantes para asignar. Si generas el plan ahora, quedará sin asignar.',
+        );
+        expect(hasLabel(container, 'Asignar plan a')).toBe(false);
+        expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('uses the task title as the single, uncluttered link to its canonical ID route', async () => {
+    listTasksMock.mockResolvedValue([
+      buildTask({ itId: '7e1f7364-8e02-453e-bdf9-b3f17a165fa2' }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const expectedPath = '/practicas/tareas/7e1f7364-8e02-453e-bdf9-b3f17a165fa2';
+        const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'))
+          .filter((link) => link.getAttribute('href') === expectedPath);
+
+        expect(links).toHaveLength(1);
+        expect(links[0]?.textContent?.trim()).toBe('Armar calendario editorial');
+        expect(container.textContent).not.toContain('Ver detalle');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('omits unset optional fields when generating the playbook project and tasks', async () => {
+    createProjectMock.mockResolvedValue({ ipId: 'playbook-project' });
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Generar plan base sin asignar')).toHaveLength(1);
+      });
+
+      await clickButton(getButtonsByText(container, 'Generar plan base sin asignar')[0]!);
+
+      await waitForExpectation(() => {
+        expect(createProjectMock).toHaveBeenCalledWith({
+          ipcTitle: 'Plan de prácticas',
+          ipcDescription: 'Plan base de prácticas con rotaciones, proyecto estrella y rituales de seguimiento.',
+          ipcStatus: 'active',
+        });
+        expect(createTaskMock).toHaveBeenCalledTimes(12);
+      });
+
+      for (const [payload] of createTaskMock.mock.calls) {
+        expect(payload).toEqual(expect.objectContaining({ itcProjectId: 'playbook-project' }));
+        expect(payload).not.toHaveProperty('itcAssignedTo');
+        expect(payload).not.toHaveProperty('itcDueAt');
+      }
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('keeps the project form collapsed behind one CTA and one contextual empty state until an admin opens it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -345,6 +456,55 @@ describe('InternshipsPage', () => {
     }
   });
 
+  it('keeps the permission form collapsed behind one CTA and one contextual empty state', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Permisos');
+        expect(container.textContent).toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(0);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(false);
+        expect(hasLabel(container, 'Motivo')).toBe(false);
+        expect(container.textContent).not.toContain('Sin solicitudes registradas.');
+      });
+
+      await clickButton(getButtonsByText(container, 'Nueva solicitud')[0]!);
+
+      await waitForExpectation(() => {
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(1);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(true);
+        expect(hasLabel(container, 'Motivo')).toBe(true);
+        expect(container.textContent).not.toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+      });
+
+      await clickButton(getButtonsByText(container, 'Cancelar solicitud')[0]!);
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain(
+          'Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.',
+        );
+        expect(getButtonsByText(container, 'Nueva solicitud')).toHaveLength(1);
+        expect(getButtonsByText(container, 'Enviar solicitud')).toHaveLength(0);
+        expect(getButtonsByText(container, 'Cancelar solicitud')).toHaveLength(0);
+        expect(hasLabel(container, 'Tipo de permiso')).toBe(false);
+        expect(hasLabel(container, 'Motivo')).toBe(false);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('hides zero-count header chips until work exists and uses singular labels for the first project and task', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -411,6 +571,33 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await secondRender.cleanup();
+    }
+  });
+
+  it('keeps the first to-do empty state passive until an admin starts typing', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(hasLabel(container, 'Nuevo to-do')).toBe(true);
+        expect(container.textContent).toContain(
+          'Escribe el primer to-do arriba. Agregar aparece cuando haya texto.',
+        );
+        expect(container.textContent).not.toContain('No hay to-dos aún.');
+        expect(getButtonsByText(container, 'Agregar')).toHaveLength(0);
+      });
+
+      await setInputValue(getInputByLabel(container, 'Nuevo to-do'), 'Preparar contrato de practicas');
+
+      await waitForExpectation(() => {
+        const addButtons = getButtonsByText(container, 'Agregar');
+        expect(addButtons).toHaveLength(1);
+        expect(addButtons[0]?.disabled).toBe(false);
+      });
+    } finally {
+      await cleanup();
     }
   });
 
@@ -546,6 +733,32 @@ describe('InternshipsPage', () => {
       });
     } finally {
       await secondRender.cleanup();
+    }
+  });
+
+  it('replaces empty admin hour-table chrome with one contextual setup message once interns exist', async () => {
+    listInternsMock.mockResolvedValue([buildIntern()]);
+    listTimeEntriesMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Jornada y registro de horas');
+        expect(container.textContent).toContain('Link de registro para pasantes');
+        expect(container.textContent).toContain('Pasante disponible');
+        expect(container.textContent).toContain('Ada Lovelace');
+        expect(container.textContent).toContain(
+          'Todavía no hay registros de horas en esta vista. Cuando llegue el primer clock-in, aquí aparecerán entrada, salida y horas.',
+        );
+        expect(container.textContent).not.toContain('Sin registros todavía.');
+        expect(container.textContent).not.toContain('PasanteEntradaSalidaHoras');
+        expect(container.querySelectorAll('thead')).toHaveLength(0);
+      });
+    } finally {
+      await cleanup();
     }
   });
 

@@ -12,18 +12,28 @@ import type {
   DropdownOptionCreate,
   DropdownOptionUpdate,
 } from './types';
-import type { Role } from './generated/client';
-
 export interface CreateUserPayload {
   partyId: number;
   username?: string | null;
-  roles?: (Role | (string & Record<never, never>))[];
 }
 
 export interface LogEntry {
   logTimestamp: string;
   logLevel: 'info' | 'warning' | 'error';
   logMessage: string;
+}
+
+export interface UserActivity {
+  id: number;
+  createdAt: string;
+  actorPartyId?: number | null;
+  actorName: string;
+  actorUsernames: string[];
+  actorRoles: string[];
+  entity: string;
+  entityId: string;
+  action: string;
+  metadata?: unknown;
 }
 
 export interface AdminUser {
@@ -154,7 +164,6 @@ export const Admin = {
     post('/admin/users', {
       uacPartyId: payload.partyId,
       uacUsername: payload.username ?? null,
-      uacRoles: payload.roles,
     }),
   listArtistProfiles: () => get<ArtistProfileDTO[]>('/admin/artists/profiles'),
   upsertArtistProfile: (payload: ArtistProfileUpsert) =>
@@ -182,6 +191,10 @@ export const Admin = {
   getLogs: (limit?: number): Promise<LogEntry[]> => {
     const params = limit ? `?limit=${limit}` : '';
     return get(`/admin/logs${params}`);
+  },
+  getActivity: (limit?: number): Promise<UserActivity[]> => {
+    const params = limit ? `?limit=${limit}` : '';
+    return get(`/admin/activity${params}`);
   },
   clearLogs: () => del('/admin/logs'),
   listDropdowns: (category: string, includeInactive?: boolean) =>

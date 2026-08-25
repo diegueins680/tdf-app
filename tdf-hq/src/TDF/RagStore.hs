@@ -8,6 +8,8 @@ module TDF.RagStore
   , retrieveRagContext
   , getRagIndexStats
   , availabilityOverlaps
+  , callOpenAIEmbeddingsWith
+  , shouldUseLocalEmbeddingFallback
   , validateEmbeddingModelDimensions
   , validateEmbeddingResponseOrder
   , validateEmbeddingResponseDimensions
@@ -17,8 +19,15 @@ import           Control.Monad          (forM, forM_)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Exception.Safe (catchAny, throwM)
 import           Data.Aeson             (Value, ToJSON(..), FromJSON(..), object, (.=), encode, eitherDecode, withObject, (.:))
-import           Data.ByteString.Lazy   (toStrict)
-import           Data.Char              (isAlphaNum, ord, toLower)
+import           Data.ByteString.Lazy   (ByteString, toStrict)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAlphaNum
+  , isSpace
+  , ord
+  , toLower
+  )
 import           Data.Int               (Int64)
 import           Data.List              (foldl', sortOn)
 import qualified Data.IntMap.Strict     as IntMap
@@ -32,8 +41,7 @@ import           Data.Time.Format       (defaultTimeLocale, formatTime)
 import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
 import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
-import           Network.HTTP.Client    (Request(..), httpLbs, newManager, parseRequest, responseBody, responseStatus, RequestBody(..))
-import           Network.HTTP.Client.TLS (tlsManagerSettings)
+import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
 import           Numeric                (showFFloat)
 import           System.IO              (hPutStrLn, stderr)
@@ -41,7 +49,7 @@ import           Text.Read              (readMaybe)
 import           Web.PathPieces         (toPathPiece)
 
 import           TDF.Config             (AppConfig(..), openAiEmbedDimensions, ragEmbeddingDim)
-import           TDF.DB                 (ConnectionPool)
+import           TDF.DB                 (ConnectionPool, sharedTlsManager)
 import qualified TDF.Models             as M
 import qualified TDF.ModelsExtra        as ME
 import qualified TDF.Trials.Models      as Trials
@@ -760,8 +768,13 @@ embedTexts cfg inputs
           results <- forM batches (callOpenAIEmbeddings cfg)
           case concatEmbeddings results of
             Left err -> do
-              hPutStrLn stderr ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
-              pure (Right (localEmbeddings cfg inputs))
+              if shouldUseLocalEmbeddingFallback err
+                then do
+                  hPutStrLn
+                    stderr
+                    ("[rag] OpenAI embeddings fallo, usando fallback. " <> T.unpack err)
+                  pure (Right (localEmbeddings cfg inputs))
+                else pure (Left err)
             Right values -> pure (Right values)
   where
     concatEmbeddings xs =
@@ -769,6 +782,53 @@ embedTexts cfg inputs
       in case failures of
         (err:_) -> Left err
         [] -> Right (concat [vals | Right vals <- xs])
+
+shouldUseLocalEmbeddingFallback :: Text -> Bool
+shouldUseLocalEmbeddingFallback rawError =
+  not responseShapeDrift && not credentialOrAccountFailure
+  where
+    msg = T.toLower (T.strip rawError)
+    responseShapeDrift =
+      "openai embeddings response invalid:" `T.isPrefixOf` msg
+    credentialOrAccountFailure =
+      any (`T.isInfixOf` msg)
+        [ "(status 400)"
+        , "(status 401)"
+        , "(status 402)"
+        , "(status 403)"
+        , "(status 404)"
+        , "authentication"
+        , "authentication_error"
+        , "bad request"
+        , "invalid_request_error"
+        , "invalid_api_key"
+        , "invalid api key"
+        , "incorrect api key"
+        , "invalid model"
+        , "invalid model id"
+        , "invalid model name"
+        , "model_not_found"
+        , "model not found"
+        , "does not exist or you do not have access"
+        , "does not have access to model"
+        , "doesn't have access to model"
+        , "do not have access to model"
+        , "don't have access to model"
+        , "no access to model"
+        , "not a valid model"
+        , "unknown model"
+        , "unauthorized"
+        , "unauthorised"
+        , "permission_denied"
+        , "permission denied"
+        , "insufficient_quota"
+        , "quota"
+        , "billing"
+        , "billing_hard_limit"
+        , "payment_required"
+        , "payment required"
+        , "payment method"
+        ]
 
 localEmbeddings :: AppConfig -> [Text] -> [[Double]]
 localEmbeddings cfg inputs =
@@ -798,11 +858,22 @@ hashToken dim token =
 
 callOpenAIEmbeddings :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 callOpenAIEmbeddings cfg inputs =
+  callOpenAIEmbeddingsWith (\req -> do
+    manager <- pure sharedTlsManager
+    httpLbs req manager
+  ) cfg inputs
+
+callOpenAIEmbeddingsWith
+  :: (Request -> IO (Response ByteString))
+  -> AppConfig
+  -> [Text]
+  -> IO (Either Text [[Double]])
+callOpenAIEmbeddingsWith runEmbeddingRequest cfg inputs =
   case openAiApiKey cfg of
     Nothing -> pure (Left "OPENAI_API_KEY no configurada")
     Just key -> do
-      manager <- newManager tlsManagerSettings
-      reqBase <- parseRequest "https://api.openai.com/v1/embeddings"
+      let embedBase = T.dropWhileEnd (== '/') (chatKitApiBase cfg)
+      reqBase <- parseRequest (T.unpack (embedBase <> "/v1/embeddings"))
       let body = encode EmbeddingReq
             { model = openAiEmbedModel cfg
             , input = inputs
@@ -816,26 +887,196 @@ callOpenAIEmbeddings cfg inputs =
                   ]
               , requestBody = RequestBodyLBS body
               }
-      resp <- httpLbs req manager
-      let status = statusCode (responseStatus resp)
-      let raw = responseBody resp
-      if status < 200 || status >= 300
-        then case eitherDecode raw of
-          Right OpenAIErrorResp{..} ->
-            pure (Left ("OpenAI embeddings error: " <> oeMessage oeError))
-          Left _ ->
-            pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
-        else
-          case eitherDecode raw of
-            Left err -> pure (Left (T.pack err))
-            Right (EmbeddingResp embeddings) ->
-              pure $ do
-                expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
-                orderedEmbeddings <-
-                  validateEmbeddingResponseOrder
-                    (length inputs)
-                    [(index item, embedding item) | item <- embeddings]
-                validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
+      respResult <-
+        (Right <$> runEmbeddingRequest req) `catchAny` \err ->
+          pure
+            ( Left
+                ( "OpenAI embeddings request failed: "
+                    <> sanitizeOpenAIEmbeddingErrorMessage (T.pack (show err))
+                )
+            )
+      case respResult of
+        Left err -> pure (Left err)
+        Right resp -> do
+          let status = statusCode (responseStatus resp)
+          let raw = responseBody resp
+          if status < 200 || status >= 300
+            then case eitherDecode raw of
+              Right OpenAIErrorResp{..} ->
+                pure
+                  ( Left
+                      ( "OpenAI embeddings error (status "
+                          <> T.pack (show status)
+                          <> "): "
+                          <> sanitizeOpenAIEmbeddingErrorMessage (oeMessage oeError)
+                      )
+                  )
+              Left _ ->
+                pure (Left ("OpenAI embeddings error (status " <> T.pack (show status) <> ")."))
+            else
+              case eitherDecode raw of
+                Left err ->
+                  pure (Left ("OpenAI embeddings response invalid: " <> T.pack err))
+                Right (EmbeddingResp embeddings) ->
+                  pure (validateOpenAIEmbeddingPayload cfg (length inputs) embeddings)
+
+validateOpenAIEmbeddingPayload :: AppConfig -> Int -> [EmbeddingData] -> Either Text [[Double]]
+validateOpenAIEmbeddingPayload cfg expectedCount embeddings =
+  case validated of
+    Left err -> Left ("OpenAI embeddings response invalid: " <> err)
+    Right values -> Right values
+  where
+    validated = do
+      expectedDim <- validateEmbeddingModelDimensions (openAiEmbedModel cfg)
+      orderedEmbeddings <-
+        validateEmbeddingResponseOrder
+          expectedCount
+          [(index item, embedding item) | item <- embeddings]
+      validateEmbeddingResponseDimensions expectedDim orderedEmbeddings
+
+sanitizeOpenAIEmbeddingErrorMessage :: Text -> Text
+sanitizeOpenAIEmbeddingErrorMessage raw =
+  let sanitized =
+        redactOpenAIEmbeddingErrorSecrets $
+          T.strip (T.map sanitizeChar raw)
+  in if T.length sanitized <= maxOpenAIEmbeddingErrorChars
+       then sanitized
+       else T.take maxOpenAIEmbeddingErrorChars sanitized <> " [truncated]"
+  where
+    sanitizeChar ch
+      | ch == '\DEL' || ch < ' ' = ' '
+      | generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator] = ' '
+      | otherwise = ch
+
+maxOpenAIEmbeddingErrorChars :: Int
+maxOpenAIEmbeddingErrorChars = 500
+
+redactOpenAIEmbeddingErrorSecrets :: Text -> Text
+redactOpenAIEmbeddingErrorSecrets =
+  redactOpenAIEmbeddingSecretFields . redactOpenAIEmbeddingBearerTokens
+
+redactOpenAIEmbeddingBearerTokens :: Text -> Text
+redactOpenAIEmbeddingBearerTokens = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchOpenAIEmbeddingBearerToken previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchOpenAIEmbeddingBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
+matchOpenAIEmbeddingBearerToken previous textValue
+  | not (isOpenAIEmbeddingSecretBoundary previous) = Nothing
+  | not ("bearer" `T.isPrefixOf` T.toLower textValue) = Nothing
+  | otherwise =
+      let bearerText = T.take 6 textValue
+          afterBearer = T.drop 6 textValue
+          (between, tokenStart) = T.span isSpace afterBearer
+          (openingQuote, tokenText, isValueEnd) =
+            consumeOpenAIEmbeddingValueOpeningQuote tokenStart
+          (tokenValue, rest) = T.break isValueEnd tokenText
+      in if T.null between
+            || T.null tokenValue
+            || not (T.any isOpenAIEmbeddingSecretAtom tokenValue)
+           then Nothing
+           else Just (bearerText <> between <> openingQuote, rest)
+
+redactOpenAIEmbeddingSecretFields :: Text -> Text
+redactOpenAIEmbeddingSecretFields = go Nothing
+  where
+    go _ textValue
+      | T.null textValue = ""
+    go previous textValue =
+      case matchOpenAIEmbeddingSecretField previous textValue of
+        Just (prefix, rest) ->
+          prefix <> "[redacted]" <> go Nothing rest
+        Nothing ->
+          let ch = T.head textValue
+          in T.singleton ch <> go (Just ch) (T.tail textValue)
+
+matchOpenAIEmbeddingSecretField :: Maybe Char -> Text -> Maybe (Text, Text)
+matchOpenAIEmbeddingSecretField previous textValue
+  | not (isOpenAIEmbeddingSecretBoundary previous) = Nothing
+  | otherwise = firstMatch openAIEmbeddingSecretFields
+  where
+    lowered = T.toLower textValue
+
+    firstMatch [] = Nothing
+    firstMatch (fieldName:rest) =
+      case parseOpenAIEmbeddingSecretField fieldName lowered textValue of
+        Just match -> Just match
+        Nothing -> firstMatch rest
+
+openAIEmbeddingSecretFields :: [Text]
+openAIEmbeddingSecretFields =
+  [ "access_token"
+  , "api_key"
+  , "api-key"
+  , "apikey"
+  , "authorization"
+  , "client_secret"
+  , "id_token"
+  , "refresh_token"
+  , "x-api-key"
+  ]
+
+parseOpenAIEmbeddingSecretField :: Text -> Text -> Text -> Maybe (Text, Text)
+parseOpenAIEmbeddingSecretField fieldName lowered textValue
+  | not (fieldName `T.isPrefixOf` lowered) = Nothing
+  | otherwise = do
+      let fieldLength = T.length fieldName
+          fieldText = T.take fieldLength textValue
+          afterField = T.drop fieldLength textValue
+          (closingQuote, afterClosingQuote) =
+            consumeOpenAIEmbeddingOptionalQuote afterField
+          (beforeSeparator, separatorCandidate) = T.span isSpace afterClosingQuote
+      (separator, afterSeparator) <- T.uncons separatorCandidate
+      if separator == '=' || separator == ':'
+        then
+          let (afterSeparatorSpace, valueStart) = T.span isSpace afterSeparator
+              (openingQuote, valueText, isValueEnd) =
+                consumeOpenAIEmbeddingValueOpeningQuote valueStart
+              (_, rest) = T.break isValueEnd valueText
+              prefix =
+                fieldText
+                  <> closingQuote
+                  <> beforeSeparator
+                  <> T.singleton separator
+                  <> afterSeparatorSpace
+                  <> openingQuote
+          in Just (prefix, rest)
+        else Nothing
+
+isOpenAIEmbeddingSecretBoundary :: Maybe Char -> Bool
+isOpenAIEmbeddingSecretBoundary Nothing = True
+isOpenAIEmbeddingSecretBoundary (Just ch) =
+  not (isAlphaNum ch || ch == '_' || ch == '-')
+
+isOpenAIEmbeddingSecretAtom :: Char -> Bool
+isOpenAIEmbeddingSecretAtom ch =
+  isAlphaNum ch || ch `elem` (".-_~+/=" :: String)
+
+consumeOpenAIEmbeddingOptionalQuote :: Text -> (Text, Text)
+consumeOpenAIEmbeddingOptionalQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest)
+    Just ('\'', rest) -> ("'", rest)
+    _ -> ("", textValue)
+
+consumeOpenAIEmbeddingValueOpeningQuote :: Text -> (Text, Text, Char -> Bool)
+consumeOpenAIEmbeddingValueOpeningQuote textValue =
+  case T.uncons textValue of
+    Just ('"', rest) -> ("\"", rest, (== '"'))
+    Just ('\'', rest) -> ("'", rest, (== '\''))
+    _ -> ("", textValue, isUnquotedOpenAIEmbeddingSecretValueEnd)
+
+isUnquotedOpenAIEmbeddingSecretValueEnd :: Char -> Bool
+isUnquotedOpenAIEmbeddingSecretValueEnd ch =
+  isSpace ch || ch `elem` ("&,;}]" :: String)
 
 formatUtc :: UTCTime -> Text
 formatUtc ts = T.pack (formatTime defaultTimeLocale "%Y-%m-%d %H:%M UTC" ts)

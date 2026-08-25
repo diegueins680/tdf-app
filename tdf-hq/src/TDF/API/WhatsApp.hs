@@ -15,6 +15,8 @@ module TDF.API.WhatsApp
   , ensureLeadCompletionUpdated
   , leadCompletionConsumedToken
   , extractFirstWebhookMessage
+  , extractFirstEnrollmentWebhookMessage
+  , extractUniqueEnrollmentWebhookMessage
   , PreviewReq(..)
   , CompleteReq(..)
   ) where
@@ -30,8 +32,18 @@ import Data.Aeson
   , genericParseJSON
   , rejectUnknownFields
   )
+import Data.Aeson.Types (Parser)
 import Control.Monad (unless)
-import Data.Char (isAlphaNum, isAscii, isAsciiLower, isControl, isDigit)
+import Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator, Space)
+  , generalCategory
+  , isAlphaNum
+  , isAscii
+  , isAsciiLower
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import Data.Int (Int64)
 import Data.Maybe (isNothing, listToMaybe, maybeToList)
 import Data.Text (Text)
@@ -40,6 +52,7 @@ import Control.Monad.IO.Class (liftIO)
 import Database.PostgreSQL.Simple (Connection, Only(..), execute, query)
 
 import TDF.WhatsApp.Types
+import TDF.WhatsApp.History (normalizeWhatsAppPhone)
 import TDF.WhatsApp.Service
 
 -- GET verification + POST inbound + preview
@@ -54,9 +67,12 @@ type WhatsAppApi =
 
 data PreviewReq = PreviewReq { phone :: Text } deriving (Show, Generic)
 instance FromJSON PreviewReq where
-  parseJSON = genericParseJSON defaultOptions
-    { rejectUnknownFields = True
-    }
+  parseJSON rawValue = do
+    req <- genericParseJSON defaultOptions
+      { rejectUnknownFields = True
+      } rawValue
+    phoneValue <- normalizePreviewPhone (phone req)
+    pure req { phone = phoneValue }
 
 whatsappServer :: Connection -> Server WhatsAppApi
 whatsappServer conn =
@@ -74,20 +90,19 @@ hookVerifyH mmode mchall mtoken = do
 hookReceiveH :: Connection -> WAMetaWebhook -> Handler Value
 hookReceiveH conn payload = do
   svc <- liftIO mkWhatsAppService
-  let mMsg = extractFirstWebhookMessage payload
-  case mMsg of
-    Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
-    Just msg ->
-      let normText = T.toUpper . T.strip $ maybe "" body (text msg)
-          fromPhone = from msg
-          looksEnroll = ("INSCRIBIRME" `T.isInfixOf` normText) || ("INSCRIBIR" `T.isInfixOf` normText)
-      in if looksEnroll
-         then do
-           unless (isValidE164 fromPhone) $
-             throwError err400 { errBody = "Invalid phone number format" }
-           (resp, _) <- liftIO $ enrollPhone svc conn fromPhone
-           pure resp
-         else pure $ object ["ignored" .= True]
+  case extractUniqueEnrollmentWebhookMessage payload of
+    Left err -> throwError err
+    Right Nothing ->
+      case extractFirstWebhookMessage payload of
+        Nothing -> pure $ object ["ok" .= True, "reason" .= ("no-message" :: Text)]
+        Just _ -> pure $ object ["ignored" .= True]
+    Right (Just msg) ->
+      let fromPhone = from msg
+      in do
+        unless (isValidE164 fromPhone) $
+          throwError err400 { errBody = "Invalid phone number format" }
+        (resp, _) <- liftIO $ enrollPhone svc conn fromPhone
+        pure resp
 
 previewH :: Connection -> PreviewReq -> Handler Value
 previewH conn (PreviewReq p) = do
@@ -97,18 +112,86 @@ previewH conn (PreviewReq p) = do
   liftIO $ previewEnrollment svc conn p
 
 extractFirstWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
-extractFirstWebhookMessage payload =
-  listToMaybe
-    [ msg
-    | ent <- entry payload
-    , chg <- changes ent
-    , msgs <- maybeToList (messages (value chg))
-    , msg <- msgs
-    , waType msg == "text"
-    , not (T.null (T.strip (from msg)))
-    , Just txt <- [text msg]
-    , not (T.null (T.strip (body txt)))
-    ]
+extractFirstWebhookMessage =
+  listToMaybe . extractWebhookTextMessages
+
+extractFirstEnrollmentWebhookMessage :: WAMetaWebhook -> Maybe WAMessage
+extractFirstEnrollmentWebhookMessage =
+  listToMaybe . filter isEnrollmentWebhookMessage . extractWebhookTextMessages
+
+extractUniqueEnrollmentWebhookMessage :: WAMetaWebhook -> Either ServerError (Maybe WAMessage)
+extractUniqueEnrollmentWebhookMessage payload =
+  case filter isEnrollmentWebhookMessage (extractWebhookTextMessages payload) of
+    [] -> Right Nothing
+    firstMsg : rest
+      | any ((/= from firstMsg) . from) rest ->
+          Left err400
+            { errBody =
+                "Webhook contains enrollment messages from multiple senders"
+            }
+      | otherwise ->
+          Right (Just firstMsg)
+
+extractWebhookTextMessages :: WAMetaWebhook -> [WAMessage]
+extractWebhookTextMessages payload =
+  [ msg
+      { from = senderId
+      }
+  | ent <- entry payload
+  , chg <- changes ent
+  , msgs <- maybeToList (messages (value chg))
+  , msg <- msgs
+  , waType msg == "text"
+  , Just senderId <- [normalizeWhatsAppPhone (from msg)]
+  , isValidE164 senderId
+  , Just txt <- [text msg]
+  , not (T.null (T.strip (body txt)))
+  ]
+
+isEnrollmentWebhookMessage :: WAMessage -> Bool
+isEnrollmentWebhookMessage msg =
+  case dropWhile (not . isEnrollmentCommandToken) tokens of
+    [] -> False
+    commandAndAfter ->
+      let beforeCommand = take (length tokens - length commandAndAfter) tokens
+      in not (any (`elem` negativeEnrollmentTokens) tokens)
+           && (null beforeCommand || any (`elem` affirmativeEnrollmentTokens) beforeCommand)
+  where
+    tokens = T.words (normalizeEnrollmentCommandText (maybe "" body (text msg)))
+
+normalizeEnrollmentCommandText :: Text -> Text
+normalizeEnrollmentCommandText =
+  T.unwords . T.words . T.map normalizeChar . T.toUpper
+  where
+    normalizeChar ch
+      | isAlphaNum ch = ch
+      | otherwise = ' '
+
+isEnrollmentCommandToken :: Text -> Bool
+isEnrollmentCommandToken tokenValue =
+  tokenValue == "INSCRIBIRME" || tokenValue == "INSCRIBIR"
+
+affirmativeEnrollmentTokens :: [Text]
+affirmativeEnrollmentTokens =
+  [ "QUIERO"
+  , "DESEO"
+  , "ACEPTO"
+  , "CONFIRMO"
+  , "SI"
+  , "SÍ"
+  , "OK"
+  ]
+
+negativeEnrollmentTokens :: [Text]
+negativeEnrollmentTokens =
+  [ "NO"
+  , "NUNCA"
+  , "TAMPOCO"
+  , "CANCELAR"
+  , "CANCELO"
+  , "CANCELEN"
+  , "BAJA"
+  ]
 
 -- Link minting & sender -------------------------------------------------------
 
@@ -146,23 +229,52 @@ leadsCompleteServer conn lid rawReq = do
 isValidE164 :: Text -> Bool
 isValidE164 t =
   case T.uncons t of
-    Just ('+', rest) -> not (T.null rest) && T.all isDigit rest && T.length rest >= 7 && T.length rest <= 15
+    Just ('+', rest) ->
+      case T.uncons rest of
+        Just (countryCodeStart, _) ->
+          countryCodeStart >= '1'
+            && countryCodeStart <= '9'
+            && T.all isDigit rest
+            && T.length rest >= 7
+            && T.length rest <= 15
+        Nothing -> False
     _ -> False
+
+normalizePreviewPhone :: Text -> Parser Text
+normalizePreviewPhone rawPhone =
+  case normalizeWhatsAppPhone rawPhone of
+    Just phoneValue
+      | isValidE164 phoneValue -> pure phoneValue
+    _ -> fail "phone must be a valid E.164 phone number"
 
 isValidEmail :: Text -> Bool
 isValidEmail candidate =
   case T.split (== '@') candidate of
     [localPart, domain] ->
+      T.length candidate <= maxLeadCompletionEmailChars &&
       isValidEmailLocalPart localPart &&
       not (T.any (`elem` [' ', '\t', '\n', '\r']) candidate) &&
-      not (T.null domain) &&
-      T.isInfixOf "." domain &&
-      all isValidDomainLabel (T.splitOn "." domain)
+      isValidEmailDomain domain
     _ -> False
+
+isValidEmailDomain :: Text -> Bool
+isValidEmailDomain domain =
+  not (T.null domain) &&
+  T.isInfixOf "." domain &&
+  all isValidDomainLabel labels &&
+  T.length topLevelLabel >= 2 &&
+  T.any isAsciiLower topLevelLabel
+  where
+    labels = T.splitOn "." domain
+    topLevelLabel =
+      case reverse labels of
+        label : _ -> label
+        [] -> ""
 
 isValidEmailLocalPart :: Text -> Bool
 isValidEmailLocalPart localPart =
   not (T.null localPart) &&
+  T.length localPart <= maxLeadCompletionEmailLocalPartChars &&
   not (T.isPrefixOf "." localPart) &&
   not (T.isSuffixOf "." localPart) &&
   not (".." `T.isInfixOf` localPart) &&
@@ -175,6 +287,7 @@ isValidEmailLocalChar c =
 isValidDomainLabel :: Text -> Bool
 isValidDomainLabel label =
   not (T.null label) &&
+  T.length label <= maxLeadCompletionEmailDomainLabelChars &&
   not (T.isPrefixOf "-" label) &&
   not (T.isSuffixOf "-" label) &&
   T.all isValidDomainChar label
@@ -190,8 +303,14 @@ validateLeadCompletionRequest (CompleteReq rawToken rawName rawEmail)
       Left err400 { errBody = "Completion token format is invalid" }
   | T.null nameValue || T.length nameValue > 200 =
       Left err400 { errBody = "Invalid name: must be 1-200 characters" }
-  | T.any isControl nameValue =
-      Left err400 { errBody = "Invalid name: must not contain control characters" }
+  | T.any isUnsafeLeadCompletionNameChar nameValue =
+      Left err400
+        { errBody =
+            "Invalid name: must not contain control or hidden formatting characters"
+              <> ", or non-ASCII spaces"
+        }
+  | not (T.any isAlphaNum nameValue) =
+      Left err400 { errBody = "Invalid name: must include letters or numbers" }
   | T.length emailValue > maxLeadCompletionEmailChars =
       Left err400 { errBody = "Invalid email: must be 254 characters or fewer" }
   | not (isValidEmail emailValue) =
@@ -214,9 +333,27 @@ leadCompletionTokenLength = 20
 maxLeadCompletionEmailChars :: Int
 maxLeadCompletionEmailChars = 254
 
+maxLeadCompletionEmailLocalPartChars :: Int
+maxLeadCompletionEmailLocalPartChars = 64
+
+maxLeadCompletionEmailDomainLabelChars :: Int
+maxLeadCompletionEmailDomainLabelChars = 63
+
 isValidLeadCompletionTokenChar :: Char -> Bool
 isValidLeadCompletionTokenChar c =
   isAscii c && isAlphaNum c
+
+isUnsafeLeadCompletionNameChar :: Char -> Bool
+isUnsafeLeadCompletionNameChar ch =
+  isControl ch || isHiddenFormattingChar ch || isNonAsciiSpace ch
+
+isNonAsciiSpace :: Char -> Bool
+isNonAsciiSpace ch =
+  generalCategory ch == Space && ch /= ' '
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateLeadCompletionId :: Int -> Either ServerError Int
 validateLeadCompletionId leadId
@@ -240,17 +377,19 @@ validateLeadCompletionLookup suppliedToken (Just (status, mStoredToken))
   | otherwise =
       Right ()
   where
-    storedTokenValue = nonBlank mStoredToken
+    storedTokenValue = canonicalStoredToken mStoredToken
 
-    nonBlank :: Maybe Text -> Maybe Text
-    nonBlank mTxt =
-      case fmap T.strip mTxt of
-        Just txt | not (T.null txt) -> Just txt
+    canonicalStoredToken :: Maybe Text -> Maybe Text
+    canonicalStoredToken mTxt =
+      case mTxt of
+        Just txt
+          | txt == T.strip txt && isValidLeadCompletionToken txt -> Just txt
         _ -> Nothing
 
 isCompletableLeadStatus :: Text -> Bool
 isCompletableLeadStatus rawStatus =
-  T.toUpper (T.strip rawStatus) `elem` ["NEW", "LINK_SENT"]
+  let statusValue = T.strip rawStatus
+  in rawStatus == statusValue && statusValue `elem` ["NEW", "LINK_SENT"]
 
 ensureLeadCompletionUpdated :: Int64 -> Either ServerError ()
 ensureLeadCompletionUpdated updatedRows
@@ -270,36 +409,67 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
   case validateConfiguredVerifyToken mExpected of
     Left err -> Left err
     Right expected ->
-      case fmap T.toLower (nonBlank mmode) of
-        Nothing ->
-          Left err400 { errBody = "hub.mode is required" }
-        Just "subscribe" ->
-          case nonBlank mchall of
+      case validateHookMode mmode of
+        Left err -> Left err
+        Right () ->
+          case nonBlankRaw mchall of
             Nothing ->
               Left err400 { errBody = "hub.challenge is required" }
             Just challenge ->
               case validateHookChallenge challenge of
                 Left err -> Left err
                 Right challengeVal ->
-                  case nonBlank mtoken of
+                  case nonBlankRaw mtoken of
                     Nothing ->
                       Left err400 { errBody = "hub.verify_token is required" }
                     Just verifyToken
-                      | T.any isControl verifyToken ->
+                      | T.length verifyToken > maxHookVerifyTokenChars ->
                           Left err400
-                            { errBody = "hub.verify_token must not contain control characters" }
+                            { errBody =
+                                "hub.verify_token must be 512 characters or fewer"
+                            }
+                      | T.any isUnsafeVerifyTokenChar verifyToken ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must not contain control characters or whitespace; hidden formatting characters are not allowed"
+                            }
+                      | T.any (not . isVisibleAsciiVerifyTokenChar) verifyToken ->
+                          Left err400
+                            { errBody =
+                                "hub.verify_token must contain visible ASCII characters only"
+                            }
                       | verifyToken == expected -> Right challengeVal
                       | otherwise -> Left err403 { errBody = "hub.verify_token mismatch" }
-        Just _ ->
-          Left err400 { errBody = "hub.mode must be subscribe" }
   where
+    validateHookMode :: Maybe Text -> Either ServerError ()
+    validateHookMode mTxt =
+      case mTxt of
+        Nothing ->
+          Left err400 { errBody = "hub.mode is required" }
+        Just rawMode
+          | T.null (T.strip rawMode) ->
+              Left err400 { errBody = "hub.mode is required" }
+          | T.any isUnsafeHookModeChar rawMode ->
+              Left err400
+                { errBody =
+                    "hub.mode must not contain whitespace, control characters, or hidden formatting characters"
+                }
+          | T.toLower rawMode == "subscribe" ->
+              Right ()
+          | otherwise ->
+              Left err400 { errBody = "hub.mode must be subscribe" }
+
     validateConfiguredVerifyToken :: Maybe Text -> Either ServerError Text
     validateConfiguredVerifyToken mTxt =
       case nonBlank mTxt of
         Nothing ->
           Left err503 { errBody = "WhatsApp verify token not configured" }
         Just txt
-          | T.any isControl txt ->
+          | T.length txt > maxHookVerifyTokenChars ->
+              Left err503 { errBody = "WhatsApp verify token is misconfigured" }
+          | T.any isUnsafeVerifyTokenChar txt ->
+              Left err503 { errBody = "WhatsApp verify token is misconfigured" }
+          | T.any (not . isVisibleAsciiVerifyTokenChar) txt ->
               Left err503 { errBody = "WhatsApp verify token is misconfigured" }
           | otherwise ->
               Right txt
@@ -310,11 +480,34 @@ validateHookVerifyRequest mmode mchall mtoken mExpected =
         Just txt | not (T.null txt) -> Just txt
         _ -> Nothing
 
+    nonBlankRaw :: Maybe Text -> Maybe Text
+    nonBlankRaw mTxt =
+      case mTxt of
+        Just txt | not (T.null (T.strip txt)) -> Just txt
+        _ -> Nothing
+
     validateHookChallenge :: Text -> Either ServerError Text
     validateHookChallenge challenge
       | T.length challenge > 512 =
           Left err400 { errBody = "hub.challenge must be 512 characters or fewer" }
       | T.any isControl challenge =
           Left err400 { errBody = "hub.challenge must not contain control characters" }
+      | T.any isSpace challenge =
+          Left err400 { errBody = "hub.challenge must not contain whitespace" }
+      | T.any isHiddenFormattingChar challenge =
+          Left err400
+            { errBody = "hub.challenge must not contain hidden formatting characters" }
       | otherwise =
           Right challenge
+
+    isUnsafeVerifyTokenChar ch =
+      isControl ch || isSpace ch || isHiddenFormattingChar ch
+
+    isVisibleAsciiVerifyTokenChar ch =
+      ch >= '!' && ch <= '~'
+
+    isUnsafeHookModeChar ch =
+      isControl ch || isSpace ch || isHiddenFormattingChar ch
+
+    maxHookVerifyTokenChars :: Int
+    maxHookVerifyTokenChars = 512

@@ -3,32 +3,52 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module TDF.Cron
   ( startCoursePaymentReminderJob
+  , startEventDiscoveryJob
   , startInstagramSyncJob
   , startSocialAutoReplyJob
+  , startEventLogisticsRecheckJob
+  , startArtistEnrichmentJob
   , Directive(..)
   , parseDirective
+  , selectInstagramSyncAccessToken
   ) where
 
 import           Control.Concurrent      (forkIO, threadDelay)
-import           Control.Exception       (SomeException, displayException, try)
+import           Control.Exception
+  ( SomeAsyncException
+  , SomeException
+  , displayException
+  , finally
+  , fromException
+  , throwIO
+  , try
+  )
 import           Control.Applicative    ((<|>))
-import           Control.Monad           (forever, void, when, foldM)
+import           Control.Monad           (foldM, forM_, forever, void, when)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.Foldable           (for_)
-import           Data.List                  (find, foldl', nub)
+import           Data.List                  (find, nub)
 import qualified Data.Map.Strict         as Map
-import           Data.Maybe              (catMaybes, fromMaybe, isJust, listToMaybe)
+import           Data.Maybe              (catMaybes, fromMaybe, isJust, isNothing, listToMaybe)
+import           Data.Pool               (withResource)
 import           Data.Text               (Text)
 import qualified Data.Text               as T
 import           Data.Time               ( LocalTime(..)
                                          , TimeOfDay(..)
-                                         , UTCTime
+                                         , NominalDiffTime
+                                         , UTCTime(..)
                                          , ZonedTime(..)
                                          , addUTCTime
                                          , addDays
                                          , diffUTCTime
+                                         , defaultTimeLocale
+                                         , formatTime
                                          , getCurrentTime
                                          , getZonedTime
+                                         , secondsToDiffTime
+                                         , toModifiedJulianDay
+                                         , utctDay
+                                         , utctDayTime
                                          , zonedTimeToUTC
                                          )
 import           Database.Persist        ( (!=.)
@@ -44,14 +64,19 @@ import           Database.Persist        ( (!=.)
                                          , insert
                                          , insert_
                                          , insertEntity
+                                         , insertUnique
+                                         , delete
                                          , update
                                          , (=.)
+                                         , (+=.)
                                           )
-import           Database.Persist.Sql    (SqlPersistT, runSqlPool)
+import           Database.Persist.Sql    (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlConn, runSqlPool)
 import           System.Random           (randomRIO)
 import           System.IO               (hPutStrLn, stderr)
 
 import           TDF.DB                  (Env(..), ConnectionPool)
+import           TDF.API.Admin           (ArtistEnrichmentRunRequest(..))
+import           TDF.Artists.Enrichment  (runArtistEnrichmentWithKey)
 import qualified TDF.Email.Service       as EmailSvc
 import qualified TDF.LogBuffer           as LogBuf
 import qualified TDF.ModelsExtra         as ME
@@ -59,6 +84,30 @@ import           TDF.Models
 import           TDF.Services.InstagramMessaging (sendInstagramText)
 import           TDF.Services.FacebookMessaging (sendFacebookText)
 import           TDF.Services.InstagramSync (InstagramMedia(..), fetchUserMedia)
+import           TDF.Services.EventDiscovery
+  ( DiscoverySyncStats(..)
+  , DiscoveredEvent(..)
+  , DiscoveredVenue(..)
+  , EventDiscoveryCity(..)
+  , beginEventDiscoveryRun
+  , discoveredEventFitsPilotLimit
+  , failEventDiscoveryRun
+  , fetchBuenPlanEvents
+  , fetchStructuredFeedEvents
+  , fetchTicketmasterEventsForCity
+  , finishEventDiscoveryRun
+  , loadSubscribedDiscoveryCities
+  , reconcileProviderEvents
+  , reconcileImportedEvents
+  , syncDiscoveredEvent
+  , syncDiscoveredEventDraft
+  )
+import           TDF.Services.EventLogisticsRoutes
+  ( RouteEstimateInput(..)
+  , RouteEstimateResult(..)
+  , computeGoogleRoute
+  )
+import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
 import           TDF.Server              ( buildLandingUrl
                                          , loadAdExamples
@@ -72,7 +121,25 @@ import           TDF.Server              ( buildLandingUrl
                                          )
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
-import           TDF.Config              (AppConfig, instagramAppToken)
+import           TDF.Config
+  ( AppConfig
+  , eventDiscoveryEnabled
+  , eventDiscoveryAutoPublish
+  , eventDiscoveryPilotLimit
+  , instagramAppToken
+  , ticketmasterApiKey
+  , eventLogisticsRecheckEnabled
+  , artistEnrichmentEnabled
+  , artistEnrichmentAutoPublish
+  , artistEnrichmentHourLocal
+  , artistEnrichmentBatchSize
+  , artistEnrichmentStaleDays
+  , googleRoutesApiBase
+  , googleRoutesApiKey
+  , defaultCurrency
+  , defaultLocale
+  )
+import           Web.PathPieces          (fromPathPiece)
 import           TDF.WhatsApp.Client     (SendTextResult)
 import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
 import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
@@ -97,17 +164,35 @@ parseDirective raw0 =
       isNeedLine line =
         let cleaned = T.strip line
         in T.toCaseFold "NEED:" `T.isPrefixOf` T.toCaseFold cleaned
+      isDirectiveLine line =
+        let cleaned = T.strip line
+            lowered = T.toCaseFold cleaned
+        in any (`T.isPrefixOf` lowered) ["send:", "hold:", "need:"]
+      isNestedHoldDirectiveLine line =
+        let cleaned = T.strip line
+            lowered = T.toCaseFold cleaned
+        in any (`T.isPrefixOf` lowered) ["send:", "hold:"]
+      validateSendBody msg
+        | T.null msg = Left "SEND directive empty"
+        | any isDirectiveLine (filter (not . T.null) (map T.strip (T.lines msg))) =
+            Left "SEND directive contains nested directive line"
+        | otherwise = Right (Send msg)
       parseHoldBody body =
         let lines0 = filter (not . T.null) (map T.strip (T.lines body))
-            needTxt = listToMaybe [need | line <- lines0, Just need <- [parseNeedLine line]]
+            needLines = [need | line <- lines0, Just need <- [parseNeedLine line]]
+            needLineCount = length [() | line <- lines0, isNeedLine line]
             reason = listToMaybe [line | line <- lines0, not (isNeedLine line)]
-        in case reason of
-             Nothing -> Left "HOLD directive empty"
-             Just value -> Right (Hold value needTxt)
+        in if any isNestedHoldDirectiveLine lines0
+             then Left "HOLD directive contains nested directive line"
+             else if needLineCount > 1
+               then Left "HOLD directive must include at most one NEED line"
+               else case reason of
+                 Nothing -> Left "HOLD directive empty"
+                 Just value -> Right (Hold value (listToMaybe needLines))
   in case () of
       _ | Just rest <- stripPrefixCI "SEND:" raw ->
             let msg = T.strip rest
-            in if T.null msg then Left "SEND directive empty" else Right (Send msg)
+            in validateSendBody msg
         | Just rest <- stripPrefixCI "HOLD:" raw ->
             parseHoldBody rest
         | otherwise -> Left "Invalid directive: expected SEND: or HOLD:"
@@ -154,6 +239,640 @@ waitUntil targetUtc = do
       waitMicros = max 0 (ceiling (realToFrac diffSeconds * (1e6 :: Double)) :: Int)
   when (waitMicros > 0) (threadDelay waitMicros)
 
+-- | Run the safe artist inventory/enrichment audit once per local day. Every
+-- replica starts the scheduler; a session advisory lock and deterministic run
+-- key ensure one execution per day and safe recovery after restarts.
+startArtistEnrichmentJob :: Env -> IO ()
+startArtistEnrichmentJob env@Env{envConfig}
+  | not (artistEnrichmentEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][ArtistEnrichment] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (artistEnrichmentLoop env))
+      LogBuf.addLog LogBuf.LogInfo
+        ("[Cron][ArtistEnrichment] Scheduled daily at local hour "
+          <> T.pack (show (artistEnrichmentHourLocal envConfig)) <> ".")
+
+artistEnrichmentLoop :: Env -> IO ()
+artistEnrichmentLoop env@Env{envConfig} = forever $ do
+  target <- nextLocalTimeUtc (TimeOfDay (artistEnrichmentHourLocal envConfig) 0 0)
+  waitUntil target
+  result <- tryNonAsync (runArtistEnrichmentWithLeaderLock env)
+  case result of
+    Left err -> LogBuf.addLog LogBuf.LogError
+      ("[Cron][ArtistEnrichment] Daily run failed: " <> T.pack (displayException err))
+    Right () -> pure ()
+
+runArtistEnrichmentWithLeaderLock :: Env -> IO ()
+runArtistEnrichmentWithLeaderLock Env{envPool, envConfig} =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn
+      (rawSql "SELECT pg_try_advisory_lock(8401320260805)" [] :: SqlPersistT IO [Single Bool])
+      backend
+    case lockRows of
+      [Single True] -> do
+        now <- getCurrentTime
+        let mode = if artistEnrichmentAutoPublish envConfig then "production" else "dry_run"
+            runKey = "daily:" <> T.pack (formatTime defaultTimeLocale "%F" now)
+            request = ArtistEnrichmentRunRequest
+              { aerrMode = mode
+              , aerrArtistId = Nothing
+              , aerrBatchSize = Just (artistEnrichmentBatchSize envConfig)
+              , aerrStaleDays = Just (artistEnrichmentStaleDays envConfig)
+              , aerrResumeRunKey = Just runKey
+              }
+        outcome <- tryNonAsync
+          (runSqlConn (runArtistEnrichmentWithKey "daily-enrichment" runKey request) backend)
+          `finally` void
+            (runSqlConn
+              (rawSql "SELECT pg_advisory_unlock(8401320260805)" [] :: SqlPersistT IO [Single Bool])
+              backend)
+        case outcome of
+          Left err -> throwIO err
+          Right _ -> LogBuf.addLog LogBuf.LogInfo
+            ("[Cron][ArtistEnrichment] Completed " <> runKey <> " in " <> mode <> " mode.")
+      _ -> LogBuf.addLog LogBuf.LogInfo
+        "[Cron][ArtistEnrichment] Another API replica owns this run; skipping."
+
+-- | Import external events for cities with active subscriptions. Every API
+-- replica starts the loop, while a PostgreSQL advisory lock and per-source
+-- slot ledger ensure that only one replica performs each six-hour run.
+startEventDiscoveryJob :: Env -> IO ()
+startEventDiscoveryJob env@Env{envConfig}
+  | not (eventDiscoveryEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][EventDiscovery] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (eventDiscoveryLoop env))
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] Scheduled every six hours at UTC slot boundaries."
+
+eventDiscoveryLoop :: Env -> IO ()
+eventDiscoveryLoop env = do
+  threadDelay (30 * 1000000)
+  forever $ do
+    runResult <- tryNonAsync (runEventDiscoveryWithLeaderLock env)
+    case runResult of
+      Left err -> do
+        let message =
+              "[Cron][EventDiscovery] Job failed: "
+                <> T.pack (displayException err)
+        hPutStrLn stderr (T.unpack message)
+        LogBuf.addLog LogBuf.LogError message
+      Right () -> pure ()
+    now <- getCurrentTime
+    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoverySlot now))
+
+discoverySlotSeconds :: NominalDiffTime
+discoverySlotSeconds = 6 * 60 * 60
+
+eventDiscoverySlot :: UTCTime -> UTCTime
+eventDiscoverySlot now =
+  UTCTime
+    (utctDay now)
+    ( secondsToDiffTime
+        ( (floor (toRational (utctDayTime now)) `div` slotSeconds)
+            * slotSeconds
+        )
+    )
+  where
+    slotSeconds = 6 * 60 * 60
+
+runEventDiscoveryWithLeaderLock :: Env -> IO ()
+runEventDiscoveryWithLeaderLock env@Env{envPool} = do
+  lockResult <- withEventDiscoveryLeaderLock envPool (runEventDiscoveryOnce env)
+  case lockResult of
+    Nothing ->
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] Another API replica owns this run; skipping."
+    Just () -> pure ()
+
+-- | Recheck upcoming event travel at the 24-hour and 2-hour operational gates.
+-- A database advisory lock and per-activity checkpoint rows keep this safe when
+-- multiple API replicas are running.
+startEventLogisticsRecheckJob :: Env -> IO ()
+startEventLogisticsRecheckJob env@Env{envConfig}
+  | not (eventLogisticsRecheckEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Disabled by configuration."
+  | otherwise = case googleRoutesApiKey envConfig of
+      Nothing -> LogBuf.addLog LogBuf.LogWarning "[Cron][EventLogistics] GOOGLE_ROUTES_API_KEY is missing; job is idle."
+      Just apiKey -> do
+        void (forkIO (eventLogisticsLoop env apiKey))
+        LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Scheduled route checks every 15 minutes."
+
+eventLogisticsLoop :: Env -> Text -> IO ()
+eventLogisticsLoop env apiKey = do
+  threadDelay (45 * 1000000)
+  forever $ do
+    result <- tryNonAsync (runEventLogisticsWithLeaderLock env apiKey)
+    case result of
+      Left err -> LogBuf.addLog LogBuf.LogError ("[Cron][EventLogistics] Recheck failed: " <> T.pack (displayException err))
+      Right () -> pure ()
+    threadDelay (15 * 60 * 1000000)
+
+runEventLogisticsWithLeaderLock :: Env -> Text -> IO ()
+runEventLogisticsWithLeaderLock env@Env{envPool} apiKey =
+  withResource envPool $ \backend -> do
+    lockRows <- runSqlConn (rawSql "SELECT pg_try_advisory_lock(8401320250713)" [] :: SqlPersistT IO [Single Bool]) backend
+    case lockRows of
+      [Single True] -> runEventLogisticsRechecks env apiKey
+        `finally` void (runSqlConn (rawSql "SELECT pg_advisory_unlock(8401320250713)" [] :: SqlPersistT IO [Single Bool]) backend)
+      _ -> LogBuf.addLog LogBuf.LogInfo "[Cron][EventLogistics] Another API replica owns this tick; skipping."
+
+runEventLogisticsRechecks :: Env -> Text -> IO ()
+runEventLogisticsRechecks env@Env{envPool} apiKey = do
+  now <- getCurrentTime
+  rows <- runSqlPool
+    (selectList
+      [ Social.EventLogisticsActivityActivityType ==. "travel"
+      , Social.EventLogisticsActivityStatus !=. "completed"
+      , Social.EventLogisticsActivityStatus !=. "cancelled"
+      , Social.EventLogisticsActivityStartTime >=. now
+      ]
+      [Asc Social.EventLogisticsActivityStartTime, LimitTo 500])
+    envPool
+  for_ rows $ \row@(Entity activityKey activity) ->
+    for_ (logisticsCheckpoint now (Social.eventLogisticsActivityStartTime activity)) $ \checkpoint -> do
+      alreadyChecked <- runSqlPool
+        (selectFirst
+          [ Social.EventRouteVerificationActivityId ==. activityKey
+          , Social.EventRouteVerificationActivityVersion ==. Social.eventLogisticsActivityVersion activity
+          , Social.EventRouteVerificationCheckpoint ==. Just checkpoint
+          ] [])
+        envPool
+      when (isNothing alreadyChecked) $ recheckLogisticsActivity env apiKey checkpoint row
+
+logisticsCheckpoint :: UTCTime -> UTCTime -> Maybe Text
+logisticsCheckpoint now departure
+  | secondsUntil < 0 = Nothing
+  | secondsUntil <= 2 * 60 * 60 + 15 * 60 = Just "2h"
+  | secondsUntil <= 24 * 60 * 60 + 15 * 60 = Just "24h"
+  | otherwise = Nothing
+  where
+    secondsUntil = realToFrac (diffUTCTime departure now) :: Double
+
+recheckLogisticsActivity :: Env -> Text -> Text -> Entity Social.EventLogisticsActivity -> IO ()
+recheckLogisticsActivity Env{envPool, envConfig} apiKey checkpoint (Entity activityKey activity) = do
+  now <- getCurrentTime
+  previous <- runSqlPool
+    (selectFirst [Social.EventRouteVerificationActivityId ==. activityKey] [Desc Social.EventRouteVerificationVerifiedAt])
+    envPool
+  routeResult <- case (Social.eventLogisticsActivityOriginPlaceId activity, Social.eventLogisticsActivityDestinationPlaceId activity, Social.eventLogisticsActivityEndTime activity) of
+    (Just originKey, Just destinationKey, Just endTime) -> do
+      mOrigin <- runSqlPool (get originKey) envPool
+      mDestination <- runSqlPool (get destinationKey) envPool
+      case (mOrigin, mDestination) of
+        (Just origin, Just destination) -> do
+          let mode = fromMaybe "drive" (Social.eventLogisticsActivityTravelMode activity)
+              input = RouteEstimateInput
+                { reiOriginLatitude = Social.eventLogisticsPlaceLatitude origin
+                , reiOriginLongitude = Social.eventLogisticsPlaceLongitude origin
+                , reiDestinationLatitude = Social.eventLogisticsPlaceLatitude destination
+                , reiDestinationLongitude = Social.eventLogisticsPlaceLongitude destination
+                , reiTravelMode = mode
+                , reiDepartureTime = Social.eventLogisticsActivityStartTime activity
+                }
+          result <- computeGoogleRoute apiKey (googleRoutesApiBase envConfig) (defaultLocale envConfig) input
+          pure (mode, endTime, result)
+        _ -> pure ("drive", endTime, Left "El origen o destino ya no existe.")
+    _ -> pure ("drive", Social.eventLogisticsActivityStartTime activity, Left "El traslado está incompleto.")
+  let (mode, endTime, estimate) = routeResult
+      allocatedSeconds = max 0 (floor (diffUTCTime endTime (Social.eventLogisticsActivityStartTime activity)))
+      (durationValue, staticValue, distanceValue, bufferSeconds, verdict, polyline, errorMessage) =
+        cronRouteVerificationValues activity allocatedSeconds estimate
+  _ <- runSqlPool (insert Social.EventRouteVerification
+    { Social.eventRouteVerificationActivityId = activityKey
+    , Social.eventRouteVerificationActivityVersion = Social.eventLogisticsActivityVersion activity
+    , Social.eventRouteVerificationProvider = "google_routes"
+    , Social.eventRouteVerificationTravelMode = mode
+    , Social.eventRouteVerificationDepartureTime = Social.eventLogisticsActivityStartTime activity
+    , Social.eventRouteVerificationDurationSeconds = durationValue
+    , Social.eventRouteVerificationStaticDurationSeconds = staticValue
+    , Social.eventRouteVerificationDistanceMeters = distanceValue
+    , Social.eventRouteVerificationBufferSeconds = bufferSeconds
+    , Social.eventRouteVerificationAllocatedSeconds = allocatedSeconds
+    , Social.eventRouteVerificationVerdict = verdict
+    , Social.eventRouteVerificationEncodedPolyline = polyline
+    , Social.eventRouteVerificationErrorMessage = errorMessage
+    , Social.eventRouteVerificationCheckpoint = Just checkpoint
+    , Social.eventRouteVerificationVerifiedAt = now
+    }) envPool
+  let previousDuration = previous >>= Social.eventRouteVerificationDurationSeconds . entityVal
+      materiallyIncreased = case (previousDuration, durationValue) of
+        (Just old, Just new) -> new - old >= max 600 (ceiling (fromIntegral old * (0.15 :: Double)))
+        _ -> False
+      shouldAlert = verdict `elem` ["tight", "infeasible", "unavailable"] || materiallyIncreased
+  when shouldAlert $ notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey activity verdict durationValue bufferSeconds
+
+cronRouteVerificationValues :: Social.EventLogisticsActivity -> Int -> Either Text RouteEstimateResult -> (Maybe Int, Maybe Int, Maybe Int, Int, Text, Maybe Text, Maybe Text)
+cronRouteVerificationValues activity allocated result = case result of
+  Left message -> (Nothing, Nothing, Nothing, maybe 900 (* 60) (Social.eventLogisticsActivityBufferMinutes activity), "unavailable", Nothing, Just message)
+  Right RouteEstimateResult{..} ->
+    let automaticBuffer = max 900 (ceiling (fromIntegral rerDurationSeconds * (0.2 :: Double)))
+        bufferSeconds = maybe automaticBuffer (* 60) (Social.eventLogisticsActivityBufferMinutes activity)
+        verdict
+          | allocated < rerDurationSeconds = "infeasible"
+          | allocated < rerDurationSeconds + bufferSeconds = "tight"
+          | otherwise = "feasible"
+     in (Just rerDurationSeconds, rerStaticDurationSeconds, Just rerDistanceMeters, bufferSeconds, verdict, rerEncodedPolyline, Nothing)
+
+notifyLogisticsRouteRecipients :: Env -> Text -> Social.EventLogisticsActivityId -> Social.EventLogisticsActivity -> Text -> Maybe Int -> Int -> IO ()
+notifyLogisticsRouteRecipients Env{envPool, envConfig} checkpoint activityKey activity verdict durationValue bufferSeconds = do
+  now <- getCurrentTime
+  mEvent <- runSqlPool (get (Social.eventLogisticsActivityEventId activity)) envPool
+  members <- runSqlPool
+    (selectList
+      [ Social.EventLogisticsMemberEventId ==. Social.eventLogisticsActivityEventId activity
+      , Social.EventLogisticsMemberMemberRole ==. "editor"
+      ] []) envPool
+  assignments <- runSqlPool (selectList [Social.EventLogisticsAssignmentActivityId ==. activityKey] []) envPool
+  let organizer = mEvent >>= Social.socialEventOrganizerPartyId
+      memberIds = map (Social.eventLogisticsMemberPartyId . entityVal) members
+      assigneeIds = catMaybes (map (Social.eventLogisticsAssignmentPartyId . entityVal) assignments)
+      recipientTexts = nub (catMaybes [organizer] <> memberIds <> assigneeIds)
+      recipientKeys = catMaybes (map (fromPathPiece :: Text -> Maybe PartyId) recipientTexts)
+      eventTitle = maybe "Evento" Social.socialEventTitle mEvent
+      title = "Alerta de ruta · " <> eventTitle
+      estimateLabel = maybe "sin estimación" (\seconds -> T.pack (show (ceiling (fromIntegral seconds / (60 :: Double)) :: Int)) <> " min") durationValue
+      body = Social.eventLogisticsActivityTitle activity <> ": " <> verdict <> ", estimado " <> estimateLabel <> ", holgura " <> T.pack (show (ceiling (fromIntegral bufferSeconds / (60 :: Double)) :: Int)) <> " min."
+      emailSvc = EmailSvc.mkEmailService envConfig
+      targetId = fromIntegral (fromSqlKey (Social.eventLogisticsActivityEventId activity))
+      logisticsUrl = fmap (\base -> T.dropWhileEnd (== '/') base <> "/social/eventos/" <> T.pack (show (fromSqlKey (Social.eventLogisticsActivityEventId activity))) <> "/logistica") (EmailSvc.esAppBase emailSvc)
+  for_ recipientKeys $ \partyKey -> do
+    inAppClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
+      { Social.eventLogisticsAlertDeliveryActivityId = activityKey
+      , Social.eventLogisticsAlertDeliveryActivityVersion = Social.eventLogisticsActivityVersion activity
+      , Social.eventLogisticsAlertDeliveryCheckpoint = checkpoint
+      , Social.eventLogisticsAlertDeliveryRecipientPartyId = T.pack (show (fromSqlKey partyKey))
+      , Social.eventLogisticsAlertDeliveryChannel = "in_app"
+      , Social.eventLogisticsAlertDeliveryDeliveredAt = now
+      }) envPool
+    for_ inAppClaim $ \_ -> runSqlPool (insert_ Notification
+      { notificationRecipientPartyId = partyKey
+      , notificationNotifType = "event_logistics_route"
+      , notificationTitle = title
+      , notificationBody = body
+      , notificationTargetType = Just "event_logistics"
+      , notificationTargetId = Just targetId
+      , notificationIsRead = False
+      , notificationCreatedAt = now
+      }) envPool
+    mParty <- runSqlPool (get partyKey) envPool
+    case (EmailSvc.esConfig emailSvc, mParty >>= partyPrimaryEmail) of
+      (Just _, Just emailAddress) -> do
+        emailClaim <- runSqlPool (insertUnique Social.EventLogisticsAlertDelivery
+          { Social.eventLogisticsAlertDeliveryActivityId = activityKey
+          , Social.eventLogisticsAlertDeliveryActivityVersion = Social.eventLogisticsActivityVersion activity
+          , Social.eventLogisticsAlertDeliveryCheckpoint = checkpoint
+          , Social.eventLogisticsAlertDeliveryRecipientPartyId = T.pack (show (fromSqlKey partyKey))
+          , Social.eventLogisticsAlertDeliveryChannel = "email"
+          , Social.eventLogisticsAlertDeliveryDeliveredAt = now
+          }) envPool
+        for_ emailClaim $ \deliveryKey -> do
+          sendResult <- try (EmailSvc.sendTestEmail emailSvc (maybe "Equipo" partyDisplayName mParty) emailAddress title [body, "Revisa el cronograma antes de confirmar el traslado."] logisticsUrl) :: IO (Either SomeException ())
+          case sendResult of
+            Left err -> do
+              runSqlPool (delete deliveryKey) envPool
+              LogBuf.addLog LogBuf.LogError ("[Cron][EventLogistics] Email failed: " <> T.pack (displayException err))
+            Right () -> pure ()
+      _ -> pure ()
+
+withEventDiscoveryLeaderLock :: ConnectionPool -> IO a -> IO (Maybe a)
+withEventDiscoveryLeaderLock pool action =
+  withResource pool $ \backend -> do
+    acquiredRows <-
+      runSqlConn
+        (rawSql "SELECT pg_try_advisory_lock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
+        backend
+    case acquiredRows of
+      [Single True] ->
+        Just
+          <$> ( action
+                  `finally` void
+                    ( runSqlConn
+                        (rawSql "SELECT pg_advisory_unlock(8401320250712)" [] :: SqlPersistT IO [Single Bool])
+                        backend
+                    )
+              )
+      _ -> pure Nothing
+
+runEventDiscoveryOnce :: Env -> IO ()
+runEventDiscoveryOnce Env{..} = do
+  now <- getCurrentTime
+  ensureDefaultEventDiscoverySources now
+  let slot = eventDiscoverySlot now
+  allCities <- loadSubscribedDiscoveryCities envPool
+  let cities = selectEventDiscoveryCities slot allCities
+  lifecycleChanges <- reconcileImportedEvents envPool now allCities
+  when (lifecycleChanges > 0) $
+    LogBuf.addLog
+      LogBuf.LogInfo
+      ( "[Cron][EventDiscovery] Reconciled "
+          <> showCount lifecycleChanges
+          <> " completed or out-of-scope events."
+      )
+  sources <-
+    runSqlPool
+      ( selectList
+          [Social.EventDiscoverySourceEnabled ==. True]
+          [Asc Social.EventDiscoverySourcePriority]
+      )
+      envPool
+  if null cities
+    then
+      LogBuf.addLog
+        LogBuf.LogInfo
+        "[Cron][EventDiscovery] No active city subscriptions; nothing to import."
+    else forM_ sources $ \sourceEntity@(Entity _ source) ->
+      if sourceCircuitOpen now source
+        then
+          LogBuf.addLog
+            LogBuf.LogWarning
+            ( "[Cron][EventDiscovery]["
+                <> Social.eventDiscoverySourceSourceKey source
+                <> "] Circuit open after repeated failures; retry deferred."
+            )
+        else runDiscoverySource now slot cities sourceEntity
+  where
+    sourceCircuitOpen now source =
+      Social.eventDiscoverySourceConsecutiveFailures source >= 3
+        && diffUTCTime now (Social.eventDiscoverySourceUpdatedAt source)
+          < 24 * 60 * 60
+
+    runDiscoverySource now slot cities (Entity sourceKey source) = do
+      let provider = Social.eventDiscoverySourceSourceKey source
+      runHandle <- beginEventDiscoveryRun envPool provider slot now
+      case runHandle of
+        Nothing ->
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ("[Cron][EventDiscovery][" <> provider <> "] Slot already claimed; skipping.")
+        Just handle -> do
+          outcome <- tryNonAsync (fetchAndSyncSource now cities source)
+          finishedAt <- getCurrentTime
+          case outcome of
+            Left err -> do
+              let errText = T.pack (displayException err)
+              failEventDiscoveryRun envPool handle finishedAt errText
+              markSourceFailure sourceKey finishedAt errText
+              LogBuf.addLog
+                LogBuf.LogError
+                ("[Cron][EventDiscovery][" <> provider <> "] " <> errText)
+            Right (Left errText) -> do
+              failEventDiscoveryRun envPool handle finishedAt errText
+              markSourceFailure sourceKey finishedAt errText
+              LogBuf.addLog
+                LogBuf.LogError
+                ("[Cron][EventDiscovery][" <> provider <> "] " <> errText)
+            Right (Right (processedCities, events, totals)) -> do
+              _ <-
+                reconcileProviderEvents
+                  envPool
+                  finishedAt
+                  provider
+                  processedCities
+                  (map discoveredEventExternalId events)
+              finishEventDiscoveryRun envPool handle finishedAt (length processedCities) totals
+              markSourceSuccess sourceKey finishedAt
+              LogBuf.addLog
+                LogBuf.LogInfo
+                ( "[Cron][EventDiscovery]["
+                    <> provider
+                    <> "] Finished: seen "
+                    <> showCount (discoveryEventsSeen totals)
+                    <> ", created "
+                    <> showCount (discoveryEventsCreated totals)
+                    <> ", updated "
+                    <> showCount (discoveryEventsUpdated totals)
+                    <> "."
+                )
+
+    fetchAndSyncSource now cities source = do
+      fetched <-
+        case T.toCaseFold (Social.eventDiscoverySourceSourceType source) of
+          "ticketmaster" ->
+            case ticketmasterApiKey envConfig of
+              Nothing -> pure (Left "TICKETMASTER_API_KEY is not configured")
+              Just apiKey -> fetchTicketmasterCities apiKey cities
+          "buenplan" -> do
+            result <- fetchBuenPlanEvents envConfig cities now
+            pure $
+              case result of
+                Left err -> Left err
+                Right events ->
+                  Right
+                    ( filter ((== "EC") . eventDiscoveryCityCountryCode) cities
+                    , events
+                    )
+          "ical" -> fetchConfiguredFeed "ical"
+          "json" -> fetchConfiguredFeed "json"
+          _ -> pure (Left "Unsupported event discovery source type")
+      case fetched of
+        Left err -> pure (Left err)
+        Right (processedCities, events) -> do
+          totals <- foldM (syncOne now) zeroDiscoverySyncStats events
+          pure (Right (processedCities, events, totals))
+      where
+        fetchTicketmasterCities apiKey requestedCities = do
+          (processedCities, events, errors) <-
+            foldM
+              ( \(successfulCities, collected, failures) city -> do
+                fetched <- fetchTicketmasterEventsForCity envConfig apiKey city now
+                case fetched of
+                  Left err -> do
+                    LogBuf.addLog
+                      LogBuf.LogError
+                      ( "[Cron][EventDiscovery][ticketmaster]["
+                          <> eventDiscoveryCityCountryCode city
+                          <> ":"
+                          <> eventDiscoveryCityName city
+                          <> "] "
+                          <> err
+                      )
+                    pure (successfulCities, collected, err : failures)
+                  Right cityEvents ->
+                    pure (city : successfulCities, collected ++ cityEvents, failures)
+              )
+              ([], [], [])
+              requestedCities
+          pure $
+            if null processedCities && not (null errors)
+              then Left (T.intercalate "; " (take 3 (reverse errors)))
+              else Right (reverse processedCities, events)
+
+        fetchConfiguredFeed sourceType =
+          case
+              ( Social.eventDiscoverySourceFeedUrl source
+              , Social.eventDiscoverySourceCityId source
+              ) of
+            (Just feedUrl, Just cityKey) -> do
+              cityRow <- runSqlPool (get cityKey) envPool
+              case cityRow of
+                Nothing -> pure (Left "Configured venue feed city does not exist")
+                Just city ->
+                  let target =
+                        EventDiscoveryCity
+                          { eventDiscoveryCityName = Social.eventCityName city
+                          , eventDiscoveryCityCountryCode =
+                              Social.eventCityCountryCode city
+                          , eventDiscoveryCityTimeZone =
+                              Social.eventCityTimeZone city
+                          }
+                   in if target `elem` cities
+                        then
+                          fmap
+                            ( \result ->
+                                case result of
+                                  Left err -> Left err
+                                  Right events -> Right ([target], events)
+                            )
+                            ( fetchStructuredFeedEvents
+                                envConfig
+                                (Social.eventDiscoverySourceSourceKey source)
+                                sourceType
+                                feedUrl
+                                target
+                                now
+                            )
+                        else pure (Right ([], []))
+            _ -> pure (Left "Venue feed requires both feed URL and city")
+
+    syncOne now totals event = do
+      let autoPublish = eventDiscoveryAutoPublish envConfig
+      withinPilotLimit <-
+        if autoPublish
+          then pure True
+          else
+            discoveredEventFitsPilotLimit
+              envPool
+              (eventDiscoveryPilotLimit envConfig)
+              event
+      if not withinPilotLimit
+        then do
+          LogBuf.addLog
+            LogBuf.LogInfo
+            ( "[Cron][EventDiscovery] Pilot limit reached; deferred new event "
+                <> discoveredEventProvider event
+                <> ":"
+                <> discoveredEventExternalId event
+                <> "."
+            )
+          pure totals { discoveryEventsSeen = discoveryEventsSeen totals + 1 }
+        else do
+          let syncAction =
+                if autoPublish
+                  then syncDiscoveredEvent envPool now event
+                  else syncDiscoveredEventDraft envPool now event
+          synced <- tryNonAsync syncAction
+          case synced of
+            Left err -> do
+              LogBuf.addLog
+                LogBuf.LogError
+                ( "[Cron][EventDiscovery] Failed to persist an event for "
+                    <> discoveredVenueCity (discoveredEventVenue event)
+                    <> ": "
+                    <> T.pack (displayException err)
+                )
+              pure totals
+            Right stats -> pure (addDiscoveryStats totals stats)
+
+    markSourceFailure sourceKey finishedAt errText =
+      runSqlPool
+        ( update
+            sourceKey
+            [ Social.EventDiscoverySourceConsecutiveFailures +=. 1
+            , Social.EventDiscoverySourceLastError =. Just (T.take 2000 errText)
+            , Social.EventDiscoverySourceUpdatedAt =. finishedAt
+            ]
+        )
+        envPool
+
+    markSourceSuccess sourceKey finishedAt =
+      runSqlPool
+        ( update
+            sourceKey
+            [ Social.EventDiscoverySourceConsecutiveFailures =. 0
+            , Social.EventDiscoverySourceLastSuccessAt =. Just finishedAt
+            , Social.EventDiscoverySourceLastError =. Nothing
+            , Social.EventDiscoverySourceUpdatedAt =. finishedAt
+            ]
+        )
+        envPool
+
+    showCount = T.pack . show
+
+    ensureDefaultEventDiscoverySources now =
+      runSqlPool
+        (forM_ defaultSources $ \(sourceKey, sourceName, sourceType, priority) -> do
+          _ <-
+            insertUnique
+              Social.EventDiscoverySource
+                { Social.eventDiscoverySourceSourceKey = sourceKey
+                , Social.eventDiscoverySourceName = sourceName
+                , Social.eventDiscoverySourceSourceType = sourceType
+                , Social.eventDiscoverySourceFeedUrl = Nothing
+                , Social.eventDiscoverySourceCityId = Nothing
+                , Social.eventDiscoverySourceEnabled = True
+                , Social.eventDiscoverySourcePriority = priority
+                , Social.eventDiscoverySourceConfiguration = Nothing
+                , Social.eventDiscoverySourceEtag = Nothing
+                , Social.eventDiscoverySourceLastModified = Nothing
+                , Social.eventDiscoverySourceConsecutiveFailures = 0
+                , Social.eventDiscoverySourceLastSuccessAt = Nothing
+                , Social.eventDiscoverySourceLastError = Nothing
+                , Social.eventDiscoverySourceCreatedAt = now
+                , Social.eventDiscoverySourceUpdatedAt = now
+                }
+          pure ())
+        envPool
+      where
+        defaultSources =
+          [ ("ticketmaster", "Ticketmaster", "ticketmaster", 300)
+          , ("buenplan", "Buen Plan", "buenplan", 200)
+          ]
+
+maxEventDiscoveryCitiesPerRun :: Int
+maxEventDiscoveryCitiesPerRun = 500
+
+selectEventDiscoveryCities :: UTCTime -> [a] -> [a]
+selectEventDiscoveryCities _ [] = []
+selectEventDiscoveryCities slot cities =
+  take maxEventDiscoveryCitiesPerRun rotated
+  where
+    cityCount = length cities
+    slotOfDay =
+      floor (toRational (utctDayTime slot)) `div` (6 * 60 * 60)
+    offset =
+      fromIntegral
+        ( ((toModifiedJulianDay (utctDay slot) * 4 + slotOfDay)
+              * fromIntegral maxEventDiscoveryCitiesPerRun)
+            `mod` fromIntegral cityCount
+        )
+    rotated = drop offset cities ++ take offset cities
+
+tryNonAsync :: IO a -> IO (Either SomeException a)
+tryNonAsync action = do
+  result <- try action
+  case result of
+    Left err ->
+      case fromException err :: Maybe SomeAsyncException of
+        Just asyncError -> throwIO asyncError
+        Nothing -> pure (Left err)
+    Right value -> pure (Right value)
+
+zeroDiscoverySyncStats :: DiscoverySyncStats
+zeroDiscoverySyncStats = DiscoverySyncStats 0 0 0 0 0
+
+addDiscoveryStats :: DiscoverySyncStats -> DiscoverySyncStats -> DiscoverySyncStats
+addDiscoveryStats left right =
+  DiscoverySyncStats
+    { discoveryEventsSeen = discoveryEventsSeen left + discoveryEventsSeen right
+    , discoveryEventsCreated = discoveryEventsCreated left + discoveryEventsCreated right
+    , discoveryEventsUpdated = discoveryEventsUpdated left + discoveryEventsUpdated right
+    , discoveryVenuesCreated = discoveryVenuesCreated left + discoveryVenuesCreated right
+    , discoveryArtistsCreated = discoveryArtistsCreated left + discoveryArtistsCreated right
+    }
+
 sendCoursePaymentReminders :: Env -> IO ()
 sendCoursePaymentReminders Env{..} = do
   let slugVal = normalizeSlug (productionCourseSlug envConfig)
@@ -183,7 +902,8 @@ sendCoursePaymentReminders Env{..} = do
     envPool
   let meta = metaFromDb <|> courseMetadataFor envConfig Nothing slugVal
       courseTitle = maybe "Curso de Producción Musical" title meta
-      priceUsd = maybe productionCoursePrice price meta
+      coursePrice = maybe productionCoursePrice price meta
+      courseCurrency = maybe (defaultCurrency envConfig) currency meta
       capacityVal = maybe productionCourseCapacity capacity meta
   totalCount <- runSqlPool
     (count [ ME.CourseRegistrationCourseSlug ==. slugVal
@@ -246,7 +966,9 @@ sendCoursePaymentReminders Env{..} = do
                 nameTxt
                 emailTxt
                 courseTitle
-                priceUsd
+                coursePrice
+                courseCurrency
+                (defaultLocale envConfig)
                 remainingSeats
                 landingUrl)
               :: IO (Either SomeException ())
@@ -506,7 +1228,7 @@ ensureInstagramAccounts Env{..} = runSqlPool action envPool
                 , socialSyncAccountPlatform = "instagram"
                 , socialSyncAccountExternalUserId = handleTxt
                 , socialSyncAccountHandle = Just handleTxt
-                , socialSyncAccountAccessToken = instagramAppToken envConfig
+                , socialSyncAccountAccessToken = nonEmptyText (instagramAppToken envConfig)
                 , socialSyncAccountTokenExpiresAt = Nothing
                 , socialSyncAccountStatus = "pending"
                 , socialSyncAccountLastSyncedAt = Nothing
@@ -528,7 +1250,10 @@ syncInstagramAccount :: Env -> Entity SocialSyncAccount -> IO ()
 syncInstagramAccount Env{..} (Entity accId acc) = do
   now <- getCurrentTime
   let labelTxt = displayHandle acc
-      token = socialSyncAccountAccessToken acc <|> instagramAppToken envConfig
+      token =
+        selectInstagramSyncAccessToken
+          (socialSyncAccountAccessToken acc)
+          (instagramAppToken envConfig)
   case token of
     Nothing -> LogBuf.addLog LogBuf.LogWarning ("[Cron][IGSync] Skipping " <> labelTxt <> " (no access token configured).")
     Just tok -> do
@@ -631,6 +1356,10 @@ nonEmptyText Nothing = Nothing
 nonEmptyText (Just txt) =
   let trimmed = T.strip txt
   in if T.null trimmed then Nothing else Just trimmed
+
+selectInstagramSyncAccessToken :: Maybe Text -> Maybe Text -> Maybe Text
+selectInstagramSyncAccessToken accountToken configuredToken =
+  nonEmptyText accountToken <|> nonEmptyText configuredToken
 
 classifyTags :: Maybe Text -> [Text]
 classifyTags mCaption =

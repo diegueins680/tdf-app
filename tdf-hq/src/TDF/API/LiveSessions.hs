@@ -10,14 +10,25 @@ module TDF.API.LiveSessions
   , LiveSessionIntakePayload(..)
   , LiveSessionMusicianPayload(..)
   , LiveSessionSongPayload(..)
+  , maxLiveSessionMusicians
   , resolveLiveSessionSetlistSortOrders
   ) where
 
-import           Data.Aeson               (FromJSON(..), Object, Value, eitherDecodeStrict', withObject, (.:?))
+import           Data.Aeson               (FromJSON(..), Object, Value(..), eitherDecodeStrict', withObject)
 import qualified Data.Aeson.Key           as AesonKey
 import qualified Data.Aeson.KeyMap        as AesonKeyMap
 import           Data.Aeson.Types         (Parser)
-import           Data.Char                (isAsciiLower, isDigit, isSpace)
+import           Data.Char                ( GeneralCategory
+                                            ( Format
+                                            , LineSeparator
+                                            , ParagraphSeparator
+                                            )
+                                          , generalCategory
+                                          , isAsciiLower
+                                          , isControl
+                                          , isDigit
+                                          , isSpace
+                                          )
 import           Control.Monad            (unless)
 import           Data.Maybe               (fromMaybe)
 import qualified Data.Set                 as Set
@@ -37,17 +48,22 @@ import           Servant.Multipart        ( FileData
                                           , fdInputName
                                           )
 import           TDF.WhatsApp.History     (normalizeWhatsAppPhone)
+
 type LiveSessionsAPI =
   "live-sessions" :>
     ( "intake" :> MultipartForm Tmp LiveSessionIntakePayload :> Post '[JSON] NoContent
     )
 
+data AliasedField a
+  = AliasedFieldMissing
+  | AliasedFieldNull
+  | AliasedFieldValue a
+
 data LiveSessionMusicianPayload = LiveSessionMusicianPayload
   { lsmPartyId    :: Maybe Int
   , lsmName       :: Text
   , lsmEmail      :: Maybe Text
-  , lsmInstrument :: Maybe Text
-  , lsmRole       :: Maybe Text
+  , lsmInstrumentId :: Maybe Text
   , lsmNotes      :: Maybe Text
   , lsmIsExisting :: Bool
   } deriving (Show, Generic)
@@ -60,10 +76,8 @@ instance FromJSON LiveSessionMusicianPayload where
     , "lsmName"
     , "email"
     , "lsmEmail"
-    , "instrument"
-    , "lsmInstrument"
-    , "role"
-    , "lsmRole"
+    , "instrumentId"
+    , "lsmInstrumentId"
     , "notes"
     , "lsmNotes"
     , "isExisting"
@@ -73,8 +87,7 @@ instance FromJSON LiveSessionMusicianPayload where
       <$> parseAliasedOptionalField obj "partyId" "lsmPartyId"
       <*> parseAliasedRequiredField obj "name" "lsmName"
       <*> parseAliasedOptionalField obj "email" "lsmEmail"
-      <*> parseAliasedOptionalField obj "instrument" "lsmInstrument"
-      <*> parseAliasedOptionalField obj "role" "lsmRole"
+      <*> parseAliasedOptionalField obj "instrumentId" "lsmInstrumentId"
       <*> parseAliasedOptionalField obj "notes" "lsmNotes"
       <*> parseAliasedRequiredField obj "isExisting" "lsmIsExisting"
 
@@ -109,7 +122,7 @@ instance FromJSON LiveSessionSongPayload where
 data LiveSessionIntakePayload = LiveSessionIntakePayload
   { lsiBandName     :: Text
   , lsiBandDescription :: Maybe Text
-  , lsiPrimaryGenre :: Maybe Text
+  , lsiPrimaryGenreId :: Maybe Text
   , lsiInputList    :: Maybe Text
   , lsiContactEmail :: Maybe Text
   , lsiContactPhone :: Maybe Text
@@ -122,20 +135,26 @@ data LiveSessionIntakePayload = LiveSessionIntakePayload
   , lsiRider        :: Maybe (FileData Tmp)
   } deriving (Show, Generic)
 
+maxLiveSessionMusicians :: Int
+maxLiveSessionMusicians = 50
+
+maxLiveSessionSetlistSongs :: Int
+maxLiveSessionSetlistSongs = 100
+
 instance FromMultipart Tmp LiveSessionIntakePayload where
   fromMultipart multipart = do
     rejectUnexpectedParts multipart
     bandName <- lookupText "bandName" multipart
-    bandDescription <- optionalText "bandDescription" multipart
-    primaryGenre <- optionalText "primaryGenre" multipart
-    inputList <- optionalText "inputList" multipart
+    bandDescription <- optionalMultilineText "bandDescription" 4000 multipart
+    primaryGenreId <- optionalSingleLineText "primaryGenreId" 36 multipart
+    inputList <- optionalMultilineText "inputList" 4000 multipart
     contactEmail <- optionalEmail "contactEmail" multipart
     contactPhone <- optionalPhone "contactPhone" multipart
     riderFile <- lookupFile "rider" multipart
     sessionDate <- optionalDay "sessionDate" multipart
-    availability <- optionalText "availability" multipart
+    availability <- optionalMultilineText "availability" 4000 multipart
     acceptedTerms <- optionalBool "acceptedTerms" multipart
-    termsVersion <- optionalText "termsVersion" multipart
+    termsVersion <- optionalSingleLineText "termsVersion" 160 multipart
     musiciansTxt <- lookupText "musicians" multipart
     musicians <- decodeMusicians musiciansTxt
     setlistTxt <- optionalText "setlist" multipart
@@ -146,7 +165,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         pure LiveSessionIntakePayload
           { lsiBandName     = T.strip bandName
           , lsiBandDescription = bandDescription
-          , lsiPrimaryGenre = primaryGenre
+          , lsiPrimaryGenreId = primaryGenreId
           , lsiInputList    = inputList
           , lsiContactEmail = contactEmail
           , lsiContactPhone = contactPhone
@@ -171,6 +190,18 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           Left err -> Left err
           Right Nothing  -> Right Nothing
           Right (Just inp) -> Right (normalizeOptionalText (inputValueText inp))
+      optionalSingleLineText name maxLength mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing  -> Right Nothing
+          Right (Just inp) ->
+            validateOptionalIntakeText name maxLength isUnsafeIntakeTextChar (inputValueText inp)
+      optionalMultilineText name maxLength mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just inp) ->
+            validateOptionalIntakeText name maxLength isUnsafeMultilineIntakeTextChar (inputValueText inp)
       optionalEmail name mp =
         case lookupSingleInput name mp of
           Left err -> Left err
@@ -201,19 +232,38 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid musicians payload: " <> err)
           Right xs ->
-            case traverse validateMusician xs of
-              Left err -> Left ("Invalid musicians payload: " <> err)
-              Right validated -> Right validated
+            if length xs > maxLiveSessionMusicians
+              then
+                Left
+                  ( "Invalid musicians payload: musicians must contain at most "
+                      <> show maxLiveSessionMusicians
+                      <> " entries"
+                  )
+              else
+                case traverse validateMusician xs of
+                  Left err -> Left ("Invalid musicians payload: " <> err)
+                  Right validated ->
+                    case validateDistinctMusicianPartyIds validated of
+                      Left err -> Left ("Invalid musicians payload: " <> err)
+                      Right () -> Right validated
       decodeSetlist txt =
         case eitherDecodeStrict' (encodeUtf8 txt) of
           Left err -> Left ("Invalid setlist payload: " <> err)
           Right xs ->
-            case traverse validateSetlistSong xs of
-              Left err -> Left ("Invalid setlist payload: " <> err)
-              Right validated ->
-                case resolveLiveSessionSetlistSortOrders validated of
+            if length xs > maxLiveSessionSetlistSongs
+              then
+                Left
+                  ( "Invalid setlist payload: setlist must contain at most "
+                      <> show maxLiveSessionSetlistSongs
+                      <> " songs"
+                  )
+              else
+                case traverse validateSetlistSong xs of
                   Left err -> Left ("Invalid setlist payload: " <> err)
-                  Right _ -> Right validated
+                  Right validated ->
+                    case resolveLiveSessionSetlistSortOrders validated of
+                      Left err -> Left ("Invalid setlist payload: " <> err)
+                      Right _ -> Right validated
 
       validateMusician musician = do
         normalizedEmail <-
@@ -221,13 +271,27 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
             (Right Nothing)
             (validateOptionalEmailText "musician email")
             (lsmEmail musician)
+        normalizedName <- validateMusicianName (lsmName musician)
+        normalizedInstrumentId <-
+          validateOptionalMusicianTextField
+            "musician instrumentId"
+            36
+            (lsmInstrumentId musician >>= normalizeOptionalText)
+        normalizedNotes <-
+          case lsmNotes musician of
+            Nothing -> Right Nothing
+            Just rawNotes ->
+              validateOptionalIntakeText
+                "musician notes"
+                4000
+                isUnsafeMultilineIntakeTextChar
+                rawNotes
         let normalizedMusician =
               musician
-                { lsmName = T.strip (lsmName musician)
+                { lsmName = normalizedName
                 , lsmEmail = normalizedEmail
-                , lsmInstrument = lsmInstrument musician >>= normalizeOptionalText
-                , lsmRole = lsmRole musician >>= normalizeOptionalText
-                , lsmNotes = lsmNotes musician >>= normalizeOptionalText
+                , lsmInstrumentId = normalizedInstrumentId
+                , lsmNotes = normalizedNotes
                 }
             noReferenceProvided =
               lsmPartyId normalizedMusician == Nothing
@@ -237,28 +301,129 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
         if maybe False (<= 0) (lsmPartyId musician)
           then Left "musician partyId must be a positive integer"
           else if lsmIsExisting normalizedMusician && not hasPartyReference
-          then Left "existing musicians must include a positive partyId"
+            then Left "existing musicians must include a positive partyId"
           else if hasPartyReference && not (lsmIsExisting normalizedMusician)
             then Left "musician partyId requires isExisting=true"
           else if noReferenceProvided
             then Left "each musician must include a non-blank name, email, or partyId"
-            else Right normalizedMusician
+          else Right normalizedMusician
+
+      validateDistinctMusicianPartyIds :: [LiveSessionMusicianPayload] -> Either String ()
+      validateDistinctMusicianPartyIds musicians =
+        go Set.empty musicians
+        where
+          go _ [] = Right ()
+          go seen (musician : rest) =
+            case lsmPartyId musician of
+              Nothing -> go seen rest
+              Just partyId
+                | Set.member partyId seen ->
+                    Left "referenced musician partyIds must be distinct"
+                | otherwise ->
+                    go (Set.insert partyId seen) rest
+
+      validateMusicianName rawName =
+        let name = T.strip rawName
+        in if T.length name > 160
+             then Left "musician name must be 160 characters or fewer"
+             else if T.any isUnsafeIntakeTextChar name
+               then Left "musician name must not contain control characters or hidden formatting characters"
+               else Right name
+
+      validateOptionalMusicianTextField fieldName maxLength mRawValue =
+        case mRawValue of
+          Nothing -> Right Nothing
+          Just value
+            | T.length value > maxLength ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must be "
+                      <> show maxLength
+                      <> " characters or fewer"
+                  )
+            | T.any isUnsafeIntakeTextChar value ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must not contain control characters or hidden formatting characters"
+                  )
+            | otherwise ->
+                Right (Just value)
+
+      isUnsafeIntakeTextChar ch =
+        isControl ch
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+      isUnsafeMultilineIntakeTextChar ch =
+        isControl ch && ch `notElem` ("\n\r\t" :: String)
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+      validateOptionalIntakeText fieldName maxLength isUnsafe raw =
+        case normalizeOptionalText raw of
+          Nothing -> Right Nothing
+          Just value
+            | T.length value > maxLength ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must be "
+                      <> show maxLength
+                      <> " characters or fewer"
+                  )
+            | T.any isUnsafe value ->
+                Left
+                  ( T.unpack fieldName
+                      <> " must not contain control characters or hidden formatting characters"
+                  )
+            | otherwise ->
+                Right (Just value)
 
       validateSetlistSong song =
         let normalizedTitle = T.strip (lssTitle song)
-            normalizedSong =
-              song
-                { lssTitle = normalizedTitle
-                , lssSongKey = lssSongKey song >>= normalizeOptionalText
-                , lssLyrics = lssLyrics song >>= normalizeOptionalText
-                }
         in if T.null normalizedTitle
              then Left "each setlist song must include a non-blank title"
-             else
+             else if T.length normalizedTitle > 160
+               then Left "setlist song title must be 160 characters or fewer"
+             else if T.any isUnsafeIntakeTextChar normalizedTitle
+               then Left "setlist song title must not contain control characters or hidden formatting characters"
+             else do
+               normalizedSongKey <-
+                 validateOptionalSetlistSongKey (lssSongKey song >>= normalizeOptionalText)
+               normalizedLyrics <-
+                 validateOptionalSetlistLyrics (lssLyrics song >>= normalizeOptionalText)
                case lssBpm song of
                  Just bpm | bpm <= 0 ->
                    Left "setlist song bpm must be a positive integer"
-                 _ -> Right normalizedSong
+                 Just bpm | bpm > 400 ->
+                   Left "setlist song bpm must be 400 or fewer"
+                 _ ->
+                   Right song
+                     { lssTitle = normalizedTitle
+                     , lssSongKey = normalizedSongKey
+                     , lssLyrics = normalizedLyrics
+                     }
+
+      validateOptionalSetlistSongKey :: Maybe Text -> Either String (Maybe Text)
+      validateOptionalSetlistSongKey Nothing = Right Nothing
+      validateOptionalSetlistSongKey (Just songKey)
+        | T.length songKey > 64 =
+            Left "setlist song songKey must be 64 characters or fewer"
+        | T.any isUnsafeIntakeTextChar songKey =
+            Left "setlist song songKey must not contain control characters or hidden formatting characters"
+        | otherwise =
+            Right (Just songKey)
+
+      validateOptionalSetlistLyrics :: Maybe Text -> Either String (Maybe Text)
+      validateOptionalSetlistLyrics Nothing = Right Nothing
+      validateOptionalSetlistLyrics (Just lyrics)
+        | T.length lyrics > 4000 =
+            Left "setlist song lyrics must be 4000 characters or fewer"
+        | T.any isUnsafeLyricsTextChar lyrics =
+            Left "setlist song lyrics must not contain control characters or hidden formatting characters"
+        | otherwise =
+            Right (Just lyrics)
+
+      isUnsafeLyricsTextChar ch =
+        isControl ch && ch `notElem` ("\n\r\t" :: String)
+          || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
       normalizeOptionalText :: Text -> Maybe Text
       normalizeOptionalText raw =
@@ -306,7 +471,15 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
               && not (T.isSuffixOf "." domain)
               && T.isInfixOf "." domain
               && all isValidEmailDomainLabel (T.splitOn "." domain)
+              && isValidEmailFinalDomainLabel domain
           _ -> False
+
+      isValidEmailFinalDomainLabel :: Text -> Bool
+      isValidEmailFinalDomainLabel domain =
+        case reverse (T.splitOn "." domain) of
+          finalLabel : _ ->
+            T.length finalLabel >= 2 && T.any isAsciiLower finalLabel
+          [] -> False
 
       isValidEmailLocalPart :: Text -> Bool
       isValidEmailLocalPart localPart =
@@ -356,7 +529,7 @@ instance FromMultipart Tmp LiveSessionIntakePayload where
           expectedInputs =
             [ "bandName"
             , "bandDescription"
-            , "primaryGenre"
+            , "primaryGenreId"
             , "inputList"
             , "contactEmail"
             , "contactPhone"
@@ -415,10 +588,25 @@ resolveLiveSessionSetlistSortOrders songs = go Set.empty [] 0 songs
 
 readMaybeDay :: Text -> Either String Day
 readMaybeDay txt =
-  maybe
-    (Left "Invalid date format for sessionDate (expected YYYY-MM-DD)")
-    Right
-    (parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack txt) :: Maybe Day)
+  let value = T.strip txt
+  in if hasIsoDateShape value
+       then
+         maybe
+           (Left "Invalid date format for sessionDate (expected YYYY-MM-DD)")
+           Right
+           (parseTimeM False defaultTimeLocale "%Y-%m-%d" (T.unpack value) :: Maybe Day)
+       else Left "Invalid date format for sessionDate (expected YYYY-MM-DD)"
+
+hasIsoDateShape :: Text -> Bool
+hasIsoDateShape value =
+  case T.splitOn "-" value of
+    [yearPart, monthPart, dayPart] ->
+      T.length yearPart == 4
+        && T.length monthPart == 2
+        && T.length dayPart == 2
+        && T.all isDigit (yearPart <> monthPart <> dayPart)
+    _ ->
+      False
 
 withAliasedObject :: String -> [Text] -> (Object -> Parser a) -> Value -> Parser a
 withAliasedObject label allowedFields parser = withObject label $ \obj -> do
@@ -441,15 +629,17 @@ parseAliasedRequiredField
   -> Text
   -> Parser a
 parseAliasedRequiredField obj canonicalField legacyField = do
-  canonicalValue <- obj .:? AesonKey.fromText canonicalField
-  legacyValue <- obj .:? AesonKey.fromText legacyField
+  canonicalValue <- parseAliasedField obj canonicalField
+  legacyValue <- parseAliasedField obj legacyField
   case (canonicalValue, legacyValue) of
-    (Just canonical, Just legacy)
+    (AliasedFieldValue canonical, AliasedFieldValue legacy)
       | canonical == legacy -> pure canonical
       | otherwise -> fail conflictingMessage
-    (Just canonical, Nothing) -> pure canonical
-    (Nothing, Just legacy) -> pure legacy
-    (Nothing, Nothing) -> fail missingMessage
+    (AliasedFieldValue canonical, AliasedFieldMissing) -> pure canonical
+    (AliasedFieldMissing, AliasedFieldValue legacy) -> pure legacy
+    (AliasedFieldValue _, AliasedFieldNull) -> fail conflictingMessage
+    (AliasedFieldNull, AliasedFieldValue _) -> fail conflictingMessage
+    _ -> fail missingMessage
   where
     conflictingMessage =
       "Conflicting fields: "
@@ -466,15 +656,20 @@ parseAliasedOptionalField
   -> Text
   -> Parser (Maybe a)
 parseAliasedOptionalField obj canonicalField legacyField = do
-  canonicalValue <- obj .:? AesonKey.fromText canonicalField
-  legacyValue <- obj .:? AesonKey.fromText legacyField
+  canonicalValue <- parseAliasedField obj canonicalField
+  legacyValue <- parseAliasedField obj legacyField
   case (canonicalValue, legacyValue) of
-    (Just canonical, Just legacy)
+    (AliasedFieldValue canonical, AliasedFieldValue legacy)
       | canonical == legacy -> pure (Just canonical)
       | otherwise -> fail conflictingMessage
-    (Just canonical, Nothing) -> pure (Just canonical)
-    (Nothing, Just legacy) -> pure (Just legacy)
-    (Nothing, Nothing) -> pure Nothing
+    (AliasedFieldValue canonical, AliasedFieldMissing) -> pure (Just canonical)
+    (AliasedFieldMissing, AliasedFieldValue legacy) -> pure (Just legacy)
+    (AliasedFieldValue _, AliasedFieldNull) -> fail conflictingMessage
+    (AliasedFieldNull, AliasedFieldValue _) -> fail conflictingMessage
+    (AliasedFieldNull, AliasedFieldMissing) -> fail (nullMessage canonicalField)
+    (AliasedFieldMissing, AliasedFieldNull) -> fail (nullMessage legacyField)
+    (AliasedFieldNull, AliasedFieldNull) -> fail (nullMessage canonicalField)
+    _ -> pure Nothing
   where
     conflictingMessage =
       "Conflicting fields: "
@@ -482,3 +677,16 @@ parseAliasedOptionalField obj canonicalField legacyField = do
         <> " and "
         <> T.unpack legacyField
         <> " must match when both are provided"
+    nullMessage fieldName =
+      T.unpack fieldName <> " must be omitted instead of null"
+
+parseAliasedField
+  :: FromJSON a
+  => Object
+  -> Text
+  -> Parser (AliasedField a)
+parseAliasedField obj fieldName =
+  case AesonKeyMap.lookup (AesonKey.fromText fieldName) obj of
+    Nothing -> pure AliasedFieldMissing
+    Just Null -> pure AliasedFieldNull
+    Just value -> AliasedFieldValue <$> parseJSON value

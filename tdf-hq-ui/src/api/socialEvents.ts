@@ -1,8 +1,11 @@
-import { get, post, postForm, put } from './client';
+import { del, get, post, postForm, put } from './client';
 
 export interface SocialArtistDTO {
   artistId?: string | null;
   artistName: string;
+  /** Canonical relationship identifiers used by writes and filters. */
+  artistGenreIds?: string[];
+  /** Localized presentation labels returned by the API; never submit as identity. */
   artistGenres?: string[];
   artistBio?: string | null;
   artistAvatarUrl?: string | null;
@@ -14,6 +17,17 @@ export interface SocialVenueDTO {
   venueAddress?: string | null;
   venueCity?: string | null;
   venueCountry?: string | null;
+  venueLat?: number | null;
+  venueLng?: number | null;
+  venueCapacity?: number | null;
+  venueContact?: string | null;
+  venuePhone?: string | null;
+  venueWebsite?: string | null;
+  venueState?: string | null;
+  venueZipCode?: string | null;
+  venueImageUrl?: string | null;
+  venueCreatedAt?: string | null;
+  venueUpdatedAt?: string | null;
 }
 
 export interface SocialEventDTO {
@@ -22,12 +36,18 @@ export interface SocialEventDTO {
   eventTitle: string;
   eventDescription?: string | null;
   eventStart: string;
-  eventEnd: string;
+  eventEnd?: string | null;
+  eventTimezone?: string | null;
   eventVenueId?: string | null;
   eventPriceCents?: number | null;
   eventCapacity?: number | null;
-  eventType?: string | null;
-  eventStatus?: string | null;
+  eventTypeId?: string | null;
+  eventWorkflowStateId?: string | null;
+  eventWorkflowStateCode?: string | null;
+  eventWorkflowStateNameEs?: string | null;
+  eventWorkflowStateNameEn?: string | null;
+  eventPublicListable?: boolean | null;
+  eventTicketPurchaseEnabled?: boolean | null;
   eventCurrency?: string | null;
   eventBudgetCents?: number | null;
   eventTicketUrl?: string | null;
@@ -36,12 +56,52 @@ export interface SocialEventDTO {
   eventArtists: SocialArtistDTO[];
 }
 
+export interface PublicUpcomingEventDTO {
+  publicUpcomingEventId: string;
+  publicUpcomingEventTitle: string;
+  publicUpcomingEventDescription?: string | null;
+  publicUpcomingEventStart: string;
+  publicUpcomingEventEnd?: string | null;
+  publicUpcomingEventTimezone?: string | null;
+  publicUpcomingEventVenueName?: string | null;
+  publicUpcomingEventCity?: string | null;
+  publicUpcomingEventPriceCents?: number | null;
+  publicUpcomingEventCurrency?: string | null;
+  publicUpcomingEventTicketUrl?: string | null;
+  publicUpcomingEventImageUrl?: string | null;
+  publicUpcomingEventWorkflowStateCode: string;
+}
+
 export interface SocialEventImageUploadDTO {
   eiuEventId: string;
   eiuFileName: string;
   eiuPath: string;
   eiuPublicUrl: string;
   eiuImageUrl: string;
+}
+
+export interface SocialEventMomentDTO {
+  emId?: string | null;
+  emEventId?: string | null;
+  emAuthorPartyId?: string | null;
+  emAuthorName: string;
+  emCaption?: string | null;
+  emMediaUrl: string;
+  emMediaType: string;
+  emMediaWidth?: number | null;
+  emMediaHeight?: number | null;
+  emMediaDurationMs?: number | null;
+  emCreatedAt?: string | null;
+}
+
+export interface SocialEventMomentCreateDTO {
+  emCreateAuthorName?: string;
+  emCreateCaption?: string;
+  emCreateMediaUrl: string;
+  emCreateMediaType: 'image' | 'video';
+  emCreateMediaWidth?: number;
+  emCreateMediaHeight?: number;
+  emCreateMediaDurationMs?: number;
 }
 
 export interface SocialInvitationDTO {
@@ -110,6 +170,9 @@ export interface SocialTicketOrderDTO {
   ticketOrderBuyerName?: string | null;
   ticketOrderBuyerEmail?: string | null;
   ticketOrderQuantity: number;
+  ticketOrderFaceValueCents: number;
+  ticketOrderBuyerPlatformFeeCents: number;
+  ticketOrderOrganizerPlatformFeeCents: number;
   ticketOrderAmountCents: number;
   ticketOrderCurrency: string;
   ticketOrderStatusValue: string;
@@ -177,6 +240,230 @@ export interface SocialEventFinanceSummaryDTO {
   efsGeneratedAt: string;
 }
 
+export type LogisticsAccessRole = 'owner' | 'editor' | 'viewer';
+export type LogisticsActivityType = 'task' | 'milestone' | 'wait' | 'travel';
+export type LogisticsTravelMode = 'drive' | 'walk' | 'bicycle' | 'two_wheeler' | 'transit';
+
+export interface EventLogisticsSettingsDTO {
+  elsTimezone: string;
+  elsDefaultTravelMode: LogisticsTravelMode;
+}
+
+export interface EventLogisticsMemberDTO {
+  elmPartyId: string;
+  elmDisplayName?: string | null;
+  elmEmail?: string | null;
+  elmRole: 'editor' | 'viewer';
+  elmCreatedAt?: string | null;
+}
+
+export interface EventLogisticsPlaceDTO {
+  elpId?: string | null;
+  elpVenueId?: string | null;
+  elpLabel: string;
+  elpType: 'venue' | 'hotel' | 'airport' | 'pickup' | 'custom';
+  elpAddress?: string | null;
+  elpGooglePlaceId?: string | null;
+  elpLatitude: number;
+  elpLongitude: number;
+  elpInstructions?: string | null;
+  elpContactName?: string | null;
+  elpContactPhone?: string | null;
+  elpCreatedAt?: string | null;
+  elpUpdatedAt?: string | null;
+}
+
+export interface EventLogisticsAssignmentDTO {
+  elaPartyId?: string | null;
+  elaDisplayName?: string | null;
+  elaExternalName?: string | null;
+  elaExternalPhone?: string | null;
+  elaExternalEmail?: string | null;
+}
+
+export interface EventRouteVerificationDTO {
+  ervId?: string | null;
+  ervActivityVersion: number;
+  ervProvider: string;
+  ervTravelMode: LogisticsTravelMode;
+  ervDepartureTime: string;
+  ervDurationSeconds?: number | null;
+  ervStaticDurationSeconds?: number | null;
+  ervDistanceMeters?: number | null;
+  ervBufferSeconds: number;
+  ervAllocatedSeconds: number;
+  ervVerdict: 'feasible' | 'tight' | 'infeasible' | 'provisional' | 'unavailable' | 'stale';
+  ervEncodedPolyline?: string | null;
+  ervErrorMessage?: string | null;
+  ervCheckpoint?: string | null;
+  ervVerifiedAt: string;
+}
+
+export interface EventLogisticsActivityDTO {
+  eacId?: string | null;
+  eacType: LogisticsActivityType;
+  eacTitle: string;
+  eacNotes?: string | null;
+  eacStart: string;
+  eacEnd?: string | null;
+  eacPlaceId?: string | null;
+  eacOriginPlaceId?: string | null;
+  eacDestinationPlaceId?: string | null;
+  eacTravelMode?: LogisticsTravelMode | null;
+  eacBufferMinutes?: number | null;
+  eacPriority: 'low' | 'normal' | 'high' | 'critical';
+  eacStatus: 'planned' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+  eacVersion?: number | null;
+  eacAssignments: EventLogisticsAssignmentDTO[];
+  eacDependencyIds: string[];
+  eacLatestVerification?: EventRouteVerificationDTO | null;
+  eacCreatedAt?: string | null;
+  eacUpdatedAt?: string | null;
+}
+
+export interface EventScheduleIssueDTO {
+  esiCode: string;
+  esiSeverity: 'warning' | 'error';
+  esiActivityId?: string | null;
+  esiMessage: string;
+}
+
+export interface EventLogisticsPlanDTO {
+  elgEventId: string;
+  elgAccessRole: LogisticsAccessRole;
+  elgSettings: EventLogisticsSettingsDTO;
+  elgMembers: EventLogisticsMemberDTO[];
+  elgPlaces: EventLogisticsPlaceDTO[];
+  elgActivities: EventLogisticsActivityDTO[];
+  elgIssues: EventScheduleIssueDTO[];
+}
+
+// Promo Codes
+export interface PromoCodeDTO {
+  promoCodeId?: string | null;
+  promoCodeEventId?: string | null;
+  promoCodeCode: string;
+  promoCodeDescription?: string | null;
+  promoCodeDiscountType: 'percentage' | 'fixed';
+  promoCodeDiscountValue: number;
+  promoCodeCurrency: string;
+  promoCodeMaxRedemptions?: number | null;
+  promoCodeCurrentRedemptions: number;
+  promoCodeValidFrom?: string | null;
+  promoCodeValidUntil?: string | null;
+  promoCodeTierIds?: string[] | null;
+  promoCodeMinPurchaseAmountCents?: number | null;
+  promoCodeIsActive: boolean;
+  promoCodeCreatedAt?: string | null;
+  promoCodeUpdatedAt?: string | null;
+}
+
+export interface TicketPurchaseWithPromoDTO {
+  ticketPurchaseTierId: string;
+  ticketPurchaseQuantity: number;
+  ticketPurchaseBuyerPartyId?: string | null;
+  ticketPurchaseBuyerName?: string | null;
+  ticketPurchaseBuyerEmail?: string | null;
+  ticketPurchasePromoCode?: string | null;
+  ticketPurchaseMobileSdkStripeVersion?: string | null;
+}
+
+export interface StripePaymentIntentDTO {
+  spiClientSecret: string;
+  spiPaymentIntentId?: string | null;
+  spiOrderId: string;
+  spiAmountCents: number;
+  spiCurrency: string;
+}
+
+// Refunds
+export interface RefundRequestDTO {
+  refundRequestReason?: string | null;
+}
+
+export interface RefundDTO {
+  refundId?: string | null;
+  refundOrderId?: string | null;
+  refundRequestedByPartyId?: string | null;
+  refundReason?: string | null;
+  refundAmountCents: number;
+  refundCurrency?: string | null;
+  refundStatus: string;
+  refundApprovedByPartyId?: string | null;
+  refundApprovedAt?: string | null;
+  refundRejectionReason?: string | null;
+  refundStripeRefundId?: string | null;
+  refundProcessedAt?: string | null;
+  refundCreatedAt?: string | null;
+  refundUpdatedAt?: string | null;
+}
+
+export interface RejectionReasonDTO {
+  rrReason: string;
+}
+
+// Transfers
+export interface TicketTransferCreateDTO {
+  ttcToEmail: string;
+  ttcToName?: string | null;
+  ttcMessage?: string | null;
+}
+
+export interface TicketTransferDTO {
+  ticketTransferId?: string | null;
+  ticketTransferTicketId?: string | null;
+  ticketTransferFromPartyId?: string | null;
+  ticketTransferToEmail: string;
+  ticketTransferToName?: string | null;
+  ticketTransferMessage?: string | null;
+  ticketTransferCode: string;
+  ticketTransferStatus: string;
+  ticketTransferAcceptedAt?: string | null;
+  ticketTransferExpiresAt?: string | null;
+  ticketTransferCreatedAt?: string | null;
+  ticketTransferUpdatedAt?: string | null;
+}
+
+// Waitlist
+export interface WaitlistJoinDTO {
+  wjEmail: string;
+  wjName?: string | null;
+  wjTierId?: string | null;
+  wjQuantity: number;
+}
+
+export interface WaitlistEntryDTO {
+  waitlistId?: string | null;
+  waitlistEventId?: string | null;
+  waitlistEmail: string;
+  waitlistName?: string | null;
+  waitlistTierId?: string | null;
+  waitlistQuantity: number;
+  waitlistStatus: string;
+  waitlistPriority: number;
+  waitlistNotifiedAt?: string | null;
+  waitlistExpiresAt?: string | null;
+  waitlistCreatedAt?: string | null;
+}
+
+// QR Codes
+export interface TicketWithQRDTO {
+  twqTicket: SocialTicketDTO;
+  twqQRData: string;
+  twqQRImageUrl?: string | null;
+}
+
+type RequestWithoutBody = (path: string) => Promise<unknown>;
+type GetRequest = (path: string, init?: RequestInit) => Promise<unknown>;
+type RequestWithBody = (path: string, body: unknown) => Promise<unknown>;
+type FormRequest = (path: string, form: FormData) => Promise<unknown>;
+
+const getUnknown: GetRequest = get;
+const delUnknown: RequestWithoutBody = del;
+const postUnknown: RequestWithBody = post;
+const putUnknown: RequestWithBody = put;
+const postFormUnknown: FormRequest = postForm;
+
 const normalizeComparableId = (value: string | null | undefined): string => {
   const trimmed = value?.trim() ?? '';
   if (!trimmed) return '';
@@ -189,7 +476,14 @@ const normalizeComparableId = (value: string | null | undefined): string => {
   return trimmed;
 };
 
-const buildQuery = (params: Record<string, string | number | null | undefined>) => {
+type QueryParams = Record<string, string | number | null | undefined>;
+
+interface SocialInvitationCreatePayload {
+  invitationToPartyId: string;
+  invitationMessage?: string | null;
+}
+
+const buildQuery = (params: QueryParams) => {
   const entries = Object.entries(params)
     .map((entry): [string, string | number] | null => {
       const [key, value] = entry;
@@ -208,43 +502,59 @@ const buildQuery = (params: Record<string, string | number | null | undefined>) 
 };
 
 export const SocialEventsAPI = {
-  listEvents: (opts?: { city?: string; startAfter?: string; eventType?: string; eventStatus?: string; artistId?: string; venueId?: string }) => {
+  listPublicUpcomingEvents: async (opts?: { city?: string; startAfter?: string; limit?: number; signal?: AbortSignal }) => {
+    const qs = buildQuery({ city: opts?.city, startAfter: opts?.startAfter, limit: opts?.limit });
+    const path = `/social-events/upcoming${qs}`;
+    return await (opts?.signal ? getUnknown(path, { signal: opts.signal }) : getUnknown(path)) as PublicUpcomingEventDTO[];
+  },
+  listEvents: async (opts?: { city?: string; startAfter?: string; eventTypeId?: string; workflowStateId?: string; artistId?: string; venueId?: string }) => {
     const qs = buildQuery({
       city: opts?.city,
       start_after: opts?.startAfter,
-      event_type: opts?.eventType,
-      event_status: opts?.eventStatus,
+      event_type_id: opts?.eventTypeId,
+      workflow_state_id: opts?.workflowStateId,
       artistId: opts?.artistId,
       venueId: opts?.venueId,
     });
-    return get<SocialEventDTO[]>(`/social-events/events${qs}`);
+    return await getUnknown(`/social-events/events${qs}`) as SocialEventDTO[];
   },
-  createEvent: (payload: SocialEventDTO) =>
-    post<SocialEventDTO>('/social-events/events', payload),
-  updateEvent: (eventId: string, payload: SocialEventDTO) =>
-    put<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`, payload),
-  uploadEventImage: (eventId: string, file: File, name?: string) => {
+  createEvent: async (payload: SocialEventDTO) =>
+    await postUnknown('/social-events/events', payload) as SocialEventDTO,
+  updateEvent: async (eventId: string, payload: SocialEventDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}`, payload) as SocialEventDTO,
+  uploadEventImage: async (eventId: string, file: File, name?: string) => {
     const form = new FormData();
     form.append('file', file);
     const trimmed = name?.trim() ?? '';
     if (trimmed) form.append('name', trimmed);
-    return postForm<SocialEventImageUploadDTO>(`/social-events/events/${encodeURIComponent(eventId)}/image`, form);
+    return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/image`, form) as SocialEventImageUploadDTO;
   },
-  getEvent: (eventId: string) =>
-    get<SocialEventDTO>(`/social-events/events/${encodeURIComponent(eventId)}`),
-  listVenues: (opts?: { city?: string }) => {
+  listMoments: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`) as SocialEventMomentDTO[],
+  createMoment: async (eventId: string, payload: SocialEventMomentCreateDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload) as SocialEventMomentDTO,
+  uploadMomentImage: async (eventId: string, file: File, name?: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    const trimmed = name?.trim() ?? '';
+    if (trimmed) form.append('name', trimmed);
+    return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments/image`, form) as SocialEventImageUploadDTO;
+  },
+  getEvent: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}`) as SocialEventDTO,
+  listVenues: async (opts?: { city?: string }) => {
     const qs = buildQuery({ city: opts?.city });
-    return get<SocialVenueDTO[]>(`/social-events/venues${qs}`);
+    return await getUnknown(`/social-events/venues${qs}`) as SocialVenueDTO[];
   },
-  listInvitations: (eventId: string) =>
-    get<SocialInvitationDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/invitations`),
-  sendInvitation: (eventId: string, payload: Pick<SocialInvitationDTO, 'invitationToPartyId' | 'invitationMessage'>) =>
-    post<SocialInvitationDTO>(`/social-events/events/${encodeURIComponent(eventId)}/invitations`, {
+  listInvitations: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/invitations`) as SocialInvitationDTO[],
+  sendInvitation: async (eventId: string, payload: SocialInvitationCreatePayload) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/invitations`, {
       invitationEventId: eventId,
       invitationToPartyId: payload.invitationToPartyId,
       invitationMessage: payload.invitationMessage ?? null,
       invitationStatus: 'Pending',
-    }),
+    }) as SocialInvitationDTO,
   respondInvitation: async (eventId: string, invitationId: string, status: string, message?: string | null) => {
     const normalizedEventId = eventId.trim();
     const normalizedInvitationId = invitationId.trim();
@@ -255,9 +565,9 @@ export const SocialEventsAPI = {
       throw new Error('invitationId is required to respond to an invitation.');
     }
 
-    const invitations = await get<SocialInvitationDTO[]>(
+    const invitations = await getUnknown(
       `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations`,
-    );
+    ) as SocialInvitationDTO[];
     const invitationKey = normalizeComparableId(normalizedInvitationId);
     const invitation = invitations.find(
       (candidate) => normalizeComparableId(candidate.invitationId) === invitationKey,
@@ -271,57 +581,130 @@ export const SocialEventsAPI = {
     }
     const invitationPathId = normalizeComparableId(invitation.invitationId) || invitationKey;
 
-    return put<SocialInvitationDTO>(
+    return await putUnknown(
       `/social-events/events/${encodeURIComponent(normalizedEventId)}/invitations/${encodeURIComponent(invitationPathId)}`,
       {
         invitationToPartyId,
         invitationStatus: status,
         invitationMessage: message ?? null,
       },
-    );
+    ) as SocialInvitationDTO;
   },
-  listTicketTiers: (eventId: string) =>
-    get<SocialTicketTierDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`),
-  createTicketTier: (eventId: string, payload: SocialTicketTierDTO) =>
-    post<SocialTicketTierDTO>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`, payload),
-  updateTicketTier: (eventId: string, tierId: string, payload: SocialTicketTierDTO) =>
-    put<SocialTicketTierDTO>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers/${encodeURIComponent(tierId)}`, payload),
-  listTicketOrders: (eventId: string, opts?: { buyerPartyId?: string; status?: string }) => {
+  listTicketTiers: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`) as SocialTicketTierDTO[],
+  createTicketTier: async (eventId: string, payload: SocialTicketTierDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers`, payload) as SocialTicketTierDTO,
+  updateTicketTier: async (eventId: string, tierId: string, payload: SocialTicketTierDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-tiers/${encodeURIComponent(tierId)}`, payload) as SocialTicketTierDTO,
+  listTicketOrders: async (eventId: string, opts?: { buyerPartyId?: string; status?: string }) => {
     const qs = buildQuery({ buyerPartyId: opts?.buyerPartyId, status: opts?.status });
-    return get<SocialTicketOrderDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders${qs}`);
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders${qs}`) as SocialTicketOrderDTO[];
   },
-  buyTickets: (eventId: string, payload: SocialTicketPurchaseRequestDTO) =>
-    post<SocialTicketOrderDTO>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders`, payload),
-  updateTicketOrderStatus: (eventId: string, orderId: string, status: string) =>
-    put<SocialTicketOrderDTO>(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/status`, {
+  buyTickets: async (eventId: string, payload: SocialTicketPurchaseRequestDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders`, payload) as SocialTicketOrderDTO,
+  updateTicketOrderStatus: async (eventId: string, orderId: string, status: string) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/status`, {
       ticketOrderStatus: status,
-    }),
-  listTickets: (eventId: string, opts?: { orderId?: string; status?: string }) => {
+    }) as SocialTicketOrderDTO,
+  listTickets: async (eventId: string, opts?: { orderId?: string; status?: string }) => {
     const qs = buildQuery({ orderId: opts?.orderId, status: opts?.status });
-    return get<SocialTicketDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/tickets${qs}`);
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets${qs}`) as SocialTicketDTO[];
   },
-  checkInTicket: (eventId: string, payload: { ticketCheckInTicketId?: string | null; ticketCheckInTicketCode?: string | null }) =>
-    post<SocialTicketDTO>(`/social-events/events/${encodeURIComponent(eventId)}/tickets/check-in`, payload),
-  listBudgetLines: (eventId: string) =>
-    get<SocialEventBudgetLineDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`),
-  createBudgetLine: (eventId: string, payload: SocialEventBudgetLineDTO) =>
-    post<SocialEventBudgetLineDTO>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`, payload),
-  updateBudgetLine: (eventId: string, lineId: string, payload: SocialEventBudgetLineDTO) =>
-    put<SocialEventBudgetLineDTO>(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines/${encodeURIComponent(lineId)}`, payload),
-  listFinanceEntries: (eventId: string, opts?: { direction?: string; source?: string; status?: string }) => {
+  checkInTicket: async (eventId: string, payload: { ticketCheckInTicketId?: string | null; ticketCheckInTicketCode?: string | null }) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/check-in`, payload) as SocialTicketDTO,
+  listBudgetLines: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`) as SocialEventBudgetLineDTO[],
+  createBudgetLine: async (eventId: string, payload: SocialEventBudgetLineDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`, payload) as SocialEventBudgetLineDTO,
+  updateBudgetLine: async (eventId: string, lineId: string, payload: SocialEventBudgetLineDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines/${encodeURIComponent(lineId)}`, payload) as SocialEventBudgetLineDTO,
+  listFinanceEntries: async (eventId: string, opts?: { direction?: string; source?: string; status?: string }) => {
     const qs = buildQuery({ direction: opts?.direction, source: opts?.source, status: opts?.status });
-    return get<SocialEventFinanceEntryDTO[]>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`);
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`) as SocialEventFinanceEntryDTO[];
   },
-  createFinanceEntry: (eventId: string, payload: SocialEventFinanceEntryDTO) =>
-    post<SocialEventFinanceEntryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries`, payload),
-  updateFinanceEntry: (eventId: string, entryId: string, payload: SocialEventFinanceEntryDTO) =>
-    put<SocialEventFinanceEntryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload),
-  getFinanceSummary: (eventId: string) =>
-    get<SocialEventFinanceSummaryDTO>(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`),
-  rsvp: (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
-    post<SocialRsvpDTO>(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
+  createFinanceEntry: async (eventId: string, payload: SocialEventFinanceEntryDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries`, payload) as SocialEventFinanceEntryDTO,
+  updateFinanceEntry: async (eventId: string, entryId: string, payload: SocialEventFinanceEntryDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload) as SocialEventFinanceEntryDTO,
+  getFinanceSummary: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO,
+  getLogisticsPlan: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics`) as EventLogisticsPlanDTO,
+  updateLogisticsSettings: async (eventId: string, payload: EventLogisticsSettingsDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/settings`, payload) as EventLogisticsSettingsDTO,
+  createLogisticsMember: async (eventId: string, payload: EventLogisticsMemberDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members`, payload) as EventLogisticsMemberDTO,
+  updateLogisticsMember: async (eventId: string, partyId: string, payload: EventLogisticsMemberDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members/${encodeURIComponent(partyId)}`, payload) as EventLogisticsMemberDTO,
+  deleteLogisticsMember: async (eventId: string, partyId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/members/${encodeURIComponent(partyId)}`),
+  createLogisticsPlace: async (eventId: string, payload: EventLogisticsPlaceDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places`, payload) as EventLogisticsPlaceDTO,
+  updateLogisticsPlace: async (eventId: string, placeId: string, payload: EventLogisticsPlaceDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places/${encodeURIComponent(placeId)}`, payload) as EventLogisticsPlaceDTO,
+  deleteLogisticsPlace: async (eventId: string, placeId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/places/${encodeURIComponent(placeId)}`),
+  createLogisticsActivity: async (eventId: string, payload: EventLogisticsActivityDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities`, payload) as EventLogisticsActivityDTO,
+  updateLogisticsActivity: async (eventId: string, activityId: string, payload: EventLogisticsActivityDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}`, payload) as EventLogisticsActivityDTO,
+  deleteLogisticsActivity: async (eventId: string, activityId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}`),
+  verifyLogisticsRoute: async (eventId: string, activityId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}/verify-route`, {}) as EventRouteVerificationDTO,
+  verifyAllLogisticsRoutes: async (eventId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/verify-routes`, {}) as EventRouteVerificationDTO[],
+  rsvp: async (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
       rsvpEventId: eventId,
       rsvpPartyId: partyId,
       rsvpStatus: status,
-    }),
+    }) as SocialRsvpDTO,
+  // Promo Codes
+  listPromoCodes: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/promo-codes`) as PromoCodeDTO[],
+  createPromoCode: async (eventId: string, data: PromoCodeDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/promo-codes`, data) as PromoCodeDTO,
+  updatePromoCode: async (eventId: string, codeId: string, data: PromoCodeDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/promo-codes/${encodeURIComponent(codeId)}`, data) as PromoCodeDTO,
+  validatePromoCode: async (eventId: string, codeId: string, code?: string, tierId?: string) => {
+    const query = buildQuery({ code, tierId });
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/promo-codes/${encodeURIComponent(codeId)}/validate${query}`) as PromoCodeDTO;
+  },
+  // Stripe Payment
+  createPaymentIntent: async (data: TicketPurchaseWithPromoDTO) =>
+    await postUnknown('/social-events/stripe/create-payment-intent', data) as StripePaymentIntentDTO,
+  // Refunds
+  requestRefund: async (eventId: string, orderId: string, data: RefundRequestDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/refund`, data) as RefundDTO,
+  listRefunds: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds`) as RefundDTO[],
+  approveRefund: async (eventId: string, refundId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/approve`, {}) as RefundDTO,
+  rejectRefund: async (eventId: string, refundId: string, data: RejectionReasonDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/reject`, data) as RefundDTO,
+  // Transfers
+  createTransfer: async (eventId: string, ticketId: string, data: TicketTransferCreateDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/transfer`, data) as TicketTransferDTO,
+  listTransfers: async (eventId: string, ticketId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/transfers`) as TicketTransferDTO[],
+  acceptTransfer: async (transferCode: string) =>
+    await postUnknown(`/social-events/ticket-transfers/${encodeURIComponent(transferCode)}/accept`, {}) as SocialTicketDTO,
+  cancelTransfer: async (transferCode: string) =>
+    await postUnknown(`/social-events/ticket-transfers/${encodeURIComponent(transferCode)}/cancel`, {}) as TicketTransferDTO,
+  // Waitlist
+  joinWaitlist: async (eventId: string, data: WaitlistJoinDTO) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist`, data) as WaitlistEntryDTO,
+  listWaitlist: async (eventId: string, tierId?: string) => {
+    const waitlistQuery = buildQuery({ tierId });
+    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist${waitlistQuery}`) as WaitlistEntryDTO[];
+  },
+  notifyWaitlist: async (eventId: string, entryId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist/${encodeURIComponent(entryId)}/notify`, {}) as WaitlistEntryDTO,
+  removeFromWaitlist: async (eventId: string, entryId: string) => {
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/waitlist/${encodeURIComponent(entryId)}`);
+  },
+  // QR Codes
+  getTicketQR: async (eventId: string, ticketId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/qr`) as TicketWithQRDTO,
 };

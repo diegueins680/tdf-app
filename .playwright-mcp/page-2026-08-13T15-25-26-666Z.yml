@@ -1,0 +1,242 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e55]:
+          - img "Messages" [ref=e57]
+          - generic "Direct messaging - 2 new notifications link" [ref=e59]: "2"
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e70]
+      - link [ref=e77] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e82]
+      - link [ref=e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e93]
+      - link [ref=e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e103]
+      - link [ref=e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e115]:
+          - img "tdf.records.label's profile picture" [ref=e116]
+    - generic [ref=e117]:
+      - link [ref=e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e125]
+      - link [ref=e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e133]
+  - main [ref=e137]:
+    - generic [ref=e142]:
+      - navigation "Thread list" [ref=e143]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - button [ref=e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e148]
+              - img "Down chevron icon" [ref=e151]
+            - button [ref=e155] [cursor=pointer]:
+              - img "New message" [ref=e157]
+          - tablist [ref=e162]:
+            - tab "Primary" [ref=e163] [cursor=pointer]
+            - tab "General" [active] [selected] [ref=e166] [cursor=pointer]
+            - tab "From ads" [ref=e169] [cursor=pointer]
+            - tab "Requests" [ref=e173] [cursor=pointer]
+          - generic [ref=e179]:
+            - img "Search" [ref=e181]
+            - textbox "Search" [ref=e184]
+          - generic [ref=e185]:
+            - generic [ref=e187]:
+              - list [ref=e189]:
+                - listitem [ref=e190]
+                - listitem [ref=e191]:
+                  - button "Weekend plans? Your note" [ref=e193] [cursor=pointer]:
+                    - generic [ref=e194]:
+                      - generic [ref=e195]: Weekend plans?
+                      - generic [ref=e201]:
+                        - link [ref=e203]
+                        - generic [ref=e204]: Your note
+                - listitem [ref=e206]:
+                  - button "Toca la nota Así me gustan las perritas, obedientes anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=e209] [cursor=pointer]:
+                    - generic [ref=e210]:
+                      - generic [ref=e211]: Toca la notaAsí me gustan las perritas, obedientes
+                      - generic [ref=e220]:
+                        - link [ref=e222]:
+                          - img "anajusegovia's profile picture" [ref=e223]
+                        - generic [ref=e224]: Ana Julia/ DJ JU🫧
+                - listitem [ref=e227]:
+                  - button "a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥 camymantillan's profile picture Cami Mantilla" [ref=e230] [cursor=pointer]:
+                    - generic [ref=e231]:
+                      - generic [ref=e232]: a q hora perdemos la gravedad?😂para vestirme y estar redi pa volar 🫨🐦‍🔥
+                      - generic [ref=e239]:
+                        - link [ref=e241]:
+                          - img "camymantillan's profile picture" [ref=e242]
+                        - generic [ref=e243]: Cami Mantilla
+                - listitem [ref=e246]:
+                  - button "show en cdmx hoy 12/08 zoemoff's profile picture Zoe Moff" [ref=e249] [cursor=pointer]:
+                    - generic [ref=e250]:
+                      - generic [ref=e251]: show en cdmx hoy 12/08
+                      - generic [ref=e258]:
+                        - link [ref=e260]:
+                          - img "zoemoff's profile picture" [ref=e261]
+                        - generic [ref=e262]: Zoe Moff
+                - listitem [ref=e265]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Astro Moog (feat. Llama Este Pez) Juano Ledesma juano_music's profile picture J" [ref=e268] [cursor=pointer]:
+                    - generic [ref=e269]:
+                      - generic [ref=e275]:
+                        - generic [ref=e276]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e278]
+                          - generic [ref=e282]: Astro Moog (feat. Llama Este Pez)
+                        - generic [ref=e283]: Juano Ledesma
+                      - generic [ref=e284]:
+                        - link [ref=e286]:
+                          - img "juano_music's profile picture" [ref=e287]
+                        - generic [ref=e288]: J
+                - listitem [ref=e291]:
+                  - button "No hay nada más caro que deberle favores a 🇺🇸 e 🇮🇱 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=e294] [cursor=pointer]:
+                    - generic [ref=e295]:
+                      - generic [ref=e296]: No hay nada más caro que deberle favores a 🇺🇸 e 🇮🇱
+                      - generic [ref=e303]:
+                        - link [ref=e305]:
+                          - img "jofiel.arch.music's profile picture" [ref=e306]
+                        - generic [ref=e307]: Jofiel.arch.music
+                - listitem [ref=e310]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Dos Mil Treinta Y Dos Juano Ledesma blue_records333's profile picture Blue Records" [ref=e313] [cursor=pointer]:
+                    - generic [ref=e314]:
+                      - generic [ref=e320]:
+                        - generic [ref=e321]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e323]
+                          - generic [ref=e327]: Dos Mil Treinta Y Dos
+                        - generic [ref=e328]: Juano Ledesma
+                      - generic [ref=e329]:
+                        - link [ref=e331]:
+                          - img "blue_records333's profile picture" [ref=e332]
+                        - generic [ref=e333]: Blue Records
+                - listitem [ref=e336]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Shape Of My Heart Sting natiqdati's profile picture Natali Quintero" [ref=e339] [cursor=pointer]:
+                    - generic [ref=e340]:
+                      - generic [ref=e346]:
+                        - generic [ref=e347]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e349]
+                          - generic [ref=e353]: Shape Of My Heart
+                        - generic [ref=e354]: Sting
+                      - generic [ref=e355]:
+                        - link [ref=e357]:
+                          - img "natiqdati's profile picture" [ref=e358]
+                        - generic [ref=e359]: Natali Quintero
+                - listitem [ref=e362]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner For My Dogs (feat. Drag-On, Loose, Big Stan, Kasino) Explicit DMX jasarimusic's profile picture JASARI🇵🇷" [ref=e365] [cursor=pointer]:
+                    - generic [ref=e366]:
+                      - generic [ref=e372]:
+                        - generic [ref=e373]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e375]
+                          - generic [ref=e379]: For My Dogs (feat. Drag-On, Loose, Big Stan, Kasino)
+                          - img "Explicit" [ref=e381]
+                        - generic [ref=e383]: DMX
+                      - generic [ref=e384]:
+                        - link [ref=e386]:
+                          - img "jasarimusic's profile picture" [ref=e387]
+                        - generic [ref=e388]: JASARI🇵🇷
+              - button "Next" [ref=e391] [cursor=pointer]
+            - generic [ref=e396]:
+              - button "user-profile-picture Instagram User Liked a message a year ago" [ref=e684] [cursor=pointer]:
+                - generic [ref=e686]:
+                  - img "user-profile-picture" [ref=e690]
+                  - generic [ref=e693]:
+                    - generic [ref=e694]: Instagram User
+                    - generic [ref=e700]:
+                      - generic [ref=e701]: Liked a message
+                      - generic [ref=e703]:
+                        - generic [ref=e704]: ·
+                        - generic "a year ago" [ref=e709]: 1y
+              - button "user-profile-picture Jofiel.arch.music Liked a message a year ago" [ref=e713] [cursor=pointer]:
+                - generic [ref=e715]:
+                  - img "user-profile-picture" [ref=e719]
+                  - generic [ref=e722]:
+                    - generic [ref=e723]: Jofiel.arch.music
+                    - generic [ref=e729]:
+                      - generic [ref=e730]: Liked a message
+                      - generic [ref=e732]:
+                        - generic [ref=e733]: ·
+                        - generic "a year ago" [ref=e738]: 1y
+              - button "user-profile-picture Everaldho Everaldho sent an attachment. a year ago" [ref=e742] [cursor=pointer]:
+                - generic [ref=e744]:
+                  - img "user-profile-picture" [ref=e748]
+                  - generic [ref=e751]:
+                    - generic [ref=e752]: Everaldho
+                    - generic [ref=e758]:
+                      - generic [ref=e759]: Everaldho sent an attachment.
+                      - generic [ref=e761]:
+                        - generic [ref=e762]: ·
+                        - generic "a year ago" [ref=e767]: 1y
+              - 'button "user-profile-picture Renato Goyes García You: Primero empiezas con teoría obvio jeje a year ago" [ref=e771] [cursor=pointer]':
+                - generic [ref=e773]:
+                  - img "user-profile-picture" [ref=e777]
+                  - generic [ref=e780]:
+                    - generic [ref=e781]: Renato Goyes García
+                    - generic [ref=e787]:
+                      - generic [ref=e788]: "You: Primero empiezas con teoría obvio jeje"
+                      - generic [ref=e790]:
+                        - generic [ref=e791]: ·
+                        - generic "a year ago" [ref=e796]: 1y
+              - button "user-profile-picture Diego Jaramillo Diego sent an attachment. a year ago" [ref=e800] [cursor=pointer]:
+                - generic [ref=e802]:
+                  - img "user-profile-picture" [ref=e806]
+                  - generic [ref=e809]:
+                    - generic [ref=e810]: Diego Jaramillo
+                    - generic [ref=e816]:
+                      - generic [ref=e817]: Diego sent an attachment.
+                      - generic [ref=e819]:
+                        - generic [ref=e820]: ·
+                        - generic "a year ago" [ref=e825]: 1y
+              - button "user-profile-picture Julio DÍaz Julio sent an attachment. a year ago" [ref=e829] [cursor=pointer]:
+                - generic [ref=e831]:
+                  - img "user-profile-picture" [ref=e835]
+                  - generic [ref=e838]:
+                    - generic [ref=e839]: Julio DÍaz
+                    - generic [ref=e845]:
+                      - generic [ref=e846]: Julio sent an attachment.
+                      - generic [ref=e848]:
+                        - generic [ref=e849]: ·
+                        - generic "a year ago" [ref=e854]: 1y
+              - button "user-profile-picture WE ARE MOVING GATHERING WE sent an attachment. 2 years ago" [ref=e858] [cursor=pointer]:
+                - generic [ref=e860]:
+                  - img "user-profile-picture" [ref=e864]
+                  - generic [ref=e867]:
+                    - generic [ref=e868]: WE ARE MOVING GATHERING
+                    - generic [ref=e874]:
+                      - generic [ref=e875]: WE sent an attachment.
+                      - generic [ref=e877]:
+                        - generic [ref=e878]: ·
+                        - generic "2 years ago" [ref=e883]: 2y
+              - button "user-profile-picture Labii Labii sent an attachment. 2 years ago" [ref=e887] [cursor=pointer]:
+                - generic [ref=e889]:
+                  - img "user-profile-picture" [ref=e893]
+                  - generic [ref=e896]:
+                    - generic [ref=e897]: Labii
+                    - generic [ref=e903]:
+                      - generic [ref=e904]: Labii sent an attachment.
+                      - generic [ref=e906]:
+                        - generic [ref=e907]: ·
+                        - generic "2 years ago" [ref=e912]: 2y
+              - button [ref=e651] [cursor=pointer]:
+                - generic [ref=e653]:
+                  - status "Loading..." [ref=e656]
+                  - generic [ref=e659]:
+                    - status "Loading..." [ref=e661]
+                    - status "Loading..." [ref=e663]
+      - generic [ref=e668]:
+        - heading "Your messages" [level=2] [ref=e675]
+        - generic [ref=e676]: Send a message to start a chat.
+        - button "Send message" [ref=e680] [cursor=pointer]

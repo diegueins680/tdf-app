@@ -7,18 +7,37 @@ module TDF.ServerLiveSessions
   ( liveSessionsServer
   , LiveSessionMusicianLookup(..)
   , buildLiveSessionUsernameCollisionCandidate
+  , liveSessionMusicianPartyNotes
   , resolveLiveSessionMusicianLookup
+  , selectUniqueLiveSessionMusicianByEmail
   , sanitizeLiveSessionRiderFileName
+  , validateLiveSessionBandName
+  , validateLiveSessionMusicianCount
+  , validateLiveSessionOptionalEmail
+  , validateLiveSessionReferencedPartyEmail
+  , validateLiveSessionRiderFileName
+  , validateLiveSessionRiderFileSize
   , validateLiveSessionTermsAcceptance
   ) where
 
-import           Control.Monad              (forM_, void, when)
+import           Control.Monad              ((>=>), forM_, unless, when, zipWithM)
+import           Control.Exception          (throwIO)
 import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import           Crypto.BCrypt              (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
-import           Data.Char                  (isAlphaNum, isAscii)
-import           Data.Maybe                 (fromMaybe, mapMaybe)
+import           Data.Char                  ( GeneralCategory
+                                              ( Format
+                                              , LineSeparator
+                                              , ParagraphSeparator
+                                              )
+                                            , generalCategory
+                                            , isAlphaNum
+                                            , isAscii
+                                            , isControl
+                                            )
+import           Data.Maybe                 (mapMaybe)
+import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
@@ -29,24 +48,46 @@ import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
 import           Servant
 import           Servant.Multipart          (FileData(..), Tmp)
-import           System.Directory           (createDirectoryIfMissing)
+import           System.Directory           (createDirectoryIfMissing, getFileSize)
 import           System.FilePath            ((</>), takeFileName)
 import qualified Data.ByteString.Lazy       as BL
 
 import           TDF.API.LiveSessions
 import           TDF.Auth                   (AuthedUser, auPartyId)
+import qualified TDF.Catalog.Models        as Catalog
+import           TDF.Catalog.Security       (applySecurityRoleAssignmentPolicy)
 import           TDF.DB                     (Env(..))
 import           TDF.Models
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
+import           TDF.ServerAuth             (normalizeAuthEmailAddress)
+import           Web.PathPieces             (fromPathPiece)
 
 liveSessionUsernameCollisionBudget :: Int
 liveSessionUsernameCollisionBudget = 60
+
+liveSessionBandNameMaxLength :: Int
+liveSessionBandNameMaxLength = 160
+
+liveSessionTermsVersionMaxLength :: Int
+liveSessionTermsVersionMaxLength = 160
+
+maxLiveSessionRiderBytes :: Integer
+maxLiveSessionRiderBytes = 10 * 1024 * 1024
+
+liveSessionRiderFileNameMaxLength :: Int
+liveSessionRiderFileNameMaxLength = 160
 
 data LiveSessionMusicianLookup
   = LookupLiveSessionMusicianByEmail Text
   | CreateLiveSessionMusician
   deriving (Eq, Show)
+
+liveSessionMusicianPartyNotes :: Maybe Text -> Maybe Text
+liveSessionMusicianPartyNotes rawInstrument =
+  case T.strip <$> rawInstrument of
+    Just instrument | not (T.null instrument) -> Just instrument
+    _ -> Nothing
 
 liveSessionsServer
   :: forall m.
@@ -59,19 +100,24 @@ liveSessionsServer
 liveSessionsServer user = intakeHandler
   where
     intakeHandler payload = do
-      let bandName = T.strip (lsiBandName payload)
-      when (T.null bandName) $
-        throwError err400 { errBody = "bandName is required" }
+      bandName <- either throwError pure (validateLiveSessionBandName (lsiBandName payload))
       acceptedTermsVersion <-
         either throwError pure $
           validateLiveSessionTermsAcceptance
             (lsiAcceptedTerms payload)
             (lsiTermsVersion payload)
+      contactEmail <-
+        either throwError pure $
+          validateLiveSessionOptionalEmail "contactEmail" (lsiContactEmail payload)
+      either throwError pure $
+        validateLiveSessionMusicianCount (lsiMusicians payload)
+      primaryGenreKey <- traverse resolvePublishedGenre (lsiPrimaryGenreId payload)
+      musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)
 
       now <- liftIO getCurrentTime
-      riderPath <- liftIO $ traverse storeRiderFile (lsiRider payload)
+      riderPath <- traverse validateAndStoreRiderFile (lsiRider payload)
 
-      partyKeys <- mapM (ensureMusician now) (lsiMusicians payload)
+      preparedMusicians <- zipWithM (ensureMusician now) musicianInstruments (lsiMusicians payload)
       resolvedSongOrders <-
         either
           (\err ->
@@ -86,9 +132,10 @@ liveSessionsServer user = intakeHandler
       intakeId <- withPool $ insert ME.LiveSessionIntake
         { ME.liveSessionIntakeBandName     = bandName
         , ME.liveSessionIntakeBandDescription = lsiBandDescription payload
-        , ME.liveSessionIntakePrimaryGenre = lsiPrimaryGenre payload
+        , ME.liveSessionIntakePrimaryGenre = Nothing
+        , ME.liveSessionIntakePrimaryGenreId = primaryGenreKey
         , ME.liveSessionIntakeInputList    = lsiInputList payload
-        , ME.liveSessionIntakeContactEmail = T.strip <$> lsiContactEmail payload
+        , ME.liveSessionIntakeContactEmail = contactEmail
         , ME.liveSessionIntakeContactPhone = T.strip <$> lsiContactPhone payload
         , ME.liveSessionIntakeSessionDate  = lsiSessionDate payload
         , ME.liveSessionIntakeAvailability = lsiAvailability payload
@@ -108,17 +155,20 @@ liveSessionsServer user = intakeHandler
                  else Just (sortOrder, title, song)
 
       withPool $
-        forM_ (zip partyKeys (lsiMusicians payload)) $ \(partyKey, m) ->
-          insert_ ME.LiveSessionMusician
-            { ME.liveSessionMusicianIntakeId   = intakeId
-            , ME.liveSessionMusicianPartyId    = partyKey
-            , ME.liveSessionMusicianName       = lsmName m
-            , ME.liveSessionMusicianEmail      = lsmEmail m
-            , ME.liveSessionMusicianInstrument = lsmInstrument m
-            , ME.liveSessionMusicianRole       = lsmRole m
-            , ME.liveSessionMusicianNotes      = lsmNotes m
-            , ME.liveSessionMusicianIsExisting = lsmIsExisting m
-            }
+        forM_
+          (zip preparedMusicians (lsiMusicians payload))
+          $ \((partyKey, musicianEmail, instrumentKey), m) ->
+              insert_ ME.LiveSessionMusician
+                { ME.liveSessionMusicianIntakeId   = intakeId
+                , ME.liveSessionMusicianPartyId    = partyKey
+                , ME.liveSessionMusicianName       = lsmName m
+                , ME.liveSessionMusicianEmail      = musicianEmail
+                , ME.liveSessionMusicianInstrument = Nothing
+                , ME.liveSessionMusicianInstrumentId = instrumentKey
+                , ME.liveSessionMusicianRole       = Nothing
+                , ME.liveSessionMusicianNotes      = lsmNotes m
+                , ME.liveSessionMusicianIsExisting = lsmIsExisting m
+                }
 
       withPool $
         forM_ preparedSongs $ \(sortOrder, title, song) ->
@@ -133,29 +183,48 @@ liveSessionsServer user = intakeHandler
 
       pure NoContent
 
-    ensureMusician :: UTCTime -> LiveSessionMusicianPayload -> m (Key Party)
-    ensureMusician now LiveSessionMusicianPayload{..} = do
-      let mEmail = T.strip <$> lsmEmail
-          trimmedName = T.strip lsmName
-      partyKey <- case lsmPartyId of
+    ensureMusician
+      :: UTCTime
+      -> Maybe (Catalog.InstrumentId, Text)
+      -> LiveSessionMusicianPayload
+      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)
+    ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do
+      mEmail <-
+        either throwError pure $
+          validateLiveSessionOptionalEmail "musicians.email" lsmEmail
+      let trimmedName = T.strip lsmName
+      (partyKey, accountEmail) <- case lsmPartyId of
         Just pidInt -> do
           let key = toSqlKey (fromIntegral pidInt)
           existingParty <- withPool $ get key
           case existingParty of
             Nothing -> throwError err400 { errBody = "Referenced party not found" }
-            Just _  -> pure key
+            Just party -> do
+              referencedPartyEmail <-
+                either throwError pure $
+                  validateLiveSessionReferencedPartyEmail
+                    (M.partyPrimaryEmail party)
+                    mEmail
+              pure (key, referencedPartyEmail)
         Nothing -> do
           found <- case resolveLiveSessionMusicianLookup mEmail of
-            LookupLiveSessionMusicianByEmail email ->
-              withPool $ selectFirst [M.PartyPrimaryEmail ==. Just email] []
+            LookupLiveSessionMusicianByEmail email -> do
+              matches <-
+                withPool $
+                  selectList [M.PartyPrimaryEmail ==. Just email] [LimitTo 2]
+              either throwError pure (selectUniqueLiveSessionMusicianByEmail matches)
             CreateLiveSessionMusician ->
               pure Nothing
           case found of
-            Just ent -> pure (entityKey ent)
-            Nothing -> withPool $
-              insert Party
+            Just ent ->
+              pure (entityKey ent, M.partyPrimaryEmail (entityVal ent))
+            Nothing -> withPool $ do
+              key <- insert Party
                 { partyLegalName        = Nothing
-                , partyDisplayName      = if T.null trimmedName then "Músico Live Session" else trimmedName
+                , partyDisplayName      =
+                    if T.null trimmedName
+                      then "Músico Live Session"
+                      else trimmedName
                 , partyIsOrg            = False
                 , partyTaxId            = Nothing
                 , partyPrimaryEmail     = mEmail
@@ -163,22 +232,84 @@ liveSessionsServer user = intakeHandler
                 , partyWhatsapp         = Nothing
                 , partyInstagram        = Nothing
                 , partyEmergencyContact = Nothing
-                , partyNotes            = Just (fromMaybe "" lsmInstrument)
+                , partyNotes            = liveSessionMusicianPartyNotes (snd <$> instrumentRef)
+                , partyStripeCustomerId = Nothing
+                , partyCountryCode       = Nothing
+                , partyCountryId         = Nothing
                 , partyCreatedAt        = now
                 }
+              pure (key, mEmail)
 
       when (partyKey == toSqlKey 0) $
         throwError err400 { errBody = "Invalid party reference" }
-      when (not (maybe True T.null mEmail)) $
-        withPool $ update partyKey [M.PartyPrimaryEmail =. mEmail]
-      withPool $ ensureArtistRole partyKey
-      withPool $ ensureUserAccount partyKey mEmail
-      pure partyKey
+      withPool $ ensureArtistRole now partyKey
+      withPool $ ensureUserAccount partyKey accountEmail
+      pure (partyKey, mEmail, fst <$> instrumentRef)
 
-    ensureArtistRole :: PartyId -> SqlPersistT IO ()
-    ensureArtistRole pid = do
-      _ <- upsert (PartyRole pid Artist True) [PartyRoleActive =. True]
-      pure ()
+    resolvePublishedGenre :: Text -> m Catalog.GenreId
+    resolvePublishedGenre rawId = do
+      genreKey <-
+        maybe
+          (throwError err400 { errBody = "primaryGenreId must be a valid catalog UUID" })
+          pure
+          (fromPathPiece (T.strip rawId))
+      valid <- withPool $ do
+        item <- get genreKey
+        case item of
+          Nothing -> pure False
+          Just genre -> do
+            state <- get (Catalog.genreWorkflowStateId genre)
+            catalog <- get (Catalog.genreCatalogId genre)
+            pure $
+              Catalog.genreActive genre
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "genres") catalog
+      unless valid $
+        throwError err400 { errBody = "primaryGenreId must reference an active published genre" }
+      pure genreKey
+
+    resolvePublishedInstrument :: Text -> m (Catalog.InstrumentId, Text)
+    resolvePublishedInstrument rawId = do
+      instrumentKey <-
+        maybe
+          (throwError err400 { errBody = "instrumentId must be a valid catalog UUID" })
+          pure
+          (fromPathPiece (T.strip rawId))
+      result <- withPool $ do
+        item <- get instrumentKey
+        case item of
+          Nothing -> pure Nothing
+          Just instrument -> do
+            state <- get (Catalog.instrumentWorkflowStateId instrument)
+            catalog <- get (Catalog.instrumentCatalogId instrument)
+            pure $
+              if Catalog.instrumentActive instrument
+                && maybe False ((== "published") . Catalog.workflowStateCode) state
+                && maybe False (\definition -> Catalog.catalogDefinitionActive definition && Catalog.catalogDefinitionCode definition == "instruments") catalog
+                then Just (Catalog.instrumentNameEs instrument)
+                else Nothing
+      label <- maybe
+        (throwError err400 { errBody = "instrumentId must reference an active published instrument" })
+        pure
+        result
+      pure (instrumentKey, label)
+
+    ensureArtistRole :: UTCTime -> PartyId -> SqlPersistT IO ()
+    ensureArtistRole now pid = do
+      result <- applySecurityRoleAssignmentPolicy
+        "live-session.artist-profile.artist"
+        pid
+        False
+        (Just (auPartyId user))
+        "live-session-intake"
+        ("live-session-artist:" <> T.pack (show (fromSqlKey pid)))
+        now
+      case result of
+        Right _ -> pure ()
+        Left message ->
+          liftIO $ throwIO err503
+            { errBody = BL.fromStrict (TE.encodeUtf8 message)
+            }
 
     ensureUserAccount :: PartyId -> Maybe Text -> SqlPersistT IO ()
     ensureUserAccount pid mEmail = do
@@ -198,12 +329,7 @@ liveSessionsServer user = intakeHandler
             , userCredentialPasswordHash = hashed
             , userCredentialActive       = True
             }
-          applyRoles pid [Artist]
-
-    applyRoles :: PartyId -> [RoleEnum] -> SqlPersistT IO ()
-    applyRoles pid rolesList =
-      forM_ rolesList $ \role ->
-        void $ upsert (PartyRole pid role True) [PartyRoleActive =. True]
+          pure ()
 
     generateUniqueUsername :: Text -> SqlPersistT IO Text
     generateUniqueUsername base = do
@@ -232,15 +358,32 @@ liveSessionsServer user = intakeHandler
     randomPassword :: IO Text
     randomPassword = toText <$> nextRandom
 
-    storeRiderFile :: FileData Tmp -> IO Text
-    storeRiderFile FileData{..} = do
-      let safeName = sanitizeLiveSessionRiderFileName fdFileName
+    validateAndStoreRiderFile :: FileData Tmp -> m Text
+    validateAndStoreRiderFile file@FileData{..} = do
+      safeName <- either throwError pure (validateLiveSessionRiderFileName fdFileName)
+      size <- liftIO (getFileSize fdPayload)
+      either throwError pure (validateLiveSessionRiderFileSize size)
+      liftIO (storeRiderFile safeName file)
+
+    storeRiderFile :: Text -> FileData Tmp -> IO Text
+    storeRiderFile safeName FileData{..} = do
       token <- toText <$> nextRandom
       let destDir  = "uploads/live-sessions"
           destPath = destDir </> T.unpack token <> "-" <> T.unpack safeName
       createDirectoryIfMissing True destDir
       BL.readFile fdPayload >>= BL.writeFile destPath
       pure (T.pack destPath)
+
+validateLiveSessionRiderFileSize :: Integer -> Either ServerError ()
+validateLiveSessionRiderFileSize size
+  | size < 0 =
+      Left err400 { errBody = "rider file size is invalid" }
+  | size == 0 =
+      Left err400 { errBody = "rider file must not be empty" }
+  | size > maxLiveSessionRiderBytes =
+      Left err400 { errBody = "rider file must be 10 MB or smaller" }
+  | otherwise =
+      Right ()
 
 buildLiveSessionUsernameCollisionCandidate :: Text -> Text -> Text
 buildLiveSessionUsernameCollisionCandidate base suffix =
@@ -258,11 +401,131 @@ buildLiveSessionUsernameCollisionCandidate base suffix =
           else T.take baseBudget trimmedBase
   in T.take liveSessionUsernameCollisionBudget (basePrefix <> suffixPart)
 
+validateLiveSessionBandName :: Text -> Either ServerError Text
+validateLiveSessionBandName rawBandName
+  | T.null bandName =
+      Left err400 { errBody = "bandName is required" }
+  | T.length bandName > liveSessionBandNameMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "bandName must be "
+                      <> T.pack (show liveSessionBandNameMaxLength)
+                      <> " characters or fewer"
+                  )
+              )
+        }
+  | T.any isUnsafeLiveSessionBandNameChar bandName =
+      Left err400
+        { errBody =
+            "bandName must not contain control characters or hidden formatting characters"
+        }
+  | otherwise =
+      Right bandName
+  where
+    bandName = T.strip rawBandName
+
+isUnsafeLiveSessionBandNameChar :: Char -> Bool
+isUnsafeLiveSessionBandNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
 resolveLiveSessionMusicianLookup :: Maybe Text -> LiveSessionMusicianLookup
 resolveLiveSessionMusicianLookup rawEmail =
-  case T.toLower . T.strip <$> rawEmail of
-    Just email | not (T.null email) -> LookupLiveSessionMusicianByEmail email
+  case rawEmail >>= normalizeAuthEmailAddress of
+    Just email -> LookupLiveSessionMusicianByEmail email
     _ -> CreateLiveSessionMusician
+
+selectUniqueLiveSessionMusicianByEmail
+  :: [Entity Party]
+  -> Either ServerError (Maybe (Entity Party))
+selectUniqueLiveSessionMusicianByEmail [] = Right Nothing
+selectUniqueLiveSessionMusicianByEmail [partyEnt]
+  | fromSqlKey (entityKey partyEnt) <= 0 =
+      Left err500 { errBody = "Stored live-session musician party id is invalid" }
+  | otherwise = Right (Just partyEnt)
+selectUniqueLiveSessionMusicianByEmail _ =
+  Left err409 { errBody = "Multiple parties match this musician email" }
+
+validateLiveSessionMusicianCount
+  :: [LiveSessionMusicianPayload]
+  -> Either ServerError ()
+validateLiveSessionMusicianCount [] =
+  Left err400 { errBody = "At least one musician is required for live-session intake" }
+validateLiveSessionMusicianCount musicians
+  | length musicians > maxLiveSessionMusicians =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "musicians must contain at most "
+                      <> T.pack (show maxLiveSessionMusicians)
+                      <> " entries"
+                  )
+              )
+        }
+  | any invalidPartyId musicians =
+      Left err400 { errBody = "musician partyId must be a positive integer" }
+  | hasDuplicates referencedPartyIds =
+      Left err400 { errBody = "referenced musician partyIds must be distinct" }
+  | hasDuplicates referencedEmails =
+      Left err400 { errBody = "musician emails must be distinct" }
+  | otherwise =
+      Right ()
+  where
+    invalidPartyId musician =
+      maybe False (<= 0) (lsmPartyId musician)
+
+    referencedPartyIds =
+      mapMaybe lsmPartyId musicians
+
+    referencedEmails =
+      mapMaybe (lsmEmail >=> normalizeAuthEmailAddress) musicians
+
+hasDuplicates :: Ord a => [a] -> Bool
+hasDuplicates = go Set.empty
+  where
+    go _ [] = False
+    go seen (value : rest)
+      | Set.member value seen = True
+      | otherwise = go (Set.insert value seen) rest
+
+validateLiveSessionOptionalEmail
+  :: Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateLiveSessionOptionalEmail _ Nothing = Right Nothing
+validateLiveSessionOptionalEmail fieldName (Just rawEmail)
+  | T.null (T.strip rawEmail) =
+      Right Nothing
+  | Just email <- normalizeAuthEmailAddress rawEmail =
+      Right (Just email)
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be a valid email address"))
+        }
+
+validateLiveSessionReferencedPartyEmail
+  :: Maybe Text
+  -> Maybe Text
+  -> Either ServerError (Maybe Text)
+validateLiveSessionReferencedPartyEmail rawExistingEmail rawSuppliedEmail = do
+  suppliedEmail <- validateLiveSessionOptionalEmail "musicians.email" rawSuppliedEmail
+  case suppliedEmail of
+    Nothing ->
+      Right existingEmail
+    Just supplied
+      | existingEmail == Just supplied ->
+          Right existingEmail
+      | otherwise ->
+          Left err400
+            { errBody =
+                "Referenced musician email must match the existing party email"
+            }
+  where
+    existingEmail = rawExistingEmail >>= normalizeAuthEmailAddress
 
 validateLiveSessionTermsAcceptance :: Bool -> Maybe Text -> Either ServerError Text
 validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
@@ -271,9 +534,102 @@ validateLiveSessionTermsAcceptance acceptedTerms rawTermsVersion
         { errBody = "acceptedTerms must be true before submitting live session intake" }
   | otherwise =
       case T.strip <$> rawTermsVersion of
-        Just termsVersion | not (T.null termsVersion) -> Right termsVersion
+        Just termsVersion
+          | T.null termsVersion ->
+              missingTermsVersion
+          | T.length termsVersion > liveSessionTermsVersionMaxLength ->
+              Left err400
+                { errBody =
+                    BL.fromStrict
+                      ( TE.encodeUtf8
+                          ( "termsVersion must be "
+                              <> T.pack (show liveSessionTermsVersionMaxLength)
+                              <> " characters or fewer"
+                          )
+                      )
+                }
+          | T.any isUnsafeLiveSessionTermsVersionChar termsVersion ->
+              Left err400
+                { errBody =
+                    "termsVersion must not contain control characters or hidden formatting characters"
+                }
+          | otherwise ->
+              Right termsVersion
         _ ->
-          Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
+          missingTermsVersion
+  where
+    missingTermsVersion =
+      Left err400 { errBody = "termsVersion is required when acceptedTerms is true" }
+
+isUnsafeLiveSessionTermsVersionChar :: Char -> Bool
+isUnsafeLiveSessionTermsVersionChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+validateLiveSessionRiderFileName :: Text -> Either ServerError Text
+validateLiveSessionRiderFileName rawName
+  | T.null trimmed =
+      Left err400 { errBody = "rider file name is required" }
+  | T.any isUnsafeRiderFileNameChar trimmed =
+      Left err400
+        { errBody =
+            "rider file name must not contain control characters or hidden formatting characters"
+        }
+  | T.any isPathSeparator trimmed =
+      Left err400 { errBody = "rider file name must not contain path separators" }
+  | T.length trimmed > liveSessionRiderFileNameMaxLength =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              ( TE.encodeUtf8
+                  ( "rider file name must be "
+                      <> T.pack (show liveSessionRiderFileNameMaxLength)
+                      <> " characters or fewer"
+                  )
+              )
+        }
+  | sanitized == "rider" && trimmed /= "rider" =
+      Left err400 { errBody = "rider file name must include a usable name" }
+  | hasDisallowedLiveSessionRiderExtension sanitized =
+      Left err400 { errBody = "rider file name extension is not allowed" }
+  | otherwise =
+      Right sanitized
+  where
+    trimmed = T.strip rawName
+    sanitized = sanitizeLiveSessionRiderFileName trimmed
+
+isUnsafeRiderFileNameChar :: Char -> Bool
+isUnsafeRiderFileNameChar ch =
+  isControl ch || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
+
+isPathSeparator :: Char -> Bool
+isPathSeparator ch = ch == '/' || ch == '\\'
+
+hasDisallowedLiveSessionRiderExtension :: Text -> Bool
+hasDisallowedLiveSessionRiderExtension name =
+  any (`elem` extensionChain) disallowedLiveSessionRiderExtensions
+  where
+    loweredName = T.toLower name
+    extensionChain = map ("." <>) (drop 1 (T.splitOn "." loweredName))
+
+disallowedLiveSessionRiderExtensions :: [Text]
+disallowedLiveSessionRiderExtensions =
+  [ ".bat"
+  , ".cmd"
+  , ".com"
+  , ".exe"
+  , ".htm"
+  , ".html"
+  , ".jar"
+  , ".js"
+  , ".mjs"
+  , ".php"
+  , ".ps1"
+  , ".scr"
+  , ".sh"
+  , ".svg"
+  , ".svgz"
+  , ".xhtml"
+  ]
 
 sanitizeLiveSessionRiderFileName :: Text -> Text
 sanitizeLiveSessionRiderFileName rawName =
@@ -281,10 +637,11 @@ sanitizeLiveSessionRiderFileName rawName =
       baseName = T.pack (takeFileName (T.unpack trimmed))
       cleaned = T.map normalizeRiderFileNameChar baseName
       stripped = T.dropWhile (== '-') (T.dropWhileEnd (== '-') cleaned)
+      bounded = T.take liveSessionRiderFileNameMaxLength stripped
   in
-    if T.null stripped || not (T.any isStableRiderFileNameChar stripped)
+    if T.null bounded || not (T.any isStableRiderFileNameChar bounded)
       then "rider"
-      else stripped
+      else bounded
   where
     isStableRiderFileNameChar ch = isAscii ch && isAlphaNum ch
 

@@ -15,9 +15,14 @@ module TDF.API.Proposals
   ) where
 
 import           Data.Aeson (FromJSON (parseJSON), Options (rejectUnknownFields), ToJSON,
-                             defaultOptions, genericParseJSON)
+                             Value (Null, Object), (.:!), defaultOptions, genericParseJSON)
+import qualified Data.Aeson.Key as AesonKey
+import qualified Data.Aeson.KeyMap as KeyMap
+import           Data.Aeson.Types (Parser)
+import           Data.Foldable (traverse_)
 import           Data.Int (Int64)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
@@ -77,7 +82,16 @@ data ProposalCreate = ProposalCreate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectExplicitNullFields
+      "ProposalCreate"
+      [ "pcStatus"
+      , "pcLatex"
+      , "pcTemplateKey"
+      , "pcVersionNotes"
+      ]
+      value
+    genericParseJSON strictObjectOptions value
 
 data ProposalUpdate = ProposalUpdate
   { puTitle          :: Maybe Text
@@ -92,7 +106,39 @@ data ProposalUpdate = ProposalUpdate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalUpdate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value@(Object o) = do
+    _ <- (genericParseJSON strictObjectOptions value :: Parser ProposalUpdate)
+    rawTitle <- o .:! "puTitle"
+    titleVal <- case rawTitle of
+      Nothing -> pure Nothing
+      Just Nothing -> fail "puTitle must be omitted instead of null"
+      Just (Just value') -> pure (Just value')
+    rawStatus <- o .:! "puStatus"
+    statusVal <- case rawStatus of
+      Nothing -> pure Nothing
+      Just Nothing -> fail "puStatus must be omitted instead of null"
+      Just (Just value') -> pure (Just value')
+    payload <-
+      ProposalUpdate
+        <$> pure titleVal
+        <*> pure statusVal
+        <*> o .:! "puServiceKind"
+        <*> o .:! "puClientPartyId"
+        <*> o .:! "puContactName"
+        <*> o .:! "puContactEmail"
+        <*> o .:! "puContactPhone"
+        <*> o .:! "puPipelineCardId"
+        <*> o .:! "puNotes"
+    validateProposalUpdateIntent payload
+    pure payload
+  parseJSON _ = fail "ProposalUpdate must be an object"
+
+validateProposalUpdateIntent :: ProposalUpdate -> Parser ()
+validateProposalUpdateIntent
+  (ProposalUpdate Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing) =
+  fail "ProposalUpdate must include at least one field"
+validateProposalUpdateIntent _ =
+  pure ()
 
 data ProposalVersionSummaryDTO = ProposalVersionSummaryDTO
   { versionId :: Text
@@ -123,7 +169,47 @@ data ProposalVersionCreate = ProposalVersionCreate
   } deriving (Show, Generic)
 
 instance FromJSON ProposalVersionCreate where
-  parseJSON = genericParseJSON strictObjectOptions
+  parseJSON value = do
+    rejectExplicitNullFields
+      "ProposalVersionCreate"
+      [ "pvcLatex"
+      , "pvcTemplateKey"
+      , "pvcNotes"
+      ]
+      value
+    payload <- genericParseJSON strictObjectOptions value
+    validateProposalVersionCreateContentSource payload
+    pure payload
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }
+
+rejectExplicitNullFields :: Text -> [Text] -> Value -> Parser ()
+rejectExplicitNullFields _payloadName fieldNames (Object object) =
+  traverse_ rejectField fieldNames
+  where
+    rejectField fieldName =
+      case KeyMap.lookup (AesonKey.fromText fieldName) object of
+        Just Null ->
+          fail (T.unpack fieldName <> " must be omitted instead of null")
+        _ ->
+          pure ()
+rejectExplicitNullFields payloadName _ _ =
+  fail (T.unpack payloadName <> " must be an object")
+
+validateProposalVersionCreateContentSource :: ProposalVersionCreate -> Parser ()
+validateProposalVersionCreateContentSource payload = do
+  hasLatex <- validateSourceField "pvcLatex" (pvcLatex payload)
+  hasTemplateKey <- validateSourceField "pvcTemplateKey" (pvcTemplateKey payload)
+  case (hasLatex, hasTemplateKey) of
+    (True, False) -> pure ()
+    (False, True) -> pure ()
+    (False, False) ->
+      fail "ProposalVersionCreate requires pvcLatex or pvcTemplateKey"
+    (True, True) ->
+      fail "ProposalVersionCreate must provide either pvcLatex or pvcTemplateKey, not both"
+  where
+    validateSourceField _ Nothing = pure False
+    validateSourceField fieldName (Just rawValue)
+      | T.null (T.strip rawValue) = fail (fieldName <> " must not be blank")
+      | otherwise = pure True

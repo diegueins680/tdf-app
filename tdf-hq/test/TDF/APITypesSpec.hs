@@ -1,121 +1,178 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.APITypesSpec (spec) where
 
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import Data.Proxy (Proxy (..))
+import Data.Maybe (isJust)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import Data.Time (fromGregorian)
-import Servant.API (MimeUnrender (mimeUnrender), OctetStream, PlainText)
 import Test.Hspec
 
 import qualified TDF.API as API
 import qualified TDF.API.Calendar as Calendar
+import qualified TDF.API.Catalog as Catalog
 import qualified TDF.API.Facebook as Facebook
 import qualified TDF.API.Instagram as Instagram
 import qualified TDF.API.InstagramOAuth as InstagramOAuth
+import qualified TDF.API.InternAudit as InternAudit
 import qualified TDF.API.Proposals as Proposals
+import TDF.API.Types (
+    ArtistTipRequest (..),
+    AssetCheckoutRequest (..),
+    BandCreate (..),
+    BandMemberInput (..),
+    ClockInRequest (..),
+    ClockOutRequest (..),
+    DriveTokenExchangeRequest (..),
+    DriveTokenRefreshRequest (..),
+    DropdownOptionCreate (..),
+    DropdownOptionUpdate (..),
+    InternPermissionCreate (..),
+    InternPermissionUpdate (..),
+    InternProfileUpdate (..),
+    InternProjectCreate (..),
+    InternProjectUpdate (..),
+    InternTaskCreate (..),
+    InternTaskUpdate (..),
+    InternTodoCreate (..),
+    InternTodoUpdate (..),
+    LabelTrackCreate (..),
+    LabelTrackUpdate (..),
+    LabelProjectNoteCreate (..),
+    LabelProjectNoteUpdate (..),
+    MarketplaceCartItemUpdate (..),
+    MarketplaceCheckoutReq (..),
+    MarketplaceOrderUpdate (..),
+    PaypalCaptureReq (..),
+    PipelineCardCreate (..),
+    PipelineCardUpdate (..),
+    SessionCreate (..),
+    SessionUpdate (..),
+    maxMarketplaceCartItemQuantity,
+    verifyMetaWebhookSignature,
+ )
 import qualified TDF.DTO as DTO
 import qualified TDF.DTO.SocialEventsDTO as SocialEvents
-import TDF.API.Types
-    ( BandCreate (..)
-    , BandMemberInput (..)
-    , ClockInRequest (..)
-    , ClockOutRequest (..)
-    , DropdownOptionCreate (..)
-    , DropdownOptionUpdate (..)
-    , InternProfileUpdate (..)
-    , InternPermissionCreate (..)
-    , InternPermissionUpdate (..)
-    , InternProjectCreate (..)
-    , InternProjectUpdate (..)
-    , InternTaskCreate (..)
-    , InternTodoCreate (..)
-    , InternTodoUpdate (..)
-    , InternTaskUpdate (..)
-    , LooseJSON
-    , MarketplaceCheckoutReq (..)
-    , MarketplaceCartItemUpdate (..)
-    , maxMarketplaceCartItemQuantity
-    , MarketplaceOrderUpdate (..)
-    , PaypalCaptureReq (..)
-    , PipelineCardCreate (..)
-    , PipelineCardUpdate (..)
-    , RolePayload (..)
-    , ServiceCatalogCreate (..)
-    , ServiceCatalogUpdate (..)
-    , SessionCreate (..)
-    , SessionUpdate (..)
-    , LabelTrackCreate (..)
-    , LabelTrackUpdate (..)
-    , UserRoleUpdatePayload (..)
-    )
+import qualified TDF.DTO.SocialSyncDTO as SocialSync
 import qualified TDF.Routes.Academy as Academy
 import qualified TDF.Routes.Courses as Courses
-import TDF.Models (RoleEnum (Admin, Teacher))
 import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
-    describe "RolePayload FromJSON" $ do
-        it "parses raw string payloads" $
-            decodeRole "\"Engineer\"" `shouldBe` Right (RolePayload "Engineer")
+    describe "Intern audit update FromJSON" $ do
+        it "distinguishes omitted plan justification from an explicit clear" $ do
+            case eitherDecode "{}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected empty plan patch to decode, got: " <> err)
+                Right payload -> do
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Nothing
+                    InternAudit.iapuApproveException payload `shouldBe` Nothing
+                    InternAudit.iapuStatus payload `shouldBe` Nothing
 
-        it "parses object payloads that provide the role field" $
-            decodeRole "{\"role\":\"Teacher\"}" `shouldBe` Right (RolePayload "Teacher")
+            case eitherDecode "{\"iapuCompletionJustification\":null}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected plan justification clear to decode, got: " <> err)
+                Right payload ->
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Just Nothing
 
-        it "parses object payloads that provide a value field" $
-            decodeRole "{\"value\":\"Artist\"}" `shouldBe` Right (RolePayload "Artist")
+            case eitherDecode "{\"iapuCompletionJustification\":\"Approved exception\"}" :: Either String InternAudit.InternAuditPlanUpdate of
+                Left err -> expectationFailure ("Expected plan justification update to decode, got: " <> err)
+                Right payload ->
+                    InternAudit.iapuCompletionJustification payload `shouldBe` Just (Just "Approved exception")
 
-        it "fails when neither role nor value is present" $
-            decodeRole "{}" `shouldSatisfy` isLeft
+        it "preserves explicit clears for every nullable execution field" $
+            case eitherDecode
+                "{\"iteuActualResult\":null,\"iteuPersistedStateObserved\":null,\"iteuSideEffectsObserved\":null,\"iteuBlockerReason\":null,\"iteuEvidenceSummary\":null}"
+                :: Either String InternAudit.InternTestExecutionUpdate of
+                Left err -> expectationFailure ("Expected execution clears to decode, got: " <> err)
+                Right payload -> do
+                    InternAudit.iteuStatus payload `shouldBe` Nothing
+                    InternAudit.iteuActualResult payload `shouldBe` Just Nothing
+                    InternAudit.iteuPersistedStateObserved payload `shouldBe` Just Nothing
+                    InternAudit.iteuSideEffectsObserved payload `shouldBe` Just Nothing
+                    InternAudit.iteuBlockerReason payload `shouldBe` Just Nothing
+                    InternAudit.iteuEvidenceSummary payload `shouldBe` Just Nothing
 
-        it "fails when both role and value are present to avoid ambiguous role assignment bodies" $
-            decodeRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
+    describe "verifyMetaWebhookSignature" $ do
+        it "requires Meta's sha256-prefixed HMAC header before trusting webhook bodies" $ do
+            let body = BL8.pack "{}"
+                digest = "77325902caca812dc259733aacd046b73817372c777b8d95b402647474516e13"
+                validHeader = "sha256=" <> digest
 
-        it "rejects unexpected object keys so role assignment cannot silently ignore over-posted fields" $
-            decodeRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
-
-    describe "RolePayload LooseJSON MimeUnrender" $ do
-        it "still accepts plain text role bodies sent as application/json" $
-            decodeLooseRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
-
-        it "rejects malformed or ambiguous JSON-like bodies instead of treating them as raw role text" $ do
-            decodeLooseRole "{\"role\":\"Teacher\",\"value\":\"Artist\"}" `shouldSatisfy` isLeft
-            decodeLooseRole "{\"role\":\"Teacher\",\"active\":false}" `shouldSatisfy` isLeft
-            decodeLooseRole "{}" `shouldSatisfy` isLeft
-
-        it "rejects invalid UTF-8 bytes instead of throwing while applying raw-role fallback parsing" $
-            decodeLooseRole invalidUtf8 `shouldSatisfy` isLeft
-
-    describe "RolePayload text MimeUnrender" $ do
-        it "accepts valid plain-text role bodies across supported content types" $ do
-            decodePlainRole "Teacher" `shouldBe` Right (RolePayload "Teacher")
-            decodeOctetRole "Engineer" `shouldBe` Right (RolePayload "Engineer")
-
-        it "rejects invalid UTF-8 bytes before role assignment validation" $ do
-            decodePlainRole invalidUtf8 `shouldSatisfy` isLeft
-            decodeOctetRole invalidUtf8 `shouldSatisfy` isLeft
-
-    describe "UserRoleUpdatePayload FromJSON" $ do
-        it "accepts canonical admin role update payloads" $
-            case decodeUserRoleUpdate "{\"roles\":[\"Admin\",\"Teacher\"]}" of
-                Left err ->
-                    expectationFailure ("Expected canonical user role update payload to decode, got: " <> err)
-                Right (UserRoleUpdatePayload rolesVal) ->
-                    rolesVal `shouldBe` [Admin, Teacher]
-
-        it "rejects unexpected keys so role updates cannot silently ignore over-posted fields" $
-            decodeUserRoleUpdate
-                "{\"roles\":[\"Admin\"],\"active\":false}"
+            verifyMetaWebhookSignature (Just "secret") (Just validHeader) body
+                `shouldSatisfy` isRightUnit
+            verifyMetaWebhookSignature Nothing Nothing body
+                `shouldSatisfy` isRightUnit
+            verifyMetaWebhookSignature (Just "secret") (Just ("SHA256=" <> digest)) body
                 `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature
+                (Just "secret")
+                (Just ("sha256=" <> "a" <> T.drop 1 digest))
+                body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") (Just digest) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") (Just (" " <> validHeader <> " ")) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") (Just ("sha256=" <> T.take 63 digest)) body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature
+                (Just "secret")
+                (Just ("sha256=" <> T.take 63 digest <> "z"))
+                body
+                `shouldSatisfy` isLeft
+            verifyMetaWebhookSignature (Just "secret") Nothing body
+                `shouldSatisfy` isLeft
+
+    describe "ArtistTipRequest FromJSON" $ do
+        it "normalizes canonical tip payloads into the Stripe request contract" $
+            case decodeArtistTipRequest
+                "{\"amountCents\":2500,\"currency\":\" USD \",\"tipperName\":\" Ada Lovelace \",\"tipperEmail\":\" ADA@EXAMPLE.COM \",\"message\":\" gracias \"}" of
+                Left err ->
+                    expectationFailure ("Expected artist tip payload to decode, got: " <> err)
+                Right (ArtistTipRequest amountVal currencyVal nameVal emailVal messageVal) -> do
+                    amountVal `shouldBe` 2500
+                    currencyVal `shouldBe` "usd"
+                    nameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    messageVal `shouldBe` Just "gracias"
+
+        it "rejects malformed tip payloads before handler or Stripe IO" $ do
+            decodeArtistTipRequest
+                "{\"amountCents\":0,\"currency\":\"usd\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"US1\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"tipperEmail\":\"not-an-email\"}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"tipperName\":null}"
+                `shouldSatisfy` isLeft
+            decodeArtistTipRequest
+                "{\"amountCents\":1000,\"currency\":\"usd\",\"unexpected\":true}"
+                `shouldSatisfy` isLeft
+
+    describe "RefundDTO currency contract" $ do
+        it "carries the refunded order currency with the minor-unit amount" $
+            case
+                decodeRefundDTO
+                    "{\"refundOrderId\":\"order-7\",\"refundAmountCents\":2500,\"refundCurrency\":\"EUR\",\"refundStatus\":\"pending\"}"
+            of
+                Left err ->
+                    expectationFailure ("Expected refund payload to decode, got: " <> err)
+                Right refund -> do
+                    SocialEvents.refundAmountCents refund `shouldBe` 2500
+                    SocialEvents.refundCurrency refund `shouldBe` "EUR"
 
     describe "Dropdown option write payload FromJSON" $ do
         it "accepts canonical admin dropdown create and update payloads" $ do
             case decodeDropdownOptionCreate
-                "{\"docValue\":\"stage\",\"docLabel\":\"Stage\",\"docSortOrder\":3,\"docActive\":true}"
-             of
+                "{\"docValue\":\"stage\",\"docLabel\":\"Stage\",\"docSortOrder\":3,\"docActive\":true}" of
                 Left err ->
                     expectationFailure ("Expected dropdown option create payload to decode, got: " <> err)
                 Right (DropdownOptionCreate valueVal labelVal sortOrderVal activeVal) -> do
@@ -125,8 +182,7 @@ spec = do
                     activeVal `shouldBe` Just True
 
             case decodeDropdownOptionUpdate
-                "{\"douValue\":\"stage-two\",\"douLabel\":null,\"douSortOrder\":4,\"douActive\":false}"
-             of
+                "{\"douValue\":\"stage-two\",\"douLabel\":null,\"douSortOrder\":4,\"douActive\":false}" of
                 Left err ->
                     expectationFailure ("Expected dropdown option update payload to decode, got: " <> err)
                 Right (DropdownOptionUpdate valueVal labelVal sortOrderVal activeVal) -> do
@@ -142,6 +198,17 @@ spec = do
             decodeDropdownOptionUpdate
                 "{\"douActive\":false,\"active\":true}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null dropdown create defaults so active fallback stays intentional" $
+            case decodeDropdownOptionCreate "{\"docValue\":\"stage\",\"docActive\":null}" of
+                Left err ->
+                    err `shouldContain` "docActive must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null dropdown active default to be rejected, got: " <> show value)
+
+        it "rejects empty dropdown updates instead of accepting a silent no-op patch" $
+            decodeDropdownOptionUpdate "{}" `shouldSatisfy` isLeft
 
     describe "ChatKitSessionRequest FromJSON" $ do
         it "accepts canonical top-level and nested workflow selectors" $ do
@@ -175,6 +242,21 @@ spec = do
             decodeChatKitSession "{\"workflowId\":\"wf_primary\",\"unexpected\":true}" `shouldSatisfy` isLeft
             decodeChatKitSession "{\"workflow\":{\"id\":\"wf_nested\",\"label\":\"default\"}}" `shouldSatisfy` isLeft
 
+        it "rejects explicit null workflow selectors instead of falling back to server defaults" $ do
+            case decodeChatKitSession "{\"workflowId\":null}" of
+                Left err ->
+                    err `shouldContain` "workflowId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null workflowId to be rejected, got: " <> show value)
+
+            case decodeChatKitSession "{\"workflow\":null}" of
+                Left err ->
+                    err `shouldContain` "workflow must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null workflow to be rejected, got: " <> show value)
+
     describe "TidalAgentRequest FromJSON" $ do
         it "accepts canonical requests and trims explicit prompt/model selectors" $ do
             case decodeTidalAgentRequest "{\"prompt\":\"  make a mellow bassline  \",\"model\":\" gpt-4o-mini \"}" of
@@ -202,23 +284,70 @@ spec = do
                     modelVal `shouldBe` Just "ft:gpt-4o-mini:tdf:tidal:abc123"
 
         it
-            "rejects blank, malformed, or unexpected model selectors before upstream calls"
+            "rejects malformed prompts and model selectors before upstream calls"
             $ do
-            decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt/4o-mini?preview=1")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt-4o\\nmini")
-                `shouldSatisfy` isLeft
-            decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
+                decodeTidalAgentRequest "{\"prompt\":\"   \"}" `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt (BL8.pack (replicate 2001 'a')))
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u0000beat")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithPrompt "play\\u202Ebeat")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "   ") `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt 4o-mini")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt/4o-mini?preview=1")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest (tidalAgentRequestWithModel "gpt-4o\\nmini")
+                    `shouldSatisfy` isLeft
+                decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"unexpected\":true}" `shouldSatisfy` isLeft
+
+        it "rejects explicit null model selectors instead of falling back to configured defaults" $
+            case decodeTidalAgentRequest "{\"prompt\":\"play a broken beat\",\"model\":null}" of
+                Left err ->
+                    err `shouldContain` "model must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null tidal-agent model to be rejected, got: " <> show value)
+
+    describe "GenerateSessionInvoiceReq FromJSON" $ do
+        it "keeps omitted customerId as the only session-client fallback signal" $ do
+            let payload =
+                    "{\"currency\":\"USD\",\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}],\"issueSri\":false}"
+            case decodeGenerateSessionInvoice payload of
+                Left err ->
+                    expectationFailure
+                        ("Expected session invoice payload without customerId to decode, got: " <> err)
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _) -> do
+                    customerIdVal `shouldBe` Nothing
+                    currencyVal `shouldBe` Just "USD"
+                    length lineItemsVal `shouldBe` 1
+                    issueSriVal `shouldBe` Just False
+
+            case decodeGenerateSessionInvoice
+                "{\"customerId\":42,\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}]}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected explicit session invoice customerId to decode, got: " <> err)
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _) ->
+                    customerIdVal `shouldBe` Just 42
+
+        it "rejects null customerId instead of silently using the session-client fallback" $
+            case decodeGenerateSessionInvoice
+                "{\"customerId\":null,\"lineItems\":[{\"description\":\"Tracking\",\"quantity\":1,\"unitCents\":9000}]}" of
+                Left err ->
+                    err
+                        `shouldContain` "customerId must be omitted instead of null to use the session client fallback"
+                Right value ->
+                    expectationFailure
+                        ( "Expected null session invoice customerId to be rejected, got: "
+                            <> show value
+                        )
 
     describe "social reply request FromJSON" $ do
-        it "accepts canonical manual reply payloads" $ do
+        it "accepts canonical and legacy manual reply payloads" $ do
             case decodeInstagramReply
-                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}"
-             of
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"ig-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Instagram reply payload to decode, got: " <> err)
                 Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
@@ -226,9 +355,17 @@ spec = do
                     messageVal `shouldBe` "Hola"
                     externalIdVal `shouldBe` Just "ig-msg-1"
 
+            case decodeInstagramReply
+                "{\"irSenderId\":\"ig-sender\",\"irMessage\":\"Hola\",\"irExternalId\":\"ig-msg-1\"}" of
+                Left err ->
+                    expectationFailure ("Expected legacy Instagram reply payload to decode, got: " <> err)
+                Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "ig-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "ig-msg-1"
+
             case decodeFacebookReply
-                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}"
-             of
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"fb-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Facebook reply payload to decode, got: " <> err)
                 Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
@@ -236,9 +373,17 @@ spec = do
                     messageVal `shouldBe` "Hola"
                     externalIdVal `shouldBe` Just "fb-msg-1"
 
+            case decodeFacebookReply
+                "{\"frSenderId\":\"fb-sender\",\"frMessage\":\"Hola\",\"frExternalId\":\"fb-msg-1\"}" of
+                Left err ->
+                    expectationFailure ("Expected legacy Facebook reply payload to decode, got: " <> err)
+                Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "fb-sender"
+                    messageVal `shouldBe` "Hola"
+                    externalIdVal `shouldBe` Just "fb-msg-1"
+
             case decodeWhatsAppReply
-                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":\"wa-msg-1\"}"
-             of
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":\"wa-msg-1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical WhatsApp reply payload to decode, got: " <> err)
                 Right (API.WhatsAppReplyReq senderVal messageVal externalIdVal) -> do
@@ -256,28 +401,74 @@ spec = do
             decodeWhatsAppReply
                 "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            case decodeWhatsAppReply
+                "{\"wrSenderId\":\"+593991234567\",\"wrMessage\":\"Hola\",\"wrExternalId\":null}" of
+                Left err ->
+                    err `shouldContain` "wrExternalId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null WhatsApp reply target to be rejected, got: " <> show value)
+
+        it "normalizes social reply ids and text before handler fallback dispatch" $ do
+            case decodeInstagramReply
+                "{\"senderId\":\" ig-sender_1 \",\"message\":\" Hola\\nlinea dos \",\"externalId\":\" mid.ig.1 \"}" of
+                Left err ->
+                    expectationFailure ("Expected normalized Instagram reply payload, got: " <> err)
+                Right (Instagram.InstagramReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "ig-sender_1"
+                    messageVal `shouldBe` "Hola\nlinea dos"
+                    externalIdVal `shouldBe` Just "mid.ig.1"
+
+            case decodeFacebookReply
+                "{\"senderId\":\" fb-sender_1 \",\"message\":\" Hola\\tMeta \",\"externalId\":\" mid.fb.1 \"}" of
+                Left err ->
+                    expectationFailure ("Expected normalized Facebook reply payload, got: " <> err)
+                Right (Facebook.FacebookReplyReq senderVal messageVal externalIdVal) -> do
+                    senderVal `shouldBe` "fb-sender_1"
+                    messageVal `shouldBe` "Hola\tMeta"
+                    externalIdVal `shouldBe` Just "mid.fb.1"
+
+        it "rejects malformed social reply fields before dispatch fallbacks run" $ do
+            decodeInstagramReply
+                "{\"senderId\":\"   \",\"message\":\"Hola\"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb sender\",\"message\":\"Hola\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramReply
+                "{\"senderId\":\"ig-sender\",\"message\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\\u0000\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramReply
+                "{\"senderId\":\"ig-sender\",\"message\":\"Hola\",\"externalId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeFacebookReply
+                "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"mid\\u202E1\"}"
+                `shouldSatisfy` isLeft
 
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"}}"
-             of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
-                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal) -> do
-                        fullNameVal `shouldBe` Just "Ada Lovelace"
-                        emailVal `shouldBe` Just "ada@example.com"
-                        phoneVal `shouldBe` Just "+593991234567"
-                        sourceVal `shouldBe` "landing"
-                        howHeardVal `shouldBe` Just "instagram"
-                        case utmVal of
-                            Nothing ->
-                                expectationFailure "Expected canonical course registration payload to preserve utm tags"
-                            Just (Courses.UTMTags utmSourceVal utmMediumVal utmCampaignVal utmContentVal) -> do
-                                    utmSourceVal `shouldBe` Just "ig"
-                                    utmMediumVal `shouldBe` Just "social"
-                                    utmCampaignVal `shouldBe` Just "launch"
-                                    utmContentVal `shouldBe` Just "reel"
+                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal) -> do
+                    fullNameVal `shouldBe` Just "Ada Lovelace"
+                    emailVal `shouldBe` Just "ada@example.com"
+                    phoneVal `shouldBe` Just "+593991234567"
+                    sourceVal `shouldBe` "landing"
+                    howHeardVal `shouldBe` Just "instagram"
+                    termsAcceptedVal `shouldBe` Just True
+                    case utmVal of
+                        Nothing ->
+                            expectationFailure "Expected canonical course registration payload to preserve utm tags"
+                        Just (Courses.UTMTags utmSourceVal utmMediumVal utmCampaignVal utmContentVal) -> do
+                            utmSourceVal `shouldBe` Just "ig"
+                            utmMediumVal `shouldBe` Just "social"
+                            utmCampaignVal `shouldBe` Just "launch"
+                            utmContentVal `shouldBe` Just "reel"
 
         it "rejects unexpected top-level or nested utm keys so malformed registration bodies fail explicitly" $ do
             decodeCourseRegistration
@@ -287,11 +478,52 @@ spec = do
                 "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":\"ig\",\"campaign\":\"launch\",\"extra\":\"typo\"}}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null registration fields instead of treating them as fallback omissions" $ do
+            decodeCourseRegistration
+                "{\"fullName\":null,\"email\":\"ada@example.com\",\"source\":\"landing\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistration
+                "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistration
+                "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":null}}"
+                `shouldSatisfy` isLeft
+
+    describe "CoursePaymentIntentRequest FromJSON" $ do
+        it "accepts omitted and canonical mobile Stripe version selectors" $ do
+            case decodeCoursePaymentIntent "{}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected omitted course payment intent selector to decode, got: " <> err)
+                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
+                    mobileSdkStripeVersionVal `shouldBe` Nothing
+
+            case decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\" 2026-04-22.dahlia \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected course payment intent payload to decode, got: " <> err)
+                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
+                    mobileSdkStripeVersionVal `shouldBe` Just "2026-04-22.dahlia"
+
+        it "rejects ambiguous or unsafe mobile Stripe version selectors" $ do
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":null}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\\nInjected: yes\"}"
+                `shouldSatisfy` isLeft
+            decodeCoursePaymentIntent
+                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\",\"stripeVersion\":\"typo\"}"
+                `shouldSatisfy` isLeft
+
     describe "AdsInquiry FromJSON" $ do
         it "accepts canonical public ads inquiry payloads" $
             case decodeAdsInquiry
-                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"course\":\"Ableton\",\"message\":\"Quiero info\",\"channel\":\"instagram\"}"
-             of
+                "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"course\":\"Ableton\",\"message\":\"Quiero info\",\"channel\":\"instagram\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical ads inquiry payload to decode, got: " <> err)
                 Right (API.AdsInquiry nameVal emailVal phoneVal courseVal messageVal channelVal) -> do
@@ -307,11 +539,28 @@ spec = do
                 "{\"name\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"message\":\"Quiero info\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null inquiry fields so contact omission stays intentional" $ do
+            let assertNullRejected fieldName rawPayload =
+                    case decodeAdsInquiry rawPayload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null ads inquiry field to fail, got: " <> show payload)
+            mapM_
+                (uncurry assertNullRejected)
+                [ ("name", "{\"name\":null,\"email\":\"ada@example.com\"}")
+                , ("email", "{\"name\":\"Ada\",\"email\":null}")
+                , ("phone", "{\"name\":\"Ada\",\"phone\":null}")
+                , ("course", "{\"name\":\"Ada\",\"course\":null}")
+                , ("message", "{\"name\":\"Ada\",\"message\":null}")
+                , ("channel", "{\"name\":\"Ada\",\"channel\":null}")
+                ]
+
     describe "AdsAssistRequest FromJSON" $ do
         it "accepts canonical public ads assist payloads" $
             case decodeAdsAssist
-                "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":\"whatsapp\",\"aarAdId\":42,\"aarCampaignId\":7}"
-             of
+                "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":\"whatsapp\",\"aarAdId\":42,\"aarCampaignId\":7}" of
                 Left err ->
                     expectationFailure ("Expected canonical ads assist payload to decode, got: " <> err)
                 Right (DTO.AdsAssistRequest adIdVal campaignIdVal messageVal channelVal partyIdVal) -> do
@@ -326,11 +575,26 @@ spec = do
                 "{\"aarMessage\":\"Responder al lead\",\"message\":\"typoed duplicate\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback selectors so assist context omission stays intentional" $ do
+            let assertNullRejected fieldName rawPayload =
+                    case decodeAdsAssist rawPayload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right payload ->
+                            expectationFailure
+                                ("Expected null ads assist selector to fail, got: " <> show payload)
+            mapM_
+                (uncurry assertNullRejected)
+                [ ("aarAdId", "{\"aarMessage\":\"Responder al lead\",\"aarAdId\":null}")
+                , ("aarCampaignId", "{\"aarMessage\":\"Responder al lead\",\"aarCampaignId\":null}")
+                , ("aarChannel", "{\"aarMessage\":\"Responder al lead\",\"aarChannel\":null}")
+                , ("aarPartyId", "{\"aarMessage\":\"Responder al lead\",\"aarPartyId\":null}")
+                ]
+
     describe "Ads admin write payload FromJSON" $ do
         it "accepts canonical campaign, ad creative, and example write payloads" $ do
             case decodeCampaignUpsert
-                "{\"cuName\":\"Meta Leads\",\"cuObjective\":\"book trials\",\"cuPlatform\":\"instagram\",\"cuStatus\":\"active\",\"cuBudgetCents\":12000}"
-             of
+                "{\"cuName\":\"Meta Leads\",\"cuObjective\":\"book trials\",\"cuPlatform\":\"instagram\",\"cuStatus\":\"active\",\"cuBudgetCents\":12000}" of
                 Left err ->
                     expectationFailure ("Expected campaign payload to decode, got: " <> err)
                 Right (DTO.CampaignUpsert idVal nameVal objectiveVal platformVal statusVal budgetVal _ _) -> do
@@ -342,8 +606,7 @@ spec = do
                     budgetVal `shouldBe` Just 12000
 
             case decodeAdCreativeUpsert
-                "{\"acuCampaignId\":7,\"acuExternalId\":\"ad-123\",\"acuName\":\"Trial class reel\",\"acuChannel\":\"instagram\",\"acuStatus\":\"active\"}"
-             of
+                "{\"acuCampaignId\":7,\"acuExternalId\":\"ad-123\",\"acuName\":\"Trial class reel\",\"acuChannel\":\"instagram\",\"acuStatus\":\"active\"}" of
                 Left err ->
                     expectationFailure ("Expected ad creative payload to decode, got: " <> err)
                 Right (DTO.AdCreativeUpsert idVal campaignIdVal externalIdVal nameVal channelVal _ _ _ statusVal _) -> do
@@ -355,8 +618,7 @@ spec = do
                     statusVal `shouldBe` Just "active"
 
             case decodeAdConversationExampleCreate
-                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro, te cuento opciones\",\"aecTags\":[\"lead\",\"trial\"]}"
-             of
+                "{\"aecUserMessage\":\"Quiero info\",\"aecAssistantMessage\":\"Claro, te cuento opciones\",\"aecTags\":[\"lead\",\"trial\"]}" of
                 Left err ->
                     expectationFailure ("Expected ad conversation example payload to decode, got: " <> err)
                 Right (DTO.AdConversationExampleCreate userMessageVal assistantMessageVal tagsVal) -> do
@@ -378,12 +640,11 @@ spec = do
     describe "CmsContentIn FromJSON" $ do
         it "accepts canonical CMS content payloads" $
             case decodeCmsContent
-                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}"
-             of
+                "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"title\":\"Hero\",\"status\":\"draft\",\"payload\":{\"headline\":\"Create faster\"}}" of
                 Left err ->
                     expectationFailure ("Expected canonical CMS content payload to decode, got: " <> err)
-                Right (API.CmsContentIn slugVal localeVal titleVal statusVal payloadVal) -> do
-                    slugVal `shouldBe` "homepage-hero"
+                Right (API.CmsContentIn contentIdVal localeVal titleVal statusVal payloadVal) -> do
+                    contentIdVal `shouldBe` "20000000-0000-4000-8000-000000000001"
                     localeVal `shouldBe` "en"
                     titleVal `shouldBe` Just "Hero"
                     statusVal `shouldBe` Just "draft"
@@ -391,14 +652,21 @@ spec = do
 
         it "rejects unexpected fields so typoed CMS writes fail explicitly instead of becoming partial updates" $ do
             decodeCmsContent
-                "{\"slug\":\"homepage-hero\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
+                "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"payload\":{\"headline\":\"Create faster\"},\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null payloads so omitted payloads and fallback misses stay distinguishable" $
+            case decodeCmsContent "{\"contentId\":\"20000000-0000-4000-8000-000000000001\",\"locale\":\"en\",\"payload\":null}" of
+                Left err ->
+                    err `shouldContain` "payload must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected explicit null CMS payload to be rejected, got: " <> show value)
 
     describe "CourseRegistrationFollowUp payload FromJSON" $ do
         it "accepts canonical follow-up create and update payloads" $ do
             case decodeFollowUpCreate
-                "{\"entryType\":\"call\",\"subject\":\"Confirm payment\",\"notes\":\"Client asked to pay tomorrow\",\"attachmentUrl\":\"https://files.example.com/receipt.pdf\",\"attachmentName\":\"receipt.pdf\",\"nextFollowUpAt\":\"2026-05-02T15:00:00Z\"}"
-             of
+                "{\"entryType\":\"call\",\"subject\":\"Confirm payment\",\"notes\":\"Client asked to pay tomorrow\",\"attachmentUrl\":\"https://files.example.com/receipt.pdf\",\"attachmentName\":\"receipt.pdf\",\"nextFollowUpAt\":\"2026-05-02T15:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course follow-up create payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationFollowUpCreate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
@@ -410,8 +678,7 @@ spec = do
                     nextFollowUpAtVal `shouldBe` Just "2026-05-02T15:00:00Z"
 
             case decodeFollowUpUpdate
-                "{\"notes\":\"Moved reminder to next week\",\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
-             of
+                "{\"notes\":\"Moved reminder to next week\",\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course follow-up update payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationFollowUpUpdate entryTypeVal subjectVal notesVal attachmentUrlVal attachmentNameVal nextFollowUpAtVal) -> do
@@ -435,7 +702,8 @@ spec = do
                 Right (Courses.CourseRegistrationFollowUpUpdate _ _ _ _ _ nextFollowUpAtVal) ->
                     nextFollowUpAtVal `shouldBe` Just Nothing
 
-        it "rejects unexpected keys so malformed follow-up writes fail explicitly" $ do
+        it "rejects empty or unexpected follow-up updates so malformed writes fail explicitly" $ do
+            decodeFollowUpUpdate "{}" `shouldSatisfy` isLeft
             decodeFollowUpCreate
                 "{\"entryType\":\"call\",\"notes\":\"Client asked to pay tomorrow\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
@@ -443,17 +711,42 @@ spec = do
                 "{\"notes\":\"Moved reminder to next week\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null follow-up fields except the reminder clear operation" $ do
+            decodeFollowUpCreate
+                "{\"entryType\":null,\"notes\":\"Client asked to pay tomorrow\"}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpCreate
+                "{\"notes\":\"Client asked to pay tomorrow\",\"nextFollowUpAt\":null}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpUpdate
+                "{\"subject\":null,\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+            decodeFollowUpUpdate
+                "{\"notes\":null,\"nextFollowUpAt\":\"2026-05-09T15:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
     describe "Course admin write payload FromJSON" $ do
-        it "accepts canonical status, receipt, and upsert payloads" $ do
+        it "accepts canonical status, notes, receipt, and upsert payloads" $ do
             case decodeCourseRegistrationStatusUpdate "{\"status\":\"paid\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course status update payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
                     statusVal `shouldBe` "paid"
 
+            case decodeCourseRegistrationStatusUpdate "{\"status\":\" Pending Payment \"}" of
+                Left err ->
+                    expectationFailure ("Expected normalized course status update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationStatusUpdate statusVal) ->
+                    statusVal `shouldBe` "pending_payment"
+
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":\"Follow up after bank transfer\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical course notes update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationNotesUpdate notesVal) ->
+                    notesVal `shouldBe` Just "Follow up after bank transfer"
+
             case decodeCourseRegistrationReceiptCreate
-                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}"
-             of
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":\"receipt.pdf\",\"mimeType\":\"application/pdf\",\"notes\":\"Banco Pichincha\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course receipt create payload to decode, got: " <> err)
                 Right (Courses.CourseRegistrationReceiptCreate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
@@ -462,9 +755,18 @@ spec = do
                     mimeTypeVal `shouldBe` Just "application/pdf"
                     notesVal `shouldBe` Just "Banco Pichincha"
 
+            case decodeCourseRegistrationReceiptUpdate
+                "{\"notes\":\"Comprobante actualizado\"}" of
+                Left err ->
+                    expectationFailure ("Expected canonical course receipt update payload to decode, got: " <> err)
+                Right (Courses.CourseRegistrationReceiptUpdate fileUrlVal fileNameVal mimeTypeVal notesVal) -> do
+                    fileUrlVal `shouldBe` Nothing
+                    fileNameVal `shouldBe` Nothing
+                    mimeTypeVal `shouldBe` Nothing
+                    notesVal `shouldBe` Just "Comprobante actualizado"
+
             case decodeCourseUpsert
-                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}"
-             of
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":\"Weekend intensive\",\"format\":\"Hybrid\",\"duration\":\"4 weeks\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":15,\"sessionDurationHours\":4,\"locationLabel\":\"TDF HQ\",\"locationMapUrl\":\"https://maps.example.com/tdf\",\"whatsappCtaUrl\":\"https://wa.me/593991234567\",\"landingUrl\":\"https://tdf.example.com/courses/production-bootcamp\",\"daws\":[\"Ableton\"],\"includes\":[\"Mentoring\"],\"instructorName\":\"Ada\",\"instructorBio\":\"Producer\",\"instructorAvatarUrl\":\"https://cdn.example.com/ada.jpg\",\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":1}],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":1}]}" of
                 Left err ->
                     expectationFailure ("Expected canonical course upsert payload to decode, got: " <> err)
                 Right (Courses.CourseUpsert slugVal titleVal _ _ _ priceCentsVal currencyVal capacityVal _ _ _ _ _ _ dawsVal includesVal instructorNameVal _ _ sessionsVal syllabusVal) -> do
@@ -495,6 +797,9 @@ spec = do
             decodeCourseRegistrationStatusUpdate
                 "{\"status\":\"paid\",\"updatedBy\":\"admin\"}"
                 `shouldSatisfy` isLeft
+            decodeCourseRegistrationNotesUpdate
+                "{\"notes\":\"Follow up\",\"adminNotes\":\"typo duplicate\"}"
+                `shouldSatisfy` isLeft
             decodeCourseRegistrationReceiptCreate
                 "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"status\":\"paid\"}"
                 `shouldSatisfy` isLeft
@@ -508,11 +813,80 @@ spec = do
                 "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"extra\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects invalid course registration status updates before handler fallback validation" $ do
+            decodeCourseRegistrationStatusUpdate "{\"status\":\"   \"}" `shouldSatisfy` isLeft
+            decodeCourseRegistrationStatusUpdate "{\"status\":\"refunded\"}" `shouldSatisfy` isLeft
+
+        it "rejects explicit null course upsert fields so fallback metadata stays unambiguous" $ do
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"subtitle\":null,\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"sessionStartHour\":null,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[{\"label\":\"Kickoff\",\"date\":\"2026-05-02\",\"order\":null}],\"syllabus\":[]}"
+                `shouldSatisfy` isLeft
+            decodeCourseUpsert
+                "{\"slug\":\"production-bootcamp\",\"title\":\"Production Bootcamp\",\"priceCents\":15000,\"currency\":\"USD\",\"capacity\":16,\"daws\":[],\"includes\":[],\"sessions\":[],\"syllabus\":[{\"title\":\"Intro\",\"topics\":[\"Ableton\"],\"order\":null}]}"
+                `shouldSatisfy` isLeft
+
+        it "rejects empty course receipt updates instead of accepting timestamp-only patches" $ do
+            decodeCourseRegistrationReceiptUpdate "{}" `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileUrl\":null,\"fileName\":null,\"mimeType\":null,\"notes\":null}"
+                `shouldSatisfy` isLeft
+
+        it "requires explicit notes text so empty or null updates cannot clear notes accidentally" $ do
+            case decodeCourseRegistrationNotesUpdate "{}" of
+                Left err ->
+                    err `shouldContain` "CourseRegistrationNotesUpdate must include notes"
+                Right value ->
+                    expectationFailure
+                        ("Expected empty course notes update to fail, got: " <> show value)
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":null}" of
+                Left err ->
+                    err `shouldContain` "notes must be a string"
+                Right value ->
+                    expectationFailure
+                        ("Expected null course notes update to fail, got: " <> show value)
+            case decodeCourseRegistrationNotesUpdate "{\"notes\":\"   \"}" of
+                Left err ->
+                    expectationFailure
+                        ( "Expected blank string course notes update to remain an explicit "
+                            <> "clear operation, got: "
+                            <> err
+                        )
+                Right (Courses.CourseRegistrationNotesUpdate notesVal) ->
+                    notesVal `shouldBe` Just "   "
+
+        it "rejects explicit null receipt create/update fields so omitted fields stay unambiguous" $ do
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"fileName\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"mimeType\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptCreate
+                "{\"fileUrl\":\"https://files.example.com/receipt.pdf\",\"notes\":null}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileUrl\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileName\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"mimeType\":null,\"notes\":\"Replaced proof\"}"
+                `shouldSatisfy` isLeft
+            decodeCourseRegistrationReceiptUpdate
+                "{\"fileName\":\"receipt.pdf\",\"notes\":null}"
+                `shouldSatisfy` isLeft
+
     describe "Proposal payload FromJSON" $ do
         it "accepts canonical create, update, and version payloads" $ do
             case decodeProposalCreate
-                "{\"pcTitle\":\"Live session package\",\"pcStatus\":\"draft\",\"pcContactEmail\":\"sales@example.com\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":\"Initial draft\"}"
-             of
+                "{\"pcTitle\":\"Live session package\",\"pcStatus\":\"draft\",\"pcContactEmail\":\"sales@example.com\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":\"Initial draft\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal create payload to decode, got: " <> err)
                 Right (Proposals.ProposalCreate titleVal statusVal _ _ _ contactEmailVal _ _ _ latexVal templateKeyVal versionNotesVal) -> do
@@ -524,8 +898,7 @@ spec = do
                     versionNotesVal `shouldBe` Just "Initial draft"
 
             case decodeProposalUpdate
-                "{\"puTitle\":\"Updated package\",\"puStatus\":\"sent\",\"puClientPartyId\":42,\"puNotes\":\"Waiting on signature\"}"
-             of
+                "{\"puTitle\":\"Updated package\",\"puStatus\":\"sent\",\"puClientPartyId\":42,\"puNotes\":\"Waiting on signature\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal update payload to decode, got: " <> err)
                 Right (Proposals.ProposalUpdate titleVal statusVal _ clientPartyIdVal _ _ _ _ notesVal) -> do
@@ -535,14 +908,42 @@ spec = do
                     notesVal `shouldBe` Just (Just "Waiting on signature")
 
             case decodeProposalVersionCreate
-                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":\"Regenerated PDF\"}"
-             of
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":\"Regenerated PDF\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical proposal version payload to decode, got: " <> err)
                 Right (Proposals.ProposalVersionCreate latexVal templateKeyVal notesVal) -> do
                     latexVal `shouldBe` Nothing
                     templateKeyVal `shouldBe` Just "tdf_live_sessions"
                     notesVal `shouldBe` Just "Regenerated PDF"
+
+        it "distinguishes omitted nullable proposal patch fields from explicit clears" $
+            case decodeProposalUpdate
+                ( BL8.concat
+                    [ "{\"puClientPartyId\":null"
+                    , ",\"puContactEmail\":null"
+                    , ",\"puPipelineCardId\":null"
+                    , ",\"puNotes\":null}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected proposal clear patch payload to decode, got: " <> err)
+                Right
+                    ( Proposals.ProposalUpdate
+                            _
+                            _
+                            _
+                            clientPartyIdVal
+                            _
+                            contactEmailVal
+                            _
+                            pipelineCardIdVal
+                            notesVal
+                        ) -> do
+                        clientPartyIdVal `shouldBe` Just Nothing
+                        contactEmailVal `shouldBe` Just Nothing
+                        pipelineCardIdVal `shouldBe` Just Nothing
+                        notesVal `shouldBe` Just Nothing
 
         it "rejects unexpected keys so malformed proposal writes fail explicitly" $ do
             decodeProposalCreate
@@ -555,36 +956,95 @@ spec = do
                 "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"renderMode\":\"pdf\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty proposal updates instead of accepting silent no-op patches" $
+            decodeProposalUpdate "{}" `shouldSatisfy` isLeft
+
+        it "rejects null proposal title or status updates instead of silently ignoring them" $ do
+            decodeProposalUpdate "{\"puTitle\":null}" `shouldSatisfy` isLeft
+            decodeProposalUpdate "{\"puStatus\":null}" `shouldSatisfy` isLeft
+
+        it "rejects explicit null proposal create fallback fields instead of treating them as omitted" $ do
+            let expectRejected :: String -> BL8.ByteString -> Expectation
+                expectRejected fieldName payload =
+                    case decodeProposalCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null " <> fieldName <> " to fail, got: " <> show value)
+            expectRejected
+                "pcStatus"
+                "{\"pcTitle\":\"Live session package\",\"pcStatus\":null,\"pcTemplateKey\":\"tdf_live_sessions\"}"
+            expectRejected
+                "pcLatex"
+                "{\"pcTitle\":\"Live session package\",\"pcLatex\":null,\"pcTemplateKey\":\"tdf_live_sessions\"}"
+            expectRejected
+                "pcTemplateKey"
+                "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":null}"
+            expectRejected
+                "pcVersionNotes"
+                "{\"pcTitle\":\"Live session package\",\"pcTemplateKey\":\"tdf_live_sessions\",\"pcVersionNotes\":null}"
+
+        it "rejects ambiguous proposal version content sources before handler fallback resolution" $ do
+            decodeProposalVersionCreate
+                "{\"pvcNotes\":\"Regenerated PDF\"}"
+                `shouldSatisfy` isLeft
+            decodeProposalVersionCreate
+                "{\"pvcLatex\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeProposalVersionCreate
+                "{\"pvcLatex\":\"\\\\section{Hi}\",\"pvcTemplateKey\":\"tdf_live_sessions\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null proposal version fields before source validation" $ do
+            let expectRejected :: String -> BL8.ByteString -> Expectation
+                expectRejected fieldName payload =
+                    case decodeProposalVersionCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null " <> fieldName <> " to fail, got: " <> show value)
+            expectRejected
+                "pvcLatex"
+                "{\"pvcLatex\":null}"
+            expectRejected
+                "pvcTemplateKey"
+                "{\"pvcTemplateKey\":null}"
+            expectRejected
+                "pvcNotes"
+                "{\"pvcTemplateKey\":\"tdf_live_sessions\",\"pvcNotes\":null}"
+
     describe "PipelineCard payload FromJSON" $ do
         it "accepts canonical pipeline create and patch payloads" $ do
             case decodePipelineCardCreate
-                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"stage\":\"Inquiry\",\"sortOrder\":2,\"notes\":\"Needs quote\"}"
-             of
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"workflowStateId\":\"00000000-0000-0000-0000-000000000601\",\"sortOrder\":2,\"notes\":\"Needs quote\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card create payload to decode, got: " <> err)
-                Right (PipelineCardCreate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                Right (PipelineCardCreate titleVal artistVal offeringIdVal stateIdVal sortOrderVal notesVal) -> do
                     titleVal `shouldBe` "Demo Lead"
                     artistVal `shouldBe` Just "Ada"
-                    stageVal `shouldBe` Just "Inquiry"
+                    offeringIdVal `shouldBe` "00000000-0000-0000-0000-000000000501"
+                    stateIdVal `shouldBe` Just "00000000-0000-0000-0000-000000000601"
                     sortOrderVal `shouldBe` Just 2
                     notesVal `shouldBe` Just "Needs quote"
 
             case decodePipelineCardUpdate
-                "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}"
-             of
+                "{\"title\":\"Final Quote\",\"artist\":null,\"notes\":null}" of
                 Left err ->
                     expectationFailure ("Expected canonical pipeline card patch payload to decode, got: " <> err)
-                Right (PipelineCardUpdate titleVal artistVal stageVal sortOrderVal notesVal) -> do
+                Right (PipelineCardUpdate titleVal artistVal stateIdVal sortOrderVal notesVal) -> do
                     titleVal `shouldBe` Just "Final Quote"
                     artistVal `shouldBe` Just Nothing
-                    stageVal `shouldBe` Nothing
+                    stateIdVal `shouldBe` Nothing
                     sortOrderVal `shouldBe` Nothing
                     notesVal `shouldBe` Just Nothing
 
         it "rejects unexpected keys so typoed pipeline writes cannot turn into partial creates or silent no-op patches" $ do
             decodePipelineCardCreate
-                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"unexpected\":true}"
+                "{\"title\":\"Demo Lead\",\"artist\":\"Ada\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
+            decodePipelineCardUpdate "{}" `shouldSatisfy` isLeft
             decodePipelineCardUpdate
                 "{\"unexpected\":true}"
                 `shouldSatisfy` isLeft
@@ -592,11 +1052,29 @@ spec = do
                 "{\"title\":\"Final Quote\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null pipeline create fallbacks so omitted defaults stay intentional" $
+            case decodePipelineCardCreate "{\"title\":\"Demo Lead\",\"serviceOfferingId\":\"00000000-0000-0000-0000-000000000501\",\"artist\":null}" of
+                Left err ->
+                    err `shouldContain` "artist must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null pipeline artist create fallback to fail, got: " <> show value)
+
+        it "rejects null non-clearable pipeline patch fields instead of treating them as omitted" $ do
+            decodePipelineCardUpdate
+                "{\"title\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"workflowStateId\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+            decodePipelineCardUpdate
+                "{\"sortOrder\":null,\"notes\":\"Keep note\"}"
+                `shouldSatisfy` isLeft
+
     describe "Session write payload FromJSON" $ do
         it "accepts canonical session create payloads" $
             case decodeSessionCreate
-                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":\"confirmed\"}"
-             of
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":\"confirmed\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical session create payload to decode, got: " <> err)
                 Right (SessionCreate _ _ _ serviceVal _ _ engineerVal _ roomIdsVal _ _ _ _ _ _ statusVal) -> do
@@ -607,16 +1085,16 @@ spec = do
 
         it "preserves explicit nulls on nullable session patch fields" $ do
             case decodeSessionUpdate
-                "{\"suBookingRef\":null,\"suAssistantRef\":null,\"suSampleRate\":null,\"suNotes\":null}"
-             of
+                "{\"suBookingRef\":null,\"suAssistantRef\":null,\"suSampleRate\":null,\"suNotes\":null}" of
                 Left err ->
                     expectationFailure ("Expected nullable session patch payload to decode, got: " <> err)
-                Right SessionUpdate
-                    { suBookingRef = bookingRefVal
-                    , suAssistantRef = assistantRefVal
-                    , suSampleRate = sampleRateVal
-                    , suNotes = notesVal
-                    } -> do
+                Right
+                    SessionUpdate
+                        { suBookingRef = bookingRefVal
+                        , suAssistantRef = assistantRefVal
+                        , suSampleRate = sampleRateVal
+                        , suNotes = notesVal
+                        } -> do
                         bookingRefVal `shouldBe` Just Nothing
                         assistantRefVal `shouldBe` Just Nothing
                         sampleRateVal `shouldBe` Just Nothing
@@ -628,7 +1106,8 @@ spec = do
                 Right SessionUpdate{suNotes = notesVal} ->
                     notesVal `shouldBe` Just (Just "Keep this note")
 
-        it "rejects unexpected session write keys before the handler applies a partial change" $ do
+        it "rejects empty or unexpected session write bodies before the handler applies a partial change" $ do
+            decodeSessionUpdate "{}" `shouldSatisfy` isLeft
             decodeSessionCreate
                 "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"service\":\"typo\"}"
                 `shouldSatisfy` isLeft
@@ -642,24 +1121,43 @@ spec = do
                 "{\"suInputListRows\":[{\"channelNumber\":1,\"mic\":\"typo\"}]}"
                 `shouldSatisfy` isLeft
 
+        it "rejects null session create fallback fields instead of treating them as omitted" $ do
+            case decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "scStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null session status fallback to fail, got: " <> show value)
+
+            case decodeSessionCreate
+                "{\"scService\":\"recording\",\"scStartAt\":\"2026-05-01T15:00:00Z\",\"scEndAt\":\"2026-05-01T16:00:00Z\",\"scEngineerRef\":\"eng-1\",\"scRoomIds\":[\"1\"],\"scInputListRows\":null}" of
+                Left err ->
+                    err `shouldContain` "scInputListRows must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null session input-list fallback to fail, got: " <> show value)
+
+        it "rejects null non-clearable session patch fields instead of treating them as omitted" $ do
+            decodeSessionUpdate
+                "{\"suStatus\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suRoomIds\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+            decodeSessionUpdate
+                "{\"suInputListRows\":null,\"suNotes\":\"Keep this note\"}"
+                `shouldSatisfy` isLeft
+
     describe "InstagramOAuthExchangeRequest FromJSON" $ do
-        it "accepts canonical payloads, trims inputs, and preserves the redirect fallback contract" $ do
+        it "accepts canonical payloads and trims request inputs" $ do
             case decodeInstagramOAuthExchange
-                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}"
-             of
+                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/instagram/callback \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical Instagram OAuth exchange payload to decode, got: " <> err)
                 Right (InstagramOAuth.InstagramOAuthExchangeRequest codeVal redirectUriVal) -> do
                     codeVal `shouldBe` "oauth-code-123"
                     redirectUriVal `shouldBe` Just "https://tdf-app.pages.dev/oauth/instagram/callback"
-
-            case decodeInstagramOAuthExchange
-                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
-             of
-                Left err ->
-                    expectationFailure ("Expected blank Instagram OAuth redirectUri to decode as omitted, got: " <> err)
-                Right (InstagramOAuth.InstagramOAuthExchangeRequest _ redirectUriVal) ->
-                    redirectUriVal `shouldBe` Nothing
 
         it "rejects blank or typoed request bodies before the handler reaches Facebook with ambiguous input" $ do
             decodeInstagramOAuthExchange
@@ -669,14 +1167,42 @@ spec = do
                 "{\"code\":\"oauth code 123\"}"
                 `shouldSatisfy` isLeft
             decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\\u0000\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\\u202E\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                (BL8.concat ["{\"code\":\"", BL8.pack (replicate 4097 'a'), "\"}"])
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/instagram/callback bad\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/instagram/callback\\u202E\"}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\",\"redirectUri\":\"https://tdf-app.pages.dev/"
+                    , BL8.pack (replicate 2049 'a')
+                    , "\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":null}"
+                `shouldSatisfy` isLeft
+            decodeInstagramOAuthExchange
                 "{\"code\":\"oauth-code-123\",\"unexpected\":true}"
                 `shouldSatisfy` isLeft
 
     describe "Calendar admin request FromJSON" $ do
         it "normalizes canonical token exchange and sync payloads before handlers call Google" $ do
             case decodeCalendarTokenExchange
-                "{\"code\":\" oauth-code-123 \",\"redirectUri\":\"   \",\"calendarId\":\" primary \"}"
-             of
+                "{\"code\":\" oauth-code-123 \",\"calendarId\":\" primary \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical calendar token payload to decode, got: " <> err)
                 Right (Calendar.TokenExchangeIn codeVal redirectUriVal calendarIdVal) -> do
@@ -685,8 +1211,7 @@ spec = do
                     calendarIdVal `shouldBe` "primary"
 
             case decodeCalendarSync
-                "{\"calendarId\":\" primary \",\"from\":\"2026-05-02T15:00:00Z\",\"to\":\"2026-05-02T16:00:00Z\"}"
-             of
+                "{\"calendarId\":\" primary \",\"from\":\"2026-05-02T15:00:00Z\",\"to\":\"2026-05-02T16:00:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical calendar sync payload to decode, got: " <> err)
                 Right (Calendar.SyncRequest calendarIdVal fromVal toVal) -> do
@@ -694,7 +1219,23 @@ spec = do
                     show <$> fromVal `shouldBe` Just "2026-05-02 15:00:00 UTC"
                     show <$> toVal `shouldBe` Just "2026-05-02 16:00:00 UTC"
 
+            case decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\" https://tdf-app.pages.dev/configuracion/"
+                    , "integraciones/calendario \""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure ("Expected canonical calendar redirectUri to decode, got: " <> err)
+                Right (Calendar.TokenExchangeIn _ redirectUriVal _) ->
+                    redirectUriVal
+                        `shouldBe` Just "https://tdf-app.pages.dev/configuracion/integraciones/calendario"
+
         it "rejects blank, typoed, or inverted calendar admin bodies before ambiguous Google calls" $ do
+            let oversizedCalendarId =
+                    BL8.pack (replicate (Calendar.maxCalendarIdChars + 1) 'a')
             decodeCalendarTokenExchange
                 "{\"code\":\"   \",\"calendarId\":\"primary\"}"
                 `shouldSatisfy` isLeft
@@ -705,10 +1246,68 @@ spec = do
                 "{\"code\":\"oauth-code-\\u0000\",\"calendarId\":\"primary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
+                "{\"code\":\"oauth code 123\",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-\\u202E\",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\""
+                    , BL8.pack (replicate 4097 'a')
+                    , "\",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"pri\\nmary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"calendarId\":\"team calendar\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\",\"calendarId\":\""
+                    , oversizedCalendarId
+                    , "\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":\"   \",\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                "{\"code\":\"oauth-code-123\",\"redirectUri\":null,\"calendarId\":\"primary\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
                 "{\"code\":\"oauth-code-123\",\"calendarId\":\"primary\",\"syncCursor\":\"stale\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario\\n\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario\\u202E\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+            decodeCalendarTokenExchange
+                ( BL8.concat
+                    [ "{\"code\":\"oauth-code-123\""
+                    , ",\"redirectUri\":\"https://tdf-app.pages.dev/configuracion/integraciones/"
+                    , "calendario bad\""
+                    , ",\"calendarId\":\"primary\"}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
             decodeCalendarSync
                 "{\"calendarId\":\"   \"}"
@@ -717,17 +1316,154 @@ spec = do
                 "{\"calendarId\":\"pri\\nmary\"}"
                 `shouldSatisfy` isLeft
             decodeCalendarSync
+                "{\"calendarId\":\"team calendar\"}"
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
+                (BL8.concat ["{\"calendarId\":\"", oversizedCalendarId, "\"}"])
+                `shouldSatisfy` isLeft
+            decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"from\":\"2026-05-02T16:00:00Z\",\"to\":\"2026-05-02T15:00:00Z\"}"
                 `shouldSatisfy` isLeft
+            case decodeCalendarSync "{\"calendarId\":\"primary\",\"from\":null}" of
+                Left err ->
+                    err `shouldContain` "from must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null calendar sync from bound to be rejected, got: " <> show payload)
+            case decodeCalendarSync "{\"calendarId\":\"primary\",\"to\":null}" of
+                Left err ->
+                    err `shouldContain` "to must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null calendar sync to bound to be rejected, got: " <> show payload)
             decodeCalendarSync
                 "{\"calendarId\":\"primary\",\"status\":\"confirmed\"}"
                 `shouldSatisfy` isLeft
 
+    describe "Drive token request FromJSON" $ do
+        it
+            "normalizes canonical Drive token exchange and refresh payloads before handlers call Google"
+            $ do
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\" 4/0Adeu5OAuthCode \""
+                        , ",\"codeVerifier\":\" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ \"}"
+                        ]
+                    ) of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive token payload to decode, got: " <> err)
+                    Right (DriveTokenExchangeRequest codeVal verifierVal redirectUriVal) -> do
+                        codeVal `shouldBe` "4/0Adeu5OAuthCode"
+                        verifierVal `shouldBe` "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                        redirectUriVal `shouldBe` Nothing
+
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"4/0Adeu5OAuthCode\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\" https://tdf-app.pages.dev/oauth/"
+                        , "google-drive/callback \"}"
+                        ]
+                    ) of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive redirectUri payload to decode, got: " <> err)
+                    Right (DriveTokenExchangeRequest _ _ redirectUriVal) ->
+                        redirectUriVal
+                            `shouldBe` Just "https://tdf-app.pages.dev/oauth/google-drive/callback"
+
+                case decodeDriveTokenRefresh "{\"refreshToken\":\" 1//refresh-token_ABC.123 \"}" of
+                    Left err ->
+                        expectationFailure
+                            ("Expected canonical Drive refresh payload to decode, got: " <> err)
+                    Right (DriveTokenRefreshRequest refreshTokenVal) ->
+                        refreshTokenVal `shouldBe` "1//refresh-token_ABC.123"
+
+        it
+            "rejects blank, typoed, or malformed Drive token bodies before ambiguous Google calls"
+            $ do
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "   " "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( driveTokenExchangeJson
+                        "oauth\\u202Ecode"
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( driveTokenExchangeJson
+                        "oauth-cod\\u00E9"
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ"
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth-code" "short")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    (driveTokenExchangeJson "oauth-code" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP/")
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"syncCursor\":\"stale\"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\"   \"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                case decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":null}"
+                        ]
+                    ) of
+                    Left err ->
+                        err `shouldContain` "redirectUri must be omitted instead of null"
+                    Right value ->
+                        expectationFailure
+                            ("Expected null Drive redirectUri to be rejected, got: " <> show value)
+                decodeDriveTokenExchange
+                    ( BL8.concat
+                        [ "{\"code\":\"oauth-code\""
+                        , ",\"codeVerifier\":\"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQ\""
+                        , ",\"redirectUri\":\"https://tdf-app.pages.dev/oauth/"
+                        , "google-drive/callback bad\"}"
+                        ]
+                    )
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"   \"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh\\ntoken\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh\\u202Etoken\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh-tok\\u00E9n\"}"
+                    `shouldSatisfy` isLeft
+                decodeDriveTokenRefresh
+                    "{\"refreshToken\":\"refresh-token\",\"refresh_token\":\"legacy\"}"
+                    `shouldSatisfy` isLeft
+
     describe "ServiceMarketplaceBookingReq FromJSON" $ do
         it "accepts canonical service-marketplace booking payloads" $
             case decodeServiceMarketplaceBooking
-                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\"bank_transfer\"}"
-             of
+                "{\"adId\":42,\"slotId\":84,\"title\":\"  Mix review  \",\"notes\":\"Need feedback on vocal balance\",\"paymentMethod\":\" bank_transfer \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical service-marketplace booking payload to decode, got: " <> err)
                 Right (API.ServiceMarketplaceBookingReq adIdVal slotIdVal titleVal notesVal paymentMethodVal) -> do
@@ -744,50 +1480,96 @@ spec = do
             decodeServiceMarketplaceBooking
                 "{\"adId\":42,\"slotId\":84,\"title\":\"   \"}"
                 `shouldSatisfy` isLeft
-
-    describe "Service catalog write payload FromJSON" $ do
-        it "accepts canonical service catalog create and update payloads, including explicit clear updates" $ do
-            case decodeServiceCatalogCreate
-                "{\"sccName\":\"Podcast\",\"sccRateCents\":4500,\"sccCurrency\":\"usd\",\"sccBillingUnit\":\"session\",\"sccActive\":true}"
-             of
-                Left err ->
-                    expectationFailure ("Expected canonical service catalog create payload to decode, got: " <> err)
-                Right (ServiceCatalogCreate nameVal _ _ rateCentsVal currencyVal billingUnitVal taxBpsVal activeVal) -> do
-                    nameVal `shouldBe` "Podcast"
-                    rateCentsVal `shouldBe` Just 4500
-                    currencyVal `shouldBe` Just "usd"
-                    billingUnitVal `shouldBe` Just "session"
-                    taxBpsVal `shouldBe` Nothing
-                    activeVal `shouldBe` Just True
-
-            case decodeServiceCatalogUpdate
-                "{\"scuName\":\"Podcast Pro\",\"scuRateCents\":null,\"scuBillingUnit\":null,\"scuTaxBps\":1200,\"scuActive\":false}"
-             of
-                Left err ->
-                    expectationFailure ("Expected canonical service catalog update payload to decode, got: " <> err)
-                Right (ServiceCatalogUpdate nameVal _ _ rateCentsVal _ billingUnitVal taxBpsVal activeVal) -> do
-                    nameVal `shouldBe` Just "Podcast Pro"
-                    rateCentsVal `shouldBe` Just Nothing
-                    billingUnitVal `shouldBe` Just Nothing
-                    taxBpsVal `shouldBe` Just (Just 1200)
-                    activeVal `shouldBe` Just False
-
-        it "rejects unexpected service catalog write keys instead of silently ignoring caller intent" $ do
-            decodeServiceCatalogCreate
-                "{\"sccName\":\"Podcast\",\"scActive\":false}"
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"paymentMethod\":\"   \"}"
                 `shouldSatisfy` isLeft
-            decodeServiceCatalogUpdate
-                "{\"scuName\":\"Podcast Pro\",\"scActive\":false}"
+
+        it "rejects explicit null fallback selectors so callers must omit them intentionally" $ do
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"title\":null}"
                 `shouldSatisfy` isLeft
-            decodeServiceCatalogUpdate
-                "{\"scuRateCents\":null,\"unexpected\":true}"
+            decodeServiceMarketplaceBooking
+                "{\"adId\":42,\"slotId\":84,\"paymentMethod\":null}"
+                `shouldSatisfy` isLeft
+
+    describe "Typed service offering catalog drafts" $ do
+        it "decodes canonical foreign-key and resource metadata without copied business labels" $ do
+            case decodeCatalogDraft canonicalServiceOfferingDraft of
+                Left err -> expectationFailure ("Expected typed service offering draft to decode, got: " <> err)
+                Right draft -> do
+                    Catalog.cdrCode draft `shouldBe` "studio-recording"
+                    case Catalog.cdrServiceOffering draft of
+                        Nothing -> expectationFailure "Expected serviceOffering metadata"
+                        Just serviceDraft -> do
+                            Catalog.sodCategoryId serviceDraft `shouldBe` "11111111-1111-4111-8111-111111111111"
+                            Catalog.sodPricingModelId serviceDraft `shouldBe` "22222222-2222-4222-8222-222222222222"
+                            map Catalog.sordResourceId (Catalog.sodDefaultResources serviceDraft) `shouldBe` ["12"]
+                            map Catalog.sordSelectionModeId (Catalog.sodDefaultResources serviceDraft)
+                                `shouldBe` ["44444444-4444-4444-8444-444444444444"]
+
+        it "rejects obsolete string selectors and unknown nested fields" $ do
+            let canonicalText = TE.decodeUtf8 (BL.toStrict canonicalServiceOfferingDraft)
+            decodeCatalogDraft
+                (BL.fromStrict (TE.encodeUtf8 (T.dropEnd 1 canonicalText <> ",\"serviceType\":\"Recording\"}")))
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                (BL.fromStrict (TE.encodeUtf8 (T.replace "\"requiresEngineer\":true" "\"requiresEngineer\":true,\"pricingModelCode\":\"hourly\"" canonicalText)))
+                `shouldSatisfy` isLeft
+
+    describe "Typed Radio auto-stop catalog drafts" $ do
+        it "decodes an explicit duration and persisted-default decision" $
+            case decodeCatalogDraft canonicalRadioAutoStopDraft of
+                Left err -> expectationFailure ("Expected typed Radio auto-stop draft to decode, got: " <> err)
+                Right draft ->
+                    case Catalog.cdrRadioAutoStop draft of
+                        Nothing -> expectationFailure "Expected radioAutoStop metadata"
+                        Just radioDraft -> do
+                            Catalog.rasdDurationMinutes radioDraft `shouldBe` 120
+                            Catalog.rasdDefaultForBroadcast radioDraft `shouldBe` True
+
+        it "rejects copied minute fields and unknown typed keys" $ do
+            decodeCatalogDraft
+                "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"durationMinutes\":120,\"reason\":\"policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-001\"}"
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"radioAutoStop\":{\"durationMinutes\":120,\"defaultForBroadcast\":true,\"minutes\":120},\"reason\":\"policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-002\"}"
+                `shouldSatisfy` isLeft
+
+    describe "Typed appearance-mode catalog drafts" $ do
+        it "decodes the persisted application-default decision" $
+            case decodeCatalogDraft canonicalAppearanceModeDraft of
+                Left err -> expectationFailure ("Expected typed appearance-mode draft to decode, got: " <> err)
+                Right draft ->
+                    case Catalog.cdrAppearanceMode draft of
+                        Nothing -> expectationFailure "Expected appearanceMode metadata"
+                        Just appearanceDraft ->
+                            Catalog.amdDefaultForApplication appearanceDraft `shouldBe` True
+
+        it "rejects copied renderer fields and unknown typed keys" $ do
+            decodeCatalogDraft
+                "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"theme\":\"system\",\"reason\":\"appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-001\"}"
+                `shouldSatisfy` isLeft
+            decodeCatalogDraft
+                "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"appearanceMode\":{\"defaultForApplication\":true,\"renderer\":\"system\"},\"reason\":\"appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-002\"}"
+                `shouldSatisfy` isLeft
+
+    describe "Typed feedback catalog defaults" $ do
+        it "decodes an explicit global-default decision without copied selector metadata" $
+            case decodeCatalogDraft canonicalFeedbackCatalogDraft of
+                Left err -> expectationFailure ("Expected typed feedback catalog draft to decode, got: " <> err)
+                Right draft -> do
+                    Catalog.cdrCode draft `shouldBe` "idea"
+                    Catalog.cdrGlobalDefault draft `shouldBe` Just True
+
+        it "rejects an unknown feedback-default field" $
+            decodeCatalogDraft
+                "{\"code\":\"idea\",\"nameEs\":\"Idea\",\"nameEn\":\"Idea\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":1,\"globalDefault\":true,\"defaultCategory\":true,\"reason\":\"Feedback policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"feedback-002\"}"
                 `shouldSatisfy` isLeft
 
     describe "Service marketplace ad write payloads FromJSON" $ do
         it "accepts canonical service ad and slot creation payloads" $ do
             case decodeServiceAdCreate
-                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"description\":\"Detailed feedback\",\"feeCents\":5000,\"currency\":\"USD\",\"slotMinutes\":90}"
-             of
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"description\":\"Detailed feedback\",\"feeCents\":5000,\"currency\":\"USD\",\"slotMinutes\":90}" of
                 Left err ->
                     expectationFailure ("Expected canonical service ad create payload to decode, got: " <> err)
                 Right (API.ServiceAdCreateReq serviceCatalogIdVal roleTagVal headlineVal descriptionVal feeCentsVal currencyVal slotMinutesVal) -> do
@@ -800,8 +1582,7 @@ spec = do
                     slotMinutesVal `shouldBe` Just 90
 
             case decodeServiceAdSlotCreate
-                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\"}"
-             of
+                "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical service ad slot create payload to decode, got: " <> err)
                 Right (API.ServiceAdSlotCreateReq startsAtVal endsAtVal) -> do
@@ -816,15 +1597,24 @@ spec = do
                 "{\"startsAt\":\"2026-05-01T15:00:00Z\",\"endsAt\":\"2026-05-01T16:30:00Z\",\"status\":\"closed\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null fallback fields so ad defaults are only used when omitted" $ do
+            decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"feeCents\":5000,\"currency\":null}"
+                `shouldSatisfy` isLeft
+            decodeServiceAdCreate
+                "{\"serviceCatalogId\":9,\"roleTag\":\"mixing\",\"headline\":\"Mix critique\",\"feeCents\":5000,\"slotMinutes\":null}"
+                `shouldSatisfy` isLeft
+
     describe "BandCreate FromJSON" $ do
         it "accepts canonical CRM band creation payloads" $
-            case decodeBandCreate (BL8.concat
-                [ "{\"bcName\":\"TDF House Band\""
-                , ",\"bcLabelArtist\":true"
-                , ",\"bcPrimaryGenre\":\"jazz\""
-                , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\"}]}"
-                ])
-             of
+            case decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcLabelArtist\":true"
+                    , ",\"bcPrimaryGenre\":\"jazz\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\"}]}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure ("Expected band create payload to decode, got: " <> err)
                 Right payload -> do
@@ -838,21 +1628,99 @@ spec = do
                         members ->
                             expectationFailure ("Expected one band member, got: " <> show members)
 
+        it "normalizes optional member roles before band creation stores them" $ do
+            case decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":["
+                    , "{\"bmPartyId\":42,\"bmRole\":\"  keys  \"},"
+                    , "{\"bmPartyId\":43,\"bmRole\":\"   \"}"
+                    , "]}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure ("Expected band member roles to normalize, got: " <> err)
+                Right payload ->
+                    case bcMembers payload of
+                        [BandMemberInput _ firstRole, BandMemberInput _ secondRole] -> do
+                            firstRole `shouldBe` Just "keys"
+                            secondRole `shouldBe` Nothing
+                        members ->
+                            expectationFailure ("Expected two band members, got: " <> show members)
+
         it "rejects unexpected top-level or member keys instead of silently ignoring CRM typos" $ do
             decodeBandCreate
                 "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"members\":[]}"
                 `shouldSatisfy` isLeft
-            decodeBandCreate (BL8.concat
-                [ "{\"bcName\":\"TDF House Band\""
-                , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
-                ])
+            decodeBandCreate
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"partyId\":84}]}"
+                    ]
+                )
                 `shouldSatisfy` isLeft
 
+        it "rejects malformed member ids and roles before band creation handler fallbacks" $ do
+            let assertInvalid rawPayload expectedMessage =
+                    case decodeBandCreate rawPayload of
+                        Left err ->
+                            err `shouldContain` expectedMessage
+                        Right payload ->
+                            expectationFailure
+                                ("Expected malformed band create to fail, got: " <> show payload)
+
+            assertInvalid
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":0,\"bmRole\":\"keys\"}]}"
+                    ]
+                )
+                "bmPartyId must be a positive integer"
+            assertInvalid
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\"keys\\nlead\"}]}"
+                    ]
+                )
+                "bmRole must not contain control characters"
+            assertInvalid
+                ( BL8.concat
+                    [ "{\"bcName\":\"TDF House Band\""
+                    , ",\"bcMembers\":[{\"bmPartyId\":42,\"bmRole\":\""
+                    , BL8.pack (replicate 81 'a')
+                    , "\"}]}"
+                    ]
+                )
+                "bmRole must be 80 characters or fewer"
+
+        it "rejects null band create defaults so omitted fields stay intentional" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeBandCreate payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null band create default to be rejected, got: " <> show value)
+            assertNullRejected
+                "bcLabelArtist"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcLabelArtist\":null}"
+            assertNullRejected
+                "bcPrimaryGenre"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcPrimaryGenre\":null}"
+            assertNullRejected
+                "bcHomeCity"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcHomeCity\":null}"
+            assertNullRejected
+                "bcPhotoUrl"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcPhotoUrl\":null}"
+            assertNullRejected
+                "bcContractFlags"
+                "{\"bcName\":\"TDF House Band\",\"bcMembers\":[],\"bcContractFlags\":null}"
+
     describe "MarketplaceCheckoutReq FromJSON" $ do
-        it "accepts canonical marketplace checkout payloads" $
+        it "accepts canonical marketplace checkout payloads and normalizes buyer contact fields" $
             case decodeMarketplaceCheckout
-                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\"}"
-             of
+                "{\"mcrBuyerName\":\"  Ada Lovelace  \",\"mcrBuyerEmail\":\" ADA@EXAMPLE.COM \",\"mcrBuyerPhone\":\"   +593 99 123 4567   \"}" of
                 Left err ->
                     expectationFailure ("Expected canonical marketplace checkout payload to decode, got: " <> err)
                 Right payload -> do
@@ -864,22 +1732,137 @@ spec = do
             decodeMarketplaceCheckout
                 "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+593991234567\",\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":null}"
+                `shouldSatisfy` isLeft
+
+        it "rejects blank or malformed buyer identity fields before marketplace handlers run" $ do
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"   \",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada\\u0000Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada\\u202ELovelace\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada\\u2028Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada\\u00A0Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"!!!\",\"mcrBuyerEmail\":\"ada@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"not-an-email\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.123\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.c\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada\\u0661@example.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example\\u0661.com\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"call me at 099 123 4567\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"099\\n1234567\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                "{\"mcrBuyerName\":\"Ada Lovelace\",\"mcrBuyerEmail\":\"ada@example.com\",\"mcrBuyerPhone\":\"+1234567890123456\"}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCheckout
+                ( BL8.concat
+                    [ "{\"mcrBuyerName\":\"Ada Lovelace\""
+                    , ",\"mcrBuyerEmail\":\"ada@example.com\""
+                    , ",\"mcrBuyerPhone\":\"+\\u0665\\u0669\\u0663"
+                    , "\\u0669\\u0669\\u0661\\u0662\\u0663\\u0664\\u0665\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+
+    describe "AssetCheckoutRequest FromJSON" $ do
+        it "accepts canonical asset checkout payloads" $
+            case decodeAssetCheckout
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}" of
+                Left err ->
+                    expectationFailure ("Expected asset checkout payload to decode, got: " <> err)
+                Right payload -> do
+                    coTargetKind payload `shouldBe` Just "party"
+                    coTargetParty payload `shouldBe` Just "Ada"
+                    coDisposition payload `shouldBe` Just "loan"
+
+        it "rejects null checkout decision fields before handler fallback validation" $ do
+            case decodeAssetCheckout
+                "{\"coTargetKind\":null,\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\"}" of
+                Left err ->
+                    err `shouldContain` "coTargetKind must be provided instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null checkout target kind to fail, got: " <> show value)
+
+            case decodeAssetCheckout
+                "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":null}" of
+                Left err ->
+                    err `shouldContain` "coDisposition must be provided instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null checkout disposition to fail, got: " <> show value)
+
+        it "rejects null checkout metadata fields so omission is the only fallback signal" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeAssetCheckout payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected null checkout metadata field to fail, got: "
+                                    <> show value
+                                )
+            mapM_
+                (uncurry assertNullRejected)
+                [
+                    ( "coTargetParty"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":null,\"coDisposition\":\"loan\"}"
+                    )
+                ,
+                    ( "coPaymentAmount"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coPaymentAmount\":null}"
+                    )
+                ,
+                    ( "coDueAt"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coDueAt\":null}"
+                    )
+                ,
+                    ( "coNotes"
+                    , "{\"coTargetKind\":\"party\",\"coTargetParty\":\"Ada\",\"coDisposition\":\"loan\",\"coNotes\":null}"
+                    )
+                ]
 
     describe "MarketplaceCartItemUpdate FromJSON" $ do
         it "accepts canonical public cart item payloads" $
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\" 1 \",\"mciuQuantity\":2}"
-             of
+                "{\"mciuListingId\":\" 11111111-1111-4111-8111-111111111111 \",\"mciuQuantity\":1}" of
                 Left err ->
                     expectationFailure ("Expected marketplace cart item payload to decode, got: " <> err)
                 Right payload -> do
-                    mciuListingId payload `shouldBe` "1"
-                    mciuQuantity payload `shouldBe` 2
+                    mciuListingId payload `shouldBe` "11111111-1111-4111-8111-111111111111"
+                    mciuQuantity payload `shouldBe` 1
 
         it "accepts cart item removal and the configured public quantity cap" $ do
             case decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":0}"
-             of
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":0}" of
                 Left err ->
                     expectationFailure ("Expected zero quantity cart item payload to decode, got: " <> err)
                 Right payload ->
@@ -893,7 +1876,7 @@ spec = do
 
         it "rejects unexpected cart item keys so malformed cart writes fail explicitly" $
             decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":2,\"status\":\"pending\"}"
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":1,\"status\":\"pending\"}"
                 `shouldSatisfy` isLeft
 
         it "rejects malformed listing ids before cart handler fallback validation" $ do
@@ -904,6 +1887,9 @@ spec = do
                 "{\"mciuListingId\":\"0\",\"mciuQuantity\":1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate
+                "{\"mciuListingId\":\"01\",\"mciuQuantity\":1}"
+                `shouldSatisfy` isLeft
+            decodeMarketplaceCartItemUpdate
                 "{\"mciuListingId\":\"+1\",\"mciuQuantity\":1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate
@@ -912,7 +1898,7 @@ spec = do
 
         it "rejects negative or excessive cart item quantities before handler execution" $ do
             decodeMarketplaceCartItemUpdate
-                "{\"mciuListingId\":\"1\",\"mciuQuantity\":-1}"
+                "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":-1}"
                 `shouldSatisfy` isLeft
             decodeMarketplaceCartItemUpdate (cartItemUpdateJson (maxMarketplaceCartItemQuantity + 1))
                 `shouldSatisfy` isLeft
@@ -940,27 +1926,63 @@ spec = do
                 "{\"mouStatus\":\"paid\",\"status\":\"cancelled\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty order updates instead of accepting a no-op admin write" $
+            decodeMarketplaceOrderUpdate "{}" `shouldSatisfy` isLeft
+
+        it "rejects null order status instead of silently treating it as omitted" $
+            case decodeMarketplaceOrderUpdate
+                "{\"mouStatus\":null,\"mouPaymentProvider\":\"paypal\"}" of
+                Left err ->
+                    err `shouldContain` "mouStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null marketplace order status to fail, got: " <> show value)
+
     describe "PaypalCaptureReq FromJSON" $ do
-        it "accepts canonical PayPal capture payloads" $
+        it "accepts canonical PayPal capture payloads and trims identifiers" $
             case decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
-             of
+                "{\"pcCaptureOrderId\":\" 22222222-2222-4222-8222-222222222222 \",\"pcCapturePaypalId\":\" PAYPAL-ORDER-123 \"}" of
                 Left err ->
                     expectationFailure ("Expected PayPal capture payload to decode, got: " <> err)
                 Right payload -> do
-                    pcCaptureOrderId payload `shouldBe` "42"
+                    pcCaptureOrderId payload `shouldBe` "22222222-2222-4222-8222-222222222222"
                     pcCapturePaypalId payload `shouldBe` "PAYPAL-ORDER-123"
 
         it "rejects unexpected capture keys before payment handler validation runs" $
             decodePaypalCapture
-                "{\"pcCaptureOrderId\":\"42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\",\"paypalOrderId\":\"TYPOED-DUPLICATE\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed capture identifiers before payment handler fallback validation" $ do
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"   \",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"0\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"0042\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"../42\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"---___\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL/ORDER-123\"}"
+                `shouldSatisfy` isLeft
+            decodePaypalCapture
+                "{\"pcCaptureOrderId\":\"22222222-2222-4222-8222-222222222222\",\"pcCapturePaypalId\":\"PAYPAL-ORDER-\\u0661\\u0662\\u0663\"}"
                 `shouldSatisfy` isLeft
 
     describe "LabelTrack write payload FromJSON" $ do
         it "accepts canonical label track create and update payloads" $ do
             case decodeLabelTrackCreate
-                "{\"ltcTitle\":\"Master final\",\"ltcNote\":\"Check credits\",\"ltcOwnerId\":8}"
-             of
+                "{\"ltcTitle\":\"Master final\",\"ltcNote\":\"Check credits\",\"ltcOwnerId\":8}" of
                 Left err ->
                     expectationFailure ("Expected label track create payload to decode, got: " <> err)
                 Right (LabelTrackCreate titleVal noteVal ownerIdVal) -> do
@@ -969,8 +1991,7 @@ spec = do
                     ownerIdVal `shouldBe` Just 8
 
             case decodeLabelTrackUpdate
-                "{\"ltuTitle\":\"Master delivered\",\"ltuNote\":\"\",\"ltuStatus\":\"done\"}"
-             of
+                "{\"ltuTitle\":\"Master delivered\",\"ltuNote\":\"\",\"ltuStatus\":\"done\"}" of
                 Left err ->
                     expectationFailure ("Expected label track update payload to decode, got: " <> err)
                 Right (LabelTrackUpdate titleVal noteVal statusVal) -> do
@@ -986,11 +2007,62 @@ spec = do
                 "{\"ltuStatus\":\"done\",\"ltuOwnerId\":8}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty or null label track updates so patch intent stays explicit" $ do
+            decodeLabelTrackUpdate "{}" `shouldSatisfy` isLeft
+            case decodeLabelTrackUpdate "{\"ltuTitle\":\"Master delivered\",\"ltuStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "ltuStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track status update to fail, got: " <> show value)
+
+        it "rejects explicit null label track create fallbacks so omission stays intentional" $ do
+            case decodeLabelTrackCreate "{\"ltcTitle\":\"Master final\",\"ltcNote\":null}" of
+                Left err ->
+                    err `shouldContain` "ltcNote must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track note to fail, got: " <> show value)
+
+            case decodeLabelTrackCreate "{\"ltcTitle\":\"Master final\",\"ltcOwnerId\":null}" of
+                Left err ->
+                    err `shouldContain` "ltcOwnerId must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null label track owner to fail, got: " <> show value)
+
+    describe "LabelProjectNote write payload FromJSON" $ do
+        it "accepts strict typed creates and optimistic updates" $ do
+            decodeLabelProjectNoteCreate "{\"lpncText\":\"Distribuir master\"}"
+                `shouldBe` Right (LabelProjectNoteCreate "Distribuir master")
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":true,\"lpnuExpectedVersion\":3}"
+                `shouldBe` Right (LabelProjectNoteUpdate Nothing (Just True) 3)
+
+        it "rejects legacy list payloads, empty patches, nulls, and missing versions" $ do
+            decodeLabelProjectNoteCreate
+                "{\"items\":[{\"text\":\"Distribuir master\"}]}"
+                `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate "{}" `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate "{\"lpnuCompleted\":true}" `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":null,\"lpnuExpectedVersion\":1}"
+                `shouldSatisfy` isLeft
+            decodeLabelProjectNoteUpdate
+                "{\"lpnuCompleted\":true,\"lpnuExpectedVersion\":1,\"slug\":\"label-projects\"}"
+                `shouldSatisfy` isLeft
+
     describe "internship time-entry request FromJSON" $ do
-        it "accepts canonical clock-in and clock-out payloads" $ do
+        it "accepts canonical clock-in and clock-out payloads while trimming blank notes to omission" $ do
             case decodeClockIn "{}" of
                 Left err ->
                     expectationFailure ("Expected empty clock-in payload to decode, got: " <> err)
+                Right (ClockInRequest notesVal) ->
+                    notesVal `shouldBe` Nothing
+
+            case decodeClockIn "{\"cirNotes\":\"   \"}" of
+                Left err ->
+                    expectationFailure ("Expected blank clock-in notes to decode as omitted, got: " <> err)
                 Right (ClockInRequest notesVal) ->
                     notesVal `shouldBe` Nothing
 
@@ -1000,11 +2072,22 @@ spec = do
                 Right (ClockInRequest notesVal) ->
                     notesVal `shouldBe` Just "Opening studio"
 
-            case decodeClockOut "{\"corNotes\":\"Closed after inventory\"}" of
+            case decodeClockOut "{\"corNotes\":\"  Closed after inventory  \"}" of
                 Left err ->
                     expectationFailure ("Expected clock-out payload to decode, got: " <> err)
                 Right (ClockOutRequest notesVal) ->
                     notesVal `shouldBe` Just "Closed after inventory"
+
+        it "rejects oversized or unsafe-control notes before time-entry handlers can persist ambiguous text" $ do
+            decodeClockIn
+                ("{\"cirNotes\":\"" <> BL8.pack (T.unpack (T.replicate 1001 "x")) <> "\"}")
+                `shouldSatisfy` isLeft
+            decodeClockOut
+                "{\"corNotes\":\"Closed\\u0000after inventory\"}"
+                `shouldSatisfy` isLeft
+            decodeClockIn
+                "{\"cirNotes\":\"Opening\\u200Dstudio\"}"
+                `shouldSatisfy` isLeft
 
         it "rejects unexpected clock fields so over-posted time-entry intent fails explicitly" $ do
             decodeClockIn
@@ -1013,6 +2096,10 @@ spec = do
             decodeClockOut
                 "{\"corNotes\":\"Closed\",\"clockOut\":\"2026-04-17T18:00:00Z\"}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null notes so omission remains the only fallback path" $ do
+            decodeClockIn "{\"cirNotes\":null}" `shouldSatisfy` isLeft
+            decodeClockOut "{\"corNotes\":null}" `shouldSatisfy` isLeft
 
     describe "InternProfileUpdate FromJSON" $ do
         it "distinguishes omitted nullable profile fields from explicit clears" $ do
@@ -1039,23 +2126,44 @@ spec = do
                 "{\"ipuSkills\":\"Patch bays\",\"skills\":\"typo duplicate\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty profile patches instead of creating or returning no-op profiles" $
+            decodeInternProfileUpdate "{}"
+                `shouldSatisfy` isLeft
+
     describe "InternTaskCreate FromJSON" $ do
         it "accepts canonical task create payloads" $
             case decodeInternTaskCreate
-                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}"
-             of
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":\"Label and count\",\"itcAssignedTo\":7,\"itcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern task create payload to decode, got: " <> err)
-                Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal dueAtVal) -> do
+                Right (InternTaskCreate projectIdVal titleVal descriptionVal assignedToVal proposedAssigneeVal activationStatusVal dueAtVal) -> do
                     projectIdVal `shouldBe` "42"
                     titleVal `shouldBe` "Inventory cables"
                     descriptionVal `shouldBe` Just "Label and count"
                     assignedToVal `shouldBe` Just 7
+                    proposedAssigneeVal `shouldBe` Nothing
+                    activationStatusVal `shouldBe` Nothing
                     dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
 
         it "rejects unexpected task create keys instead of silently ignoring admin intent" $
             decodeInternTaskCreate
                 "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"status\":\"done\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null task-create fallbacks so omission remains intentional" $ do
+            case decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDescription\":null}" of
+                Left err ->
+                    err `shouldContain` "itcDescription must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null task description to fail, got: " <> show value)
+
+            decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcAssignedTo\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternTaskCreate
+                "{\"itcProjectId\":\"42\",\"itcTitle\":\"Inventory cables\",\"itcDueAt\":null}"
                 `shouldSatisfy` isLeft
 
     describe "InternTaskUpdate FromJSON" $ do
@@ -1064,6 +2172,7 @@ spec = do
                 Left err ->
                     expectationFailure ("Expected intern task status update to decode, got: " <> err)
                 Right payload -> do
+                    ituProjectId payload `shouldBe` Nothing
                     ituTitle payload `shouldBe` Nothing
                     ituDescription payload `shouldBe` Nothing
                     ituStatus payload `shouldBe` Just "doing"
@@ -1079,22 +2188,31 @@ spec = do
                     ituAssignedTo payload `shouldBe` Just Nothing
                     ituDueAt payload `shouldBe` Just Nothing
 
+            case decodeInternTaskUpdate "{\"ituProjectId\":\"project-2\"}" of
+                Left err ->
+                    expectationFailure ("Expected intern task project update to decode, got: " <> err)
+                Right payload ->
+                    ituProjectId payload `shouldBe` Just "project-2"
+
         it "rejects unexpected task update keys instead of silently ignoring intern task intent" $
             decodeInternTaskUpdate
                 "{\"ituStatus\":\"doing\",\"status\":\"done\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects empty task updates instead of returning a silent no-op patch" $
+            decodeInternTaskUpdate "{}" `shouldSatisfy` isLeft
+
     describe "InternProject payload FromJSON" $ do
         it "accepts canonical project payloads and preserves explicit clears" $ do
             case decodeInternProjectCreate
-                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}"
-             of
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":\"Prepare checklist\",\"ipcStatus\":\"paused\",\"ipcStartAt\":\"2026-04-20\",\"ipcDueAt\":\"2026-04-30\"}" of
                 Left err ->
                     expectationFailure ("Expected intern project create payload to decode, got: " <> err)
-                Right (InternProjectCreate titleVal descriptionVal statusVal startAtVal dueAtVal) -> do
+                Right (InternProjectCreate titleVal descriptionVal statusVal activationStatusVal startAtVal dueAtVal) -> do
                     titleVal `shouldBe` "Studio onboarding"
                     descriptionVal `shouldBe` Just "Prepare checklist"
                     statusVal `shouldBe` Just "paused"
+                    activationStatusVal `shouldBe` Nothing
                     startAtVal `shouldBe` Just (fromGregorian 2026 4 20)
                     dueAtVal `shouldBe` Just (fromGregorian 2026 4 30)
 
@@ -1116,11 +2234,31 @@ spec = do
                 "{\"ipuStatus\":\"paused\",\"status\":\"completed\"}"
                 `shouldSatisfy` isLeft
 
+        it "rejects explicit null project-create defaults so omission remains intentional" $ do
+            case decodeInternProjectCreate "{\"ipcTitle\":\"Studio onboarding\",\"ipcStatus\":null}" of
+                Left err ->
+                    err `shouldContain` "ipcStatus must be omitted instead of null"
+                Right value ->
+                    expectationFailure
+                        ("Expected null project status to fail, got: " <> show value)
+
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDescription\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcStartAt\":null}"
+                `shouldSatisfy` isLeft
+            decodeInternProjectCreate
+                "{\"ipcTitle\":\"Studio onboarding\",\"ipcDueAt\":null}"
+                `shouldSatisfy` isLeft
+
+        it "rejects empty project updates instead of returning a silent no-op patch" $
+            decodeInternProjectUpdate "{}" `shouldSatisfy` isLeft
+
     describe "InternPermission payload FromJSON" $ do
         it "accepts canonical permission payloads and preserves explicit note clears" $ do
             case decodeInternPermissionCreate
-                "{\"ipcCategory\":\"leave\",\"ipcReason\":\"Dentist\",\"ipcStartAt\":\"2026-04-20\",\"ipcEndAt\":\"2026-04-21\"}"
-             of
+                "{\"ipcCategory\":\"leave\",\"ipcReason\":\"Dentist\",\"ipcStartAt\":\"2026-04-20\",\"ipcEndAt\":\"2026-04-21\"}" of
                 Left err ->
                     expectationFailure ("Expected intern permission create payload to decode, got: " <> err)
                 Right (InternPermissionCreate categoryVal reasonVal startAtVal endAtVal) -> do
@@ -1130,8 +2268,7 @@ spec = do
                     endAtVal `shouldBe` Just (fromGregorian 2026 4 21)
 
             case decodeInternPermissionUpdate
-                "{\"ipuStatus\":\"approved\",\"ipuDecisionNotes\":\"Approved by admin\"}"
-             of
+                "{\"ipuStatus\":\"approved\",\"ipuDecisionNotes\":\"Approved by admin\"}" of
                 Left err ->
                     expectationFailure ("Expected intern permission update payload to decode, got: " <> err)
                 Right (InternPermissionUpdate statusVal notesVal) -> do
@@ -1145,13 +2282,6 @@ spec = do
                     statusVal `shouldBe` Nothing
                     notesVal `shouldBe` Just Nothing
 
-            case decodeInternPermissionUpdate "{}" of
-                Left err ->
-                    expectationFailure ("Expected empty intern permission update payload to decode, got: " <> err)
-                Right (InternPermissionUpdate statusVal notesVal) -> do
-                    statusVal `shouldBe` Nothing
-                    notesVal `shouldBe` Nothing
-
         it "rejects unexpected permission keys so over-posted review intent fails explicitly" $ do
             decodeInternPermissionCreate
                 "{\"ipcCategory\":\"leave\",\"ipcStartAt\":\"2026-04-20\",\"ipcStatus\":\"approved\"}"
@@ -1159,6 +2289,9 @@ spec = do
             decodeInternPermissionUpdate
                 "{\"ipuStatus\":\"approved\",\"reviewedBy\":7}"
                 `shouldSatisfy` isLeft
+
+        it "rejects empty permission updates instead of returning a no-op success" $
+            decodeInternPermissionUpdate "{}" `shouldSatisfy` isLeft
 
     describe "InternTodo payload FromJSON" $ do
         it "accepts canonical todo create and update payloads" $ do
@@ -1182,6 +2315,9 @@ spec = do
             decodeInternTodoUpdate
                 "{\"done\":true}"
                 `shouldSatisfy` isLeft
+
+        it "rejects empty todo updates instead of returning a no-op success" $
+            decodeInternTodoUpdate "{}" `shouldSatisfy` isLeft
 
     describe "Academy request FromJSON" $ do
         it "accepts canonical academy enroll, progress, and referral-claim payloads" $ do
@@ -1240,6 +2376,33 @@ spec = do
                     emailVal `shouldBe` "ada@example.com"
                     codeVal `shouldBe` "REF-42"
 
+        it "rejects malformed academy platform values before enrollment persistence fallback" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"web\\nmobile\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"meta\\u202Eads\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\"meta\\u00A0ads\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                ( BL8.pack
+                    ( "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":\""
+                        <> replicate 81 'a'
+                        <> "\"}"
+                    )
+                )
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null academy enrollment optionals instead of using omitted-field fallbacks" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"platform\":null}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":null}"
+                `shouldSatisfy` isLeft
+
         it "rejects blank, malformed, or non-positive academy fields before ambiguous handler fallback" $ do
             decodeEnroll
                 "{\"email\":\"   \",\"role\":\"artist\"}"
@@ -1256,9 +2419,61 @@ spec = do
             decodeProgress
                 "{\"email\":\"ada@example.com\",\"slug\":\"   \",\"day\":3}"
                 `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing/basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
+            decodeProgress
+                "{\"email\":\"ada@example.com\",\"slug\":\"mixing\\u202E-basics\",\"day\":3}"
+                `shouldSatisfy` isLeft
             decodeReferralClaim
                 "{\"email\":\"ada@example.com\",\"code\":\"   \"}"
                 `shouldSatisfy` isLeft
+
+        it "rejects malformed academy referral codes before referral lookup fallback" $ do
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"REF 42\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"REF\\u202E42\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"\\u00A0\"}"
+                `shouldSatisfy` isLeft
+            decodeEnroll
+                "{\"email\":\"ada@example.com\",\"role\":\"artist\",\"referralCode\":\"\\t\"}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                "{\"email\":\"ada@example.com\",\"code\":\"REF\\n42\"}"
+                `shouldSatisfy` isLeft
+            decodeReferralClaim
+                ( BL8.pack
+                    ( "{\"email\":\"ada@example.com\",\"code\":\""
+                        <> replicate 129 'A'
+                        <> "\"}"
+                    )
+                )
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed academy email shapes before enrollment fallback lookup" $ do
+            let assertInvalidEmail rawEmail =
+                    decodeEnroll
+                        ( "{\"email\":\""
+                            <> rawEmail
+                            <> "\",\"role\":\"artist\"}"
+                        )
+                        `shouldSatisfy` isLeft
+            assertInvalidEmail "ada@example..com"
+            assertInvalidEmail "ada@-example.com"
+            assertInvalidEmail "ada@example-.com"
+            assertInvalidEmail "ada@example.123"
+            assertInvalidEmail "ada@example.c"
+            assertInvalidEmail ".ada@example.com"
+            assertInvalidEmail "ada.@example.com"
+            assertInvalidEmail "ada..lovelace@example.com"
+            assertInvalidEmail "ada()@example.com"
 
         it "rejects unexpected keys so malformed academy bodies fail explicitly" $ do
             decodeEnroll
@@ -1269,6 +2484,95 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeReferralClaim
                 "{\"email\":\"ada@example.com\",\"code\":\"REF-42\",\"status\":\"claimed\"}"
+                `shouldSatisfy` isLeft
+
+    describe "social event create request FromJSON" $ do
+        it "accepts canonical event create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventWorkflowStateId\":\"00000000-0000-4000-8000-000000000231\"}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical event create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.eventTitle payload `shouldBe` "Test"
+                    SocialEvents.eventEnd payload `shouldSatisfy` isJust
+                    SocialEvents.eventWorkflowStateId payload `shouldBe` Just "00000000-0000-4000-8000-000000000231"
+                    SocialEvents.eventArtists payload `shouldBe` []
+
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Sin fin confirmado\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventArtists\":[]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected an event without eventEnd to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventEnd payload `shouldBe` Nothing
+
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Fin por confirmar\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":null,\"eventArtists\":[]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected a null eventEnd to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventEnd payload `shouldBe` Nothing
+
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventWorkflowStateId\":\"00000000-0000-4000-8000-000000000231\",\"unexpected\":true}" ::
+                    Either String SocialEvents.EventDTO
+                )
+                `shouldSatisfy` isLeft
+
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"eventStatus\":\"planning\"}" ::
+                    Either String SocialEvents.EventDTO
+                )
+                `shouldSatisfy` isLeft
+
+        it "rejects unexpected nested artist and social-link keys before event handlers silently drop artist intent" $ do
+            case ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"],\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\"}}]}" ::
+                    Either String SocialEvents.EventDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical nested event artist payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.eventArtists payload `shouldSatisfy` (not . null)
+
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistGenresTypo\":[\"electronic\"]}]}" ::
+                    Either String SocialEvents.EventDTO
+                )
+                `shouldSatisfy` isLeft
+            ( eitherDecode
+                    "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[{\"artistName\":\"Ada\",\"artistSocialLinks\":{\"instagram\":\"https://instagram.com/ada\",\"bandcamp\":\"https://ada.bandcamp.com\"}}]}" ::
+                    Either String SocialEvents.EventDTO
+                )
+                `shouldSatisfy` isLeft
+
+    describe "social venue request FromJSON" $ do
+        it "accepts canonical venue create payloads and rejects unexpected keys before handlers silently drop caller intent" $ do
+            case ( eitherDecode
+                    "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250}" ::
+                    Either String SocialEvents.VenueDTO
+                 ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical venue create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.venueName payload `shouldBe` "Teatro TDF"
+                    SocialEvents.venueCity payload `shouldBe` Just "Quito"
+                    SocialEvents.venueCapacity payload `shouldBe` Just 250
+
+            ( eitherDecode
+                    "{\"venueName\":\"Teatro TDF\",\"venueCity\":\"Quito\",\"venueCapacity\":250,\"venuePhoneNumber\":\"+593991234567\"}" ::
+                    Either String SocialEvents.VenueDTO
+                )
                 `shouldSatisfy` isLeft
 
     describe "social event ticket request FromJSON" $ do
@@ -1288,13 +2592,33 @@ spec = do
                 `shouldSatisfy` isLeft
 
         it "accepts canonical ticket purchase and status update payloads" $ do
-            case decodeTicketPurchase (BL8.concat
-                [ "{\"ticketPurchaseTierId\":\"42\""
-                , ",\"ticketPurchaseQuantity\":2"
-                , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
-                , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\"}"
-                ])
-             of
+            case decodeTicketTier
+                ( BL8.concat
+                    [ "{\"ticketTierCode\":\"general\""
+                    , ",\"ticketTierName\":\"General\""
+                    , ",\"ticketTierPriceCents\":1200"
+                    , ",\"ticketTierCurrency\":\"USD\""
+                    , ",\"ticketTierQuantityTotal\":100"
+                    , ",\"ticketTierQuantitySold\":0"
+                    , ",\"ticketTierActive\":true}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket tier payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketTierCode payload `shouldBe` "general"
+                    SocialEvents.ticketTierName payload `shouldBe` "General"
+                    SocialEvents.ticketTierQuantitySold payload `shouldBe` 0
+
+            case decodeTicketPurchase
+                ( BL8.concat
+                    [ "{\"ticketPurchaseTierId\":\"42\""
+                    , ",\"ticketPurchaseQuantity\":2"
+                    , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
+                    , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\"}"
+                    ]
+                ) of
                 Left err ->
                     expectationFailure
                         ("Expected canonical ticket purchase payload to decode, got: " <> err)
@@ -1305,6 +2629,31 @@ spec = do
                     SocialEvents.ticketPurchaseBuyerName payload `shouldBe` Just "Ada Lovelace"
                     SocialEvents.ticketPurchaseBuyerEmail payload `shouldBe` Just "ada@example.com"
 
+            case decodeTicketPurchaseWithPromo
+                ( BL8.concat
+                    [ "{\"ticketPurchaseTierId\":\"42\""
+                    , ",\"ticketPurchaseQuantity\":2"
+                    , ",\"ticketPurchaseBuyerName\":\"Ada Lovelace\""
+                    , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\""
+                    , ",\"ticketPurchasePromoCode\":null"
+                    , ",\"ticketPurchaseMobileSdkStripeVersion\":\"2025-04-30.basil\""
+                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\"}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected mobile Stripe purchase payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketPurchaseTierId (SocialEvents.tpwpPurchase payload)
+                        `shouldBe` "42"
+                    SocialEvents.ticketPurchaseQuantity (SocialEvents.tpwpPurchase payload)
+                        `shouldBe` 2
+                    SocialEvents.tpwpPromoCode payload `shouldBe` Nothing
+                    SocialEvents.tpwpMobileSdkStripeVersion payload
+                        `shouldBe` Just "2025-04-30.basil"
+                    SocialEvents.tpwpIdempotencyKey payload
+                        `shouldBe` Just "ticket-checkout-123"
+
             case decodeTicketOrderStatus "{\"ticketOrderStatus\":\"paid\"}" of
                 Left err ->
                     expectationFailure
@@ -1312,7 +2661,26 @@ spec = do
                 Right payload ->
                     SocialEvents.ticketOrderStatus payload `shouldBe` "paid"
 
+            case decodeTicketOrderStatus "{\"ticketOrderStatus\":\" CANCELED \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected ticket order status alias to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.ticketOrderStatus payload `shouldBe` "cancelled"
+
+            case decodeTicketCheckIn "{\"ticketCheckInTicketCode\":\" TDF-ABCDEF123456 \"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical ticket check-in payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.ticketCheckInTicketId payload `shouldBe` Nothing
+                    SocialEvents.ticketCheckInTicketCode payload
+                        `shouldBe` Just "TDF-ABCDEF123456"
+
         it "rejects unexpected ticket keys instead of silently ignoring over-posted fields" $ do
+            decodeTicketTier
+                "{\"ticketTierCode\":\"general\",\"ticketTierName\":\"General\",\"ticketTierPriceCents\":1200,\"ticketTierCurrency\":\"USD\",\"ticketTierQuantityTotal\":100,\"ticketTierQuantitySold\":0,\"ticketTierActive\":true,\"ticketTierPrice\":12}"
+                `shouldSatisfy` isLeft
             decodeTicketPurchase
                 "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"status\":\"paid\"}"
                 `shouldSatisfy` isLeft
@@ -1322,12 +2690,388 @@ spec = do
             decodeTicketOrderStatus
                 "{\"ticketOrderStatus\":\"paid\",\"ticketPurchaseBuyerPartyId\":\"7\"}"
                 `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\",\"ticketOrderStatus\":\"paid\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects explicit null ticket check-in lookup fields instead of falling back to the other lookup" $ do
+            case decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":null,\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\"}" of
+                Left err ->
+                    err `shouldContain` "ticketCheckInTicketId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket id lookup to be rejected, got: " <> show payload)
+
+            case decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"42\",\"ticketCheckInTicketCode\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketCheckInTicketCode must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket code lookup to be rejected, got: " <> show payload)
+
+        it "rejects explicit null ticket purchase buyer fields instead of treating them as omitted fallbacks" $ do
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerPartyId\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerPartyId must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer party id to be rejected, got: " <> show payload)
+
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerName\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerName must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer name to be rejected, got: " <> show payload)
+
+            case decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":2,\"ticketPurchaseBuyerEmail\":null}" of
+                Left err ->
+                    err `shouldContain` "ticketPurchaseBuyerEmail must be omitted instead of null"
+                Right payload ->
+                    expectationFailure
+                        ("Expected null ticket buyer email to be rejected, got: " <> show payload)
+
+        it "rejects malformed ticket purchase tier ids before handler lookup fallback" $ do
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"   \",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"0\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"+42\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"../42\",\"ticketPurchaseQuantity\":2}"
+                `shouldSatisfy` isLeft
+
+        it "rejects blank, pending, or unknown ticket order status updates before handler fallback" $ do
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"pending\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketOrderStatus
+                "{\"ticketOrderStatus\":\"void\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects non-positive or excessive ticket quantities before ticket-tier lookup" $ do
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":0}"
+                `shouldSatisfy` isLeft
+            decodeTicketPurchase
+                "{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":-1}"
+                `shouldSatisfy` isLeft
+            case decodeTicketPurchase (ticketPurchaseJson SocialEvents.maxTicketPurchaseQuantity) of
+                Left err ->
+                    expectationFailure
+                        ("Expected capped ticket purchase payload to decode, got: " <> err)
+                Right payload ->
+                    SocialEvents.ticketPurchaseQuantity payload
+                        `shouldBe` SocialEvents.maxTicketPurchaseQuantity
+            decodeTicketPurchase
+                (ticketPurchaseJson (SocialEvents.maxTicketPurchaseQuantity + 1))
+                `shouldSatisfy` isLeft
+
+        it "rejects missing, blank, or ambiguous ticket check-in lookup fields" $ do
+            decodeTicketCheckIn "{}" `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"42\",\"ticketCheckInTicketCode\":\"TDF-ABCDEF123456\"}"
+                `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeTicketCheckIn
+                "{\"ticketCheckInTicketCode\":\"   \"}"
+                `shouldSatisfy` isLeft
+
+    describe "social event RSVP request FromJSON" $ do
+        it "accepts canonical RSVP create payloads and rejects server-managed RSVP fields" $ do
+            case decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\"}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical RSVP create payload to decode, got: " <> err)
+                Right (SocialEvents.RsvpCreateDTO partyIdVal statusVal) -> do
+                    partyIdVal `shouldBe` "42"
+                    statusVal `shouldBe` "accepted"
+
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpEventId\":\"99\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpId\":\"7\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpCreatedAt\":\"2026-01-01T00:00:00Z\"}"
+                `shouldSatisfy` isLeft
+
+        it "rejects malformed RSVP party ids and statuses before DB fallback lookup" $ do
+            decodeRsvpCreate "{\"rsvpPartyId\":\"   \",\"rsvpStatus\":\"Accepted\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"0\",\"rsvpStatus\":\"Accepted\"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"waitlist\"}"
+                `shouldSatisfy` isLeft
+
+    describe "social event finance entry request FromJSON" $ do
+        it "accepts canonical finance entries and rejects over-posted amount aliases" $ do
+            case decodeEventFinanceEntry
+                ( BL8.concat
+                    [ "{\"efeDirection\":\"expense\""
+                    , ",\"efeSource\":\"manual\""
+                    , ",\"efeCategory\":\"production\""
+                    , ",\"efeConcept\":\"Sound rental\""
+                    , ",\"efeAmountCents\":5000"
+                    , ",\"efeCurrency\":\"USD\""
+                    , ",\"efeStatus\":\"planned\""
+                    , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical finance entry payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.efeAmountCents payload `shouldBe` 5000
+                    SocialEvents.efeCurrency payload `shouldBe` "USD"
+
+            decodeEventFinanceEntry
+                ( BL8.concat
+                    [ "{\"efeDirection\":\"expense\""
+                    , ",\"efeSource\":\"manual\""
+                    , ",\"efeCategory\":\"production\""
+                    , ",\"efeConcept\":\"Sound rental\""
+                    , ",\"efeAmountCents\":5000"
+                    , ",\"amountCents\":1"
+                    , ",\"efeCurrency\":\"USD\""
+                    , ",\"efeStatus\":\"planned\""
+                    , ",\"efeOccurredAt\":\"2026-01-01T00:00:00Z\"}"
+                    ]
+                )
+                `shouldSatisfy` isLeft
+
+    describe "social event moment request FromJSON" $ do
+        it "accepts canonical moment creates and normalizes media lookup fields" $
+            case decodeEventMomentCreate
+                ( BL8.concat
+                    [ "{\"emCreateAuthorName\":\"Ada\""
+                    , ",\"emCreateCaption\":\"En vivo\""
+                    , ",\"emCreateMediaUrl\":\" https://cdn.example.com/moment.jpg \""
+                    , ",\"emCreateMediaType\":\" PHOTO \""
+                    , ",\"emCreateMediaWidth\":1080"
+                    , ",\"emCreateMediaHeight\":1350"
+                    , ",\"emCreateMediaDurationMs\":0}"
+                    ]
+                ) of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical moment create payload to decode, got: " <> err)
+                Right payload -> do
+                    SocialEvents.emCreateMediaUrl payload
+                        `shouldBe` "https://cdn.example.com/moment.jpg"
+                    SocialEvents.emCreateMediaType payload `shouldBe` "image"
+                    SocialEvents.emCreateMediaWidth payload `shouldBe` Just 1080
+                    SocialEvents.emCreateMediaHeight payload `shouldBe` Just 1350
+                    SocialEvents.emCreateMediaDurationMs payload `shouldBe` Just 0
+
+        it "rejects ambiguous or malformed moment creates before handler fallback validation" $ do
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"mediaUrl\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateCaption\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"   \",\"emCreateMediaType\":\"image\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"gif\"}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaWidth\":0}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"image\",\"emCreateMediaHeight\":-1}"
+                `shouldSatisfy` isLeft
+            decodeEventMomentCreate
+                "{\"emCreateMediaUrl\":\"https://cdn.example.com/moment.jpg\",\"emCreateMediaType\":\"video\",\"emCreateMediaDurationMs\":-1}"
+                `shouldSatisfy` isLeft
+
+    describe "social event live broadcast request FromJSON" $ do
+        it "accepts canonical live broadcast create payloads and trims lookup fields"
+            $ withRight
+                "Expected canonical live broadcast create payload to decode"
+                ( decodeEventLiveBroadcastCreate
+                    ( BL8.concat
+                        [ "{\"elbCreateArtistId\":\" 42 \""
+                        , ",\"elbCreateArtistName\":\"  La Banda \""
+                        , ",\"elbCreateBroadcasterName\":\"  Ada Fan \""
+                        , ",\"elbCreateBroadcasterPartyId\":\" 7 \""
+                        , ",\"elbCreateTitle\":\"  Frente al escenario \""
+                        , ",\"elbCreateDescription\":\"  Empieza el encore \""
+                        , ",\"elbCreateQuality\":\"720p\"}"
+                        ]
+                    )
+                )
+            $ \payload -> do
+                SocialEvents.elbCreateArtistId payload `shouldBe` "42"
+                SocialEvents.elbCreateArtistName payload `shouldBe` Just "La Banda"
+                SocialEvents.elbCreateBroadcasterName payload `shouldBe` Just "Ada Fan"
+                SocialEvents.elbCreateBroadcasterPartyId payload `shouldBe` Just "7"
+                SocialEvents.elbCreateTitle payload `shouldBe` Just "Frente al escenario"
+                SocialEvents.elbCreateDescription payload `shouldBe` Just "Empieza el encore"
+                SocialEvents.elbCreateQuality payload `shouldBe` Just "720p"
+
+        it "accepts omitted optional live broadcast fields for handler defaults" $ do
+            withRight
+                "Expected minimal live broadcast create payload to decode"
+                (decodeEventLiveBroadcastCreate "{\"elbCreateArtistId\":\"42\"}")
+                $ \payload -> do
+                    SocialEvents.elbCreateArtistId payload `shouldBe` "42"
+                    SocialEvents.elbCreateArtistName payload `shouldBe` Nothing
+                    SocialEvents.elbCreateBroadcasterName payload `shouldBe` Nothing
+                    SocialEvents.elbCreateBroadcasterPartyId payload `shouldBe` Nothing
+                    SocialEvents.elbCreateTitle payload `shouldBe` Nothing
+                    SocialEvents.elbCreateDescription payload `shouldBe` Nothing
+                    SocialEvents.elbCreateQuality payload `shouldBe` Nothing
+            withRight
+                "Expected empty live broadcast end payload to decode"
+                (decodeEventLiveBroadcastEnd "{}")
+                $ \payload ->
+                    SocialEvents.elbEndBroadcasterPartyId payload `shouldBe` Nothing
+            withRight
+                "Expected empty live broadcast heartbeat payload to decode"
+                (decodeEventLiveBroadcastHeartbeat "{}")
+                $ \payload ->
+                    SocialEvents.elbhViewerDelta payload `shouldBe` Nothing
+
+        it "rejects ambiguous or malformed live broadcast creates before handler validation" $ do
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"artistId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"   \"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateTitle\":null}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastCreate
+                "{\"elbCreateArtistId\":\"42\",\"elbCreateQuality\":null}"
+                `shouldSatisfy` isLeft
+
+        it "accepts end and heartbeat payloads while rejecting unknown fields" $ do
+            withRight
+                "Expected live broadcast end payload to decode"
+                (decodeEventLiveBroadcastEnd "{\"elbEndBroadcasterPartyId\":\" 7 \"}")
+                $ \payload ->
+                    SocialEvents.elbEndBroadcasterPartyId payload `shouldBe` Just "7"
+            withRight
+                "Expected live broadcast heartbeat payload to decode"
+                (decodeEventLiveBroadcastHeartbeat "{\"elbhViewerDelta\":1}")
+                $ \payload ->
+                    SocialEvents.elbhViewerDelta payload `shouldBe` Just 1
+            decodeEventLiveBroadcastEnd
+                "{\"elbEndBroadcasterPartyId\":\"7\",\"broadcastId\":\"typo\"}"
+                `shouldSatisfy` isLeft
+            decodeEventLiveBroadcastHeartbeat
+                "{\"elbhViewerDelta\":1,\"viewerCount\":\"typo\"}"
+                `shouldSatisfy` isLeft
+
+    describe "SocialSyncIngestRequest FromJSON" $ do
+        it "accepts canonical ingest posts and trims identity fields before handler validation" $
+            case decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\" Instagram \",\"externalPostId\":\" ig-post_42 \",\"likeCount\":3}]}" of
+                Left err ->
+                    expectationFailure
+                        ("Expected canonical social sync ingest payload to decode, got: " <> err)
+                Right (SocialSync.SocialSyncIngestRequest [post]) -> do
+                    SocialSync.sspPlatform post `shouldBe` "Instagram"
+                    SocialSync.sspExternalPostId post `shouldBe` "ig-post_42"
+                    SocialSync.sspLikeCount post `shouldBe` Just 3
+                Right payload ->
+                    expectationFailure
+                        ("Expected one decoded social sync post, got: " <> show payload)
+
+        it "rejects blank ingest identity fields before social sync fallback validation" $ do
+            decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\"   \",\"externalPostId\":\"ig-post_42\"}]}"
+                `shouldSatisfy` isLeft
+            decodeSocialSyncIngest
+                "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"   \"}]}"
+                `shouldSatisfy` isLeft
+
+        it "rejects null optional post fields so omitted fields stay the only update fallback" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeSocialSyncIngest payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ( "Expected null social sync field to be rejected, got: "
+                                    <> show value
+                                )
+            mapM_
+                (uncurry assertNullRejected)
+                [
+                    ( "caption"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"caption\":null}]}"
+                    )
+                ,
+                    ( "permalink"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"permalink\":null}]}"
+                    )
+                ,
+                    ( "mediaUrls"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"mediaUrls\":null}]}"
+                    )
+                ,
+                    ( "postedAt"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"postedAt\":null}]}"
+                    )
+                ,
+                    ( "artistPartyId"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistPartyId\":null}]}"
+                    )
+                ,
+                    ( "artistProfileId"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"artistProfileId\":null}]}"
+                    )
+                ,
+                    ( "ingestSource"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"ingestSource\":null}]}"
+                    )
+                ,
+                    ( "likeCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"likeCount\":null}]}"
+                    )
+                ,
+                    ( "commentCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"commentCount\":null}]}"
+                    )
+                ,
+                    ( "shareCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"shareCount\":null}]}"
+                    )
+                ,
+                    ( "viewCount"
+                    , "{\"posts\":[{\"platform\":\"instagram\",\"externalPostId\":\"ig-post_42\",\"viewCount\":null}]}"
+                    )
+                ]
 
     describe "TrialRequestIn FromJSON" $ do
         it "accepts canonical public trial request payloads" $
             case decodeTrialRequest
-                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"},{\"startAt\":\"2026-05-02T17:00:00Z\",\"endAt\":\"2026-05-02T18:00:00Z\"}],\"notes\":\"Afternoons preferred\",\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\"}"
-             of
+                "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\"},{\"startAt\":\"2026-05-02T17:00:00Z\",\"endAt\":\"2026-05-02T18:00:00Z\"}],\"notes\":\"Afternoons preferred\",\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical trial request payload to decode, got: " <> err)
                 Right (TrialRequestIn partyIdVal subjectIdVal preferredVal notesVal fullNameVal emailVal phoneVal) -> do
@@ -1346,14 +3090,30 @@ spec = do
             decodeTrialRequest
                 "{\"subjectId\":7,\"preferred\":[{\"startAt\":\"2026-05-01T15:00:00Z\",\"endAt\":\"2026-05-01T16:00:00Z\",\"label\":\"after work\"}]}"
                 `shouldSatisfy` isLeft
+
+        it "rejects explicit null trial contact fields instead of treating them as fallback omissions" $ do
+            let assertNullRejected fieldName payload =
+                    case decodeTrialRequest payload of
+                        Left err ->
+                            err `shouldContain` (fieldName <> " must be omitted instead of null")
+                        Right value ->
+                            expectationFailure
+                                ("Expected null trial request field to fail, got: " <> show value)
+            assertNullRejected
+                "notes"
+                "{\"subjectId\":7,\"preferred\":[],\"notes\":null}"
+            assertNullRejected
+                "fullName"
+                "{\"subjectId\":7,\"preferred\":[],\"fullName\":null}"
+            assertNullRejected
+                "email"
+                "{\"subjectId\":7,\"preferred\":[],\"email\":null}"
+            assertNullRejected
+                "phone"
+                "{\"subjectId\":7,\"preferred\":[],\"phone\":null}"
   where
-    decodeRole = eitherDecode
-    decodeLooseRole = mimeUnrender (Proxy :: Proxy LooseJSON)
-    decodePlainRole = mimeUnrender (Proxy :: Proxy PlainText)
-    decodeOctetRole = mimeUnrender (Proxy :: Proxy OctetStream)
-    invalidUtf8 = BL.pack [0xff]
-    decodeUserRoleUpdate :: BL8.ByteString -> Either String UserRoleUpdatePayload
-    decodeUserRoleUpdate = eitherDecode
+    decodeArtistTipRequest :: BL8.ByteString -> Either String ArtistTipRequest
+    decodeArtistTipRequest = eitherDecode
     decodeDropdownOptionCreate :: BL8.ByteString -> Either String DropdownOptionCreate
     decodeDropdownOptionCreate = eitherDecode
     decodeDropdownOptionUpdate :: BL8.ByteString -> Either String DropdownOptionUpdate
@@ -1362,6 +3122,11 @@ spec = do
     decodeChatKitSession = eitherDecode
     decodeTidalAgentRequest :: BL8.ByteString -> Either String API.TidalAgentRequest
     decodeTidalAgentRequest = eitherDecode
+    decodeGenerateSessionInvoice :: BL8.ByteString -> Either String DTO.GenerateSessionInvoiceReq
+    decodeGenerateSessionInvoice = eitherDecode
+    tidalAgentRequestWithPrompt :: BL8.ByteString -> BL8.ByteString
+    tidalAgentRequestWithPrompt rawPrompt =
+        "{\"prompt\":\"" <> rawPrompt <> "\"}"
     tidalAgentRequestWithModel :: BL8.ByteString -> BL8.ByteString
     tidalAgentRequestWithModel rawModel =
         "{\"prompt\":\"play a broken beat\",\"model\":\"" <> rawModel <> "\"}"
@@ -1384,12 +3149,16 @@ spec = do
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
     decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode
+    decodeCoursePaymentIntent :: BL8.ByteString -> Either String Courses.CoursePaymentIntentRequest
+    decodeCoursePaymentIntent = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode
     decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate
     decodeFollowUpUpdate = eitherDecode
     decodeCourseRegistrationStatusUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationStatusUpdate
     decodeCourseRegistrationStatusUpdate = eitherDecode
+    decodeCourseRegistrationNotesUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationNotesUpdate
+    decodeCourseRegistrationNotesUpdate = eitherDecode
     decodeCourseRegistrationReceiptCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptCreate
     decodeCourseRegistrationReceiptCreate = eitherDecode
     decodeCourseRegistrationReceiptUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationReceiptUpdate
@@ -1416,10 +3185,34 @@ spec = do
     decodeCalendarTokenExchange = eitherDecode
     decodeCalendarSync :: BL8.ByteString -> Either String Calendar.SyncRequest
     decodeCalendarSync = eitherDecode
-    decodeServiceCatalogCreate :: BL8.ByteString -> Either String ServiceCatalogCreate
-    decodeServiceCatalogCreate = eitherDecode
-    decodeServiceCatalogUpdate :: BL8.ByteString -> Either String ServiceCatalogUpdate
-    decodeServiceCatalogUpdate = eitherDecode
+    decodeDriveTokenExchange :: BL8.ByteString -> Either String DriveTokenExchangeRequest
+    decodeDriveTokenExchange = eitherDecode
+    decodeDriveTokenRefresh :: BL8.ByteString -> Either String DriveTokenRefreshRequest
+    decodeDriveTokenRefresh = eitherDecode
+    decodeCatalogDraft :: BL8.ByteString -> Either String Catalog.CatalogDraftRequest
+    decodeCatalogDraft = eitherDecode
+    canonicalServiceOfferingDraft :: BL8.ByteString
+    canonicalServiceOfferingDraft =
+        BL.fromStrict . TE.encodeUtf8 $
+            "{\"code\":\"studio-recording\",\"nameEs\":\"Grabación de estudio\",\"nameEn\":\"Studio recording\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":10,\"serviceOffering\":{\"categoryId\":\"11111111-1111-4111-8111-111111111111\",\"pricingModelId\":\"22222222-2222-4222-8222-222222222222\",\"rateCents\":10000,\"currencyId\":\"33333333-3333-4333-8333-333333333333\",\"billingUnitEs\":\"hora\",\"billingUnitEn\":\"hour\",\"defaultDurationMinutes\":120,\"requiresEngineer\":true,\"defaultResources\":[{\"resourceId\":\"12\",\"selectionModeId\":\"44444444-4444-4444-8444-444444444444\",\"sortOrder\":10}]},\"reason\":\"Nueva oferta aprobable\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"service-draft-20260807-001\"}"
+    canonicalRadioAutoStopDraft :: BL8.ByteString
+    canonicalRadioAutoStopDraft =
+        "{\"code\":\"minutes-120\",\"nameEs\":\"120 minutos\",\"nameEn\":\"120 minutes\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":40,\"radioAutoStop\":{\"durationMinutes\":120,\"defaultForBroadcast\":true},\"reason\":\"Radio policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"radio-stop-20260811-001\"}"
+    canonicalAppearanceModeDraft :: BL8.ByteString
+    canonicalAppearanceModeDraft =
+        "{\"code\":\"system\",\"nameEs\":\"Sistema\",\"nameEn\":\"System\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":0,\"appearanceMode\":{\"defaultForApplication\":true},\"reason\":\"Appearance policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"appearance-20260811-001\"}"
+    canonicalFeedbackCatalogDraft :: BL8.ByteString
+    canonicalFeedbackCatalogDraft =
+        "{\"code\":\"idea\",\"nameEs\":\"Idea\",\"nameEn\":\"Idea\",\"searchAliasesEs\":[],\"searchAliasesEn\":[],\"sortOrder\":1,\"globalDefault\":true,\"reason\":\"Feedback policy\",\"sourcePlatform\":\"web-admin\",\"correlationId\":\"feedback-20260811-001\"}"
+    driveTokenExchangeJson :: BL8.ByteString -> BL8.ByteString -> BL8.ByteString
+    driveTokenExchangeJson rawCode rawVerifier =
+        BL8.concat
+            [ "{\"code\":\""
+            , rawCode
+            , "\",\"codeVerifier\":\""
+            , rawVerifier
+            , "\"}"
+            ]
     decodeServiceAdCreate :: BL8.ByteString -> Either String API.ServiceAdCreateReq
     decodeServiceAdCreate = eitherDecode
     decodeServiceAdSlotCreate :: BL8.ByteString -> Either String API.ServiceAdSlotCreateReq
@@ -1430,11 +3223,17 @@ spec = do
     decodeBandCreate = eitherDecode
     decodeMarketplaceCheckout :: BL8.ByteString -> Either String MarketplaceCheckoutReq
     decodeMarketplaceCheckout = eitherDecode
+    decodeAssetCheckout :: BL8.ByteString -> Either String AssetCheckoutRequest
+    decodeAssetCheckout = eitherDecode
     decodeMarketplaceCartItemUpdate :: BL8.ByteString -> Either String MarketplaceCartItemUpdate
     decodeMarketplaceCartItemUpdate = eitherDecode
     cartItemUpdateJson :: Int -> BL8.ByteString
     cartItemUpdateJson quantity =
-        BL8.pack ("{\"mciuListingId\":\"1\",\"mciuQuantity\":" <> show quantity <> "}")
+        BL8.pack
+            ( "{\"mciuListingId\":\"11111111-1111-4111-8111-111111111111\",\"mciuQuantity\":"
+                <> show quantity
+                <> "}"
+            )
     decodeMarketplaceOrderUpdate :: BL8.ByteString -> Either String MarketplaceOrderUpdate
     decodeMarketplaceOrderUpdate = eitherDecode
     decodePaypalCapture :: BL8.ByteString -> Either String PaypalCaptureReq
@@ -1443,6 +3242,10 @@ spec = do
     decodeLabelTrackCreate = eitherDecode
     decodeLabelTrackUpdate :: BL8.ByteString -> Either String LabelTrackUpdate
     decodeLabelTrackUpdate = eitherDecode
+    decodeLabelProjectNoteCreate :: BL8.ByteString -> Either String LabelProjectNoteCreate
+    decodeLabelProjectNoteCreate = eitherDecode
+    decodeLabelProjectNoteUpdate :: BL8.ByteString -> Either String LabelProjectNoteUpdate
+    decodeLabelProjectNoteUpdate = eitherDecode
     decodeClockIn :: BL8.ByteString -> Either String ClockInRequest
     decodeClockIn = eitherDecode
     decodeClockOut :: BL8.ByteString -> Either String ClockOutRequest
@@ -1473,11 +3276,45 @@ spec = do
     decodeReferralClaim = eitherDecode
     decodeArtistFollowRequest :: BL8.ByteString -> Either String SocialEvents.ArtistFollowRequest
     decodeArtistFollowRequest = eitherDecode
+    decodeRsvpCreate :: BL8.ByteString -> Either String SocialEvents.RsvpCreateDTO
+    decodeRsvpCreate = eitherDecode
+    decodeTicketTier :: BL8.ByteString -> Either String SocialEvents.TicketTierDTO
+    decodeTicketTier = eitherDecode
     decodeTicketPurchase :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseRequestDTO
     decodeTicketPurchase = eitherDecode
+    decodeTicketPurchaseWithPromo :: BL8.ByteString -> Either String SocialEvents.TicketPurchaseWithPromoDTO
+    decodeTicketPurchaseWithPromo = eitherDecode
+    decodeRefundDTO :: BL8.ByteString -> Either String SocialEvents.RefundDTO
+    decodeRefundDTO = eitherDecode
+    ticketPurchaseJson :: Int -> BL8.ByteString
+    ticketPurchaseJson quantity =
+        BL8.pack ("{\"ticketPurchaseTierId\":\"42\",\"ticketPurchaseQuantity\":" <> show quantity <> "}")
     decodeTicketOrderStatus :: BL8.ByteString -> Either String SocialEvents.TicketOrderStatusUpdateDTO
     decodeTicketOrderStatus = eitherDecode
+    decodeTicketCheckIn :: BL8.ByteString -> Either String SocialEvents.TicketCheckInRequestDTO
+    decodeTicketCheckIn = eitherDecode
+    decodeEventFinanceEntry :: BL8.ByteString -> Either String SocialEvents.EventFinanceEntryDTO
+    decodeEventFinanceEntry = eitherDecode
+    decodeEventMomentCreate :: BL8.ByteString -> Either String SocialEvents.EventMomentCreateDTO
+    decodeEventMomentCreate = eitherDecode
+    decodeEventLiveBroadcastCreate :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastCreateDTO
+    decodeEventLiveBroadcastCreate = eitherDecode
+    decodeEventLiveBroadcastEnd :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastEndDTO
+    decodeEventLiveBroadcastEnd = eitherDecode
+    decodeEventLiveBroadcastHeartbeat :: BL8.ByteString -> Either String SocialEvents.EventLiveBroadcastHeartbeatDTO
+    decodeEventLiveBroadcastHeartbeat = eitherDecode
+    decodeSocialSyncIngest :: BL8.ByteString -> Either String SocialSync.SocialSyncIngestRequest
+    decodeSocialSyncIngest = eitherDecode
     decodeTrialRequest :: BL8.ByteString -> Either String TrialRequestIn
     decodeTrialRequest = eitherDecode
     isLeft (Left _) = True
     isLeft (Right _) = False
+    isRightUnit (Right ()) = True
+    isRightUnit _ = False
+
+    withRight :: String -> Either String a -> (a -> Expectation) -> Expectation
+    withRight context decoded onRight =
+        either
+            (\err -> expectationFailure (context <> ", got: " <> err))
+            onRight
+            decoded

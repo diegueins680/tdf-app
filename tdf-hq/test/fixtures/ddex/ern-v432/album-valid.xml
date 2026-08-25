@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ernNewReleaseMessage xmlns="http://ddex.net/xml/ern/432"
+                      xmlns:ern="http://ddex.net/xml/ern/432"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      MessageSchemaVersionId="ern/432"
+                      BusinessProfileVersionId="ern/432"
+                      Language="en">
+  <MessageHeader>
+    <MessageThreadId>THREAD-002</MessageThreadId>
+    <MessageId>MSG-20260804-002</MessageId>
+    <MessageSender>
+      <PartyId>DPID:TDF001</PartyId>
+      <PartyName>
+        <FullName>TDF Records</FullName>
+      </PartyName>
+    </MessageSender>
+    <MessageRecipient>
+      <PartyId>DPID:DSP001</PartyId>
+      <PartyName>
+        <FullName>Digital Service Provider</FullName>
+      </PartyName>
+    </MessageRecipient>
+    <MessageCreatedDateTime>2026-08-04T14:00:00Z</MessageCreatedDateTime>
+  </MessageHeader>
+  <PartyList>
+    <Party IsArtist="true">
+      <PartyId>
+        <DPID>DPID:ARTIST001</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>Test Artist</FullName>
+        <NameToDisplay>Test Artist</NameToDisplay>
+      </PartyName>
+    </Party>
+    <Party IsArtist="true">
+      <PartyId>
+        <DPID>DPID:ARTIST002</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>Featured Artist</FullName>
+        <NameToDisplay>Featured Artist</NameToDisplay>
+      </PartyName>
+    </Party>
+    <Party IsLabel="true">
+      <PartyId>
+        <DPID>DPID:TDF001</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>TDF Records</FullName>
+      </PartyName>
+    </Party>
+    <Party IsProducer="true">
+      <PartyId>
+        <IPI>123456789</IPI>
+      </PartyId>
+      <PartyName>
+        <FullName>Test Producer</FullName>
+      </PartyName>
+    </Party>
+  </PartyList>
+  <ResourceList>
+    <SoundRecording>
+      <SoundRecordingType>MusicalWorkSoundRecording</SoundRecordingType>
+      <SoundRecordingId>
+        <ISRC>USTDF2600001</ISRC>
+      </SoundRecordingId>
+      <ResourceReference>A1</ResourceReference>
+      <ReferenceTitle>
+        <TitleText>Track One</TitleText>
+      </ReferenceTitle>
+      <Duration>PT3M30S</Duration>
+      <CreationInformation>
+        <CreationDetails>
+          <CreationType>MainCreation</CreationType>
+          <Contributor>
+            <PartyReference>DPID:ARTIST001</PartyReference>
+            <Role>MainArtist</Role>
+          </Contributor>
+          <Contributor>
+            <PartyReference>DPID:ARTIST002</PartyReference>
+            <Role>FeaturedArtist</Role>
+          </Contributor>
+          <Contributor>
+            <PartyReference>IPI:123456789</PartyReference>
+            <Role>Producer</Role>
+          </Contributor>
+        </CreationDetails>
+      </CreationInformation>
+      <SoundRecordingDetailsByTechnicalConfiguration>
+        <TechnicalDetails>
+          <ResourceTechnicalConfiguration>
+            <ContainerFormat>WAV</ContainerFormat>
+          </ResourceTechnicalConfiguration>
+        </TechnicalDetails>
+        <Language>en</Language>
+        <IsExplicit>false</IsExplicit>
+      </SoundRecordingDetailsByTechnicalConfiguration>
+    </SoundRecording>
+    <SoundRecording>
+      <SoundRecordingType>MusicalWorkSoundRecording</SoundRecordingType>
+      <SoundRecordingId>
+        <ISRC>USTDF2600002</ISRC>
+      </SoundRecordingId>
+      <ResourceReference>A2</ResourceReference>
+      <ReferenceTitle>
+        <TitleText>Track Two</TitleText>
+      </ReferenceTitle>
+      <Duration>PT4M15S</Duration>
+      <CreationInformation>
+        <CreationDetails>
+          <CreationType>MainCreation</CreationType>
+          <Contributor>
+            <PartyReference>DPID:ARTIST001</PartyReference>
+            <Role>MainArtist</Role>
+          </Contributor>
+        </CreationDetails>
+      </CreationInformation>
+      <SoundRecordingDetailsByTechnicalConfiguration>
+        <TechnicalDetails>
+          <ResourceTechnicalConfiguration>
+            <ContainerFormat>WAV</ContainerFormat>
+          </ResourceTechnicalConfiguration>
+        </TechnicalDetails>
+        <Language>en</Language>
+        <IsExplicit>true</IsExplicit>
+      </SoundRecordingDetailsByTechnicalConfiguration>
+    </SoundRecording>
+    <SoundRecording>
+      <SoundRecordingType>MusicalWorkSoundRecording</SoundRecordingType>
+      <SoundRecordingId>
+        <ISRC>USTDF2600003</ISRC>
+      </SoundRecordingId>
+      <ResourceReference>A3</ResourceReference>
+      <ReferenceTitle>
+        <TitleText>Track Three</TitleText>
+        <SubTitle>Extended Mix</SubTitle>
+      </ReferenceTitle>
+      <Duration>PT5M45S</Duration>
+      <CreationInformation>
+        <CreationDetails>
+          <CreationType>MainCreation</CreationType>
+          <Contributor>
+            <PartyReference>DPID:ARTIST001</PartyReference>
+            <Role>MainArtist</Role>
+          </Contributor>
+        </CreationDetails>
+      </CreationInformation>
+      <SoundRecordingDetailsByTechnicalConfiguration>
+        <TechnicalDetails>
+          <ResourceTechnicalConfiguration>
+            <ContainerFormat>WAV</ContainerFormat>
+          </ResourceTechnicalConfiguration>
+        </TechnicalDetails>
+        <Language>en</Language>
+        <IsExplicit>false</IsExplicit>
+      </SoundRecordingDetailsByTechnicalConfiguration>
+    </SoundRecording>
+  </ResourceList>
+  <ReleaseList>
+    <Release>
+      <ReleaseId>
+        <UPC>012345678902</UPC>
+      </ReleaseId>
+      <ExternalResourceLink>
+        <ResourceReference>A1</ResourceReference>
+      </ExternalResourceLink>
+      <ExternalResourceLink>
+        <ResourceReference>A2</ResourceReference>
+      </ExternalResourceLink>
+      <ExternalResourceLink>
+        <ResourceReference>A3</ResourceReference>
+      </ExternalResourceLink>
+      <ReleaseReference>R1</ReleaseReference>
+      <ReferenceTitle>
+        <TitleText>Test Album</TitleText>
+        <SubTitle>Deluxe Edition</SubTitle>
+      </ReferenceTitle>
+      <ReleaseType>Album</ReleaseType>
+      <ReleaseDate>2026-08-04</ReleaseDate>
+      <Rights>
+        <CopyrightLine>
+          <Line>(C) 2026 TDF Records</Line>
+        </CopyrightLine>
+        <PLine>
+          <Line>(P) 2026 TDF Records</Line>
+        </PLine>
+      </Rights>
+    </Release>
+  </ReleaseList>
+  <ResourceGroup>
+    <ResourceGroupContentItem>
+      <SequenceNumber>1</SequenceNumber>
+      <ResourceType>SoundRecording</ResourceType>
+      <ResourceReference>A1</ResourceReference>
+    </ResourceGroupContentItem>
+    <ResourceGroupContentItem>
+      <SequenceNumber>2</SequenceNumber>
+      <ResourceType>SoundRecording</ResourceType>
+      <ResourceReference>A2</ResourceReference>
+    </ResourceGroupContentItem>
+    <ResourceGroupContentItem>
+      <SequenceNumber>3</SequenceNumber>
+      <ResourceType>SoundRecording</ResourceType>
+      <ResourceReference>A3</ResourceReference>
+    </ResourceGroupContentItem>
+  </ResourceGroup>
+  <DealList>
+    <Deal>
+      <DealTerms>
+        <CommercialModelType>SubscriptionModel</CommercialModelType>
+        <Usage>
+          <UseType>OnDemandStream</UseType>
+        </Usage>
+        <TerritoryCode>Worldwide</TerritoryCode>
+        <ValidityStartDate>2026-08-04</ValidityStartDate>
+      </DealTerms>
+      <ReleaseReference>R1</ReleaseReference>
+    </Deal>
+    <Deal>
+      <DealTerms>
+        <CommercialModelType>PermanentDownload</CommercialModelType>
+        <Usage>
+          <UseType>PermanentDownload</UseType>
+        </Usage>
+        <TerritoryCode>US</TerritoryCode>
+        <TerritoryCode>CA</TerritoryCode>
+        <ValidityStartDate>2026-08-04</ValidityStartDate>
+      </DealTerms>
+      <ReleaseReference>R1</ReleaseReference>
+    </Deal>
+  </DealList>
+</ernNewReleaseMessage>

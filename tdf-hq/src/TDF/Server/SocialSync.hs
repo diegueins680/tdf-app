@@ -9,9 +9,12 @@ module TDF.Server.SocialSync
   , validateSocialSyncPlatform
   , validateSocialSyncExternalPostId
   , validateSocialSyncIngestSource
+  , validateSocialSyncCaption
   , validateSocialSyncPermalink
+  , validateSocialSyncPermalinkForPlatform
   , validateSocialSyncMediaUrls
   , validateSocialSyncPostsLimit
+  , validateSocialSyncTagFilter
   ) where
 
 import           Control.Monad              (forM)
@@ -19,14 +22,28 @@ import           Control.Monad.Except       (MonadError)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader       (MonadReader, asks)
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Char                  (isAsciiLower, isAsciiUpper, isDigit, isSpace)
+import           Data.Char
+  ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
+  , generalCategory
+  , isAscii
+  , isAsciiLower
+  , isAsciiUpper
+  , isControl
+  , isDigit
+  , isSpace
+  )
 import           Data.Int                   (Int64)
 import           Data.List                  (nub)
 import           Data.Maybe                 (catMaybes, fromMaybe)
 import qualified Data.Text                  as T
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as TE
-import           Data.Time                  (getCurrentTime)
+import           Data.Time
+  ( NominalDiffTime
+  , UTCTime
+  , addUTCTime
+  , getCurrentTime
+  )
 import           Database.Persist
 import           Database.Persist.Sql       (SqlPersistT, runSqlPool, toSqlKey)
 import           Servant
@@ -37,13 +54,33 @@ import           TDF.Auth                   (AuthedUser, hasSocialSyncAccess)
 import           TDF.DB                     (Env(..))
 import           TDF.DTO.SocialSyncDTO
 import           TDF.Models
-import qualified TDF.Trials.Server          as TrialsServer (isValidHttpUrl)
+import qualified TDF.Trials.Server          as TrialsServer
+  ( hasAmbiguousPublicUrlPath
+  , isValidHttpUrl
+  )
 
 maxSocialSyncMediaUrls :: Int
 maxSocialSyncMediaUrls = 20
 
 maxSocialSyncUrlChars :: Int
 maxSocialSyncUrlChars = 2048
+
+maxSocialSyncCaptionChars :: Int
+maxSocialSyncCaptionChars = 8192
+
+maxSocialSyncPostedAtFutureSkewSeconds :: NominalDiffTime
+maxSocialSyncPostedAtFutureSkewSeconds = 5 * 60
+
+data ValidatedSocialSyncPost = ValidatedSocialSyncPost
+  { vsspPayload          :: SocialSyncPostIn
+  , vsspPlatform         :: Text
+  , vsspExternalPostId   :: Text
+  , vsspIngestSource     :: Text
+  , vsspPermalink        :: Maybe Text
+  , vsspMediaUrls        :: Maybe Text
+  , vsspArtistPartyId    :: Maybe (Key Party)
+  , vsspArtistProfileId  :: Maybe (Key ArtistProfile)
+  }
 
 socialSyncServer
   :: ( MonadReader Env m
@@ -74,30 +111,28 @@ socialSyncServer user =
     ingestHandler SocialSyncIngestRequest{..} = do
       ensureSocialSyncAccess
       now <- liftIO getCurrentTime
-      results <- forM ssirPosts $ \payload -> do
-        platform <- either throwError pure (validateSocialSyncPlatform (sspPlatform payload))
-        externalPostId <- either throwError pure (validateSocialSyncExternalPostId (sspExternalPostId payload))
-        ingestSrc <- either throwError pure (validateSocialSyncIngestSource (sspIngestSource payload))
-        permalink <- either throwError pure (validateSocialSyncPermalink (sspPermalink payload))
-        mediaText <- either throwError pure (validateSocialSyncMediaUrls (sspMediaUrls payload))
-        artistPartyKey <- traverse parsePartyId (sspArtistPartyId payload)
-        artistProfileKey <- traverse parseProfileId (sspArtistProfileId payload)
+      validatedPosts <- either throwError pure (validateSocialSyncIngestPosts ssirPosts)
+      either throwError pure $
+        mapM_ (validateSocialSyncPostedAt now . sspPostedAt . vsspPayload) validatedPosts
+      resolvedPosts <- traverse resolveSocialSyncArtistReferences validatedPosts
+      results <- forM resolvedPosts $ \ValidatedSocialSyncPost{..} -> do
         let tagList = classifyTags (sspCaption payload)
             summaryTxt = buildSummary (sspCaption payload)
             tagsText = nonEmptyText (T.intercalate "," tagList)
-        existing <- withPool $ getBy (UniqueSocialSyncPost platform externalPostId)
+            payload = vsspPayload
+        existing <- withPool $ getBy (UniqueSocialSyncPost vsspPlatform vsspExternalPostId)
         case existing of
           Just (Entity key _) -> do
             let updates = concat
                   [ setMaybe SocialSyncPostCaption (sspCaption payload)
-                  , setMaybe SocialSyncPostPermalink permalink
-                  , setMaybe SocialSyncPostMediaUrls mediaText
+                  , setMaybe SocialSyncPostPermalink vsspPermalink
+                  , setMaybe SocialSyncPostMediaUrls vsspMediaUrls
                   , setMaybe SocialSyncPostPostedAt (sspPostedAt payload)
                   , setMaybe SocialSyncPostTags tagsText
                   , setMaybe SocialSyncPostSummary summaryTxt
-                  , setMaybe SocialSyncPostArtistPartyId artistPartyKey
-                  , setMaybe SocialSyncPostArtistProfileId artistProfileKey
-                  , [SocialSyncPostIngestSource =. ingestSrc]
+                  , setMaybe SocialSyncPostArtistPartyId vsspArtistPartyId
+                  , setMaybe SocialSyncPostArtistProfileId vsspArtistProfileId
+                  , [SocialSyncPostIngestSource =. vsspIngestSource]
                   , setMaybe SocialSyncPostLikeCount (sspLikeCount payload)
                   , setMaybe SocialSyncPostCommentCount (sspCommentCount payload)
                   , setMaybe SocialSyncPostShareCount (sspShareCount payload)
@@ -107,22 +142,22 @@ socialSyncServer user =
                     ]
                   ]
             withPool $ update key updates
-            pure (False, platform, ingestSrc)
+            pure (False, vsspPlatform, vsspIngestSource)
           Nothing -> do
             let record = SocialSyncPost
                   { socialSyncPostAccountId = Nothing
-                  , socialSyncPostPlatform = platform
-                  , socialSyncPostExternalPostId = externalPostId
-                  , socialSyncPostArtistPartyId = artistPartyKey
-                  , socialSyncPostArtistProfileId = artistProfileKey
+                  , socialSyncPostPlatform = vsspPlatform
+                  , socialSyncPostExternalPostId = vsspExternalPostId
+                  , socialSyncPostArtistPartyId = vsspArtistPartyId
+                  , socialSyncPostArtistProfileId = vsspArtistProfileId
                   , socialSyncPostCaption = sspCaption payload
-                  , socialSyncPostPermalink = permalink
-                  , socialSyncPostMediaUrls = mediaText
+                  , socialSyncPostPermalink = vsspPermalink
+                  , socialSyncPostMediaUrls = vsspMediaUrls
                   , socialSyncPostPostedAt = sspPostedAt payload
                   , socialSyncPostFetchedAt = now
                   , socialSyncPostTags = tagsText
                   , socialSyncPostSummary = summaryTxt
-                  , socialSyncPostIngestSource = ingestSrc
+                  , socialSyncPostIngestSource = vsspIngestSource
                   , socialSyncPostLikeCount = sspLikeCount payload
                   , socialSyncPostCommentCount = sspCommentCount payload
                   , socialSyncPostShareCount = sspShareCount payload
@@ -131,7 +166,7 @@ socialSyncServer user =
                   , socialSyncPostUpdatedAt = now
                   }
             withPool $ insert_ record
-            pure (True, platform, ingestSrc)
+            pure (True, vsspPlatform, vsspIngestSource)
       let inserted = length (filter (\(wasInserted, _, _) -> wasInserted) results)
           updated = length results - inserted
       let platformLabel =
@@ -171,7 +206,7 @@ socialSyncServer user =
       partyKey <- traverse parsePartyId mParty
       profileKey <- traverse parseProfileId mProfile
       limitVal <- either throwError pure (validateSocialSyncPostsLimit mLimit)
-      let normalizedTag = normalizeSocialSyncTagFilter mTag
+      normalizedTag <- either throwError pure (validateSocialSyncTagFilter mTag)
       let filters = catMaybes
             [ (SocialSyncPostPlatform ==.) <$> platformFilter
             , (SocialSyncPostArtistPartyId ==.) . Just <$> partyKey
@@ -188,6 +223,139 @@ socialSyncServer user =
     withPool action = do
       pool <- asks envPool
       liftIO $ runSqlPool action pool
+
+    resolveSocialSyncArtistReferences
+      :: ( MonadReader Env m
+         , MonadIO m
+         , MonadError ServerError m
+         )
+      => ValidatedSocialSyncPost
+      -> m ValidatedSocialSyncPost
+    resolveSocialSyncArtistReferences post@ValidatedSocialSyncPost{..} = do
+      resolvedPartyId <- case vsspArtistPartyId of
+        Nothing -> pure Nothing
+        Just partyId -> do
+          mParty <- withPool (get partyId)
+          case mParty of
+            Nothing ->
+              throwError err404
+                { errBody = BL.fromStrict (TE.encodeUtf8 "artistPartyId not found")
+                }
+            Just _ -> pure (Just partyId)
+      case vsspArtistProfileId of
+        Nothing ->
+          pure post { vsspArtistPartyId = resolvedPartyId }
+        Just profileId -> do
+          mProfile <- withPool (get profileId)
+          profile <- case mProfile of
+            Nothing ->
+              throwError err404
+                { errBody = BL.fromStrict (TE.encodeUtf8 "artistProfileId not found")
+                }
+            Just value -> pure value
+          let profilePartyId = artistProfileArtistPartyId profile
+          case resolvedPartyId of
+            Nothing ->
+              pure post
+                { vsspArtistPartyId = Just profilePartyId
+                , vsspArtistProfileId = Just profileId
+                }
+            Just partyId
+              | partyId == profilePartyId ->
+                  pure post
+                    { vsspArtistPartyId = Just partyId
+                    , vsspArtistProfileId = Just profileId
+                    }
+              | otherwise ->
+                  throwError err400
+                    { errBody =
+                        BL.fromStrict
+                          (TE.encodeUtf8 "artistProfileId must belong to artistPartyId")
+                    }
+
+validateSocialSyncPostPayload :: SocialSyncPostIn -> Either ServerError ValidatedSocialSyncPost
+validateSocialSyncPostPayload payload = do
+  platform <- validateSocialSyncPlatform (sspPlatform payload)
+  externalPostId <- validateSocialSyncExternalPostId (sspExternalPostId payload)
+  ingestSrc <- validateSocialSyncIngestSource (sspIngestSource payload)
+  caption <- validateSocialSyncCaption (sspCaption payload)
+  permalink <- validateSocialSyncPermalinkForPlatform platform (sspPermalink payload)
+  mediaUrls <- validateSocialSyncMediaUrls (sspMediaUrls payload)
+  validateSocialSyncMetricCounts payload
+  artistPartyId <- traverse validateSocialSyncArtistPartyKey (sspArtistPartyId payload)
+  artistProfileId <- traverse validateSocialSyncArtistProfileKey (sspArtistProfileId payload)
+  pure ValidatedSocialSyncPost
+    { vsspPayload = payload { sspCaption = caption }
+    , vsspPlatform = platform
+    , vsspExternalPostId = externalPostId
+    , vsspIngestSource = ingestSrc
+    , vsspPermalink = permalink
+    , vsspMediaUrls = mediaUrls
+    , vsspArtistPartyId = artistPartyId
+    , vsspArtistProfileId = artistProfileId
+    }
+
+validateSocialSyncMetricCounts :: SocialSyncPostIn -> Either ServerError ()
+validateSocialSyncMetricCounts payload = do
+  validateOptionalSocialSyncMetricCount "likeCount" (sspLikeCount payload)
+  validateOptionalSocialSyncMetricCount "commentCount" (sspCommentCount payload)
+  validateOptionalSocialSyncMetricCount "shareCount" (sspShareCount payload)
+  validateOptionalSocialSyncMetricCount "viewCount" (sspViewCount payload)
+
+validateSocialSyncPostedAt :: UTCTime -> Maybe UTCTime -> Either ServerError ()
+validateSocialSyncPostedAt _ Nothing = Right ()
+validateSocialSyncPostedAt now (Just postedAt)
+  | postedAt <= addUTCTime maxSocialSyncPostedAtFutureSkewSeconds now = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "postedAt must not be more than five minutes in the future")
+        }
+
+validateOptionalSocialSyncMetricCount :: Text -> Maybe Int -> Either ServerError ()
+validateOptionalSocialSyncMetricCount _ Nothing = Right ()
+validateOptionalSocialSyncMetricCount fieldName (Just metricCount)
+  | metricCount >= 0 = Right ()
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 (fieldName <> " must be greater than or equal to 0"))
+        }
+
+validateSocialSyncIngestPosts :: [SocialSyncPostIn] -> Either ServerError [ValidatedSocialSyncPost]
+validateSocialSyncIngestPosts posts
+  | null posts =
+      Left err400 { errBody = "posts must contain at least one post" }
+  | length posts > maxSocialSyncIngestPosts =
+      Left err400
+        { errBody =
+            BL.fromStrict $
+              TE.encodeUtf8 $
+                "posts must contain at most "
+                  <> T.pack (show maxSocialSyncIngestPosts)
+                  <> " posts"
+        }
+  | otherwise = do
+      validated <- traverse validateSocialSyncPostPayload posts
+      let identities =
+            map
+              (\post -> (vsspPlatform post, vsspExternalPostId post))
+              validated
+      if length identities /= length (nub identities)
+        then
+          Left err400
+            { errBody = "posts must not contain duplicate platform/externalPostId pairs" }
+        else Right validated
+
+validateSocialSyncArtistPartyKey :: Text -> Either ServerError (Key Party)
+validateSocialSyncArtistPartyKey raw =
+  toSqlKey <$> validateSocialSyncArtistPartyId raw
+
+validateSocialSyncArtistProfileKey :: Text -> Either ServerError (Key ArtistProfile)
+validateSocialSyncArtistProfileKey raw =
+  toSqlKey <$> validateSocialSyncArtistProfileId raw
 
 parsePartyId :: MonadError ServerError m => Text -> m (Key Party)
 parsePartyId raw =
@@ -234,7 +402,27 @@ validateSocialSyncExternalPostId raw =
          then Left err400
            { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain whitespace")
            }
+       else if T.any isControl trimmed
+         then Left err400
+           { errBody = BL.fromStrict (TE.encodeUtf8 "externalPostId must not contain control characters")
+           }
+       else if T.any isHiddenSocialSyncIdentityChar trimmed
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 "externalPostId must not contain hidden formatting characters")
+           }
+       else if T.any (not . isAscii) trimmed
+         then Left err400
+           { errBody =
+               BL.fromStrict
+                 (TE.encodeUtf8 "externalPostId must contain visible ASCII characters only")
+           }
        else Right trimmed
+
+isHiddenSocialSyncIdentityChar :: Char -> Bool
+isHiddenSocialSyncIdentityChar ch =
+  generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialSyncIngestSource :: Maybe Text -> Either ServerError Text
 validateSocialSyncIngestSource Nothing = Right "manual"
@@ -250,7 +438,7 @@ validateSocialSyncIngestSource (Just raw) =
           Left err400
             { errBody = BL.fromStrict (TE.encodeUtf8 "ingestSource must be 64 characters or fewer")
             }
-      | T.all isSocialSyncIngestSourceChar source ->
+      | T.all isSocialSyncLabelChar source ->
           Right (T.toLower source)
       | otherwise ->
           Left err400
@@ -260,9 +448,37 @@ validateSocialSyncIngestSource (Just raw) =
                      "ingestSource must contain only ASCII letters, digits, "
                        <> "hyphen, or underscore")
             }
-  where
-    isSocialSyncIngestSourceChar c =
-      isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+isSocialSyncLabelChar :: Char -> Bool
+isSocialSyncLabelChar c =
+  isDigit c || isAsciiLower c || isAsciiUpper c || c == '-' || c == '_'
+
+validateSocialSyncCaption :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncCaption Nothing = Right Nothing
+validateSocialSyncCaption (Just rawCaption) =
+  case nonEmptyText rawCaption of
+    Nothing -> Right Nothing
+    Just caption
+      | T.length caption > maxSocialSyncCaptionChars ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "caption must be 8192 characters or fewer")
+            }
+      | T.any isUnsupportedSocialSyncCaptionChar caption ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  ( TE.encodeUtf8
+                      "caption must not contain unsupported control or hidden formatting characters"
+                  )
+            }
+      | otherwise -> Right (Just caption)
+
+isUnsupportedSocialSyncCaptionChar :: Char -> Bool
+isUnsupportedSocialSyncCaptionChar ch =
+  (isControl ch && ch `notElem` ("\n\r\t" :: String))
+    || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
 validateSocialSyncPermalink :: Maybe Text -> Either ServerError (Maybe Text)
 validateSocialSyncPermalink Nothing = Right Nothing
@@ -280,12 +496,94 @@ validateSocialSyncPermalink (Just rawUrl) =
                 BL.fromStrict
                   (TE.encodeUtf8 "permalink must be 2048 characters or fewer")
             }
-      | not (TrialsServer.isValidHttpUrl url) ->
+      | "#" `T.isInfixOf` url ->
           Left err400
             { errBody =
-                BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public http(s) URL")
+                BL.fromStrict (TE.encodeUtf8 "permalink must not contain URL fragments")
+            }
+      | not (isValidSocialSyncHttpsUrl url) ->
+          Left err400
+            { errBody =
+                BL.fromStrict (TE.encodeUtf8 "permalink must be an absolute public https URL")
+            }
+      | TrialsServer.hasAmbiguousPublicUrlPath url ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "permalink path must not contain empty, dot, or dot-dot segments")
             }
       | otherwise -> Right (Just url)
+
+validateSocialSyncPermalinkForPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncPermalinkForPlatform rawPlatform rawPermalink = do
+  platform <- validateSocialSyncPlatform rawPlatform
+  permalink <- validateSocialSyncPermalink rawPermalink
+  validateSocialSyncPermalinkPlatform platform permalink
+
+validateSocialSyncPermalinkPlatform :: Text -> Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncPermalinkPlatform _ Nothing = Right Nothing
+validateSocialSyncPermalinkPlatform platform (Just url)
+  | not (socialSyncPermalinkHasPath url) =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "permalink must include a post path")
+        }
+  | permalinkMatchesSocialSyncPlatform platform url = Right (Just url)
+  | otherwise =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "permalink must match the declared platform domain")
+        }
+
+permalinkMatchesSocialSyncPlatform :: Text -> Text -> Bool
+permalinkMatchesSocialSyncPlatform platform url =
+  case socialSyncPublicHttpsHost url of
+    Nothing -> False
+    Just host ->
+      case platform of
+        "instagram" -> hostMatches "instagram.com" host
+        "facebook"  -> hostMatches "facebook.com" host || hostMatches "fb.watch" host
+        _           -> False
+
+hostMatches :: Text -> Text -> Bool
+hostMatches root host =
+  host == root || ("." <> root) `T.isSuffixOf` host
+
+socialSyncPublicHttpsHost :: Text -> Maybe Text
+socialSyncPublicHttpsHost rawUrl =
+  let trimmed = T.strip rawUrl
+      lowerUrl = T.toLower trimmed
+  in case T.stripPrefix "https://" lowerUrl of
+       Nothing -> Nothing
+       Just remainder ->
+         let authority = T.takeWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') remainder
+             (host, portSuffix) = T.breakOn ":" authority
+         in if T.null host || not (T.null portSuffix || portSuffix == ":443")
+              then Nothing
+              else Just host
+
+socialSyncPermalinkHasPath :: Text -> Bool
+socialSyncPermalinkHasPath rawUrl =
+  let trimmed = T.strip rawUrl
+      lowerUrl = T.toLower trimmed
+  in case T.stripPrefix "https://" lowerUrl of
+       Nothing -> False
+       Just remainder ->
+         let pathWithQueryOrFragment =
+               T.dropWhile (\ch -> ch /= '/' && ch /= '?' && ch /= '#') remainder
+             path =
+               case T.uncons pathWithQueryOrFragment of
+                 Just ('/', suffix) ->
+                   "/" <> T.takeWhile (\ch -> ch /= '?' && ch /= '#') suffix
+                 _ -> ""
+             segments =
+               filter (not . T.null) $
+                 T.splitOn "/" $
+                   T.dropWhile (== '/') $
+                     T.dropWhileEnd (== '/') path
+         in not (null segments)
 
 validateSocialSyncMediaUrls :: Maybe [Text] -> Either ServerError (Maybe Text)
 validateSocialSyncMediaUrls Nothing = Right Nothing
@@ -308,11 +606,23 @@ validateSocialSyncMediaUrls (Just rawUrls)
             BL.fromStrict
               (TE.encodeUtf8 "mediaUrls entries must be 2048 characters or fewer")
         }
-  | any (not . TrialsServer.isValidHttpUrl) mediaUrls =
+  | any ("#" `T.isInfixOf`) mediaUrls =
       Left err400
         { errBody =
             BL.fromStrict
-              (TE.encodeUtf8 "mediaUrls entries must be absolute public http(s) URLs")
+              (TE.encodeUtf8 "mediaUrls entries must not contain URL fragments")
+        }
+  | any (not . isValidSocialSyncHttpsUrl) mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries must be absolute public https URLs")
+        }
+  | any TrialsServer.hasAmbiguousPublicUrlPath mediaUrls =
+      Left err400
+        { errBody =
+            BL.fromStrict
+              (TE.encodeUtf8 "mediaUrls entries path must not contain empty, dot, or dot-dot segments")
         }
   | length mediaUrls /= length (nub mediaUrls) =
       Left err400
@@ -323,6 +633,11 @@ validateSocialSyncMediaUrls (Just rawUrls)
   where
     mediaUrls = map T.strip rawUrls
 
+isValidSocialSyncHttpsUrl :: Text -> Bool
+isValidSocialSyncHttpsUrl url =
+  "https://" `T.isPrefixOf` T.toLower (T.strip url)
+    && TrialsServer.isValidHttpUrl url
+
 validateSocialSyncPostsLimit :: Maybe Int -> Either ServerError Int
 validateSocialSyncPostsLimit Nothing = Right 50
 validateSocialSyncPostsLimit (Just n)
@@ -332,20 +647,43 @@ validateSocialSyncPostsLimit (Just n)
         { errBody = BL.fromStrict (TE.encodeUtf8 "limit must be between 1 and 500")
         }
 
+validateSocialSyncTagFilter :: Maybe Text -> Either ServerError (Maybe Text)
+validateSocialSyncTagFilter Nothing = Right Nothing
+validateSocialSyncTagFilter (Just raw) =
+  case nonEmptyText raw of
+    Nothing -> Right Nothing
+    Just tag
+      | T.length tag > 64 ->
+          Left err400
+            { errBody = BL.fromStrict (TE.encodeUtf8 "tag must be 64 characters or fewer")
+            }
+      | T.all isSocialSyncLabelChar tag ->
+          Right (Just (T.toLower tag))
+      | otherwise ->
+          Left err400
+            { errBody =
+                BL.fromStrict
+                  (TE.encodeUtf8 "tag must contain only ASCII letters, digits, hyphen, or underscore")
+            }
+
 validatePositiveSocialSyncId :: Text -> Text -> Either ServerError Int64
 validatePositiveSocialSyncId fieldName raw =
-  case readMaybeInt64 raw of
+  case readMaybeInt64DigitsOnly raw of
     Just val | val > 0 -> Right val
     _ ->
       Left err400
         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " must be a positive integer"))
         }
 
-readMaybeInt64 :: Text -> Maybe Int64
-readMaybeInt64 txt =
-  case reads (T.unpack (T.strip txt)) of
-    [(n, "")] -> Just n
-    _         -> Nothing
+readMaybeInt64DigitsOnly :: Text -> Maybe Int64
+readMaybeInt64DigitsOnly txt =
+  let clean = T.strip txt
+  in if T.null clean || not (T.all isDigit clean)
+       then Nothing
+       else
+         case reads (T.unpack clean) of
+           [(n, "")] -> Just n
+           _         -> Nothing
 
 normalizePlatform :: Text -> Text
 normalizePlatform = T.toLower . T.strip
@@ -361,9 +699,6 @@ resolveSocialSyncRunLabel fallback rawValues =
     [] -> fallback
     [label] -> label
     _ -> "mixed"
-
-normalizeSocialSyncTagFilter :: Maybe Text -> Maybe Text
-normalizeSocialSyncTagFilter mTag = T.toLower <$> (mTag >>= nonEmptyText)
 
 filterSocialSyncRows :: Maybe Text -> Int -> [Entity SocialSyncPost] -> [Entity SocialSyncPost]
 filterSocialSyncRows Nothing _ rows = rows

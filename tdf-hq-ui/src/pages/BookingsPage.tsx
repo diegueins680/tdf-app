@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { Bookings } from '../api/bookings';
+import { Bookings, type ServiceBookingCommerceDTO } from '../api/bookings';
 import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
 import {
   Typography,
@@ -13,6 +13,7 @@ import {
   Stack,
   TextField,
   Alert,
+  Collapse,
   MenuItem,
   FormControl,
   InputLabel,
@@ -32,14 +33,17 @@ import { Parties } from '../api/parties';
 import { Services } from '../api/services';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  defaultMinutesForService,
-  describeServiceDefaults,
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
-  requiresEngineerForService,
-  shouldShowQuickBookingTemplate,
+  getBookingEngineerFieldState,
+  getBookingOptionalDetailsState,
+  getBookingRoomsFieldState,
+  getBookingServiceEntryGateState,
+  getBookingServiceFieldState,
 } from './bookingsPageLogic';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 // FullCalendar v6 auto-injects its styles when the modules load, so importing the
 // CSS bundles directly is unnecessary and breaks with Vite due to missing files.
@@ -52,6 +56,8 @@ const parsePositiveInt = (raw: string | null): number | null => {
 };
 
 export default function BookingsPage() {
+  const { timezone: zone, locale } = useLocalePreferences();
+  const { formatMoney } = useCurrency();
   const location = useLocation();
   const navigate = useNavigate();
   const calendarRef = useRef<FullCalendar | null>(null);
@@ -92,7 +98,6 @@ export default function BookingsPage() {
     staleTime: 5 * 60 * 1000,
   });
   const qc = useQueryClient();
-  const zone = (import.meta.env['VITE_TZ'] as string | undefined) ?? 'America/Guayaquil';
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
@@ -105,6 +110,8 @@ export default function BookingsPage() {
     hasActiveFilter: hasActiveBookingFilter,
     hasError: Boolean(bookingsQuery.error),
     isLoading: bookingsQuery.isLoading,
+    roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
+    roomCount: rooms.length,
   });
   const statusOptions = [
     'Tentative',
@@ -123,7 +130,7 @@ export default function BookingsPage() {
   };
   const formatEventRange = (start?: Date | null, end?: Date | null) => {
     if (!start) return '';
-    const startStr = DateTime.fromJSDate(start).setZone(zone).toFormat('ccc d LLL, HH:mm');
+    const startStr = DateTime.fromJSDate(start).setZone(zone).setLocale(locale).toFormat('ccc d LLL, HH:mm');
     if (!end) return startStr;
     const endStr = DateTime.fromJSDate(end).setZone(zone).toFormat('HH:mm');
     return `${startStr} - ${endStr}`;
@@ -160,8 +167,7 @@ export default function BookingsPage() {
           : extractEngineerFromNotes(booking.notes);
         const isCourse =
           Boolean(booking.courseSlug) ||
-          (booking.bookingId ?? 0) < 0 ||
-          (booking.serviceType ?? '').toLowerCase().includes('curso');
+          (booking.bookingId ?? 0) < 0;
         const courseCapacity = booking.courseCapacity ?? undefined;
         const courseRemaining = booking.courseRemaining ?? undefined;
         const coursePrice = booking.coursePrice ?? undefined;
@@ -169,7 +175,7 @@ export default function BookingsPage() {
         const courseSubtitle = courseCapacity
           ? `Cupos: ${Math.max(0, courseRemaining ?? 0)}/${courseCapacity}`
           : null;
-        const priceText = coursePrice ? `USD ${Math.round(coursePrice)}` : null;
+        const priceText = coursePrice ? formatMoney(coursePrice, booking.courseCurrency ?? undefined) : null;
         const locationText = courseLocation ?? null;
         return {
           id: String(booking.bookingId),
@@ -192,18 +198,19 @@ export default function BookingsPage() {
           durationEditable: !isCourse,
         };
       }),
-    [bookings],
+    [bookings, formatMoney],
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [manualReviewNotes, setManualReviewNotes] = useState('');
   const [title, setTitle] = useState('Bloque de estudio');
   const [notes, setNotes] = useState('');
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [serviceType, setServiceType] = useState<string>('');
+  const [serviceOfferingId, setServiceOfferingId] = useState<string>('');
   const [engineerName, setEngineerName] = useState('');
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
   const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
@@ -231,13 +238,30 @@ export default function BookingsPage() {
   const [prefillHandled, setPrefillHandled] = useState(false);
   const [prefillNotice, setPrefillNotice] = useState(false);
   const [autoAssignMessage, setAutoAssignMessage] = useState('');
-  const [template, setTemplate] = useState<string>('');
   const [serviceLocked, setServiceLocked] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [duplicateStartInput, setDuplicateStartInput] = useState('');
-  const [durationManuallyAdjusted, setDurationManuallyAdjusted] = useState(false);
   const [roomsManuallyAdjusted, setRoomsManuallyAdjusted] = useState(false);
-  const defaultServiceName = serviceTypes[0]?.name ?? '';
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const bookingCommerceQuery = useQuery<ServiceBookingCommerceDTO, Error>({
+    queryKey: ['booking-commerce', editingId],
+    queryFn: () => Bookings.getCommerce(editingId!),
+    enabled: dialogOpen && mode === 'edit' && editingId != null && editingId > 0,
+    retry: false,
+  });
+  const manualReviewMutation = useMutation<
+    ServiceBookingCommerceDTO,
+    Error,
+    'approve' | 'reject'
+  >({
+    mutationFn: (action) => Bookings.reviewManualPayment(editingId!, action, manualReviewNotes),
+    onSuccess: (commerce) => {
+      qc.setQueryData(['booking-commerce', editingId], commerce);
+      setManualReviewNotes('');
+      void qc.invalidateQueries({ queryKey: ['bookings'] });
+    },
+  });
+  const defaultService = serviceTypes[0] ?? null;
   const formatServiceLabel = useCallback(
     (svc: ServiceType) => {
       if (svc.priceCents == null) return svc.name;
@@ -273,59 +297,21 @@ export default function BookingsPage() {
     });
   }, [assignedRoomIds, bookings, editingId, endInput, startInput, zone]);
 
-  const categorizeRooms = useMemo(() => {
-    const map = {
-      djBooth: [] as RoomDTO[],
-      liveRoom: [] as RoomDTO[],
-      controlRoom: [] as RoomDTO[],
-      vocalBooth: [] as RoomDTO[],
-      other: [] as RoomDTO[],
-    };
-    rooms.forEach((room) => {
-      const name = room.rName.toLowerCase();
-      if (name.includes('dj')) {
-        map.djBooth.push(room);
-      } else if (name.includes('live')) {
-        map.liveRoom.push(room);
-      } else if (name.includes('control')) {
-        map.controlRoom.push(room);
-      } else if (name.includes('vocal')) {
-        map.vocalBooth.push(room);
-      } else {
-        map.other.push(room);
-      }
-    });
-    return map;
-  }, [rooms]);
-
-  const pickFirst = (list: RoomDTO[]) => (list.length > 0 ? [list[0]!] : []);
-
-  const defaultRoomsForService = useCallback((svc: string): RoomDTO[] => {
-    const lowered = svc.toLowerCase();
-    if (lowered.includes('audiovisual') && lowered.includes('live')) {
-      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('dj')) {
-      const defaults = pickFirst(categorizeRooms.djBooth);
-      return defaults.length ? defaults : pickFirst(categorizeRooms.other);
-    }
-    if (lowered.includes('band') && lowered.includes('record')) {
-      return [...categorizeRooms.liveRoom.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('vocal') && lowered.includes('record')) {
-      return [...categorizeRooms.vocalBooth.slice(0, 1), ...categorizeRooms.controlRoom.slice(0, 1)];
-    }
-    if (lowered.includes('rehearsal') || lowered.includes('ensayo') || (lowered.includes('band') && lowered.includes('rehe'))) {
-      return categorizeRooms.liveRoom.slice(0, 1);
-    }
-    if (lowered.includes('mix') || lowered.includes('master')) {
-      return categorizeRooms.controlRoom.slice(0, 1);
-    }
-    if (lowered.includes('record')) {
-      return [...categorizeRooms.controlRoom.slice(0, 1), ...categorizeRooms.liveRoom.slice(0, 1)];
-    }
-    return categorizeRooms.other.slice(0, 1);
-  }, [categorizeRooms]);
+  const selectedService = useMemo(
+    () => serviceTypes.find((service) => service.id === serviceOfferingId) ?? null,
+    [serviceOfferingId, serviceTypes],
+  );
+  const defaultRoomsForService = useCallback((offeringId: string): RoomDTO[] => {
+    const service = serviceTypes.find((candidate) => candidate.id === offeringId);
+    if (!service) return [];
+    const requiredIds = service.defaultResources
+      .filter((resource) => resource.sdrSelectionMode === 'all')
+      .map((resource) => resource.sdrResourceId);
+    const firstAvailableId = service.defaultResources
+      .find((resource) => resource.sdrSelectionMode === 'first-available')?.sdrResourceId;
+    const selectedIds = new Set(firstAvailableId ? [...requiredIds, firstAvailableId] : requiredIds);
+    return rooms.filter((room) => selectedIds.has(room.roomId));
+  }, [rooms, serviceTypes]);
 
   const assignedRooms = useMemo(
     () => rooms.filter((room) => assignedRoomIds.includes(room.roomId)),
@@ -341,20 +327,81 @@ export default function BookingsPage() {
   );
   const customerOptions = parties;
   const customerFieldState = useMemo(
-    () => getBookingCustomerFieldState({ customerCount: customerOptions.length, selectedCustomerId: customerPartyId }),
-    [customerOptions.length, customerPartyId],
+    () => getBookingCustomerFieldState({
+      customerCount: customerOptions.length,
+      customerCatalogLoading: partiesQuery.isLoading && partiesQuery.data == null,
+      selectedCustomerId: customerPartyId,
+    }),
+    [customerOptions.length, customerPartyId, partiesQuery.data, partiesQuery.isLoading],
   );
-  const showQuickTemplateField = shouldShowQuickBookingTemplate({
-    hasServiceCatalog: serviceTypes.length > 0,
-    mode,
-    serviceCatalogReady: !serviceCatalogQuery.isLoading,
-    serviceLocked,
-  });
+  const serviceCatalogReady = !serviceCatalogQuery.isLoading;
+  const serviceEntryGateState = useMemo(
+    () => getBookingServiceEntryGateState({
+      serviceCatalogReady,
+      serviceLocked,
+      serviceOfferingId,
+    }),
+    [serviceCatalogReady, serviceLocked, serviceOfferingId],
+  );
+  const serviceFieldState = useMemo(
+    () =>
+      getBookingServiceFieldState({
+        hasServiceCatalog: serviceTypes.length > 0,
+        serviceCatalogReady,
+        serviceLocked,
+      }),
+    [serviceCatalogReady, serviceLocked, serviceTypes.length],
+  );
+  const serviceFieldHelperText = selectedService
+    ? [
+        selectedService.defaultResources.length > 0
+          ? `Recursos publicados: ${selectedService.defaultResources.map((resource) => resource.sdrResourceName).join(' · ')}`
+          : 'Sin recursos predeterminados.',
+        selectedService.requiresEngineer ? 'Requiere ingeniero.' : 'Ingeniero opcional.',
+      ].join(' ')
+    : serviceFieldState.helperText || 'Selecciona un servicio publicado.';
+  const engineerFieldState = useMemo(
+    () => getBookingEngineerFieldState({
+      engineerCount: engineerOptions.length,
+      hasAssignedEngineer: engineerPartyId != null || engineerName.trim() !== '',
+      hasSelectedService: selectedService != null,
+      requiresEngineer: selectedService?.requiresEngineer ?? false,
+    }),
+    [engineerName, engineerOptions.length, engineerPartyId, selectedService],
+  );
+  const roomsFieldState = useMemo(
+    () => getBookingRoomsFieldState({
+      hasAssignedRooms: assignedRoomIds.length > 0,
+      hasSelectedService: selectedService != null,
+      roomCatalogLoading: roomsQuery.isLoading && roomsQuery.data == null,
+      roomCount: rooms.length,
+    }),
+    [assignedRoomIds.length, rooms.length, roomsQuery.data, roomsQuery.isLoading, selectedService],
+  );
+  const optionalDetailsState = useMemo(
+    () => getBookingOptionalDetailsState({
+      mode,
+      notes,
+      status,
+    }),
+    [mode, notes, status],
+  );
+  const optionalDetailsExpanded = showOptionalDetails || optionalDetailsState.defaultExpanded;
   const conflictAlertText = useMemo(
     () => getBookingConflictAlertText(conflicts.map((conflict) => conflict.title)),
     [conflicts],
   );
-  const missingEngineer = requiresEngineerForService(serviceType) && !(engineerName.trim() || engineerPartyId);
+  const missingEngineer = engineerFieldState.showField
+    && Boolean(selectedService?.requiresEngineer)
+    && !(engineerName.trim() || engineerPartyId);
+  const handleCloseBookingDialog = useCallback(() => {
+    setDialogOpen(false);
+    setShowOptionalDetails(false);
+  }, []);
+  const openCreateContactDialog = useCallback(() => {
+    setCreateContactError(null);
+    setCreateContactOpen(true);
+  }, []);
   const createPartyMutation = useMutation({
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
@@ -369,23 +416,23 @@ export default function BookingsPage() {
   });
 
 useEffect(() => {
-  if (!serviceType || rooms.length === 0 || assignedRoomIds.length > 0) return;
-  const defaults = defaultRoomsForService(serviceType);
+  if (!serviceOfferingId || rooms.length === 0 || assignedRoomIds.length > 0) return;
+  const defaults = defaultRoomsForService(serviceOfferingId);
   if (defaults.length) {
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
-}, [serviceType, rooms, assignedRoomIds.length, defaultRoomsForService]);
+}, [serviceOfferingId, rooms, assignedRoomIds.length, defaultRoomsForService]);
 
 useEffect(() => {
-  if (serviceType || !defaultServiceName) return;
-  setServiceType(defaultServiceName);
-  const defaults = defaultRoomsForService(defaultServiceName);
+  if (serviceOfferingId || !defaultService) return;
+  setServiceOfferingId(defaultService.id);
+  const defaults = defaultRoomsForService(defaultService.id);
   if (defaults.length) {
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setRoomsManuallyAdjusted(false);
   }
-}, [defaultRoomsForService, defaultServiceName, serviceType]);
+}, [defaultRoomsForService, defaultService, serviceOfferingId]);
 
   const formatForInput = useCallback(
     (date: Date) => DateTime.fromJSDate(date, { zone }).toFormat("yyyy-LL-dd'T'HH:mm"),
@@ -404,7 +451,7 @@ useEffect(() => {
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.notes) setNotes(parsed.notes);
       setStatus('Tentative');
-      setServiceType('Trial lesson');
+      setServiceOfferingId(defaultService?.id ?? '');
       setDialogOpen(true);
       setAutoAssignMessage('Datos precargados desde la última acción.');
       setPrefillNotice(true);
@@ -416,47 +463,47 @@ useEffect(() => {
     } finally {
       setPrefillHandled(true);
     }
-  }, [dialogOpen, formatForInput, prefillHandled]);
+  }, [defaultService, dialogOpen, formatForInput, prefillHandled]);
 
 const openDialogForRange = (start: Date, end: Date) => {
   setStartInput(formatForInput(start));
   setEndInput(formatForInput(end));
+  setShowOptionalDetails(false);
   setDialogOpen(true);
-  setDurationManuallyAdjusted(false);
   setRoomsManuallyAdjusted(false);
 };
 
   const handleDateClick = (info: { date: Date }) => {
     const start = info.date;
-    const initialService = defaultServiceName;
-    const duration = initialService ? defaultMinutesForService(initialService) : 60;
+    const initialService = defaultService;
+    const duration = initialService?.defaultDurationMinutes ?? 60;
     const end = DateTime.fromJSDate(start).plus({ minutes: duration }).toJSDate();
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setServiceType(initialService);
+    setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService(initialService);
+    const defaults = defaultRoomsForService(initialService?.id ?? '');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
     openDialogForRange(start, end);
   };
 
   const handleSelect = (info: { start: Date; end: Date }) => {
-    const initialService = defaultServiceName;
-    const defaultDuration = initialService ? defaultMinutesForService(initialService) : 60;
+    const initialService = defaultService;
+    const defaultDuration = initialService?.defaultDurationMinutes ?? 60;
     setMode('create');
     setEditingId(null);
     setTitle('Bloque de estudio');
     setNotes('');
-    setServiceType(initialService);
+    setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
     setCustomerName('');
     setCustomerPartyId(null);
-    const defaults = defaultRoomsForService(initialService);
+    const defaults = defaultRoomsForService(initialService?.id ?? '');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
     openDialogForRange(
@@ -475,7 +522,6 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEndInput('');
     setTitle('Bloque de estudio');
     setNotes('');
-    setServiceType('');
     setAssignedRoomIds([]);
     setEngineerName('');
     setEngineerPartyId(null);
@@ -529,10 +575,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         cbEndsAt: toUtcIso(endInput) ?? '',
         cbStatus: status,
         cbNotes: buildCombinedNotes(),
-        cbServiceType: (() => {
-          const trimmed = serviceType.trim();
-          return trimmed === '' ? null : trimmed;
-        })(),
+        cbServiceOfferingId: serviceOfferingId,
         cbPartyId: customerPartyId,
         cbResourceIds: assignedRoomIds,
         cbEngineerPartyId: engineerPartyId,
@@ -540,10 +583,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       }),
     onSuccess: () => {
       setDialogOpen(false);
+      setShowOptionalDetails(false);
       setFormError(null);
       setTitle('Bloque de estudio');
       setNotes('');
-      setServiceType('');
+      setServiceOfferingId('');
       setStatus('Confirmed');
       setEditingId(null);
       setMode('create');
@@ -567,6 +611,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['bookings'] });
       setDialogOpen(false);
+      setShowOptionalDetails(false);
       setEditingId(null);
       setMode('create');
       setFormError(null);
@@ -586,8 +631,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Revisa las fechas seleccionadas.');
       return;
     }
-    const trimmedService = serviceType.trim();
-    if (!trimmedService) {
+    if (selectedService?.id !== serviceOfferingId) {
       setFormError('Selecciona un servicio para la sesión.');
       return;
     }
@@ -605,6 +649,10 @@ const openDialogForRange = (start: Date, end: Date) => {
       setFormError('Selecciona un cliente para la sesión.');
       return;
     }
+    if (rooms.length === 0) {
+      setFormError('Todavía no hay salas registradas. Abre Salas y recursos antes de guardar la sesión.');
+      return;
+    }
     if (assignedRoomIds.length === 0) {
       setFormError('Asigna al menos una sala para la sesión.');
       return;
@@ -615,13 +663,11 @@ const openDialogForRange = (start: Date, end: Date) => {
         id: editingId,
         body: {
           ubTitle: title.trim(),
-          ubServiceType: trimmedService === '' ? null : trimmedService,
+          ubServiceOfferingId: serviceOfferingId,
           ubNotes: combinedNotes,
           ubStatus: status,
           ubStartsAt: startIso,
           ubEndsAt: endIso,
-          ubResourceIds: assignedRoomIds,
-          ubPartyId: customerPartyId,
           ubEngineerPartyId: engineerPartyId,
           ubEngineerName: engineerName.trim() || null,
         },
@@ -635,6 +681,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     (booking: BookingDTO) => {
       setMode('edit');
       setEditingId(booking.bookingId);
+      setManualReviewNotes('');
       setTitle(booking.title ?? 'Sesión');
       const parsedNotes = extractEngineerFromNotes(booking.notes);
       const engineerFromBooking = booking.engineerName ?? parsedNotes.engineer;
@@ -648,12 +695,12 @@ const openDialogForRange = (start: Date, end: Date) => {
           : null);
       setEngineerPartyId(matchedEngineerId);
       setCustomerPartyId(booking.partyId ?? null);
-      const customerLabel =
-        booking.partyId && parties.find((p) => p.partyId === booking.partyId)?.displayName
-          ? parties.find((p) => p.partyId === booking.partyId)?.displayName ?? ''
-          : booking.customerName ?? booking.partyDisplayName ?? '';
+      const customerLabel = parties.find((party) => party.partyId === booking.partyId)?.displayName
+        ?? booking.customerName
+        ?? booking.partyDisplayName
+        ?? '';
       setCustomerName(customerLabel);
-      setServiceType(booking.serviceType ?? '');
+      setServiceOfferingId(booking.serviceOfferingId ?? '');
       setServiceLocked(Boolean(booking.courseSlug));
       setStatus(booking.status ?? 'Confirmed');
       setStartInput(formatForInput(new Date(booking.startsAt)));
@@ -694,7 +741,7 @@ const openDialogForRange = (start: Date, end: Date) => {
   }) => {
     const ext = info.event.extendedProps ?? {};
     if (ext['isCourse']) {
-      setDialogOpen(false);
+      handleCloseBookingDialog();
       const slug = (ext['courseSlug'] as string | undefined) ?? undefined;
       const shareUrl =
         slug && typeof window !== 'undefined' ? `${window.location.origin}/inscripcion/${slug}` : undefined;
@@ -750,6 +797,11 @@ const openDialogForRange = (start: Date, end: Date) => {
       },
     );
   };
+  const handleCreateFirstSession = () => {
+    const start = DateTime.now().setZone(zone).plus({ hours: 1 }).startOf('hour').toJSDate();
+    handleDateClick({ date: start });
+  };
+  const showCalendar = calendarStatusState?.showCalendar ?? true;
 
   return (
     <>
@@ -760,7 +812,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {calendarError && <Alert severity="warning" sx={{ mb: 1 }}>{calendarError}</Alert>}
-      {calendarStatusState && (
+      {calendarStatusState && showCalendar && (
         <Alert
           severity={calendarStatusState.severity}
           sx={{ mb: 1 }}
@@ -774,75 +826,105 @@ const openDialogForRange = (start: Date, end: Date) => {
         </Alert>
       )}
       {bookingsQuery.error && <Alert severity="error" sx={{ mb: 1 }}>Error al cargar agenda: {bookingsQuery.error.message}</Alert>}
-      <Paper sx={{ p: 1 }}>
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          height="auto"
-          allDaySlot={false}
-          slotDuration="00:30:00"
-          editable
-          selectable
-          selectMirror
-          select={handleSelect}
-          dateClick={handleDateClick}
-          eventClick={handleEventClick}
-          eventDrop={handleEventDropOrResize}
-          eventResize={handleEventDropOrResize}
-          eventClassNames={(arg) => {
-            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
-            return ext['isCourse'] ? ['course-event'] : [];
-          }}
-          eventContent={(arg) => {
-            const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
-            const isCourse = Boolean(ext['isCourse']);
-            const courseSubtitle = (ext['courseSubtitle'] as string | undefined) ?? undefined;
-            const priceText = (ext['priceText'] as string | undefined) ?? undefined;
-            const locationText = (ext['locationText'] as string | undefined) ?? undefined;
-            const engineerLabel = (ext['engineerName'] as string | undefined) ?? undefined;
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {!showCalendar && calendarStatusState ? (
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Stack spacing={1.5} alignItems="flex-start">
+            {calendarStatusState.title && (
+              <Typography variant="h6">{calendarStatusState.title}</Typography>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {calendarStatusState.message}
+            </Typography>
+            {calendarStatusState.primaryActionLabel && (
+              calendarStatusState.primaryActionHref ? (
+                <Button variant="contained" component={RouterLink} to={calendarStatusState.primaryActionHref}>
+                  {calendarStatusState.primaryActionLabel}
+                </Button>
+              ) : (
+                <Button variant="contained" onClick={handleCreateFirstSession}>
+                  {calendarStatusState.primaryActionLabel}
+                </Button>
+              )
+            )}
+            {calendarStatusState.clearFilterActionLabel && (
+              <Button variant="outlined" onClick={handleClearBookingFilters}>
+                {calendarStatusState.clearFilterActionLabel}
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+      ) : (
+        <Paper sx={{ p: 1 }}>
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            height="auto"
+            allDaySlot={false}
+            slotDuration="00:30:00"
+            editable
+            selectable
+            selectMirror
+            select={handleSelect}
+            dateClick={handleDateClick}
+            eventClick={handleEventClick}
+            eventDrop={handleEventDropOrResize}
+            eventResize={handleEventDropOrResize}
+            eventClassNames={(arg) => {
+              const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+              return ext['isCourse'] ? ['course-event'] : [];
+            }}
+            eventContent={(arg) => {
+              const ext = (arg.event.extendedProps ?? {}) as Record<string, unknown>;
+              const isCourse = Boolean(ext['isCourse']);
+              const courseSubtitle = (ext['courseSubtitle'] as string | undefined) ?? undefined;
+              const priceText = (ext['priceText'] as string | undefined) ?? undefined;
+              const locationText = (ext['locationText'] as string | undefined) ?? undefined;
+              const engineerLabel = (ext['engineerName'] as string | undefined) ?? undefined;
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {isCourse && (
+                      <span
+                        style={{
+                          background: 'rgba(255,255,255,0.22)',
+                          color: 'inherit',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                        }}
+                      >
+                        Curso
+                      </span>
+                    )}
+                    <span>{arg.event.title}</span>
+                  </div>
                   {isCourse && (
-                    <span
-                      style={{
-                        background: 'rgba(59,130,246,0.18)',
-                        color: '#0f172a',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: 999,
-                      }}
-                    >
-                      Curso
+                    <span style={{ fontSize: 11, color: 'inherit', opacity: 0.9 }}>
+                      {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
                     </span>
                   )}
-                  <span>{arg.event.title}</span>
+                  {engineerLabel && (
+                    <span style={{ fontSize: 11, color: 'inherit', opacity: 0.9 }}>
+                      Ingeniero: {engineerLabel}
+                    </span>
+                  )}
                 </div>
-                {isCourse && (
-                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.8 }}>
-                    {[courseSubtitle, priceText, locationText].filter(Boolean).join(' · ')}
-                  </span>
-                )}
-                {engineerLabel && (
-                  <span style={{ fontSize: 11, color: '#0f172a', opacity: 0.85 }}>
-                    Ingeniero: {engineerLabel}
-                  </span>
-                )}
-              </div>
-            );
-          }}
-          events={events}
-          nowIndicator
-          timeZone={zone}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
-        />
-      </Paper>
+              );
+            }}
+            events={events}
+            nowIndicator
+            timeZone={zone}
+            locale={locale}
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+          />
+        </Paper>
+      )}
 
       <Dialog open={Boolean(courseReadOnlyInfo)} onClose={() => { setCourseReadOnlyInfo(null); setCourseNotice(null); }} maxWidth="xs" fullWidth>
         <DialogTitle>Bloque de curso</DialogTitle>
@@ -974,7 +1056,7 @@ const openDialogForRange = (start: Date, end: Date) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseBookingDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {mode === 'edit' ? 'Editar sesión' : 'Nueva sesión en el calendario'}
           {startInput && (
@@ -986,12 +1068,6 @@ const openDialogForRange = (start: Date, end: Date) => {
         <DialogContent dividers>
           <Stack spacing={2} component="form" onSubmit={handleCreate}>
             {formError && <Alert severity="error">{formError}</Alert>}
-            {roomsQuery.isLoading && <Alert severity="info">Cargando salas disponibles…</Alert>}
-            {missingEngineer && (
-              <Alert severity="warning">
-                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
-              </Alert>
-            )}
             {prefillNotice && (
               <Alert
                 severity="info"
@@ -1010,40 +1086,51 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
             />
-            <Autocomplete
-              options={customerOptions}
-              getOptionLabel={(option) => option.displayName}
-              loading={partiesQuery.isFetching}
-              value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
-              onChange={(_, value) => {
-                setCustomerPartyId(value?.partyId ?? null);
-                setCustomerName(value?.displayName ?? '');
-              }}
-              inputValue={customerName}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'clear') {
-                  setCustomerPartyId(null);
-                  setCustomerName('');
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Cliente"
-                  required
-                  helperText={customerFieldState.helperText}
-                />
-              )}
-              noOptionsText="Sin clientes en el catálogo"
-            />
-            {customerFieldState.showQuickCreateAction && (
+            {customerFieldState.showCustomerSelector ? (
+              <Autocomplete
+                options={customerOptions}
+                getOptionLabel={(option) => option.displayName}
+                loading={partiesQuery.isFetching}
+                value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
+                onChange={(_, value) => {
+                  setCustomerPartyId(value?.partyId ?? null);
+                  setCustomerName(value?.displayName ?? '');
+                }}
+                inputValue={customerName}
+                onInputChange={(_, value, reason) => {
+                  if (reason === 'clear') {
+                    setCustomerPartyId(null);
+                    setCustomerName('');
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Cliente"
+                    required
+                    helperText={customerFieldState.helperText}
+                  />
+                )}
+                noOptionsText="Sin clientes en el catálogo"
+              />
+            ) : (
+              <Alert
+                severity="info"
+                variant="outlined"
+                action={customerFieldState.showQuickCreateAction && customerFieldState.showQuickCreateInsideAlert ? (
+                  <Button color="inherit" size="small" onClick={openCreateContactDialog}>
+                    {customerFieldState.quickCreateLabel}
+                  </Button>
+                ) : undefined}
+              >
+                {customerFieldState.helperText}
+              </Alert>
+            )}
+            {customerFieldState.showQuickCreateAction && !customerFieldState.showQuickCreateInsideAlert && (
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => {
-                  setCreateContactError(null);
-                  setCreateContactOpen(true);
-                }}
+                onClick={openCreateContactDialog}
                 sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
               >
                 {customerFieldState.quickCreateLabel}
@@ -1055,7 +1142,6 @@ const openDialogForRange = (start: Date, end: Date) => {
               value={startInput}
               onChange={(e) => {
                 setStartInput(e.target.value);
-                setDurationManuallyAdjusted(true);
               }}
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -1066,196 +1152,280 @@ const openDialogForRange = (start: Date, end: Date) => {
               value={endInput}
               onChange={(e) => {
                 setEndInput(e.target.value);
-                setDurationManuallyAdjusted(true);
               }}
               fullWidth
               InputLabelProps={{ shrink: true }}
             />
-            {showQuickTemplateField && (
-              <TextField
-                select
-                label="Plantilla de respaldo"
-                value={template}
-                onChange={(e) => {
-                  const val = String(e.target.value);
-                  setTemplate(val);
-                  const presetMap: Record<'rehearsal' | 'recording' | 'mix' | 'curso', { title: string; svc: string; note: string }> = {
-                    rehearsal: { title: 'Rehearsal', svc: 'Band rehearsal', note: 'Ensayo banda' },
-                    recording: { title: 'Recording', svc: 'Recording', note: 'Grabación' },
-                    mix: { title: 'Mix/Master', svc: 'Mixing', note: 'Mix/master' },
-                    curso: { title: 'Curso', svc: 'Curso', note: 'Bloque de curso' },
-                  };
-                  const preset = Object.prototype.hasOwnProperty.call(presetMap, val)
-                    ? presetMap[val as keyof typeof presetMap]
-                    : undefined;
-                  if (preset) {
-                    setTitle(preset.title);
-                    setServiceType(preset.svc);
-                    setNotes((prev) => (prev ? prev : preset.note));
-                    const defaults = defaultRoomsForService(preset.svc);
-                    if (defaults.length) {
-                      setAssignedRoomIds(defaults.map((r) => r.roomId));
-                      setAutoAssignMessage(`Asignamos ${defaults.map((r) => r.rName).join(' + ')}`);
-                    }
-                  }
-                }}
-                helperText="Aparece cuando no hay catálogo de servicios; precarga servicio, salas y notas."
-                fullWidth
-              >
-                <MenuItem value="">Sin plantilla</MenuItem>
-                <MenuItem value="rehearsal">Ensayo (band rehearsal)</MenuItem>
-                <MenuItem value="recording">Recording (cabina + control)</MenuItem>
-                <MenuItem value="mix">Mix/Master (control room)</MenuItem>
-                <MenuItem value="curso">Curso/bloque</MenuItem>
-              </TextField>
+            {serviceEntryGateState.showServiceField ? (
+              <>
+                <TextField
+                    select
+                    label="Servicio"
+                    value={serviceOfferingId}
+                    disabled={serviceLocked}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const service = serviceTypes.find((candidate) => candidate.id === value);
+                      if (!service) return;
+                      const wasRoomsManual = roomsManuallyAdjusted;
+                      setRoomsManuallyAdjusted(false);
+                      setServiceOfferingId(service.id);
+                      const messageParts: string[] = [];
+                      if (!wasRoomsManual || assignedRoomIds.length === 0) {
+                        const defaults = defaultRoomsForService(service.id);
+                        if (defaults.length) {
+                          setAssignedRoomIds(defaults.map((room) => room.roomId));
+                          messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
+                          setRoomsManuallyAdjusted(false);
+                        }
+                      }
+                      if (service.requiresEngineer && !engineerName && engineerOptions.length > 0) {
+                        const eng = engineerOptions[0]!;
+                        setEngineerName(eng.displayName);
+                        setEngineerPartyId(eng.partyId);
+                        messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
+                      }
+                      setAutoAssignMessage(messageParts.join(' · '));
+                    }}
+                    helperText={serviceFieldHelperText}
+                  >
+                    <MenuItem value="">(Sin asignar)</MenuItem>
+                    {serviceTypes.map((svc) => (
+                      <MenuItem key={svc.id} value={svc.id}>
+                        {formatServiceLabel(svc)}
+                      </MenuItem>
+                    ))}
+                </TextField>
+                {serviceLocked && (
+                  <Alert severity="info" variant="outlined">
+                    Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
+                  </Alert>
+                )}
+              </>
+            ) : (
+              <Alert severity="info" variant="outlined">
+                {serviceEntryGateState.helperText}
+              </Alert>
             )}
-            <TextField
-              label="Notas (opcional)"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-            />
+            <Stack spacing={0.75}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={1}
+                justifyContent="space-between"
+                alignItems={{ sm: 'center' }}
+              >
+                <div>
+                  <Typography variant="subtitle2">Notas y estado</Typography>
+                  {!optionalDetailsExpanded && (
+                    <Typography variant="body2" color="text.secondary">
+                      {optionalDetailsState.collapsedHelperText}
+                    </Typography>
+                  )}
+                </div>
+                {!optionalDetailsState.defaultExpanded && (
+                  <Button
+                    variant={optionalDetailsExpanded ? 'text' : 'outlined'}
+                    size="small"
+                    onClick={() => setShowOptionalDetails((current) => !current)}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
+                  >
+                    {optionalDetailsExpanded ? 'Ocultar' : optionalDetailsState.toggleLabel}
+                  </Button>
+                )}
+              </Stack>
+              <Collapse in={optionalDetailsExpanded} unmountOnExit>
+                <Stack spacing={2} sx={{ pt: 0.5 }}>
+                  <TextField
+                    label="Notas (opcional)"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    fullWidth
+                    multiline
+                    minRows={2}
+                  />
+                  <FormControl>
+                    <InputLabel id="booking-status-label">Estado</InputLabel>
+                    <Select
+                      labelId="booking-status-label"
+                      label="Estado"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                    >
+                      {statusOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Collapse>
+            </Stack>
             {conflictAlertText && (
               <Alert severity="warning" variant="outlined">
                 {conflictAlertText}
               </Alert>
             )}
-            <Autocomplete
-              options={engineerOptions}
-              getOptionLabel={(option) => option.displayName}
-              loading={partiesQuery.isFetching}
-              value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
-              onChange={(_, value) => {
-                setEngineerPartyId(value?.partyId ?? null);
-                setEngineerName(value?.displayName ?? '');
-              }}
-              inputValue={engineerName}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'input') {
-                  setEngineerName(value);
-                  setEngineerPartyId(null);
-                }
-                if (reason === 'clear') {
-                  setEngineerName('');
-                  setEngineerPartyId(null);
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Ingeniero (sugerido para recording/mixing/mastering)"
-                  helperText={
-                    engineerOptions.length === 0
-                      ? 'No hay ingenieros en el catálogo de contactos.'
-                      : requiresEngineerForService(serviceType)
-                        ? 'Recomendado para recording/mixing/mastering.'
-                        : 'Opcional.'
-                  }
-                />
-              )}
-              noOptionsText="Sin ingenieros en el catálogo"
-            />
-            <FormControl>
-              <InputLabel id="booking-status-label">Estado</InputLabel>
-              <Select
-                labelId="booking-status-label"
-                label="Estado"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              select
-              label="Servicio"
-              value={serviceType}
-              disabled={serviceLocked}
-              onChange={(e) => {
-                const value = e.target.value;
-                const wasDurationManual = durationManuallyAdjusted;
-                const wasRoomsManual = roomsManuallyAdjusted;
-                setDurationManuallyAdjusted(false);
-                setRoomsManuallyAdjusted(false);
-                setServiceType(value);
-                const messageParts: string[] = [];
-                if (!wasRoomsManual || assignedRoomIds.length === 0) {
-                  const defaults = defaultRoomsForService(value);
-                  if (defaults.length) {
-                    setAssignedRoomIds(defaults.map((room) => room.roomId));
-                    messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
-                    setRoomsManuallyAdjusted(false);
-                  }
-                }
-                if (requiresEngineerForService(value) && !engineerName && engineerOptions.length > 0) {
-                  const eng = engineerOptions[0]!;
-                  setEngineerName(eng.displayName);
-                  setEngineerPartyId(eng.partyId);
-                  messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
-                }
-                const minutes = defaultMinutesForService(value);
-                const startDt = DateTime.fromFormat(startInput, "yyyy-LL-dd'T'HH:mm", { zone });
-                if (!wasDurationManual && startDt.isValid && minutes > 0) {
-                  const endDt = startDt.plus({ minutes });
-                  setEndInput(endDt.toFormat("yyyy-LL-dd'T'HH:mm"));
-                  messageParts.push(`Duración ajustada a ${minutes} min`);
-                  setDurationManuallyAdjusted(false);
-                }
-                setAutoAssignMessage(messageParts.join(' · '));
-              }}
-              helperText={describeServiceDefaults(serviceType)}
-            >
-              <MenuItem value="">(Sin asignar)</MenuItem>
-              {serviceTypes.map((svc) => (
-                <MenuItem key={svc.id} value={svc.name}>
-                  {formatServiceLabel(svc)}
-                </MenuItem>
-              ))}
-            </TextField>
-            {serviceLocked && (
-              <Alert severity="info" variant="outlined">
-                Este servicio está sincronizado con un curso/prueba y no se puede cambiar aquí.
+            {serviceEntryGateState.showDependentFields && missingEngineer && (
+              <Alert severity="warning">
+                Este servicio normalmente usa un ingeniero. Asigna uno o continúa bajo tu criterio.
               </Alert>
             )}
-            <Autocomplete
-              multiple
-              options={rooms}
-              getOptionLabel={(option) => option.rName}
-              value={assignedRooms}
-              onChange={(_, value) => {
-                setAssignedRoomIds(value.map((room) => room.roomId));
-                setRoomsManuallyAdjusted(true);
-              }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Salas asignadas"
-                  placeholder="Agregar/ajustar salas"
-                  helperText="Se precargan según el tipo de servicio."
+            {serviceEntryGateState.showDependentFields ? (
+              engineerFieldState.showField ? (
+                <Autocomplete
+                  options={engineerOptions}
+                  getOptionLabel={(option) => option.displayName}
+                  loading={partiesQuery.isFetching}
+                  value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
+                  onChange={(_, value) => {
+                    setEngineerPartyId(value?.partyId ?? null);
+                    setEngineerName(value?.displayName ?? '');
+                  }}
+                  inputValue={engineerName}
+                  onInputChange={(_, value, reason) => {
+                    if (reason === 'input') {
+                      setEngineerName(value);
+                      setEngineerPartyId(null);
+                    }
+                    if (reason === 'clear') {
+                      setEngineerName('');
+                      setEngineerPartyId(null);
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={engineerFieldState.label}
+                      helperText={engineerFieldState.helperText}
+                    />
+                  )}
+                  noOptionsText="Sin ingenieros en el catálogo"
                 />
-              )}
-              noOptionsText="No hay salas registradas"
-            />
+              ) : engineerFieldState.helperText ? (
+                <Alert severity="info" variant="outlined">
+                  {engineerFieldState.helperText}
+                </Alert>
+              ) : null
+            ) : null}
+            {serviceEntryGateState.showDependentFields ? (
+              roomsFieldState.showField ? (
+                <Autocomplete
+                  multiple
+                  options={rooms}
+                  getOptionLabel={(option) => option.rName}
+                  value={assignedRooms}
+                  onChange={(_, value) => {
+                    setAssignedRoomIds(value.map((room) => room.roomId));
+                    setRoomsManuallyAdjusted(true);
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip {...getTagProps({ index })} key={option.roomId} label={option.rName} />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Salas asignadas"
+                      placeholder="Agregar/ajustar salas"
+                      helperText={roomsFieldState.helperText}
+                    />
+                  )}
+                  noOptionsText="No hay salas registradas"
+                />
+              ) : (
+                <Alert
+                  severity="info"
+                  variant="outlined"
+                  action={roomsFieldState.setupActionLabel ? (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      component={RouterLink}
+                      to="/estudio/salas"
+                    >
+                      {roomsFieldState.setupActionLabel}
+                    </Button>
+                  ) : undefined}
+                >
+                  {roomsFieldState.helperText}
+                </Alert>
+              )
+            ) : null}
             {autoAssignMessage && (
               <Typography variant="caption" color="primary">
                 {autoAssignMessage}
               </Typography>
             )}
+            {bookingCommerceQuery.data && (
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={1.25}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                    <Chip label={`Pago: ${bookingCommerceQuery.data.paymentStatus}`} size="small" />
+                    <Chip label={`Prestación: ${bookingCommerceQuery.data.fulfillmentStatus}`} size="small" />
+                    <Chip
+                      label={`Depósito: ${bookingCommerceQuery.data.currency} ${(bookingCommerceQuery.data.depositMinor / 100).toFixed(2)}`}
+                      size="small"
+                    />
+                  </Stack>
+                  {bookingCommerceQuery.data.manualEvidence && (
+                    <>
+                      <Alert
+                        severity={bookingCommerceQuery.data.manualEvidence.status === 'rejected' ? 'warning' : 'info'}
+                        variant="outlined"
+                      >
+                        Transferencia: <strong>{bookingCommerceQuery.data.manualEvidence.status}</strong>
+                        {bookingCommerceQuery.data.manualEvidence.customerReference
+                          ? <> · Referencia: <strong>{bookingCommerceQuery.data.manualEvidence.customerReference}</strong></>
+                          : null}
+                      </Alert>
+                      {['submitted', 'under_review'].includes(bookingCommerceQuery.data.manualEvidence.status) && (
+                        <>
+                          <TextField
+                            label="Notas de revisión financiera"
+                            value={manualReviewNotes}
+                            onChange={(event) => setManualReviewNotes(event.target.value)}
+                            inputProps={{ maxLength: 2000 }}
+                            helperText="Compara importe, moneda y referencia con el estado bancario. No pegues credenciales ni datos completos de cuenta."
+                            multiline
+                            minRows={2}
+                            fullWidth
+                          />
+                          {manualReviewMutation.isError && (
+                            <Alert severity="error">
+                              No se pudo registrar la decisión. La evidencia y el pago conservaron su estado anterior.
+                            </Alert>
+                          )}
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <Button
+                              variant="contained"
+                              color="success"
+                              disabled={manualReviewMutation.isPending || manualReviewNotes.trim().length < 3}
+                              onClick={() => manualReviewMutation.mutate('approve')}
+                            >
+                              Aprobar depósito verificado
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              color="warning"
+                              disabled={manualReviewMutation.isPending || manualReviewNotes.trim().length < 3}
+                              onClick={() => manualReviewMutation.mutate('reject')}
+                            >
+                              Rechazar evidencia
+                            </Button>
+                          </Stack>
+                        </>
+                      )}
+                    </>
+                  )}
+                </Stack>
+              </Paper>
+            )}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleCloseBookingDialog}>Cancelar</Button>
           {mode === 'edit' && (
             <Button onClick={openDuplicateModal} color="inherit">
               Duplicar

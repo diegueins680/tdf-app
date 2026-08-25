@@ -15,6 +15,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { SocialInboxAPI, type SocialMessage } from '../api/socialInbox';
 
 interface MessageStats {
@@ -104,6 +105,33 @@ const getRepliedHistoryGuidance = (stats: MessageStats) => {
   return 'El historial detallado aparecerá aquí cuando exista al menos un mensaje respondido.';
 };
 
+const getAwaitingReplyHistorySummary = (labels: readonly string[]) =>
+  `Todavía no hay mensajes respondidos en ${formatChannelList(labels)}. El historial detallado aparecerá por canal cuando exista la primera respuesta.`;
+
+const getQueryErrorMessage = (error: unknown) => (
+  error instanceof Error ? error.message : 'Error inesperado.'
+);
+
+const hasSingleSocialMessageState = (stats: MessageStats) => {
+  if (stats.incoming.length === 0) return false;
+
+  const nonZeroStateCount = [
+    stats.replied.length,
+    stats.pending.length,
+    stats.failed.length,
+  ].filter((count) => count > 0).length;
+
+  return nonZeroStateCount === 1;
+};
+
+const CALENDAR_SYNC_PATH = '/configuracion/integraciones/calendario';
+const CALENDAR_SYNC_PENDING_COPY = 'Aún no se registra una sincronización.';
+
+const normalizeStoredDiagnosticValue = (value: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+};
+
 const formatChannelList = (labels: readonly string[]) => {
   if (labels.length <= 1) return labels[0] ?? '';
   if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
@@ -115,8 +143,12 @@ export default function AdminDiagnosticsPage() {
     typeof window !== 'undefined'
       ? ((window as typeof window & { __MISSING_ENV__?: string[] }).__MISSING_ENV__ ?? [])
       : [];
-  const calendarId = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.calendarId') : null;
-  const lastSyncAt = typeof window !== 'undefined' ? window.localStorage.getItem('calendar-sync.lastSyncAt') : null;
+  const calendarId = typeof window !== 'undefined'
+    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.calendarId'))
+    : null;
+  const lastSyncAt = typeof window !== 'undefined'
+    ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.lastSyncAt'))
+    : null;
   const hasCalendarSyncState = Boolean(calendarId || lastSyncAt);
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],
@@ -138,20 +170,37 @@ export default function AdminDiagnosticsPage() {
     { label: 'Facebook', stats: facebookStats, loading: facebookQuery.isLoading },
     { label: 'WhatsApp', stats: whatsappStats, loading: whatsappQuery.isLoading },
   ];
+  const socialQueryErrors = [
+    instagramQuery.isError ? { label: 'Instagram', message: getQueryErrorMessage(instagramQuery.error) } : null,
+    facebookQuery.isError ? { label: 'Facebook', message: getQueryErrorMessage(facebookQuery.error) } : null,
+    whatsappQuery.isError ? { label: 'WhatsApp', message: getQueryErrorMessage(whatsappQuery.error) } : null,
+  ].filter((error): error is { label: string; message: string } => error != null);
   const showGlobalSocialQuietGuidance =
     !instagramQuery.isError
     && !facebookQuery.isError
     && !whatsappQuery.isError
     && socialChannels.every(({ loading, stats }) => !loading && stats.incoming.length === 0);
   const hasSocialQueryError = instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError;
-  const visibleSocialChannels = socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
+  const showSocialLoadingSummary = !hasSocialQueryError && socialChannels.every(({ loading }) => loading);
+  const visibleSocialChannels = showSocialLoadingSummary
+    ? []
+    : socialChannels.filter(({ loading, stats }) => loading || stats.incoming.length > 0);
   const quietSocialChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
     ? []
     : socialChannels
       .filter(({ loading, stats }) => !loading && stats.incoming.length === 0)
       .map(({ label }) => label);
+  const awaitingReplyHistoryChannelLabels = showGlobalSocialQuietGuidance || hasSocialQueryError
+    ? []
+    : socialChannels
+      .filter(({ loading, stats }) => !loading && stats.incoming.length > 0 && stats.replied.length === 0)
+      .map(({ label }) => label);
+  const showSharedAwaitingReplyHistorySummary = awaitingReplyHistoryChannelLabels.length > 1;
   const showSocialChannelCards = !showGlobalSocialQuietGuidance && visibleSocialChannels.length > 0;
-  const showSocialRefreshAction = !showGlobalSocialQuietGuidance;
+  const showSocialRefreshAction = !showGlobalSocialQuietGuidance && !showSocialLoadingSummary;
+  const socialErrorDetailsTitle = socialQueryErrors.length > 0
+    ? socialQueryErrors.map(({ label, message }) => `${label}: ${message}`).join(' · ')
+    : undefined;
   const refetchSocialMessages = () => {
     void instagramQuery.refetch();
     void facebookQuery.refetch();
@@ -179,48 +228,58 @@ export default function AdminDiagnosticsPage() {
         <Typography variant="h6">Sincronización de calendario</Typography>
         {hasCalendarSyncState ? (
           <>
-            <Typography variant="body2" color="text.secondary">
-              Calendar ID: {calendarId ?? '—'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Última sincronización: {lastSyncAt ?? '—'}
-            </Typography>
+            {calendarId && (
+              <Typography variant="body2" color="text.secondary">
+                Calendar ID: {calendarId}
+              </Typography>
+            )}
+            {lastSyncAt ? (
+              <Typography variant="body2" color="text.secondary">
+                Última sincronización: {lastSyncAt}
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="admin-diagnostics-calendar-sync-pending">
+                {CALENDAR_SYNC_PENDING_COPY}
+              </Typography>
+            )}
           </>
         ) : (
-          <Alert severity="info" variant="outlined" sx={{ mt: 1 }} data-testid="admin-diagnostics-calendar-empty">
-            Todavía no hay calendario configurado. Abre la sincronización para conectar Google Calendar.
+          <Alert
+            severity="info"
+            variant="outlined"
+            sx={{ mt: 1 }}
+            data-testid="admin-diagnostics-calendar-empty"
+            action={(
+              <Button color="inherit" size="small" component={RouterLink} to={CALENDAR_SYNC_PATH}>
+                Conectar calendario
+              </Button>
+            )}
+          >
+            Todavía no hay calendario configurado. Conecta Google Calendar para activar el diagnóstico de sincronización.
           </Alert>
         )}
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.location.href = '/calendario/sincronizar';
-            }
-          }}
-          sx={{ mt: 1 }}
-        >
-          Abrir página de sincronización
-        </Button>
+        {hasCalendarSyncState && (
+          <Button
+            variant="outlined"
+            size="small"
+            component={RouterLink}
+            to={CALENDAR_SYNC_PATH}
+            sx={{ mt: 1 }}
+          >
+            Abrir sincronización
+          </Button>
+        )}
       </Paper>
-      {(instagramQuery.isError || facebookQuery.isError || whatsappQuery.isError) && (
+      {socialQueryErrors.length > 0 && (
         <Stack spacing={1}>
-          {instagramQuery.isError && (
-            <Alert severity="error">
-              Instagram: {instagramQuery.error instanceof Error ? instagramQuery.error.message : 'Error inesperado.'}
-            </Alert>
-          )}
-          {facebookQuery.isError && (
-            <Alert severity="error">
-              Facebook: {facebookQuery.error instanceof Error ? facebookQuery.error.message : 'Error inesperado.'}
-            </Alert>
-          )}
-          {whatsappQuery.isError && (
-            <Alert severity="error">
-              WhatsApp: {whatsappQuery.error instanceof Error ? whatsappQuery.error.message : 'Error inesperado.'}
-            </Alert>
-          )}
+          <Alert
+            severity="error"
+            title={socialErrorDetailsTitle}
+            data-testid="admin-diagnostics-social-error-summary"
+          >
+            No se pudieron cargar mensajes de {formatChannelList(socialQueryErrors.map(({ label }) => label))}.
+            Usa Actualizar mensajes para reintentar.
+          </Alert>
         </Stack>
       )}
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -238,6 +297,16 @@ export default function AdminDiagnosticsPage() {
               </Button>
             )}
           </Stack>
+          {showSocialLoadingSummary && (
+            <Alert
+              severity="info"
+              variant="outlined"
+              data-testid="admin-diagnostics-social-loading-summary"
+              icon={<CircularProgress size={16} />}
+            >
+              Cargando mensajes de Instagram, Facebook y WhatsApp…
+            </Alert>
+          )}
           {showGlobalSocialQuietGuidance && (
             <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-quiet-summary">
               Todavía no hay mensajes entrantes en Instagram, Facebook ni WhatsApp.
@@ -247,6 +316,11 @@ export default function AdminDiagnosticsPage() {
           {quietSocialChannelLabels.length > 0 && (
             <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-partial-quiet-summary">
               Sin mensajes entrantes en {formatChannelList(quietSocialChannelLabels)}.
+            </Alert>
+          )}
+          {showSharedAwaitingReplyHistorySummary && (
+            <Alert severity="info" variant="outlined" data-testid="admin-diagnostics-social-awaiting-reply-summary">
+              {getAwaitingReplyHistorySummary(awaitingReplyHistoryChannelLabels)}
             </Alert>
           )}
           {showSocialChannelCards && (
@@ -263,7 +337,9 @@ export default function AdminDiagnosticsPage() {
                     <Typography variant="subtitle1" fontWeight={700}>
                       {label}
                     </Typography>
-                    <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
+                    {!loading && !hasSingleSocialMessageState(stats) && (
+                      <Chip label={`Entrantes: ${stats.incoming.length}`} size="small" variant="outlined" />
+                    )}
                   </Stack>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {stats.replied.length > 0 && (
@@ -281,7 +357,7 @@ export default function AdminDiagnosticsPage() {
                       <CircularProgress size={22} />
                     </Stack>
                   ) : stats.replied.length === 0 ? (
-                    showGlobalSocialQuietGuidance ? null : (
+                    showGlobalSocialQuietGuidance || showSharedAwaitingReplyHistorySummary ? null : (
                     <Typography variant="body2" color="text.secondary">
                       {getRepliedHistoryGuidance(stats)}
                     </Typography>

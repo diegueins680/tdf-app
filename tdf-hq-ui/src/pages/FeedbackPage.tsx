@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -14,52 +14,86 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { submitFeedback } from '../api/feedback';
+import { Catalogs, type CatalogItem, type CatalogPage } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 
-const categories = [
-  { value: 'bug', label: 'Bug' },
-  { value: 'idea', label: 'Idea' },
-  { value: 'ux', label: 'UX' },
-  { value: 'datos', label: 'Datos' },
-];
+const CATEGORY_CATALOG = 'feedback-categories';
+const SEVERITY_CATALOG = 'feedback-severities';
 
-const severities = [
-  { value: 'P1', label: 'P1 - Crítico' },
-  { value: 'P2', label: 'P2 - Alto' },
-  { value: 'P3', label: 'P3 - Medio' },
-  { value: 'P4', label: 'P4 - Bajo' },
-];
+const publishedItems = (page?: CatalogPage): CatalogItem[] =>
+  page?.items.filter((item) => item.active && item.workflowState === 'published' && !item.deprecatedAt) ?? [];
+
+const globalDefaultId = (page: CatalogPage | undefined, scopeKind: string): string =>
+  page?.defaults.find((entry) =>
+    entry.scopeKind === scopeKind && entry.scopeId === 'global' && !entry.localeId)?.entityId ?? '';
+
+export const contactEmailFromSessionUsername = (username?: string): string =>
+  username?.includes('@') ? username : '';
 
 export default function FeedbackPage() {
   const { session } = useSession();
+  const { i18n } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('bug');
-  const [severity, setSeverity] = useState('P2');
-  const [contactEmail, setContactEmail] = useState(session?.username ?? '');
+  const [categoryId, setCategoryId] = useState('');
+  const [severityId, setSeverityId] = useState('');
+  const [contactEmail, setContactEmail] = useState(contactEmailFromSessionUsername(session?.username));
   const [consent, setConsent] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
+
+  const catalogQuery = useQuery({
+    queryKey: ['catalogs', 'feedback-form', i18n.resolvedLanguage ?? i18n.language],
+    queryFn: () => Catalogs.listPublicBatch([CATEGORY_CATALOG, SEVERITY_CATALOG], {
+      locale: i18n.resolvedLanguage ?? i18n.language,
+      page: 1,
+      pageSize: 100,
+    }),
+    staleTime: 1000 * 60 * 10,
+  });
+  const categoryPage = catalogQuery.data?.catalogs.find((page) => page.catalog.code === CATEGORY_CATALOG);
+  const severityPage = catalogQuery.data?.catalogs.find((page) => page.catalog.code === SEVERITY_CATALOG);
+  const categories = publishedItems(categoryPage);
+  const severities = publishedItems(severityPage);
+  const defaultCategoryId = globalDefaultId(categoryPage, 'feedback-category');
+  const defaultSeverityId = globalDefaultId(severityPage, 'feedback-severity');
+  const catalogsReady = Boolean(
+    categories.length
+      && severities.length
+      && categories.some((item) => item.id === defaultCategoryId)
+      && severities.some((item) => item.id === defaultSeverityId),
+  );
+
+  useEffect(() => {
+    if (!catalogsReady) return;
+    if (!categories.some((item) => item.id === categoryId)) setCategoryId(defaultCategoryId);
+    if (!severities.some((item) => item.id === severityId)) setSeverityId(defaultSeverityId);
+  }, [catalogsReady, categories, categoryId, defaultCategoryId, defaultSeverityId, severities, severityId]);
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setSeverityId(defaultSeverityId);
+    setCategoryId(defaultCategoryId);
+    setAttachment(null);
+    setConsent(false);
+  };
 
   const mutation = useMutation({
     mutationFn: () =>
       submitFeedback({
         title,
         description,
-        category,
-        severity,
+        categoryId,
+        severityId,
         contactEmail: contactEmail.trim() || undefined,
         consent,
         attachment,
       }),
     onSuccess: () => {
-      setTitle('');
-      setDescription('');
-      setSeverity('P2');
-      setCategory('bug');
-      setAttachment(null);
-      setConsent(false);
+      resetForm();
     },
   });
 
@@ -78,12 +112,15 @@ export default function FeedbackPage() {
           equipo para priorizar rápido.
         </Typography>
         <Stack direction="row" spacing={1}>
-          <Chip label="Bug" size="small" />
-          <Chip label="Idea" size="small" />
-          <Chip label="UX" size="small" />
-          <Chip label="Datos" size="small" />
+          {categories.map((category) => <Chip key={category.id} label={category.name} size="small" />)}
         </Stack>
       </Stack>
+
+      {catalogQuery.isError && (
+        <Alert severity="error">
+          No se pudieron cargar las categorías y severidades publicadas. Intenta nuevamente antes de enviar.
+        </Alert>
+      )}
 
       {mutation.isError && (
         <Alert severity="error">
@@ -108,13 +145,14 @@ export default function FeedbackPage() {
               <TextField
                 select
                 label="Categoría"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                disabled={!catalogsReady}
                 fullWidth
               >
                 {categories.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                  <MenuItem key={opt.id} value={opt.id}>
+                    {opt.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -123,13 +161,14 @@ export default function FeedbackPage() {
               <TextField
                 select
                 label="Severidad"
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value)}
+                value={severityId}
+                onChange={(e) => setSeverityId(e.target.value)}
+                disabled={!catalogsReady}
                 fullWidth
               >
                 {severities.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                  <MenuItem key={opt.id} value={opt.id}>
+                    {opt.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -181,20 +220,13 @@ export default function FeedbackPage() {
           </Grid>
 
           <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="outlined" onClick={() => {
-              setTitle('');
-              setDescription('');
-              setSeverity('P2');
-              setCategory('bug');
-              setAttachment(null);
-              setConsent(false);
-            }}>
+            <Button variant="outlined" onClick={resetForm}>
               Limpiar
             </Button>
             <Button
               variant="contained"
               onClick={() => mutation.mutate()}
-              disabled={mutation.isPending || !title.trim() || !description.trim() || !consent}
+              disabled={mutation.isPending || !catalogsReady || !categoryId || !severityId || !title.trim() || !description.trim() || !consent}
             >
               {mutation.isPending ? 'Enviando…' : 'Enviar'}
             </Button>

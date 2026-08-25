@@ -1,4 +1,6 @@
+import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMetaTags } from '../hooks/useMetaTags';
 import {
   Alert,
   Box,
@@ -8,7 +10,9 @@ import {
   CardHeader,
   Chip,
   CircularProgress,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
   Dialog,
@@ -40,15 +44,25 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type {
   MarketplaceCartDTO,
   MarketplaceCartItemDTO,
   MarketplaceItemDTO,
   MarketplaceOrderDTO,
   DatafastCheckoutDTO,
+  StripePaymentIntentDTO,
 } from '../api/types';
-import { Marketplace } from '../api/marketplace';
-import { formatLastSavedTimestamp, getOrderStatusMeta } from '../utils/marketplace';
+import {
+  Marketplace,
+  getMarketplaceCheckoutIdempotencyKey,
+  loadMarketplaceLookupToken,
+  storeMarketplaceLookupToken,
+  type CheckoutRequest,
+} from '../api/marketplace';
+import { formatLastSavedTimestamp, getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { Inventory } from '../api/inventory';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
@@ -56,11 +70,11 @@ import { useSession } from '../session/SessionContext';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
+import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
+import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
-const IMPORT_META_ENV = (import.meta.env ?? {}) as Record<string, string | undefined>;
-
-const API_BASE = (IMPORT_META_ENV['VITE_API_BASE'] && IMPORT_META_ENV['VITE_API_BASE'].trim() !== ''
-  ? IMPORT_META_ENV['VITE_API_BASE']
+const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
+  ? import.meta.env.VITE_API_BASE
   : 'https://tdf-hq.fly.dev');
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
@@ -131,10 +145,68 @@ const BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 const PAYMENT_PREF_KEY = 'tdf-marketplace-payment-pref';
 const FILTERS_KEY = 'tdf-marketplace-filters';
 
+const buildMarketplaceCheckoutRequest = (
+  buyerName: string,
+  buyerEmail: string,
+  buyerPhone: string,
+  rental?: {
+    termsAccepted: boolean;
+    identityType: 'cedula' | 'passport' | 'ruc';
+    identityNumber: string;
+  },
+): CheckoutRequest => {
+  const normalizedPhone = normalizePhone(buyerPhone);
+  return {
+    mcrBuyerName: buyerName,
+    mcrBuyerEmail: buyerEmail,
+    mcrFulfillmentMethod: 'pickup',
+    ...(normalizedPhone ? { mcrBuyerPhone: normalizedPhone } : {}),
+    ...(rental
+      ? {
+          mcrRentalTermsAccepted: rental.termsAccepted,
+          mcrIdentityDocumentType: rental.identityType,
+          mcrIdentityDocumentNumber: rental.identityNumber.trim(),
+        }
+      : {}),
+  };
+};
+
+type MarketplacePaymentMethod = 'stripe' | 'contact' | 'card' | 'paypal';
+
+const paymentMethodLabel = (method: MarketplacePaymentMethod) => {
+  switch (method) {
+    case 'stripe':
+      return 'Tarjeta (Stripe)';
+    case 'card':
+      return 'Tarjeta local (Datafast)';
+    case 'paypal':
+      return 'PayPal';
+    case 'contact':
+      return 'Coordinar por correo/WhatsApp';
+    default:
+      return assertNever(method, 'marketplace payment method');
+  }
+};
+
+const continuePaymentLabel = (method: MarketplacePaymentMethod) => {
+  switch (method) {
+    case 'stripe':
+      return 'Continuar con Stripe';
+    case 'card':
+      return 'Continuar con tarjeta local';
+    case 'paypal':
+      return 'Continuar con PayPal';
+    case 'contact':
+      return 'Confirmar pedido';
+    default:
+      return assertNever(method, 'marketplace payment method');
+  }
+};
+
 const parseCartQuantity = (value: string, fallback = 0): number => {
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed)) return fallback;
-  return Math.min(99, Math.max(0, parsed));
+  return Math.min(1, Math.max(0, parsed));
 };
 
 interface SavedFilters {
@@ -253,8 +325,7 @@ const hasBuyerInfo = (buyer: SavedBuyer) => {
   return name !== '' || email !== '' || phone !== '';
 };
 
-const parseEnvNumber = (key: string): number | null => {
-  const raw = IMPORT_META_ENV[key];
+const parseEnvNumber = (raw: string | undefined): number | null => {
   const trimmed = raw?.trim();
   if (trimmed == null || trimmed === '') return null;
   const val = Number(trimmed);
@@ -270,6 +341,64 @@ const readRuntimeEnv = (key: string): string => {
   if (typeof fromEnv === 'string' && fromEnv.trim()) return fromEnv.trim();
   return '';
 };
+
+interface MarketplaceStripePaymentFormProps {
+  orderId: string;
+  totalDisplay: string;
+  onSuccess: (orderId: string) => Promise<void> | void;
+  onError: (message: string) => void;
+}
+
+function MarketplaceStripePaymentForm({ orderId, totalDisplay, onSuccess, onError }: MarketplaceStripePaymentFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isSubmitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!stripe || !elements || isSubmitting) return;
+    setSubmitting(true);
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        onError(submitError.message ?? 'No pudimos validar los datos de pago.');
+        return;
+      }
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+      });
+      if (confirmError) {
+        onError(confirmError.message ?? 'Stripe no pudo confirmar el pago.');
+        return;
+      }
+      if (paymentIntent?.status === 'succeeded') {
+        await onSuccess(orderId);
+        return;
+      }
+      onError(`Stripe dejó el pago en estado ${paymentIntent?.status ?? 'desconocido'}.`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Typography variant="body2" color="text.secondary">
+        Total: {totalDisplay}
+      </Typography>
+      <PaymentElement />
+      <Button
+        variant="contained"
+        onClick={() => {
+          void handleSubmit();
+        }}
+        disabled={!stripe || !elements || isSubmitting}
+      >
+        {isSubmitting ? 'Confirmando pago...' : 'Confirmar pago'}
+      </Button>
+    </Stack>
+  );
+}
 
 const normalizeText = (value: string) =>
   value
@@ -291,6 +420,11 @@ const fireCartMetaEvent = () => {
 };
 
 export default function MarketplacePage() {
+  useMetaTags({
+    title: 'Marketplace',
+    description: 'Descubre equipos, instrumentos y servicios disponibles en TDF Records.',
+  });
+
   const qc = useQueryClient();
   const { session } = useSession();
   const modules = useMemo(
@@ -299,11 +433,20 @@ export default function MarketplacePage() {
   );
   const canManagePhotos = modules.has('ops') || modules.has('admin');
   const paypalClientId = useMemo<string>(() => {
-    const baked = String(IMPORT_META_ENV['VITE_PAYPAL_CLIENT_ID'] ?? '').trim();
+    const paypalBakedClientId = String(import.meta.env?.VITE_PAYPAL_CLIENT_ID ?? '').trim();
     const runtimeVal: string = readRuntimeEnv('VITE_PAYPAL_CLIENT_ID');
     const cleanedRuntime = runtimeVal.trim();
-    return baked !== '' ? baked : cleanedRuntime;
+    return paypalBakedClientId !== '' ? paypalBakedClientId : cleanedRuntime;
   }, []);
+  const stripePublishableKey = useMemo<string>(() => {
+    const stripeBakedPublishableKey = String(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '').trim();
+    const runtimeVal = readRuntimeEnv('VITE_STRIPE_PUBLISHABLE_KEY');
+    return stripeBakedPublishableKey !== '' ? stripeBakedPublishableKey : runtimeVal.trim();
+  }, []);
+  const stripePromise = useMemo(
+    () => (stripePublishableKey ? loadStripe(stripePublishableKey) : null),
+    [stripePublishableKey],
+  );
   const [initialViewState] = useState<MarketplaceInitialViewState>(() => {
     if (typeof window === 'undefined') return DEFAULT_MARKETPLACE_VIEW_STATE;
     return resolveMarketplaceInitialViewState(
@@ -338,10 +481,14 @@ export default function MarketplacePage() {
     hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot : null,
   );
   const [lastOrder, setLastOrder] = useState<MarketplaceOrderDTO | null>(null);
+  const [stripeDialogOpen, setStripeDialogOpen] = useState(false);
+  const [stripeIntent, setStripeIntent] = useState<StripePaymentIntentDTO | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalDialogOpen, setPaypalDialogOpen] = useState(false);
-  const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string } | null>(null);
+  const [paypalOrder, setPaypalOrder] = useState<{ orderId: string; paypalOrderId: string; lookupToken: string } | null>(null);
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const showStripeOption = false;
   const paypalEnabled = Boolean(paypalClientId);
   const columnScrollHeight = { xs: 'auto', md: 'calc(100vh - 240px)' };
   const datafastFormRef = useRef<HTMLDivElement>(null);
@@ -352,7 +499,7 @@ export default function MarketplacePage() {
   const [datafastUnavailable, setDatafastUnavailable] = useState(false);
   const showPaypalOption = paypalEnabled;
   const showDatafastOption = !datafastUnavailable;
-  const [paymentMethod, setPaymentMethod] = useState<'contact' | 'card' | 'paypal'>(() => {
+  const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>(() => {
     if (typeof window === 'undefined') return 'contact';
     const saved = localStorage.getItem(PAYMENT_PREF_KEY);
     return saved === 'card' || saved === 'paypal' || saved === 'contact' ? saved : 'contact';
@@ -360,11 +507,22 @@ export default function MarketplacePage() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalDialogListing, setRentalDialogListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalStartDate, setRentalStartDate] = useState('');
+  const [rentalEndDate, setRentalEndDate] = useState('');
+  const [rentalTermsAccepted, setRentalTermsAccepted] = useState(false);
+  const [rentalIdentityType, setRentalIdentityType] = useState<'cedula' | 'passport' | 'ruc'>('cedula');
+  const [rentalIdentityNumber, setRentalIdentityNumber] = useState('');
+  const [rentalTermsDialogListing, setRentalTermsDialogListing] = useState<MarketplaceItemDTO | null>(null);
+  const [rentalTermsForm, setRentalTermsForm] = useState({
+    dailyRate: '', weeklyRate: '', deposit: '', lateFee: '', minDays: '1', maxDays: '30',
+    cancellationHours: '24', version: '', summary: '', active: true,
+  });
   const [imagePreview, setImagePreview] = useState<{ src: string; alt: string } | null>(null);
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(() => new Set());
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
-  const adaUsdRate = useMemo(() => parseEnvNumber('VITE_ADA_USD_RATE'), []);
-  const sedUsdRate = useMemo(() => parseEnvNumber('VITE_SED_USD_RATE'), []);
+  const adaUsdRate = useMemo(() => parseEnvNumber(import.meta.env?.VITE_ADA_USD_RATE), []);
+  const sedUsdRate = useMemo(() => parseEnvNumber(import.meta.env?.VITE_SED_USD_RATE), []);
   const showTokenRates = Boolean(adaUsdRate ?? sedUsdRate);
   const normalizedSearchTerm = useMemo(() => normalizeText(search.trim()), [search]);
   const searchTokens = useMemo(() => normalizedSearchTerm.split(' ').filter(Boolean), [normalizedSearchTerm]);
@@ -378,6 +536,9 @@ export default function MarketplacePage() {
   });
   const cart = cartQuery.data;
   const cartItems: MarketplaceCartItemDTO[] = cart?.mcItems ?? [];
+  const rentalCartItem = cartItems.find((item) => item.mciPurpose === 'rent') ?? null;
+  const isRentalCart = Boolean(rentalCartItem);
+  const paypalCurrency = cart?.mcCurrency?.trim().toUpperCase() ?? null;
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -400,6 +561,15 @@ export default function MarketplacePage() {
     url.searchParams.set('orderId', datafastCheckout.dcOrderId);
     return url.toString();
   }, [datafastCheckout]);
+  const stripeElementsOptions = useMemo<StripeElementsOptions | null>(() => {
+    if (!stripeIntent) return null;
+    return {
+      clientSecret: stripeIntent.spiClientSecret,
+      appearance: {
+        theme: 'stripe',
+      },
+    };
+  }, [stripeIntent]);
   const isValidEmail = useMemo(() => /\S+@\S+\.\S+/.test(buyerEmail.trim()), [buyerEmail]);
   const isValidName = useMemo(() => buyerName.trim().length > 1, [buyerName]);
   const isValidPhone = useMemo(() => {
@@ -407,6 +577,24 @@ export default function MarketplacePage() {
     const cleaned = normalizePhone(buyerPhone) ?? '';
     return cleaned.length >= 7;
   }, [buyerPhone, contactPref]);
+  const isValidRentalPhone = useMemo(
+    () => (buyerPhone.match(/[0-9]/g)?.length ?? 0) >= 8,
+    [buyerPhone],
+  );
+  const isValidRentalIdentity = useMemo(() => {
+    const normalized = rentalIdentityNumber.trim();
+    const canonical = normalized.replace(/[^A-Za-z0-9]/g, '');
+    return canonical.length >= 5
+      && canonical.length <= 32
+      && /^[A-Za-z0-9 .-]+$/.test(normalized);
+  }, [rentalIdentityNumber]);
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const rentalDateError = useMemo(() => {
+    if (!rentalStartDate || !rentalEndDate) return 'Selecciona fecha de inicio y devolución.';
+    if (rentalStartDate < todayIso) return 'La fecha de inicio no puede estar en el pasado.';
+    if (rentalEndDate < rentalStartDate) return 'La devolución no puede ser anterior al inicio.';
+    return '';
+  }, [rentalEndDate, rentalStartDate, todayIso]);
 
   const listingsQuery = useQuery({
     queryKey: ['marketplace-listings'],
@@ -429,13 +617,13 @@ export default function MarketplacePage() {
   }, [paymentMethod]);
 
   useEffect(() => {
-    if (!paypalClientId || typeof window === 'undefined') return;
+    if (!paypalClientId || !paypalCurrency || typeof window === 'undefined') return;
     if (window.paypal) {
       setPaypalReady(true);
       return;
     }
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=USD`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(paypalCurrency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
     script.onerror = () => setPaypalError('No se pudo cargar PayPal. Intenta de nuevo.');
@@ -443,7 +631,7 @@ export default function MarketplacePage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, [paypalClientId]);
+  }, [paypalClientId, paypalCurrency]);
 
   useEffect(() => {
     if (!datafastDialogOpen || !datafastCheckout || typeof window === 'undefined') return;
@@ -498,12 +686,37 @@ export default function MarketplacePage() {
     },
   });
 
-  const upsertItemMutation = useMutation<MarketplaceCartDTO, Error, { listingId: string; quantity: number }>({
-    mutationFn: async ({ listingId, quantity }) => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      const nextId = cartId ?? ensuredCart;
-      setCartId(nextId);
-      return Marketplace.upsertItem(nextId, { mciuListingId: listingId, mciuQuantity: quantity });
+  const ensuringCartRef = useRef<Promise<string> | null>(null);
+
+  const ensureCart = useCallback(async (): Promise<string> => {
+    if (cartId) return cartId;
+    if (ensuringCartRef.current) {
+      return ensuringCartRef.current;
+    }
+    const promise = createCartMutation.mutateAsync().then((data) => {
+      setCartId((prev) => prev ?? data.mcCartId);
+      return data.mcCartId;
+    }).finally(() => {
+      ensuringCartRef.current = null;
+    });
+    ensuringCartRef.current = promise;
+    return promise;
+  }, [cartId, createCartMutation]);
+
+  const upsertItemMutation = useMutation<
+    MarketplaceCartDTO,
+    Error,
+    { listingId: string; quantity: number; rentalStartDate?: string; rentalEndDate?: string }
+  >({
+    mutationFn: async ({ listingId, quantity, rentalStartDate: startDate, rentalEndDate: endDate }) => {
+      const ensuredCart = await ensureCart();
+      return Marketplace.upsertItem(ensuredCart, {
+        mciuListingId: listingId,
+        mciuQuantity: quantity,
+        ...(startDate && endDate
+          ? { mciuRentalStartDate: startDate, mciuRentalEndDate: endDate }
+          : {}),
+      });
     },
     onSuccess: (data) => {
       qc.setQueryData(['marketplace-cart', data.mcCartId], data);
@@ -530,18 +743,54 @@ export default function MarketplacePage() {
     },
   });
 
+  const clearCheckoutCart = useCallback(() => {
+    qc.removeQueries({ queryKey: ['marketplace-cart'] });
+    setCartId(null);
+    setSavedCartMeta(null);
+    setShowRestoreBanner(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(CART_META_KEY);
+    }
+    fireCartMetaEvent();
+  }, [qc]);
+
+  const checkoutRequest = useCallback(
+    () => buildMarketplaceCheckoutRequest(
+      buyerName,
+      buyerEmail,
+      buyerPhone,
+      isRentalCart
+        ? {
+            termsAccepted: rentalTermsAccepted,
+            identityType: rentalIdentityType,
+            identityNumber: rentalIdentityNumber,
+          }
+        : undefined,
+    ),
+    [
+      buyerEmail,
+      buyerName,
+      buyerPhone,
+      isRentalCart,
+      rentalIdentityNumber,
+      rentalIdentityType,
+      rentalTermsAccepted,
+    ],
+  );
+
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
-      const order = await Marketplace.checkout(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      const ensuredCart = await ensureCart();
+      const order = await Marketplace.checkout(
+        ensuredCart,
+        checkoutRequest(),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'bank_transfer'),
+      );
       return order;
     },
     onSuccess: (order) => {
+      storeMarketplaceLookupToken(order.moOrderId, order.moLookupToken);
       setLastOrder(order);
       qc.removeQueries({ queryKey: ['marketplace-cart'] });
       setCartId(null);
@@ -552,7 +801,7 @@ export default function MarketplacePage() {
         localStorage.removeItem(CART_META_KEY);
       }
       setToast(
-        `Pedido enviado. Te contactaremos por ${
+        `Pedido creado y pendiente de pago. Te contactaremos por ${
           contactPref === 'email' ? 'correo' : 'teléfono/WhatsApp'
         } en menos de 24 h.`,
       );
@@ -560,17 +809,36 @@ export default function MarketplacePage() {
     },
   });
 
-  const datafastCheckoutMutation = useMutation<DatafastCheckoutDTO, Error, void>({
+  const stripePaymentIntentMutation = useMutation<StripePaymentIntentDTO, Error, void>({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
-      return Marketplace.datafastCheckout(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      const ensuredCart = await ensureCart();
+      return Marketplace.stripePaymentIntent(
+        ensuredCart,
+        checkoutRequest(),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'stripe'),
+      );
     },
     onSuccess: (dto) => {
+      setStripeIntent(dto);
+      setStripeDialogOpen(true);
+      setStripeError(null);
+    },
+    onError: () => {
+      setStripeError('No pudimos iniciar el pago con Stripe. Revisa tus datos.');
+    },
+  });
+
+  const datafastCheckoutMutation = useMutation<DatafastCheckoutDTO, Error, void>({
+    mutationFn: async () => {
+      const ensuredCart = await ensureCart();
+      return Marketplace.datafastCheckout(
+        ensuredCart,
+        checkoutRequest(),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'datafast'),
+      );
+    },
+    onSuccess: (dto) => {
+      storeMarketplaceLookupToken(dto.dcOrderId, dto.dcLookupToken);
       setDatafastCheckout(dto);
       setDatafastDialogOpen(true);
       setDatafastError(null);
@@ -586,16 +854,24 @@ export default function MarketplacePage() {
 
   const createPaypalOrderMutation = useMutation({
     mutationFn: async () => {
-      const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-      setCartId(ensuredCart);
-      return Marketplace.createPaypalOrder(ensuredCart, {
-        mcrBuyerName: buyerName,
-        mcrBuyerEmail: buyerEmail,
-        mcrBuyerPhone: normalizePhone(buyerPhone),
-      });
+      const ensuredCart = await ensureCart();
+      return Marketplace.createPaypalOrder(
+        ensuredCart,
+        checkoutRequest(),
+        getMarketplaceCheckoutIdempotencyKey(ensuredCart, 'paypal'),
+      );
     },
     onSuccess: (data) => {
-      setPaypalOrder({ orderId: data.pcOrderId, paypalOrderId: data.pcPaypalOrderId });
+      if (!data.pcLookupToken) {
+        setPaypalError('La orden PayPal no incluyó un acceso seguro de seguimiento. Intenta nuevamente.');
+        return;
+      }
+      storeMarketplaceLookupToken(data.pcOrderId, data.pcLookupToken);
+      setPaypalOrder({
+        orderId: data.pcOrderId,
+        paypalOrderId: data.pcPaypalOrderId,
+        lookupToken: data.pcLookupToken,
+      });
       setPaypalDialogOpen(true);
       setPaypalError(null);
     },
@@ -607,12 +883,23 @@ export default function MarketplacePage() {
     Error,
     { orderId: string; paypalOrderId: string }
   >({
-    mutationFn: ({ orderId, paypalOrderId }) =>
-      Marketplace.capturePaypalOrder({ pcCaptureOrderId: orderId, pcCapturePaypalId: paypalOrderId }),
+    mutationFn: ({ orderId, paypalOrderId }) => {
+      const lookupToken = paypalOrder?.lookupToken ?? loadMarketplaceLookupToken(orderId);
+      if (!lookupToken) throw new Error('No secure marketplace order lookup token');
+      return Marketplace.capturePaypalOrder(
+        { pcCaptureOrderId: orderId, pcCapturePaypalId: paypalOrderId },
+        lookupToken,
+      );
+    },
     onSuccess: (order) => {
       setLastOrder(order);
       setPaypalDialogOpen(false);
       setPaypalOrder(null);
+      const paid = isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus);
+      if (!paid) {
+        setToast('PayPal está procesando el pago. Conservamos tu carrito hasta recibir confirmación verificable.');
+        return;
+      }
       qc.removeQueries({ queryKey: ['marketplace-cart'] });
       setCartId(null);
       setSavedCartMeta(null);
@@ -621,7 +908,7 @@ export default function MarketplacePage() {
         localStorage.removeItem(CART_STORAGE_KEY);
         localStorage.removeItem(CART_META_KEY);
       }
-      setToast('Pago recibido con PayPal. Gracias por tu compra.');
+      setToast('Pago verificado con PayPal. Gracias por tu compra.');
       fireCartMetaEvent();
     },
     onError: () => setPaypalError('No pudimos confirmar el pago. Intenta de nuevo.'),
@@ -649,6 +936,35 @@ export default function MarketplacePage() {
     onError: (err) => {
       setPhotoError(err instanceof Error ? err.message : 'No se pudo actualizar la foto.');
       setPendingPhotoUrl(null);
+    },
+  });
+
+  const updateRentalTermsMutation = useMutation({
+    mutationFn: () => {
+      if (!rentalTermsDialogListing) throw new Error('No rental listing selected');
+      const readInteger = (value: string) => Number(value.trim());
+      return Marketplace.updateRentalTerms(rentalTermsDialogListing.miListingId, {
+        mrtuDailyRateUsdCents: readInteger(rentalTermsForm.dailyRate),
+        mrtuWeeklyRateUsdCents: rentalTermsForm.weeklyRate.trim()
+          ? readInteger(rentalTermsForm.weeklyRate)
+          : null,
+        mrtuSecurityDepositUsdCents: readInteger(rentalTermsForm.deposit),
+        mrtuLateFeeUsdCents: readInteger(rentalTermsForm.lateFee),
+        mrtuMinDays: readInteger(rentalTermsForm.minDays),
+        mrtuMaxDays: readInteger(rentalTermsForm.maxDays),
+        mrtuCancellationWindowHours: readInteger(rentalTermsForm.cancellationHours),
+        mrtuTimezone: 'America/Guayaquil',
+        mrtuTermsVersion: rentalTermsForm.version.trim(),
+        mrtuTermsSummary: rentalTermsForm.summary.trim(),
+        mrtuActive: rentalTermsForm.active,
+      });
+    },
+    onSuccess: (updated) => {
+      qc.setQueryData<MarketplaceItemDTO[]>(['marketplace-listings'], (current) =>
+        current?.map((listing) => listing.miListingId === updated.miListingId ? updated : listing),
+      );
+      setRentalTermsDialogListing(null);
+      setToast(updated.miRentalTermsVersion ? 'Tarifa y términos de renta activados' : 'Renta desactivada');
     },
   });
 
@@ -725,17 +1041,31 @@ export default function MarketplacePage() {
   }, [computeRelevanceScore, filteredListings, sort]);
   const cartItemCount = cartItems.reduce((acc, it) => acc + it.mciQuantity, 0);
   const hasCartItems = cartItems.length > 0;
-  const cartSubtotal = cart?.mcSubtotalDisplay ?? 'USD $0.00';
+  const cartSubtotal = cart?.mcSubtotalDisplay ?? formatCurrencyForUser(0, paypalCurrency ?? resolveRuntimeCurrency());
   const checkoutDisabledReason = useMemo(() => {
     if (!hasCartItems || cartItemCount === 0) return 'Agrega al menos un producto para continuar.';
     if (!isValidName) return 'Ingresa tu nombre para coordinar el pedido.';
     if (!isValidEmail) return 'Ingresa un correo válido.';
+    if (isRentalCart && !isValidRentalPhone) return 'La renta requiere un teléfono de contacto válido.';
+    if (isRentalCart && !isValidRentalIdentity) return 'Completa un documento válido para la entrega del equipo.';
+    if (isRentalCart && !rentalTermsAccepted) return 'Acepta los términos versionados de la renta.';
     if (!isValidPhone && contactPref === 'phone') return 'Agrega un teléfono para coordinar por WhatsApp.';
     return '';
-  }, [cartItemCount, contactPref, hasCartItems, isValidEmail, isValidName, isValidPhone]);
+  }, [
+    cartItemCount,
+    contactPref,
+    hasCartItems,
+    isRentalCart,
+    isValidEmail,
+    isValidName,
+    isValidPhone,
+    isValidRentalIdentity,
+    isValidRentalPhone,
+    rentalTermsAccepted,
+  ]);
   useEffect(() => {
     if (!paypalEnabled && (modules.has('ops') || modules.has('admin'))) {
-      console.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
+      logger.warn('PayPal deshabilitado: falta VITE_PAYPAL_CLIENT_ID en build o runtime.');
     }
   }, [paypalEnabled, modules]);
 
@@ -754,13 +1084,16 @@ export default function MarketplacePage() {
   }, [condition, listingsQuery.isSuccess, resolvedCondition]);
 
   useEffect(() => {
+    if (paymentMethod === 'stripe' && !showStripeOption) {
+      setPaymentMethod('contact');
+    }
     if (paymentMethod === 'paypal' && !showPaypalOption) {
       setPaymentMethod('contact');
     }
     if (paymentMethod === 'card' && !showDatafastOption) {
       setPaymentMethod('contact');
     }
-  }, [paymentMethod, showDatafastOption, showPaypalOption]);
+  }, [paymentMethod, showDatafastOption, showPaypalOption, showStripeOption]);
   const resetFilters = () => {
     setSearch('');
     setCategory('all');
@@ -876,13 +1209,54 @@ export default function MarketplacePage() {
   }, [capturePaypalMutation, paypalDialogOpen, paypalOrder, paypalReady]);
 
   const handleAdd = (listing: MarketplaceItemDTO) => {
+    if (listing.miPurpose === 'rent') {
+      if (!listing.miRentalTermsVersion) {
+        setToast('Esta renta sigue bloqueada hasta que Operaciones apruebe su tarifa, depósito y términos.');
+        return;
+      }
+      if (cartItems.some((item) => item.mciPurpose !== 'rent')) {
+        setToast('Las ventas y rentas usan carritos separados. Vacía el carrito de venta para continuar.');
+        return;
+      }
+      setRentalDialogListing(listing);
+      setRentalStartDate('');
+      setRentalEndDate('');
+      return;
+    }
+    if (cartItems.some((item) => item.mciPurpose === 'rent')) {
+      setToast('Las ventas y rentas usan carritos separados. Vacía la renta para continuar con la compra.');
+      return;
+    }
     if (!isListingAvailable(listing.miStatus)) {
       setToast('Este artículo no está disponible en este momento.');
       return;
     }
     const currentQty =
       cart?.mcItems.find((item) => item.mciListingId === listing.miListingId)?.mciQuantity ?? 0;
-    upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: currentQty + 1 });
+    if (currentQty >= 1) {
+      setToast('Este activo físico ya está en tu carrito.');
+      return;
+    }
+    upsertItemMutation.mutate({ listingId: listing.miListingId, quantity: 1 });
+  };
+
+  const confirmRentalDates = () => {
+    if (!rentalDialogListing || rentalDateError) return;
+    upsertItemMutation.mutate(
+      {
+        listingId: rentalDialogListing.miListingId,
+        quantity: 1,
+        rentalStartDate,
+        rentalEndDate,
+      },
+      {
+        onSuccess: () => {
+          setRentalDialogListing(null);
+          setRentalStartDate('');
+          setRentalEndDate('');
+        },
+      },
+    );
   };
 
   const handleUpdateQty = (item: MarketplaceCartItemDTO, quantity: number) => {
@@ -891,18 +1265,18 @@ export default function MarketplacePage() {
 
   const clearCart = async () => {
     if (!hasCartItems) return;
-    const ensuredCart = cartId ?? (await createCartMutation.mutateAsync()).mcCartId;
-    setCartId(ensuredCart);
-    for (const item of cartItems) {
-      // eslint-disable-next-line no-await-in-loop
-      await upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 });
-    }
+    await ensureCart();
+    await Promise.all(
+      cartItems.map((item) =>
+        upsertItemMutation.mutateAsync({ listingId: item.mciListingId, quantity: 0 }),
+      ),
+    );
     setToast('Carrito vacío');
   };
 
   const handleCheckout = () => {
-    if (!isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
-      setToast('Completa tu nombre, correo y teléfono para continuar.');
+    if (checkoutDisabledReason) {
+      setToast(checkoutDisabledReason);
       return;
     }
     checkoutMutation.mutate();
@@ -910,32 +1284,60 @@ export default function MarketplacePage() {
 
   const handleDatafastCheckout = () => {
     setDatafastError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail || cartItemCount === 0 || (contactPref === 'phone' && !isValidPhone)) {
-      setDatafastError(
-        contactPref === 'phone'
-          ? 'Completa tu nombre, correo y teléfono para pagar con tarjeta.'
-          : 'Completa tu nombre y correo para pagar con tarjeta.',
-      );
+    if (checkoutDisabledReason) {
+      setDatafastError(checkoutDisabledReason);
       return;
     }
     datafastCheckoutMutation.mutate();
   };
 
+  const handleStripeCheckout = () => {
+    setStripeError(null);
+    if (!showStripeOption) {
+      setStripeError('Stripe no está configurado en este entorno.');
+      return;
+    }
+    if (checkoutDisabledReason) {
+      setStripeError(checkoutDisabledReason);
+      return;
+    }
+    stripePaymentIntentMutation.mutate();
+  };
+
+  const handleStripePaymentSuccess = async (orderId: string) => {
+    try {
+      const lookupToken = stripeIntent?.spiLookupToken ?? loadMarketplaceLookupToken(orderId);
+      if (!lookupToken) throw new Error('No secure marketplace order lookup token');
+      const order = await Marketplace.getOrder(orderId, lookupToken);
+      setLastOrder(order);
+      if (isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus)) {
+        clearCheckoutCart();
+        setToast('El servidor verificó el pago con Stripe. Gracias por tu compra.');
+      } else {
+        setToast('Stripe devolvió el navegador, pero el servidor aún no verificó el pago. Conservamos tu carrito.');
+      }
+    } catch {
+      setLastOrder(null);
+      setToast('No pudimos verificar el pago en el servidor. Conservamos tu carrito; no intentes pagar de nuevo todavía.');
+    }
+    setStripeDialogOpen(false);
+    setStripeIntent(null);
+    setStripeError(null);
+  };
+
   const handlePaypalCheckout = () => {
     setPaypalError(null);
-    if (!hasCartItems || !isValidName || !isValidEmail || (contactPref === 'phone' && !isValidPhone)) {
-      setPaypalError(
-        contactPref === 'phone'
-          ? 'Completa tu nombre, correo y teléfono para pagar con PayPal.'
-          : 'Completa tu nombre y correo para pagar con PayPal.',
-      );
+    if (checkoutDisabledReason) {
+      setPaypalError(checkoutDisabledReason);
       return;
     }
     createPaypalOrderMutation.mutate();
   };
 
   const handleContinueCheckout = () => {
-    if (paymentMethod === 'card') {
+    if (paymentMethod === 'stripe') {
+      handleStripeCheckout();
+    } else if (paymentMethod === 'card') {
       handleDatafastCheckout();
     } else if (paymentMethod === 'paypal') {
       handlePaypalCheckout();
@@ -1011,6 +1413,44 @@ export default function MarketplacePage() {
     updatePhotoMutation.mutate({ assetId: photoDialogListing.miAssetId, photoUrl: null });
   };
 
+  const openRentalTermsDialog = (listing: MarketplaceItemDTO) => {
+    if (!canManagePhotos || listing.miPurpose !== 'rent') return;
+    setRentalTermsDialogListing(listing);
+    setRentalTermsForm({
+      dailyRate: String(listing.miPriceUsdCents),
+      weeklyRate: listing.miRentalWeeklyPriceUsdCents == null ? '' : String(listing.miRentalWeeklyPriceUsdCents),
+      deposit: String(listing.miRentalSecurityDepositUsdCents ?? 0),
+      lateFee: String(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
+      minDays: String(listing.miRentalMinDays ?? 1),
+      maxDays: String(listing.miRentalMaxDays ?? 30),
+      cancellationHours: String(listing.miRentalCancellationWindowHours ?? 24),
+      version: listing.miRentalTermsVersion ?? '',
+      summary: listing.miRentalTermsSummary ?? '',
+      active: Boolean(listing.miRentalTermsVersion),
+    });
+    updateRentalTermsMutation.reset();
+  };
+
+  const rentalTermsFormInvalid = useMemo(() => {
+    const integerFields = [
+      rentalTermsForm.dailyRate,
+      rentalTermsForm.deposit,
+      rentalTermsForm.lateFee,
+      rentalTermsForm.minDays,
+      rentalTermsForm.maxDays,
+      rentalTermsForm.cancellationHours,
+      ...(rentalTermsForm.weeklyRate.trim() ? [rentalTermsForm.weeklyRate] : []),
+    ];
+    const values = integerFields.map(Number);
+    return values.some((value) => !Number.isSafeInteger(value) || value < 0)
+      || Number(rentalTermsForm.dailyRate) < 1
+      || Number(rentalTermsForm.minDays) < 1
+      || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
+      || Number(rentalTermsForm.maxDays) > 366
+      || !rentalTermsForm.version.trim()
+      || !rentalTermsForm.summary.trim();
+  }, [rentalTermsForm]);
+
   const handleRestoreCart = () => {
     if (!savedCartMeta?.cartId) return;
     setCartId(savedCartMeta.cartId);
@@ -1068,7 +1508,7 @@ export default function MarketplacePage() {
     const lastUpdatedAt = lastOrder.moUpdatedAt ?? (lastHistoryEntry ? lastHistoryEntry[1] : null);
     return (
       <Card variant="outlined">
-        <CardHeader title="Pedido enviado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
+        <CardHeader title="Pedido creado" subheader={`Total: ${lastOrder.moTotalDisplay}`} />
         <CardContent>
           <Stack spacing={1}>
             {lastOrder.moItems.map((item) => (
@@ -1092,6 +1532,11 @@ export default function MarketplacePage() {
                 {statusMeta.desc || lastOrder.moStatus}
               </Typography>
             </Stack>
+            {lastOrder.moPaymentProvider === 'bank_transfer' && lastOrder.moCheckoutStatus !== 'paid' && (
+              <Alert severity="warning" variant="outlined">
+                El pedido existe, pero no está pagado. Abre el seguimiento para enviar la referencia de transferencia; la aprobación requiere revisión independiente.
+              </Alert>
+            )}
             <Button
               variant="text"
               size="small"
@@ -1395,61 +1840,69 @@ export default function MarketplacePage() {
                 {search.trim() && <Chip label="Búsqueda activa" size="small" />}
               </Stack>
             )}
-            <Grid container spacing={2}>
-              {!listingsQuery.isLoading && filteredListings.length === 0 && (
-                <Grid item xs={12}>
-                  <Alert
-                    severity="info"
-                    action={
-                      <Button color="inherit" size="small" onClick={resetFilters}>
-                        Limpiar filtros
-                      </Button>
-                    }
-                  >
-                    No encontramos resultados con estos filtros.
-                  </Alert>
-                  <Card variant="outlined" sx={{ mt: 1 }}>
-                    <CardContent>
-                      <Stack spacing={1.5}>
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          ¿Te avisamos cuando vuelva a estar disponible?
-                        </Typography>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                          <TextField
-                            label="Nombre"
-                            value={buyerName}
-                            onChange={(e) => setBuyerName(e.target.value)}
-                            size="small"
-                          />
-                          <TextField
-                            label="Correo"
-                            value={buyerEmail}
-                            onChange={(e) => setBuyerEmail(e.target.value)}
-                            size="small"
-                          />
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => {
-                              const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
-                              localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
-                              setSavedBuyerSnapshot(payload);
-                              setToast('Guardamos tu contacto; te avisaremos.');
-                            }}
-                          >
-                            Guardar contacto
+            <LazyPaginatedList
+              items={sortedListings}
+              pagination={{
+                itemLabel: 'resultados',
+                initialRowsPerPage: 12,
+                resetKey: [search.trim(), resolvedCategory, resolvedCondition, purpose, sort].join('|'),
+              }}
+              renderItems={(visibleListings) => (
+                <Grid container spacing={2}>
+                  {!listingsQuery.isLoading && filteredListings.length === 0 && (
+                    <Grid item xs={12}>
+                      <Alert
+                        severity="info"
+                        action={
+                          <Button color="inherit" size="small" onClick={resetFilters}>
+                            Limpiar filtros
                           </Button>
-                        </Stack>
-                        <Typography variant="caption" color="text.secondary">
-                          Usaremos tu contacto solo para notificar disponibilidad.
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-              {sortedListings.map((item) => (
-                <Grid item xs={12} sm={6} key={item.miListingId}>
+                        }
+                      >
+                        No encontramos resultados con estos filtros.
+                      </Alert>
+                      <Card variant="outlined" sx={{ mt: 1 }}>
+                        <CardContent>
+                          <Stack spacing={1.5}>
+                            <Typography variant="subtitle1" fontWeight={700}>
+                              ¿Te avisamos cuando vuelva a estar disponible?
+                            </Typography>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <TextField
+                                label="Nombre"
+                                value={buyerName}
+                                onChange={(e) => setBuyerName(e.target.value)}
+                                size="small"
+                              />
+                              <TextField
+                                label="Correo"
+                                value={buyerEmail}
+                                onChange={(e) => setBuyerEmail(e.target.value)}
+                                size="small"
+                              />
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => {
+                                  const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
+                                  localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+                                  setSavedBuyerSnapshot(payload);
+                                  setToast('Guardamos tu contacto; te avisaremos.');
+                                }}
+                              >
+                                Guardar contacto
+                              </Button>
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                              Usaremos tu contacto solo para notificar disponibilidad.
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  )}
+                  {visibleListings.map((item) => (
+                    <Grid item xs={12} sm={6} key={item.miListingId}>
                   <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -1616,11 +2069,16 @@ export default function MarketplacePage() {
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 'auto' }}>
                         <Tooltip
                           title={
-                            isListingAvailable(item.miStatus)
-                              ? ''
-                              : `No disponible para agregar (${item.miStatus ?? 'estado desconocido'})`
+                            item.miPurpose === 'rent' && !item.miRentalTermsVersion
+                              ? 'Operaciones todavía no ha aprobado una tarifa y términos activos para esta renta.'
+                              : isListingAvailable(item.miStatus)
+                                ? ''
+                                : `No disponible para agregar (${item.miStatus ?? 'estado desconocido'})`
                           }
-                          disableHoverListener={isListingAvailable(item.miStatus)}
+                          disableHoverListener={
+                            isListingAvailable(item.miStatus)
+                              && (item.miPurpose !== 'rent' || Boolean(item.miRentalTermsVersion))
+                          }
                         >
                           <span>
                             <Button
@@ -1628,18 +2086,35 @@ export default function MarketplacePage() {
                               size="small"
                               startIcon={<ShoppingCartIcon />}
                               onClick={() => handleAdd(item)}
-                              disabled={upsertItemMutation.isPending || !isListingAvailable(item.miStatus)}
+                              disabled={
+                                upsertItemMutation.isPending
+                                || !isListingAvailable(item.miStatus)
+                                || (item.miPurpose === 'rent' && !item.miRentalTermsVersion)
+                              }
                             >
-                              {item.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                              {item.miPurpose === 'rent'
+                                ? item.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
+                                : 'Agregar'}
                             </Button>
+                            {canManagePhotos && item.miPurpose === 'rent' && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => openRentalTermsDialog(item)}
+                              >
+                                Configurar renta
+                              </Button>
+                            )}
                           </span>
                         </Tooltip>
                       </Stack>
                     </CardContent>
                   </Card>
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
+              )}
+            />
             </Box>
           </Grid>
 
@@ -1710,6 +2185,16 @@ export default function MarketplacePage() {
                               <Typography variant="caption" color="text.secondary">
                                 {item.mciUnitPriceDisplay} · {item.mciCategory}
                               </Typography>
+                              {item.mciPurpose === 'rent' && (
+                                <Stack spacing={0.25} mt={0.5}>
+                                  <Typography variant="caption">
+                                    {item.mciRentalStartDate} → {item.mciRentalEndDate} · {item.mciRentalDurationDays} día(s)
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Renta: {item.mciRentalChargeDisplay} · Depósito reembolsable: {item.mciSecurityDepositDisplay}
+                                  </Typography>
+                                </Stack>
+                              )}
                             </Box>
                             <IconButton
                               aria-label="Quitar"
@@ -1719,6 +2204,7 @@ export default function MarketplacePage() {
                               <DeleteIcon fontSize="small" />
                             </IconButton>
                           </Stack>
+                          {item.mciPurpose === 'sale' ? (
                           <Stack direction="row" spacing={1} alignItems="center" mt={1}>
                             <IconButton
                               aria-label="Disminuir cantidad"
@@ -1736,14 +2222,14 @@ export default function MarketplacePage() {
                               onChange={(e) =>
                                 handleUpdateQty(item, parseCartQuantity(e.target.value ?? '0', item.mciQuantity))
                               }
-                              inputProps={{ min: 0, max: 99 }}
+                              inputProps={{ min: 0, max: 1 }}
                               sx={{ width: 120 }}
                             />
                             <IconButton
                               aria-label="Incrementar cantidad"
                               size="small"
-                              onClick={() => handleUpdateQty(item, Math.min(99, item.mciQuantity + 1))}
-                              disabled={upsertItemMutation.isPending}
+                              onClick={() => handleUpdateQty(item, 1)}
+                              disabled={upsertItemMutation.isPending || item.mciQuantity >= 1}
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
@@ -1751,6 +2237,14 @@ export default function MarketplacePage() {
                               {item.mciSubtotalDisplay}
                             </Typography>
                           </Stack>
+                          ) : (
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
+                              <Chip size="small" label="1 activo con fechas" />
+                              <Typography variant="body2" fontWeight={700}>
+                                Total retenido al pagar: {item.mciSubtotalDisplay}
+                              </Typography>
+                            </Stack>
+                          )}
                         </Box>
                       ))}
                       <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
@@ -1779,7 +2273,7 @@ export default function MarketplacePage() {
                             onClick={() => {
                               openReview();
                             }}
-                            disabled={!isValidName || !isValidEmail || cartItemCount === 0}
+                            disabled={Boolean(checkoutDisabledReason)}
                           >
                             Continuar al checkout
                           </Button>
@@ -1854,11 +2348,50 @@ export default function MarketplacePage() {
                           helperText={Boolean(buyerEmail) && !isValidEmail ? 'Correo no válido' : undefined}
                         />
                         <TextField
-                          label="Teléfono (opcional)"
+                          type="tel"
+                          label={isRentalCart ? 'Teléfono para entrega (obligatorio)' : 'Teléfono (opcional)'}
                           value={buyerPhone}
                           onChange={(e) => setBuyerPhone(e.target.value)}
                           fullWidth
                         />
+                        {isRentalCart && (
+                          <Stack spacing={1.25}>
+                            <Alert severity="info" variant="outlined">
+                              La renta y el depósito son conceptos separados. Pagar confirma la reserva; no significa que el equipo ya fue entregado ni que el depósito fue reembolsado.
+                            </Alert>
+                            <FormControl fullWidth size="small">
+                              <InputLabel id="marketplace-rental-identity-type-label">Documento</InputLabel>
+                              <Select
+                                labelId="marketplace-rental-identity-type-label"
+                                label="Documento"
+                                value={rentalIdentityType}
+                                onChange={(event) => setRentalIdentityType(event.target.value as 'cedula' | 'passport' | 'ruc')}
+                              >
+                                <MenuItem value="cedula">Cédula</MenuItem>
+                                <MenuItem value="passport">Pasaporte</MenuItem>
+                                <MenuItem value="ruc">RUC</MenuItem>
+                              </Select>
+                            </FormControl>
+                            <TextField
+                              label="Número de documento"
+                              value={rentalIdentityNumber}
+                              onChange={(event) => setRentalIdentityNumber(event.target.value)}
+                              inputProps={{ maxLength: 32, autoComplete: 'off' }}
+                              error={Boolean(rentalIdentityNumber) && !isValidRentalIdentity}
+                              helperText="Se valida para la entrega y el servidor conserva únicamente tipo y últimos cuatro caracteres."
+                              fullWidth
+                            />
+                            <FormControlLabel
+                              control={(
+                                <Checkbox
+                                  checked={rentalTermsAccepted}
+                                  onChange={(event) => setRentalTermsAccepted(event.target.checked)}
+                                />
+                              )}
+                              label={`Acepto los términos de renta ${rentalCartItem?.mciRentalStartDate ?? ''}–${rentalCartItem?.mciRentalEndDate ?? ''} y la inspección de salida/retorno.`}
+                            />
+                          </Stack>
+                        )}
                         <Stack spacing={0.5}>
                           <Typography variant="caption" color="text.secondary">
                             Preferencia de contacto
@@ -1894,15 +2427,24 @@ export default function MarketplacePage() {
                           </Typography>
                           <Stack direction="row" spacing={1} flexWrap="wrap">
                             <Chip
-                              label="Coordinar por correo/WhatsApp"
+                              label={paymentMethodLabel('contact')}
                               color={paymentMethod === 'contact' ? 'primary' : 'default'}
                               variant={paymentMethod === 'contact' ? 'filled' : 'outlined'}
                               onClick={() => setPaymentMethod('contact')}
                               size="small"
                             />
+                            {showStripeOption && (
+                              <Chip
+                                label={paymentMethodLabel('stripe')}
+                                color={paymentMethod === 'stripe' ? 'primary' : 'default'}
+                                variant={paymentMethod === 'stripe' ? 'filled' : 'outlined'}
+                                onClick={() => setPaymentMethod('stripe')}
+                                size="small"
+                              />
+                            )}
                             {showDatafastOption && (
                               <Chip
-                                label="Tarjeta (Datafast)"
+                                label={paymentMethodLabel('card')}
                                 color={paymentMethod === 'card' ? 'primary' : 'default'}
                                 variant={paymentMethod === 'card' ? 'filled' : 'outlined'}
                                 onClick={() => setPaymentMethod('card')}
@@ -1927,16 +2469,17 @@ export default function MarketplacePage() {
                               </Typography>
                             </Stack>
                           )}
+                          {paymentMethod === 'stripe' && stripeError && (
+                            <Alert severity="warning" variant="outlined" onClose={() => setStripeError(null)}>
+                              {stripeError}
+                            </Alert>
+                          )}
                           <Button
                             variant="contained"
                             onClick={openReview}
                             disabled={Boolean(checkoutDisabledReason)}
                           >
-                            {paymentMethod === 'paypal'
-                              ? 'Continuar con PayPal'
-                              : paymentMethod === 'card'
-                                ? 'Continuar con tarjeta'
-                                : 'Confirmar pedido'}
+                            {continuePaymentLabel(paymentMethod)}
                           </Button>
                           {checkoutDisabledReason && (
                             <Alert severity="info" variant="outlined">
@@ -2121,6 +2664,53 @@ export default function MarketplacePage() {
         </DialogActions>
       </Dialog>
       <Dialog
+        open={stripeDialogOpen}
+        onClose={() => {
+          setStripeDialogOpen(false);
+          setStripeIntent(null);
+          setStripeError(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Pagar con Stripe</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            {stripeError && (
+              <Alert severity="warning" onClose={() => setStripeError(null)}>
+                {stripeError}
+              </Alert>
+            )}
+            {stripePromise && stripeElementsOptions && stripeIntent ? (
+              <Elements stripe={stripePromise} options={stripeElementsOptions}>
+                <MarketplaceStripePaymentForm
+                  orderId={stripeIntent.spiOrderId}
+                  totalDisplay={cartSubtotal}
+                  onSuccess={handleStripePaymentSuccess}
+                  onError={setStripeError}
+                />
+              </Elements>
+            ) : (
+              <Alert severity="info" variant="outlined">
+                Preparando el pago...
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setStripeDialogOpen(false);
+              setStripeIntent(null);
+              setStripeError(null);
+            }}
+            color="inherit"
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
         open={datafastDialogOpen}
         onClose={() => {
           setDatafastDialogOpen(false);
@@ -2181,6 +2771,158 @@ export default function MarketplacePage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        open={Boolean(rentalTermsDialogListing)}
+        onClose={() => setRentalTermsDialogListing(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Tarifa y términos de renta</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <Alert severity="warning" variant="outlined">
+              Activar esta versión la publica para nuevos checkouts. Las órdenes existentes conservan sus fechas, importes y versión aceptada.
+            </Alert>
+            <Grid container spacing={1.5}>
+              {([
+                ['Tarifa diaria (centavos)', 'dailyRate'],
+                ['Tarifa semanal (centavos, opcional)', 'weeklyRate'],
+                ['Depósito reembolsable (centavos)', 'deposit'],
+                ['Cargo tardío (centavos)', 'lateFee'],
+                ['Días mínimos', 'minDays'],
+                ['Días máximos', 'maxDays'],
+                ['Ventana de cancelación (horas)', 'cancellationHours'],
+              ] as const).map(([label, key]) => (
+                <Grid item xs={12} sm={6} key={key}>
+                  <TextField
+                    label={label}
+                    type="number"
+                    value={rentalTermsForm[key as keyof typeof rentalTermsForm]}
+                    onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
+                    inputProps={{ min: key === 'dailyRate' || key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
+                    fullWidth
+                  />
+                </Grid>
+              ))}
+            </Grid>
+            <TextField
+              label="Versión de términos"
+              value={rentalTermsForm.version}
+              onChange={(event) => setRentalTermsForm((current) => ({ ...current, version: event.target.value }))}
+              inputProps={{ maxLength: 80 }}
+              helperText="Incrementa la versión cuando cambies tarifas, depósito, límites o políticas comerciales."
+              fullWidth
+            />
+            <TextField
+              label="Resumen mostrado al cliente"
+              value={rentalTermsForm.summary}
+              onChange={(event) => setRentalTermsForm((current) => ({ ...current, summary: event.target.value }))}
+              inputProps={{ maxLength: 1000 }}
+              multiline
+              minRows={3}
+              fullWidth
+            />
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={rentalTermsForm.active}
+                  onChange={(event) => setRentalTermsForm((current) => ({ ...current, active: event.target.checked }))}
+                />
+              )}
+              label="Versión activa y aprobada para checkout público"
+            />
+            {updateRentalTermsMutation.isError && (
+              <Alert severity="error">
+                {updateRentalTermsMutation.error?.message ?? 'No se pudieron guardar los términos.'}
+              </Alert>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRentalTermsDialogListing(null)} color="inherit">Cancelar</Button>
+          <Button
+            variant="contained"
+            disabled={rentalTermsFormInvalid || updateRentalTermsMutation.isPending}
+            onClick={() => updateRentalTermsMutation.mutate()}
+          >
+            {updateRentalTermsMutation.isPending ? 'Guardando…' : 'Guardar versión'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(rentalDialogListing)}
+        onClose={() => setRentalDialogListing(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Elige las fechas de renta</DialogTitle>
+        <DialogContent dividers>
+          {rentalDialogListing && (
+            <Stack spacing={1.5}>
+              <Typography variant="subtitle1" fontWeight={700}>
+                {rentalDialogListing.miTitle}
+              </Typography>
+              <Alert severity="info" variant="outlined">
+                El servidor volverá a calcular el precio y reservará el activo atómicamente. Esta selección todavía no es un pago ni una entrega.
+              </Alert>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <TextField
+                  type="date"
+                  label="Inicio"
+                  value={rentalStartDate}
+                  onChange={(event) => setRentalStartDate(event.target.value)}
+                  inputProps={{ min: todayIso }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <TextField
+                  type="date"
+                  label="Devolución"
+                  value={rentalEndDate}
+                  onChange={(event) => setRentalEndDate(event.target.value)}
+                  inputProps={{ min: rentalStartDate || todayIso }}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+              </Stack>
+              {rentalDateError && (rentalStartDate || rentalEndDate) && (
+                <Alert severity="warning">{rentalDateError}</Alert>
+              )}
+              <Stack spacing={0.5}>
+                <Typography variant="body2">
+                  Tarifa diaria vigente: {rentalDialogListing.miPriceDisplay}
+                </Typography>
+                {rentalDialogListing.miRentalWeeklyPriceDisplay && (
+                  <Typography variant="body2">
+                    Tarifa semanal: {rentalDialogListing.miRentalWeeklyPriceDisplay}
+                  </Typography>
+                )}
+                <Typography variant="body2">
+                  Depósito reembolsable: {rentalDialogListing.miRentalSecurityDepositDisplay ?? 'USD 0,00'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Plazo permitido: {rentalDialogListing.miRentalMinDays ?? 1}–{rentalDialogListing.miRentalMaxDays ?? 366} días · zona horaria {rentalDialogListing.miRentalTimezone ?? 'America/Guayaquil'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Términos {rentalDialogListing.miRentalTermsVersion}: {rentalDialogListing.miRentalTermsSummary}
+                </Typography>
+              </Stack>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRentalDialogListing(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={confirmRentalDates}
+            disabled={Boolean(rentalDateError) || upsertItemMutation.isPending}
+          >
+            {upsertItemMutation.isPending ? 'Verificando disponibilidad…' : 'Agregar renta'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={reviewOpen} onClose={closeReview} maxWidth="sm" fullWidth>
         <DialogTitle>Revisa tu pedido</DialogTitle>
         <DialogContent dividers>
@@ -2193,13 +2935,25 @@ export default function MarketplacePage() {
             </Typography>
             <Stack spacing={0.5}>
               {cartItems.map((item) => (
-                <Typography key={item.mciListingId} variant="body2">
-                  {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay} ({item.mciUnitPriceDisplay} c/u)
-                </Typography>
+                <Box key={item.mciListingId}>
+                  <Typography variant="body2">
+                    {item.mciQuantity} × {item.mciTitle} — {item.mciSubtotalDisplay}
+                  </Typography>
+                  {item.mciPurpose === 'rent' && (
+                    <Typography variant="caption" color="text.secondary">
+                      {item.mciRentalStartDate} → {item.mciRentalEndDate}; renta {item.mciRentalChargeDisplay}; depósito reembolsable {item.mciSecurityDepositDisplay}
+                    </Typography>
+                  )}
+                </Box>
               ))}
             </Stack>
+            {isRentalCart && (
+              <Alert severity="info" variant="outlined">
+                Aceptaste los términos versionados. El pago confirmado reserva el activo; la entrega, inspección, deducción y devolución del depósito se registran por separado.
+              </Alert>
+            )}
             <Typography variant="body2" color="text.secondary">
-              Método de pago: {paymentMethod === 'paypal' ? 'PayPal' : paymentMethod === 'card' ? 'Tarjeta (Datafast)' : 'Coordinar por correo/WhatsApp'}
+              Método de pago: {paymentMethodLabel(paymentMethod)}
             </Typography>
           </Stack>
         </DialogContent>
@@ -2215,30 +2969,32 @@ export default function MarketplacePage() {
             }}
             disabled={
               checkoutMutation.isPending ||
+              stripePaymentIntentMutation.isPending ||
               datafastCheckoutMutation.isPending ||
               createPaypalOrderMutation.isPending ||
               capturePaypalMutation.isPending ||
+              (paymentMethod === 'stripe' && !showStripeOption) ||
               (paymentMethod === 'paypal' && (!paypalClientId || !paypalReady)) ||
-              !isValidName ||
-              !isValidEmail ||
-              (contactPref === 'phone' && !isValidPhone) ||
-              !hasCartItems ||
-              cartItemCount === 0
+              Boolean(checkoutDisabledReason)
             }
           >
-            {paymentMethod === 'paypal'
-              ? capturePaypalMutation.isPending
-                ? 'Confirmando PayPal…'
-                : createPaypalOrderMutation.isPending
-                  ? 'Abriendo PayPal…'
-                  : 'Pagar con PayPal'
-              : paymentMethod === 'card'
-                ? datafastCheckoutMutation.isPending
-                  ? 'Abriendo pago con tarjeta…'
-                  : 'Pagar con tarjeta'
-                : checkoutMutation.isPending
-                  ? 'Enviando pedido…'
-                  : 'Confirmar pedido'}
+            {paymentMethod === 'stripe'
+              ? stripePaymentIntentMutation.isPending
+                ? 'Abriendo Stripe...'
+                : 'Pagar con Stripe'
+              : paymentMethod === 'paypal'
+                ? capturePaypalMutation.isPending
+                  ? 'Confirmando PayPal…'
+                  : createPaypalOrderMutation.isPending
+                    ? 'Abriendo PayPal…'
+                    : 'Pagar con PayPal'
+                : paymentMethod === 'card'
+                  ? datafastCheckoutMutation.isPending
+                    ? 'Abriendo pago con tarjeta…'
+                    : 'Pagar con tarjeta'
+                  : checkoutMutation.isPending
+                    ? 'Enviando pedido…'
+                    : 'Confirmar pedido'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -2319,6 +3075,11 @@ export default function MarketplacePage() {
                 <Typography variant="h5" fontWeight={800}>
                   {selectedListing.miPriceDisplay}
                 </Typography>
+                {selectedListing.miPurpose === 'rent' && (
+                  <Typography variant="caption" color="text.secondary">
+                    por día · depósito reembolsable {selectedListing.miRentalSecurityDepositDisplay ?? 'USD 0,00'} · términos {selectedListing.miRentalTermsVersion ?? 'pendientes'}
+                  </Typography>
+                )}
               </Stack>
               <Stack direction="row" spacing={1}>
                 <Button
@@ -2329,10 +3090,21 @@ export default function MarketplacePage() {
                     handleAdd(selectedListing);
                     closeDetail();
                   }}
-                  disabled={upsertItemMutation.isPending || !isListingAvailable(selectedListing.miStatus)}
+                  disabled={
+                    upsertItemMutation.isPending
+                    || !isListingAvailable(selectedListing.miStatus)
+                    || (selectedListing.miPurpose === 'rent' && !selectedListing.miRentalTermsVersion)
+                  }
                 >
-                  {selectedListing.miPurpose === 'rent' ? 'Agregar renta' : 'Agregar'}
+                  {selectedListing.miPurpose === 'rent'
+                    ? selectedListing.miRentalTermsVersion ? 'Elegir fechas' : 'Renta en revisión'
+                    : 'Agregar'}
                 </Button>
+                {canManagePhotos && selectedListing.miPurpose === 'rent' && (
+                  <Button size="small" variant="outlined" onClick={() => openRentalTermsDialog(selectedListing)}>
+                    Configurar renta
+                  </Button>
+                )}
                 <Button
                   size="small"
                   variant="outlined"
@@ -2349,6 +3121,11 @@ export default function MarketplacePage() {
                   Copiar detalle
                 </Button>
               </Stack>
+              <ExperienceReviews
+                targetKind="marketplace_listing"
+                targetId={selectedListing.miListingId}
+                title="Reseñas verificadas"
+              />
             </Stack>
           )}
         </DialogContent>

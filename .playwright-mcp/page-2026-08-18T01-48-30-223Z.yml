@@ -1,0 +1,126 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link [ref=e4] [cursor=pointer]:
+      - /url: https://cleveradvertising.com
+      - img "Logo" [ref=e5]
+    - img "overlay-clever" [ref=e6] [cursor=pointer]
+    - img "close" [ref=e7] [cursor=pointer]
+    - iframe [ref=e8] [cursor=pointer]:
+      - generic [ref=f4e4] [cursor=pointer]:
+        - generic:
+          - generic:
+            - img "legal"
+          - generic:
+            - img "#AD"
+          - generic:
+            - img "LATAM_BR_Weelcome_Bonus_1490x250_ 1"
+          - generic:
+            - img "PTopscrollSponsor_1490x250"
+  - generic [ref=e11]:
+    - banner [ref=e13]:
+      - generic [ref=e17]:
+        - list:
+          - listitem [ref=e18]:
+            - generic [ref=e19] [cursor=pointer]: Iniciar sesión
+          - listitem [ref=e20]:
+            - generic [ref=e21] [cursor=pointer]: Registrarme
+          - listitem [ref=e22]:
+            - link "Historial de Reservas" [ref=e23] [cursor=pointer]:
+              - /url: /historial-compra
+      - generic [ref=e26]:
+        - link [ref=e29] [cursor=pointer]:
+          - /url: /
+          - img "Logo TicketShow" [ref=e30]
+        - navigation [ref=e32]:
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "CONCIERTOS" [ref=e36] [cursor=pointer]:
+                - /url: /eventos/Conciertos
+            - listitem [ref=e37]:
+              - link "TEATRO" [ref=e38] [cursor=pointer]:
+                - /url: /eventos/Teatro
+            - listitem [ref=e39]:
+              - link "SEMINARIOS" [ref=e40] [cursor=pointer]:
+                - /url: /eventos/Seminarios
+            - listitem [ref=e41]:
+              - link "OTROS" [ref=e42] [cursor=pointer]:
+                - /url: /eventos/Otros
+            - listitem [ref=e43]:
+              - link "CIUDAD" [ref=e44] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e45]:
+              - link "FECHA" [ref=e46] [cursor=pointer]:
+                - /url: "#"
+    - tabpanel [ref=e48]:
+      - text:   
+      - generic [ref=e49]:
+        - img "Zhamira" [ref=e52]
+        - generic [ref=e54]:
+          - 'heading "NOTA: Una vez realizada la compra no se podrá aplicar descuento alguno. Para acceder al descuento de tercera edad o discapacidad deben acercarse al punto de venta a realizar la compra, deberá llevar copia de cédula, este descuento será personal e intrasferible." [level=5] [ref=e56]'
+          - 'heading "NOTA: EVENTO EN PREVENTA" [level=5] [ref=e58]'
+        - heading "SINOPSIS:" [level=3] [ref=e61]
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: Zhamira
+          - paragraph [ref=e65]: Domingo, 23 de agosto de 2026 20:00
+          - paragraph [ref=e66]: Teatro San Gabriel
+          - paragraph [ref=e67]
+          - paragraph [ref=e68]: INICIO DE VENTA EL LUNES 4 DE MAYO A LAS 10H00 ONLINE Y PUNTO DE VENTA
+          - paragraph [ref=e69]
+          - paragraph [ref=e70]
+          - paragraph [ref=e72]
+          - paragraph [ref=e73]
+        - generic [ref=e76]:
+          - heading "ORGANIZADO POR:" [level=3] [ref=e78]
+          - generic [ref=e79]: OUTPUT S.A.
+        - generic [ref=e80] [cursor=pointer]: Reservar ticket
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - generic [ref=e84]: 
+          - paragraph [ref=e85]: 23 Agosto
+        - generic [ref=e86]:
+          - separator [ref=e88]
+          - generic [ref=e89]: 
+          - paragraph [ref=e90]: 20:00
+        - generic [ref=e91]:
+          - separator [ref=e93]
+          - generic [ref=e94]: 
+          - paragraph [ref=e95]: Teatro San Gabriel
+        - generic [ref=e96]:
+          - separator [ref=e98]
+          - generic [ref=e99] [cursor=pointer]: Reservar ticket
+    - contentinfo [ref=e101]:
+      - generic [ref=e104]:
+        - link [ref=e106] [cursor=pointer]:
+          - /url: /
+          - img "logo" [ref=e107]
+        - list [ref=e109]:
+          - listitem [ref=e110]:
+            - link "VENDE CON NOSOTROS" [ref=e111] [cursor=pointer]:
+              - /url: https://sale.ticketshow.com.ec/rps/cotiza.aspx
+          - listitem [ref=e112]:
+            - link "QUIENES SOMOS" [ref=e113] [cursor=pointer]:
+              - /url: /quienessomos/
+        - list [ref=e115]:
+          - listitem [ref=e116]:
+            - link "PUNTOS DE VENTA" [ref=e117] [cursor=pointer]:
+              - /url: /puntosventa/
+          - listitem [ref=e118]:
+            - link "TERMINOS Y CONDICIONES" [ref=e119] [cursor=pointer]:
+              - /url: /terminosycondiciones/
+        - list [ref=e121]:
+          - listitem [ref=e122]:
+            - generic [ref=e123] [cursor=pointer]: TICKET SEGURO
+          - listitem [ref=e124]:
+            - link "CONTÁCTANOS" [ref=e125] [cursor=pointer]:
+              - /url: /contactenos/
+      - generic [ref=e134]:
+        - link "" [ref=e135] [cursor=pointer]:
+          - /url: https://www.facebook.com/TicketShowFanPage
+        - link "" [ref=e137] [cursor=pointer]:
+          - /url: https://www.twitter.com/ticketshow
+        - link "" [ref=e139] [cursor=pointer]:
+          - /url: https://www.instagram.com/ticketshow/?hl=es-la
+        - link "" [ref=e141] [cursor=pointer]:
+          - /url: /contactenos
+      - generic [ref=e143]: © 2023 TICKETSHOW TODOS LOS DERECHOS RESERVADOS.
+  - generic [ref=e148] [cursor=pointer]

@@ -4,19 +4,88 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { CmsContentDTO } from '../api/cms';
+import type { AuthoredContent, CatalogItem, WorkflowState } from '../api/catalogs';
 
 jest.setTimeout(15000);
 
-const listMock = jest.fn<(params?: { slug?: string; locale?: string }) => Promise<CmsContentDTO[]>>();
+const FAN_HUB_CONTENT_ID = '20000000-0000-4000-8000-000000000001';
+const COURSE_CONTENT_ID = '20000000-0000-4000-8000-000000000002';
+const authoredContents: AuthoredContent[] = [
+  {
+    id: FAN_HUB_CONTENT_ID,
+    code: 'fan-hub',
+    contentTypeId: '30000000-0000-4000-8000-000000000001',
+    contentTypeCode: 'fan-hub-page',
+    entityKind: 'authored_page',
+    name: 'Fan Hub',
+    nameEs: 'Fan Hub',
+    nameEn: 'Fan Hub',
+    currentSlug: 'fan-hub',
+    publicRoute: '/fans',
+    schema: {
+      type: 'object',
+      required: ['heroTitle', 'heroSubtitle', 'sections'],
+      example: {
+        heroTitle: 'Descubre artistas emergentes',
+        heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+        sections: [],
+      },
+    },
+    schemaVersion: 2,
+    sortOrder: 10,
+    active: true,
+    workflowState: 'published',
+    revision: 1,
+    version: 1,
+  },
+  {
+    id: COURSE_CONTENT_ID,
+    code: 'course-production',
+    contentTypeId: '30000000-0000-4000-8000-000000000002',
+    contentTypeCode: 'course-production-page',
+    entityKind: 'authored_page',
+    name: 'Curso de producción',
+    nameEs: 'Curso de producción',
+    nameEn: 'Production course',
+    currentSlug: 'course-production',
+    publicRoute: '/curso/produccion-musical',
+    schema: { type: 'object', required: ['heroTitle', 'heroSubtitle', 'sessions'] },
+    schemaVersion: 2,
+    sortOrder: 20,
+    active: true,
+    workflowState: 'published',
+    revision: 1,
+    version: 1,
+  },
+];
+const localeItems = [
+  { id: 'locale-es', code: 'es', name: 'Español' },
+  { id: 'locale-en', code: 'en', name: 'English' },
+] as CatalogItem[];
+const workflowStates: WorkflowState[] = [
+  { id: 'state-draft', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'draft', name: 'Borrador', nameEs: 'Borrador', nameEn: 'Draft', sortOrder: 10, terminal: false, active: true, version: 1 },
+  { id: 'state-published', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'published', name: 'Publicado', nameEs: 'Publicado', nameEn: 'Published', sortOrder: 50, terminal: true, active: true, version: 1 },
+  { id: 'state-archived', workflowId: 'workflow-catalog', workflowCode: 'catalog-publication', code: 'archived', name: 'Archivado', nameEs: 'Archivado', nameEn: 'Archived', sortOrder: 60, terminal: false, active: true, version: 1 },
+];
+
+const listMock = jest.fn<(params?: { contentId?: string; locale?: string }) => Promise<CmsContentDTO[]>>();
 const getPublicMock = jest.fn<(slug: string, locale?: string) => Promise<CmsContentDTO>>();
 
 jest.unstable_mockModule('../api/cms', () => ({
   Cms: {
-    list: (params?: { slug?: string; locale?: string }) => listMock(params),
+    list: (params?: { contentId?: string; locale?: string }) => listMock(params),
     getPublic: (slug: string, locale?: string) => getPublicMock(slug, locale),
     create: jest.fn(() => Promise.resolve(null)),
     publish: jest.fn(() => Promise.resolve(null)),
     remove: jest.fn(() => Promise.resolve(null)),
+  },
+}));
+
+jest.unstable_mockModule('../api/catalogs', () => ({
+  Catalogs: {
+    listAuthoredContents: jest.fn(() => Promise.resolve(authoredContents)),
+    listItems: jest.fn(() => Promise.resolve({ items: localeItems })),
+    listWorkflowStates: jest.fn(() => Promise.resolve(workflowStates)),
   },
 }));
 
@@ -25,6 +94,21 @@ jest.unstable_mockModule('../components/ApiErrorNotice', () => ({
     <div>
       {title}
       {error instanceof Error ? `: ${error.message}` : ''}
+      {helper}
+    </div>
+  ),
+  ApiLoadingNotice: ({
+    title,
+    message,
+    helper,
+  }: {
+    title?: string;
+    message?: React.ReactNode;
+    helper?: React.ReactNode;
+  }) => (
+    <div role="status" aria-busy="true">
+      {title}
+      {message}
       {helper}
     </div>
   ),
@@ -56,7 +140,8 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
 
 const buildContent = (overrides: Partial<CmsContentDTO> = {}): CmsContentDTO => ({
   ccdId: 101,
-  ccdSlug: 'records-public',
+  ccdContentId: FAN_HUB_CONTENT_ID,
+  ccdSlug: 'fan-hub',
   ccdLocale: 'es',
   ccdVersion: 4,
   ccdStatus: 'published',
@@ -77,7 +162,6 @@ const renderPage = async (container: HTMLElement) => {
     root?.render(
       <MemoryRouter
         initialEntries={['/cms/admin']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <QueryClientProvider client={qc}>
           <CmsAdminPage />
@@ -86,6 +170,11 @@ const renderPage = async (container: HTMLElement) => {
     );
     await flushPromises();
     await flushPromises();
+  });
+
+  await waitForExpectation(() => {
+    expect(container.textContent).toContain('fan-hub · esquema v2');
+    expect(container.textContent).toContain('Español (es)');
   });
 
   return {
@@ -153,6 +242,31 @@ const getButtonByText = (root: ParentNode, labelText: string) => {
   return button;
 };
 
+const normalizeElementText = (element: Element) => (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+
+const selectComboboxOption = async (root: ParentNode, currentText: string, optionText: string) => {
+  const combobox = Array.from(root.querySelectorAll<HTMLElement>('[role="combobox"]')).find(
+    (element) => normalizeElementText(element) === currentText,
+  );
+  if (!combobox) throw new Error(`Combobox not found: ${currentText}`);
+
+  await act(async () => {
+    combobox.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    await flushPromises();
+  });
+
+  const option = Array.from(document.body.querySelectorAll<HTMLElement>('[role="option"]')).find(
+    (element) => normalizeElementText(element) === optionText,
+  );
+  if (!option) throw new Error(`Combobox option not found: ${optionText}`);
+
+  await act(async () => {
+    option.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+  });
+};
+
 describe('CmsAdminPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -194,7 +308,7 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas.',
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas.',
       );
       expect(container.textContent).not.toContain('Guardar borrador local');
     });
@@ -210,7 +324,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(window.localStorage.getItem('tdf-cms-admin:draft:records-public:es')).toBe(
+      expect(window.localStorage.getItem(`tdf-cms-admin:draft:${FAN_HUB_CONTENT_ID}:es`)).toBe(
         JSON.stringify({
           title: 'Landing actualizada',
           payload: updatedPayload,
@@ -222,7 +336,26 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps editor guidance in one helper block instead of stacking separate autosave and compare lines', async () => {
+  it('labels CMS language context for admins instead of leaking locale jargon', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Idioma')).toBe(1);
+      expect(countLabelsByText(container, 'Locale')).toBe(0);
+      expect(container.textContent).toContain('Español (es)');
+      expect(container.textContent).toContain(
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es).',
+      );
+      expect(container.textContent).not.toContain('slug y locale');
+      expect(container.textContent).not.toContain('locale es');
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the live-start action label on the button instead of repeating it in helper copy', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -231,22 +364,33 @@ describe('CmsAdminPage', () => {
       const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
       expect(guidance).not.toBeNull();
       expect(guidance?.textContent?.trim()).toBe(
-        'El borrador se guarda automáticamente en este navegador por slug y locale mientras editas. Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas. El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
+      );
+      expect(guidance?.textContent).not.toContain('Usar versión en vivo');
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(container.textContent).toContain(
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
+      );
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
       );
     });
 
     await cleanup();
   });
 
-  it('keeps the live-page action in a single primary place instead of duplicating it in the live summary card', async () => {
+  it('keeps the live-page action beside the live summary instead of pointing admins to another part of the page', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
+      const liveCard = container.querySelector<HTMLElement>('[data-testid="cms-admin-live-content-card"]');
+      expect(liveCard).not.toBeNull();
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(1);
+      expect(countActionsByText(liveCard!, 'Abrir página en vivo')).toBe(1);
       expect(container.textContent).not.toContain('Ver en vivo');
-      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
+      expect(container.textContent).not.toContain('La página pública se abre con el botón principal de arriba.');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
     });
@@ -282,6 +426,61 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('routes stale draft history through the editor instead of offering direct publish', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain(
+        'Las versiones anteriores a la versión en vivo se revisan en el formulario antes de publicarlas.',
+      );
+      expect(history?.querySelector('[data-testid="cms-admin-stale-version-publish-guidance"]')).not.toBeNull();
+      expect(countActionsByText(history!, 'Publicar')).toBe(0);
+      expect(countActionsByText(history!, 'Editar en formulario')).toBe(1);
+      expect(countActionsByText(history!, 'Borrar')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps a current-live draft row passive instead of offering a duplicate publish action', async () => {
+    listMock.mockResolvedValue([
+      buildContent({
+        ccdId: 201,
+        ccdVersion: 5,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 202,
+        ccdVersion: 4,
+        ccdStatus: 'published',
+      }),
+    ]);
+    getPublicMock.mockResolvedValue(buildContent({
+      ccdId: 201,
+      ccdVersion: 5,
+      ccdStatus: 'draft',
+      ccdPublishedAt: null,
+    }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countExactText(container, 'En vivo')).toBe(1);
+      expect(countActionsByText(container, 'Publicar')).toBe(0);
+      expect(countActionsByText(container, 'Borrar')).toBe(1);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
   it('keeps a single live-to-editor action in the editor instead of repeating load-live buttons across the page', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -293,9 +492,9 @@ describe('CmsAdminPage', () => {
       expect(container.textContent).not.toContain('Cargar última publicada');
       expect(container.textContent).not.toContain('Revertir a en vivo');
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
-      expect(container.textContent).toContain('La página pública se abre con el botón principal de arriba.');
+      expect(container.textContent).not.toContain('La página pública se abre con el botón principal de arriba.');
       expect(container.textContent).not.toContain('Para editar lo publicado');
     });
 
@@ -311,10 +510,10 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -332,7 +531,7 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(container.textContent).toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -344,13 +543,13 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
-      expect(getInputByLabel(container, 'Título').value).toBe('Lanzamientos destacados');
+      expect(getInputByLabel(container, 'Título').value).toBe('Descubre artistas emergentes');
       expect(getInputByLabel(container, 'Payload JSON').value).toBe(
         JSON.stringify(
           {
-            heroTitle: 'Lanzamientos destacados',
-            heroSubtitle: 'Explora los releases recientes del sello.',
-            locale: 'es',
+            heroTitle: 'Descubre artistas emergentes',
+            heroSubtitle: 'Sigue y guarda lanzamientos para escuchar luego.',
+            sections: [],
           },
           null,
           2,
@@ -360,7 +559,7 @@ describe('CmsAdminPage', () => {
         'El ejemplo sugerido ya está cargado. Ajusta título y payload antes de guardar.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -381,7 +580,7 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(getPublicMock).toHaveBeenCalledWith('records-public', 'es');
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
       expect(container.textContent).toContain(
@@ -395,7 +594,7 @@ describe('CmsAdminPage', () => {
         'No pudimos confirmar si ya existe una versión en vivo. Reintenta la carga en vivo antes de partir de un ejemplo.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -409,8 +608,9 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
@@ -422,13 +622,122 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
-      expect(container.textContent).toContain('Editor coincide con live');
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
       );
       expect(container.textContent).not.toContain(
-        'Esta página ya tiene una versión en vivo. Usa "Usar versión en vivo" para traer la estructura real al editor.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
+    });
+
+    await cleanup();
+  });
+
+  it('keeps metadata-only edits from reopening live-start and payload-comparison guidance', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
+      );
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing retitulada');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      const guidance = container.querySelector<HTMLElement>('[data-testid="cms-admin-editor-guidance"]');
+      expect(guidance).not.toBeNull();
+      expect(guidance?.textContent?.trim()).toBe(
+        'El borrador se guarda automáticamente en este navegador por contenido e idioma mientras editas. El payload editable ya coincide con la versión en vivo. Vuelve a cargar la versión en vivo para descartar cambios de título o estado.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(container.textContent).not.toContain(
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
+      );
+      expect(guidance?.textContent).not.toContain('El comparador aparecerá');
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps the live payload behind the live-to-editor action until the editor uses it', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain(
+        'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
+      expect(countLabelsByText(container, 'Payload actual')).toBe(0);
+      expect(container.textContent).not.toContain('Payload en vivo disponible.');
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('El editor ya usa el payload en vivo.');
+      expect(container.textContent).toContain('Editor coincide con versión en vivo');
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
+      expect(countLabelsByText(container, 'Payload actual')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps live-and-loaded version state in one passive history label', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countExactText(container, 'En vivo')).toBe(1);
+      expect(countExactText(container, 'En formulario')).toBe(0);
+      expect(countExactText(container, 'En vivo y en formulario')).toBe(0);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
+      expect(countExactText(container, 'En vivo y en formulario')).toBe(1);
+      expect(countExactText(container, 'En vivo')).toBe(0);
+      expect(countExactText(container, 'En formulario')).toBe(0);
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
 
     await cleanup();
@@ -485,7 +794,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
       expect(container.textContent).toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
     });
 
@@ -505,8 +814,57 @@ describe('CmsAdminPage', () => {
         'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
       );
       expect(container.textContent).not.toContain(
-        'Usa el botón "Cargar ejemplo" para ver la estructura sugerida del payload para este slug (no valida contra un esquema aún).',
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
       );
+    });
+
+    await cleanup();
+  });
+
+  it('hides the generic example action once a new-page title draft has started', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing propia');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(countActionsByText(container, 'Limpiar')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(container.textContent).toContain(
+        'Ya hay contenido en el editor. Usa "Limpiar" si quieres volver a partir de un ejemplo sugerido.',
+      );
+      expect(container.textContent).not.toContain(
+        'Usa "Cargar ejemplo" para partir del ejemplo versionado del tipo de contenido.',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Limpiar').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Título').value).toBe('');
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar')).toBe(0);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
     });
 
     await cleanup();
@@ -535,7 +893,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
       expect(countActionsByText(container, 'Limpiar')).toBe(0);
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.',
       );
     });
 
@@ -578,48 +936,87 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the live payload collapsed by default and opens it only on request', async () => {
+  it('keeps invalid JSON recovery inline instead of allowing a save-alert detour', async () => {
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+        expect(container.textContent).toContain(
+          'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
+        );
+      });
+
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Payload JSON'), '{"heroTitle":');
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Error:');
+        expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
+        expect(countActionsByText(container, 'Formatear JSON')).toBe(0);
+        expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      });
+
+      await act(async () => {
+        getButtonByText(container, 'Guardar borrador').click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(alertMock).not.toHaveBeenCalled();
+    } finally {
+      alertMock.mockRestore();
+      await cleanup();
+    }
+  });
+
+  it('keeps first-time live payload recovery to one visible action', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Payload JSON');
-      expect(container.textContent).toContain('Payload en vivo disponible.');
-      expect(container.textContent).toContain('Ver payload en vivo');
+      expect(container.textContent).toContain(
+        'Carga la versión en vivo para editar la estructura publicada desde el formulario.',
+      );
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload actual');
       expect(countLabelsByText(container, 'Payload actual')).toBe(0);
       expect(container.textContent).not.toContain('Payload (borrador)');
       expect(container.textContent).toContain(
-        'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
       );
-    });
-
-    await act(async () => {
-      getButtonByText(container, 'Ver payload en vivo').click();
-      await flushPromises();
-      await flushPromises();
-    });
-
-    await waitForExpectation(() => {
-      expect(container.textContent).toContain('Payload actual');
-      expect(container.textContent).toContain('Ocultar payload en vivo');
+      expect(container.textContent).toContain(
+        'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
+      );
     });
 
     await cleanup();
   });
 
-  it('waits to show the compare action until the editor has a meaningful draft payload', async () => {
+  it('lets compare own changed-payload review instead of reopening the live payload inspector', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
-        'Empieza con "Usar versión en vivo" para editar la estructura real, o escribe tu propio JSON si vas a reemplazarla.',
+        'El payload editable está arriba. Escribe tu propio JSON solo si vas a reemplazar la estructura publicada.',
       );
     });
 
@@ -630,7 +1027,8 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
       expect(container.textContent).toContain(
         'El payload editable ya coincide con la versión en vivo. El comparador aparecerá cuando vuelvas a modificarlo.',
@@ -647,47 +1045,112 @@ describe('CmsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countActionsByText(container, 'Comparar con live')).toBe(1);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(1);
+      expect(countActionsByText(container, 'Ver payload en vivo')).toBe(0);
+      expect(countActionsByText(container, 'Ocultar payload en vivo')).toBe(0);
       expect(container.textContent).not.toContain('Payload modificado vs en vivo');
+      const liveCard = container.querySelector<HTMLElement>('[data-testid="cms-admin-live-content-card"]');
+      expect(liveCard?.textContent).toContain('El comparador revisa el payload en vivo contra este borrador.');
+      expect(liveCard?.textContent).not.toContain('El editor ya usa el payload en vivo.');
       expect(container.textContent).toContain(
-        'El payload editable está arriba. La versión en vivo ya se muestra en la columna izquierda; usa Comparar con live si necesitas revisar cambios línea por línea.',
+        'El payload editable está arriba. Usa Comparar cambios para revisar el borrador contra la versión en vivo sin abrir un segundo visor de payload.',
       );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Comparar cambios').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(document.body.textContent).toContain('Comparar borrador con versión en vivo');
+      expect(document.body.textContent).not.toContain('Comparar borrador vs. live');
     });
 
     await cleanup();
   });
 
-  it('hides the example action for custom slugs and replaces it with custom-slug guidance', async () => {
+  it('does not restore an arbitrary legacy slug as an administrative relationship', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',
-      JSON.stringify({ slug: 'promo-landing', locale: 'es' }),
+      JSON.stringify({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' }),
     );
-    listMock.mockResolvedValue([
-      buildContent({ ccdSlug: 'promo-landing' }),
-      buildContent({ ccdId: 102, ccdSlug: 'promo-landing', ccdVersion: 3, ccdStatus: 'draft', ccdPublishedAt: null }),
-    ]);
-    getPublicMock.mockResolvedValue(buildContent({ ccdSlug: 'promo-landing' }));
+    listMock.mockResolvedValue([buildContent()]);
+    getPublicMock.mockResolvedValue(buildContent());
 
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: 'promo-landing', locale: 'es' });
-      expect(getPublicMock).toHaveBeenCalledWith('promo-landing', 'es');
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
       expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(container.textContent).toContain('fan-hub · esquema v2');
+      expect(container.textContent).not.toContain('promo-landing');
+    });
+
+    await cleanup();
+  });
+
+  it('switches between persisted authored-content IDs without using slugs as relationships', async () => {
+    listMock.mockImplementation((params) => {
+      const courseSelected = params?.contentId === COURSE_CONTENT_ID;
+      return Promise.resolve([
+        buildContent({
+          ccdContentId: params?.contentId ?? FAN_HUB_CONTENT_ID,
+          ccdSlug: courseSelected ? 'course-production' : 'fan-hub',
+          ccdTitle: courseSelected ? 'Curso publicado' : 'Fan Hub publicado',
+        }),
+      ]);
+    });
+    getPublicMock.mockImplementation((slug) => Promise.resolve(buildContent({
+      ccdSlug: slug,
+      ccdTitle: slug === 'fan-hub' ? 'Fan Hub publicado' : 'Landing principal',
+      ccdPayload: {
+        heroTitle: slug === 'fan-hub' ? 'Fans destacados' : 'Lanzamientos destacados',
+      },
+    })));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Usar versión en vivo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Usar versión en vivo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(getInputByLabel(container, 'Título').value).toBe('Fan Hub publicado');
+      expect(getInputByLabel(container, 'Payload JSON').value).toContain('Fans destacados');
+      expect(container.textContent).toContain('Base: v4');
+    });
+
+    await selectComboboxOption(container, 'Fan Hub', 'Curso de producción');
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ contentId: COURSE_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('course-production', 'es');
+      expect(getInputByLabel(container, 'Título').value).toBe('');
+      expect(getInputByLabel(container, 'Payload JSON').value.trim()).toBe('{}');
+      expect(container.textContent).not.toContain('Base: v4');
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
       expect(container.textContent).toContain(
-        'Este slug no tiene un ejemplo sugerido todavía. Empieza con tu propio JSON o trae la versión en vivo si ya existe.',
-      );
-      expect(container.textContent).toContain(
-        'Estructura JSON del bloque (usa objetos/arrays). Para slugs nuevos, parte de tu propio JSON o trae la versión en vivo si ya existe.',
+        'Esta página ya tiene contenido publicado. Parte de la versión en vivo para mantener la estructura real antes de escribir JSON nuevo.',
       );
     });
 
     await cleanup();
   });
 
-  it('replaces blank custom-slug dead ends with one helper and keeps save disabled until the slug exists', async () => {
+  it('recovers a blank legacy selection from the first persisted authored-content definition', async () => {
     window.localStorage.setItem(
       'tdf-cms-admin:last-selection',
       JSON.stringify({ slug: '', locale: 'es' }),
@@ -698,13 +1161,10 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(listMock).toHaveBeenCalledWith({ slug: '', locale: 'es' });
-      expect(getPublicMock).not.toHaveBeenCalled();
-      expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
-      expect(container.textContent).toContain(
-        'Completa este slug para habilitar el guardado y Abrir página en vivo.',
-      );
-      expect(getButtonByText(container, 'Guardar borrador').disabled).toBe(true);
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
+      expect(container.textContent).toContain('fan-hub · esquema v2');
+      expect(container.textContent).not.toContain('Slug personalizado');
     });
 
     await cleanup();
@@ -724,7 +1184,7 @@ describe('CmsAdminPage', () => {
       );
       expect(countActionsByText(container, 'Abrir página en vivo')).toBe(0);
       expect(countActionsByText(container, 'Usar versión en vivo')).toBe(0);
-      expect(countActionsByText(container, 'Comparar con live')).toBe(0);
+      expect(countActionsByText(container, 'Comparar cambios')).toBe(0);
       expect(container.textContent).toContain(
         'El payload editable está arriba. Cuando exista una versión en vivo, la verás en la columna izquierda, aparecerá el botón "Usar versión en vivo" y podrás compararla desde aquí.',
       );
@@ -744,13 +1204,117 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('Sin contenido publicado');
       expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
-      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).not.toBeNull();
-      expect(container.textContent).toContain(
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).toBeNull();
+      expect(container.textContent).not.toContain(
         'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
       );
       expect(container.textContent).not.toContain('No hay versiones guardadas todavía.');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Cargar ejemplo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.querySelector('[data-testid="cms-admin-first-version-history-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'El historial de versiones aparecerá debajo de este editor cuando guardes la primera versión.',
+      );
+    });
+
+    await cleanup();
+  });
+
+  it('hides the first-version save action until the editor has real content', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => Promise.resolve(null as unknown as CmsContentDTO));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('Sin contenido publicado');
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(1);
+    });
+
+    await act(async () => {
+      getButtonByText(container, 'Cargar ejemplo').click();
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
+      );
+      expect(container.textContent).not.toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+    });
+
+    await cleanup();
+  });
+
+  it('keeps first-version save controls hidden while the live lookup is still unresolved', async () => {
+    listMock.mockResolvedValue([]);
+    getPublicMock.mockImplementation(() => new Promise<CmsContentDTO>(() => undefined));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(listMock).toHaveBeenCalledWith({ contentId: FAN_HUB_CONTENT_ID, locale: 'es' });
+      expect(getPublicMock).toHaveBeenCalledWith('fan-hub', 'es');
+      expect(container.textContent).toContain(
+        'Confirmando si ya existe una versión en vivo antes de mostrar ejemplos genéricos.',
+      );
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Agrega un título o payload antes de guardar la primera versión.',
+      );
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(countActionsByText(container, 'Cargar ejemplo')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing en revisión');
+      await flushPromises();
+      await flushPromises();
+    });
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+      expect(countActionsByText(container, 'Guardar y publicar')).toBe(0);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.textContent).toContain(
+        'Espera a que termine la búsqueda en vivo antes de guardar la primera versión.',
+      );
+      expect(container.textContent).not.toContain(
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
+      );
     });
 
     await cleanup();
@@ -836,7 +1400,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('shows shared title, slug, and locale context once above the versions list instead of repeating them on each row', async () => {
+  it('shows shared title, slug, and language context once above the versions list instead of repeating them on each row', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -845,13 +1409,13 @@ describe('CmsAdminPage', () => {
       const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
       expect(history).not.toBeNull();
       expect(history?.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · locale es.',
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es).',
       );
       expect((history?.textContent ?? '').split('Landing principal').length - 1).toBe(1);
       expect(history?.textContent).toContain('Versión v4');
       expect(history?.textContent).toContain('Versión v3');
-      expect(countExactText(container, 'records-public')).toBe(1);
-      expect(countExactText(container, 'es')).toBe(1);
+      expect(history?.textContent).toContain('slug fan-hub');
+      expect(history?.textContent).toContain('idioma Español (es)');
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
     });
@@ -859,23 +1423,39 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('keeps the editor status field distinct from the versions filter so first-time admins do not see two ambiguous Estado controls', async () => {
+  it('keeps the two-version history focused on rows without showing premature status controls', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
-      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(container.querySelector('[data-testid="cms-admin-first-version-save-guidance"]')).not.toBeNull();
+      expect(container.textContent).toContain(
+        'Parte de la versión en vivo o empieza un borrador propio antes de guardar.',
+      );
+      expect(container.textContent).toContain('2 versiones');
+      expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
     });
 
     await cleanup();
   });
 
-  it('makes the primary save action explicit so first-time admins can tell draft saves from live publishes', async () => {
+  it('keeps CMS writes draft-only even when legacy local storage requested direct publication', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let rendered = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countActionsByText(container, 'Guardar borrador')).toBe(0);
+    });
+
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Título'), 'Landing actualizada');
+      await flushPromises();
+      await flushPromises();
+    });
 
     await waitForExpectation(() => {
       expect(getButtonByText(container, 'Guardar borrador')).toBeTruthy();
@@ -888,8 +1468,12 @@ describe('CmsAdminPage', () => {
     await rendered.cleanup();
 
     window.localStorage.setItem(
-      'tdf-cms-admin:draft:records-public:es',
-      JSON.stringify({ status: 'published' }),
+      `tdf-cms-admin:draft:${FAN_HUB_CONTENT_ID}:es`,
+      JSON.stringify({
+        title: 'Landing publicada',
+        payload: JSON.stringify({ heroTitle: 'Landing publicada' }, null, 2),
+        status: 'published',
+      }),
     );
 
     const secondContainer = document.createElement('div');
@@ -897,10 +1481,11 @@ describe('CmsAdminPage', () => {
     rendered = await renderPage(secondContainer);
 
     await waitForExpectation(() => {
-      expect(getButtonByText(secondContainer, 'Guardar y publicar')).toBeTruthy();
+      expect(getButtonByText(secondContainer, 'Guardar borrador')).toBeTruthy();
       expect(secondContainer.textContent).toContain(
-        'Publicará esta versión al guardar y actualizará la página en vivo.',
+        'Guardará esta versión como borrador sin cambiar la página en vivo.',
       );
+      expect(secondContainer.textContent).not.toContain('Guardar y publicar');
       expect(secondContainer.textContent).not.toContain('Guardar versión');
     });
 
@@ -935,8 +1520,9 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       const pageText = container.textContent ?? '';
-      expect(pageText).toContain('Base: v3 · ID 102');
-      expect(pageText.split('Base: v3 · ID 102').length - 1).toBe(1);
+      expect(pageText).toContain('Base: v3');
+      expect(pageText.split('Base: v3').length - 1).toBe(1);
+      expect(pageText).not.toContain('Base: v3 · ID 102');
       expect(pageText).not.toContain('Editando desde ID');
     });
 
@@ -975,7 +1561,8 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Borrar')).toBe(0);
       expect(countExactText(container, 'En formulario')).toBe(1);
       expect(countExactText(container, 'En vivo')).toBe(1);
-      expect(container.textContent).toContain('Base: v3 · ID 102');
+      expect(container.textContent).toContain('Base: v3');
+      expect(container.textContent).not.toContain('Base: v3 · ID 102');
     });
 
     await cleanup();
@@ -994,7 +1581,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides version filters until the CMS history has enough entries to compare', async () => {
+  it('hides the version history panel until a live page has additional saved history to compare', async () => {
     listMock.mockResolvedValue([buildContent()]);
 
     const container = document.createElement('div');
@@ -1002,7 +1589,9 @@ describe('CmsAdminPage', () => {
     const { cleanup } = await renderPage(container);
 
     await waitForExpectation(() => {
-      expect(container.textContent).toContain(
+      expect(container.querySelector('[data-testid="cms-admin-version-history"]')).toBeNull();
+      expect(container.textContent).not.toContain('Versiones');
+      expect(container.textContent).not.toContain(
         'La única versión guardada ya está resumida arriba; el historial aparecerá cuando guardes otra versión.',
       );
       expect(container.textContent).not.toContain(
@@ -1013,7 +1602,7 @@ describe('CmsAdminPage', () => {
       expect(countActionsByText(container, 'Editar en formulario')).toBe(0);
       expect(container.textContent).not.toContain('1/1');
       expect(container.textContent).not.toContain('1 versión');
-      expect(countLabelsByText(container, 'Estado')).toBe(1);
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
       expect(countActionsByText(container, 'Limpiar filtros')).toBe(0);
     });
@@ -1021,7 +1610,7 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
-  it('hides the history status filter when every saved version already shares the same status', async () => {
+  it('keeps a two-version history focused on the rows when every saved version already shares the same status', async () => {
     listMock.mockResolvedValue([
       buildContent(),
       buildContent({
@@ -1039,7 +1628,109 @@ describe('CmsAdminPage', () => {
     await waitForExpectation(() => {
       expect(container.textContent).toContain('2 versiones');
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
+      expect(countLabelsByText(container, 'Versión mínima')).toBe(0);
+    });
+
+    await cleanup();
+  });
+
+  it('shows the minimum-version filter once the history is long enough to narrow meaningfully', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-01T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('3 versiones');
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
       expect(countLabelsByText(container, 'Versión mínima')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('shows the history status filter once enough mixed-status versions exist to narrow meaningfully', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'archived',
+        ccdPublishedAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('3 versiones');
+      expect(countLabelsByText(container, 'Estado')).toBe(0);
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('keeps filtered-empty version history to one clear reset action', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-01T03:04:05.000Z',
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(countLabelsByText(container, 'Estado del historial')).toBe(1);
+      expect(container.textContent).toContain('3 versiones');
+    });
+
+    await selectComboboxOption(container, 'Todos', 'Archivado');
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain(
+        'Ninguna versión coincide con los filtros actuales. Limpia los filtros para volver a ver el historial completo.',
+      );
+      expect(countActionsByText(history!, 'Limpiar filtros')).toBe(1);
+      expect(countActionsByText(container, 'Limpiar filtros')).toBe(1);
+      expect(container.textContent).toContain('0 de 3');
     });
 
     await cleanup();
@@ -1062,11 +1753,44 @@ describe('CmsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(container.textContent).toContain(
-        'Contexto compartido: título Landing principal · slug records-public · locale es · estado Publicado.',
+        'Contexto compartido: título Landing principal · slug fan-hub · idioma Español (es) · estado Publicado.',
       );
       expect(countExactText(container, 'Publicado')).toBe(1);
       expect(countLabelsByText(container, 'Estado del historial')).toBe(0);
       expect(countActionsByText(container, 'Editar en formulario')).toBe(1);
+    });
+
+    await cleanup();
+  });
+
+  it('collapses published history row state and timestamp into one clear chip', async () => {
+    listMock.mockResolvedValue([
+      buildContent(),
+      buildContent({
+        ccdId: 102,
+        ccdVersion: 3,
+        ccdStatus: 'published',
+        ccdPublishedAt: '2030-01-02T03:04:05.000Z',
+      }),
+      buildContent({
+        ccdId: 103,
+        ccdVersion: 2,
+        ccdStatus: 'draft',
+        ccdPublishedAt: null,
+      }),
+    ]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      const history = container.querySelector<HTMLElement>('[data-testid="cms-admin-version-history"]');
+      expect(history).not.toBeNull();
+      expect(history?.textContent).toContain('Publicado:');
+      expect(history?.textContent).not.toContain('pub:');
+      expect(countExactText(history!, 'Publicado')).toBe(0);
+      expect(countExactText(history!, 'Borrador')).toBe(1);
     });
 
     await cleanup();

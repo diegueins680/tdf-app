@@ -17,6 +17,13 @@ import           Servant.Multipart  ( FileData
                                      , Tmp
                                      , fdInputName
                                      )
+import           Data.Char          ( GeneralCategory(Format)
+                                     , generalCategory
+                                     , isAscii
+                                     , isControl
+                                     , isHexDigit
+                                     , isSpace
+                                     )
 import qualified Data.Text         as T
 
 import           TDF.API.Types      ( DriveTokenExchangeRequest
@@ -30,6 +37,7 @@ data DriveUploadForm = DriveUploadForm
   , duFolderId    :: Maybe Text
   , duName        :: Maybe Text
   , duAccessToken :: Maybe Text
+  , duIdempotencyKey :: Maybe Text
   } deriving (Generic)
 
 instance FromMultipart Tmp DriveUploadForm where
@@ -39,19 +47,24 @@ instance FromMultipart Tmp DriveUploadForm where
     folder <- optionalText "folderId" multipart
     nameTxt <- optionalText "name" multipart
     token <- optionalAccessToken "accessToken" multipart
+    idempotencyKey <- optionalIdempotencyKey "idempotencyKey" multipart
     pure DriveUploadForm
       { duFile = file
       , duFolderId = folder
       , duName = nameTxt
       , duAccessToken = token
+      , duIdempotencyKey = idempotencyKey
       }
     where
       optionalText name mp =
-        fmap (>>= normalizeInputText) (lookupSingleInput name mp)
-
-      normalizeInputText (Input _ value) =
-        let trimmed = T.strip value
-        in if T.null trimmed then Nothing else Just trimmed
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just (Input _ value)) ->
+            let trimmed = T.strip value
+            in if T.null trimmed
+                then Left (T.unpack name <> " must not be blank")
+                else Right (Just trimmed)
 
       optionalAccessToken name mp =
         case lookupSingleInput name mp of
@@ -61,6 +74,16 @@ instance FromMultipart Tmp DriveUploadForm where
             let trimmed = T.strip value
             in if T.null trimmed
                 then Left (T.unpack name <> " must not be blank")
+                else Just <$> validateMultipartAccessToken name trimmed
+
+      optionalIdempotencyKey name mp =
+        case lookupSingleInput name mp of
+          Left err -> Left err
+          Right Nothing -> Right Nothing
+          Right (Just (Input _ value)) ->
+            let trimmed = T.toLower (T.strip value)
+            in if T.length trimmed /= 64 || not (T.all isHexDigit trimmed)
+                then Left (T.unpack name <> " must be a 64-character SHA-256 hex digest")
                 else Right (Just trimmed)
 
       lookupSingleInput name mp =
@@ -81,7 +104,7 @@ instance FromMultipart Tmp DriveUploadForm where
           (_, fileName : _) -> Left ("Unexpected file field: " <> T.unpack fileName)
           _ -> Right ()
         where
-          expectedInputs = ["folderId", "name", "accessToken"]
+          expectedInputs = ["folderId", "name", "accessToken", "idempotencyKey"]
           expectedFiles = ["file"]
           unexpectedInputs =
             [ name
@@ -93,6 +116,27 @@ instance FromMultipart Tmp DriveUploadForm where
             | file <- files mp
             , fdInputName file `notElem` expectedFiles
             ]
+
+validateMultipartAccessToken :: Text -> Text -> Either String Text
+validateMultipartAccessToken fieldName token
+  | T.length token > 4096 =
+      Left (fieldLabel <> " must be 4096 characters or fewer")
+  | T.any isSpace token =
+      Left (fieldLabel <> " must not contain whitespace")
+  | T.any isControl token =
+      Left (fieldLabel <> " must not contain control characters")
+  | T.any isHiddenFormattingChar token =
+      Left (fieldLabel <> " must not contain hidden formatting characters")
+  | T.any (not . isAscii) token =
+      Left (fieldLabel <> " must contain only ASCII characters")
+  | otherwise =
+      Right token
+  where
+    fieldLabel = T.unpack fieldName
+
+isHiddenFormattingChar :: Char -> Bool
+isHiddenFormattingChar ch =
+  generalCategory ch == Format
 
 type DriveAPI =
   "drive" :> "upload"

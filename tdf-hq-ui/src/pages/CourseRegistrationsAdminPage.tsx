@@ -31,8 +31,9 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SaveIcon from '@mui/icons-material/Save';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import SearchIcon from '@mui/icons-material/Search';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ClearIcon from '@mui/icons-material/Clear';
+import UndoIcon from '@mui/icons-material/Undo';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
@@ -45,39 +46,187 @@ import {
   type CourseRegistrationReceiptDTO,
 } from '../api/courses';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ConfirmDialog from '../components/ConfirmDialog';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { formatTimestampForDisplay, parseTimestamp } from '../utils/dateTime';
 
 type StatusFilter = 'all' | 'pending_payment' | 'paid' | 'cancelled';
+type RegistrationSortKey = 'default' | 'name' | 'createdAt' | 'updatedAt' | 'course' | 'status' | 'source';
+type RegistrationSortDirection = 'asc' | 'desc';
 type DossierIntent = 'review' | 'markPaid';
 type FlashSeverity = 'success' | 'error' | 'info' | 'warning';
 const DEFAULT_LIMIT = 200;
 const markPaidReceiptSectionHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y luego podrás marcar la inscripción como pagada.';
+const markPaidEvidenceComposerHelpText = 'La evidencia es opcional: guárdala solo si necesitas documentar el pago antes de marcarlo pagado.';
 const emptyReceiptAlertMessage = 'El primer comprobante documenta el pago y habilita Marcar pagado. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
-const emptyReceiptEvidenceAlertMessage = 'El primer comprobante queda como evidencia de pago solo si hace falta documentarla. Cuando lo guardes aparecerá aquí con enlace y acciones para revisarlo después.';
+const emptyReceiptEvidenceAlertMessage = 'Agrega evidencia solo si necesitas documentar este pago. Se guardará aquí con un enlace para revisarla después.';
 const firstReceiptComposerHelpText = 'Este formulario ya está abierto para registrar el primer comprobante. Guárdalo y aparecerá aquí con enlace y acciones para revisarlo después.';
 const receiptComposerHelpText = 'Este formulario ya está abierto para guardar otro comprobante o pegar un enlace existente.';
 const editingReceiptComposerHelpText = 'Edita el comprobante y guarda los cambios para actualizar el registro.';
-const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. Configura el primer formulario público de curso para empezar a recibirlas aquí.';
-const buildInitialEmptyStateMultiCohortMessage = (count: number) =>
-  `Todavía no hay inscripciones. Hay ${count} formularios públicos listos; revisa cursos para compartir uno.`;
-const initialEmptyStateConfigActionLabel = 'Configurar cursos';
-const initialEmptyStateMultiCohortActionLabel = 'Revisar cursos';
+const receiptUrlFallbackHelpText = 'Pega un enlace existente; si prefieres subir un archivo, oculta este campo.';
+const initialEmptyStateConfigMessage = 'Todavía no hay inscripciones. El formulario público se configura en el primer curso.';
+const INITIAL_COHORT_PREVIEW_LIMIT = 2;
+const INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT = 3;
+const INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH = 48;
+const INITIAL_COHORT_LABEL_PREVIEW_MIN_LENGTH = 24;
+const cleanInitialCohortPreviewLabel = (label: string) =>
+  label.trim().replace(/^[¿¡]+\s*/g, '').replace(/\s*[.!?:;¿¡]+$/g, '').trim();
+const compactInitialCohortPreviewLabel = (label: string) => {
+  const cleanLabel = cleanInitialCohortPreviewLabel(label);
+  if (cleanLabel.length <= INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH) return cleanLabel;
+
+  const wordBoundaryPreview = cleanLabel
+    .slice(0, INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH)
+    .replace(/\s+\S*$/, '')
+    .trim();
+  const preview = wordBoundaryPreview.length >= INITIAL_COHORT_LABEL_PREVIEW_MIN_LENGTH
+    ? wordBoundaryPreview
+    : cleanLabel.slice(0, INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH).trim();
+
+  return `${cleanInitialCohortPreviewLabel(preview)}…`;
+};
+const compactCohortContextLabel = (label: string) => {
+  const trimmedLabel = label.trim();
+  return trimmedLabel.length > INITIAL_COHORT_LABEL_PREVIEW_MAX_LENGTH
+    ? compactInitialCohortPreviewLabel(trimmedLabel)
+    : trimmedLabel;
+};
+const normalizeInitialCohortPreviewKey = (label: string) =>
+  cleanInitialCohortPreviewLabel(label)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const uniqueInitialCohortLabels = (labels: readonly string[]) => {
+  const uniqueLabelsByKey = new Map<string, string>();
+
+  labels.forEach((label) => {
+    const trimmedLabel = cleanInitialCohortPreviewLabel(label);
+    if (!trimmedLabel) return;
+
+    const labelKey = normalizeInitialCohortPreviewKey(trimmedLabel);
+    if (!uniqueLabelsByKey.has(labelKey)) {
+      uniqueLabelsByKey.set(labelKey, trimmedLabel);
+    }
+  });
+
+  return Array.from(uniqueLabelsByKey.values());
+};
+
+const formatInitialCohortLabelList = (labels: readonly string[]) => {
+  if (labels.length === 0) return '';
+
+  if (labels.length === 1) return labels[0] ?? '';
+  if (labels.length === 2) return `${labels[0]} y ${labels[1]}`;
+  return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
+};
+
+const formatInitialCohortPreview = (labels: readonly string[]) => {
+  const uniqueLabels = uniqueInitialCohortLabels(labels);
+  const visibleLabels = uniqueLabels
+    .slice(0, INITIAL_COHORT_PREVIEW_LIMIT)
+    .map(compactInitialCohortPreviewLabel);
+  const hiddenUniqueLabelCount = Math.max(0, uniqueLabels.length - visibleLabels.length);
+  const hiddenCount = uniqueLabels.length > 1 ? hiddenUniqueLabelCount : 0;
+
+  if (hiddenCount > 0) {
+    const hiddenLabel = `${hiddenCount} ${hiddenCount === 1 ? 'curso más' : 'cursos más'}`;
+    return formatInitialCohortLabelList([...visibleLabels, hiddenLabel]);
+  }
+
+  return formatInitialCohortLabelList(visibleLabels);
+};
+
+const formatInitialCohortActionTitleList = (labels: readonly string[]) => {
+  if (labels.length <= INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT + 1) {
+    return formatInitialCohortLabelList(labels);
+  }
+
+  const visibleLabels = labels.slice(0, INITIAL_COHORT_ACTION_TITLE_PREVIEW_LIMIT);
+  const hiddenCount = labels.length - visibleLabels.length;
+  return formatInitialCohortLabelList([
+    ...visibleLabels,
+    `${hiddenCount} ${hiddenCount === 1 ? 'curso más' : 'cursos más'}`,
+  ]);
+};
+
+const countInitialCohortPreviewLabels = (labels: readonly string[]) => {
+  return uniqueInitialCohortLabels(labels).length;
+};
+
+const buildInitialEmptyStateMultiCohortActionTitle = (count: number, labels: readonly string[] = []) => {
+  const uniqueLabels = uniqueInitialCohortLabels(labels);
+  if (uniqueLabels.length === 0) return initialEmptyStateMultiCohortActionAriaLabel;
+
+  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} público${count === 1 ? '' : 's'}`;
+  if (count > 1 && uniqueLabels.length === 1) {
+    return `Elegir entre ${formsLabel} para ${uniqueLabels[0]}.`;
+  }
+
+  return `Elegir entre ${formsLabel}: ${formatInitialCohortActionTitleList(uniqueLabels)}.`;
+};
+
+const buildInitialEmptyStateSingleCourseVariantActionTitle = (count: number, labels: readonly string[] = []) => {
+  const [label] = uniqueInitialCohortLabels(labels);
+  if (!label) return initialEmptyStateSingleCourseVariantActionAriaLabel;
+
+  const formsLabel = `${count} formulario${count === 1 ? '' : 's'} público${count === 1 ? '' : 's'}`;
+  return `Elegir entre ${formsLabel} de ${label}.`;
+};
+
+const buildInitialEmptyStateMultiCohortMessage = (count: number, labels: readonly string[] = []) => {
+  const preview = formatInitialCohortPreview(labels);
+  if (preview) {
+    if (count > 1 && countInitialCohortPreviewLabels(labels) === 1) {
+      return `Hay ${count} formularios públicos de ${preview} listos para recibir la primera inscripción.`;
+    }
+    return `Hay ${count} formularios públicos listos para recibir la primera inscripción: ${preview}.`;
+  }
+  return `Hay ${count} formularios públicos listos para recibir la primera inscripción.`;
+};
+const initialEmptyStateConfigActionLabel = 'Crear curso';
+const initialEmptyStateReviewFormsActionLabel = 'Escoger formulario';
 const initialEmptyStateFormActionLabel = 'Abrir formulario público';
+const initialEmptyStateNewTabDescription = 'Se abre en una pestaña nueva.';
+const initialEmptyStateNewTabDescriptionId = 'course-registration-initial-empty-state-new-tab-description';
 const initialRegistrationLoadingMessage = 'Cargando inscripciones…';
 const initialCohortResolutionMessage = 'Revisando formularios de curso para mostrar el siguiente paso.';
-const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué enlace compartir.';
+const initialCohortErrorMessage = 'No se pudieron cargar los formularios de curso. Reintenta para elegir qué formulario compartir.';
 const initialCohortRetryLabel = 'Reintentar formularios';
-const cohortFilterUnavailableMessage = 'No se pudieron cargar cohortes. La lista sigue disponible; el filtro por curso volverá cuando se recupere esa información.';
-const cohortFilterLoadingMessage = 'La lista ya está disponible; el filtro por curso aparecerá cuando terminen de cargar los formularios.';
-const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para habilitar el filtro por cohorte.';
+const unavailableCohortFilterLabel = 'Formularios públicos no disponibles';
+const unavailableCohortFilterRetryLabel = 'Reintentar formularios públicos';
+const unavailableCohortFilterRetryTitle = 'Reintenta solo los formularios públicos; la lista visible no se recarga.';
+const initialEmptyStateConfigActionAriaLabel = 'Crear el primer curso';
+const initialEmptyStateMultiCohortActionAriaLabel = 'Ver formularios públicos para elegir cuál compartir primero';
+const initialEmptyStateSingleCourseVariantActionAriaLabel = 'Ver formularios públicos de este curso para elegir cuál compartir primero';
+const cohortFilterUnavailableMessage = 'No se pudieron cargar los formularios públicos. La lista sigue disponible; el selector por formulario volverá cuando se recupere esa información.';
+const busyCohortFilterUnavailableMessage = 'La lista sigue cargada; los formularios públicos no están disponibles.';
+const cohortFilterLoadingMessage = 'La lista ya está disponible; el selector por formulario aparecerá cuando terminen de cargar los formularios.';
+const emptyCohortFilterMessage = 'La lista sigue disponible; configura cursos para activar el selector por formulario.';
+const genericSingleCohortInitialEmptyStateMessage =
+  'Todavía no hay inscripciones. La página pública ya está lista para recibir la primera.';
 const buildSingleCohortInitialEmptyStateMessage = (cohortLabel: string) =>
-  `Todavía no hay inscripciones para ${cohortLabel}. Cuando llegue la primera podrás revisar pago, seguimiento y correos aquí.`;
-type RegistrationIdentityKind = 'name' | 'contact' | 'record';
+  cohortLabel
+    ? `Todavía no hay inscripciones para ${cohortLabel}. La página pública ya está lista para recibir la primera.`
+    : genericSingleCohortInitialEmptyStateMessage;
+type RegistrationIdentityKind = 'name' | 'email' | 'phone' | 'record';
 const buildCompactDossierScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; usa Cambiar estado para acciones rápidas.`;
+  `Abre expediente desde ${targetLabel}; las opciones de estado muestran acciones.`;
+const buildDossierLinkScopeHint = (targetLabel: string) =>
+  `Abre expediente desde ${targetLabel}.`;
+const buildPaymentWorkflowScopeHint = (targetLabel: string) =>
+  `Abre expediente desde ${targetLabel}; el botón de pago y estado registra pagos o cambia estados.`;
 const buildDossierOnlyScopeHint = (targetLabel: string) =>
-  `Abre el expediente desde ${targetLabel}; el estado abre acciones rápidas.`;
+  `Abre expediente desde ${targetLabel}; las opciones de estado abren acciones rápidas.`;
+const buildCustomStatusNormalizationScopeHint = (targetLabel: string) =>
+  `Abre expediente desde ${targetLabel}; las opciones de estado normalizan a pendiente o cancelado.`;
+const buildPendingRecoveryScopeHint = (targetLabel: string) =>
+  `Abre expediente desde ${targetLabel}; Reabrir vuelve a pendiente.`;
+const buildPaidRecoveryScopeHint = (targetLabel: string) =>
+  `Abre expediente desde ${targetLabel}; Marcar pago pendiente devuelve la inscripción a pendiente.`;
 const emptyNotesHelperText = 'Aún no hay notas internas. Registra la primera solo cuando necesites dejar contexto, acuerdos o próximos pasos.';
 const markPaidEmptyNotesHelperText = 'Agrega una nota solo si necesitas dejar contexto extra sobre este pago.';
 const showSystemEmailsLabel = 'Ver correos del sistema';
@@ -91,23 +240,191 @@ const systemEmailHistoryHelperText = 'Historial persistente de correos del siste
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const markPaidEmptyFollowUpHelperText = 'Agrega seguimiento solo si necesitas dejar contexto manual aparte del comprobante o del cambio de estado.';
-const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Guárdalo y aparecerá aquí para revisarlo después.';
-const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Guárdalo y aparecerá en el historial para revisarlo después.';
+const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
+const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
+const markPaidOptionalFollowUpActionLabel = 'Agregar seguimiento';
+const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const openPaymentWorkflowLabel = 'Registrar pago';
+const paymentStatusMenuButtonLabel = 'Pago y estado';
 const markPaidSuccessMessage = 'Inscripción marcada como pagada.';
-const activeStatusFilterHelperText = 'Esta vista ya está filtrada por ese estado. Tócalo otra vez para volver a ver todos.';
-const customStatusFilterUnavailableMessage = 'Los estados visibles no coinciden con los filtros estándar. Usa el menú de estado de cada inscripción para normalizarlos.';
+const activeStatusFilterHelperText = 'Selecciona el estado activo otra vez para volver a ver todos.';
+const customStatusFilterUnavailableMessage = 'Normaliza cada fila desde Estado para recuperar los filtros estándar.';
 const defaultPublicFormSource = 'landing';
 const MIN_LOCAL_SEARCH_REGISTRATIONS = 8;
 const MIN_DEFAULT_CSV_EXPORT_ROWS = MIN_LOCAL_SEARCH_REGISTRATIONS;
+const MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS = 2;
+const MIN_REPEATED_CUSTOM_STATUS_ICON_ACTIONS = 2;
 const MIN_PHONE_SEARCH_DIGITS = 4;
+const MIN_FULL_PHONE_MATCH_DIGITS = 7;
 const MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS = 4;
 const MAX_LOCAL_SEARCH_QUERY_SUMMARY_LENGTH = 64;
+const COHORT_FILTER_LABEL = 'Formulario público';
 const LOCAL_SEARCH_LABEL = 'Buscar inscripciones';
+const REGISTRATION_SORT_LABEL = 'Ordenar por';
+const REGISTRATION_SORT_DIRECTION_LABEL = 'Dirección';
 const LOAD_LIMIT_LABEL = 'Límite de carga';
 const LOAD_LIMIT_HELPER_TEXT = 'Máximo de inscripciones cargadas en esta vista.';
+const LOCAL_SEARCH_COMPACT_CONTEXT_TITLE = 'Otros datos: estado, curso, fuente, origen o nota cuando existan.';
 const missingContactSummary = 'Sin correo ni teléfono';
+const registrationStatusNeedsReviewLabel = 'Estado por revisar';
+const CONTACT_PLACEHOLDER_VALUE_KEYS = new Set([
+  '-',
+  'n a',
+  'na',
+  'ninguna',
+  'ninguno',
+  'celular pendiente',
+  'correo pendiente',
+  'email pendiente',
+  'numero pendiente',
+  'no tiene celular',
+  'no tiene correo',
+  'no tiene email',
+  'no tiene numero',
+  'no tiene telefono',
+  'no tiene numero de whatsapp',
+  'no tiene whatsapp',
+  'no aplica',
+  'no cell',
+  'no cellphone',
+  'no contesta',
+  'no contacto',
+  'no datos contacto',
+  'no datos de contacto',
+  'no disponible',
+  'no e mail',
+  'no e-mail',
+  'no email',
+  'no especificada',
+  'no especificado',
+  'no mobile',
+  'no responde',
+  'no registra',
+  'no registra correo',
+  'no registra email',
+  'no registra celular',
+  'no registra numero',
+  'no registra numero celular',
+  'no registra numero de celular',
+  'no registra numero de whatsapp',
+  'no registra telefono',
+  'no registra whatsapp',
+  'no phone',
+  'no telephone',
+  'no whatsapp number',
+  'no informada',
+  'no informado',
+  'no registrado',
+  'no registrada',
+  'no reportado',
+  'no proporcionada',
+  'no proporcionado',
+  'no proporciono',
+  'no proporciono correo',
+  'no proporciono email',
+  'no proporciono telefono',
+  'no facilito',
+  'no facilito correo',
+  'no facilito email',
+  'no facilito telefono',
+  'no suministrada',
+  'no suministrado',
+  'none',
+  'none provided',
+  'not available',
+  'not provided',
+  'not responding',
+  'not specified',
+  'pendiente',
+  'pendiente de celular',
+  'pendiente de correo',
+  'pending e mail',
+  'pending e-mail',
+  'pending email',
+  'pending phone',
+  'pendiente de email',
+  'pendiente de numero',
+  'pendiente de numero celular',
+  'pendiente de numero de celular',
+  'pendiente de telefono',
+  'pendiente de whatsapp',
+  'pendiente por validar',
+  'telefono pendiente',
+  'whatsapp pendiente',
+  'por actualizar',
+  'por completar',
+  'por confirmar',
+  'por definir',
+  'por validar',
+  's n',
+  'desconocido',
+  'desconocida',
+  'sin celular',
+  'sin completar',
+  'sin contacto',
+  'sin correo',
+  'sin datos',
+  'sin datos contacto',
+  'sin datos de contacto',
+  'sin email',
+  'sin especificar',
+  'sin informacion',
+  'sin numero',
+  'sin numero celular',
+  'sin numero de celular',
+  'sin numero de whatsapp',
+  'sin telefono',
+  'sin telefono ni whatsapp',
+  'sin telefono ni correo',
+  'sin whatsapp',
+  'sin actualizar',
+  'tbd',
+  't b d',
+]);
+
+const normalizeContactPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderContactValue = (value: string) => {
+  const placeholderKey = normalizeContactPlaceholderKey(value);
+  const compactDigits = placeholderKey.replace(/\s+/g, '');
+  return placeholderKey === ''
+    || CONTACT_PLACEHOLDER_VALUE_KEYS.has(placeholderKey)
+    || /^0+$/.test(compactDigits);
+};
+
+const normalizeRegistrationContactValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (isPlaceholderContactValue(trimmed)) return null;
+  return trimmed;
+};
+
+const NAME_PLACEHOLDER_VALUE_KEYS = new Set([
+  ...CONTACT_PLACEHOLDER_VALUE_KEYS,
+  'nombre pendiente',
+  'nombre por confirmar',
+  'nombre por definir',
+  'no registra nombre',
+  'no tiene nombre',
+  'sin nombre',
+  'sin nombre completo',
+]);
+
+const normalizeRegistrationNameValue = (value?: string | null) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (NAME_PLACEHOLDER_VALUE_KEYS.has(normalizeContactPlaceholderKey(trimmed))) return null;
+  return trimmed;
+};
 
 const formatDossierContextActionsLabel = ({
   showInlineEmptyFollowUpAction,
@@ -158,6 +475,33 @@ const statusFilterLabels: Record<StatusFilter, string> = {
   paid: 'Pagado',
   cancelled: 'Cancelado',
 };
+const registrationSortKeys: readonly RegistrationSortKey[] = [
+  'default',
+  'name',
+  'createdAt',
+  'updatedAt',
+  'course',
+  'status',
+  'source',
+];
+const registrationSortLabels: Record<RegistrationSortKey, string> = {
+  default: 'Predeterminado',
+  name: 'Nombre',
+  createdAt: 'Fecha de registro',
+  updatedAt: 'Última actualización',
+  course: 'Formulario público',
+  status: 'Estado',
+  source: 'Fuente',
+};
+const registrationSortDirections: readonly RegistrationSortDirection[] = ['asc', 'desc'];
+const registrationSortDirectionLabels: Record<RegistrationSortDirection, string> = {
+  asc: 'Ascendente',
+  desc: 'Descendente',
+};
+const registrationSortCollator = new Intl.Collator('es', {
+  numeric: true,
+  sensitivity: 'base',
+});
 const manualFollowUpTypeOptions = ['note', 'call', 'whatsapp', 'email'] as const;
 
 const emptyReceiptForm = (): ReceiptFormState => ({
@@ -180,13 +524,69 @@ const emptyFollowUpForm = (): FollowUpFormState => ({
 const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.some((status) => status === value);
 
+const isRegistrationSortKey = (value: string): value is RegistrationSortKey =>
+  registrationSortKeys.some((key) => key === value);
+
+const isRegistrationSortDirection = (value: string): value is RegistrationSortDirection =>
+  registrationSortDirections.some((direction) => direction === value);
+
+const parseRegistrationSortKey = (value: string | null): RegistrationSortKey => {
+  const trimmed = value?.trim() ?? '';
+  return isRegistrationSortKey(trimmed) ? trimmed : 'default';
+};
+
+const defaultRegistrationSortDirection = (key: RegistrationSortKey): RegistrationSortDirection =>
+  key === 'createdAt' || key === 'updatedAt' ? 'desc' : 'asc';
+
+const parseRegistrationSortDirection = (
+  value: string | null,
+  sortKey: RegistrationSortKey,
+): RegistrationSortDirection => {
+  const trimmed = value?.trim() ?? '';
+  return isRegistrationSortDirection(trimmed)
+    ? trimmed
+    : defaultRegistrationSortDirection(sortKey);
+};
+
 const normalizeBackendStatusToken = (status: string) =>
   status.trim().toLowerCase().replace(/[\s._/-]+/g, '_').replace(/^_+|_+$/g, '');
 
 const normalizeStatusFilterAlias = (value: string): StatusFilter | null => {
   const normalized = normalizeBackendStatusToken(value);
-  if (normalized === 'payment_pending') return 'pending_payment';
-  if (normalized === 'canceled') return 'cancelled';
+  if (
+    normalized === 'pending'
+    || normalized === 'awaiting_payment'
+    || normalized === 'not_paid'
+    || normalized === 'payment_pending'
+    || normalized === 'payment_due'
+    || normalized === 'pago_pendiente'
+    || normalized === 'no_pagado'
+    || normalized === 'pendiente_de_pago'
+    || normalized === 'pendiente_pago'
+    || normalized === 'por_pagar'
+    || normalized === 'sin_pago'
+    || normalized === 'unpaid'
+  ) {
+    return 'pending_payment';
+  }
+  if (
+    normalized === 'payment_paid'
+    || normalized === 'payment_received'
+    || normalized === 'payment_confirmed'
+    || normalized === 'payment_succeeded'
+    || normalized === 'pago_recibido'
+    || normalized === 'pago_confirmado'
+    || normalized === 'pagado'
+  ) {
+    return 'paid';
+  }
+  if (
+    normalized === 'canceled'
+    || normalized === 'cancelado'
+    || normalized === 'cancelada'
+  ) {
+    return 'cancelled';
+  }
   return isStatusFilter(normalized) ? normalized : null;
 };
 
@@ -212,7 +612,7 @@ const summarizeActiveFilters = ({
 }) => {
   const parts: string[] = [];
   const trimmedCohortLabel = cohortLabel.trim();
-  if (trimmedCohortLabel) parts.push(`cohorte ${trimmedCohortLabel}`);
+  if (trimmedCohortLabel) parts.push(`formulario ${trimmedCohortLabel}`);
   if (status !== 'all') parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
   if (limit !== DEFAULT_LIMIT) parts.push(`límite ${limit}`);
   return parts.join(' · ');
@@ -220,12 +620,16 @@ const summarizeActiveFilters = ({
 
 const buildAutomaticFilterHelpText = ({
   combinedSingleChoiceSummary,
+  hasCohortFilterControl,
+  hasStatusFilterControl,
   hasVisibleRegistrations,
   showAdvancedLimitControl,
   showSingleStatusSummary,
   singleAvailableCohortLabel,
 }: {
   combinedSingleChoiceSummary: string;
+  hasCohortFilterControl: boolean;
+  hasStatusFilterControl: boolean;
   hasVisibleRegistrations: boolean;
   showAdvancedLimitControl: boolean;
   showSingleStatusSummary: boolean;
@@ -237,39 +641,42 @@ const buildAutomaticFilterHelpText = ({
     return '';
   }
 
-  const filterStartingPoint = singleAvailableCohortLabel
-    ? 'Usa Estado.'
-    : showSingleStatusSummary
-      ? 'Usa cohorte.'
-      : 'Empieza por cohorte y estado.';
+  if (!hasStatusFilterControl) return '';
+
+  const filterStartingPoint = hasCohortFilterControl
+    ? 'Los filtros se aplican al instante.'
+    : 'El estado se aplica al instante.';
   const limitGuidance = showAdvancedLimitControl
-    ? 'Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-    : 'Ajustar límite aparecerá cuando esta vista llene el lote actual o si ya estás usando un límite personalizado.';
+    ? 'Cambia el límite solo si necesitas cargar otra cantidad.'
+    : 'El límite aparece solo si la vista llega al máximo cargado.';
   const emptySuffix = hasVisibleRegistrations
     ? ''
-    : ' Ajusta la vista o usa refrescar si esperabas resultados.';
+    : ' Si esperabas resultados, ajusta la vista o refresca.';
 
-  return `Los filtros se aplican automáticamente al cambiar. ${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
+  return `${filterStartingPoint} ${limitGuidance}${emptySuffix}`;
 };
 
 const getResetViewLabel = ({
   hasCustomLimit,
   hasSlugFilter,
   hasStatusFilter,
+  hasUnconfiguredSlugFilter = false,
 }: {
   hasCustomLimit: boolean;
   hasSlugFilter: boolean;
   hasStatusFilter: boolean;
+  hasUnconfiguredSlugFilter?: boolean;
 }) => {
   if (hasCustomLimit && (hasSlugFilter || hasStatusFilter)) return 'Restablecer vista';
   if (hasCustomLimit) return 'Restablecer límite';
-  if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todas las cohortes';
+  if (hasSlugFilter && !hasStatusFilter && hasUnconfiguredSlugFilter) return 'Quitar filtro de formulario';
+  if (hasSlugFilter && !hasStatusFilter) return 'Mostrar todos los formularios';
   if (!hasSlugFilter && hasStatusFilter) return 'Mostrar todos los estados';
-  if (hasSlugFilter && hasStatusFilter) return 'Restablecer filtros';
+  if (hasSlugFilter && hasStatusFilter) return 'Restablecer vista';
   return 'Restablecer vista';
 };
 
-const formatRowCountLabel = (count: number) => `${count} fila${count === 1 ? '' : 's'}`;
+const formatCsvRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 const formatRegistrationCountLabel = (count: number) => `${count} inscripci${count === 1 ? 'ón' : 'ones'}`;
 const formatLoadedRegistrationCountLabel = (count: number) =>
   `${count} inscripci${count === 1 ? 'ón cargada' : 'ones cargadas'}`;
@@ -281,10 +688,13 @@ const buildLoadedSearchScopeHint = (loadedCount: number) =>
   `Busca dentro de las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const buildFullLocalSearchMatchHint = (loadedCount: number) =>
   loadedCount === 1
-    ? 'La búsqueda coincide con la inscripción cargada.'
-    : `La búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
+    ? 'Sin cambios: la búsqueda coincide con la inscripción cargada.'
+    : `Sin cambios: la búsqueda coincide con las ${formatRegistrationCountLabel(loadedCount)} cargadas.`;
 const cappedLocalSearchEmptyHint =
   'Aumenta el límite si el registro puede estar fuera del lote cargado.';
+const emptyLocalSearchLimitRecoveryLabel = 'Revisar más registros';
+const emptyLocalSearchLimitRecoveryAccessibleLabel = 'Revisar más registros aumentando el límite de carga';
+const emptyLocalSearchLimitRecoveryTitle = 'Muestra el campo de límite de carga para buscar fuera del lote actual.';
 
 const spanishOrConnector = (term: string) => (/^h?o/i.test(term.trim()) ? 'u' : 'o');
 const formatLocalSearchPlaceholder = (terms: readonly string[]) => {
@@ -311,11 +721,46 @@ const normalizeVisibleLocalSearchInput = (value: string) => (
   value.trim().length === 0 ? '' : value
 );
 const normalizeLocalSearchDigits = (value: string) => value.replace(/\D/g, '');
-const looksLikeShortPhoneSearch = (value: string, digits: string) => (
-  digits.length > 0
-  && digits.length < MIN_PHONE_SEARCH_DIGITS
-  && /^[\d\s()+.-]+$/.test(value.trim())
-);
+const phoneSearchDigitCandidates = (digits: string) => {
+  const candidates = [digits];
+  if (digits.startsWith('0') && digits.length > MIN_PHONE_SEARCH_DIGITS) {
+    candidates.push(digits.slice(1));
+  }
+
+  return candidates.filter((candidate, index) => (
+    candidate.length >= MIN_PHONE_SEARCH_DIGITS && candidates.indexOf(candidate) === index
+  ));
+};
+const phoneDigitsMatchLocalSearch = (phoneValue: string | null | undefined, localSearchDigitsKey: string) => {
+  const phoneCandidates = phoneSearchDigitCandidates(
+    normalizeLocalSearchDigits(normalizeRegistrationContactValue(phoneValue) ?? ''),
+  );
+  const searchCandidates = phoneSearchDigitCandidates(localSearchDigitsKey);
+
+  return phoneCandidates.some((phoneDigits) => (
+    searchCandidates.some((searchDigits) => (
+      phoneDigits.includes(searchDigits)
+      || (
+        phoneDigits.length >= MIN_FULL_PHONE_MATCH_DIGITS
+        && searchDigits.length >= MIN_FULL_PHONE_MATCH_DIGITS
+        && searchDigits.endsWith(phoneDigits)
+      )
+    ))
+  ));
+};
+const shortPhoneSearchHintFor = (value: string, digits: string) => {
+  if (!digits || !/^[\d\s()+.-]+$/.test(value.trim())) return '';
+
+  if (digits.length < MIN_PHONE_SEARCH_DIGITS) {
+    return `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`;
+  }
+
+  if (digits.startsWith('0') && digits.slice(1).length < MIN_PHONE_SEARCH_DIGITS) {
+    return `Para buscar teléfonos locales con 0 inicial, escribe al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos después del 0.`;
+  }
+
+  return '';
+};
 const normalizeLocalSearchQuery = (value: string) => value.trim().replace(/\s+/g, ' ');
 const formatLocalSearchQuerySummary = (value: string) => {
   const normalizedValue = normalizeLocalSearchQuery(value);
@@ -335,9 +780,9 @@ const formatLocalSearchQuerySummary = (value: string) => {
   return `${compactPrefix}...`;
 };
 const normalizeContactComparisonValue = (value: string | null | undefined) =>
-  value?.trim().toLocaleLowerCase('es') ?? '';
+  normalizeRegistrationContactValue(value)?.toLocaleLowerCase('es') ?? '';
 const normalizePhoneComparisonValue = (value: string | null | undefined) => {
-  const trimmedValue = value?.trim() ?? '';
+  const trimmedValue = normalizeRegistrationContactValue(value) ?? '';
   if (!/^\+?[\d\s().-]+$/.test(trimmedValue)) return '';
 
   const digits = normalizeLocalSearchDigits(trimmedValue);
@@ -382,23 +827,95 @@ const getSharedOptionalDateLabel = (values: readonly (string | null | undefined)
 
 type RegistrationStatus = Exclude<StatusFilter, 'all'>;
 
+const REGISTRATION_STATUS_PLACEHOLDER_VALUE_KEYS = new Set([
+  '',
+  '-',
+  'desconocida',
+  'desconocido',
+  'n a',
+  'na',
+  'no disponible',
+  'no asignada',
+  'no asignado',
+  'no definida',
+  'no definido',
+  'none',
+  'not provided',
+  'not set',
+  'not available',
+  'null',
+  'pendiente por validar',
+  'por actualizar',
+  'por confirmar',
+  'por definir',
+  'por validar',
+  'sin actualizar',
+  'sin asignar',
+  'sin estado',
+  'sin status',
+  'tbd',
+  'unknown',
+  'undefined',
+]);
+
+const normalizeRegistrationStatusPlaceholderKey = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.!?:;]+$/g, '')
+    .replace(/[^a-z0-9-]+/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+
+const isPlaceholderRegistrationStatus = (status: string) =>
+  REGISTRATION_STATUS_PLACEHOLDER_VALUE_KEYS.has(normalizeRegistrationStatusPlaceholderKey(status));
+
 const normalizeRegistrationStatusKey = (status: string) =>
-  normalizeBackendStatusToken(status);
+  isPlaceholderRegistrationStatus(status)
+    ? '__placeholder_registration_status__'
+    : normalizeBackendStatusToken(status);
 
 const normalizeKnownRegistrationStatus = (status: string): RegistrationStatus | null => {
   const statusFilter = normalizeStatusFilterAlias(status);
   return statusFilter && statusFilter !== 'all' ? statusFilter : null;
 };
 
+const customStatusLabelSpecialWords = new Map([
+  ['api', 'API'],
+  ['crm', 'CRM'],
+  ['id', 'ID'],
+  ['sms', 'SMS'],
+  ['url', 'URL'],
+  ['utm', 'UTM'],
+  ['whatsapp', 'WhatsApp'],
+]);
+
+const formatCustomStatusWord = (word: string) => (
+  customStatusLabelSpecialWords.get(word) ?? `${word.charAt(0).toLocaleUpperCase('es')}${word.slice(1)}`
+);
+
 const customRegistrationStatusLabel = (status: string) => {
+  if (isPlaceholderRegistrationStatus(status)) return registrationStatusNeedsReviewLabel;
+
   const normalized = status.trim().toLowerCase().replace(/[\s._/-]+/g, ' ').trim();
-  if (!normalized) return 'Estado desconocido';
-  return normalized.replace(/\b\w/g, (match) => match.toUpperCase());
+  if (!normalized) return registrationStatusNeedsReviewLabel;
+  return normalized.split(' ').map(formatCustomStatusWord).join(' ');
 };
 
 const registrationStatusLabel = (status: string) => {
   const knownStatus = normalizeKnownRegistrationStatus(status);
   return knownStatus ? statusFilterLabels[knownStatus] : customRegistrationStatusLabel(status);
+};
+
+const registrationStatusSearchValues = (status: string) => {
+  const label = registrationStatusLabel(status);
+  const knownStatus = normalizeKnownRegistrationStatus(status);
+
+  if (knownStatus === 'paid') return [label, 'Pagada', 'Pagados', 'Pagadas'];
+  if (knownStatus === 'cancelled') return [label, 'Cancelada', 'Cancelados', 'Canceladas'];
+  if (knownStatus === 'pending_payment') return [label, 'Pendiente', 'Pendientes', 'Pagos pendientes'];
+  return [label];
 };
 
 const registrationStatusButtonLabel = (
@@ -444,6 +961,24 @@ const statusFilterChipAriaLabel = (status: StatusFilter, isActive: boolean) => {
     : `Filtrar inscripciones por estado ${statusLabel}`;
 };
 
+const statusFilterChipTitle = (
+  status: StatusFilter,
+  isActive: boolean,
+  clearsLocalSearch: boolean,
+) => (
+  clearsLocalSearch
+    ? `${statusFilterChipAriaLabel(status, isActive)} y limpiar la búsqueda actual.`
+    : undefined
+);
+const statusFilterChipAccessibleLabel = (
+  status: StatusFilter,
+  isActive: boolean,
+  clearsLocalSearch: boolean,
+) => (
+  statusFilterChipTitle(status, isActive, clearsLocalSearch)
+  ?? statusFilterChipAriaLabel(status, isActive)
+);
+
 const statusChip = (status: string) => {
   return (
     <Chip
@@ -453,6 +988,19 @@ const statusChip = (status: string) => {
     />
   );
 };
+
+type RegistrationReceiptCountSource = Pick<CourseRegistrationDTO, 'crReceiptCount'> & {
+  crCanMarkPaid?: boolean | null;
+};
+
+const courseRegistrationReceiptCount = (reg: RegistrationReceiptCountSource) => {
+  const rawCount = reg.crReceiptCount;
+  if (rawCount != null && Number.isSafeInteger(rawCount) && rawCount > 0) return rawCount;
+  return reg.crCanMarkPaid ? 1 : 0;
+};
+
+const courseRegistrationReceiptCountLabel = (receiptCount: number) =>
+  `${receiptCount} comprobante${receiptCount === 1 ? '' : 's'}`;
 
 const canTransitionToStatus = (
   currentStatus: string,
@@ -467,12 +1015,74 @@ const canOpenPaymentWorkflowFromStatus = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'pending_payment';
 
 const pendingStatusMenuLabel = (currentStatus: string) =>
-  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled' ? 'Reabrir como pendiente' : 'Marcar pendiente';
+  normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
+    ? 'Reabrir como pendiente'
+    : normalizeKnownRegistrationStatus(currentStatus) == null
+      ? 'Normalizar a pendiente'
+      : 'Marcar pago pendiente';
+
+const cancelStatusMenuLabel = (currentStatus: string) =>
+  normalizeKnownRegistrationStatus(currentStatus) == null ? 'Normalizar a cancelado' : 'Cancelar inscripción';
+
+const pendingStatusButtonLabel = (currentStatus: string, useCompactActionLabel: boolean) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  if (knownStatus === 'cancelled' && useCompactActionLabel) return 'Reabrir';
+  if (knownStatus === 'paid' && useCompactActionLabel) return 'Pasar a pendiente';
+  return pendingStatusMenuLabel(currentStatus);
+};
 
 const pendingStatusMenuTargetLabel = (currentStatus: string) =>
   normalizeKnownRegistrationStatus(currentStatus) === 'cancelled'
     ? 'reabrir la inscripción como pendiente'
-    : 'marcarla pendiente';
+    : normalizeKnownRegistrationStatus(currentStatus) == null
+      ? 'normalizar la inscripción a pendiente de pago'
+      : 'marcar el pago como pendiente';
+
+const cancelStatusMenuTargetLabel = (currentStatus: string) =>
+  normalizeKnownRegistrationStatus(currentStatus) == null
+    ? 'normalizar la inscripción como cancelada'
+    : 'cancelar la inscripción';
+
+const statusMenuButtonTitle = (currentStatus: string, targetLabel?: string) => {
+  const currentStatusLabel = registrationStatusLabel(currentStatus);
+  const targetSuffix = targetLabel ? ` para ${targetLabel}` : '';
+  if (canOpenPaymentWorkflowFromStatus(currentStatus)) {
+    return `${openPaymentWorkflowLabel} o cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
+  }
+  return `Cambiar estado${targetSuffix}; actual: ${currentStatusLabel}`;
+};
+
+const paymentReceiptIconButtonTitle = (currentStatus: string, targetLabel: string) =>
+  `Registrar pago o cambiar estado para ${targetLabel}; actual: ${registrationStatusLabel(currentStatus)}`;
+
+const statusMenuIconButtonAriaLabel = (currentStatus: string, targetLabel: string) => {
+  const actionLabel = canOpenPaymentWorkflowFromStatus(currentStatus)
+    ? `${openPaymentWorkflowLabel} o cambiar estado`
+    : 'Cambiar estado';
+  return `${actionLabel} para ${targetLabel}; estado actual: ${registrationStatusLabel(currentStatus)}`;
+};
+
+const paymentStatusMenuButtonAriaLabel = (targetLabel: string) =>
+  `Abrir opciones de pago y estado para ${targetLabel}`;
+
+const shouldUseDirectPendingRecoveryAction = (
+  currentStatus: string,
+  includePaidRecovery = false,
+) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  return knownStatus === 'cancelled' || (includePaidRecovery && knownStatus === 'paid');
+};
+
+const canCancelRegistrationFromStatus = (currentStatus: string) => {
+  const knownStatus = normalizeKnownRegistrationStatus(currentStatus);
+  return knownStatus == null || knownStatus === 'pending_payment';
+};
+
+const hasOnlyPendingRecoveryStatusAction = (currentStatus: string) => (
+  canTransitionToStatus(currentStatus, 'pending_payment')
+  && !canOpenPaymentWorkflowFromStatus(currentStatus)
+  && !canCancelRegistrationFromStatus(currentStatus)
+);
 
 const eventStatusColor = (
   status: string,
@@ -495,7 +1105,7 @@ const eventStatusLabels: Record<string, string> = {
 const eventStatusLabel = (status: string) => {
   const normalized = status.trim().toLowerCase();
   const trimmed = status.trim();
-  return eventStatusLabels[normalized] ?? (trimmed || 'Estado desconocido');
+  return eventStatusLabels[normalized] ?? (trimmed || 'Estado no registrado');
 };
 
 const eventTypeLabels: Record<string, string> = {
@@ -512,12 +1122,62 @@ const eventTypeLabels: Record<string, string> = {
 };
 
 const eventTypeLabel = (eventType: string) =>
-  eventTypeLabels[eventType.trim().toLowerCase()]
+  eventTypeLabels[normalizeBackendStatusToken(eventType)]
   ?? eventType
     .trim()
     .toLowerCase()
-    .replace(/_/g, ' ')
+    .replace(/[\s._/-]+/g, ' ')
     .replace(/\b\w/g, (m) => m.toUpperCase());
+
+const followUpTypeLabel = (entryType: string) => eventTypeLabel(entryType) || 'Seguimiento';
+
+const getSharedEmailEventTypeLabel = (
+  events: readonly Pick<CourseEmailEventDTO, 'ceEventType'>[],
+) => {
+  if (events.length < 2) return '';
+
+  const labels = events.map((entry) => eventTypeLabel(entry.ceEventType).trim());
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
+const getSharedEmailEventStatusLabel = (
+  events: readonly Pick<CourseEmailEventDTO, 'ceStatus'>[],
+) => {
+  if (events.length < 2) return '';
+
+  const labels = events.map((entry) => eventStatusLabel(entry.ceStatus));
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
+const getSharedFollowUpTypeLabel = (
+  followUps: readonly Pick<CourseRegistrationFollowUpDTO, 'crfEntryType'>[],
+) => {
+  if (followUps.length < 2) return '';
+
+  const labels = followUps.map((entry) => followUpTypeLabel(entry.crfEntryType).trim());
+  const [firstLabel] = labels;
+
+  if (!firstLabel || labels.some((label) => label !== firstLabel)) return '';
+  return firstLabel;
+};
+
+const getSharedReceiptNotes = (
+  receipts: readonly Pick<CourseRegistrationReceiptDTO, 'crrNotes'>[],
+) => {
+  if (receipts.length < 2) return '';
+
+  const notes = receipts.map((receipt) => receipt.crrNotes?.trim() ?? '');
+  const [firstNote] = notes;
+
+  if (!firstNote || notes.some((note) => note !== firstNote)) return '';
+  return firstNote;
+};
 
 const getFollowUpTypeOptions = (entryType: string) => {
   const normalizedEntryType = entryType.trim().toLowerCase();
@@ -534,8 +1194,14 @@ const getFollowUpTypeOptions = (entryType: string) => {
 const followUpSubjectLabel = (entry: Pick<CourseRegistrationFollowUpDTO, 'crfSubject'>) =>
   entry.crfSubject?.trim() ?? '';
 
-const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) =>
-  followUpSubjectLabel(entry) || `${eventTypeLabel(entry.crfEntryType)} del ${formatDate(entry.crfCreatedAt)}`;
+const followUpActionTargetLabel = (entry: CourseRegistrationFollowUpDTO) => {
+  const subject = followUpSubjectLabel(entry);
+  if (subject) return subject;
+
+  const typeLabel = followUpTypeLabel(entry.crfEntryType);
+  const createdLabel = formatOptionalDate(entry.crfCreatedAt);
+  return createdLabel ? `${typeLabel} del ${createdLabel}` : typeLabel;
+};
 
 const normalizeFollowUpActionTargetKey = (entry: CourseRegistrationFollowUpDTO) =>
   followUpActionTargetLabel(entry).toLocaleLowerCase('es');
@@ -600,54 +1266,1496 @@ const receiptDisplayLabelWithContext = (
 };
 
 const normalizeCohortLabelKey = (value: string) =>
-  value.trim().toLocaleLowerCase('es');
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[()[\]{}]+/g, ' ')
+    .replace(/[_./-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const normalizeFirstRunDescriptorSeparators = (value: string) =>
+  value.replace(/\s*[\u00b7\u2022\u2013\u2014]\s*/g, ' - ');
+
+const firstRunDecorativeEdgeMarkerPattern =
+  /^(?:[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]\s*)+|(?:\s*[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D])+$/gu;
+const firstRunListMarkerPattern = /^(?:[-*•]\s+|\d+[.)]\s+)/;
+const firstRunInvisibleFormatCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
+const firstRunUrlDescriptorPattern =
+  String.raw`(?:(?:https?:\/\/|www\.|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+\/)[^\s]+|forms\.gle(?:\/[^\s]*)?)`;
+const firstRunUrlDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunUrlDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunUrlDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunUrlDescriptorPattern})\s*$`,
+  'i',
+);
+const firstRunShortlinkProviderPattern = String.raw`(?:bit\s*\.?\s*ly|bitly|tiny\s*url|tinyurl|rebrandly|short\s*\.?\s*io|shortio|cutt\s*\.?\s*ly|cuttly|t\s*\.?\s*ly|tly)`;
+const firstRunShortlinkDescriptorPattern = String.raw`(?:(?:${firstRunShortlinkProviderPattern})(?:\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:(?:short|tracking|redirect)\s+)?(?:links?|urls?|pages?|forms?))?|(?:(?:short|tracking|redirect)\s+links?|link\s+shorteners?|shortened\s+urls?|short\s+urls?)|(?:enlaces?|links?|urls?)\s+cort[oa]s?|acortadores?\s+de\s+enlaces?)`;
+const firstRunShortlinkDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunShortlinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunShortlinkDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunShortlinkDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCohortHtmlEntities: Record<string, string> = {
+  amp: '&',
+  apos: "'",
+  gt: '>',
+  lt: '<',
+  nbsp: ' ',
+  quot: '"',
+};
+
+const decodeFirstRunCohortCodePoint = (entity: string, codePoint: number) => (
+  Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+    ? String.fromCodePoint(codePoint)
+    : `&${entity};`
+);
+
+const decodeFirstRunCohortHtmlEntity = (entity: string) => {
+  const namedEntity = firstRunCohortHtmlEntities[entity.toLocaleLowerCase('es')];
+  if (namedEntity != null) return namedEntity;
+
+  if (entity.startsWith('#x') || entity.startsWith('#X')) {
+    const codePoint = Number.parseInt(entity.slice(2), 16);
+    return decodeFirstRunCohortCodePoint(entity, codePoint);
+  }
+
+  if (entity.startsWith('#')) {
+    const codePoint = Number.parseInt(entity.slice(1), 10);
+    return decodeFirstRunCohortCodePoint(entity, codePoint);
+  }
+
+  return `&${entity};`;
+};
+
+const decodeFirstRunCohortHtmlEntities = (value: string) =>
+  value.replace(/&(amp|apos|gt|lt|nbsp|quot|#[0-9]+|#x[0-9a-f]+);/gi, (_, entity: string) =>
+    decodeFirstRunCohortHtmlEntity(entity),
+  );
+
+const stripFirstRunCohortPresentationMarkers = (value: string) =>
+  decodeFirstRunCohortHtmlEntities(value)
+    .replace(firstRunInvisibleFormatCharacterPattern, '')
+    .trim()
+    .replace(firstRunListMarkerPattern, '')
+    .replace(/^#{1,6}\s+/, '')
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/!\[([^\]\n]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]\n]+)\]\([^)]+\)/g, '$1')
+    .replace(/<\/?(?:strong|b|em|i|span|a|div|p|h[1-6]|br)[^>\n]*>/gi, '')
+    .replace(
+      /^\[(?:TODO|FIXME|DRAFT|BORRADOR|PENDING|PENDIENTE|POR\s+PUBLICAR|SIN\s+PUBLICAR|NO\s+PUBLICAR|WIP|TEST|QA|UAT|DEV|DEVELOPMENT|DESARROLLO|INTERNAL|INTERN[OA]|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA|ARCHIVE|ARCHIVED|ARCHIVAD[OA]|BACKUP|RESPALDO)\]\s*/gi,
+      '',
+    )
+    .replace(
+      /^(?:TODO|FIXME|DRAFT|BORRADOR|PENDING|PENDIENTE|POR\s+PUBLICAR|SIN\s+PUBLICAR|NO\s+PUBLICAR|WIP|TEST|QA|UAT|DEV|DEVELOPMENT|DESARROLLO|INTERNAL|INTERN[OA]|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA|ARCHIVE|ARCHIVED|ARCHIVAD[OA]|BACKUP|RESPALDO)\s*(?::|-|\u2013|\u2014)\s*/gi,
+      '',
+    )
+    .replace(
+      /\s*(?:[[(]\s*(?:TODO|FIXME|DRAFT|BORRADOR|PENDING|PENDIENTE|POR\s+PUBLICAR|SIN\s+PUBLICAR|NO\s+PUBLICAR|WIP|TEST|QA|UAT|DEV|DEVELOPMENT|DESARROLLO|INTERNAL|INTERN[OA]|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA|ARCHIVE|ARCHIVED|ARCHIVAD[OA]|BACKUP|RESPALDO)\s*[\])]|\s*(?::|-|\u2013|\u2014)\s*(?:TODO|FIXME|DRAFT|BORRADOR|PENDING|PENDIENTE|POR\s+PUBLICAR|SIN\s+PUBLICAR|NO\s+PUBLICAR|WIP|TEST|QA|UAT|DEV|DEVELOPMENT|DESARROLLO|INTERNAL|INTERN[OA]|DEMO|SAMPLE|STAGING|SANDBOX|PREVIEW|PRUEBA|MUESTRA|EJEMPLO|VISTA\s+PREVIA|ARCHIVE|ARCHIVED|ARCHIVAD[OA]|BACKUP|RESPALDO))\s*$/gi,
+      '',
+    )
+    .replace(firstRunListMarkerPattern, '')
+    .replace(firstRunDecorativeEdgeMarkerPattern, '')
+    .trim();
+
+const humanizeCohortSlug = (slug: string) => {
+  const normalized = slug.trim().replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ');
+  if (!normalized) return '';
+
+  return normalized
+    .split(' ')
+    .map((part) => (part ? `${part.charAt(0).toLocaleUpperCase('es')}${part.slice(1)}` : part))
+    .join(' ');
+};
+
+const readableCohortFallbackLabel = (slug: string) => humanizeCohortSlug(slug) || slug.trim();
 
 const stripTrailingCohortSlug = (title: string, slug: string) => {
   const trimmedTitle = title.trim();
   const trimmedSlug = slug.trim();
   if (!trimmedTitle || !trimmedSlug) return trimmedTitle;
 
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
   const escapedSlug = escapeRegExp(trimmedSlug);
   const suffixPattern = new RegExp(
     `\\s*(?:\\(${escapedSlug}\\)|\\[${escapedSlug}\\]|[-:/|]\\s*${escapedSlug})\\s*$`,
     'i',
   );
-  const strippedTitle = trimmedTitle.replace(suffixPattern, '').trim();
-  return strippedTitle || trimmedSlug;
+  const strippedTitle = normalizedTitle.replace(suffixPattern, '').trim();
+  return strippedTitle === normalizedTitle ? trimmedTitle : strippedTitle || trimmedSlug;
+};
+
+const dedupeRepeatedCohortTitleSegments = (title: string) => {
+  const trimmedTitle = title.trim();
+  const trailingWrappedSegment = /^(.*?)\s*(?:\(|\[)\s*([^)\]]+)\s*(?:\)|\])$/.exec(trimmedTitle);
+  const leadingWrappedSegment = /^(?:\(|\[)\s*([^)\]]+)\s*(?:\)|\])\s*(.*)$/.exec(trimmedTitle);
+  let unwrappedTitle = trimmedTitle;
+
+  if (
+    trailingWrappedSegment
+    && normalizeCohortLabelKey(trailingWrappedSegment[1] ?? '')
+      === normalizeCohortLabelKey(trailingWrappedSegment[2] ?? '')
+  ) {
+    unwrappedTitle = (trailingWrappedSegment[1] ?? '').trim();
+  } else if (
+    leadingWrappedSegment
+    && normalizeCohortLabelKey(leadingWrappedSegment[1] ?? '')
+      === normalizeCohortLabelKey(leadingWrappedSegment[2] ?? '')
+  ) {
+    unwrappedTitle = (leadingWrappedSegment[2] ?? '').trim();
+  }
+
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(unwrappedTitle);
+  const parts = normalizedTitle
+    .split(/\s*(?:[-:/|])\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length < 2) return unwrappedTitle;
+
+  const uniqueParts: string[] = [];
+  parts.forEach((part) => {
+    const partKey = normalizeCohortLabelKey(part);
+    if (!partKey || uniqueParts.some((uniquePart) => normalizeCohortLabelKey(uniquePart) === partKey)) return;
+    uniqueParts.push(part);
+  });
+
+  if (uniqueParts.length === parts.length) return unwrappedTitle;
+  return uniqueParts.join(' - ');
+};
+
+const firstRunApplicationDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|(?:student\s+|course\s+)?admissions?\s+packets?|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n|admisi[oó]n|admisiones|ingreso)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunApplicationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?applications?(?:\s+(?:form|page|portal|packet))?|student\s+applications?\s+(?:form|page|portal|packet)|(?:student\s+|course\s+)?admissions?\s+packets?|application\s+(?:form|page|portal|packet)|formulario\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n)|paquetes?\s+de\s+(?:aplicaci[oó]n|postulaci[oó]n|admisi[oó]n|admisiones|ingreso)|solicitud(?:es)?\s+de\s+postulaci[oó]n|postulaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
+const firstRunFinancialAidDescriptorPrefixPattern =
+  /^(?:(?:scholarships?|grants?|financial\s+aid|tuition\s+(?:assistance|support)|payment\s+(?:assistance|support)|bursar(?:y|ies))\s+(?:(?:applications?|requests?)(?:\s+(?:forms?|pages?|portals?))?|forms?|pages?|portals?)|(?:forms?|pages?|portals?|applications?|requests?)\s+(?:for\s+)?(?:scholarships?|grants?|financial\s+aid|tuition\s+(?:assistance|support)|payment\s+(?:assistance|support)|bursar(?:y|ies))|(?:formulario|p[aá]gina|portal|solicitud(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:becas?|ayuda\s+financiera|apoyo\s+econ[oó]mico|ayuda\s+de\s+matr[ií]cula|apoyo\s+de\s+matr[ií]cula|asistencia\s+de\s+matr[ií]cula|ayuda\s+de\s+pago|facilidades\s+de\s+pago)|(?:becas?|ayuda\s+financiera|apoyo\s+econ[oó]mico|ayuda\s+de\s+matr[ií]cula|apoyo\s+de\s+matr[ií]cula|asistencia\s+de\s+matr[ií]cula|ayuda\s+de\s+pago|facilidades\s+de\s+pago)\s+(?:formularios?|p[aá]ginas?|portales?|solicitud(?:es)?))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunFinancialAidDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:scholarships?|grants?|financial\s+aid|tuition\s+(?:assistance|support)|payment\s+(?:assistance|support)|bursar(?:y|ies))\s+(?:(?:applications?|requests?)(?:\s+(?:forms?|pages?|portals?))?|forms?|pages?|portals?)|(?:forms?|pages?|portals?|applications?|requests?)\s+(?:for\s+)?(?:scholarships?|grants?|financial\s+aid|tuition\s+(?:assistance|support)|payment\s+(?:assistance|support)|bursar(?:y|ies))|(?:formulario|p[aá]gina|portal|solicitud(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:becas?|ayuda\s+financiera|apoyo\s+econ[oó]mico|ayuda\s+de\s+matr[ií]cula|apoyo\s+de\s+matr[ií]cula|asistencia\s+de\s+matr[ií]cula|ayuda\s+de\s+pago|facilidades\s+de\s+pago)|(?:becas?|ayuda\s+financiera|apoyo\s+econ[oó]mico|ayuda\s+de\s+matr[ií]cula|apoyo\s+de\s+matr[ií]cula|asistencia\s+de\s+matr[ií]cula|ayuda\s+de\s+pago|facilidades\s+de\s+pago)\s+(?:formularios?|p[aá]ginas?|portales?|solicitud(?:es)?))\s*$/i;
+
+const firstRunOnboardingDescriptorPrefixPattern =
+  /^(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:(?:student|course|class|program)\s+)?welcome\s+(?:packets?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:packets?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?welcome|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOnboardingDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:student|course|class|program)\s+)?onboarding\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:(?:student|course|class|program)\s+)?welcome\s+(?:packets?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?onboarding|(?:packets?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?welcome|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+(?:onboarding|bienvenida|inducci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
+const firstRunOrientationDescriptorPrefixPattern =
+  /^(?:(?:(?:student|course|class|program)\s+)?orientation\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?orientation|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+orientaci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOrientationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:student|course|class|program)\s+)?orientation\s+(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)|(?:forms?|pages?|portals?|packets?|links?|urls?|checklists?)\s+(?:for\s+)?(?:(?:student|course|class|program)\s+)?orientation|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|checklist|lista\s+de\s+(?:tareas|verificaci[oó]n))\s+de\s+orientaci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
+const firstRunAuditionDescriptorPrefixPattern =
+  /^(?:(?:audition|casting)\s+(?:forms?|pages?|portals?|sign[-\s]?ups?|registrations?|applications?)|(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+de\s+(?:audici[oó]n(?:es)?|casting)|(?:audici[oó]n(?:es)?|casting)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunAuditionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:audition|casting)\s+(?:forms?|pages?|portals?|sign[-\s]?ups?|registrations?|applications?)|(?:formulario|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+de\s+(?:audici[oó]n(?:es)?|casting)|(?:audici[oó]n(?:es)?|casting)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
+
+const firstRunAssessmentDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunAssessmentDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:placement\s+test|level\s+test|assessment|diagnostic|quiz(?:zes)?)\s+(?:forms?|pages?|portals?|tests?|quiz(?:zes)?|funnels?)|(?:formulario|p[aá]gina|prueba|test|cuestionario)\s+de\s+(?:nivel|ubicaci[oó]n|diagn[oó]stico|evaluaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
+const firstRunPortfolioAssetDescriptorPattern =
+  String.raw`(?:portfolio|demo(?:\s+reel)?|showreel|audition\s+tape)`;
+const firstRunPortfolioSubmissionActionDescriptorPattern =
+  String.raw`(?:(?:submissions?|uploads?|requests?|applications?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|reviews?\s+(?:requests?|forms?|pages?|portals?|links?|urls?)|forms?|pages?|portals?|links?|urls?)`;
+const firstRunPortfolioSubmissionDescriptorPattern = String.raw`(?:(?:(?:student|artist|music|course)\s+)?${firstRunPortfolioAssetDescriptorPattern}\s+${firstRunPortfolioSubmissionActionDescriptorPattern}|${firstRunPortfolioSubmissionActionDescriptorPattern}\s+(?:for\s+)?(?:(?:student|artist|music|course)\s+)?${firstRunPortfolioAssetDescriptorPattern}|(?:formulario|p[aá]gina|portal|enlace|link|url|solicitud(?:es)?|env[ií]o|env[ií]os|subida|subidas|carga|cargas)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:portafolio|portfolio|demo|reel|showreel|audici[oó]n)|(?:portafolio|portfolio|demo|reel|showreel|audici[oó]n)\s+(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|env[ií]os?|subidas?|cargas?))`;
+const firstRunPortfolioSubmissionDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPortfolioSubmissionDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPortfolioSubmissionDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPortfolioSubmissionDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAssignmentSubmissionDescriptorPattern = String.raw`(?:(?:homework|assignments?|projects?|final\s+projects?|capstones?)\s+(?:submissions?|uploads?|turn[-\s]?ins?|dropboxes?)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:submissions?|uploads?|turn[-\s]?ins?|dropboxes?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:homework|assignments?|projects?|final\s+projects?|capstones?)|(?:entrega|env[ií]o|subida|carga|buz[oó]n)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:tareas?|deberes?|asignaciones?|proyectos?|proyecto\s+final)|(?:tareas?|deberes?|asignaciones?|proyectos?|proyecto\s+final)\s+(?:entregas?|env[ií]os?|subidas?|cargas?|buzones?|formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?))`;
+const firstRunAssignmentSubmissionDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAssignmentSubmissionDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunAssignmentSubmissionDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAssignmentSubmissionDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCertificateArtifactDescriptorPattern = String.raw`(?:(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?(?:\s+(?:forms?|pages?|portals?|packets?|links?|urls?))?|diplomas?\s+(?:requests?|applications?|uploads?|claims?|verifications?|forms?|pages?|portals?|packets?|links?|urls?)(?:\s+(?:forms?|pages?|portals?|packets?|links?|urls?))?|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?(?:(?:course|student)\s+)?(?:certificates?|certifications?|completion|graduation)(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?|(?:forms?|pages?|portals?|packets?|links?|urls?)\s+(?:for\s+)?diplomas?(?:\s+(?:requests?|applications?|uploads?|claims?|verifications?))?|(?:formulario|p[aá]gina|portal|paquete|enlace|link|url|solicitud(?:es)?)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:certificados?|certificaci[oó]n|constancias?|diplomas?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)|(?:certificados?|certificaci[oó]n|constancias?|diplomas?|culminaci[oó]n|finalizaci[oó]n|graduaci[oó]n)\s+(?:formularios?|p[aá]ginas?|portales?|paquetes?|enlaces?|links?|urls?|solicitud(?:es)?))`;
+const firstRunCertificateArtifactDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCertificateArtifactDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCertificateArtifactDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCertificateArtifactDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCohortDescriptorPrefixPattern =
+  /^(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*[-:/|]\s*/i;
+
+const firstRunCohortDescriptorSuffixPattern =
+  /\s*[-:/|]\s*(?:cohorte|cohort|grupo|group|batch|ciclo|cycle|edici[oó]n|edition)\s*$/i;
+
+const firstRunCourseNounDescriptorPrefixPattern =
+  /^(?:(?:curso|course|clase|class|programa|program)\s*(?:[-:/|]\s*|(?:de|del|para(?:\s+el)?|for)\s+))/i;
+
+const firstRunCourseNounDescriptorSuffixPattern =
+  /(?:\s*[-:/|]\s*|\s+(?:de|del|para(?:\s+el)?|for)\s+)(?:curso|course|clase|class|programa|program)\s*$/i;
+
+const firstRunWorkspaceBrandDescriptorPrefixPattern =
+  /^(?:tdf(?:\s+(?:records?|academy|school|label|hq))?|the\s+domo\s+factory)\s*[-:/|]\s*/i;
+
+const firstRunWorkspaceBrandDescriptorSuffixPattern =
+  /\s*[-:/|]\s*(?:tdf(?:\s+(?:records?|academy|school|label|hq))?|the\s+domo\s+factory)\s*$/i;
+
+const firstRunUntitledDescriptorPrefixPattern =
+  /^(?:(?:untitled|sin\s+t[ií]tulo)(?=\s*(?:[-:/|]|$))|untitled\s+(?:forms?|surveys?|questionnaires?|quiz(?:zes)?|pages?|portals?|links?|urls?)|new\s+(?:forms?|pages?|portals?|links?|urls?)|(?:formulario|encuesta|cuestionario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunUntitledDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:untitled(?:\s+(?:forms?|surveys?|questionnaires?|quiz(?:zes)?|pages?|portals?|links?|urls?))?|new\s+(?:forms?|pages?|portals?|links?|urls?)|sin\s+t[ií]tulo|(?:formulario|encuesta|cuestionario|p[aá]gina|portal|enlace|link|url)\s+sin\s+t[ií]tulo|nuevo\s+(?:formulario|p[aá]gina|portal|enlace|link|url))\s*$/i;
+
+const firstRunNumberedGenericFormDescriptorPrefixPattern =
+  /^(?:(?:forms?|formularios?)\s*(?:#?\s*\d+|n(?:o|[úu]mero)\.?\s*\d+))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunNumberedGenericFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:forms?|formularios?)\s*(?:#?\s*\d+|n(?:o|[úu]mero)\.?\s*\d+))\s*$/i;
+
+const firstRunVariantDescriptorPrefixPattern =
+  /^(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunVariantDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:a\s*\/\s*b|ab|split)\s+tests?)|(?:tests?|pruebas?)\s+a\s*\/\s*b|(?:variant|variation|variante|variaci[oó]n)\s+(?:[a-z]\d*|\d+|uno|dos|tres|cuatro))\s*$/i;
+
+const firstRunTemplateDescriptorPrefixPattern =
+  /^(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTemplateDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:template|plantilla)(?:\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))?|(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:template|plantilla))\s*$/i;
+
+const firstRunTestDraftDescriptorPrefixPattern =
+  /^(?:(?:(?:draft|staging|sandbox|test)\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))|(?:(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:draft|staging|sandbox|test))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:prueba|borrador))|(?:(?:prueba|borrador)\s+de\s+(?:formulario|p[aá]gina|portal|enlace|link|url))|(?:draft|staging|sandbox|borrador))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTestDraftDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:draft|staging|sandbox|test)\s+(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?))|(?:(?:forms?|pages?|portals?|links?|urls?|formularios?|p[aá]ginas?|portales?|enlaces?)\s+(?:draft|staging|sandbox|test))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:prueba|borrador))|(?:(?:prueba|borrador)\s+de\s+(?:formulario|p[aá]gina|portal|enlace|link|url))|(?:draft|staging|sandbox|borrador))\s*$/i;
+
+const firstRunCopyDescriptorPrefixPattern =
+  /^(?:(?:copy|duplicates?|duplicated)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+of(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:clone|cloned)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+(?:of|from)(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*)|(?:copia|duplicad[oa]s?|clon(?:ad[oa])?)(?:\s*[-#_]?\s*\d+)?(?:[\s_]+de(?:[\s_]+|\s*[-:/|_]\s*)|\s*[-:/|_]\s*))\s*/i;
+
+const firstRunCopyDescriptorSuffixPattern =
+  /\s*(?:(?:[-:/|_]\s*)|(?:\(\s*)|(?:\[\s*))?(?:copy|duplicate|clone|cloned|copia|duplicad[oa]|clon(?:ad[oa])?)(?:\s*[-#_]?\s*\d+)?\s*(?:\)|\])?\s*$/i;
+
+const firstRunRegistrationLinkDescriptorPrefixPattern =
+  /^(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|v[ií]nculos?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|v[ií]nculos?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunRegistrationLinkDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:public\s+)?(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)\s+(?:links?|urls?))|(?:(?:links?|enlaces?|v[ií]nculos?|urls?)\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para)\s+(?:pre)?inscripci[oó]n)|(?:(?:links?|enlaces?|v[ií]nculos?|urls?)\s+(?:del?\s+curso|de\s+curso|p[uú]blicos?)))\s*$/i;
+
+const firstRunQrRegistrationDescriptorPattern = String.raw`(?:(?:qr\s*(?:code)?|c[oó]digo\s+qr)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist)|(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:de|para)\s+registro|(?:de|para)\s+matr[ií]cula)|(?:(?:formulario|p[aá]gina|portal|enlaces?|links?|urls?)\s+(?:de|para)\s+(?:qr|c[oó]digo\s+qr)(?:\s+(?:(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:de|para)\s+registro|(?:de|para)\s+matr[ií]cula))?))`;
+const firstRunQrRegistrationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunQrRegistrationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunQrRegistrationDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunQrRegistrationDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunPromoAssetDescriptorPattern = String.raw`(?:(?:(?:course|registration|enrollment|sign[-\s]?up|signup)\s+)?(?:flyers?|posters?|banners?|promo(?:tional)?\s+(?:assets?|creatives?))(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:course|registration|enrollment|sign[-\s]?up|signup)\s+)?(?:flyers?|posters?|banners?|promo(?:tional)?\s+(?:assets?|creatives?))|(?:afiches?|carteles?|volantes?|banners?|piezas?\s+promocional(?:es)?|creativ[oa]s?\s+promocional(?:es)?)\s+(?:de|para)\s+(?:inscripci[oó]n|registro|matr[ií]cula|curso)|(?:inscripci[oó]n|registro|matr[ií]cula)\s+(?:afiches?|carteles?|volantes?|banners?|piezas?\s+promocional(?:es)?))`;
+const firstRunPromoAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPromoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPromoAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPromoAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEnrollmentFlowDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|pipelines?|landing(?:\s+pages?)?)|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:admisiones|ingreso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunEnrollmentFlowDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|admissions?|application|intake|sign[-\s]?up)\s+(?:flows?|funnels?|workflows?|pipelines?|landing(?:\s+pages?)?)|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:flujos?|embudos?|canalizaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:admisiones|ingreso))\s*$/i;
+
+const firstRunOfferDescriptorPrefixPattern =
+  /^(?:(?:early[-\s]?bird|promo(?:tion(?:al)?)?(?:\s+codes?)?|discount(?:ed)?(?:\s+codes?)?|coupon(?:\s+codes?)?|pre[-\s]?sale)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:descuento|promoci[oó]n|oferta|preventa|cup[oó]n(?:es)?|c[oó]digos?\s+(?:promocional(?:es)?|de\s+descuento))(?:\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))?|(?:descuento|promoci[oó]n|oferta|preventa|cup[oó]n(?:es)?|c[oó]digos?\s+(?:promocional(?:es)?|de\s+descuento))\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOfferDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:early[-\s]?bird|promo(?:tion(?:al)?)?(?:\s+codes?)?|discount(?:ed)?(?:\s+codes?)?|coupon(?:\s+codes?)?|pre[-\s]?sale)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:descuento|promoci[oó]n|oferta|preventa|cup[oó]n(?:es)?|c[oó]digos?\s+(?:promocional(?:es)?|de\s+descuento))(?:\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))?|(?:descuento|promoci[oó]n|oferta|preventa|cup[oó]n(?:es)?|c[oó]digos?\s+(?:promocional(?:es)?|de\s+descuento))\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula))\s*$/i;
+
+const firstRunUrgencyOfferDescriptorPrefixPattern =
+  /^(?:(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:forms?|pages?|links?|urls?|portals?))|(?:(?:registration|enrollment|sign[-\s]?up)\s+(?:deadline|closing)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:[uú]ltimos?\s+cupos?|cierre\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula)|fecha\s+l[ií]mite\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula))(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunUrgencyOfferDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:(?:last[-\s]?chance|final\s+call|closing|deadline)\s+(?:forms?|pages?|links?|urls?|portals?))|(?:(?:registration|enrollment|sign[-\s]?up)\s+(?:deadline|closing)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?)|(?:[uú]ltimos?\s+cupos?|cierre\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula)|fecha\s+l[ií]mite\s+de\s+(?:inscripciones|inscripci[oó]n|registro|matr[ií]cula))(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
+
+const firstRunContestEntryDescriptorPattern = String.raw`(?:(?:giveaways?|contests?|raffles?|prize\s+draws?|sweepstakes)\s+(?:(?:entry|entries|registrations?|sign[-\s]?ups?)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:entries?|entry\s+forms?|registration\s+forms?|sign[-\s]?up\s+forms?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:giveaways?|contests?|raffles?|prize\s+draws?|sweepstakes)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|inscripci[oó]n(?:es)?|registros?|participaci[oó]n(?:es)?)\s+(?:de|para)\s+(?:sorteos?|concursos?|rifas?|premios?)|(?:sorteos?|concursos?|rifas?|premios?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|inscripci[oó]n(?:es)?|registros?|participaci[oó]n(?:es)?))`;
+const firstRunContestEntryDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunContestEntryDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunContestEntryDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunContestEntryDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCallToActionDescriptorPrefixPattern =
+  /^(?:(?:apply|enroll|register|sign\s*up)\s+(?:for|to|in)\s+(?:the\s+)?(?:course|class|program)|(?:apply|enroll|register|sign\s*up)\s+(?:now|here|for|to|in)\b|(?:start|begin|open|complete|continue)\s+(?:(?:your|the)\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admission|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+(?:ahora|aqu[ií]|al\s+curso|a\s+la\s+clase|en\s+el\s+curso|para\s+el\s+curso|al\s+programa)|(?:inicia|empieza|comienza|abre|completa|contin[uú]a)\s+(?:tu\s+|la\s+)?(?:pre)?(?:inscripci[oó]n|matr[ií]cula|postulaci[oó]n|aplicaci[oó]n|registro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCallToActionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:apply|enroll|register|sign\s*up)\s+(?:for|to|in)\s+(?:the\s+)?(?:course|class|program)|(?:apply|enroll|register|sign\s*up)\s+(?:now|here|for|to|in)\b|(?:start|begin|open|complete|continue)\s+(?:(?:your|the)\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admission|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:aplica|inscr[ií]bete|matric[uú]late|postula|reg[ií]strate)\s+(?:ahora|aqu[ií]|al\s+curso|a\s+la\s+clase|en\s+el\s+curso|para\s+el\s+curso|al\s+programa)|(?:inicia|empieza|comienza|abre|completa|contin[uú]a)\s+(?:tu\s+|la\s+)?(?:pre)?(?:inscripci[oó]n|matr[ií]cula|postulaci[oó]n|aplicaci[oó]n|registro))\s*$/i;
+
+const firstRunSeatReservationCallToActionDescriptorPrefixPattern =
+  /^(?:(?:reserve|save|claim|book)\s+(?:(?:your|my|a|the)\s+)?(?:spot|seat|place)|join\s+(?:(?:the|my)\s+)?(?:(?:course|class|program|cohort)\s+)?(?:waitlist|waiting\s+list|course|class|program|cohort)|(?:reserva|aparta|separa|asegura|guarda)\s+(?:(?:tu|mi|un|el|la)\s+)?(?:cupo|plaza|lugar|asiento)|(?:[uú]nete|unete)\s+(?:al\s+curso|a\s+la\s+clase|al\s+programa|a\s+la\s+cohorte|a\s+la\s+lista(?:\s+de\s+espera)?))(?:\s+(?:now|here|ahora|aqu[ií]|del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSeatReservationCallToActionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:reserve|save|claim|book)\s+(?:(?:your|my|a|the)\s+)?(?:spot|seat|place)|join\s+(?:(?:the|my)\s+)?(?:(?:course|class|program|cohort)\s+)?(?:waitlist|waiting\s+list|course|class|program|cohort)|(?:reserva|aparta|separa|asegura|guarda)\s+(?:(?:tu|mi|un|el|la)\s+)?(?:cupo|plaza|lugar|asiento)|(?:[uú]nete|unete)\s+(?:al\s+curso|a\s+la\s+clase|al\s+programa|a\s+la\s+cohorte|a\s+la\s+lista(?:\s+de\s+espera)?))(?:\s+(?:now|here|ahora|aqu[ií]))?\s*$/i;
+
+const firstRunOpenEnrollmentDescriptorPrefixPattern =
+  /^(?:(?:open|abiertas?)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)|(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)\s+open|(?:pre[-\s]?)?inscripci[oó]n(?:es)?\s+abiertas?|matr[ií]cula(?:s)?\s+abiertas?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOpenEnrollmentDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:open|abiertas?)\s+(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)|(?:course\s+)?(?:(?:pre[-\s]?)?registrations?|enrollments?|enrolments?|sign[-\s]?ups?)\s+open|(?:pre[-\s]?)?inscripci[oó]n(?:es)?\s+abiertas?|matr[ií]cula(?:s)?\s+abiertas?)\s*$/i;
+
+const firstRunSalesDescriptorPrefixPattern =
+  /^(?:(?:(?:(?:shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|payhip|samcart|thrivecart|kiwify)\s+)?(?:sales?|purchase|order|tickets?|products?|store(?:front)?s?)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras|productos?|tiendas?|tickets?|entradas?|boletos?)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?|productos?|tiendas?|tickets?|entradas?|boletos?))(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:tickets?|entradas?|boletos?)\s*[-:/|]\s*)/i;
+
+const firstRunSalesDescriptorSuffixPattern =
+  /(?:(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:(?:shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|payhip|samcart|thrivecart|kiwify)\s+)?(?:sales?|purchase|order|tickets?|products?|store(?:front)?s?)\s+(?:pages?|forms?|links?|urls?|portals?)|(?:p[aá]ginas?|formularios?|enlaces?|links?|urls?|portales?)\s+de\s+(?:venta|ventas|compra|compras|productos?|tiendas?|tickets?|entradas?|boletos?)|(?:p[aá]gina|formulario)\s+(?:de\s+)?(?:ventas?|compras?|productos?|tiendas?|tickets?|entradas?|boletos?))|\s*[-:/|]\s*(?:tickets?|entradas?|boletos?))\s*$/i;
+
+const firstRunPaymentDescriptorPrefixPattern =
+  /^(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|hotmart|kiwify|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment(?:[-\s]+plans?)?|installment(?:\s+plans?)?|checkout|deposit|down\s*payment|reservation\s+payment|bank\s+transfers?|wire\s+transfers?)\s+(?:applications?|requests?|forms?|pages?|links?|urls?|portals?|buttons?)|checkout|bank\s+transfers?|wire\s+transfers?)|(?:datos|formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?|solicitud(?:es)?)\s+de\s+(?:pago|plan(?:es)?\s+de\s+pagos?|cuotas?|checkout|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?|transferencias?(?:\s+bancarias?)?)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago|plan(?:es)?\s+de\s+pagos?|cuotas?|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?|transferencias?(?:\s+bancarias?)?)\s+(?:del?\s+curso|de\s+curso)|transferencias?(?:\s+bancarias?)?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPaymentDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:stripe|paypal|payphone|datafast|kushki|paymentez|deuna|mercado\s*pago|mercadopago|hotmart|kiwify|shopify|woo\s*commerce|woocommerce|gum\s*road|gumroad|lemon\s*squeezy|payhip|samcart|thrivecart)\s+)?(?:(?:online\s+)?(?:course\s+)?(?:payment(?:[-\s]+plans?)?|installment(?:\s+plans?)?|checkout|deposit|down\s*payment|reservation\s+payment|bank\s+transfers?|wire\s+transfers?)\s+(?:applications?|requests?|forms?|pages?|links?|urls?|portals?|buttons?)|checkout|bank\s+transfers?|wire\s+transfers?)|(?:datos|formulario|p[aá]gina|enlaces?|links?|urls?|portal(?:es)?|bot[oó]n(?:es)?|solicitud(?:es)?)\s+de\s+(?:pago|plan(?:es)?\s+de\s+pagos?|cuotas?|checkout|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?|transferencias?(?:\s+bancarias?)?)(?:\s+(?:en\s+l[ií]nea|online))?|(?:checkout|pago|plan(?:es)?\s+de\s+pagos?|cuotas?|dep[oó]sito|abono|reserva(?:\s+de\s+cupo)?|transferencias?(?:\s+bancarias?)?)\s+(?:del?\s+curso|de\s+curso)|transferencias?(?:\s+bancarias?)?)\s*$/i;
+
+const firstRunPaymentScheduleDescriptorPattern = String.raw`(?:(?:tuition\s+)?payment\s+schedules?(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:cronogramas?|calendarios?|tablas?)\s+(?:de|para)\s+pagos?(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunPaymentScheduleDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPaymentScheduleDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPaymentScheduleDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPaymentScheduleDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunPaymentEvidenceDescriptorPrefixPattern =
+  /^(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|verifications?|validations?|invoices?|vouchers?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?|vouchers?\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?|vouchers?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?|(?:confirmaci[oó]n(?:es)?|verificaci[oó]n(?:es)?|validaci[oó]n(?:es)?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPaymentEvidenceDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:payment\s+(?:receipts?|proof|evidence|confirmations?|verifications?|validations?|invoices?|vouchers?)|proof\s+of\s+payment|receipts?\s+uploads?|invoice\s+uploads?|vouchers?\s+uploads?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|uploads?))?|(?:comprobantes?|evidencias?|recibos?|facturas?|vouchers?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?|(?:confirmaci[oó]n(?:es)?|verificaci[oó]n(?:es)?|validaci[oó]n(?:es)?)\s+(?:de\s+)?pago(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)\s*$/i;
+
+const firstRunBillingDescriptorPattern = String.raw`(?:(?:invoice|billing|tax\s+receipt|fiscal\s+receipt)\s+(?:requests?|details?|forms?|pages?|links?|urls?|portals?)|(?:requests?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:invoice|billing|tax\s+receipt|fiscal\s+receipt)s?|(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|datos)\s+(?:de|para)\s+(?:facturas?|facturaci[oó]n|comprobantes?\s+tributarios?|recibos?\s+fiscales?)|(?:facturas?|facturaci[oó]n|comprobantes?\s+tributarios?|recibos?\s+fiscales?)\s+(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|datos))`;
+const firstRunBillingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBillingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunBillingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunBillingDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCourseChangeRequestDescriptorPattern = String.raw`(?:(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?|(?:cohort|group|section|class)\s+(?:changes?|transfers?))\s+(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)|(?:requests?(?:\s+forms?)?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:cancellations?|withdrawals?|drops?|refunds?|deferrals?|transfers?|schedule\s+changes?|reschedules?|(?:cohort|group|section|class)\s+(?:changes?|transfers?))|(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+(?:de|para)\s+(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|cambio\s+de\s+(?:cohorte|grupo|secci[oó]n|paralelo|clase)|traslado\s+de\s+(?:cohorte|grupo|secci[oó]n|paralelo|clase)|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula))?|(?:cancelaci[oó]n|retiro|baja|reembolso|devoluci[oó]n|aplazamiento|cambio\s+de\s+(?:cohorte|grupo|secci[oó]n|paralelo|clase)|traslado\s+de\s+(?:cohorte|grupo|secci[oó]n|paralelo|clase)|traslado|cambio\s+de\s+horario|reprogramaci[oó]n)(?:\s+(?:del?\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+matr[ií]cula))?(?:\s+(?:solicitud(?:es)?|formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunCourseChangeRequestDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseChangeRequestDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseChangeRequestDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseChangeRequestDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAgreementDescriptorPattern = String.raw`(?:(?:(?:course|student|parent|guardian|minor|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release|permission\s+slips?)(?:\s+(?:forms?|pages?|links?|urls?|portals?|packets?))?)|(?:(?:consent|release)\s+forms?|permission\s+slips?|liability\s+waivers?|media\s+releases?|photo\s+releases?)|(?:(?:forms?|pages?|links?|urls?|portals?|packets?)\s+(?:for\s+)?(?:course|student|parent|guardian|minor|enrollment|registration|liability|media|photo)\s+(?:agreements?|contracts?|waivers?|consent|release|permission\s+slips?))|(?:(?:contratos?|acuerdos?|autorizaciones?|consentimientos?|exoneraciones?|permisos?)\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad|representantes?|tutor(?:es)?|menor(?:es)?|padres?|madres?))|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|paquetes?)\s+de\s+(?:contrato|acuerdo|autorizaci[oó]n|consentimiento|exoneraci[oó]n|permiso)(?:\s+(?:de|para)\s+(?:matr[ií]cula|inscripci[oó]n|estudiantes?|alumnos?|curso|imagen|fotos?|responsabilidad|representantes?|tutor(?:es)?|menor(?:es)?|padres?|madres?))?))`;
+const firstRunAgreementDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAgreementDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunAgreementDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunAgreementDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunStudentInfoDescriptorPattern = String.raw`(?:(?:(?:student|guardian|parent|participant)\s+(?:information|info|details?|profiles?|records?|data|contacts?)\s+(?:forms?|pages?|links?|urls?|portals?|records?|profiles?))|(?:(?:forms?|pages?|links?|urls?|portals?|records?|profiles?)\s+(?:for\s+)?(?:student|guardian|parent|participant)\s+(?:information|info|details?|profiles?|records?|data|contacts?))|(?:(?:datos|informaci[oó]n|perfil(?:es)?|fichas?|contactos?)\s+(?:de|del?|para(?:\s+el|\s+la)?)\s+(?:estudiantes?|alumnos?|representantes?|tutor(?:es)?|padres?|madres?|participantes?)(?:\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?))?)|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?)\s+(?:de|para)\s+(?:datos|informaci[oó]n|perfil(?:es)?|contactos?)\s+(?:de|del?|para(?:\s+el|\s+la)?)\s+(?:estudiantes?|alumnos?|representantes?|tutor(?:es)?|padres?|madres?|participantes?)))`;
+const firstRunStudentInfoDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunStudentInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunStudentInfoDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunStudentInfoDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunSafetyInfoDescriptorPattern = String.raw`(?:(?:(?:emergency\s+contacts?|medical|health|allerg(?:y|ies)|safety)(?:\s+(?:information|info|details?))?\s+(?:forms?|pages?|links?|urls?|portals?|records?|profiles?))|(?:(?:forms?|pages?|links?|urls?|portals?|records?|profiles?)\s+(?:for\s+)?(?:emergency\s+contacts?|medical|health|allerg(?:y|ies)|safety)(?:\s+(?:information|info|details?))?)|(?:(?:contacto(?:s)?\s+de\s+emergencia|informaci[oó]n\s+m[eé]dica|datos\s+m[eé]dicos|alergias?|seguridad)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?|datos))|fichas?\s+m[eé]dicas?|(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|fichas?|perfiles?)\s+(?:de|para)\s+(?:contacto(?:s)?\s+de\s+emergencia|informaci[oó]n\s+m[eé]dica|datos\s+m[eé]dicos|salud|alergias?|seguridad)))`;
+const firstRunSafetyInfoDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSafetyInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunSafetyInfoDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSafetyInfoDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunSupportRequestDescriptorPattern = String.raw`(?:(?:(?:student|course|class)\s+)?(?:support|help\s*desk|helpdesk|help|assistance)\s+(?:(?:requests?|tickets?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:(?:requests?|tickets?)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:(?:student|course|class)\s+)?(?:support|help\s*desk|helpdesk|help|assistance)|(?:(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|tickets?)\s+(?:de|para)\s+(?:soporte|ayuda|mesa\s+de\s+ayuda|asistencia)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)|(?:(?:soporte|ayuda|mesa\s+de\s+ayuda|asistencia)\s+(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|solicitud(?:es)?|tickets?)))`;
+const firstRunSupportRequestDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSupportRequestDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunSupportRequestDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSupportRequestDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunSignupSheetDescriptorPrefixPattern =
+  /^(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSignupSheetDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:google|(?:microsoft|ms))\s+)?(?:course\s+)?(?:(?:sign[-\s]?up|(?:pre[-\s]?)?registration|enrollment)\s+(?:sheets?|spreadsheets?))|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+(?:pre)?inscripci[oó]n|(?:hoja|planilla)(?:\s+de\s+c[aá]lculo)?\s+de\s+registro)\s*$/i;
+
+const firstRunRosterDescriptorPattern = String.raw`(?:(?:(?:course|class|student|students?)\s+(?:rosters?|lists?|directories?))|(?:(?:rosters?|lists?|directories?)\s+(?:for\s+)?(?:course|class|students?))|(?:(?:lista|listado|directorio|n[oó]mina)\s+(?:de|para)\s+(?:estudiantes|alumnos|curso|clase))|(?:(?:estudiantes|alumnos)\s+(?:del?|de|para\s+el)\s+(?:curso|clase)))`;
+const firstRunRosterDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunRosterDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunRosterDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunRosterDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAttendanceDescriptorPattern = String.raw`(?:(?:(?:course|class|student|students?)\s+)?(?:attendance|check[-\s]?in|roll\s*call)\s+(?:forms?|pages?|links?|urls?|portals?|sheets?|lists?|trackers?)|(?:(?:forms?|pages?|links?|urls?|portals?|sheets?|lists?|trackers?)\s+(?:for\s+)?(?:(?:course|class|student|students?)\s+)?(?:attendance|check[-\s]?in|roll\s*call))|(?:(?:lista|listado|hoja|planilla|formulario|p[aá]gina|enlace|link|url|portal|registro)\s+(?:de|para)\s+(?:asistencia|check[-\s]?in|ingreso)(?:\s+(?:del?\s+curso|de\s+curso|de\s+clase|de\s+estudiantes?))?))`;
+const firstRunAttendanceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAttendanceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunAttendanceDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAttendanceDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunWorkshopDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s*(?:[-:/|]\s*)?)/i;
+
+const firstRunWorkshopDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?(?:\s+de\s+(?:pre)?inscripci[oó]n)?|(?:pre)?inscripciones?|matr[ií]culas?|admisi[oó]n|landing)\s+(?:del?|de|al|para\s+el|para)\s+taller|workshop\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
+
+const firstRunClassDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|(?:master\s*class|masterclass|class)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunClassDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:pre)?inscripci[oó]n(?:es)?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|matr[ií]culas?\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|admisi[oó]n\s+(?:a\s+la|de(?:\s+la)?|para\s+la)\s+clase|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|landing)\s+(?:a\s+la|de\s+la|para\s+la)\s+clase|(?:master\s*class|masterclass|class)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page))?)\s*$/i;
+
+const firstRunTrialLessonDescriptorPrefixPattern =
+  /^(?:(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up|forms?|pages?|portals?)|(?:forms?|pages?|portals?)\s+(?:for\s+)?(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba|(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba\s+(?:formularios?|fichas?|p[aá]ginas?|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunTrialLessonDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up|forms?|pages?|portals?)|(?:forms?|pages?|portals?)\s+(?:for\s+)?(?:free\s+)?(?:trial|sample|demo)\s+(?:class|lesson|session)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?)\s+(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba|(?:clase|lecci[oó]n|sesi[oó]n)\s+de\s+prueba\s+(?:formularios?|fichas?|p[aá]ginas?|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?))\s*$/i;
+
+const firstRunProgramDescriptorPrefixPattern =
+  /^(?:(?:program(?:me)?|training)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|matr[ií]culas?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunProgramDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:program(?:me)?|training)\s+(?:(?:pre[-\s]?)?registration|enrollment|applications?|sign[-\s]?up)(?:\s+(?:form|page|portal))?|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa|matr[ií]culas?\s+(?:al|del?|de(?:\s+el)?|para\s+el)\s+programa)\s*$/i;
+
+const firstRunWaitlistDescriptorPrefixPattern =
+  /^(?:(?:formulario|p[aá]gina|portal|enlace|link|url|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|lista\s+de\s+(?:espera|interesad[oa]s)|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|waitlist(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|waiting\s+list(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|interest(?:ed)?\s+list(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:course\s+)?interest(?:ed)?\s+sign[-\s]?up(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|newsletter\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?)|mailing\s+list(?:\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?|lead[-\s]+gen(?:eration)?(?:\s+(?:forms?|pages?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunWaitlistDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|p[aá]gina|portal|enlace|link|url|solicitud(?:es)?|registro(?:s)?|inscripci[oó]n(?:es)?)\s+(?:de|para(?:\s+la)?|del?)\s+(?:lista\s+de\s+(?:espera|interesad[oa]s)|interesad[oa]s|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|lista\s+de\s+(?:espera|interesad[oa]s)|(?:captaci[oó]n|captura|generaci[oó]n)\s+de\s+(?:leads?|prospectos|interesad[oa]s)|waitlist(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|waiting\s+list(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|interest(?:ed)?\s+list(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:course\s+)?interest(?:ed)?\s+sign[-\s]?up(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|newsletter\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?)|mailing\s+list(?:\s+(?:(?:sign[-\s]?up|signup|subscription|subscribe)(?:\s+(?:forms?|pages?))?|forms?|pages?))?|lead\s+list(?:\s+(?:form|page))?|lead\s+capture(?:\s+(?:form|page))?|lead[-\s]+gen(?:eration)?(?:\s+(?:forms?|pages?))?)\s*$/i;
+const firstRunNewsletterSubscriptionConnectorDescriptorPrefixPattern =
+  /^(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para(?:\s+el|\s+la)?|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+para\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunNewsletterSubscriptionConnectorDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:suscripci[oó]n|registro)\s+(?:al|a\s+la|para(?:\s+el|\s+la)?|del?|de)\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo)|(?:suscripci[oó]n|registro)\s+para\s+(?:newsletter|bolet[ií]n|lista\s+de\s+correo))\s*$/i;
+
+const firstRunPriorityWaitlistDescriptorPrefixPattern =
+  /^(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:forms?|pages?|portals?|links?|urls?)(?=\s*(?:(?:del|de|para\s+el|para|for)\b|[-:/|])))|(?:forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:vip|priority|early\s+access)(?=\s*(?:(?:del|de|para\s+el|para|for)\b|[-:/|]))|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+(?:de|para)\s+acceso\s+anticipado|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPriorityWaitlistDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:vip|priority|early\s+access|acceso\s+anticipado)\s+(?:(?:waitlist|waiting\s+list|interest(?:ed)?\s+list|list|lista(?:\s+de\s+(?:espera|interesad[oa]s))?)|(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:lista\s+(?:vip|prioritaria|prioritario|de\s+prioridad)|lista\s+de\s+espera\s+(?:vip|prioritaria|prioritario)|(?:waitlist|waiting\s+list|interest(?:ed)?\s+list)\s+(?:vip|priority)))\s*$/i;
+
+const firstRunBetaPilotDescriptorPattern = String.raw`(?:(?:beta|pilot|preview|test[-\s]?run|soft\s+launch|private\s+beta)\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|access)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|access|forms?|pages?|portals?|links?|urls?)\s+(?:for\s+)?(?:beta|pilot|preview|test[-\s]?run|soft\s+launch|private\s+beta)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|registro|inscripci[oó]n|matr[ií]cula|acceso)\s+(?:de|para(?:\s+el)?)\s+(?:beta|piloto|vista\s+previa|lanzamiento\s+suave))`;
+const firstRunBetaPilotDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBetaPilotDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunBetaPilotDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunBetaPilotDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunInvitationDescriptorPattern = String.raw`(?:(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?|access))?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:invite[-\s]?only|invitation(?:\s+only)?|private\s+invite|by\s+invitation)(?:\s+(?:registration|enrollment|application|access))?|(?:formulario|p[aá]gina|registro|inscripci[oó]n|matr[ií]cula|acceso)\s+(?:de|para|por|con)\s+invitaci[oó]n|invitaci[oó]n\s+(?:al|a\s+la|del?|de|para)\s+(?:curso|clase|programa|cohorte|inscripci[oó]n|registro|matr[ií]cula))`;
+const firstRunInvitationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunInvitationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunInvitationDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunInvitationDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunNotificationChannelPattern = String.raw`(?:sms|text\s+messages?|whats\s*app|wa\s*\.?\s*me|e-?mail|correo)`;
+const firstRunNotificationOptInDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?\s+(?:forms?|pages?|links?|urls?|portals?)|(?:(?:${firstRunNotificationChannelPattern})\s+)consents?\b\s+(?:forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:${firstRunNotificationChannelPattern})\s+consents?\b|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+opt[-\s]?ins?(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern})|(?:formulario|p[aá]gina|enlace|link|url|portal)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern})\s+(?:opt[-\s]?ins?|consentimientos?|autorizaci[oó]n(?:es)?)(?:\s+(?:de|para|por|v[ií]a)\s+(?:${firstRunNotificationChannelPattern}))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?opt[-\s]?ins?\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?)|(?:${firstRunNotificationChannelPattern})\s+(?:consentimientos?|autorizaci[oó]n(?:es)?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?))`;
+const firstRunNotificationSignupDescriptorPattern = String.raw`(?:(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)\s+(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)|(?:sign[-\s]?ups?|subscriptions?|registrations?|forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:course\s+)?(?:reminders?|notifications?|alerts?)|(?:formulario|p[aá]gina|enlace|link|url|portal|suscripci[oó]n|registro)\s+(?:de|para(?:\s+el)?|por|v[ií]a)\s+(?:(?:${firstRunNotificationChannelPattern})\s+(?:para\s+)?)?(?:recordatorios?|notificaciones?|alertas?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:(?:${firstRunNotificationChannelPattern})\s+)?(?:recordatorios?|notificaciones?|alertas?)\s+(?:del?\s+curso|de\s+curso)?\s*(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|suscripciones?|registros?)|${firstRunNotificationOptInDescriptorPattern})`;
+const firstRunNotificationSignupDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunNotificationSignupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunNotificationSignupDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunNotificationSignupDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunLeadMagnetDescriptorPrefixPattern =
+  /^(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLeadMagnetDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s))\s+(?:forms?|pages?|downloads?(?:\s+pages?)?|sign[-\s]?ups?|registrations?)|(?:formulario|p[aá]gina|registro|descarga)\s+de\s+(?:lead\s+magnet|freebie|free\s+resource|opt[-\s]?in|squeeze|recurso\s+gratuito|im[aá]n\s+de\s+(?:leads?|prospectos?|interesad[oa]s)))\s*$/i;
+
+const firstRunReferralDescriptorPattern = String.raw`(?:(?:referral|affiliate|ambassador|partner)\s+(?:(?:tracking|invite|invitation|share|promo(?:tional)?)\s+)?(?:forms?|pages?|links?|urls?|portals?|codes?|sign[-\s]?ups?|registrations?)|(?:forms?|pages?|links?|urls?|portals?|codes?)\s+(?:for\s+)?(?:referrals?|affiliates?|ambassadors?|partners?)|(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|c[oó]digos?)\s+(?:de|para(?:\s+el|\s+la)?)\s+(?:referid[oa]s?|afiliad[oa]s?|embajadores?|socios?)|(?:referid[oa]s?|afiliad[oa]s?|embajadores?|socios?)\s+(?:formularios?|p[aá]ginas?|enlaces?|links?|urls?|portales?|c[oó]digos?))`;
+const firstRunReferralDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunReferralDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunReferralDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunReferralDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunDownloadableResourceDescriptorPattern = String.raw`(?:(?:free\s+)?(?:guide|e-?book|checklist|template|worksheet|resource)\s+(?:(?:download|request|opt[-\s]?in)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:download|request|opt[-\s]?in)\s+(?:forms?|pages?|links?|urls?|portals?)?\s*(?:for\s+)?(?:free\s+)?(?:guide|e-?book|checklist|template|worksheet|resource)|(?:formulario|p[aá]gina|enlace|link|url|portal|descarga|solicitud)\s+de\s+(?:gu[ií]a|e-?book|libro\s+electr[oó]nico|checklist|lista\s+de\s+verificaci[oó]n|plantilla|worksheet|hoja\s+de\s+trabajo|recurso)(?:\s+gratuit[oa])?)`;
+const firstRunDownloadableResourceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDownloadableResourceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunDownloadableResourceDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunDownloadableResourceDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCourseInfoAssetDescriptorPattern = String.raw`(?:(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)\s+(?:(?:download|request)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:forms?|pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:brochure|prospectus|syllabus|info(?:rmation)?\s+packet)|(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)\s+(?:del?\s+curso|de\s+curso)?(?:\s+(?:descarga|solicitud))?|(?:descarga|solicitud)\s+de\s+(?:folleto|brochure|prospecto|temario|programa\s+informativo|paquete\s+informativo)(?:\s+(?:del?\s+curso|de\s+curso))?)`;
+const firstRunCourseInfoAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseInfoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseInfoAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseInfoAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunBareCourseInfoDescriptorPattern = String.raw`(?:(?:course\s+)?(?:brochure|prospectus|syllabus|outline|curriculum(?:\s+(?:guide|overview|packet))?|info(?:rmation)?\s+packet|guide|materials?|resources?)|(?:folleto|brochure|prospecto|temario|malla(?:\s+curricular)?|curr[ií]culo|programa\s+informativo|paquete\s+informativo|gu[ií]a|material(?:es)?|recursos?|contenido)(?:\s+(?:del?\s+curso|de\s+curso))?)`;
+const firstRunBareCourseInfoDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunBareCourseInfoDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunBareCourseInfoDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunBareCourseInfoDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunVideoAssetDescriptorPattern = String.raw`(?:(?:(?:course|class|student|onboarding|orientation|welcome|intro(?:ductory)?|lesson|module)\s+)?(?:welcome|intro(?:ductory)?|orientation|onboarding|lesson|module)\s+(?:videos?|recordings?|replays?)(?:\s+(?:links?|urls?|pages?|portals?|uploads?|assets?))?|(?:youtube|vimeo)\s+(?:videos?|recordings?|replays?)(?:\s+(?:links?|urls?|pages?|portals?|uploads?|assets?))?|(?:videos?|recordings?|replays?)\s+(?:links?|urls?|pages?|portals?|uploads?|assets?)\s*(?:for\s+)?(?:(?:course|class|student|onboarding|orientation|welcome|intro(?:ductory)?|lesson|module)\s+)?(?:welcome|intro(?:ductory)?|orientation|onboarding|lesson|module)?|(?:videos?|grabaci[oó]n|grabaciones?|replays?|reproducci[oó]n|reproducciones?)\s+(?:de|para(?:\s+el)?|del?)\s+(?:bienvenida|orientaci[oó]n|onboarding|curso|clase|m[oó]dulo|lecci[oó]n)|(?:bienvenida|orientaci[oó]n|onboarding|curso|clase|m[oó]dulo|lecci[oó]n)\s+(?:videos?|grabaci[oó]n|grabaciones?|replays?|reproducci[oó]n|reproducciones?))`;
+const firstRunVideoAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunVideoAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunVideoAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunVideoAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCourseInfoPageDescriptorPattern = String.raw`(?:(?:course\s+)?(?:details?|information|info)\s+(?:pages?|links?|urls?|portals?)|(?:pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:details?|information|info)|(?:p[aá]gina|enlace|link|url|portal)\s+de\s+(?:informaci[oó]n|detalles?)\s+(?:del?\s+curso|de\s+curso)?|(?:informaci[oó]n|detalles?)\s+(?:del?\s+curso|de\s+curso)(?:\s+(?:p[aá]gina|enlace|link|url|portal))?)`;
+const firstRunCourseInfoPageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCourseInfoPageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCourseInfoPageDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCourseInfoPageDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunFaqPageDescriptorPattern = String.raw`(?:(?:course\s+)?(?:faqs?|frequently\s+asked\s+questions?|questions?\s+and\s+answers?|q\s*&\s*a)(?:\s+(?:pages?|links?|urls?|portals?))?|(?:pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:course\s+)?(?:faqs?|frequently\s+asked\s+questions?|questions?\s+and\s+answers?|q\s*&\s*a)|(?:p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:preguntas\s+frecuentes|faq|faqs|preguntas\s+y\s+respuestas)|(?:preguntas\s+frecuentes|faq|faqs|preguntas\s+y\s+respuestas)(?:\s+(?:del?\s+curso|de\s+curso))?(?:\s+(?:p[aá]ginas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunFaqPageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunFaqPageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunFaqPageDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunFaqPageDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCampaignDescriptorPrefixPattern =
+  /^(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app|e-?mail|correo|newsletter|bolet[ií]n)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCampaignDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app|e-?mail|correo|newsletter|bolet[ií]n)\s+)?(?:ad\s+|ads?\s+|marketing\s+)?campaign(?:\s+(?:forms?|pages?|landing\s+pages?|links?|urls?|funnels?))?|campañas?\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n)|(?:formulario|p[aá]gina|landing|enlaces?|links?|urls?)\s+de\s+campaña(?:\s+(?:de|para)\s+(?:inscripci[oó]n(?:es)?|registro|matr[ií]cula|leads?|prospectos?|interesad[oa]s|captaci[oó]n|publicidad|anuncios?|ads?|e-?mail|correo|newsletter|bolet[ií]n))?)\s*$/i;
+
+const firstRunLaunchDescriptorPattern = String.raw`(?:course\s+launch(?:\s+(?:campaigns?|pages?|forms?|funnels?|links?|urls?|portals?))?|launch\s+(?:campaigns?|pages?|forms?|funnels?|links?|urls?|portals?)|(?:p[aá]gina|campaña|formulario|enlace|link|url|portal|embudo)\s+de\s+lanzamiento(?:\s+(?:del?\s+curso|de\s+curso))?|lanzamiento\s+(?:del?\s+curso|de\s+curso))`;
+const firstRunLaunchDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunLaunchDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunLaunchDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunLaunchDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAdAssetDescriptorPattern = String.raw`(?:(?:(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app)\s+)?(?:ad\s*sets?|adsets?|ads?\s+groups?|ad\s+creatives?|ads?)|(?:anuncios?|conjuntos?\s+de\s+anuncios?)(?:\s+de\s+(?:facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok|google|youtube|whats\s*app))?)`;
+const firstRunAdAssetDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAdAssetDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunAdAssetDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunAdAssetDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAdLeadFormProviderPattern = String.raw`(?:google|youtube|facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok)`;
+const firstRunAdLeadFormDescriptorPattern = String.raw`(?:(?:${firstRunAdLeadFormProviderPattern})\s+ads?\s+(?:(?:lead|instant|prospect)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:${firstRunAdLeadFormProviderPattern})\s+(?:lead|instant|prospect)\s+ads?\s+(?:forms?|pages?|portals?|links?|urls?)?|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?)\s+de\s+(?:leads?|prospectos?)\s+de\s+(?:${firstRunAdLeadFormProviderPattern})\s+ads?)`;
+const firstRunAdLeadFormDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAdLeadFormDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunAdLeadFormDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAdLeadFormDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunProviderFormDescriptorPrefixPattern =
+  /^(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|instant|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform(?:\s*\.?\s*com)?|many\s*chat|manychat|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable|coda|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|mautic|rd\s*station|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|lead\s*pages?|notion|fillout|cognito\s+forms?|forms?\.app|form\s*spree|formsite|wp\s*forms?|ninja\s*forms?|formidable\s+forms?|fluent\s+forms?|123\s*forms?\s*builder|123formbuilder)(?:\s+forms?)?)|typeform(?:\s*\.?\s*com)?|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable(?:\s+forms?)?|coda(?:\s+forms?)?|hubspot\s+(?:forms?|pages?|landing\s+pages?|portals?)|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|mautic\s+(?:forms?|pages?|landing\s+pages?|portals?)|rd\s*station\s+(?:forms?|pages?|landing\s+pages?|portals?)|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|lead\s*pages?(?:\s+(?:landing\s+)?pages?|forms?|portals?)?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?|forms?\.app(?:\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))?|form\s*spree(?:\s+forms?)?|formsite(?:\s+forms?)?|wp\s*forms?|ninja\s*forms?|formidable\s+forms?|fluent\s+forms?|123\s*forms?\s*builder(?:\s+forms?)?|123formbuilder(?:\s+forms?)?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunProviderFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:google|(?:microsoft|ms))\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?\s+(?:de\s+)?google)|(?:(?:facebook|fb|meta|instagram|ig)\s+lead\s+ads?(?:\s+(?:forms?|pages?|portals?|links?|urls?))?)|(?:(?:facebook|fb|meta|instagram|ig)\s+leads\b)|(?:leads?\b\s+de\s+(?:facebook|fb|meta|instagram|ig))|(?:(?:facebook|fb|meta|instagram|ig)\s+(?:(?:lead|instant|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:whats\s*app\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))|(?:formulario\s+(?:de\s+)?whats\s*app)|(?:formularios?\s+(?:de\s+)?(?:typeform(?:\s*\.?\s*com)?|many\s*chat|manychat|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable|coda|hubspot|mail\s*chimp|paper\s*forms?|survey\s*monkey|mautic|rd\s*station|wufoo|formstack|zoho|gravity\s+forms?|web\s*flow|wix|squarespace|lead\s*pages?|notion|fillout|cognito\s+forms?|forms?\.app|form\s*spree|formsite|wp\s*forms?|ninja\s*forms?|formidable\s+forms?|fluent\s+forms?|123\s*forms?\s*builder|123formbuilder)(?:\s+forms?)?)|typeform(?:\s*\.?\s*com)?|many\s*chat\s+(?:lead\s+)?forms?|manychat\s+(?:lead\s+)?forms?|tally(?:\s+forms?|\s*\.?\s*so)?|jot\s*forms?|airtable(?:\s+forms?)?|coda(?:\s+forms?)?|hubspot\s+(?:forms?|pages?|landing\s+pages?|portals?)|mail\s*chimp\s+(?:sign[-\s]?up\s+)?forms?|paper\s*forms?|survey\s*monkey(?:\s+forms?)?|mautic\s+(?:forms?|pages?|landing\s+pages?|portals?)|rd\s*station\s+(?:forms?|pages?|landing\s+pages?|portals?)|wufoo(?:\s+forms?)?|formstack(?:\s+forms?)?|zoho\s+forms?|gravity\s+forms?|web\s*flow\s+forms?|wix\s+forms?|squarespace\s+forms?|lead\s*pages?(?:\s+(?:landing\s+)?pages?|forms?|portals?)?|notion\s+forms?|fillout(?:\s+forms?)?|cognito\s+forms?|forms?\.app(?:\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?))?|form\s*spree(?:\s+forms?)?|formsite(?:\s+forms?)?|wp\s*forms?|ninja\s*forms?|formidable\s+forms?|fluent\s+forms?|123\s*forms?\s*builder(?:\s+forms?)?|123formbuilder(?:\s+forms?)?)\s*$/i;
+
+const firstRunStaticFormBackendProviderPattern =
+  String.raw`(?:netlify(?:\s+forms?)?|form\s*keep|formkeep|form\s*bold|formbold|form\s*spark|formspark|form\s*submit|formsubmit|get\s*form|getform|basin|form\s*carry|formcarry)`;
+const firstRunStaticFormBackendDescriptorPattern =
+  String.raw`(?:(?:${firstRunStaticFormBackendProviderPattern})(?:\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?))?|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?)\s+(?:de\s+)?(?:${firstRunStaticFormBackendProviderPattern}))`;
+const firstRunStaticFormBackendDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunStaticFormBackendDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunStaticFormBackendDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunStaticFormBackendDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEmergingFormProviderPattern =
+  String.raw`(?:hey\s*flow|heyflow|outgrow|interact|land\s*bot|landbot|perspective(?:\s*\.?\s*co)?|feathery|qualtrics|question\s*pro|questionpro|survey\s*sparrow|surveysparrow|score\s*app|scoreapp|formaloo|formbricks|make\s*forms?|makeforms|youform)`;
+const firstRunEmergingFormProviderDescriptorPattern =
+  String.raw`(?:(?:${firstRunEmergingFormProviderPattern})\s+(?:(?:lead|quiz|survey|questionnaire|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|portals?|links?|urls?|funnels?|flows?|quiz(?:zes)?|surveys?|questionnaires?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?|embudos?|flujos?|cuestionarios?|encuestas?)\s+(?:de\s+)?(?:${firstRunEmergingFormProviderPattern}))`;
+const firstRunEmergingFormProviderDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunEmergingFormProviderDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunEmergingFormProviderDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunEmergingFormProviderDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunNoCodeLandingProviderPattern = String.raw`(?:carrd|framer|unbounce|instapage|landingi|web\s*flow|wix|squarespace|notion|google\s+sites?)`;
+const firstRunNoCodeLandingDescriptorPattern = String.raw`(?:(?:${firstRunNoCodeLandingProviderPattern})\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|admissions?|waitlist|interest|contact|inquiry|enquiry|booking|reservation)\s+)?(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)|(?:forms?|pages?|landing\s+pages?|links?|urls?|portals?)\s+(?:for\s+)?(?:${firstRunNoCodeLandingProviderPattern})|(?:formularios?|p[aá]ginas?|landings?|enlaces?|links?|urls?|portales?)\s+(?:de\s+)?(?:${firstRunNoCodeLandingProviderPattern}))`;
+const firstRunNoCodeLandingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunNoCodeLandingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunNoCodeLandingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunNoCodeLandingDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEmailMarketingProviderPattern =
+  String.raw`(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack)`;
+const firstRunEmailMarketingAutomationDescriptorPattern =
+  String.raw`(?:(?:${firstRunEmailMarketingProviderPattern})\s+(?:(?:e-?mail|correo|drip|follow[-\s]?up|seguimiento|reminder|recordatorio)\s+)?(?:automations?|workflows?|sequences?|campaigns?|broadcasts?|drips?|emails?|messages?|automatizaciones?|flujos?|secuencias?(?:\s+de\s+correos?)?|campañas?|seguimientos?|recordatorios?)|(?:automatizaciones?|flujos?|secuencias?(?:\s+de\s+correos?)?|campañas?|seguimientos?|recordatorios?)\s+(?:de|para)\s+(?:${firstRunEmailMarketingProviderPattern}))`;
+const firstRunEmailMarketingAutomationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunEmailMarketingAutomationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunEmailMarketingAutomationDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunEmailMarketingAutomationDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEmailMarketingFormDescriptorPrefixPattern =
+  /^(?:(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunEmailMarketingFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack)\s+(?:(?:lead|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake|interest|contact|inquiry|enquiry)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+(?:de\s+)?(?:convert\s*kit|kit|brevo|sendinblue|flodesk|mailer\s*lite|mailerlite|klaviyo|active\s*campaign|constant\s+contact|keap|infusionsoft|mautic|rd\s*station|substack))\s*$/i;
+
+const firstRunCoursePlatformPattern = String.raw`(?:kajabi|teachable|thinkific|moodle|hotmart|podia|learn\s*worlds?|click\s*funnels?|clickfunnels|kartra|systeme\s*\.?\s*io|ghl|go\s*high\s*level|gohighlevel|highlevel|lead\s*connector|mighty\s*networks?|skool|circle\s*\.?\s*so|udemy|coursera|skill\s*share|ed\s*x|canvas\s+lms|instructure\s+canvas|google\s+classroom|schoology|blackboard(?:\s+learn)?|learn\s*dash|learndash|talent\s*lms|talentlms)`;
+const firstRunCoursePlatformDescriptorPattern = String.raw`(?:(?:course\s+)?(?:checkout|payment|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)(?:\s+(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))?|(?:course\s+)?(?:forms?|pages?|portals?|links?|urls?|checkouts?|funnels?))`;
+const firstRunCoursePlatformDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCoursePlatformPattern}(?:\s+${firstRunCoursePlatformDescriptorPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCoursePlatformDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCoursePlatformPattern}(?:\s+${firstRunCoursePlatformDescriptorPattern})?)\s*$`,
+  'i',
+);
+
+const firstRunCrmFormDescriptorPrefixPattern =
+  /^(?:(?:crm|customer\s+relationship\s+management)\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+crm\s+(?:de\s+)?(?:leads?|prospectos?|contactos?|consultas?|(?:pre)?inscripci[oó]n(?:es)?|registro))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCrmFormDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:crm|customer\s+relationship\s+management)\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?)|(?:formularios?|p[aá]ginas?|portales?)\s+crm\s+(?:de\s+)?(?:leads?|prospectos?|contactos?|consultas?|(?:pre)?inscripci[oó]n(?:es)?|registro))\s*$/i;
+
+const firstRunCrmWorkflowDescriptorPrefixPattern =
+  /^(?:(?:crm|customer\s+relationship\s+management)\s+(?:pipelines?|funnels?|workflows?|boards?|dashboards?|queues?)|(?:pipeline|funnel|workflow|board|dashboard|queue)\s+crm)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
+
+const firstRunCrmWorkflowDescriptorSuffixPattern =
+  /(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)(?:(?:crm|customer\s+relationship\s+management)\s+(?:pipelines?|funnels?|workflows?|boards?|dashboards?|queues?)|(?:pipeline|funnel|workflow|board|dashboard|queue)\s+crm)\s*$/i;
+
+const firstRunCrmProviderPattern = String.raw`(?:wati|kommo|pipe\s*drive)`;
+const firstRunCrmProviderFormDescriptorPattern = String.raw`(?:(?:${firstRunCrmProviderPattern})\s+(?:(?:lead|prospects?|contact|inquiry|enquiry|intake|(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up)\s+)?(?:forms?|pages?|portals?|links?|urls?)|(?:formularios?|p[aá]ginas?|portales?|enlaces?|links?|urls?)\s+(?:de\s+)?(?:${firstRunCrmProviderPattern}))`;
+const firstRunCrmProviderFormDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCrmProviderFormDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunCrmProviderFormDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunCrmProviderFormDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEmergingSocialLeadDescriptorPrefixPattern =
+  /^(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:(?:lead(?:\s+gen|\s+ads?)?|instant)\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunEmergingSocialLeadDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+(?:(?:lead(?:\s+gen|\s+ads?)?|instant)\s+)?(?:forms?|pages?|portals?)|(?:(?:linked\s*in|linkedin|tik\s*tok|tiktok)\s+leads?\b)|(?:leads?\b\s+de\s+(?:linked\s*in|linkedin|tik\s*tok|tiktok)))\s*$/i;
+
+const firstRunMessagingAutomationProviderPattern = String.raw`(?:many\s*chat|manychat|instagram|ig|facebook|fb|meta|messenger|whats\s*app|wa\s*\.?\s*me)`;
+const firstRunMessagingAutomationChannelPattern = String.raw`(?:dm|direct\s+messages?|messages?|mensaje\s+directo|inbox|chat|messenger)`;
+const firstRunMessagingAutomationWorkflowPattern = String.raw`(?:automation|automations|automated\s+reply|bots?|flows?|funnels?|intake|leads?|registration|enrollment|sign[-\s]?up|click[-\s]?to[-\s]?chat|chat\s+links?|deep\s+links?|links?|urls?|keywords?|keyword\s+triggers?|triggers?|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|embudos?|enlaces?|palabras?\s+clave|disparadores?|respuestas?(?:\s+autom[aá]ticas?)?)`;
+const firstRunMessagingAutomationDescriptorPattern = String.raw`(?:(?:(?:${firstRunMessagingAutomationProviderPattern}\s+)?${firstRunMessagingAutomationChannelPattern}\s+${firstRunMessagingAutomationWorkflowPattern}|${firstRunMessagingAutomationProviderPattern}\s+${firstRunMessagingAutomationWorkflowPattern})(?:\s+(?:forms?|pages?|links?|urls?|flows?|funnels?))?|${firstRunMessagingAutomationWorkflowPattern}\s+(?:de|para)\s+(?:${firstRunMessagingAutomationChannelPattern}|${firstRunMessagingAutomationProviderPattern}))`;
+const firstRunMessagingAutomationDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunMessagingAutomationDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunMessagingAutomationDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunMessagingAutomationDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunAutomationPlumbingProviderPattern = String.raw`(?:zapier|make\s*\.?\s*com|integromat|n8n|pabbly(?:\s+connect)?|integrately)`;
+const firstRunAutomationPlumbingWorkflowPattern = String.raw`(?:webhooks?|automation|automations|workflows?|flows?|scenarios?|zaps?|connections?|integrations?|registro|inscripci[oó]n|automatizaci[oó]n|automatizaciones|flujos?|escenarios?|integraciones?)`;
+const firstRunAutomationPlumbingDescriptorPattern = String.raw`(?:(?:${firstRunAutomationPlumbingProviderPattern})\s+(?:(?:course\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|intake)\s+)?(?:${firstRunAutomationPlumbingWorkflowPattern})(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|(?:${firstRunAutomationPlumbingWorkflowPattern})\s+(?:de|para|for)\s+(?:${firstRunAutomationPlumbingProviderPattern}))`;
+const firstRunAutomationPlumbingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunAutomationPlumbingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunAutomationPlumbingDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunAutomationPlumbingDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunDataSourceDescriptorPattern = String.raw`(?:(?:airtable|notion|coda|google\s*sheets?|google\s*sheet|(?:microsoft\s+)?excel)\s+(?:(?:course\s+)?(?:registration|enrollment|lead|intake|student|sign[-\s]?up)\s+)?(?:tables?|views?|databases?|spreadsheets?|sheets?|workbooks?|rows?|bases?|lists?)|(?:tables?|views?|databases?|spreadsheets?|sheets?|workbooks?|rows?|bases?|lists?)\s+(?:for\s+)?(?:airtable|notion|coda|google\s*sheets?|google\s*sheet|(?:microsoft\s+)?excel)|(?:tabla|vista|base\s+de\s+datos|hoja\s+de\s+c[aá]lculo|lista)\s+(?:de|para)\s+(?:airtable|notion|coda|google|(?:microsoft\s+)?excel)|hoja\s+de\s+c[aá]lculo\s+de\s+google|hojas?\s+de\s+(?:microsoft\s+)?excel)`;
+const firstRunDataSourceDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDataSourceDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunDataSourceDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunDataSourceDescriptorPattern})\s*$`,
+  'i',
+);
+const firstRunDataImportDescriptorPattern = String.raw`(?:(?:(?:manual|admin|backend|bulk|legacy|data|database|seed|system|registration|enrollment|student|course)\s+)?(?:imports?|uploads?|migrations?)|(?:csv|xlsx?|excel|spreadsheet|sheet)\s+(?:imports?|uploads?)|(?:imported|migrated)\s+(?:registrations?|enrollments?|students?|data)|(?:carga|importaci[oó]n|migraci[oó]n)(?:\s+(?:manual|masiva|csv|excel|xlsx|de\s+datos|del?\s+curso|de\s+inscripciones?))?|(?:datos|inscripciones?|matr[ií]culas?|estudiantes?|alumnos?)\s+(?:importad[oa]s?|migrad[oa]s?))`;
+const firstRunDataImportDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunDataImportDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunDataImportDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunDataImportDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunFileStorageProviderPattern = String.raw`(?:(?:google\s+)?drive|dropbox|one\s*drive|onedrive|share\s*point|sharepoint|box|icloud)`;
+const firstRunFileStorageDescriptorPattern = String.raw`(?:(?:${firstRunFileStorageProviderPattern}\s+(?:(?:course|class|student|registration|enrollment|application|intake|asset|resource|files?|uploads?)\s+)?(?:folders?|directories?))|(?:(?:course|class|student|registration|enrollment|application|intake|asset|resource|files?|uploads?)\s+(?:folders?|directories?))|(?:(?:folders?|directories?)\s+(?:for|del?|para(?:\s+el)?)\s+(?:${firstRunFileStorageProviderPattern}|course|class|students?|registration|enrollment|application|intake|uploads?|assets?|resources?|files?))|(?:(?:carpetas?|directorios?)\s+(?:del?|para(?:\s+el)?)\s+(?:${firstRunFileStorageProviderPattern}|curso|clase|estudiantes?|alumnos?|inscripci[oó]n|matr[ií]cula|archivos?|recursos?|subidas?|cargas?))|(?:${firstRunFileStorageProviderPattern}\s+(?:carpetas?|folders?|directorios?)))`;
+const firstRunFileStorageDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunFileStorageDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunFileStorageDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunFileStorageDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunCommunityPlatformPattern = String.raw`(?:whats\s*app|discord|slack|telegram|facebook|fb|circle(?:\s*\.?\s*so)?|mighty\s*networks?|skool)`;
+const firstRunCommunityScopePattern = String.raw`(?:course|class|students?|members?|alumni|graduates?|curso|clase|estudiantes|alumnos|miembros|egresad[oa]s?|graduad[oa]s?)`;
+const firstRunCommunityScopeQualifierPattern = String.raw`(?:(?:for|para|de)\s+(?:the\s+|el\s+|la\s+)?(?:${firstRunCommunityScopePattern})|del?\s+curso)`;
+const firstRunCommunityChannelPattern = String.raw`(?:community|comunidad|group|grupo|chat|channel|canal|servers?|servidor(?:es)?|workspaces?|espacios?\s+de\s+trabajo|broadcast\s+(?:lists?|channels?)|announcement\s+channels?|listas?\s+de\s+difusi[oó]n|canal(?:es)?\s+de\s+(?:difusi[oó]n|anuncios|avisos|novedades)|(?:group|community|chat|channel|servers?)\s+(?:invites?|invite\s+links?|invitation\s+links?)|(?:invites?|invite\s+links?|invitation\s+links?)|(?:invitaci[oó]n|enlace(?:\s+de\s+invitaci[oó]n)?|link|url)\s+(?:al|a\s+la|para\s+el|para\s+la|del?|de)\s+(?:grupo|comunidad|chat|canal|servidor(?:es)?))`;
+const firstRunCommunityGroupDescriptorPattern = String.raw`(?:(?:(?:${firstRunCommunityScopePattern})\s+(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern})(?:\s+(?:${firstRunCommunityScopeQualifierPattern}))?)|(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityScopePattern})\s+(?:${firstRunCommunityChannelPattern})(?:\s+(?:${firstRunCommunityScopeQualifierPattern}))?)|(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern})(?:\s+(?:${firstRunCommunityScopeQualifierPattern})))|(?:(?:${firstRunCommunityChannelPattern})\s+(?:de\s+)?(?:${firstRunCommunityPlatformPattern})(?:\s+(?:${firstRunCommunityScopeQualifierPattern})))|(?:(?:${firstRunCommunityPlatformPattern})\s+(?:${firstRunCommunityChannelPattern}))|(?:(?:${firstRunCommunityChannelPattern})\s+(?:de\s+)?(?:${firstRunCommunityPlatformPattern}))|(?:(?:course|class|students?|members?|alumni|graduates?)\s+(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+(?:lists?|channels?)|announcement\s+channels?))|(?:(?:group\s+chat|chat\s+group|community|group|chat|channel|broadcast\s+(?:lists?|channels?)|announcement\s+channels?)\s+(?:for\s+)?(?:the\s+)?(?:course|class|students?|members?|alumni|graduates?))|(?:(?:comunidad|grupo|chat|canal|listas?\s+de\s+difusi[oó]n|canal(?:es)?\s+de\s+(?:difusi[oó]n|anuncios|avisos|novedades))\s+(?:de(?:l)?\s+curso|para\s+(?:el\s+)?curso|de\s+(?:estudiantes|alumnos|miembros|egresad[oa]s?|graduad[oa]s?)|para\s+(?:estudiantes|alumnos|miembros|egresad[oa]s?|graduad[oa]s?))))`;
+
+const firstRunCommunityGroupDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunCommunityGroupDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)|\s*[-:/|]\s*)`,
+  'i',
+);
+
+const firstRunCommunityGroupDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+)(?:${firstRunCommunityGroupDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunEventPlatformDescriptorPrefixPattern =
+  /^(?:(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+events?(?:\s+(?:page|portal))?(?:\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|\s+(?:form|page|portal)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?|\s+(?:del|de|para\s+el|para|for)\s*|\s*[-:/|]\s*)|(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?)/i;
+
+const firstRunEventPlatformDescriptorSuffixPattern =
+  /(?:\s*[-:/|]\s*(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)(?:\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+events?(?:\s+(?:page|portal))?|\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)\s+(?:(?:event\s+)?(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|booking|reservation)(?:\s+(?:form|page|portal))?|\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium)\s+events?(?:\s+(?:page|portal))?|\s*(?:[-:/|]\s*)?(?:formulario|p[aá]gina|portal)\s+de\s+(?:event\s*brite|eventbrite|lu\s*\.?\s*ma|luma|meetup|ticket\s*tailor|tickettailor|humanitix|eventzilla|sympla|entradium))\s*$/i;
+
+const firstRunGenericEventDescriptorPrefixPattern =
+  /^(?:(?:event|evento)\s+(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|signup|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:formulario|p[aá]gina|portal|enlace|link|url|registro|inscripci[oó]n|reserva|rsvp)\s+(?:de|para(?:\s+el)?)\s+eventos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunGenericEventDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:event|evento)\s+(?:(?:pre[-\s]?)?registration|enrollment|application|sign[-\s]?up|signup|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|(?:formulario|p[aá]gina|portal|enlace|link|url|registro|inscripci[oó]n|reserva|rsvp)\s+(?:de|para(?:\s+el)?)\s+eventos?)\s*$/i;
+
+const firstRunTicketingDescriptorPattern = String.raw`(?:(?:(?:ticketing|box\s*office)\s+(?:forms?|pages?|links?|urls?|portals?|checkouts?))|(?:(?:forms?|pages?|links?|urls?|portals?|checkouts?)\s+(?:for\s+)?(?:ticketing|box\s*office))|(?:(?:boleter[ií]a|taquilla)\s+(?:del?\s+curso|de\s+curso))|(?:(?:formulario|p[aá]gina|portal|enlace|link|url|checkout)\s+(?:de|para)\s+(?:boleter[ií]a|taquilla)))`;
+const firstRunTicketingDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunTicketingDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunTicketingDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunTicketingDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunInquiryDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:course\s+)?expression\s+of\s+interest(?:\s+(?:forms?|pages?))?|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|expresi[oó]n\s+de\s+inter[eé]s(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunInquiryDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:contact|inquiry|enquiry|interest|lead|prospects?)\s+(?:form|page)|(?:course\s+)?expression\s+of\s+interest(?:\s+(?:forms?|pages?))?|(?:formulario|p[aá]gina)\s+de\s+(?:contacto|consulta|inter[eé]s|prospectos?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|expresi[oó]n\s+de\s+inter[eé]s(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
+const firstRunSurveyDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:survey|questionnaire|feedback|evaluation)\s+(?:forms?|pages?|portals?|requests?)|(?:course\s+)?reviews?\s+(?:forms?|pages?|portals?)|(?:post[-\s]?course|end[-\s]?of[-\s]?course|exit|satisfaction|nps)\s+(?:surveys?|questionnaires?|feedback|evaluations?)(?:\s+(?:forms?|pages?|portals?|requests?))?|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?|feedback\s+forms?|evaluations?|reviews?\s+forms?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario|opiniones?|reseñas?|valoraciones?)\s+de\s+satisfacci[oó]n|(?:evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+final(?:\s+(?:del?\s+curso|de\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSurveyDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:survey|questionnaire|feedback|evaluation)\s+(?:forms?|pages?|portals?|requests?)|(?:course\s+)?reviews?\s+(?:forms?|pages?|portals?)|(?:post[-\s]?course|end[-\s]?of[-\s]?course|exit|satisfaction|nps)\s+(?:surveys?|questionnaires?|feedback|evaluations?)(?:\s+(?:forms?|pages?|portals?|requests?))?|(?:(?:pre[-\s]?)?registration|enrollment|application|intake)\s+(?:surveys?|questionnaires?|feedback\s+forms?|evaluations?|reviews?\s+forms?)|(?:formulario|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+de\s+(?:pre)?inscripci[oó]n(?:es)?|(?:encuesta|cuestionario|opiniones?|reseñas?|valoraciones?)\s+de\s+satisfacci[oó]n|(?:evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+final(?:\s+(?:del?\s+curso|de\s+curso))?|(?:encuesta|cuestionario|evaluaci[oó]n|retroalimentaci[oó]n|opiniones?|reseñas?|valoraciones?)\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))\s*$/i;
+
+const firstRunInfoSessionDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:info(?:rmation)?\s+session|orientation|open\s+house)\s+(?:forms?|pages?|signup|sign[-\s]?up|registration|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|links?|urls?))?|(?:formulario|p[aá]gina|registro|inscripci[oó]n(?:es)?|reserva|rsvp)\s+de\s+(?:sesi[oó]n\s+informativa|orientaci[oó]n|clase\s+abierta|casa\s+abierta)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunInfoSessionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:info(?:rmation)?\s+session|orientation|open\s+house)\s+(?:forms?|pages?|signup|sign[-\s]?up|registration|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|links?|urls?))?|(?:formulario|p[aá]gina|registro|inscripci[oó]n(?:es)?|reserva|rsvp)\s+de\s+(?:sesi[oó]n\s+informativa|orientaci[oó]n|clase\s+abierta|casa\s+abierta)(?:\s+(?:del?\s+curso|de\s+curso|para\s+el\s+curso))?)\s*$/i;
+
+const firstRunLiveSessionDescriptorPrefixPattern =
+  /^(?:(?:(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+)?(?:webinar|seminar|meeting|live\s+session|sesi[oó]n\s+en\s+vivo)\s+(?:(?:registration|enrollment|sign[-\s]?up|waitlist|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+(?:(?:registration|enrollment|sign[-\s]?up|waitlist|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:(?:registro|inscripci[oó]n|reserva|rsvp|lista\s+de\s+espera)\s+(?:de|para)\s+)?(?:webinar|seminario|seminar|meeting|sesi[oó]n\s+en\s+vivo))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLiveSessionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+)?(?:webinar|seminar|meeting|live\s+session|sesi[oó]n\s+en\s+vivo)\s+(?:(?:registration|enrollment|sign[-\s]?up|waitlist|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:zoom|google\s+meet|microsoft\s+teams|teams)\s+(?:(?:registration|enrollment|sign[-\s]?up|waitlist|booking|reservation|rsvp)(?:\s+(?:forms?|pages?|portals?|links?|urls?))?|forms?|pages?|portals?|links?|urls?)|(?:formulario|p[aá]gina|portal|enlace|link|url)\s+de\s+(?:(?:registro|inscripci[oó]n|reserva|rsvp|lista\s+de\s+espera)\s+(?:de|para)\s+)?(?:webinar|seminario|seminar|meeting|sesi[oó]n\s+en\s+vivo))\s*$/i;
+
+const firstRunPublicRegistrationDescriptorPrefixPattern =
+  /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+p[uú]blic[oa]s?\s+(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPublicRegistrationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:pre)?inscripci[oó]n\s+p[uú]blica)|(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+p[uú]blic[oa]s?\s+(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?)|(?:(?:pre)?inscripci[oó]n(?:es)?\s+p[uú]blicas?)|(?:public\s+(?:course\s+)?(?:registration|enrollment)\s+(?:form|page|portal)))\s*$/i;
+
+const firstRunSpanishPortalDescriptorPrefixPattern =
+  /^(?:portal(?:es)?\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|portal(?:es)?\s+(?:del?\s+curso|de\s+curso))(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSpanishPortalDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:portal(?:es)?\s+(?:p[uú]blic[oa]s?\s+)?(?:de|para(?:\s+la)?)\s+(?:pre)?inscripci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|portal(?:es)?\s+(?:del?\s+curso|de\s+curso))\s*$/i;
+
+const firstRunOnlineRegistrationDescriptorPrefixPattern =
+  /^(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunOnlineRegistrationDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:online\s+(?:course\s+)?(?:registration|enrollment|application|sign[-\s]?up)(?:\s+(?:form|page|portal))?)|(?:(?:pre)?inscripci[oó]n|registro|matr[ií]cula)\s+(?:en\s+l[ií]nea|online)(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
+const firstRunPostSubmitDescriptorPattern = String.raw`(?:(?:thank[-\s]?you|thanks|success)\s+(?:pages?|screens?|links?|urls?|portals?)|(?:registration|enrollment|sign[-\s]?up|signup)\s+confirmation(?:\s+(?:pages?|screens?|links?|urls?|portals?))?|confirmation\s+(?:pages?|screens?|links?|urls?|portals?)|(?:p[aá]ginas?|pantallas?|enlaces?|links?|urls?|portales?)\s+de\s+(?:gracias|[eé]xito|confirmaci[oó]n)|confirmaci[oó]n\s+de\s+(?:inscripci[oó]n|registro|matr[ií]cula)(?:\s+(?:p[aá]ginas?|pantallas?|enlaces?|links?|urls?|portales?))?)`;
+const firstRunPostSubmitDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunPostSubmitDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunPostSubmitDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunPostSubmitDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunLandingPageDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?landing(?:\s+pages?)?|landings?(?:\s+(?:del?\s+curso|de\s+curso))?|p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)/i;
+
+const firstRunLandingPageDescriptorSuffixPattern =
+  /(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:(?:course\s+)?landing(?:\s+pages?)?|landings?(?:\s+(?:del?\s+curso|de\s+curso))?|p[aá]gina\s+landing(?:\s+(?:del?\s+curso|de\s+curso))?)\s*$/i;
+
+const firstRunStandalonePublicPageDescriptorPrefixPattern =
+  /^(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunStandalonePublicPageDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:p[aá]gina|portal|formulario|ficha)\s+p[uú]blic[oa]s?|public\s+(?:page|form|portal))\s*$/i;
+
+const firstRunBioLinkDescriptorPrefixPattern =
+  /^(?:(?:link\s*tree|linktree|beacons(?:\s*\.?\s*ai)?|stan\s*store|koji(?:\s*\.?\s*to)?\s+(?:pages?|links?|urls?|portals?|forms?)|milkshake(?:\s*\.?\s*app)?|tap\s*link|solo\s*\.?\s*to|bio\s*\.?\s*site|bento\s*\.?\s*me|campsite\s*\.?\s*bio|bio\s*\.?\s*link|bio\s+links?|bio\s+pages?|profile\s+links?|profile\s+pages?|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio|enlace\s+de\s+perfil|link\s+de\s+perfil|p[aá]gina\s+de\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunBioLinkDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:link\s*tree|linktree|beacons(?:\s*\.?\s*ai)?|stan\s*store|koji(?:\s*\.?\s*to)?\s+(?:pages?|links?|urls?|portals?|forms?)|milkshake(?:\s*\.?\s*app)?|tap\s*link|solo\s*\.?\s*to|bio\s*\.?\s*site|bento\s*\.?\s*me|campsite\s*\.?\s*bio|bio\s*\.?\s*link|bio\s+links?|bio\s+pages?|profile\s+links?|profile\s+pages?|link\s+in\s+bio|enlace\s+en\s+bio|link\s+en\s+bio|enlace\s+de\s+perfil|link\s+de\s+perfil|p[aá]gina\s+de\s+bio)(?:\s+(?:pages?|links?|urls?|portals?|forms?))?)\s*$/i;
+
+const firstRunCourseWebsiteDescriptorPrefixPattern =
+  /^(?:(?:(?:course\s+)?(?:website|web\s+page|site|micro\s*site)|course\s+portal|web\s+portal|micrositio(?:\s+(?:del?\s+curso|de\s+curso))?)(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)|(?:p[aá]gina|sitio|portal)\s+web\s+(?:del?\s+curso|de\s+curso)(?:\s*[-:/|]\s*)?|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del|de|para\s+el|para)\s+|\s*[-:/|]\s*))/i;
+
+const firstRunCourseWebsiteDescriptorSuffixPattern =
+  /(?:\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:website|web\s+page|site|micro\s*site)|course\s+portal|web\s+portal|micrositio(?:\s+(?:del?\s+curso|de\s+curso))?|(?:p[aá]gina|sitio|portal)\s+web(?:\s+(?:del?\s+curso|de\s+curso))?)|\s+(?:del|de|para\s+el|para|for)\s+(?:(?:course\s+)?(?:website|web\s+page|site|micro\s*site)|course\s+portal|web\s+portal|micrositio|(?:p[aá]gina|sitio|portal)\s+web))\s*$/i;
+
+const firstRunLearningPortalDescriptorPrefixPattern =
+  /^(?:(?:student|learner|member|learning|lms)\s+(?:portal|dashboard|hub|area|cent(?:er|re))|(?:learning\s+management\s+system|lms)\s+(?:(?:enrollment|registration|sign[-\s]?up|student|learner)\s+)?(?:portal|dashboard|hub|area|cent(?:er|re))|(?:portal|dashboard|hub|area|cent(?:er|re))\s+(?:for\s+)?(?:students?|learners?|members?)|(?:campus|aula|sal[oó]n)\s+virtual|digital\s+campus|campus\s+digital|(?:portal|centro)\s+(?:de\s+)?(?:estudiantes|alumnos|miembros|aprendizaje))(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunLearningPortalDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:student|learner|member|learning|lms)\s+(?:portal|dashboard|hub|area|cent(?:er|re))|(?:learning\s+management\s+system|lms)\s+(?:(?:enrollment|registration|sign[-\s]?up|student|learner)\s+)?(?:portal|dashboard|hub|area|cent(?:er|re))|(?:portal|dashboard|hub|area|cent(?:er|re))\s+(?:for\s+)?(?:students?|learners?|members?)|(?:campus|aula|sal[oó]n)\s+virtual|digital\s+campus|campus\s+digital|(?:portal|centro)\s+(?:de\s+)?(?:estudiantes|alumnos|miembros|aprendizaje))\s*$/i;
+
+const firstRunCourseCatalogDescriptorPrefixPattern =
+  /^(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunCourseCatalogDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:course\s+)?(?:catalog|catalogue|listing|directory)\s+(?:pages?|links?|urls?|portals?)?|(?:cat[aá]logo|listado|directorio)\s+(?:de\s+)?cursos?)\s*$/i;
+
+const firstRunScheduleDescriptorPattern = String.raw`(?:(?:course\s+)?(?:schedule|calendar|timetable)\s+(?:pages?|links?|urls?|portals?)|(?:class|lesson)\s+(?:schedule|calendar|timetable)\s+(?:pages?|links?|urls?|portals?)|(?:horarios?|calendarios?|cronogramas?)\s+(?:del?\s+curso|de\s+curso|de\s+clases?)(?:\s+(?:p[aá]ginas?|enlaces?|links?|urls?|portales?))?|(?:p[aá]ginas?|enlaces?|links?|urls?|portales?)\s+(?:de|para)\s+(?:horarios?|calendarios?|cronogramas?)(?:\s+(?:del?\s+curso|de\s+curso|de\s+clases?))?)`;
+const firstRunScheduleDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunScheduleDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+  'i',
+);
+const firstRunScheduleDescriptorSuffixPattern = new RegExp(
+  String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunScheduleDescriptorPattern})\s*$`,
+  'i',
+);
+
+const firstRunSchedulingProviderPattern = String.raw`(?:calendly|acuity(?:\s+scheduling)?|cal\s*\.?\s*com|simply\s*book|simplybook|setmore|you\s*can\s*book\s*\.?\s*me|youcanbookme|tidy\s*cal|savvy\s*cal|savvycal|once\s*hub|oncehub|appointlet|book\s*like\s*a\s*boss|booklikeaboss|microsoft\s+bookings?|ms\s+bookings?|google\s+calendar)`;
+const firstRunSchedulingProviderIntentPattern = String.raw`(?:(?:booking|reservation|rsvp|appointments?|scheduling)\s+)?`;
+const firstRunSchedulingProviderLinkDescriptorPattern = String.raw`(?:(?:${firstRunSchedulingProviderPattern})\s+${firstRunSchedulingProviderIntentPattern}(?:links?|urls?|pages?|forms?|portals?|schedules?)|(?:links?|urls?|pages?|forms?|portals?|schedules?)\s+(?:for\s+)?(?:${firstRunSchedulingProviderPattern})|(?:enlace|link|url|portal|formulario|p[aá]gina)\s+(?:de|para)\s+(?:${firstRunSchedulingProviderPattern}))`;
+const firstRunSchedulingProviderStandalonePrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSchedulingProviderPattern})\s*(?:[-:/|]\s*)`,
+  'i',
+);
+const firstRunSchedulingProviderStandaloneSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSchedulingProviderPattern})\s*$`,
+  'i',
+);
+const firstRunSchedulingProviderLinkDescriptorPrefixPattern = new RegExp(
+  String.raw`^(?:${firstRunSchedulingProviderLinkDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+  'i',
+);
+const firstRunSchedulingProviderLinkDescriptorSuffixPattern = new RegExp(
+  String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunSchedulingProviderLinkDescriptorPattern})\s*$`,
+  'i',
+);
+const firstRunReservationDescriptorPattern = String.raw`(?:booking|reservation|rsvp|appointments?(?:\s+schedules?)?|scheduling)(?:\s+(?:forms?|pages?|links?|urls?|portals?|schedules?))?`;
+
+const firstRunReservationDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?${firstRunReservationDescriptorPattern}|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunReservationDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:(?:${firstRunSchedulingProviderPattern}\s+)?(?:course\s+)?${firstRunReservationDescriptorPattern}|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+(?:reserva(?:\s+de\s+cupos?)?|cupos?|rsvp)(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?|reservas?\s+de\s+cupos?(?:\s+(?:de|en)\s+${firstRunSchedulingProviderPattern})?)\s*$`,
+    'i',
+  );
+
+const firstRunConsultationCallDescriptorPattern = String.raw`(?:(?:discovery|consultation|intro(?:ductory)?|strategy)\s+calls?\s+(?:(?:booking|registration|sign[-\s]?up|requests?)(?:\s+(?:forms?|pages?|links?|urls?|portals?))?|forms?|pages?|links?|urls?|portals?)|(?:formulario|ficha|p[aá]gina|solicitud(?:es)?|enlace|link|url|portal)\s+de\s+llamada\s+de\s+(?:consulta|diagn[oó]stico))`;
+
+const firstRunConsultationCallDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunConsultationCallDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunConsultationCallDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunConsultationCallDescriptorPattern})\s*$`,
+    'i',
+  );
+
+const firstRunAdminWorkflowDescriptorPattern = String.raw`(?:(?:(?:admin|ops|operations|internal|back\s*office|backoffice)\s+)?(?:(?:application|admissions?|registration|enrollment|student|course|follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+)?(?:review|approval|moderation|triage)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:follow[-\s]?ups?|payments?|receipts?|proof\s+of\s+payment)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:admin|ops|operations|internal|back\s*office|backoffice)\s+(?:queues?|boards?|trackers?|dashboards?|kanbans?|pipelines?|inbox(?:es)?|workspaces?)|(?:colas?|bandejas?|tableros?|panel(?:es)?|kanban(?:es)?|pipelines?|seguimiento)\s+(?:de|para)\s+(?:revisi[oó]n|aprobaci[oó]n|moderaci[oó]n|triaje|seguimiento|pagos?|comprobantes?|evidencias?|admin|operaci[oó]n|operaciones|intern[oa]s?))`;
+
+const firstRunAdminWorkflowDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunAdminWorkflowDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunAdminWorkflowDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunAdminWorkflowDescriptorPattern})\s*$`,
+    'i',
+  );
+
+const firstRunFallbackDiscoveryDescriptorPattern = String.raw`(?:(?:(?:ui|ux|admin|ops|internal)\s+)?fallback\s+(?:discovery|triage|backlogs?|inventor(?:y|ies))(?:\s+(?:reviews?|audits?|scans?|cards?|views?|labels?|notes?|pages?|panels?|dashboards?|boards?|queues?|trackers?|backlogs?|inventor(?:y|ies)))?|(?:ui|ux|admin|ops|internal)\s+fallback(?:\s+(?:discovery|reviews?|audits?|scans?|triage|backlogs?|inventor(?:y|ies)))(?:\s+(?:cards?|views?|labels?|notes?|pages?|panels?|dashboards?|boards?|queues?|trackers?|backlogs?|inventor(?:y|ies)))?|(?:(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa])\s+)?(?:descubrimiento|revisi[oó]n|auditor[ií]a|chequeo|escaneo|triaje|inventario|backlog)\s+de\s+fallbacks?(?:\s+(?:de\s+)?(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa]))?(?:\s+(?:tarjetas?|vistas?|etiquetas?|notas?|p[aá]ginas?|panel(?:es)?|tableros?|colas?|seguimiento|backlogs?|inventarios?))?|(?:panel(?:es)?|tarjetas?|vistas?|etiquetas?|notas?|p[aá]ginas?|tableros?|colas?|seguimiento|inventarios?|backlogs?)\s+(?:intern[oa]\s+)?de\s+fallbacks?(?:\s+(?:de\s+)?(?:ui|ux|admin|ops|operaci[oó]n(?:es)?|intern[oa]))?)`;
+
+const firstRunFallbackDiscoveryDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunFallbackDiscoveryDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+    'i',
+  );
+
+const firstRunFallbackDiscoveryDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunFallbackDiscoveryDescriptorPattern})\s*$`,
+    'i',
+  );
+
+const firstRunUiReviewDescriptorPattern = String.raw`(?:(?:ui|ux|frontend|front[-\s]?end|admin|visual)\s+(?:qa|quality\s+assurance|smoke(?:\s+test)?|visual\s+qa)?\s*(?:reviews?|audits?|checks?|tests?|test\s+pages?|passes?|scans?|checklists?|pages?|panels?|dashboards?)|(?:screenshots?|screen\s+captures?|capturas?(?:\s+de\s+pantalla)?)\s+(?:reviews?|audits?|checks?|revisi[oó]n|auditor[ií]a)|(?:revisi[oó]n|auditor[ií]a|prueba|chequeo)\s+(?:visual|de\s+ui|de\s+ux|de\s+interfaz|de\s+capturas?(?:\s+de\s+pantalla)?))`;
+
+const firstRunUiReviewDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunUiReviewDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for)\s+|\s*[-:/|]\s*)`,
+    'i',
+  );
+
+const firstRunUiReviewDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`(?:\s*[-:/|]\s*|\s+(?:del|de|para\s+el|para|for)\s+)(?:${firstRunUiReviewDescriptorPattern})\s*$`,
+    'i',
+  );
+
+const firstRunRegistrationDashboardDescriptorPattern = String.raw`(?:(?:admin\s+)?(?:course\s+|student\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admissions?|intake|waitlist)\s+(?:dashboards?|trackers?|boards?|workspaces?)|(?:admin\s+)?(?:dashboards?|trackers?|boards?|workspaces?)\s+(?:for\s+)?(?:course\s+|student\s+)?(?:(?:pre[-\s]?)?registration|enrollment|application|admissions?|intake|waitlist|students?)|(?:panel(?:es)?|tableros?|seguimiento)\s+(?:de|para)\s+(?:pre)?inscripci[oó]n(?:es)?|(?:panel(?:es)?|tableros?|seguimiento)\s+(?:de|para)\s+(?:matr[ií]cula|admisiones|solicitudes|estudiantes?|alumnos?))`;
+
+const firstRunRegistrationDashboardDescriptorPrefixPattern =
+  new RegExp(
+    String.raw`^(?:${firstRunRegistrationDashboardDescriptorPattern})(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?`,
+    'i',
+  );
+
+const firstRunRegistrationDashboardDescriptorSuffixPattern =
+  new RegExp(
+    String.raw`\s*(?:[-:/|]\s*)?(?:${firstRunRegistrationDashboardDescriptorPattern})\s*$`,
+    'i',
+  );
+
+const firstRunCourseEnrollmentConnectorPrefixPattern =
+  /^(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)(?:\s*(?:[-:/|]\s*)?)/i;
+
+const firstRunCourseEnrollmentConnectorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+)?(?:pre)?inscripci[oó]n(?:es)?\s+(?:al|del?|de|para(?:\s+el)?)\s+curso)\s*$/i;
+
+const firstRunPreMatriculaDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+pre[-\s]?matr[ií]cula|pre[-\s]?matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunPreMatriculaDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+pre[-\s]?matr[ií]cula|pre[-\s]?matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
+const firstRunMatriculacionDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+matriculaci[oó]n|matriculaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunMatriculacionDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+de\s+matriculaci[oó]n|matriculaci[oó]n(?:es)?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?)\s*$/i;
+
+const firstRunSpanishAdmissionsDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|portal(?:es)?|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))(?:\s+(?:del|de|para\s+el|para))?\s*(?:[-:/|]\s*)?/i;
+
+const firstRunSpanishAdmissionsDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|portal(?:es)?|solicitud(?:es)?)\s+de\s+(?:admisiones|ingreso)|admisiones(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|ingreso\s+(?:del?\s+curso|de\s+curso|al\s+curso))\s*$/i;
+
+const firstRunLooseEnrollmentDescriptorPrefixPattern =
+  /^(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)(?:\s*(?:[-:/|]\s*))/i;
+
+const firstRunLooseEnrollmentDescriptorSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:formulario|ficha|p[aá]gina|solicitud(?:es)?)\s+para\s+(?:la\s+)?(?:pre)?inscripci[oó]n(?:es)?)\s*$/i;
+
+const firstRunEnglishRegistrationNounPrefixPattern =
+  /^(?:(?:[Pp]re[-\s]?)?[Rr]egistration(?:[Ss])?|[Ee]nrollment(?:[Ss])?|[Aa]pplication(?:[Ss])?|[Aa]dmission(?:[Ss])?|[Ss]ign[-\s]?[Uu]p(?:[Ss])?|[Ss]ignup(?:[Ss])?)(?:\s+(?:[Ff]orms?|[Pp]ages?|[Pp]ortals?))?(?:\s+(?:for|to|in)\s+(?:the\s+)?course)?(?:\s*[-:/|]\s*|\s+(?=[A-Z0-9]))/;
+
+const firstRunEnglishRegistrationNounSuffixPattern =
+  /\s*(?:[-:/|]\s*)?(?:(?:pre[-\s]?)?registrations?|enrollments?|applications?|admissions?|sign[-\s]?ups?|signups?)\s*$/i;
+
+const firstRunSpanishRegistrationNounPrefixPattern =
+  /^(?:(?:[Pp]re[-\s]?)?[Ii]nscripci[oóÓ]n(?:[Ee]s)?|[Rr]egistro(?:[Ss])?|[Mm]atr[iíÍ]cula(?:[Ss])?|[Ss]olicitud(?:[Ee]s)?)(?:\s+(?:del?|para(?:\s+el)?|al)\s+curso)?(?:\s*[-:/|]\s*|\s+(?=[A-ZÁÉÍÓÚÑ0-9]))/;
+
+const unwrapFirstRunDescriptorWrappedTitle = (title: string) => {
+  const trimmedTitle = title.trim();
+  const parenthesizedTitle = /^\(([^()]+)\)$/.exec(trimmedTitle);
+  if (parenthesizedTitle?.[1]?.trim()) return parenthesizedTitle[1].trim();
+
+  const bracketedTitle = /^\[([^[\]]+)\]$/.exec(trimmedTitle);
+  if (bracketedTitle?.[1]?.trim()) return bracketedTitle[1].trim();
+
+  const quotedTitle = /^(?:"([^"\n]+)"|'([^'\n]+)'|“([^”\n]+)”|‘([^’\n]+)’|«([^»\n]+)»)$/.exec(trimmedTitle);
+  const unquotedTitle = quotedTitle?.slice(1).find(Boolean)?.trim();
+  if (unquotedTitle) return unquotedTitle;
+
+  return trimmedTitle;
+};
+
+const firstRunResponseSheetProviderPattern =
+  String.raw`(?:(?:google\s*)?(?:sheets?|forms?)|(?:microsoft\s+)?excel)`;
+const firstRunResponseSheetDescriptorPattern =
+  String.raw`(?:(?:${firstRunResponseSheetProviderPattern}\s+)?(?:form\s+)?responses?|respuestas?(?:\s+del\s+formulario)?)(?:\s+\d+)?`;
+const firstRunResponseSheetSuffixPattern = new RegExp(
+  String.raw`\s*(?:(?:\(|\[)\s*(?:${firstRunResponseSheetDescriptorPattern})\s*(?:\)|\])|(?:[-:/|]\s*)(?:${firstRunResponseSheetDescriptorPattern}))\s*$`,
+  'i',
+);
+const firstRunResponseSheetPrefixPattern = new RegExp(
+  String.raw`^(?:(?:\(|\[)\s*(?:${firstRunResponseSheetDescriptorPattern})\s*(?:\)|\])|(?:${firstRunResponseSheetDescriptorPattern}))\s*(?:[-:/|]\s*)`,
+  'i',
+);
+
+const stripFirstRunResponseSheetSuffix = (title: string) =>
+  title.replace(firstRunResponseSheetSuffixPattern, '').trim();
+
+const stripFirstRunCohortDescriptorPrefixOnce = (title: string) => {
+  const trimmedTitle = title.trim();
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const strippedTitle = normalizedTitle
+    .replace(firstRunResponseSheetPrefixPattern, '')
+    .replace(firstRunUrlDescriptorPrefixPattern, '')
+    .replace(firstRunShortlinkDescriptorPrefixPattern, '')
+    .replace(firstRunQrRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunPromoAssetDescriptorPrefixPattern, '')
+    .replace(firstRunDataSourceDescriptorPrefixPattern, '')
+    .replace(firstRunDataImportDescriptorPrefixPattern, '')
+    .replace(firstRunFileStorageDescriptorPrefixPattern, '')
+    .replace(firstRunAdLeadFormDescriptorPrefixPattern, '')
+    .replace(firstRunProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunStaticFormBackendDescriptorPrefixPattern, '')
+    .replace(firstRunEmergingFormProviderDescriptorPrefixPattern, '')
+    .replace(firstRunRegistrationLinkDescriptorPrefixPattern, '')
+    .replace(firstRunEnrollmentFlowDescriptorPrefixPattern, '')
+    .replace(firstRunOfferDescriptorPrefixPattern, '')
+    .replace(firstRunUrgencyOfferDescriptorPrefixPattern, '')
+    .replace(firstRunContestEntryDescriptorPrefixPattern, '')
+    .replace(firstRunCallToActionDescriptorPrefixPattern, '')
+    .replace(firstRunSeatReservationCallToActionDescriptorPrefixPattern, '')
+    .replace(firstRunOpenEnrollmentDescriptorPrefixPattern, '')
+    .replace(firstRunSalesDescriptorPrefixPattern, '')
+    .replace(firstRunPaymentDescriptorPrefixPattern, '')
+    .replace(firstRunPaymentScheduleDescriptorPrefixPattern, '')
+    .replace(firstRunPaymentEvidenceDescriptorPrefixPattern, '')
+    .replace(firstRunBillingDescriptorPrefixPattern, '')
+    .replace(firstRunCourseChangeRequestDescriptorPrefixPattern, '')
+    .replace(firstRunFinancialAidDescriptorPrefixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorPrefixPattern, '')
+    .replace(firstRunAgreementDescriptorPrefixPattern, '')
+    .replace(firstRunStudentInfoDescriptorPrefixPattern, '')
+    .replace(firstRunSafetyInfoDescriptorPrefixPattern, '')
+    .replace(firstRunSupportRequestDescriptorPrefixPattern, '')
+    .replace(firstRunSignupSheetDescriptorPrefixPattern, '')
+    .replace(firstRunRosterDescriptorPrefixPattern, '')
+    .replace(firstRunAttendanceDescriptorPrefixPattern, '')
+    .replace(firstRunWorkshopDescriptorPrefixPattern, '')
+    .replace(firstRunClassDescriptorPrefixPattern, '')
+    .replace(firstRunTrialLessonDescriptorPrefixPattern, '')
+    .replace(firstRunProgramDescriptorPrefixPattern, '')
+    .replace(firstRunLiveSessionDescriptorPrefixPattern, '')
+    .replace(firstRunPriorityWaitlistDescriptorPrefixPattern, '')
+    .replace(firstRunBetaPilotDescriptorPrefixPattern, '')
+    .replace(firstRunInvitationDescriptorPrefixPattern, '')
+    .replace(firstRunWaitlistDescriptorPrefixPattern, '')
+    .replace(firstRunNewsletterSubscriptionConnectorDescriptorPrefixPattern, '')
+    .replace(firstRunLeadMagnetDescriptorPrefixPattern, '')
+    .replace(firstRunReferralDescriptorPrefixPattern, '')
+    .replace(firstRunDownloadableResourceDescriptorPrefixPattern, '')
+    .replace(firstRunCourseInfoAssetDescriptorPrefixPattern, '')
+    .replace(firstRunBareCourseInfoDescriptorPrefixPattern, '')
+    .replace(firstRunVideoAssetDescriptorPrefixPattern, '')
+    .replace(firstRunCourseInfoPageDescriptorPrefixPattern, '')
+    .replace(firstRunFaqPageDescriptorPrefixPattern, '')
+    .replace(firstRunCampaignDescriptorPrefixPattern, '')
+    .replace(firstRunLaunchDescriptorPrefixPattern, '')
+    .replace(firstRunAdAssetDescriptorPrefixPattern, '')
+    .replace(firstRunEmergingSocialLeadDescriptorPrefixPattern, '')
+    .replace(firstRunMessagingAutomationDescriptorPrefixPattern, '')
+    .replace(firstRunAutomationPlumbingDescriptorPrefixPattern, '')
+    .replace(firstRunCommunityGroupDescriptorPrefixPattern, '')
+    .replace(firstRunEventPlatformDescriptorPrefixPattern, '')
+    .replace(firstRunGenericEventDescriptorPrefixPattern, '')
+    .replace(firstRunTicketingDescriptorPrefixPattern, '')
+    .replace(firstRunEmailMarketingAutomationDescriptorPrefixPattern, '')
+    .replace(firstRunEmailMarketingFormDescriptorPrefixPattern, '')
+    .replace(firstRunNoCodeLandingDescriptorPrefixPattern, '')
+    .replace(firstRunCoursePlatformDescriptorPrefixPattern, '')
+    .replace(firstRunCrmFormDescriptorPrefixPattern, '')
+    .replace(firstRunCrmWorkflowDescriptorPrefixPattern, '')
+    .replace(firstRunCrmProviderFormDescriptorPrefixPattern, '')
+    .replace(firstRunInquiryDescriptorPrefixPattern, '')
+    .replace(firstRunSurveyDescriptorPrefixPattern, '')
+    .replace(firstRunInfoSessionDescriptorPrefixPattern, '')
+    .replace(firstRunPublicRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunSpanishPortalDescriptorPrefixPattern, '')
+    .replace(firstRunOnlineRegistrationDescriptorPrefixPattern, '')
+    .replace(firstRunPostSubmitDescriptorPrefixPattern, '')
+    .replace(firstRunLandingPageDescriptorPrefixPattern, '')
+    .replace(firstRunStandalonePublicPageDescriptorPrefixPattern, '')
+    .replace(firstRunBioLinkDescriptorPrefixPattern, '')
+    .replace(firstRunCourseWebsiteDescriptorPrefixPattern, '')
+    .replace(firstRunLearningPortalDescriptorPrefixPattern, '')
+    .replace(firstRunCourseCatalogDescriptorPrefixPattern, '')
+    .replace(firstRunScheduleDescriptorPrefixPattern, '')
+    .replace(firstRunSchedulingProviderLinkDescriptorPrefixPattern, '')
+    .replace(firstRunReservationDescriptorPrefixPattern, '')
+    .replace(firstRunSchedulingProviderStandalonePrefixPattern, '')
+    .replace(firstRunConsultationCallDescriptorPrefixPattern, '')
+    .replace(firstRunAdminWorkflowDescriptorPrefixPattern, '')
+    .replace(firstRunFallbackDiscoveryDescriptorPrefixPattern, '')
+    .replace(firstRunUiReviewDescriptorPrefixPattern, '')
+    .replace(firstRunRegistrationDashboardDescriptorPrefixPattern, '')
+    .replace(firstRunCourseEnrollmentConnectorPrefixPattern, '')
+    .replace(firstRunPreMatriculaDescriptorPrefixPattern, '')
+    .replace(firstRunMatriculacionDescriptorPrefixPattern, '')
+    .replace(firstRunSpanishAdmissionsDescriptorPrefixPattern, '')
+    .replace(firstRunLooseEnrollmentDescriptorPrefixPattern, '')
+    .replace(firstRunEnglishRegistrationNounPrefixPattern, '')
+    .replace(firstRunSpanishRegistrationNounPrefixPattern, '')
+    .replace(firstRunWorkspaceBrandDescriptorPrefixPattern, '')
+    .replace(firstRunUntitledDescriptorPrefixPattern, '')
+    .replace(firstRunNumberedGenericFormDescriptorPrefixPattern, '')
+    .replace(firstRunOnboardingDescriptorPrefixPattern, '')
+    .replace(firstRunOrientationDescriptorPrefixPattern, '')
+    .replace(firstRunCohortDescriptorPrefixPattern, '')
+    .replace(firstRunVariantDescriptorPrefixPattern, '')
+    .replace(firstRunTemplateDescriptorPrefixPattern, '')
+    .replace(firstRunTestDraftDescriptorPrefixPattern, '')
+    .replace(firstRunCopyDescriptorPrefixPattern, '')
+    .replace(firstRunAuditionDescriptorPrefixPattern, '')
+    .replace(firstRunAssessmentDescriptorPrefixPattern, '')
+    .replace(firstRunPortfolioSubmissionDescriptorPrefixPattern, '')
+    .replace(firstRunAssignmentSubmissionDescriptorPrefixPattern, '')
+    .replace(firstRunCertificateArtifactDescriptorPrefixPattern, '')
+    .replace(firstRunApplicationDescriptorPrefixPattern, '')
+    .replace(
+      /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s|para\s+el|para)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso|para\s+el|para)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
+      '',
+    )
+    .replace(firstRunCourseNounDescriptorPrefixPattern, '')
+    .trim();
+  if (strippedTitle === normalizedTitle) return trimmedTitle;
+
+  const strippedCourseNoun = strippedTitle
+    .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
+    .replace(/^(?:de|del|para(?:\s+el)?)\s+/, '')
+    .trim();
+
+  return unwrapFirstRunDescriptorWrappedTitle(strippedCourseNoun || strippedTitle);
 };
 
 const stripFirstRunCohortDescriptorPrefix = (title: string) => {
+  let currentTitle = title.trim();
+
+  for (let pass = 0; pass < 4; pass += 1) {
+    const nextTitle = stripFirstRunCohortDescriptorPrefixOnce(currentTitle);
+    if (nextTitle === currentTitle) return currentTitle;
+    currentTitle = nextTitle;
+  }
+
+  return currentTitle;
+};
+
+const stripFirstRunCohortDescriptorSuffixOnce = (title: string) => {
   const trimmedTitle = title.trim();
-  const strippedTitle = trimmedTitle
+  const normalizedTitle = normalizeFirstRunDescriptorSeparators(trimmedTitle);
+  const strippedTitle = normalizedTitle
+    .replace(firstRunUrlDescriptorSuffixPattern, '')
+    .replace(firstRunShortlinkDescriptorSuffixPattern, '')
+    .replace(firstRunQrRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunPromoAssetDescriptorSuffixPattern, '')
+    .replace(firstRunDataSourceDescriptorSuffixPattern, '')
+    .replace(firstRunDataImportDescriptorSuffixPattern, '')
+    .replace(firstRunFileStorageDescriptorSuffixPattern, '')
+    .replace(firstRunAdLeadFormDescriptorSuffixPattern, '')
+    .replace(firstRunProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunStaticFormBackendDescriptorSuffixPattern, '')
+    .replace(firstRunEmergingFormProviderDescriptorSuffixPattern, '')
+    .replace(firstRunRegistrationLinkDescriptorSuffixPattern, '')
+    .replace(firstRunEnrollmentFlowDescriptorSuffixPattern, '')
+    .replace(firstRunOfferDescriptorSuffixPattern, '')
+    .replace(firstRunUrgencyOfferDescriptorSuffixPattern, '')
+    .replace(firstRunContestEntryDescriptorSuffixPattern, '')
+    .replace(firstRunCallToActionDescriptorSuffixPattern, '')
+    .replace(firstRunSeatReservationCallToActionDescriptorSuffixPattern, '')
+    .replace(firstRunOpenEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunSalesDescriptorSuffixPattern, '')
+    .replace(firstRunPaymentDescriptorSuffixPattern, '')
+    .replace(firstRunPaymentScheduleDescriptorSuffixPattern, '')
+    .replace(firstRunPaymentEvidenceDescriptorSuffixPattern, '')
+    .replace(firstRunBillingDescriptorSuffixPattern, '')
+    .replace(firstRunCourseChangeRequestDescriptorSuffixPattern, '')
+    .replace(firstRunFinancialAidDescriptorSuffixPattern, '')
+    .replace(firstRunNotificationSignupDescriptorSuffixPattern, '')
+    .replace(firstRunAgreementDescriptorSuffixPattern, '')
+    .replace(firstRunStudentInfoDescriptorSuffixPattern, '')
+    .replace(firstRunSafetyInfoDescriptorSuffixPattern, '')
+    .replace(firstRunSupportRequestDescriptorSuffixPattern, '')
+    .replace(firstRunSignupSheetDescriptorSuffixPattern, '')
+    .replace(firstRunRosterDescriptorSuffixPattern, '')
+    .replace(firstRunAttendanceDescriptorSuffixPattern, '')
+    .replace(firstRunWorkshopDescriptorSuffixPattern, '')
+    .replace(firstRunClassDescriptorSuffixPattern, '')
+    .replace(firstRunTrialLessonDescriptorSuffixPattern, '')
+    .replace(firstRunProgramDescriptorSuffixPattern, '')
+    .replace(firstRunLiveSessionDescriptorSuffixPattern, '')
+    .replace(firstRunPriorityWaitlistDescriptorSuffixPattern, '')
+    .replace(firstRunBetaPilotDescriptorSuffixPattern, '')
+    .replace(firstRunInvitationDescriptorSuffixPattern, '')
+    .replace(firstRunWaitlistDescriptorSuffixPattern, '')
+    .replace(firstRunNewsletterSubscriptionConnectorDescriptorSuffixPattern, '')
+    .replace(firstRunLeadMagnetDescriptorSuffixPattern, '')
+    .replace(firstRunReferralDescriptorSuffixPattern, '')
+    .replace(firstRunDownloadableResourceDescriptorSuffixPattern, '')
+    .replace(firstRunCourseInfoAssetDescriptorSuffixPattern, '')
+    .replace(firstRunBareCourseInfoDescriptorSuffixPattern, '')
+    .replace(firstRunVideoAssetDescriptorSuffixPattern, '')
+    .replace(firstRunCourseInfoPageDescriptorSuffixPattern, '')
+    .replace(firstRunFaqPageDescriptorSuffixPattern, '')
+    .replace(firstRunCampaignDescriptorSuffixPattern, '')
+    .replace(firstRunLaunchDescriptorSuffixPattern, '')
+    .replace(firstRunAdAssetDescriptorSuffixPattern, '')
+    .replace(firstRunEmergingSocialLeadDescriptorSuffixPattern, '')
+    .replace(firstRunMessagingAutomationDescriptorSuffixPattern, '')
+    .replace(firstRunAutomationPlumbingDescriptorSuffixPattern, '')
+    .replace(firstRunCommunityGroupDescriptorSuffixPattern, '')
+    .replace(firstRunEventPlatformDescriptorSuffixPattern, '')
+    .replace(firstRunGenericEventDescriptorSuffixPattern, '')
+    .replace(firstRunTicketingDescriptorSuffixPattern, '')
+    .replace(firstRunEmailMarketingAutomationDescriptorSuffixPattern, '')
+    .replace(firstRunEmailMarketingFormDescriptorSuffixPattern, '')
+    .replace(firstRunNoCodeLandingDescriptorSuffixPattern, '')
+    .replace(firstRunCoursePlatformDescriptorSuffixPattern, '')
+    .replace(firstRunCrmFormDescriptorSuffixPattern, '')
+    .replace(firstRunCrmWorkflowDescriptorSuffixPattern, '')
+    .replace(firstRunCrmProviderFormDescriptorSuffixPattern, '')
+    .replace(firstRunInquiryDescriptorSuffixPattern, '')
+    .replace(firstRunSurveyDescriptorSuffixPattern, '')
+    .replace(firstRunInfoSessionDescriptorSuffixPattern, '')
+    .replace(firstRunPublicRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunSpanishPortalDescriptorSuffixPattern, '')
+    .replace(firstRunOnlineRegistrationDescriptorSuffixPattern, '')
+    .replace(firstRunPostSubmitDescriptorSuffixPattern, '')
+    .replace(firstRunLandingPageDescriptorSuffixPattern, '')
+    .replace(firstRunStandalonePublicPageDescriptorSuffixPattern, '')
+    .replace(firstRunBioLinkDescriptorSuffixPattern, '')
+    .replace(firstRunCourseWebsiteDescriptorSuffixPattern, '')
+    .replace(firstRunLearningPortalDescriptorSuffixPattern, '')
+    .replace(firstRunCourseCatalogDescriptorSuffixPattern, '')
+    .replace(firstRunScheduleDescriptorSuffixPattern, '')
+    .replace(firstRunSchedulingProviderLinkDescriptorSuffixPattern, '')
+    .replace(firstRunReservationDescriptorSuffixPattern, '')
+    .replace(firstRunSchedulingProviderStandaloneSuffixPattern, '')
+    .replace(firstRunConsultationCallDescriptorSuffixPattern, '')
+    .replace(firstRunAdminWorkflowDescriptorSuffixPattern, '')
+    .replace(firstRunFallbackDiscoveryDescriptorSuffixPattern, '')
+    .replace(firstRunUiReviewDescriptorSuffixPattern, '')
+    .replace(firstRunRegistrationDashboardDescriptorSuffixPattern, '')
+    .replace(firstRunCourseEnrollmentConnectorSuffixPattern, '')
+    .replace(firstRunPreMatriculaDescriptorSuffixPattern, '')
+    .replace(firstRunMatriculacionDescriptorSuffixPattern, '')
+    .replace(firstRunSpanishAdmissionsDescriptorSuffixPattern, '')
+    .replace(firstRunLooseEnrollmentDescriptorSuffixPattern, '')
+    .replace(firstRunAuditionDescriptorSuffixPattern, '')
+    .replace(firstRunApplicationDescriptorSuffixPattern, '')
+    .replace(firstRunEnglishRegistrationNounSuffixPattern, '')
+    .replace(firstRunWorkspaceBrandDescriptorSuffixPattern, '')
+    .replace(firstRunUntitledDescriptorSuffixPattern, '')
+    .replace(firstRunNumberedGenericFormDescriptorSuffixPattern, '')
+    .replace(firstRunOnboardingDescriptorSuffixPattern, '')
+    .replace(firstRunOrientationDescriptorSuffixPattern, '')
+    .replace(firstRunCohortDescriptorSuffixPattern, '')
+    .replace(firstRunVariantDescriptorSuffixPattern, '')
+    .replace(firstRunTemplateDescriptorSuffixPattern, '')
+    .replace(firstRunTestDraftDescriptorSuffixPattern, '')
+    .replace(firstRunCopyDescriptorSuffixPattern, '')
+    .replace(firstRunAssessmentDescriptorSuffixPattern, '')
+    .replace(firstRunPortfolioSubmissionDescriptorSuffixPattern, '')
+    .replace(firstRunAssignmentSubmissionDescriptorSuffixPattern, '')
+    .replace(firstRunCertificateArtifactDescriptorSuffixPattern, '')
     .replace(
-      /^(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+inscripci[oó]n|de\s+registro)|p[aá]gina\s+(?:de\s+inscripci[oó]n|de\s+registro)|public\s+form|course\s+form|(?:course\s+)?registration(?:\s+(?:form|page))?|landing\s+(?:del\s+curso|de\s+curso|de\s+inscripci[oó]n|de\s+registro|para\s+el|para|del|de)|course\s+landing(?:\s+page)?|landing\s+page)(?:\s+(?:del|de|para\s+el|para|for))?\s*(?:[-:/|]\s*)?/i,
+      /\s*(?:[-:/|]\s*)?(?:formulario\s+(?:p[uú]blico|del?\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+reserva\s+de\s+cupos?|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+contacto|de\s+consulta|de\s+inter[eé]s)|ficha\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|del?\s+curso|de\s+curso)|p[aá]gina\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|(?:p[uú]blica\s+)?del?\s+curso)|solicitud(?:es)?\s+(?:de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro|de\s+admisi[oó]n|de\s+matr[ií]cula|de\s+cupos?|del?\s+curso|de\s+curso)|inscripciones?\s+(?:del?\s+curso|de\s+curso)|pre[-\s]?registros?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|registros?\s+(?:del?\s+curso|de\s+curso|al\s+curso)|reservas?\s+de\s+cupos?(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|preinscripciones?(?:\s+(?:del?\s+curso|de\s+curso))?|matr[ií]culas?(?:\s+(?:del?\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro))?|(?:pre)?inscripci[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|admisi[oó]n(?:\s+(?:del?\s+curso|de\s+curso|al\s+curso))?|public\s+form|course\s+form|contact\s+form|inquiry\s+form|enquiry\s+form|lead\s+form|(?:course\s+)?sign[-\s]?up(?:\s+(?:form|page|portal))?|(?:public\s+)?course\s+page|(?:(?:course|student)\s+)?(?:intake|submissions?|inscriptions?|(?:pre[-\s]?)?registration|enrollment|admissions?)(?:\s+(?:form|page|portal|request))?|landing\s+(?:del\s+curso|de\s+curso|de\s+(?:pre)?inscripci[oó]n|de\s+pre[-\s]?registro|de\s+registro)|course\s+landing(?:\s+page)?|landing\s+page)\s*$/i,
       '',
     )
+    .replace(firstRunCourseNounDescriptorSuffixPattern, '')
     .trim();
-  const strippedCourseNoun = strippedTitle === trimmedTitle
-    ? strippedTitle
-    : strippedTitle
-      .replace(/^(?:curso|course)\s*(?:[-:/|]\s*)?/i, '')
-      .trim();
 
-  return strippedCourseNoun || strippedTitle || trimmedTitle;
+  return strippedTitle === normalizedTitle ? trimmedTitle : unwrapFirstRunDescriptorWrappedTitle(strippedTitle);
+};
+
+const stripFirstRunCohortDescriptorSuffix = (title: string) => {
+  let currentTitle = title.trim();
+
+  for (let pass = 0; pass < 4; pass += 1) {
+    const nextTitle = stripFirstRunCohortDescriptorSuffixOnce(currentTitle);
+    if (nextTitle === currentTitle) return currentTitle;
+    currentTitle = nextTitle;
+  }
+
+  return currentTitle;
+};
+
+const stripFirstRunCohortDescriptorFallback = (label: string) => {
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(label),
+  );
+
+  return strippedLabel || label.trim();
+};
+
+const readableFirstRunCohortFallbackLabel = (slug: string) =>
+  stripFirstRunCohortDescriptorFallback(readableCohortFallbackLabel(slug));
+
+const isGenericFirstRunCohortLabel = (label: string) => {
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(label),
+  );
+
+  return strippedLabel.trim() === '';
 };
 
 const cohortOptionLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
   const title = cohort.ccTitle?.trim();
-  if (!title || normalizeCohortLabelKey(title) === normalizeCohortLabelKey(slug)) return slug;
-  if (stripTrailingCohortSlug(title, slug) !== title) return title;
-  return `${title} (${slug})`;
+  const fallbackLabel = readableCohortFallbackLabel(slug);
+  if (!title) return fallbackLabel;
+
+  const strippedTitle = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
+  );
+  const displayTitle = unwrapFirstRunDescriptorWrappedTitle(
+    stripFirstRunResponseSheetSuffix(dedupeRepeatedCohortTitleSegments(strippedTitle)),
+  ) || fallbackLabel;
+  if (!slug) return displayTitle;
+
+  const displayKey = normalizeCohortLabelKey(displayTitle);
+  const slugKey = normalizeCohortLabelKey(slug);
+  const fallbackKey = normalizeCohortLabelKey(fallbackLabel);
+  if (displayKey === slugKey || displayKey === fallbackKey) return fallbackLabel;
+
+  return `${displayTitle} (${slug})`;
 };
 
-const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
+const hasCohortTitleFormattingWorthPreserving = (label: string) => (
+  Array.from(label).some((character) => character.charCodeAt(0) > 0x7f)
+  || /\b[A-Z]{2,}\b/.test(label)
+  || /[a-z][A-Z]/.test(label)
+);
+
+const isLikelyAdPlatformCourseTitle = (title: string, slug: string) => (
+  normalizeCohortLabelKey(title) === normalizeCohortLabelKey(slug)
+  && /^(?:google|youtube|facebook|fb|meta|instagram|ig|linked\s*in|linkedin|tik\s*tok|tiktok)\s+ads?\s+(?:for|para)\s+\S/i.test(title.trim())
+);
+
+export const cohortFirstRunLabel = (cohort: CourseCohortOptionDTO) => {
   const slug = cohort.ccSlug.trim();
-  const title = cohort.ccTitle?.trim();
-  if (!title) return slug;
-  return stripTrailingCohortSlug(stripFirstRunCohortDescriptorPrefix(title), slug);
+  const fallbackLabel = stripFirstRunCohortDescriptorFallback(humanizeCohortSlug(slug) || slug);
+  const title = stripFirstRunCohortPresentationMarkers(cohort.ccTitle ?? '');
+  if (!title) return fallbackLabel;
+  if (isLikelyAdPlatformCourseTitle(title, slug)) {
+    return title.trim();
+  }
+  const strippedLabel = stripFirstRunCohortDescriptorSuffix(
+    stripFirstRunCohortDescriptorPrefix(stripTrailingCohortSlug(title, slug)),
+  );
+  const displayLabel = unwrapFirstRunDescriptorWrappedTitle(
+    stripFirstRunResponseSheetSuffix(dedupeRepeatedCohortTitleSegments(strippedLabel)),
+  );
+  if (!displayLabel) return fallbackLabel;
+  if (normalizeCohortLabelKey(displayLabel) === normalizeCohortLabelKey(slug)) {
+    if (hasCohortTitleFormattingWorthPreserving(displayLabel)) return displayLabel;
+    return fallbackLabel;
+  }
+  return displayLabel;
 };
 
 const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
@@ -655,29 +2763,1135 @@ const cohortSummaryLabel = (cohort: CourseCohortOptionDTO) => {
   return summaryLabel || cohortOptionLabel(cohort);
 };
 
+const sourceLabelSpecialWords = new Map([
+  ['api', 'API'],
+  ['crm', 'CRM'],
+  ['facebook', 'Facebook'],
+  ['fb', 'Facebook'],
+  ['google', 'Google'],
+  ['instagram', 'Instagram'],
+  ['ig', 'Instagram'],
+  ['linkedin', 'LinkedIn'],
+  ['meta', 'Meta'],
+  ['ms', 'MS'],
+  ['qr', 'QR'],
+  ['sms', 'SMS'],
+  ['tiktok', 'TikTok'],
+  ['utm', 'UTM'],
+  ['wa', 'WhatsApp'],
+  ['wati', 'WATI'],
+  ['whatsapp', 'WhatsApp'],
+  ['youtube', 'YouTube'],
+]);
+
+const formatDelimitedSourceWord = (word: string, index: number) => {
+  const lowerWord = word.toLocaleLowerCase('es');
+  const acronym = sourceLabelSpecialWords.get(lowerWord);
+  if (acronym) return acronym;
+  if (index > 0) return lowerWord;
+  return `${lowerWord.charAt(0).toLocaleUpperCase('es')}${lowerWord.slice(1)}`;
+};
+
+const sourceWordComparisonKey = (word: string) => {
+  const lowerWord = word.toLocaleLowerCase('es');
+  return (sourceLabelSpecialWords.get(lowerWord) ?? lowerWord).toLocaleLowerCase('es');
+};
+
+const dedupeAdjacentSourceWords = (words: readonly string[]) => {
+  const dedupedWords: string[] = [];
+
+  words.forEach((word) => {
+    const wordKey = sourceWordComparisonKey(word);
+    const previousWord = dedupedWords[dedupedWords.length - 1];
+    const previousWordKey = previousWord == null ? '' : sourceWordComparisonKey(previousWord);
+
+    if (wordKey && wordKey === previousWordKey) return;
+
+    dedupedWords.push(word);
+  });
+
+  return dedupedWords;
+};
+
 const humanizeDelimitedSourceLabel = (source: string) => {
-  if (!/[_./-]/.test(source)) return source;
-  const normalized = source.replace(/[_./-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const hasDelimitedParts = /[_./-]/.test(source);
+  const hasCamelCaseParts = !/\s/.test(source) && /[a-z0-9][A-Z]/.test(source);
+  if (!hasDelimitedParts && !hasCamelCaseParts) {
+    return sourceLabelSpecialWords.get(source.trim().toLocaleLowerCase('es')) ?? source;
+  }
+  const normalized = source
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_./-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!normalized) return source;
-  const sentenceCaseSource = normalized.toLocaleLowerCase('es');
-  return `${sentenceCaseSource.charAt(0).toLocaleUpperCase('es')}${sentenceCaseSource.slice(1)}`;
+  return dedupeAdjacentSourceWords(normalized.split(' ')).map(formatDelimitedSourceWord).join(' ');
 };
 
 const normalizeSourceAliasKey = (source: string) =>
   normalizeLocalSearchText(humanizeDelimitedSourceLabel(source));
 
+const sourceAliasKeyVariants = (sourceKey: string) => {
+  const variants = new Set([sourceKey]);
+  const pluralSuffixes = [
+    ['form', 'forms'],
+    ['link', 'links'],
+    ['page', 'pages'],
+    ['portal', 'portals'],
+    ['button', 'buttons'],
+    ['url', 'urls'],
+  ] as const;
+
+  const addPluralVariants = (key: string) => {
+    for (const [singularSuffix, pluralSuffix] of pluralSuffixes) {
+      if (key.endsWith(` ${pluralSuffix}`)) {
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), ` ${singularSuffix}`));
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), ''));
+        variants.add(key.replace(new RegExp(`\\s+${pluralSuffix}$`), singularSuffix));
+      } else if (key.endsWith(` ${singularSuffix}`)) {
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), ` ${pluralSuffix}`));
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), ''));
+        variants.add(key.replace(new RegExp(`\\s+${singularSuffix}$`), singularSuffix));
+      } else if (key.endsWith(pluralSuffix)) {
+        variants.add(key.replace(new RegExp(`${pluralSuffix}$`), singularSuffix));
+      }
+    }
+  };
+
+  addPluralVariants(sourceKey);
+
+  for (const containerSuffix of [
+    'entry',
+    'entries',
+    'record',
+    'records',
+    'response',
+    'responses',
+    'result',
+    'results',
+    'submission',
+    'submissions',
+  ]) {
+    if (sourceKey.endsWith(` ${containerSuffix}`)) {
+      const baseSourceKey = sourceKey.replace(new RegExp(`\\s+${containerSuffix}$`), '');
+      variants.add(baseSourceKey);
+      addPluralVariants(baseSourceKey);
+    }
+  }
+
+  for (const containerPrefix of [
+    'formulario de',
+    'formularios de',
+    'pagina de',
+    'paginas de',
+    'portal de',
+    'portales de',
+    'enlace de',
+    'enlaces de',
+  ]) {
+    if (sourceKey.startsWith(`${containerPrefix} `)) {
+      const baseSourceKey = sourceKey.slice(containerPrefix.length + 1).trim();
+      if (!baseSourceKey) continue;
+      variants.add(baseSourceKey);
+      addPluralVariants(baseSourceKey);
+    }
+  }
+
+  return variants;
+};
+
+const placeholderMetadataValueKeys = new Set([
+  '-',
+  'unknown',
+  'desconocido',
+  'desconocida',
+  'pendiente',
+  'pendiente por validar',
+  'por actualizar',
+  'por confirmar',
+  'por definir',
+  'por validar',
+  'sin dato',
+  'sin datos',
+  'sin actualizar',
+  'sin campana',
+  'sin contenido',
+  'sin fuente',
+  'sin importacion',
+  'sin medio',
+  'sin origen',
+  'sin utm',
+  'n/a',
+  'na',
+  'n.d.',
+  'nd',
+  'none',
+  'null',
+  'undefined',
+  'not set',
+  'not provided',
+  'not available',
+  'not tracked',
+  'no campaign',
+  'no informa',
+  'no informada',
+  'no informado',
+  'no registra',
+  'no registrada',
+  'no registrado',
+  'no reportada',
+  'no reportado',
+  'no aplica',
+  'no disponible',
+  'sin registrar',
+  'sin registro',
+  'sin migracion',
+  'tbd',
+].map(normalizeSourceAliasKey));
+
+const isPlaceholderMetadataValue = (value: string | null | undefined) => {
+  const valueKey = normalizeSourceAliasKey(value ?? '');
+  if (!valueKey) return true;
+
+  return Array.from(sourceAliasKeyVariants(valueKey)).some((variant) =>
+    placeholderMetadataValueKeys.has(variant)
+  );
+};
+
 const defaultPublicFormSourceKeys = new Set([
   defaultPublicFormSource,
+  '-',
+  'unknown',
+  'desconocido',
+  'desconocida',
+  'sin fuente',
+  'sin origen',
+  'n/a',
+  'na',
+  'none',
+  'null',
+  'undefined',
+  'not set',
+  'not provided',
+  'default',
+  'form',
+  'forms',
+  'form entry',
+  'form entries',
+  'form response',
+  'form responses',
+  'form result',
+  'form results',
+  'form submission',
+  'form submissions',
+  'new form entry',
+  'new form entries',
+  'new form response',
+  'new form responses',
+  'new form submission',
+  'new form submissions',
+  'new submission',
+  'new submissions',
+  'submission',
+  'submissions',
+  'direct',
+  'direct web',
+  'direct website',
+  'manual',
+  'manual entry',
+  'manual registration',
+  'manual enrollment',
+  'manual signup',
+  'manual import',
+  'manual upload',
+  'manual data entry',
+  'admin entry',
+  'admin registration',
+  'admin enrollment',
+  'admin signup',
+  'back office registration',
+  'backoffice registration',
+  'internal registration',
+  'test',
+  'test form',
+  'test submission',
+  'draft',
+  'draft form',
+  'draft submission',
+  'demo',
+  'demo form',
+  'demo submission',
+  'sample',
+  'sample form',
+  'sample submission',
+  'sandbox',
+  'sandbox form',
+  'sandbox submission',
+  'staging',
+  'staging form',
+  'staging submission',
+  'qa',
+  'qa test',
+  'uat',
+  'uat submission',
+  'internal test',
+  'internal test form',
+  'prueba',
+  'prueba formulario',
+  'formulario de prueba',
+  'envio de prueba',
+  'registro de prueba',
+  'admin import',
+  'backend import',
+  'bulk import',
+  'bulk upload',
+  'csv',
+  'csv import',
+  'csv upload',
+  'excel import',
+  'excel upload',
+  'xlsx import',
+  'xlsx upload',
+  'spreadsheet import',
+  'spreadsheet upload',
+  'sheet import',
+  'sheet upload',
+  'legacy import',
+  'legacy migration',
+  'data import',
+  'data migration',
+  'database import',
+  'database migration',
+  'seed data',
+  'seed import',
+  'system import',
+  'system migration',
+  'airtable registration table',
+  'airtable enrollment table',
+  'airtable table',
+  'airtable view',
+  'airtable database',
+  'notion registration database',
+  'notion database',
+  'coda registration table',
+  'coda table',
+  'google sheet',
+  'google sheets',
+  'google sheets registration rows',
+  'google sheets enrollment rows',
+  'excel registration workbook',
+  'excel sheet',
+  'excel rows',
+  'microsoft excel registration workbook',
+  'carga manual',
+  'registro manual',
+  'inscripcion manual',
+  'matricula manual',
+  'registro interno',
+  'inscripcion interna',
+  'carga masiva',
+  'carga csv',
+  'importacion manual',
+  'importacion masiva',
+  'importacion csv',
+  'importacion de datos',
+  'migracion',
+  'migracion de datos',
+  'datos migrados',
+  'organic',
+  'organic web',
+  'organic website',
+  'website organic',
+  'web organic',
+  'organico',
+  'organica',
+  'trafico directo',
+  'trafico organico',
+  'homepage',
+  'homepage form',
+  'home page',
+  'home page form',
+  'home page signup',
+  'pagina de inicio',
+  'formulario de pagina de inicio',
   'landing page',
+  'web',
+  'website',
+  'web form',
+  'website form',
+  'course website',
+  'course page',
+  'public website',
   'course landing',
   'course landing page',
   'public landing',
   'public landing page',
   'public form',
+  'public course form',
+  'public course page',
+  'public signup',
+  'public signup form',
+  'public course signup',
+  'public course signup form',
+  'public registration',
+  'public course registration',
+  'public registration form',
+  'public course registration form',
+  'public enrollment',
+  'public course enrollment',
+  'public enrollment form',
+  'public course enrollment form',
+  'facebook instant form',
+  'facebook instant forms',
+  'fb instant form',
+  'fb instant forms',
+  'ig instant form',
+  'ig instant forms',
+  'instagram instant form',
+  'instagram instant forms',
+  'meta instant form',
+  'meta instant forms',
+  'tiktok instant form',
+  'tiktok instant forms',
+  'tiktok instant lead form',
+  'tiktok instant lead forms',
+  'tik tok instant form',
+  'tik tok instant forms',
+  'tik tok instant lead form',
+  'tik tok instant lead forms',
+  'facebook lead ad',
+  'facebook lead ads',
+  'facebook lead ad form',
+  'facebook lead ads form',
+  'facebook lead form',
+  'facebook leadgen',
+  'facebook leadgen form',
+  'facebook leads',
+  'facebook ads lead form',
+  'facebook ads leadgen',
+  'facebook ads leads',
+  'google lead ad',
+  'google lead ads',
+  'google lead ad form',
+  'google lead ads form',
+  'google lead form',
+  'google leadgen',
+  'google leadgen form',
+  'google leads',
+  'google ads lead form',
+  'google ads leadgen',
+  'google ads leads',
+  'fb lead ad',
+  'fb lead ads',
+  'fb lead ad form',
+  'fb lead ads form',
+  'fb lead form',
+  'fb leadgen',
+  'fb leadgen form',
+  'fb leads',
+  'fb ads lead form',
+  'fb ads leadgen',
+  'fb ads leads',
+  'instagram lead ad',
+  'instagram lead ads',
+  'instagram lead ad form',
+  'instagram lead ads form',
+  'instagram lead form',
+  'instagram leadgen',
+  'instagram leadgen form',
+  'instagram leads',
+  'instagram ads lead form',
+  'instagram ads leadgen',
+  'instagram ads leads',
+  'ig lead ad',
+  'ig lead ads',
+  'ig lead ad form',
+  'ig lead ads form',
+  'ig lead form',
+  'ig leadgen',
+  'ig leadgen form',
+  'ig leads',
+  'ig ads lead form',
+  'ig ads leadgen',
+  'ig ads leads',
+  'meta lead ad',
+  'meta lead ads',
+  'meta lead ad form',
+  'meta lead ads form',
+  'meta lead form',
+  'meta leadgen',
+  'meta leadgen form',
+  'meta leads',
+  'meta ads lead form',
+  'meta ads leadgen',
+  'meta ads leads',
+  'youtube lead ad',
+  'youtube lead ads',
+  'youtube lead ad form',
+  'youtube lead ads form',
+  'youtube lead form',
+  'youtube leadgen',
+  'youtube leadgen form',
+  'youtube leads',
+  'youtube ads lead form',
+  'youtube ads leadgen',
+  'youtube ads leads',
+  'linkedin lead gen form',
+  'linkedin lead form',
+  'linkedin leadgen',
+  'linkedin leadgen form',
+  'linkedin leads',
+  'tiktok lead form',
+  'tiktok leadgen',
+  'tiktok leadgen form',
+  'tiktok leads',
+  'whatsapp lead form',
+  'whatsapp leadgen',
+  'whatsapp leadgen form',
+  'whatsapp leads',
+  'whatsapp form',
+  'whatsapp forms',
+  'whatsapp registration',
+  'whatsapp registration form',
+  'whatsapp signup',
+  'whatsapp signup form',
+  'lead capture',
+  'lead generation',
+  'lead gen',
+  'leadgen',
+  'leadgen form',
+  'leadgen forms',
+  'leads de facebook',
+  'leads de instagram',
+  'leads de meta',
+  'leads de linkedin',
+  'leads de tiktok',
+  'leads de whatsapp',
+  'captacion de leads',
+  'captura de leads',
+  'generacion de leads',
+  'captacion de prospectos',
+  'captura de prospectos',
+  'generacion de prospectos',
+  'captacion de interesados',
+  'captura de interesados',
+  'generacion de interesados',
+  'formulario de captacion de leads',
+  'formulario de captura de prospectos',
+  'formulario de generacion de interesados',
+  'course signup',
+  'course signup page',
+  'course signup form',
+  'signup form',
+  'pre registration',
+  'pre registration form',
+  'pre registration page',
+  'pre registration portal',
+  'course pre registration',
+  'course pre registration form',
+  'course pre registration page',
+  'course pre registration portal',
+  'course registration',
+  'course registration form',
+  'course registration page',
+  'registration portal',
+  'course registration portal',
+  'course enrollment',
+  'course enrollment form',
+  'course enrollment page',
+  'enrollment form',
+  'enrollment portal',
+  'course enrollment portal',
+  'student enrollment portal',
+  'student registration form',
+  'admission form',
+  'admissions form',
+  'admission page',
+  'admissions page',
+  'course admission page',
+  'course admissions page',
+  'application form',
+  'application page',
+  'course application page',
+  'intake form',
+  'intake page',
+  'course intake',
+  'course intake form',
+  'course intake page',
+  'student intake form',
+  'student intake page',
+  'waitlist',
+  'waitlist form',
+  'waitlist page',
+  'waitlist portal',
+  'course waitlist',
+  'course waitlist form',
+  'course waitlist page',
+  'course waitlist portal',
+  'waiting list',
+  'waiting list form',
+  'waiting list page',
+  'lista de espera',
+  'lista de espera del curso',
+  'formulario de lista de espera',
+  'pagina de lista de espera',
+  'portal de lista de espera',
+  'payment form',
+  'payment page',
+  'payment link',
+  'payment portal',
+  'payment button',
+  'online payment form',
+  'online payment page',
+  'online payment link',
+  'checkout',
+  'checkout form',
+  'checkout page',
+  'checkout link',
+  'checkout portal',
+  'course payment form',
+  'course payment page',
+  'course payment link',
+  'course payment portal',
+  'course checkout',
+  'course checkout form',
+  'course checkout page',
+  'course checkout link',
+  'stripe checkout',
+  'stripe payment link',
+  'paypal checkout',
+  'paypal payment link',
+  'payphone checkout',
+  'payphone payment link',
+  'payphone payment button',
+  'datafast checkout',
+  'datafast payment link',
+  'kushki checkout',
+  'kushki payment link',
+  'paymentez checkout',
+  'paymentez payment link',
+  'deuna checkout',
+  'deuna payment link',
+  'mercado pago checkout',
+  'mercado pago payment link',
+  'mercadopago checkout',
+  'mercadopago payment link',
+  'hotmart checkout',
+  'hotmart payment link',
+  'hotmart payment page',
+  'kiwify checkout',
+  'kiwify payment link',
+  'kiwify payment page',
+  'lemon squeezy checkout',
+  'lemon squeezy payment link',
+  'gumroad checkout',
+  'gumroad payment link',
+  'payhip checkout',
+  'payhip payment link',
+  'samcart checkout',
+  'samcart payment link',
+  'thrivecart checkout',
+  'thrivecart payment link',
+  'shopify checkout',
+  'shopify payment link',
+  'woocommerce checkout',
+  'woocommerce payment link',
+  'calendly',
+  'calendly link',
+  'calendly booking link',
+  'calendly booking page',
+  'acuity',
+  'acuity scheduling',
+  'acuity booking link',
+  'acuity scheduling page',
+  'cal com',
+  'cal com link',
+  'cal com booking link',
+  'cal com booking page',
+  'simplybook',
+  'simply book',
+  'simplybook page',
+  'setmore',
+  'setmore booking link',
+  'youcanbookme',
+  'you can book me',
+  'you can book me link',
+  'tidycal',
+  'tidy cal',
+  'tidycal link',
+  'savvycal',
+  'savvy cal',
+  'savvycal booking link',
+  'savvycal booking page',
+  'oncehub',
+  'once hub',
+  'oncehub booking link',
+  'oncehub booking page',
+  'appointlet',
+  'appointlet booking link',
+  'appointlet booking page',
+  'book like a boss',
+  'book like a boss booking link',
+  'book like a boss booking page',
+  'booklikeaboss',
+  'booklikeaboss booking link',
+  'booklikeaboss booking page',
+  'microsoft bookings',
+  'microsoft bookings link',
+  'microsoft bookings booking link',
+  'microsoft bookings booking page',
+  'microsoft bookings reservation link',
+  'microsoft bookings appointment schedule',
+  'ms bookings',
+  'ms bookings link',
+  'ms bookings booking link',
+  'ms bookings booking page',
+  'google calendar booking link',
+  'google calendar appointment schedule',
+  'discovery call booking',
+  'discovery call form',
+  'consultation call booking',
+  'consultation call form',
+  'intro call link',
+  'strategy call booking',
+  'formulario de llamada de consulta',
+  'enlace de llamada de consulta',
+  'formulario de llamada de diagnostico',
+  'enlace de llamada de diagnostico',
+  'eventbrite',
+  'eventbrite event',
+  'eventbrite event page',
+  'eventbrite registration',
+  'eventbrite registration page',
+  'eventbrite signup page',
+  'luma',
+  'luma event',
+  'luma event page',
+  'luma registration page',
+  'luma signup page',
+  'lu ma event page',
+  'meetup',
+  'meetup event',
+  'meetup event page',
+  'meetup event registration',
+  'meetup registration page',
+  'ticket tailor',
+  'ticket tailor event page',
+  'ticket tailor registration page',
+  'tickettailor',
+  'tickettailor event page',
+  'humanitix',
+  'humanitix event page',
+  'humanitix registration page',
+  'eventzilla',
+  'eventzilla event page',
+  'eventzilla registration page',
+  'sympla',
+  'sympla event page',
+  'sympla registration page',
+  'entradium',
+  'entradium event page',
+  'entradium registration page',
+  'event registration',
+  'event registration page',
+  'event signup page',
+  'event rsvp link',
+  'formulario de eventbrite',
+  'pagina de eventbrite',
+  'registro de evento',
   'formulario publico',
+  'formulario publico del curso',
+  'formulario publico de curso',
+  'formulario publico de inscripcion',
+  'formulario de inscripcion publica',
+  'preinscripcion',
+  'preinscripcion del curso',
+  'preinscripcion de curso',
+  'formulario de preinscripcion',
+  'pagina de preinscripcion',
+  'portal de preinscripcion',
+  'pre registro',
+  'pre registro del curso',
+  'pre registro de curso',
+  'formulario de pre registro',
+  'pagina de pre registro',
+  'portal de pre registro',
+  'formulario online',
+  'formulario en linea',
+  'inscripcion publica',
+  'inscripcion publica del curso',
+  'inscripcion publica de curso',
+  'inscripcion online',
+  'inscripcion en linea',
+  'registro publico',
+  'registro publico del curso',
+  'registro publico de curso',
+  'registro online',
+  'registro en linea',
+  'formulario web',
+  'sitio web',
+  'sitio web del curso',
+  'pagina web',
+  'pagina web del curso',
+  'pagina publica del curso',
+  'pagina publica de curso',
+  'pagina de inscripcion',
+  'pagina de registro',
+  'portal de inscripcion',
+  'portal de registro',
   'registration form',
   'formulario de inscripcion',
   'formulario de registro',
+  'formulario de ingreso',
+  'pagina de admision',
+  'pagina de admisiones',
+  'pagina de ingreso',
+  'formulario de pago',
+  'pagina de pago',
+  'enlace de pago',
+  'portal de pago',
+  'boton de pago',
+  'botones de pago',
+  'formulario de checkout',
+  'pagina de checkout',
+  'enlace de checkout',
+  'portal de checkout',
+  'solicitud de inscripcion',
+  'solicitud de ingreso',
+  'ficha de inscripcion',
+  'google form',
+  'google forms',
+  'google forms course registration',
+  'typeform',
+  'typeform registration page',
+  'tally',
+  'tally form',
+  'jot form',
+  'jotform',
+  'jotform registration form',
+  'microsoft forms',
+  'ms form',
+  'airtable',
+  'airtable form',
+  'coda',
+  'coda form',
+  'coda forms',
+  'hubspot',
+  'hubspot forms',
+  'hubspot landing page',
+  'go highlevel',
+  'go highlevel form',
+  'go high level',
+  'go high level form',
+  'gohighlevel',
+  'gohighlevel form',
+  'highlevel',
+  'highlevel form',
+  'high level',
+  'high level form',
+  'leadconnector',
+  'leadconnector form',
+  'lead connector',
+  'lead connector form',
+  'mailchimp',
+  'mailchimp form',
+  'mailchimp signup form',
+  'manychat',
+  'manychat form',
+  'manychat forms',
+  'paper form',
+  'paper forms',
+  'paperform',
+  'survey monkey',
+  'survey monkey form',
+  'survey monkey forms',
+  'surveymonkey',
+  'surveymonkey form',
+  'qualtrics',
+  'qualtrics form',
+  'qualtrics survey',
+  'question pro',
+  'question pro form',
+  'questionpro',
+  'questionpro form',
+  'surveysparrow',
+  'surveysparrow form',
+  'surveysparrow survey',
+  'survey sparrow',
+  'survey sparrow form',
+  'survey sparrow survey',
+  'fillout form',
+  'fillout forms',
+  'cognito form',
+  'cognito forms',
+  'convert kit',
+  'convert kit form',
+  'convert kit landing page',
+  'convertkit',
+  'convertkit form',
+  'convertkit landing page',
+  'brevo',
+  'brevo form',
+  'sendinblue',
+  'sendinblue form',
+  'flodesk',
+  'flodesk form',
+  'mailer lite',
+  'mailer lite form',
+  'mailerlite',
+  'mailerlite form',
+  'klaviyo',
+  'klaviyo form',
+  'active campaign',
+  'active campaign form',
+  'active campaign registration form',
+  'activecampaign',
+  'activecampaign form',
+  'activecampaign registration form',
+  'constant contact',
+  'constant contact form',
+  'keap',
+  'keap form',
+  'infusionsoft',
+  'infusionsoft form',
+  'mautic',
+  'mautic form',
+  'mautic forms',
+  'mautic landing page',
+  'rd station',
+  'rd station form',
+  'rd station forms',
+  'rd station landing page',
+  'substack form',
+  'substack signup page',
+  'crm lead form',
+  'crm registration page',
+  'crm intake form',
+  'wati lead form',
+  'kommo registration page',
+  'pipedrive lead form',
+  'wufoo',
+  'wufoo form',
+  'formstack',
+  'formstack form',
+  'zoho',
+  'zoho form',
+  'zoho forms',
+  'gravity form',
+  'gravity forms',
+  'webflow',
+  'webflow form',
+  'webflow forms',
+  'wix',
+  'wix form',
+  'wix forms',
+  'squarespace',
+  'squarespace form',
+  'squarespace forms',
+  'leadpages',
+  'lead pages',
+  'leadpages form',
+  'lead pages form',
+  'leadpages page',
+  'lead pages page',
+  'leadpages landing page',
+  'lead pages landing page',
+  'kajabi form',
+  'kajabi page',
+  'kajabi landing page',
+  'teachable form',
+  'teachable page',
+  'teachable landing page',
+  'thinkific form',
+  'thinkific page',
+  'thinkific landing page',
+  'podia form',
+  'podia page',
+  'podia landing page',
+  'click funnels form',
+  'click funnels page',
+  'clickfunnels form',
+  'clickfunnels page',
+  'kartra form',
+  'kartra page',
+  'systeme io form',
+  'systeme io page',
+  'carrd',
+  'carrd form',
+  'carrd page',
+  'carrd landing page',
+  'framer',
+  'framer form',
+  'framer page',
+  'framer landing page',
+  'unbounce',
+  'unbounce form',
+  'unbounce page',
+  'unbounce landing page',
+  'instapage',
+  'instapage form',
+  'instapage page',
+  'instapage landing page',
+  'landingi',
+  'landingi form',
+  'landingi page',
+  'landingi landing page',
+  'linktree',
+  'link tree',
+  'beacons',
+  'beacons ai',
+  'stan store',
+  'koji',
+  'koji to',
+  'milkshake',
+  'milkshake app',
+  'bio link',
+  'bio page',
+  'profile link',
+  'profile page',
+  'link in bio',
+  'enlace en bio',
+  'link en bio',
+  'enlace de perfil',
+  'link de perfil',
+  'pagina de bio',
+  'bitly',
+  'bitly link',
+  'bitly short link',
+  'tinyurl',
+  'tinyurl link',
+  'tinyurl short link',
+  'rebrandly',
+  'rebrandly link',
+  'short link',
+  'short links',
+  'short url',
+  'short urls',
+  'tracking link',
+  'tracking links',
+  'tracking url',
+  'tracking urls',
+  'redirect link',
+  'redirect links',
+  'redirect url',
+  'redirect urls',
+  'enlace corto',
+  'enlaces cortos',
+  'url corta',
+  'urls cortas',
+  'enlace de seguimiento',
+  'url de seguimiento',
+  'enlace de redireccion',
+  'url de redireccion',
+  'notion',
+  'notion form',
+  'notion forms',
+  'forms app',
+  'forms app form',
+  'forms app forms',
+  'formspree',
+  'formspree form',
+  'formspree forms',
+  'formsite',
+  'formsite form',
+  'formsite forms',
+  'wpforms',
+  'wpforms form',
+  'wp forms',
+  'wp forms form',
+  'ninja forms',
+  'ninja forms form',
+  'formidable forms',
+  'formidable forms form',
+  'fluent forms',
+  'fluent forms form',
+  '123 form builder',
+  '123 form builder form',
+  '123 form builder forms',
+  '123 forms builder',
+  '123 forms builder form',
+  '123 forms builder forms',
+  '123formbuilder',
+  '123formbuilder form',
+  '123formbuilder forms',
+  'netlify',
+  'netlify form',
+  'netlify forms',
+  'formkeep',
+  'form keep',
+  'formkeep form',
+  'form keep form',
+  'formbold',
+  'formbold form',
+  'formspark',
+  'formspark form',
+  'formsubmit',
+  'formsubmit form',
+  'getform',
+  'get form',
+  'getform form',
+  'get form form',
+  'basin',
+  'basin form',
+  'formcarry',
+  'form carry',
+  'formcarry form',
+  'form carry form',
+  'heyflow',
+  'heyflow form',
+  'heyflow registration form',
+  'heyflow lead form',
+  'outgrow',
+  'outgrow form',
+  'outgrow quiz',
+  'interact',
+  'interact quiz',
+  'interact survey',
+  'landbot',
+  'landbot flow',
+  'landbot registration flow',
+  'perspective',
+  'perspective co',
+  'perspective co form',
+  'perspective funnel',
+  'feathery',
+  'feathery form',
+  'feathery intake form',
+  'webhook',
+  'registration webhook',
+  'webhook registration',
+  'api',
+  'api form',
+  'api registration',
+  'api enrollment',
+  'api signup',
+  'api webhook',
+  'public api',
+  'public api form',
+  'public api registration',
+  'backend api',
+  'backend api form',
+  'backend api registration',
+  'rest api',
+  'rest api form',
+  'rest api registration',
+  'zapier',
+  'zapier webhook',
+  'zapier automation',
+  'zapier registration automation',
+  'make com',
+  'make com scenario',
+  'make com workflow',
+  'integromat',
+  'integromat scenario',
+  'n8n',
+  'n8n workflow',
+  'n8n registration workflow',
+  'pabbly connect',
+  'pabbly connect integration',
+  'integrately',
+  'integrately automation',
 ].map(normalizeSourceAliasKey));
 
 const registrationSourceLabel = (source: string | null | undefined) => {
@@ -689,7 +3903,10 @@ const normalizeRegistrationSourceKey = (sourceLabel: string) =>
   registrationSourceLabel(sourceLabel).toLocaleLowerCase('es');
 
 const isDefaultPublicFormSource = (sourceLabel: string) =>
-  defaultPublicFormSourceKeys.has(normalizeSourceAliasKey(sourceLabel));
+  isPlaceholderMetadataValue(sourceLabel)
+  || Array.from(sourceAliasKeyVariants(normalizeSourceAliasKey(sourceLabel))).some((sourceKey) =>
+    defaultPublicFormSourceKeys.has(sourceKey)
+  );
 
 const getSearchableRegistrationSource = (source: string | null | undefined) => {
   const trimmedSource = source?.trim() ?? '';
@@ -713,7 +3930,7 @@ const getSearchableRegistrationAcquisitionContext = (
   ]
     .map((value) => {
       const trimmedValue = value?.trim() ?? '';
-      if (!trimmedValue) return '';
+      if (!trimmedValue || isPlaceholderMetadataValue(trimmedValue)) return '';
       const displayLabel = humanizeDelimitedSourceLabel(trimmedValue);
       return displayLabel === trimmedValue ? trimmedValue : `${trimmedValue} ${displayLabel}`;
     })
@@ -734,6 +3951,60 @@ const formatHiddenLocalSearchFieldList = (fields: readonly HiddenLocalSearchFiel
   return `${labels.slice(0, -1).join(', ')} y ${labels[labels.length - 1]}`;
 };
 
+const exactLocalSearchPhraseFragments = [
+  'sin correo ni telefono',
+  'sin telefono ni correo',
+  'sin telefono ni whatsapp',
+  'inscripciones visibles con contacto pendiente',
+  'inscripciones con contacto pendiente',
+  'contactos pendientes',
+  'contacto pendiente',
+  'correos pendientes',
+  'correo pendiente',
+  'emails pendientes',
+  'email pendiente',
+  'telefonos pendientes',
+  'telefono pendiente',
+  'sin contacto',
+  'sin correos',
+  'sin correo',
+  'sin emails',
+  'sin email',
+  'sin telefonos',
+  'sin telefono',
+].map((phrase) => normalizeLocalSearchText(phrase));
+
+const localSearchFragments = (localSearchKey: string) => {
+  const tokens = localSearchKey.split(' ').filter(Boolean);
+  if (tokens.length <= 1) return tokens;
+
+  const fragments: string[] = [];
+  let tokenIndex = 0;
+  while (tokenIndex < tokens.length) {
+    const matchedPhrase = exactLocalSearchPhraseFragments.find((phrase) => {
+      const phraseTokens = phrase.split(' ');
+      if (phraseTokens.length <= 1 || tokenIndex + phraseTokens.length > tokens.length) {
+        return false;
+      }
+
+      return phraseTokens.every((phraseToken, phraseTokenIndex) => (
+        tokens[tokenIndex + phraseTokenIndex] === phraseToken
+      ));
+    });
+
+    if (matchedPhrase) {
+      fragments.push(matchedPhrase);
+      tokenIndex += matchedPhrase.split(' ').length;
+      continue;
+    }
+
+    fragments.push(tokens[tokenIndex]!);
+    tokenIndex += 1;
+  }
+
+  return fragments;
+};
+
 const localSearchTextMatches = (value: string | null | undefined, localSearchKey: string) => {
   if (!localSearchKey) return false;
 
@@ -744,8 +4015,18 @@ const localSearchTextMatches = (value: string | null | undefined, localSearchKey
   }
 
   const compactSearchKey = normalizeCompactLocalSearchText(localSearchKey);
-  return Boolean(compactSearchKey)
-    && normalizeCompactLocalSearchText(normalizedValue).includes(compactSearchKey);
+  const compactValue = normalizeCompactLocalSearchText(normalizedValue);
+  if (compactSearchKey && compactValue.includes(compactSearchKey)) return true;
+
+  const searchFragments = localSearchFragments(localSearchKey);
+  if (searchFragments.length <= 1) return false;
+
+  return searchFragments.every((fragment) => {
+    if (normalizedValue.includes(fragment)) return true;
+
+    const compactFragment = normalizeCompactLocalSearchText(fragment);
+    return Boolean(compactFragment) && compactValue.includes(compactFragment);
+  });
 };
 
 const registrationVisibleSearchText = (
@@ -754,14 +4035,14 @@ const registrationVisibleSearchText = (
 ) => {
   const courseSlug = reg.crCourseSlug.trim();
   return [
-    reg.crFullName,
-    reg.crEmail,
-    reg.crPhoneE164,
+    normalizeRegistrationNameValue(reg.crFullName),
+    normalizeRegistrationContactValue(reg.crEmail),
     `registro #${reg.crId}`,
     String(reg.crId),
     courseSlug,
     cohortLabelsBySlug.get(courseSlug),
     registrationStatusLabel(reg.crStatus),
+    ...registrationContactStateSearchValues(reg),
     getSearchableRegistrationSource(reg.crSource),
   ].join(' ');
 };
@@ -785,7 +4066,7 @@ const registrationMatchesVisibleSearchFields = ({
     return false;
   }
 
-  return normalizeLocalSearchDigits(reg.crPhoneE164 ?? '').includes(localSearchDigitsKey);
+  return phoneDigitsMatchLocalSearch(reg.crPhoneE164, localSearchDigitsKey);
 };
 
 const hiddenLocalSearchFieldsForRegistration = (
@@ -850,16 +4131,28 @@ const buildHiddenLocalSearchMatchSummary = ({
   return `Algunas coincidencias vienen de ${fieldList}.`;
 };
 
+const hasUsableRegistrationRecordId = (registrationId: number | null | undefined) => (
+  typeof registrationId === 'number' && Number.isInteger(registrationId) && registrationId > 0
+);
+
+const registrationRecordLabel = (registrationId: number | null | undefined, lowercase = false) => {
+  const labelPrefix = lowercase ? 'registro' : 'Registro';
+  if (hasUsableRegistrationRecordId(registrationId)) {
+    return `${labelPrefix} #${registrationId}`;
+  }
+  return `${labelPrefix} sin número`;
+};
+
 const registrationIdentityDisplay = (
   fullName: string | null | undefined,
   email: string | null | undefined,
   phone: string | null | undefined,
   registrationId?: number | null,
 ) => {
-  const trimmedName = fullName?.trim() ?? '';
-  const trimmedEmail = email?.trim() ?? '';
-  const trimmedPhone = phone?.trim() ?? '';
-  const fallbackIdentity = registrationId == null ? 'Sin nombre' : `Registro #${registrationId}`;
+  const trimmedName = normalizeRegistrationNameValue(fullName) ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
+  const fallbackIdentity = registrationRecordLabel(registrationId);
 
   if (trimmedName) {
     return {
@@ -891,18 +4184,67 @@ const registrationIdentityDisplay = (
 const registrationIdentityKind = (
   reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ): RegistrationIdentityKind => {
-  if (reg.crFullName?.trim()) return 'name';
-  if (reg.crEmail?.trim() || reg.crPhoneE164?.trim()) return 'contact';
+  if (normalizeRegistrationNameValue(reg.crFullName)) return 'name';
+  if (normalizeRegistrationContactValue(reg.crEmail)) return 'email';
+  if (normalizeRegistrationContactValue(reg.crPhoneE164)) return 'phone';
   return 'record';
 };
 
-const namedRegistrationNeedsContact = (
-  reg: Pick<CourseRegistrationDTO, 'crFullName' | 'crEmail' | 'crPhoneE164'>,
+const registrationNeedsContact = (
+  reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
 ) => (
-  Boolean(reg.crFullName?.trim())
-  && !reg.crEmail?.trim()
-  && !reg.crPhoneE164?.trim()
+  !normalizeRegistrationContactValue(reg.crEmail)
+  && !normalizeRegistrationContactValue(reg.crPhoneE164)
 );
+
+const registrationContactStateSearchValues = (
+  reg: Pick<CourseRegistrationDTO, 'crEmail' | 'crPhoneE164'>,
+) => {
+  const needsEmail = !normalizeRegistrationContactValue(reg.crEmail);
+  const needsPhone = !normalizeRegistrationContactValue(reg.crPhoneE164);
+  const values: string[] = [];
+
+  if (needsEmail && needsPhone) {
+    values.push(
+      'contacto pendiente',
+      'contactos pendientes',
+      'inscripciones con contacto pendiente',
+      'inscripciones visibles con contacto pendiente',
+      'sin contacto',
+      'sin correo ni teléfono',
+      'sin correo ni telefono',
+      missingContactSummary,
+    );
+  }
+
+  if (needsEmail) {
+    values.push(
+      'correo pendiente',
+      'correos pendientes',
+      'email pendiente',
+      'emails pendientes',
+      'sin correo',
+      'sin correos',
+      'sin email',
+      'sin emails',
+    );
+  }
+
+  if (needsPhone) {
+    values.push(
+      'teléfono pendiente',
+      'teléfonos pendientes',
+      'telefono pendiente',
+      'telefonos pendientes',
+      'sin teléfono',
+      'sin teléfonos',
+      'sin telefono',
+      'sin telefonos',
+    );
+  }
+
+  return values;
+};
 
 const formatVisibleMissingContactSummary = (missingContactCount: number, visibleCount: number) => {
   if (visibleCount <= 1 || missingContactCount === 0) return '';
@@ -917,13 +4259,25 @@ const formatVisibleMissingContactSummary = (missingContactCount: number, visible
 
 const registrationIdentityTargetLabel = (registrations: readonly CourseRegistrationDTO[]) => {
   const identityKinds = new Set(registrations.map(registrationIdentityKind));
-  if (identityKinds.size === 1) {
-    const [kind] = Array.from(identityKinds);
-    if (kind === 'contact') return 'el contacto';
-    if (kind === 'record') return 'el registro';
-  }
-  if (identityKinds.size > 1) return 'el dato principal de cada fila';
-  return 'el nombre';
+  const orderedTargetLabels = (['name', 'email', 'phone', 'record'] as const)
+    .filter((kind) => identityKinds.has(kind))
+    .map((kind) => {
+      if (kind === 'email') return 'el correo';
+      if (kind === 'phone') return 'el teléfono';
+      if (kind === 'record') {
+        const recordIdentities = registrations.filter((reg) => registrationIdentityKind(reg) === 'record');
+        return recordIdentities.some((reg) => hasUsableRegistrationRecordId(reg.crId))
+          ? 'el número de registro'
+          : 'el registro';
+      }
+      return 'el nombre';
+    });
+
+  if (orderedTargetLabels.length === 0) return 'el nombre';
+  if (orderedTargetLabels.length === 1) return orderedTargetLabels[0] ?? 'el nombre';
+  const lastTargetLabel = orderedTargetLabels[orderedTargetLabels.length - 1] ?? 'el número de registro';
+  if (orderedTargetLabels.length === 2) return `${orderedTargetLabels[0] ?? 'el nombre'} o ${lastTargetLabel}`;
+  return `${orderedTargetLabels.slice(0, -1).join(', ')} o ${lastTargetLabel}`;
 };
 
 const registrationContactSummary = (
@@ -931,8 +4285,8 @@ const registrationContactSummary = (
   phone: string | null | undefined,
   visibleIdentityValues: readonly string[] = [],
 ) => {
-  const trimmedEmail = email?.trim() ?? '';
-  const trimmedPhone = phone?.trim() ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(email) ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(phone) ?? '';
   const parts = [trimmedEmail, trimmedPhone].filter((value) => value !== '');
   if (parts.length === 0) return missingContactSummary;
   return visibleRegistrationContactParts(parts, visibleIdentityValues).join(' · ');
@@ -941,13 +4295,13 @@ const registrationContactSummary = (
 const registrationActionTargetLabel = (
   reg: Pick<CourseRegistrationDTO, 'crId' | 'crFullName' | 'crEmail' | 'crPhoneE164'>,
 ) => {
-  const trimmedName = reg.crFullName?.trim() ?? '';
+  const trimmedName = normalizeRegistrationNameValue(reg.crFullName) ?? '';
   if (trimmedName) return trimmedName;
-  const trimmedEmail = reg.crEmail?.trim() ?? '';
+  const trimmedEmail = normalizeRegistrationContactValue(reg.crEmail) ?? '';
   if (trimmedEmail) return trimmedEmail;
-  const trimmedPhone = reg.crPhoneE164?.trim() ?? '';
+  const trimmedPhone = normalizeRegistrationContactValue(reg.crPhoneE164) ?? '';
   if (trimmedPhone) return trimmedPhone;
-  return `registro #${reg.crId}`;
+  return registrationRecordLabel(reg.crId, true);
 };
 
 const normalizeRegistrationActionTargetKey = (
@@ -1017,42 +4371,174 @@ const registrationActionTargetLabelWithContext = (
   const secondary = identity.secondary.trim();
   if (secondary && secondary !== missingContactSummary) {
     const disambiguatingContext = needsRecordDisambiguator
-      ? `${secondary} · registro #${reg.crId}`
+      ? `${secondary} · ${registrationRecordLabel(reg.crId, true)}`
       : secondary;
     return `${baseLabel} (${disambiguatingContext})`;
   }
 
-  return `${baseLabel} (registro #${reg.crId})`;
+  return `${baseLabel} (${registrationRecordLabel(reg.crId, true)})`;
+};
+
+const compareOptionalText = (
+  left: string | null | undefined,
+  right: string | null | undefined,
+  direction: RegistrationSortDirection,
+) => {
+  const leftValue = left?.trim() ?? '';
+  const rightValue = right?.trim() ?? '';
+  if (leftValue && !rightValue) return -1;
+  if (!leftValue && rightValue) return 1;
+  if (!leftValue && !rightValue) return 0;
+
+  const comparison = registrationSortCollator.compare(leftValue, rightValue);
+  return direction === 'asc' ? comparison : -comparison;
+};
+
+const compareOptionalNumber = (
+  left: number | null,
+  right: number | null,
+  direction: RegistrationSortDirection,
+) => {
+  if (left != null && right == null) return -1;
+  if (left == null && right != null) return 1;
+  if (left == null || right == null) return 0;
+
+  const comparison = left === right ? 0 : left < right ? -1 : 1;
+  return direction === 'asc' ? comparison : -comparison;
+};
+
+const timestampSortValue = (value: string | null | undefined) => {
+  const parsed = parseTimestamp(value);
+  return parsed ? parsed.getTime() : null;
+};
+
+const registrationCourseSortLabel = (
+  reg: CourseRegistrationDTO,
+  cohortSummaryLabelsBySlug: ReadonlyMap<string, string>,
+  cohortLabelsBySlug: ReadonlyMap<string, string>,
+) => {
+  const courseSlug = reg.crCourseSlug.trim();
+  return cohortSummaryLabelsBySlug.get(courseSlug)
+    ?? cohortLabelsBySlug.get(courseSlug)
+    ?? readableCohortFallbackLabel(courseSlug);
+};
+
+const compareRegistrationsBySort = (
+  left: CourseRegistrationDTO,
+  right: CourseRegistrationDTO,
+  {
+    cohortLabelsBySlug,
+    cohortSummaryLabelsBySlug,
+    direction,
+    sortKey,
+  }: {
+    cohortLabelsBySlug: ReadonlyMap<string, string>;
+    cohortSummaryLabelsBySlug: ReadonlyMap<string, string>;
+    direction: RegistrationSortDirection;
+    sortKey: RegistrationSortKey;
+  },
+) => {
+  switch (sortKey) {
+    case 'name':
+      return compareOptionalText(registrationActionTargetLabel(left), registrationActionTargetLabel(right), direction);
+    case 'createdAt':
+      return compareOptionalNumber(timestampSortValue(left.crCreatedAt), timestampSortValue(right.crCreatedAt), direction);
+    case 'updatedAt':
+      return compareOptionalNumber(timestampSortValue(left.crUpdatedAt), timestampSortValue(right.crUpdatedAt), direction);
+    case 'course':
+      return compareOptionalText(
+        registrationCourseSortLabel(left, cohortSummaryLabelsBySlug, cohortLabelsBySlug),
+        registrationCourseSortLabel(right, cohortSummaryLabelsBySlug, cohortLabelsBySlug),
+        direction,
+      );
+    case 'status':
+      return compareOptionalText(registrationStatusLabel(left.crStatus), registrationStatusLabel(right.crStatus), direction);
+    case 'source':
+      return compareOptionalText(registrationSourceLabel(left.crSource), registrationSourceLabel(right.crSource), direction);
+    case 'default':
+      return 0;
+    default:
+      return 0;
+  }
+};
+
+const sortCourseRegistrations = (
+  registrations: readonly CourseRegistrationDTO[],
+  options: {
+    cohortLabelsBySlug: ReadonlyMap<string, string>;
+    cohortSummaryLabelsBySlug: ReadonlyMap<string, string>;
+    direction: RegistrationSortDirection;
+    sortKey: RegistrationSortKey;
+  },
+) => {
+  if (options.sortKey === 'default') return registrations;
+
+  return registrations
+    .map((registration, index) => ({ index, registration }))
+    .sort((left, right) => {
+      const comparison = compareRegistrationsBySort(left.registration, right.registration, options);
+      return comparison || left.index - right.index;
+    })
+    .map(({ registration }) => registration);
 };
 
 const registrationListContextSummary = ({
   cohortLabel,
   createdAt,
+  followUpCount,
   hasNotes,
+  receiptCount,
   showCreatedAt = true,
   showCohort,
   showSource,
   source,
+  status,
 }: {
   cohortLabel: string;
   createdAt: string | null | undefined;
+  followUpCount: number | null | undefined;
   hasNotes: boolean;
+  receiptCount: number | null | undefined;
   showCreatedAt?: boolean;
   showCohort: boolean;
   showSource: boolean;
   source: string | null | undefined;
+  status: string;
 }) => {
   const parts: string[] = [];
   const trimmedCohortLabel = cohortLabel.trim();
   const trimmedSource = source?.trim() ?? '';
-  if (showCohort && trimmedCohortLabel) parts.push(`Cohorte: ${trimmedCohortLabel}`);
+  if (showCohort && trimmedCohortLabel) parts.push(`Curso: ${trimmedCohortLabel}`);
   if (showSource && trimmedSource && !isDefaultPublicFormSource(trimmedSource)) {
     parts.push(`Fuente: ${registrationSourceLabel(trimmedSource)}`);
   }
   const createdLabel = showCreatedAt ? formatOptionalDate(createdAt) : '';
   if (createdLabel) parts.push(`Creado: ${createdLabel}`);
+  const receiptSummary = registrationReceiptContextSummary(receiptCount, status);
+  if (receiptSummary) parts.push(receiptSummary);
+  const followUpSummary = registrationFollowUpContextSummary(followUpCount);
+  if (followUpSummary) parts.push(followUpSummary);
   if (hasNotes) parts.push('Notas internas');
   return parts.join(' · ');
+};
+
+const registrationReceiptContextSummary = (
+  receiptCount: number | null | undefined,
+  status: string,
+) => {
+  if (!Number.isSafeInteger(receiptCount) || receiptCount == null || receiptCount <= 0) return '';
+  const count = receiptCount;
+  if (normalizeKnownRegistrationStatus(status) === 'pending_payment') {
+    return count === 1 ? 'Comprobante listo' : `${count} comprobantes listos`;
+  }
+  return count === 1 ? '1 comprobante' : `${count} comprobantes`;
+};
+
+const registrationFollowUpContextSummary = (
+  followUpCount: number | null | undefined,
+) => {
+  if (!Number.isSafeInteger(followUpCount) || followUpCount == null || followUpCount <= 0) return '';
+  return followUpCount === 1 ? '1 seguimiento' : `${followUpCount} seguimientos`;
 };
 
 const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseRegistrationDTO[]) => {
@@ -1068,7 +4554,10 @@ const hasSearchableCustomRegistrationStatus = (registrations: readonly CourseReg
   return hasCustomStatus && statusKeys.size > 1;
 };
 
-const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationDTO[]) => {
+const buildLocalSearchPlaceholder = (
+  registrations: readonly CourseRegistrationDTO[],
+  { includeCourseTerm = true }: { includeCourseTerm?: boolean } = {},
+) => {
   const sourceKeys = new Set<string>();
   const cohortKeys = new Set<string>();
   let hasNameIdentity = false;
@@ -1078,16 +4567,21 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
   let hasRowsWithoutNotes = false;
   let hasHiddenDefaultOrEmptySource = false;
   let hasHiddenAcquisitionContext = false;
+  const hasRecordDisambiguatorSearch =
+    getRegistrationIdsRequiringActionRecordDisambiguator(registrations).size > 0;
   const noteKeys = new Set<string>();
   const acquisitionContextKeys = new Set<string>();
 
   registrations.forEach((reg) => {
-    const hasName = Boolean(reg.crFullName?.trim());
-    const hasEmail = Boolean(reg.crEmail?.trim());
-    const hasPhone = Boolean(reg.crPhoneE164?.trim());
+    const name = normalizeRegistrationNameValue(reg.crFullName);
+    const hasName = Boolean(name);
+    const email = normalizeRegistrationContactValue(reg.crEmail);
+    const phone = normalizeRegistrationContactValue(reg.crPhoneE164);
+    const hasEmail = Boolean(email);
+    const hasPhone = Boolean(phone);
     const hasContact = hasEmail || hasPhone;
-    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crEmail));
-    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(reg.crFullName, reg.crPhoneE164));
+    const hasDistinctEmail = hasEmail && (!hasName || !contactComparisonValuesMatch(name, email));
+    const hasDistinctPhone = hasPhone && (!hasName || !contactComparisonValuesMatch(name, phone));
 
     if (hasName) hasNameIdentity = true;
     if (hasDistinctEmail) hasEmailIdentity = true;
@@ -1121,8 +4615,8 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
     }
   });
 
-  const terms: string[] = [];
-  if (hasNameIdentity) terms.push('Nombre');
+  const identityTerms: string[] = [];
+  if (hasNameIdentity) identityTerms.push('Nombre');
   if (hasEmailIdentity || hasPhoneIdentity) {
     const contactTerm = hasEmailIdentity && hasPhoneIdentity
       ? 'contacto'
@@ -1130,16 +4624,37 @@ const buildLocalSearchPlaceholder = (registrations: readonly CourseRegistrationD
         ? 'correo'
         : 'teléfono';
     const capitalizedContactTerm = `${contactTerm.charAt(0).toLocaleUpperCase('es')}${contactTerm.slice(1)}`;
-    terms.push(hasNameIdentity ? contactTerm : capitalizedContactTerm);
+    identityTerms.push(hasNameIdentity ? contactTerm : capitalizedContactTerm);
   }
-  if (hasGeneratedRegistrationIdentity) terms.push(terms.length === 0 ? 'Registro' : 'registro');
-  if (noteKeys.size > 1 || (noteKeys.size === 1 && hasRowsWithoutNotes)) terms.push('nota');
-  if (acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext)) {
-    terms.push(terms.length === 0 ? 'Origen' : 'origen');
+
+  const contextTerms: string[] = [];
+  if (noteKeys.size > 1 || (noteKeys.size === 1 && hasRowsWithoutNotes)) contextTerms.push('nota');
+  const hasVariableAcquisitionContext =
+    acquisitionContextKeys.size > 1 || (acquisitionContextKeys.size === 1 && hasHiddenAcquisitionContext);
+  const hasVariableSource =
+    sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource);
+  if (hasVariableAcquisitionContext) {
+    contextTerms.push(identityTerms.length === 0 && !hasGeneratedRegistrationIdentity ? 'Origen' : 'origen');
   }
-  if (hasSearchableCustomRegistrationStatus(registrations)) terms.push('estado');
-  if (sourceKeys.size > 1 || (sourceKeys.size === 1 && hasHiddenDefaultOrEmptySource)) terms.push('fuente');
-  if (cohortKeys.size > 1) terms.push('curso');
+  if (hasSearchableCustomRegistrationStatus(registrations)) contextTerms.push('estado');
+  if (hasVariableSource && !hasVariableAcquisitionContext) contextTerms.push('fuente');
+  if (includeCourseTerm && cohortKeys.size > 1) contextTerms.push('curso');
+
+  const visibleContextTerms = contextTerms.length > 1 ? ['otros datos'] : contextTerms;
+
+  const hasRecordSearchTerm = hasGeneratedRegistrationIdentity || hasRecordDisambiguatorSearch;
+
+  if (
+    hasRecordSearchTerm
+    && identityTerms.length > 0
+    && identityTerms.length + 1 + contextTerms.length > MAX_LOCAL_SEARCH_PLACEHOLDER_TERMS
+  ) {
+    return formatLocalSearchPlaceholder([...identityTerms, 'registro', 'otros datos']);
+  }
+
+  const terms = [...identityTerms];
+  if (hasRecordSearchTerm) terms.push(terms.length === 0 ? 'Número de registro' : 'número de registro');
+  terms.push(...visibleContextTerms);
 
   return formatLocalSearchPlaceholder(terms);
 };
@@ -1177,6 +4692,29 @@ const preferNonEmptyText = (primary?: string | null, fallback?: string | null) =
   return null;
 };
 
+const preferRegistrationNameText = (primary?: string | null, fallback?: string | null) =>
+  normalizeRegistrationNameValue(primary) ?? normalizeRegistrationNameValue(fallback);
+
+const preferContactText = (primary?: string | null, fallback?: string | null) =>
+  normalizeRegistrationContactValue(primary) ?? normalizeRegistrationContactValue(fallback);
+
+const preferMeaningfulRegistrationSource = (primary?: string | null, fallback?: string | null) => {
+  const trimmedPrimary = primary?.trim() ?? '';
+  const trimmedFallback = fallback?.trim() ?? '';
+
+  if (!trimmedPrimary) return trimmedFallback || null;
+  if (!trimmedFallback) return trimmedPrimary;
+
+  const primaryHasMeaningfulSource = Boolean(getSearchableRegistrationSource(trimmedPrimary));
+  const fallbackHasMeaningfulSource = Boolean(getSearchableRegistrationSource(trimmedFallback));
+
+  if (!primaryHasMeaningfulSource && fallbackHasMeaningfulSource) {
+    return trimmedFallback;
+  }
+
+  return trimmedPrimary;
+};
+
 const preferPositiveId = (primary?: number | null, fallback?: number | null) => {
   if (typeof primary === 'number' && Number.isInteger(primary) && primary > 0) return primary;
   if (typeof fallback === 'number' && Number.isInteger(fallback) && fallback > 0) return fallback;
@@ -1205,21 +4743,29 @@ const toIsoStringFromLocalDateTime = (value: string): string | null => {
 const mergeCourseRegistrationRecords = (
   primary: CourseRegistrationDTO,
   fallback: CourseRegistrationDTO,
-): CourseRegistrationDTO => ({
-  ...primary,
-  crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
-  crFullName: preferNonEmptyText(primary.crFullName, fallback.crFullName),
-  crEmail: preferNonEmptyText(primary.crEmail, fallback.crEmail),
-  crPhoneE164: preferNonEmptyText(primary.crPhoneE164, fallback.crPhoneE164),
-  crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
-  crSource: preferNonEmptyText(primary.crSource, fallback.crSource),
-  crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
-  crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
-  crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),
-  crUtmMedium: preferNonEmptyText(primary.crUtmMedium, fallback.crUtmMedium),
-  crUtmCampaign: preferNonEmptyText(primary.crUtmCampaign, fallback.crUtmCampaign),
-  crUtmContent: preferNonEmptyText(primary.crUtmContent, fallback.crUtmContent),
-});
+): CourseRegistrationDTO => {
+  const receiptCount = Math.max(
+    courseRegistrationReceiptCount(primary),
+    courseRegistrationReceiptCount(fallback),
+  );
+
+  return {
+    ...primary,
+    crPartyId: preferPositiveId(primary.crPartyId, fallback.crPartyId),
+    crFullName: preferRegistrationNameText(primary.crFullName, fallback.crFullName),
+    crEmail: preferContactText(primary.crEmail, fallback.crEmail),
+    crPhoneE164: preferContactText(primary.crPhoneE164, fallback.crPhoneE164),
+    crStatus: preferNonEmptyText(primary.crStatus, fallback.crStatus) ?? primary.crStatus,
+    crReceiptCount: receiptCount,
+    crSource: preferMeaningfulRegistrationSource(primary.crSource, fallback.crSource),
+    crAdminNotes: preferNonEmptyText(primary.crAdminNotes, fallback.crAdminNotes),
+    crHowHeard: preferNonEmptyText(primary.crHowHeard, fallback.crHowHeard),
+    crUtmSource: preferNonEmptyText(primary.crUtmSource, fallback.crUtmSource),
+    crUtmMedium: preferNonEmptyText(primary.crUtmMedium, fallback.crUtmMedium),
+    crUtmCampaign: preferNonEmptyText(primary.crUtmCampaign, fallback.crUtmCampaign),
+    crUtmContent: preferNonEmptyText(primary.crUtmContent, fallback.crUtmContent),
+  };
+};
 
 const dedupeCourseRegistrations = (registrations: readonly CourseRegistrationDTO[]) => {
   const registrationsById = new Map<number, CourseRegistrationDTO>();
@@ -1266,17 +4812,38 @@ const dedupeCourseRegistrationReceipts = (receipts: readonly CourseRegistrationR
   return [...receiptsById.values()];
 };
 
-const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
-  const seenFollowUpIds = new Set<number>();
+const mergeCourseRegistrationFollowUpRecords = (
+  primary: CourseRegistrationFollowUpDTO,
+  fallback: CourseRegistrationFollowUpDTO,
+): CourseRegistrationFollowUpDTO => ({
+  ...primary,
+  crfRegistrationId: preferPositiveId(primary.crfRegistrationId, fallback.crfRegistrationId) ?? primary.crfRegistrationId,
+  crfPartyId: preferPositiveId(primary.crfPartyId, fallback.crfPartyId),
+  crfEntryType: preferNonEmptyText(primary.crfEntryType, fallback.crfEntryType) ?? primary.crfEntryType,
+  crfSubject: preferNonEmptyText(primary.crfSubject, fallback.crfSubject),
+  crfNotes: preferNonEmptyText(primary.crfNotes, fallback.crfNotes) ?? primary.crfNotes,
+  crfAttachmentUrl: preferNonEmptyText(primary.crfAttachmentUrl, fallback.crfAttachmentUrl),
+  crfAttachmentName: preferNonEmptyText(primary.crfAttachmentName, fallback.crfAttachmentName),
+  crfNextFollowUpAt: preferNonEmptyText(primary.crfNextFollowUpAt, fallback.crfNextFollowUpAt),
+  crfCreatedBy: preferPositiveId(primary.crfCreatedBy, fallback.crfCreatedBy),
+  crfCreatedAt: preferNonEmptyText(primary.crfCreatedAt, fallback.crfCreatedAt) ?? primary.crfCreatedAt,
+  crfUpdatedAt: preferNonEmptyText(primary.crfUpdatedAt, fallback.crfUpdatedAt) ?? primary.crfUpdatedAt,
+});
 
-  return followUps.filter((entry) => {
-    if (seenFollowUpIds.has(entry.crfId)) {
-      return false;
+const dedupeCourseRegistrationFollowUps = (followUps: readonly CourseRegistrationFollowUpDTO[]) => {
+  const followUpsById = new Map<number, CourseRegistrationFollowUpDTO>();
+
+  followUps.forEach((entry) => {
+    const existingEntry = followUpsById.get(entry.crfId);
+    if (!existingEntry) {
+      followUpsById.set(entry.crfId, entry);
+      return;
     }
 
-    seenFollowUpIds.add(entry.crfId);
-    return true;
+    followUpsById.set(entry.crfId, mergeCourseRegistrationFollowUpRecords(existingEntry, entry));
   });
+
+  return [...followUpsById.values()];
 };
 
 const mergeCourseEmailEventRecords = (
@@ -1316,9 +4883,18 @@ export default function CourseRegistrationsAdminPage() {
   const initialSlug = searchParams.get('slug') ?? '';
   const initialStatus = parseStatusFilter(searchParams.get('status'));
   const initialLimit = parsePositiveLimit(searchParams.get('limit'));
+  const initialRegistrationSortKey = parseRegistrationSortKey(searchParams.get('sort'));
+  const initialRegistrationSortDirection = parseRegistrationSortDirection(
+    searchParams.get('dir'),
+    initialRegistrationSortKey,
+  );
   const [slug, setSlug] = useState(initialSlug);
   const [status, setStatus] = useState<StatusFilter>(initialStatus);
   const [limit, setLimit] = useState(initialLimit);
+  const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>(initialRegistrationSortKey);
+  const [registrationSortDirection, setRegistrationSortDirection] = useState<RegistrationSortDirection>(
+    initialRegistrationSortDirection,
+  );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
@@ -1351,6 +4927,10 @@ export default function CourseRegistrationsAdminPage() {
   const [showFollowUpDetails, setShowFollowUpDetails] = useState(false);
   const [showFollowUpComposer, setShowFollowUpComposer] = useState(false);
   const [markedPaidRegistrationId, setMarkedPaidRegistrationId] = useState<number | null>(null);
+  const [deleteReceiptConfirmOpen, setDeleteReceiptConfirmOpen] = useState(false);
+  const [pendingDeleteReceipt, setPendingDeleteReceipt] = useState<CourseRegistrationReceiptDTO | null>(null);
+  const [deleteFollowUpConfirmOpen, setDeleteFollowUpConfirmOpen] = useState(false);
+  const [pendingDeleteFollowUp, setPendingDeleteFollowUp] = useState<CourseRegistrationFollowUpDTO | null>(null);
   const selectedSlug = slug.trim();
 
   const listQueryKey = useMemo(
@@ -1389,7 +4969,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortOptionLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, selectedSlug);
+      bySlug.set(selectedSlug, readableFirstRunCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -1401,7 +4981,7 @@ export default function CourseRegistrationsAdminPage() {
       bySlug.set(cohortSlug, cohortSummaryLabel(cohort));
     }
     if (selectedSlug && !bySlug.has(selectedSlug)) {
-      bySlug.set(selectedSlug, selectedSlug);
+      bySlug.set(selectedSlug, readableFirstRunCohortFallbackLabel(selectedSlug));
     }
     return bySlug;
   }, [cohortsQuery.data, selectedSlug]);
@@ -1437,9 +5017,14 @@ export default function CourseRegistrationsAdminPage() {
     if (cohortsQuery.isError || !selectedSlug) return null;
     return configuredCohortOptions.find((option) => option.value === selectedSlug) ?? null;
   }, [cohortsQuery.isError, configuredCohortOptions, selectedSlug]);
+  const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
 
   const activeCohortLabel = selectedSlug
-    ? (cohortSummaryLabelsBySlug.get(selectedSlug) ?? cohortLabelsBySlug.get(selectedSlug) ?? selectedSlug)
+    ? (
+      cohortSummaryLabelsBySlug.get(selectedSlug)
+      ?? cohortLabelsBySlug.get(selectedSlug)
+      ?? readableCohortFallbackLabel(selectedSlug)
+    )
     : '';
 
   const regsQuery = useQuery({
@@ -1463,13 +5048,15 @@ export default function CourseRegistrationsAdminPage() {
   ), [registrations]);
   const singleAvailableCohortLabel = useMemo(() => {
     if (!singleAvailableCohort) return '';
+    const summaryLabel = cohortSummaryLabelsBySlug.get(singleAvailableCohort.value) ?? singleAvailableCohort.label;
+    const contextLabel = compactCohortContextLabel(summaryLabel);
     if (!hasVisibleRegistrations || selectedSlug === singleAvailableCohort.value) {
-      return singleAvailableCohort.label;
+      return contextLabel;
     }
     return visibleCohortSlugs.size === 1 && visibleCohortSlugs.has(singleAvailableCohort.value)
-      ? singleAvailableCohort.label
+      ? contextLabel
       : '';
-  }, [hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
+  }, [cohortSummaryLabelsBySlug, hasVisibleRegistrations, selectedSlug, singleAvailableCohort, visibleCohortSlugs]);
 
   const dossierQuery = useQuery<CourseRegistrationDossierDTO>({
     queryKey: dossierQueryKey,
@@ -1512,6 +5099,10 @@ export default function CourseRegistrationsAdminPage() {
       { ...base },
     );
   }, [registrations]);
+  const hasVisibleCustomStatuses = useMemo(
+    () => registrations.some((reg) => !normalizeKnownRegistrationStatus(reg.crStatus)),
+    [registrations],
+  );
   const visibleStatusFilters = useMemo<readonly StatusFilter[]>(() => {
     if (!hasVisibleRegistrations) return statusFilters;
     return statusFilters.filter((value) => value === 'all' || status === value || statusCounts[value] > 0);
@@ -1522,10 +5113,11 @@ export default function CourseRegistrationsAdminPage() {
   );
   const hasHiddenStatusFilters = visibleStatusFilters.length < statusFilters.length;
   const singleVisibleStatus = useMemo<Exclude<StatusFilter, 'all'> | null>(() => {
+    if (hasVisibleCustomStatuses) return null;
     if (!hasVisibleRegistrations) return null;
     const realStatuses = visibleStatusFilters.filter((value): value is Exclude<StatusFilter, 'all'> => value !== 'all');
     return realStatuses.length === 1 ? (realStatuses[0] ?? null) : null;
-  }, [hasVisibleRegistrations, visibleStatusFilters]);
+  }, [hasVisibleCustomStatuses, hasVisibleRegistrations, visibleStatusFilters]);
   const singleVisibleCustomStatus = useMemo(() => {
     if (!hasVisibleRegistrations || status !== 'all') return null;
     const statusesByKey = new Map<string, string>();
@@ -1552,6 +5144,10 @@ export default function CourseRegistrationsAdminPage() {
     && singleAvailableCohort?.value === selectedSlug,
   );
   const hasEffectiveSlugFilter = hasSlugFilter && !hasRedundantSingleCohortFilter;
+  const hasUnconfiguredSlugFilter = hasSlugFilter
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && selectedConfiguredCohort == null;
   const hasManualFilters = hasEffectiveSlugFilter || hasStatusFilter;
   const hasCustomLimit = limit !== DEFAULT_LIMIT;
   const hasCustomFilters = hasManualFilters || hasCustomLimit;
@@ -1564,6 +5160,22 @@ export default function CourseRegistrationsAdminPage() {
     && Boolean(selectedConfiguredCohort)
     && hasSlugFilter
     && !hasStatusFilter;
+  const showUnconfiguredCourseFirstRunLimitEmptyState = !hasVisibleRegistrations
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && configuredCohortOptions.length === 0
+    && hasCustomLimit
+    && !hasManualFilters;
+  const showUnconfiguredCourseFirstRunFilteredEmptyState = !hasVisibleRegistrations
+    && !cohortsQuery.isLoading
+    && !cohortsQuery.isError
+    && configuredCohortOptions.length === 0
+    && !hasSlugFilter
+    && hasStatusFilter;
+  const showMultiCohortFirstRunLimitEmptyState = !hasVisibleRegistrations
+    && hasMultipleAvailableCohorts
+    && hasCustomLimit
+    && !hasManualFilters;
   const showCohortFilterUnavailableSummary = cohortsQuery.isError && hasVisibleRegistrations && !hasSlugFilter;
   const activeFilterSummary = useMemo(
     () => summarizeActiveFilters({
@@ -1573,8 +5185,16 @@ export default function CourseRegistrationsAdminPage() {
     }),
     [activeCohortLabel, hasEffectiveSlugFilter, status, limit],
   );
-  const combinedSingleChoiceSummary = singleAvailableCohortLabel && showSingleStatusSummary && singleVisibleStatus
-    ? `${singleAvailableCohortLabel} · ${statusFilterLabels[singleVisibleStatus]}`
+  const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
+  const combinedSingleChoiceStatusLabel = singleAvailableCohortLabel
+    ? showSingleStatusSummary && singleVisibleStatus
+      ? statusFilterLabels[singleVisibleStatus]
+      : showSingleCustomStatusSummary && singleVisibleCustomStatus != null
+        ? customRegistrationStatusLabel(singleVisibleCustomStatus)
+        : ''
+    : '';
+  const combinedSingleChoiceSummary = singleAvailableCohortLabel && combinedSingleChoiceStatusLabel
+    ? `${singleAvailableCohortLabel} · ${combinedSingleChoiceStatusLabel}`
     : '';
   const loadedRegistrationCount = registrations.length;
   const viewHitsCurrentLimit = hasVisibleRegistrations && loadedRegistrationCount >= limit;
@@ -1586,32 +5206,53 @@ export default function CourseRegistrationsAdminPage() {
   const localSearchDigitsKey = normalizeLocalSearchDigits(localSearchTerm);
   const hasLocalSearch = Boolean(localSearchKey);
   const searchedRegistrations = useMemo(() => {
-    if (!localSearchKey) return registrations;
-    return registrations.filter((reg) => {
+    const matchingRegistrations = !localSearchKey ? registrations : registrations.filter((reg) => {
       const courseSlug = reg.crCourseSlug.trim();
       const haystack = [
-        reg.crFullName,
-        reg.crEmail,
-        reg.crPhoneE164,
+        normalizeRegistrationNameValue(reg.crFullName),
+        normalizeRegistrationContactValue(reg.crEmail),
         `registro #${reg.crId}`,
         String(reg.crId),
         reg.crAdminNotes,
         courseSlug,
         cohortLabelsBySlug.get(courseSlug),
-        registrationStatusLabel(reg.crStatus),
+        ...registrationStatusSearchValues(reg.crStatus),
+        ...registrationContactStateSearchValues(reg),
         getSearchableRegistrationSource(reg.crSource),
         getSearchableRegistrationAcquisitionContext(reg),
       ].join(' ');
       if (localSearchTextMatches(haystack, localSearchKey)) return true;
 
       if (localSearchDigitsKey.length >= MIN_PHONE_SEARCH_DIGITS) {
-        const phoneDigits = normalizeLocalSearchDigits(reg.crPhoneE164 ?? '');
-        return phoneDigits.includes(localSearchDigitsKey);
+        return phoneDigitsMatchLocalSearch(reg.crPhoneE164, localSearchDigitsKey);
       }
 
       return false;
     });
-  }, [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, registrations]);
+
+    return sortCourseRegistrations(matchingRegistrations, {
+      cohortLabelsBySlug,
+      cohortSummaryLabelsBySlug,
+      direction: registrationSortDirection,
+      sortKey: registrationSortKey,
+    });
+  }, [
+    cohortLabelsBySlug,
+    cohortSummaryLabelsBySlug,
+    localSearchDigitsKey,
+    localSearchKey,
+    registrationSortDirection,
+    registrationSortKey,
+    registrations,
+  ]);
+  const registrationPaginationResetKey = [
+    selectedSlug,
+    status,
+    localSearchKey,
+    limit,
+    registrationSortKey,
+    registrationSortDirection,
+  ].join('|');
   const registrationIdsRequiringActionDisambiguator = useMemo(
     () => getRegistrationIdsRequiringActionDisambiguator(searchedRegistrations),
     [searchedRegistrations],
@@ -1651,8 +5292,11 @@ export default function CourseRegistrationsAdminPage() {
     if (uniqueCohortSlugs.length !== 1) return '';
     const cohortSlug = uniqueCohortSlugs[0];
     if (!cohortSlug) return '';
-    return cohortLabelsBySlug.get(cohortSlug) ?? cohortSlug;
-  }, [cohortLabelsBySlug, searchedRegistrations, selectedSlug]);
+    const contextLabel = cohortSummaryLabelsBySlug.get(cohortSlug)
+      ?? cohortLabelsBySlug.get(cohortSlug)
+      ?? readableCohortFallbackLabel(cohortSlug);
+    return compactCohortContextLabel(contextLabel);
+  }, [cohortLabelsBySlug, cohortSummaryLabelsBySlug, searchedRegistrations, selectedSlug]);
   const singleVisibleSourceLabel = useMemo(() => {
     if (searchedRegistrations.length === 0) return '';
     const sourceLabelsByKey = new Map<string, string>();
@@ -1689,20 +5333,58 @@ export default function CourseRegistrationsAdminPage() {
     const [onlyStatus] = Array.from(statusLabelsByKey.values());
     return statusLabelsByKey.size === 1 && onlyStatus ? registrationStatusLabel(onlyStatus) : '';
   }, [searchedRegistrations]);
+  const singleSearchedKnownStatus = useMemo<RegistrationStatus | null>(() => {
+    if (searchedRegistrations.length < 2) return null;
+    const statusKeys = new Set<RegistrationStatus>();
+
+    searchedRegistrations.forEach((reg) => {
+      const knownStatus = normalizeKnownRegistrationStatus(reg.crStatus.trim());
+      if (knownStatus) statusKeys.add(knownStatus);
+    });
+
+    const [onlyStatus] = Array.from(statusKeys.values());
+    return statusKeys.size === 1 && onlyStatus ? onlyStatus : null;
+  }, [searchedRegistrations]);
   const sharedVisibleSourceSummary = hasNamedVisibleSource
-    ? `Mostrando una sola fuente: ${singleVisibleSourceLabel}.`
+    ? `Fuente visible: ${singleVisibleSourceLabel}.`
     : '';
   const showEmptyLocalSearchResults = hasLocalSearch
     && loadedRegistrationCount > 0
     && searchedRegistrations.length === 0;
+  const hidePassiveFiltersDuringEmptyLocalSearch = showEmptyLocalSearchResults
+    && !hasManualFilters
+    && !cohortsQuery.isError;
   const showDefaultEmptyLocalSearchFocus = showEmptyLocalSearchResults
     && !hasCustomFilters
     && !viewHitsCurrentLimit;
+  const showCappedEmptyLocalSearchLimitEditor = showEmptyLocalSearchResults
+    && viewHitsCurrentLimit
+    && showAdvancedFilters;
+  const hidePassiveFilterChromeDuringEmptySearchRecovery =
+    hidePassiveFiltersDuringEmptyLocalSearch || showCappedEmptyLocalSearchLimitEditor;
+  const showFilteredEmptyLocalSearchFocus = showEmptyLocalSearchResults
+    && hasManualFilters
+    && !cohortsQuery.isError
+    && Boolean(activeFilterSummary)
+    && !showCappedEmptyLocalSearchLimitEditor;
+  const showFocusedEmptyLocalSearchState = showDefaultEmptyLocalSearchFocus || showFilteredEmptyLocalSearchFocus;
+  const defaultEmptyLocalSearchScopeSummary = showDefaultEmptyLocalSearchFocus
+    ? [
+      combinedSingleChoiceSummary
+        || singleAvailableCohortLabel
+        || (showSingleStatusSummary && singleVisibleStatus ? statusFilterLabels[singleVisibleStatus] : ''),
+      hasNamedVisibleSource ? `Fuente visible: ${singleVisibleSourceLabel}` : '',
+    ].filter(Boolean).join(' · ')
+    : '';
+  const filteredEmptyLocalSearchScopeSummary = showFilteredEmptyLocalSearchFocus
+    ? `Vista filtrada: ${activeFilterSummary}`
+    : '';
+  const emptyLocalSearchScopeSummary = filteredEmptyLocalSearchScopeSummary || defaultEmptyLocalSearchScopeSummary;
   const localSearchNarrowsRegistrations = hasLocalSearch && searchedRegistrations.length < loadedRegistrationCount;
-  const singleVisibleNamedRegistrationNeedsContact = searchedRegistrations.length === 1
+  const singleVisibleRegistrationNeedsContact = searchedRegistrations.length === 1
     && searchedRegistrations[0] != null
-    && namedRegistrationNeedsContact(searchedRegistrations[0]);
-  const singleVisibleMissingContactSummary = singleVisibleNamedRegistrationNeedsContact
+    && registrationNeedsContact(searchedRegistrations[0]);
+  const singleVisibleMissingContactSummary = singleVisibleRegistrationNeedsContact
     ? 'Contacto pendiente en esta inscripción.'
     : '';
   const hiddenLocalSearchMatchSummary = useMemo(
@@ -1714,22 +5396,134 @@ export default function CourseRegistrationsAdminPage() {
     }),
     [cohortLabelsBySlug, localSearchDigitsKey, localSearchKey, searchedRegistrations],
   );
-  const shortPhoneSearchHint = looksLikeShortPhoneSearch(localSearchTerm, localSearchDigitsKey)
-    ? `Para buscar por teléfono, usa al menos ${MIN_PHONE_SEARCH_DIGITS} dígitos del número.`
-    : '';
-  const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
-  const localSearchPlaceholder = useMemo(
-    () => buildLocalSearchPlaceholder(registrations),
+  const hasSearchablePhoneContacts = useMemo(
+    () => registrations.some((reg) => Boolean(normalizeRegistrationContactValue(reg.crPhoneE164))),
     [registrations],
   );
+  const shortPhoneSearchHint = hasSearchablePhoneContacts
+    ? shortPhoneSearchHintFor(localSearchTerm, localSearchDigitsKey)
+    : '';
+  const showEmptyLocalSearchLimitGuidance = showEmptyLocalSearchResults
+    && viewHitsCurrentLimit
+    && !shortPhoneSearchHint;
+  const showEmptyLocalSearchLimitRecoveryAction = showEmptyLocalSearchLimitGuidance
+    && !showAdvancedFilters;
+  const showLocalSearchControl = loadedRegistrationCount >= MIN_LOCAL_SEARCH_REGISTRATIONS || Boolean(localSearchKey);
+  const showRegistrationSortControls = loadedRegistrationCount > 1 || registrationSortKey !== 'default';
+  const showRegistrationResultsToolbar = showLocalSearchControl || showRegistrationSortControls;
+  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const statusFiltersSummarizeBusyListRows = showBusyListSearchOnboarding
+    && status === 'all'
+    && actionableStatusFilters.length > 1
+    && !hasVisibleCustomStatuses;
+  const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
+  const hasDedicatedCohortFilterControl = showCohortSelect
+    && !cohortsQuery.isError
+    && cohortOptions.length > 1;
+  const hasDedicatedCohortFilterPath = showCohortSelect
+    && !cohortsQuery.isError
+    && (cohortsQuery.isLoading || cohortOptions.length > 1);
+  const localSearchPlaceholder = useMemo(
+    () => buildLocalSearchPlaceholder(registrations, {
+      includeCourseTerm: !hasDedicatedCohortFilterPath,
+    }),
+    [hasDedicatedCohortFilterPath, registrations],
+  );
+  const localSearchInputTitle = localSearchPlaceholder.includes('otros datos')
+    ? LOCAL_SEARCH_COMPACT_CONTEXT_TITLE
+    : undefined;
   const hasCustomStatusSearch = useMemo(
     () => hasSearchableCustomRegistrationStatus(registrations),
     [registrations],
   );
+  const statusAlreadyVisibleInBusySearchOnboarding = Boolean(combinedSingleChoiceSummary)
+    && showLocalSearchControl
+    && !hasLocalSearch
+    && !hasCustomFilters
+    && !viewHitsCurrentLimit
+    && limit === DEFAULT_LIMIT;
+  const allVisibleRowsCanOpenPaymentWorkflow = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus));
+  const allVisibleRowsUseBusyListPaidRecoveryAction = statusAlreadyVisibleInBusySearchOnboarding
+    && searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid');
+  const allVisibleRowsUseDirectPendingRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
+      reg.crStatus,
+      allVisibleRowsUseBusyListPaidRecoveryAction,
+    ));
+  const allVisibleRowsUseCustomStatusActions = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => !normalizeKnownRegistrationStatus(reg.crStatus));
+  const localSearchOnboardingActionText = allVisibleRowsUseDirectPendingRecoveryAction
+    ? allVisibleRowsUseBusyListPaidRecoveryAction
+      ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
+      : buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+    : allVisibleRowsCanOpenPaymentWorkflow
+      ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseCustomStatusActions
+        ? buildCustomStatusNormalizationScopeHint(dossierIdentityTargetLabel)
+      : statusAlreadyVisibleInBusySearchOnboarding || statusFiltersSummarizeBusyListRows
+        ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
+        : buildDossierOnlyScopeHint(dossierIdentityTargetLabel);
   const localSearchOnboardingActionHint = showFilterOnboardingCopy
-    ? ` ${buildDossierOnlyScopeHint(dossierIdentityTargetLabel)}`
+    ? ` ${localSearchOnboardingActionText}`
     : '';
-  const localSearchHelperText = localSearchKey
+  const localSearchSingleResult =
+    localSearchNarrowsRegistrations && searchedRegistrations.length === 1
+      ? (searchedRegistrations[0] ?? null)
+      : null;
+  const localSearchSingleResultKnownStatus = localSearchSingleResult
+    ? normalizeKnownRegistrationStatus(localSearchSingleResult.crStatus)
+    : null;
+  const singleResultUnrelatedStatusFilterCount = localSearchSingleResultKnownStatus
+    ? actionableStatusFilters.filter((value) => value !== localSearchSingleResultKnownStatus).length
+    : 0;
+  const hideSingleResultLocalSearchPassiveFilterPanel = Boolean(
+    localSearchSingleResult
+    && !hasCustomFilters
+    && !cohortsQuery.isError
+    && singleResultUnrelatedStatusFilterCount > 0,
+  );
+  const localSearchSingleResultUsesDirectPaidRecovery =
+    localSearchSingleResultKnownStatus === 'paid';
+  const localSearchSingleResultTargetLabel = localSearchSingleResult
+    ? registrationIdentityTargetLabel(searchedRegistrations)
+    : dossierIdentityTargetLabel;
+  const localSearchSingleResultActionHint = localSearchSingleResult
+    ? ` ${
+      localSearchSingleResultKnownStatus === 'cancelled'
+        ? buildPendingRecoveryScopeHint(localSearchSingleResultTargetLabel)
+        : localSearchSingleResultUsesDirectPaidRecovery
+          ? buildPaidRecoveryScopeHint(localSearchSingleResultTargetLabel)
+        : canOpenPaymentWorkflowFromStatus(localSearchSingleResult.crStatus)
+          ? buildPaymentWorkflowScopeHint(localSearchSingleResultTargetLabel)
+        : !localSearchSingleResultKnownStatus
+          ? buildCustomStatusNormalizationScopeHint(localSearchSingleResultTargetLabel)
+          : buildDossierOnlyScopeHint(localSearchSingleResultTargetLabel)
+    }`
+    : '';
+  const localSearchSharedActionHint = localSearchNarrowsRegistrations
+    && searchedRegistrations.length > 1
+    ? (() => {
+      const targetLabel = registrationIdentityTargetLabel(searchedRegistrations);
+
+      if (singleSearchedKnownStatus === 'paid') return buildPaidRecoveryScopeHint(targetLabel);
+      if (singleSearchedKnownStatus === 'cancelled') return buildPendingRecoveryScopeHint(targetLabel);
+      if (
+        singleSearchedKnownStatus === 'pending_payment'
+        && searchedRegistrations.every((reg) => canOpenPaymentWorkflowFromStatus(reg.crStatus))
+      ) {
+        return buildPaymentWorkflowScopeHint(targetLabel);
+      }
+
+      return '';
+    })()
+    : '';
+  const loadedSearchScopeHint = buildLoadedSearchScopeHint(loadedRegistrationCount);
+  const localSearchLoadedScopeHint = hasCustomFilters
+    ? `${loadedSearchScopeHint.replace(/\.$/, '')} sin cambiar filtros.`
+    : loadedSearchScopeHint;
+  const baseLocalSearchHelperText = localSearchKey
     ? showEmptyLocalSearchResults
       ? undefined
       : localSearchNarrowsRegistrations
@@ -1737,20 +5531,43 @@ export default function CourseRegistrationsAdminPage() {
           formatLocalSearchResultSummary(searchedRegistrations.length, loadedRegistrationCount),
           singleVisibleMissingContactSummary,
           hiddenLocalSearchMatchSummary,
+          localSearchSingleResultActionHint.trim(),
+          localSearchSharedActionHint,
         ].filter(Boolean).join(' ')
         : loadedRegistrationCount > 0
-          ? buildFullLocalSearchMatchHint(loadedRegistrationCount)
+          ? [
+            buildFullLocalSearchMatchHint(loadedRegistrationCount),
+            hiddenLocalSearchMatchSummary,
+          ].filter(Boolean).join(' ')
           : undefined
     : viewHitsCurrentLimit
       ? `${buildLoadedSearchScopeHint(loadedRegistrationCount)}${localSearchOnboardingActionHint}`
-      : `Busca dentro de las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas sin cambiar filtros.${localSearchOnboardingActionHint}`;
+      : `${localSearchLoadedScopeHint}${localSearchOnboardingActionHint}`;
   const emptyLocalSearchResultsMessage = showEmptyLocalSearchResults
     ? [
+      emptyLocalSearchScopeSummary ? `${emptyLocalSearchScopeSummary}.` : '',
       shortPhoneSearchHint
         || `No hay coincidencias para "${localSearchSummary}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
-      shortPhoneSearchHint ? '' : viewHitsCurrentLimit ? cappedLocalSearchEmptyHint : '',
+      shortPhoneSearchHint || showEmptyLocalSearchLimitRecoveryAction
+        ? ''
+        : viewHitsCurrentLimit
+          ? cappedLocalSearchEmptyHint
+          : '',
     ].filter(Boolean).join(' ')
     : '';
+  const emptyLocalSearchResultsAccessibleLabel = showEmptyLocalSearchResults
+    && !shortPhoneSearchHint
+    && localSearchSummary !== localSearchTerm
+    ? [
+      emptyLocalSearchScopeSummary ? `${emptyLocalSearchScopeSummary}.` : '',
+      `No hay coincidencias para "${localSearchTerm}" en las ${formatRegistrationCountLabel(loadedRegistrationCount)} cargadas.`,
+      showEmptyLocalSearchLimitRecoveryAction
+        ? ''
+        : viewHitsCurrentLimit
+          ? cappedLocalSearchEmptyHint
+          : '',
+    ].filter(Boolean).join(' ')
+    : undefined;
   const visibleRegistrationsSummary = hasCustomFilters
     ? `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)}.`
     : `Mostrando ${formatRegistrationCountLabel(loadedRegistrationCount)} en esta vista.`;
@@ -1771,27 +5588,44 @@ export default function CourseRegistrationsAdminPage() {
   const combinedSingleChoiceCountSummary = showTinyDefaultCountInCurrentView
     ? visibleRegistrationsSummary
     : '';
-  const combinedSingleChoiceContextSummary = [
+  const combinedSingleChoicePassiveContextSummary = [
     combinedSingleChoiceSourceSummary,
     combinedSingleChoiceLimitSummary,
     combinedSingleChoiceCountSummary,
   ].filter(Boolean).join(' ');
+  const combinedSingleChoiceCustomStatusGuidance = combinedSingleChoiceSummary && showSingleCustomStatusSummary
+    ? customStatusFilterUnavailableMessage
+    : '';
   const showSingleStatusSummaryBlock = showSingleStatusSummary
     && !(showCohortFilterUnavailableSummary && loadedRegistrationCount === 1);
-  const standaloneSingleChoiceSourceSummary = !combinedSingleChoiceSummary
+  const standaloneSingleChoiceInlineSourceSummary = !combinedSingleChoiceSummary
     && (singleAvailableCohortLabel || showSingleStatusSummaryBlock)
-    ? summarizedVisibleSourceLabel
+    && hasNamedVisibleSource
+    ? `Fuente: ${singleVisibleSourceLabel}`
+    : '';
+  const standaloneSingleChoiceBusySearchSourceSummary = standaloneSingleChoiceInlineSourceSummary
+    ? `Fuente visible: ${singleVisibleSourceLabel}`
     : '';
   const resetViewLabel = getResetViewLabel({
     hasCustomLimit,
     hasSlugFilter: hasEffectiveSlugFilter,
     hasStatusFilter,
+    hasUnconfiguredSlugFilter,
   });
-  const showCohortSelect = !combinedSingleChoiceSummary && !singleAvailableCohortLabel;
   const showCohortFilterLoadingSummary = showCohortSelect
     && cohortsQuery.isLoading
     && hasVisibleRegistrations
     && !hasSlugFilter;
+  const hideBusyListPassiveCohortLoadingSummary = showBusyListSearchOnboarding
+    && showCohortFilterLoadingSummary
+    && !hasCustomFilters
+    && !hasVisibleCustomStatuses
+    && actionableStatusFilters.length <= 1;
+  const hideBusyListPassiveCohortUnavailableSummary = showBusyListSearchOnboarding
+    && showCohortFilterUnavailableSummary
+    && !hasCustomFilters
+    && !hasVisibleCustomStatuses
+    && actionableStatusFilters.length <= 1;
   const showEmptyCohortFilterSummary = showCohortSelect
     && !cohortsQuery.isLoading
     && !cohortsQuery.isError
@@ -1799,23 +5633,42 @@ export default function CourseRegistrationsAdminPage() {
     && cohortOptions.length === 0
     && !hasSlugFilter;
   const cohortFilterCanSelfReset = showCohortSelect && hasSlugFilter && !hasStatusFilter && !hasCustomLimit;
-  const filteredEmptyStateRecoveryHint = hasManualFilters
-    ? 'Revisa los filtros o restablece la vista si esperabas resultados.'
+  const filteredEmptyStateRecoveryHint = hasManualFilters || cohortsQuery.isError
+    ? ''
     : 'Usa refrescar si esperabas resultados.';
   const filteredEmptyStateScope = hasManualFilters
     ? hasCustomLimit
       ? 'en la vista actual'
       : 'con los filtros actuales'
     : 'con el límite actual';
-  const filteredEmptyStateMessage = activeFilterSummary
-    ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}. ${filteredEmptyStateRecoveryHint}`
-    : `No hay inscripciones ${filteredEmptyStateScope}. ${filteredEmptyStateRecoveryHint}`;
-  const hasExplicitCsvExportScope = hasCustomFilters || localSearchNarrowsRegistrations;
+  const filteredEmptyStateBaseMessage =
+    hasUnconfiguredSlugFilter && !hasStatusFilter && !hasCustomLimit
+      ? `No hay inscripciones para ${activeCohortLabel}.`
+      : !hasManualFilters && hasCustomLimit
+      ? `No hay inscripciones con el límite actual de hasta ${limit} inscripci${limit === 1 ? 'ón' : 'ones'}.`
+      : activeFilterSummary
+        ? `No hay inscripciones ${filteredEmptyStateScope}: ${activeFilterSummary}.`
+        : `No hay inscripciones ${filteredEmptyStateScope}.`;
+  const filteredEmptyStateMessage = [
+    filteredEmptyStateBaseMessage,
+    filteredEmptyStateRecoveryHint,
+  ].filter(Boolean).join(' ');
+  const hasTinyLimitOnlyView = hasCustomLimit
+    && !hasManualFilters
+    && !hasLocalSearch
+    && loadedRegistrationCount > 1
+    && loadedRegistrationCount <= MIN_DEFAULT_CSV_EXPORT_ROWS;
+  const hasTinyManualFilterView = hasManualFilters
+    && !hasLocalSearch
+    && searchedRegistrations.length > 1
+    && searchedRegistrations.length < MIN_DEFAULT_CSV_EXPORT_ROWS;
+  const hasBroadLocalSearch = hasLocalSearch && !localSearchNarrowsRegistrations;
+  const hasExplicitCsvExportScope = !hasBroadLocalSearch && (hasManualFilters
+    ? !hasTinyManualFilterView
+    : localSearchNarrowsRegistrations || (hasCustomLimit && !hasTinyLimitOnlyView));
   const canCopyCsv = searchedRegistrations.length > 1 && hasExplicitCsvExportScope;
-  const copiedCsvRecently = copyMessage?.startsWith('Copiado CSV') ?? false;
-  const showCopyCsvAction = canCopyCsv && !copiedCsvRecently;
-  const showLocalSearchInlineClearAction = hasLocalSearch
-    && !showEmptyLocalSearchResults;
+  const showCopyCsvAction = canCopyCsv && !copyMessage;
+  const showLocalSearchInlineClearAction = hasLocalSearch && !showEmptyLocalSearchLimitRecoveryAction;
   const showLocalSearchUtilityRow = hasLocalSearch && localSearchNarrowsRegistrations && (
     showCopyCsvAction
     || Boolean(copyMessage)
@@ -1823,27 +5676,52 @@ export default function CourseRegistrationsAdminPage() {
   const showScopedCopyCsvAction = showCopyCsvAction && !showLocalSearchUtilityRow;
   const showScopedCopyMessage = Boolean(copyMessage) && !showLocalSearchUtilityRow;
   const hideTinyDefaultListRowDates = !hasCustomFilters && loadedRegistrationCount < MIN_DEFAULT_CSV_EXPORT_ROWS;
-  const shouldShowSharedCohortSummary = !hasCustomFilters && Boolean(singleVisibleCohortLabel) && !singleAvailableCohortLabel;
+  const shouldShowSharedCohortSummary = Boolean(singleVisibleCohortLabel)
+    && !singleAvailableCohortLabel
+    && !hasEffectiveSlugFilter;
   const hasSharedVisibleSource = Boolean(singleVisibleSourceLabel);
+  const activeStatusFilterIsOnlyStatusOption = hasStatusFilter
+    && actionableStatusFilters.length === 1
+    && actionableStatusFilters[0] === status;
+  const showActiveStatusFilterSummary = hasVisibleRegistrations
+    && hasStatusFilter
+    && !hasVisibleCustomStatuses
+    && (
+      hasEffectiveSlugFilter
+      || hasCustomLimit
+      || loadedRegistrationCount === 1
+      || activeStatusFilterIsOnlyStatusOption
+    );
+  const activeStatusInlineSourceSummary = showActiveStatusFilterSummary
+    && hasNamedVisibleSource
+    && !combinedSingleChoiceSourceSummary
+    && !standaloneSingleChoiceInlineSourceSummary
+    ? `Fuente: ${singleVisibleSourceLabel}`
+    : '';
   const shouldShowSharedSourceSummary = hasNamedVisibleSource
     && !combinedSingleChoiceSourceSummary
-    && !standaloneSingleChoiceSourceSummary;
-  const showActiveStatusFilterSummary = hasStatusFilter && (hasEffectiveSlugFilter || hasCustomLimit);
+    && !standaloneSingleChoiceInlineSourceSummary
+    && !activeStatusInlineSourceSummary;
   const statusAlreadyVisibleInFilterStrip = hasStatusFilter && !showSingleStatusSummary && !showActiveStatusFilterSummary;
-  const showSingleCustomStatusSummary = singleVisibleCustomStatus != null && actionableStatusFilters.length === 0;
   const shouldShowSharedStatusSummary = Boolean(singleSearchedStatusLabel)
     && !showSingleStatusSummary
     && !statusAlreadyVisibleInFilterStrip
+    && !showActiveStatusFilterSummary
     && !showSingleCustomStatusSummary;
   const sharedVisibleStatusSummary = shouldShowSharedStatusSummary
     ? `Estado visible: ${singleSearchedStatusLabel}.`
     : '';
-  const visibleNamedRegistrationsMissingContactCount =
-    searchedRegistrations.filter(namedRegistrationNeedsContact).length;
+  const sharedVisibleCohortSummary = shouldShowSharedCohortSummary
+    ? `Formulario público visible: ${singleVisibleCohortLabel}.`
+    : '';
+  const visibleRegistrationsMissingContactCount =
+    searchedRegistrations.filter(registrationNeedsContact).length;
   const sharedVisibleMissingContactSummary = formatVisibleMissingContactSummary(
-    visibleNamedRegistrationsMissingContactCount,
+    visibleRegistrationsMissingContactCount,
     searchedRegistrations.length,
   );
+  const showSharedVisibleMissingContactSummary = Boolean(sharedVisibleMissingContactSummary)
+    && !showBusyListSearchOnboarding;
   const sharedVisibleCreatedAtLabel = useMemo(() => {
     if (searchedRegistrations.length < 2) return '';
     const createdLabels = searchedRegistrations.map((reg) => formatOptionalDate(reg.crCreatedAt));
@@ -1852,7 +5730,6 @@ export default function CourseRegistrationsAdminPage() {
     return firstLabel && createdLabels.every((label) => label === firstLabel) ? firstLabel : '';
   }, [searchedRegistrations]);
   const sharedVisibleCreatedAtSummary = sharedVisibleCreatedAtLabel
-    && hasCustomFilters
     && localSearchNarrowsRegistrations
     ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}.`
     : '';
@@ -1860,28 +5737,49 @@ export default function CourseRegistrationsAdminPage() {
     && (hasCustomFilters || searchedRegistrations.length > 1);
   const allVisibleRegistrationsHaveNotes = searchedRegistrations.length > 1
     && searchedRegistrations.every((reg) => Boolean(reg.crAdminNotes?.trim()));
-  const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes
+  const sharedVisibleNotesSummary = allVisibleRegistrationsHaveNotes && !hiddenLocalSearchMatchSummary
     ? 'Notas internas en todas las inscripciones visibles.'
     : '';
+  const foldSharedNotesIntoBusySearch = showBusyListSearchOnboarding
+    && Boolean(sharedVisibleNotesSummary)
+    && !hasCustomFilters
+    && !viewHitsCurrentLimit
+    && limit === DEFAULT_LIMIT;
+  const showSharedNotesSummaryInList = Boolean(sharedVisibleNotesSummary)
+    && !foldSharedNotesIntoBusySearch;
   const sharedListContextSummaries = [
     sharedVisibleStatusSummary,
-    shouldShowSharedCohortSummary ? `Mostrando una sola cohorte: ${singleVisibleCohortLabel}.` : '',
+    sharedVisibleCohortSummary,
     shouldShowSharedSourceSummary ? `Fuente visible: ${singleVisibleSourceLabel}.` : '',
     sharedVisibleCreatedAtSummary,
-    sharedVisibleMissingContactSummary,
-    sharedVisibleNotesSummary,
+    showSharedVisibleMissingContactSummary ? sharedVisibleMissingContactSummary : '',
+    showSharedNotesSummaryInList ? sharedVisibleNotesSummary : '',
   ].filter(Boolean);
   const combinedSharedListContextSummary = sharedListContextSummaries.length > 1
     ? sharedListContextSummaries.join(' ')
     : '';
   const copyCsvButtonLabel = showLocalSearchUtilityRow
-    ? 'Copiar visibles como CSV'
-    : `Copiar CSV (${formatRowCountLabel(searchedRegistrations.length)})`;
-  const copyCsvButtonAccessibleLabel = `Copiar ${formatRowCountLabel(searchedRegistrations.length)} visibles como CSV`;
+    ? 'Copiar resultados'
+    : `Copiar CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`;
+  const copyCsvButtonAccessibleLabel = showLocalSearchUtilityRow
+    ? `Copiar resultados de búsqueda como CSV (${formatCsvRegistrationCountLabel(searchedRegistrations.length)})`
+    : `Copiar ${formatCsvRegistrationCountLabel(searchedRegistrations.length)} visibles como CSV`;
+  const copyCsvButtonTitle = showLocalSearchUtilityRow
+    ? 'Copia solo los resultados visibles de la búsqueda como CSV.'
+    : 'Copia solo las inscripciones visibles de esta vista.';
   const visibleCsvScopeKey = useMemo(
-    () => searchedRegistrations
-      .map((reg) => `${reg.crCourseSlug}:${reg.crId}:${reg.crStatus}:${reg.crUpdatedAt}`)
-      .join('|'),
+    () => JSON.stringify(
+      searchedRegistrations.map((reg) => [
+        reg.crId,
+        reg.crCourseSlug,
+        reg.crFullName ?? '',
+        reg.crEmail ?? '',
+        reg.crPhoneE164 ?? '',
+        reg.crStatus,
+        reg.crCreatedAt,
+        reg.crUpdatedAt,
+      ]),
+    ),
     [searchedRegistrations],
   );
   const suppressDefaultMediumListUtilityRow = !hasCustomFilters
@@ -1893,6 +5791,8 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch;
   const showUtilityCountSummary = !hasLocalSearch
     && !canCopyCsv
+    && !hasTinyManualFilterView
+    && !hasTinyLimitOnlyView
     && !showTinyDefaultCountInCurrentView
     && !suppressDefaultMediumListUtilityRow
     && !suppressDefaultUnscopedListUtilityRow
@@ -1903,32 +5803,279 @@ export default function CourseRegistrationsAdminPage() {
     ? buildReachedListLimitSummary(limit)
     : '';
   const showAdvancedLimitControl = viewHitsCurrentLimit || limit !== DEFAULT_LIMIT;
+  const showLimitAdjustmentAction = showAdvancedLimitControl && (
+    viewHitsCurrentLimit
+    || showAdvancedFilters
+  );
+  const hideCohortFilterForSingleLocalSearchResult = Boolean(localSearchSingleResult)
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !cohortsQuery.isError;
   const showSingleResultWithoutHiddenLimit = loadedRegistrationCount === 1 && !showAdvancedLimitControl;
   const showSingleResultWithOnlyPassiveFilterContext = showSingleResultWithoutHiddenLimit
     && !hasCustomFilters
-    && !hasSlugFilter
+    && !hasEffectiveSlugFilter
     && !showCohortFilterUnavailableSummary
     && (Boolean(combinedSingleChoiceSummary) || showSingleStatusSummary);
-  const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock && !showSingleResultWithOnlyPassiveFilterContext;
+  const showBusyListNonNarrowingSearch = showLocalSearchControl
+    && hasLocalSearch
+    && !localSearchNarrowsRegistrations
+    && loadedRegistrationCount > 1;
+  const hideSingleResultLocalSearchPassiveCurrentView = Boolean(
+    localSearchSingleResult
+    && combinedSingleChoiceSummary
+    && !combinedSingleChoiceSourceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl,
+  );
+  const showSingleStatusSummaryInPageChrome = showSingleStatusSummaryBlock
+    && !showSingleResultWithOnlyPassiveFilterContext
+    && !hideSingleResultLocalSearchPassiveCurrentView;
+  const localSearchSharedPaidStatusSummary = hasLocalSearch
+    && shouldShowSharedStatusSummary
+    && singleSearchedKnownStatus === 'paid';
+  const localSearchSharedPendingPaymentStatusSummary = hasLocalSearch
+    && shouldShowSharedStatusSummary
+    && singleSearchedKnownStatus === 'pending_payment';
+  const singleStatusSummarySupportsPaidRecovery =
+    showSingleStatusSummaryInPageChrome && !showCohortFilterUnavailableSummary;
   const useCompactStatusActionLabel = showSingleStatusSummaryInPageChrome
+    || statusAlreadyVisibleInBusySearchOnboarding
+    || statusFiltersSummarizeBusyListRows
     || statusAlreadyVisibleInFilterStrip
     || showActiveStatusFilterSummary
     || showSingleCustomStatusSummary
     || shouldShowSharedStatusSummary;
+  const shouldCompactRepeatedPaymentStatusActions = searchedRegistrations.length >= 2;
+  const showRepeatedPaymentStatusIconActions = Boolean(
+    combinedSingleChoiceSummary
+    || showSingleStatusSummaryInPageChrome
+    || showActiveStatusFilterSummary
+    || localSearchSharedPendingPaymentStatusSummary
+  )
+    && (!hasLocalSearch || localSearchSharedPendingPaymentStatusSummary)
+    && !showBusyListSearchOnboarding
+    && allVisibleRowsCanOpenPaymentWorkflow
+    && useCompactStatusActionLabel
+    && shouldCompactRepeatedPaymentStatusActions;
+  const hasSharedPendingPaymentStatusContext = Boolean(combinedSingleChoiceSummary)
+    || showSingleStatusSummaryInPageChrome;
+  const showInlinePaymentWorkflowRowLabel = hasSharedPendingPaymentStatusContext
+    && !hasLocalSearch
+    && !showBusyListSearchOnboarding
+    && allVisibleRowsCanOpenPaymentWorkflow
+    && !showRepeatedPaymentStatusIconActions
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length > 1;
+  const allVisibleRowsUsePaidRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => normalizeKnownRegistrationStatus(reg.crStatus) === 'paid')
+    && (
+      allVisibleRowsUseBusyListPaidRecoveryAction
+      || showActiveStatusFilterSummary
+      || localSearchSharedPaidStatusSummary
+      || (
+        localSearchSingleResultUsesDirectPaidRecovery
+        && searchedRegistrations.length === 1
+      )
+      || singleStatusSummarySupportsPaidRecovery
+    );
+  const allVisibleRowsUseDossierRecoveryAction = searchedRegistrations.length > 0
+    && searchedRegistrations.every((reg) => shouldUseDirectPendingRecoveryAction(
+      reg.crStatus,
+      allVisibleRowsUsePaidRecoveryAction,
+    ));
+  const showRepeatedDirectRecoveryIconActions = allVisibleRowsUseDossierRecoveryAction
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_REPEATED_DIRECT_RECOVERY_ICON_ACTIONS;
+  const showRepeatedCustomStatusIconActions = allVisibleRowsUseCustomStatusActions
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_REPEATED_CUSTOM_STATUS_ICON_ACTIONS;
+  const showBusyDirectRecoveryIconActions = showBusyListSearchOnboarding
+    && allVisibleRowsUseDirectPendingRecoveryAction
+    && useCompactStatusActionLabel
+    && searchedRegistrations.length >= MIN_LOCAL_SEARCH_REGISTRATIONS;
+  const showBusyStatusIconActions = (
+    showBusyListSearchOnboarding
+    && useCompactStatusActionLabel
+    && !allVisibleRowsUseDirectPendingRecoveryAction
+  ) || showRepeatedPaymentStatusIconActions
+    || showRepeatedCustomStatusIconActions;
   const dossierScopeHint = [
-    useCompactStatusActionLabel
+    allVisibleRowsUsePaidRecoveryAction
+      ? buildPaidRecoveryScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseDossierRecoveryAction
+      ? buildPendingRecoveryScopeHint(dossierIdentityTargetLabel)
+      : showInlinePaymentWorkflowRowLabel
+      ? buildDossierLinkScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsCanOpenPaymentWorkflow
+      ? buildPaymentWorkflowScopeHint(dossierIdentityTargetLabel)
+      : allVisibleRowsUseCustomStatusActions
+      ? buildCustomStatusNormalizationScopeHint(dossierIdentityTargetLabel)
+      : useCompactStatusActionLabel
       ? buildCompactDossierScopeHint(dossierIdentityTargetLabel)
       : buildDossierOnlyScopeHint(dossierIdentityTargetLabel),
     singleVisibleMissingContactSummary,
   ].filter(Boolean).join(' ');
-  const showBusyListSearchOnboarding = showLocalSearchControl && !hasLocalSearch;
+  const showInlineCurrentViewDossierHint = Boolean(combinedSingleChoiceSummary)
+    && showFilterOnboardingCopy
+    && !hideSingleResultLocalSearchPassiveCurrentView
+    && loadedRegistrationCount > 1
+    && (!showLocalSearchControl || hasLocalSearch);
+  const combinedSingleChoiceContextSummary = [
+    combinedSingleChoicePassiveContextSummary,
+    showInlineCurrentViewDossierHint ? dossierScopeHint : '',
+  ].filter(Boolean).join(' ');
+  const canFoldSharedSourceIntoBusySearch = Boolean(
+    showBusyListSearchOnboarding
+    && combinedSingleChoiceSummary
+    && combinedSingleChoiceSourceSummary
+    && combinedSingleChoicePassiveContextSummary === combinedSingleChoiceSourceSummary
+    && !combinedSingleChoiceCustomStatusGuidance
+    && !hasCustomFilters
+    && !showAdvancedLimitControl,
+  );
+  const hasSharedListContextSummary = Boolean(
+    !canFoldSharedSourceIntoBusySearch
+    && (
+      combinedSharedListContextSummary
+      || shouldShowSharedStatusSummary
+      || shouldShowSharedCohortSummary
+      || shouldShowSharedSourceSummary
+      || sharedVisibleCreatedAtSummary
+      || showSharedVisibleMissingContactSummary
+      || showSharedNotesSummaryInList
+    ),
+  );
+  const localSearchOwnsDefaultCurrentViewSummary = Boolean(
+    hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && searchedRegistrations.length > 1
+    && combinedSingleChoiceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !showEmptyLocalSearchResults,
+  );
+  const canFoldDefaultSearchSharedDateIntoHelper = Boolean(
+    localSearchOwnsDefaultCurrentViewSummary
+    && sharedVisibleCreatedAtSummary
+    && !combinedSharedListContextSummary
+    && !shouldShowSharedStatusSummary
+    && !shouldShowSharedCohortSummary
+    && !shouldShowSharedSourceSummary
+    && !showSharedVisibleMissingContactSummary
+    && !showSharedNotesSummaryInList,
+  );
+  const hideBusyListPassiveCurrentViewPanel = (
+    showBusyListSearchOnboarding
+    || showBusyListNonNarrowingSearch
+    || hideSingleResultLocalSearchPassiveCurrentView
+    || localSearchOwnsDefaultCurrentViewSummary
+  )
+    && Boolean(combinedSingleChoiceSummary)
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && (
+      hideSingleResultLocalSearchPassiveCurrentView
+      || localSearchOwnsDefaultCurrentViewSummary
+      || canFoldSharedSourceIntoBusySearch
+      || !combinedSingleChoiceContextSummary
+    )
+    && (!hasSharedListContextSummary || canFoldDefaultSearchSharedDateIntoHelper);
+  const hideBusyListPassiveSingleCohortSummary = showBusyListSearchOnboarding
+    && Boolean(singleAvailableCohortLabel)
+    && !combinedSingleChoiceSummary
+    && actionableStatusFilters.length > 0
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !hasSharedListContextSummary;
+  const hideSingleResultSearchPassiveCohortSummary = Boolean(localSearchSingleResult)
+    && !hasManualFilters
+    && !hasEffectiveSlugFilter
+    && !cohortsQuery.isError;
+  const hasBusyListPassiveSingleStatusSummary = showSingleStatusSummaryBlock || showSingleCustomStatusSummary;
+  const hideBusyListPassiveSingleStatusSummary = showBusyListSearchOnboarding
+    && hasBusyListPassiveSingleStatusSummary
+    && !singleAvailableCohortLabel
+    && !combinedSingleChoiceSummary
+    && !hasCustomFilters
+    && !showAdvancedLimitControl
+    && !hasSharedListContextSummary;
+  const hiddenBusyListMissingContactContext = showBusyListSearchOnboarding
+    ? sharedVisibleMissingContactSummary.replace(/\.$/, '')
+    : '';
+  const hiddenBusyListSharedNotesContext = foldSharedNotesIntoBusySearch
+    ? sharedVisibleNotesSummary.replace(/\.$/, '')
+    : '';
+  const hiddenBusyListCohortLoadingContext = hideBusyListPassiveCohortLoadingSummary
+    ? cohortFilterLoadingMessage.replace(/\.$/, '')
+    : '';
+  const hiddenBusyListBaseContextSummary = hideBusyListPassiveCurrentViewPanel
+    && !hideSingleResultLocalSearchPassiveCurrentView
+    ? [
+      combinedSingleChoiceSummary,
+      canFoldSharedSourceIntoBusySearch && combinedSingleChoiceSourceSummary
+        ? combinedSingleChoiceSourceSummary.replace(/\.$/, '')
+        : '',
+    ].filter(Boolean).join('. ')
+    : hideBusyListPassiveSingleCohortSummary
+      ? [singleAvailableCohortLabel, standaloneSingleChoiceBusySearchSourceSummary].filter(Boolean).join(' · ')
+      : hideBusyListPassiveSingleStatusSummary
+        ? [
+          singleVisibleStatus
+            ? statusFilterLabels[singleVisibleStatus]
+            : singleVisibleCustomStatus != null
+              ? customRegistrationStatusLabel(singleVisibleCustomStatus)
+              : '',
+          standaloneSingleChoiceBusySearchSourceSummary,
+        ].filter(Boolean).join(' · ')
+      : '';
+  const hiddenBusyListBaseIncludesSharedSource = Boolean(
+    hiddenBusyListBaseContextSummary.includes('Fuente visible:'),
+  );
+  const hiddenBusyListCohortUnavailableScopeContext = hideBusyListPassiveCohortUnavailableSummary
+    ? [
+      singleVisibleCohortLabel || singleAvailableCohortLabel,
+      hiddenBusyListBaseContextSummary
+        ? ''
+        : showSingleStatusSummaryBlock && singleVisibleStatus
+          ? statusFilterLabels[singleVisibleStatus]
+          : '',
+    ].filter(Boolean).join(' · ')
+    : '';
+  const hiddenBusyListCohortUnavailableContext = hideBusyListPassiveCohortUnavailableSummary
+    ? [
+      hiddenBusyListCohortUnavailableScopeContext,
+      busyCohortFilterUnavailableMessage.replace(/\.$/, ''),
+    ].filter(Boolean).join('. ')
+    : '';
+  const busyListSharedCreatedAtContext = showBusyListSearchOnboarding
+    && !hasCustomFilters
+    && Boolean(sharedVisibleCreatedAtLabel)
+    && (!hasSharedVisibleSource || hiddenBusyListBaseIncludesSharedSource)
+    ? `Misma fecha de registro: ${sharedVisibleCreatedAtLabel}`
+    : '';
+  const hiddenBusyListContextSummary = [
+    hiddenBusyListBaseContextSummary,
+    hiddenBusyListCohortLoadingContext,
+    hiddenBusyListCohortUnavailableContext,
+    busyListSharedCreatedAtContext,
+    hiddenBusyListMissingContactContext,
+    hiddenBusyListSharedNotesContext,
+  ].filter(Boolean).join('. ');
+  const visibleLocalSearchHelperText = !localSearchKey
+    && hiddenBusyListContextSummary
+    && baseLocalSearchHelperText
+    ? `${hiddenBusyListContextSummary}. ${baseLocalSearchHelperText.replace(' sin cambiar filtros.', '.')}`
+    : baseLocalSearchHelperText;
   const showDossierScopeHint = loadedRegistrationCount > 0
     && !hasUsedRowAction
     && !hasUsedFilterControl
-    && !showBusyListSearchOnboarding;
+    && !showBusyListSearchOnboarding
+    && !showInlineCurrentViewDossierHint;
   const showFirstRunFilterHelper = showFilterOnboardingCopy
     && !showSingleResultWithoutHiddenLimit
-    && !showBusyListSearchOnboarding;
+    && !showBusyListSearchOnboarding
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery;
   const visibleActiveFilterSummary = useMemo(() => {
     const parts: string[] = [];
     const cohortAlreadyExplained = Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel);
@@ -1939,7 +6086,7 @@ export default function CourseRegistrationsAdminPage() {
       || showActiveStatusFilterSummary,
     );
     const limitAlreadyExplained = Boolean(combinedSingleChoiceLimitSummary);
-    if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`cohorte ${activeCohortLabel}`);
+    if (activeCohortLabel && !cohortAlreadyExplained) parts.push(`formulario ${activeCohortLabel}`);
     if (status !== 'all' && !statusAlreadyExplained) parts.push(`estado ${statusFilterLabels[status].toLowerCase()}`);
     if (limit !== DEFAULT_LIMIT && !limitAlreadyExplained) parts.push(`límite ${limit}`);
     return parts.join(' · ');
@@ -1974,6 +6121,26 @@ export default function CourseRegistrationsAdminPage() {
     limit,
     visibleActiveFilterSummary,
   ]);
+  const localSearchOwnsActiveViewSummary = Boolean(
+    hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && activeViewSummaryMessage
+    && !showEmptyLocalSearchResults,
+  );
+  const defaultCurrentViewLocalSearchSummary = localSearchOwnsDefaultCurrentViewSummary
+    ? [
+      `${combinedSingleChoiceSummary}.`,
+      canFoldDefaultSearchSharedDateIntoHelper ? sharedVisibleCreatedAtSummary : '',
+    ].filter(Boolean).join(' ')
+    : '';
+  const localSearchHelperTextParts = [
+    localSearchOwnsActiveViewSummary ? activeViewSummaryMessage : '',
+    defaultCurrentViewLocalSearchSummary,
+    visibleLocalSearchHelperText,
+  ].filter(Boolean);
+  const localSearchHelperText = localSearchHelperTextParts.length
+    ? localSearchHelperTextParts.join(' ')
+    : undefined;
   const showInlineSummaryResetAction = Boolean(
     combinedSingleChoiceSummary
     && hasCustomFilters
@@ -1981,22 +6148,40 @@ export default function CourseRegistrationsAdminPage() {
     && !hasLocalSearch
     && !showEmptyLocalSearchResults,
   );
-  const showInlineSingleChoiceLimitToggle = showAdvancedLimitControl
+  const showInlineSingleChoiceLimitToggle = showLimitAdjustmentAction
+    && !hidePassiveFiltersDuringEmptyLocalSearch
+    && !showEmptyLocalSearchLimitGuidance
     && Boolean(combinedSingleChoiceSummary || singleAvailableCohortLabel || showSingleStatusSummaryBlock);
   const statusFilterCanSelfReset = statusAlreadyVisibleInFilterStrip && !hasEffectiveSlugFilter && !hasCustomLimit;
-  const showFilteredResetAction = !showEmptyLocalSearchResults
+  const showFilteredResetActionCandidate = !showEmptyLocalSearchResults
     && !hasLocalSearch
     && !showInlineSummaryResetAction
     && !cohortFilterCanSelfReset
     && !statusFilterCanSelfReset;
+  const showInlineActiveStatusResetAction = showActiveStatusFilterSummary
+    && showFilteredResetActionCandidate
+    && !activeViewSummaryMessage
+    && !showUtilityCountSummary
+    && !showScopedCopyCsvAction
+    && !showScopedCopyMessage;
+  const showFilteredResetAction = showFilteredResetActionCandidate && !showInlineActiveStatusResetAction;
+  const showActiveStatusSummaryHelper = showActiveStatusFilterSummary
+    && !showInlineActiveStatusResetAction
+    && !showFilteredResetAction
+    && !activeViewSummaryMessage;
   const showFilteredEmptyStateResetAction = hasManualFilters;
-  const showFilteredEmptyStateRefreshAction = !hasManualFilters;
+  const showFilteredEmptyStateRefreshAction = !hasManualFilters && !cohortsQuery.isError;
   const filteredUtilitySummaryMessage = useMemo(
     () => [
-      activeViewSummaryMessage,
+      localSearchOwnsActiveViewSummary ? '' : activeViewSummaryMessage,
       showUtilityCountSummary ? visibleRegistrationsSummary : '',
     ].filter(Boolean).join(' '),
-    [activeViewSummaryMessage, showUtilityCountSummary, visibleRegistrationsSummary],
+    [
+      activeViewSummaryMessage,
+      localSearchOwnsActiveViewSummary,
+      showUtilityCountSummary,
+      visibleRegistrationsSummary,
+    ],
   );
   const standaloneUtilitySummaryMessage = useMemo(
     () => [
@@ -2011,14 +6196,19 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomFilters
     && !showPassiveSingleCohortLimitEmptyState
     && !showSelectedCohortFirstRunEmptyState
+    && !showUnconfiguredCourseFirstRunLimitEmptyState
+    && !showUnconfiguredCourseFirstRunFilteredEmptyState
+    && !showMultiCohortFirstRunLimitEmptyState
     && !hasVisibleRegistrations;
   const showInitialCohortErrorState = !regsQuery.isLoading
     && !regsQuery.isError
     && cohortsQuery.isError
-    && !hasCustomFilters
+    && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
-  const showRegistrationErrorInlineRetry = regsQuery.isError && !hasVisibleRegistrations;
-  const showInlineCohortRetryAction = showCohortFilterUnavailableSummary && !regsQuery.isError;
+  const showRegistrationErrorInlineRetry = regsQuery.isError;
+  const showInlineCohortRetryAction = showCohortFilterUnavailableSummary
+    && !hideBusyListPassiveCohortUnavailableSummary
+    && !regsQuery.isError;
   const showHeaderRefreshAction = !showInitialCohortErrorState
     && !showRegistrationErrorInlineRetry
     && !showInlineCohortRetryAction
@@ -2026,18 +6216,20 @@ export default function CourseRegistrationsAdminPage() {
   const headerRefreshLabel = cohortsQuery.isError
     ? regsQuery.isError
       ? 'Reintentar datos'
-      : 'Reintentar cohortes'
+      : unavailableCohortFilterRetryLabel
     : regsQuery.isError
       ? 'Reintentar inscripciones'
       : 'Refrescar lista';
+  const headerRefreshTitle = cohortsQuery.isError && !regsQuery.isError
+    ? unavailableCohortFilterRetryTitle
+    : undefined;
   const registrationErrorRetryLabel = cohortsQuery.isError
     ? 'Reintentar datos'
     : 'Reintentar inscripciones';
   const showFilteredUtilityRow = hasCustomFilters
     && hasVisibleRegistrations
     && (
-      Boolean(activeViewSummaryMessage)
-      || showUtilityCountSummary
+      Boolean(filteredUtilitySummaryMessage)
       || showScopedCopyCsvAction
       || showScopedCopyMessage
       || showFilteredResetAction
@@ -2053,21 +6245,34 @@ export default function CourseRegistrationsAdminPage() {
     && !regsQuery.isError
     && !cohortsQuery.isError
     && !cohortsQuery.isLoading
-    && (!hasCustomFilters || showPassiveSingleCohortLimitEmptyState || showSelectedCohortFirstRunEmptyState)
+    && (
+      !hasCustomFilters
+      || showPassiveSingleCohortLimitEmptyState
+      || showSelectedCohortFirstRunEmptyState
+      || showUnconfiguredCourseFirstRunLimitEmptyState
+      || showUnconfiguredCourseFirstRunFilteredEmptyState
+      || showMultiCohortFirstRunLimitEmptyState
+    )
     && !hasVisibleRegistrations;
   const showInitialCohortResolutionState = !regsQuery.isLoading
     && !regsQuery.isError
     && cohortsQuery.isLoading
-    && !hasCustomFilters
+    && (!hasCustomFilters || (hasCustomLimit && !hasManualFilters))
     && !hasVisibleRegistrations;
   const showInitialRegistrationLoading = regsQuery.isLoading && !regsQuery.data;
+  const hidePassiveFiltersDuringCappedEmptyLocalSearch =
+    showEmptyLocalSearchLimitGuidance && !showAdvancedFilters;
   const showRegistrationFilterPanel = !showInitialRegistrationLoading
     && !showInitialCohortResolutionState
     && !showInitialCohortErrorState
     && !showFilteredEmptyState
-    && !showDefaultEmptyLocalSearchFocus
+    && !showFocusedEmptyLocalSearchState
+    && !hideBusyListPassiveCohortLoadingSummary
+    && !hideBusyListPassiveCohortUnavailableSummary
+    && !hidePassiveFiltersDuringCappedEmptyLocalSearch
     && !showSingleResultWithOnlyPassiveFilterContext
-    && (!regsQuery.isError || hasCustomFilters);
+    && !hideSingleResultLocalSearchPassiveFilterPanel
+    && (!regsQuery.isError || hasVisibleRegistrations);
   const showRegistrationResultsPanel = !showInitialRegistrationLoading
     && !showInitialFilterGuidance
     && !showInitialCohortResolutionState
@@ -2077,18 +6282,21 @@ export default function CourseRegistrationsAdminPage() {
     : limit !== DEFAULT_LIMIT
       ? `Ajustar límite (${limit})`
       : 'Ajustar límite';
-  const singleAvailableCohortHelperText = actionableStatusFilters.length === 0
-    ? 'Cohorte única por ahora.'
-    : showAdvancedLimitControl
-      ? 'Cohorte única por ahora. Usa Estado o Ajustar límite para cambiar la vista.'
-      : 'Cohorte única por ahora. Usa Estado para cambiar la vista.';
+  const limitToggleAccessibleLabel = showAdvancedFilters
+    ? 'Ocultar límite de carga'
+    : limit !== DEFAULT_LIMIT
+      ? `Ajustar límite de carga (${limit})`
+      : 'Ajustar límite de carga';
+  const limitToggleTitle = showAdvancedFilters
+    ? 'Ocultar el campo de límite de carga.'
+    : 'Mostrar el campo de límite de carga para revisar un lote distinto.';
   const singleVisibleStatusHelperText = showCohortFilterUnavailableSummary
     ? ''
-    : showAdvancedLimitControl
-      ? 'Estado único en esta vista. Usa cohorte o Ajustar límite para cambiar la vista.'
-      : 'Estado único en esta vista. Usa cohorte para cambiar la vista.';
+    : 'Estado único en esta vista.';
   const filtersHelpText = buildAutomaticFilterHelpText({
     combinedSingleChoiceSummary,
+    hasCohortFilterControl: hasDedicatedCohortFilterControl,
+    hasStatusFilterControl: actionableStatusFilters.length > 0,
     hasVisibleRegistrations,
     showAdvancedLimitControl,
     showSingleStatusSummary: showSingleStatusSummaryBlock,
@@ -2099,9 +6307,11 @@ export default function CourseRegistrationsAdminPage() {
     : hasHiddenStatusFilters
       ? 'Solo aparecen estados con inscripciones en esta vista.'
       : '';
+  const showStatusFilterCounts = hasVisibleRegistrations && !hasLocalSearch;
   const showStatusFilterCaption = !showBusyListSearchOnboarding
     && !hasLocalSearch
     && !(statusFilterCanSelfReset && actionableStatusFilters.length === 1);
+  const statusFilterCaption = showStatusFilterCounts ? 'Estado' : 'Filtrar por estado';
   const statusFilterGroupLabel = statusFilterCanSelfReset
     ? `Filtro de estado activo: ${statusFilterLabels[status]}`
     : 'Filtros de estado de inscripciones';
@@ -2109,16 +6319,70 @@ export default function CourseRegistrationsAdminPage() {
     && hasCustomStatusSearch
     && actionableStatusFilters.length === 0
     && !showSingleStatusSummary;
+  const redundantSearchStatusFilter = hasLocalSearch
+    && !hasManualFilters
+    && !cohortsQuery.isError
+    ? (
+      shouldShowSharedStatusSummary
+        ? singleSearchedKnownStatus
+        : localSearchSingleResultKnownStatus
+    )
+    : null;
+  const hideUnrelatedStatusFiltersForNarrowSearch = Boolean(
+    hasLocalSearch
+    && localSearchNarrowsRegistrations
+    && searchedRegistrations.length > 1
+    && searchedRegistrations.length < MIN_LOCAL_SEARCH_REGISTRATIONS
+    && !hasManualFilters
+    && !hasCustomLimit
+    && !viewHitsCurrentLimit
+    && !cohortsQuery.isError
+    && singleSearchedKnownStatus,
+  );
+  const displayedActionableStatusFilters = useMemo(
+    () => (hideUnrelatedStatusFiltersForNarrowSearch
+      ? []
+      : redundantSearchStatusFilter == null
+      ? actionableStatusFilters
+      : actionableStatusFilters.filter((value) => value !== redundantSearchStatusFilter)),
+    [actionableStatusFilters, hideUnrelatedStatusFiltersForNarrowSearch, redundantSearchStatusFilter],
+  );
   const showCustomStatusFilterUnavailableSummary = hasVisibleRegistrations
     && !showSingleStatusSummary
     && actionableStatusFilters.length === 0
     && !hideCustomStatusFilterSummaryForSearch;
-  const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch;
+  const showStatusFilterColumn = !hideCustomStatusFilterSummaryForSearch
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery
+    && !hideBusyListPassiveSingleStatusSummary
+    && (
+      showSingleStatusSummaryBlock
+      || showActiveStatusFilterSummary
+      || showSingleCustomStatusSummary
+      || showCustomStatusFilterUnavailableSummary
+      || displayedActionableStatusFilters.length > 0
+    );
+  const showPassiveSingleCohortSummary = Boolean(singleAvailableCohortLabel)
+    && !hidePassiveFilterChromeDuringEmptySearchRecovery
+    && !hideBusyListPassiveSingleCohortSummary
+    && !hideSingleResultSearchPassiveCohortSummary;
+  const showInlineEmptyCohortFilterGuidance = showEmptyCohortFilterSummary && showStatusFilterColumn;
+  const showEmptyCohortFilterSummaryBlock = showEmptyCohortFilterSummary && !showInlineEmptyCohortFilterGuidance;
+  const showCohortSelectControl = showCohortSelect && !showInlineEmptyCohortFilterGuidance;
+  const showCohortFilterColumn = !hidePassiveFilterChromeDuringEmptySearchRecovery
+    && !hideCohortFilterForSingleLocalSearchResult
+    && (
+      showCohortSelectControl
+      || showCohortFilterUnavailableSummary
+      || showCohortFilterLoadingSummary
+      || showEmptyCohortFilterSummaryBlock
+      || showPassiveSingleCohortSummary
+    );
   const filterGridColumns = showStatusFilterColumn ? 6 : 12;
+  const statusFilterGridColumns = showCohortFilterColumn ? 6 : 12;
   const customStatusFilterGuidance = customStatusFilterUnavailableMessage;
   const combinedSingleChoiceHelperText = showAdvancedLimitControl
     ? 'Vista única por ahora: una cohorte y un estado. Usa Ajustar límite solo cuando necesites revisar un lote distinto.'
-    : 'Vista única por ahora: una cohorte y un estado.';
+    : '';
   const emailEvents = dedupeCourseEmailEvents(emailEventsQuery.data ?? []);
   const canReviewSystemEmails = selectedDossier?.intent !== 'markPaid';
   const hasSystemEmailHistory = canReviewSystemEmails && emailEvents.length > 0;
@@ -2132,25 +6396,60 @@ export default function CourseRegistrationsAdminPage() {
     : showCollapsedSystemEmailRetryAction
       ? retrySystemEmailsLabel
       : showSystemEmailsLabel;
-  const hasMultipleAvailableCohorts = !cohortsQuery.isError && configuredCohortOptions.length > 1;
   const firstRunCohort = singleAvailableCohort ?? (showSelectedCohortFirstRunEmptyState ? selectedConfiguredCohort : null);
+  const firstRunCohortLabel = firstRunCohort?.firstRunLabel.trim() ?? '';
+  const specificFirstRunCohortLabel = firstRunCohortLabel && !isGenericFirstRunCohortLabel(firstRunCohortLabel)
+    ? firstRunCohortLabel
+    : '';
+  const configuredCohortFirstRunLabels = configuredCohortOptions.map((option) => option.firstRunLabel);
+  const hasSingleCourseFirstRunVariants =
+    hasMultipleAvailableCohorts && countInitialCohortPreviewLabels(configuredCohortFirstRunLabels) === 1;
   const initialEmptyStateMessage = firstRunCohort
-    ? buildSingleCohortInitialEmptyStateMessage(firstRunCohort.firstRunLabel)
+    ? buildSingleCohortInitialEmptyStateMessage(specificFirstRunCohortLabel)
     : hasMultipleAvailableCohorts
-      ? buildInitialEmptyStateMultiCohortMessage(configuredCohortOptions.length)
+      ? buildInitialEmptyStateMultiCohortMessage(
+        configuredCohortOptions.length,
+        configuredCohortFirstRunLabels,
+      )
     : initialEmptyStateConfigMessage;
   const initialEmptyStateAction = firstRunCohort
     ? {
       label: initialEmptyStateFormActionLabel,
       to: `/inscripcion/${encodeURIComponent(firstRunCohort.value)}`,
-      ariaLabel: `Abrir formulario público de ${firstRunCohort.firstRunLabel}`,
+      ariaLabel: specificFirstRunCohortLabel
+        ? `Abrir formulario público de ${specificFirstRunCohortLabel}`
+        : initialEmptyStateFormActionLabel,
+      title: specificFirstRunCohortLabel
+        ? `Abrir formulario público de ${specificFirstRunCohortLabel} en una pestaña nueva`
+        : `${initialEmptyStateFormActionLabel} en una pestaña nueva`,
+      target: '_blank',
+      rel: 'noopener noreferrer',
     }
     : {
-      label: hasMultipleAvailableCohorts
-        ? initialEmptyStateMultiCohortActionLabel
-        : initialEmptyStateConfigActionLabel,
+      label: hasSingleCourseFirstRunVariants
+        ? initialEmptyStateReviewFormsActionLabel
+        : hasMultipleAvailableCohorts
+          ? initialEmptyStateReviewFormsActionLabel
+          : initialEmptyStateConfigActionLabel,
       to: '/configuracion/cursos',
-      ariaLabel: undefined,
+      ariaLabel: hasSingleCourseFirstRunVariants
+        ? initialEmptyStateSingleCourseVariantActionAriaLabel
+        : hasMultipleAvailableCohorts
+          ? initialEmptyStateMultiCohortActionAriaLabel
+          : initialEmptyStateConfigActionAriaLabel,
+      title: hasSingleCourseFirstRunVariants
+        ? buildInitialEmptyStateSingleCourseVariantActionTitle(
+          configuredCohortOptions.length,
+          configuredCohortFirstRunLabels,
+        )
+        : hasMultipleAvailableCohorts
+          ? buildInitialEmptyStateMultiCohortActionTitle(
+            configuredCohortOptions.length,
+            configuredCohortFirstRunLabels,
+          )
+          : initialEmptyStateConfigActionAriaLabel,
+      target: undefined,
+      rel: undefined,
     };
 
   const resetReceiptComposer = (open = false) => {
@@ -2260,16 +6559,20 @@ export default function CourseRegistrationsAdminPage() {
     if (slug.trim()) params.set('slug', slug.trim());
     if (status !== 'all') params.set('status', status);
     if (limit && limit !== DEFAULT_LIMIT) params.set('limit', String(limit));
+    if (registrationSortKey !== 'default') {
+      params.set('sort', registrationSortKey);
+      params.set('dir', registrationSortDirection);
+    }
     setSearchParams(params, { replace: true });
-  }, [slug, status, limit, setSearchParams]);
+  }, [slug, status, limit, registrationSortKey, registrationSortDirection, setSearchParams]);
 
   useEffect(() => {
     setCopyMessage(null);
-  }, [localSearchKey, slug, status, limit, visibleCsvScopeKey]);
+  }, [localSearchKey, slug, status, limit, registrationSortKey, registrationSortDirection, visibleCsvScopeKey]);
 
   useEffect(() => {
     setPageFlash(null);
-  }, [localSearchKey, slug, status, limit]);
+  }, [localSearchKey, slug, status, limit, registrationSortKey, registrationSortDirection]);
 
   useEffect(() => {
     if (!selectedDossier) {
@@ -2294,6 +6597,7 @@ export default function CourseRegistrationsAdminPage() {
     setShowEmailHistory(false);
     setDossierContextMenuAnchor(null);
     setReceiptMenuTarget(null);
+    setFollowUpMenuTarget(null);
     setNotesDraft(selectedDossier.reg.crAdminNotes ?? '');
     setShowNotesComposer(false);
     setReceiptForm(emptyReceiptForm());
@@ -2354,6 +6658,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleCopyCsv = async () => {
     if (searchedRegistrations.length < 2) return;
+    setHasUsedFilterControl(true);
     const header = ['id', 'slug', 'nombre', 'email', 'telefono', 'estado', 'creado'];
     const rows = searchedRegistrations.map((reg) => [
       reg.crId,
@@ -2369,7 +6674,7 @@ export default function CourseRegistrationsAdminPage() {
       .join('\n');
     try {
       await navigator.clipboard.writeText(csv);
-      setCopyMessage(`Copiado CSV (${formatRowCountLabel(rows.length)})`);
+      setCopyMessage('CSV copiado');
       setTimeout(() => setCopyMessage(null), 2000);
     } catch {
       setCopyMessage('No se pudo copiar el CSV');
@@ -2383,7 +6688,28 @@ export default function CourseRegistrationsAdminPage() {
     setSlug('');
     setStatus('all');
     setLimit(DEFAULT_LIMIT);
+    setRegistrationSortKey('default');
+    setRegistrationSortDirection(defaultRegistrationSortDirection('default'));
     setShowAdvancedFilters(false);
+  };
+
+  const handleClearLocalSearch = () => {
+    setLocalSearch('');
+    if (showAdvancedFilters && hasLocalSearch && limit === DEFAULT_LIMIT) {
+      setShowAdvancedFilters(false);
+    }
+  };
+
+  const handleRegistrationSortKeyChange = (value: string) => {
+    const nextSortKey = parseRegistrationSortKey(value);
+    setHasUsedFilterControl(true);
+    setRegistrationSortKey(nextSortKey);
+    setRegistrationSortDirection(defaultRegistrationSortDirection(nextSortKey));
+  };
+
+  const handleRegistrationSortDirectionChange = (value: string) => {
+    setHasUsedFilterControl(true);
+    setRegistrationSortDirection(parseRegistrationSortDirection(value, registrationSortKey));
   };
 
   const handleToggleAdvancedFilters = () => {
@@ -2393,6 +6719,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleOpenStatusMenu = (anchorEl: HTMLElement, reg: CourseRegistrationDTO) => {
     setHasUsedRowAction(true);
+    setPageFlash(null);
     setStatusMenuTarget({ anchorEl, reg });
   };
 
@@ -2421,6 +6748,7 @@ export default function CourseRegistrationsAdminPage() {
   };
 
   const handleQuickStatus = (reg: CourseRegistrationDTO, newStatus: Exclude<StatusFilter, 'all'>) => {
+    setHasUsedRowAction(true);
     setPageFlash(null);
     void updateStatusMutation
       .mutateAsync({ id: reg.crId, courseSlug: reg.crCourseSlug, newStatus })
@@ -2437,6 +6765,7 @@ export default function CourseRegistrationsAdminPage() {
 
   const handleOpenDossier = (reg: CourseRegistrationDTO, intent: DossierIntent) => {
     setHasUsedRowAction(true);
+    setPageFlash(null);
     setSelectedDossier({ reg, intent });
   };
 
@@ -2469,6 +6798,11 @@ export default function CourseRegistrationsAdminPage() {
   const handleHideNotesComposer = () => {
     setNotesDraft(getPersistedNotesValue());
     setShowNotesComposer(false);
+    setDossierFlash(null);
+  };
+
+  const handleOpenFollowUpComposer = () => {
+    setShowFollowUpComposer(true);
     setDossierFlash(null);
   };
 
@@ -2550,7 +6884,17 @@ export default function CourseRegistrationsAdminPage() {
   const handleDeleteReceipt = (receipt: CourseRegistrationReceiptDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
     handleCloseReceiptMenu();
-    if (!window.confirm('¿Eliminar este comprobante?')) return;
+    setPendingDeleteReceipt(receipt);
+    setDeleteReceiptConfirmOpen(true);
+  };
+
+  const handleDeleteReceiptConfirm = () => {
+    if (!pendingDeleteReceipt || !selectedDossier || selectedDossierId == null) {
+      setDeleteReceiptConfirmOpen(false);
+      setPendingDeleteReceipt(null);
+      return;
+    }
+    const receipt = pendingDeleteReceipt;
     setDossierFlash(null);
     void deleteReceiptMutation
       .mutateAsync({
@@ -2566,6 +6910,10 @@ export default function CourseRegistrationsAdminPage() {
       })
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
+      })
+      .finally(() => {
+        setDeleteReceiptConfirmOpen(false);
+        setPendingDeleteReceipt(null);
       });
   };
 
@@ -2615,6 +6963,7 @@ export default function CourseRegistrationsAdminPage() {
     handleCloseFollowUpMenu();
     setShowFollowUpComposer(true);
     setShowFollowUpDetails(true);
+    setDossierFlash(null);
     setFollowUpForm({
       editingId: entry.crfId,
       entryType: entry.crfEntryType,
@@ -2630,7 +6979,17 @@ export default function CourseRegistrationsAdminPage() {
   const handleDeleteFollowUp = (entry: CourseRegistrationFollowUpDTO) => {
     if (!selectedDossier || selectedDossierId == null) return;
     handleCloseFollowUpMenu();
-    if (!window.confirm('¿Eliminar esta entrada de seguimiento?')) return;
+    setPendingDeleteFollowUp(entry);
+    setDeleteFollowUpConfirmOpen(true);
+  };
+
+  const handleDeleteFollowUpConfirm = () => {
+    if (!pendingDeleteFollowUp || !selectedDossier || selectedDossierId == null) {
+      setDeleteFollowUpConfirmOpen(false);
+      setPendingDeleteFollowUp(null);
+      return;
+    }
+    const entry = pendingDeleteFollowUp;
     setDossierFlash(null);
     void deleteFollowUpMutation
       .mutateAsync({
@@ -2646,6 +7005,10 @@ export default function CourseRegistrationsAdminPage() {
       })
       .catch((err: Error) => {
         setDossierFlash({ severity: 'error', message: err.message });
+      })
+      .finally(() => {
+        setDeleteFollowUpConfirmOpen(false);
+        setPendingDeleteFollowUp(null);
       });
   };
 
@@ -2674,19 +7037,58 @@ export default function CourseRegistrationsAdminPage() {
   const followUps = dedupeCourseRegistrationFollowUps(dossierData?.crdFollowUps ?? []);
   const followUpIdsRequiringActionDisambiguator = getFollowUpIdsRequiringActionDisambiguator(followUps);
   const sharedReceiptCreatedLabel = getSharedOptionalDateLabel(receipts.map((receipt) => receipt.crrCreatedAt));
+  const sharedReceiptNotes = getSharedReceiptNotes(receipts);
+  const sharedReceiptSummary = sharedReceiptCreatedLabel && sharedReceiptNotes
+    ? `Resumen: subidos ${sharedReceiptCreatedLabel} · nota: ${sharedReceiptNotes}`
+    : '';
+  const sharedReceiptCreatedIsInSummary = Boolean(sharedReceiptSummary && sharedReceiptCreatedLabel);
+  const sharedReceiptNotesIsInSummary = Boolean(sharedReceiptSummary && sharedReceiptNotes);
   const sharedFollowUpCreatedLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfCreatedAt));
+  const sharedFollowUpTypeLabel = getSharedFollowUpTypeLabel(followUps);
+  const sharedFollowUpNextLabel = getSharedOptionalDateLabel(followUps.map((entry) => entry.crfNextFollowUpAt));
+  const sharedFollowUpSummaryParts = [
+    sharedFollowUpTypeLabel,
+    sharedFollowUpNextLabel ? `próximo ${sharedFollowUpNextLabel}` : '',
+    sharedFollowUpCreatedLabel ? `registrados ${sharedFollowUpCreatedLabel}` : '',
+  ].filter(Boolean);
+  const sharedFollowUpSummary = sharedFollowUpSummaryParts.length > 1
+    ? `Resumen: ${sharedFollowUpSummaryParts.join(' · ')}`
+    : '';
+  const sharedFollowUpCreatedIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpCreatedLabel);
+  const sharedFollowUpTypeIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpTypeLabel);
+  const sharedFollowUpNextIsInSummary = Boolean(sharedFollowUpSummary && sharedFollowUpNextLabel);
   const sharedEmailEventCreatedLabel = getSharedOptionalDateLabel(emailEvents.map((entry) => entry.ceCreatedAt));
+  const sharedEmailEventTypeLabel = getSharedEmailEventTypeLabel(emailEvents);
+  const sharedEmailEventStatusLabel = getSharedEmailEventStatusLabel(emailEvents);
+  const sharedEmailEventSummary = sharedEmailEventCreatedLabel && sharedEmailEventTypeLabel
+    ? `Resumen: ${[
+      sharedEmailEventTypeLabel,
+      sharedEmailEventStatusLabel,
+      sharedEmailEventCreatedLabel,
+    ].filter(Boolean).join(' · ')}`
+    : '';
+  const sharedEmailEventStatusIsInSummary = Boolean(sharedEmailEventSummary && sharedEmailEventStatusLabel);
   const persistedNotes = trimToNull(getPersistedNotesValue());
   const hasSavedNotes = Boolean(persistedNotes);
   const hasNotesDraftChanges = trimToNull(notesDraft) !== persistedNotes;
   const canMarkPaid = dossierData?.crdCanMarkPaid ?? false;
   const isMarkPaidIntent = selectedDossier?.intent === 'markPaid';
+  const hasReceipts = receipts.length > 0;
+  const isMarkPaidReceiptComposer = isMarkPaidIntent && showReceiptComposer && !hasReceipts;
+  const isOptionalPaymentEvidenceComposer = isMarkPaidIntent
+    && canMarkPaid
+    && showReceiptComposer
+    && !hasReceipts
+    && receiptForm.editingId == null;
   const hasMarkedPaidInCurrentDossier =
     isMarkPaidIntent && selectedDossierId != null && markedPaidRegistrationId === selectedDossierId;
   const activeRegistrationStatus = hasMarkedPaidInCurrentDossier
     ? 'paid'
     : activeRegistration?.crStatus ?? '';
-  const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier;
+  const showMarkPaidAction = canMarkPaid && !hasMarkedPaidInCurrentDossier && !isOptionalPaymentEvidenceComposer;
+  const showActiveRegistrationStatusChip = Boolean(activeRegistrationStatus)
+    && !(isMarkPaidIntent && showMarkPaidAction);
+  const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
   const showInlineEmptyNotesAction = !isMarkPaidIntent
     && !showReceiptComposer
     && !showNotesComposer
@@ -2708,13 +7110,16 @@ export default function CourseRegistrationsAdminPage() {
     || showGroupedDossierContextActions
     || showDirectInlineEmptyNotesAction
     || showDirectInlineEmptyFollowUpAction;
+  const groupedDossierContextActionsExpandedLabel = formatDossierContextActionsLabel({
+    showInlineEmptyFollowUpAction,
+    showInlineEmptyNotesAction,
+  });
   const groupedDossierContextActionsLabel = hasPrimaryDossierAction
     ? optionalDossierContextActionsFallbackLabel
-    : formatDossierContextActionsLabel({
-      showInlineEmptyFollowUpAction,
-      showInlineEmptyNotesAction,
-    });
-  const hasReceipts = receipts.length > 0;
+    : groupedDossierContextActionsExpandedLabel;
+  const groupedDossierContextActionsAccessibleLabel = groupedDossierContextActionsLabel === optionalDossierContextActionsFallbackLabel
+    ? groupedDossierContextActionsExpandedLabel
+    : groupedDossierContextActionsLabel;
   const activeRegistrationKnownStatus = activeRegistrationStatus
     ? normalizeKnownRegistrationStatus(activeRegistrationStatus)
     : null;
@@ -2724,10 +7129,27 @@ export default function CourseRegistrationsAdminPage() {
   const emptyReceiptReviewMessage = showEvidenceOnlyEmptyReceiptCopy
     ? emptyReceiptEvidenceAlertMessage
     : emptyReceiptAlertMessage;
+  const emptyReceiptActionLabel = showEvidenceOnlyEmptyReceiptCopy
+    ? 'Agregar evidencia'
+    : 'Agregar comprobante';
+  const emptyReceiptActionAccessibleLabel = showEvidenceOnlyEmptyReceiptCopy
+    ? 'Agregar evidencia'
+    : 'Agregar primer comprobante';
+  const showReceiptsSection = !(
+    activeRegistrationKnownStatus === 'cancelled'
+    && !hasReceipts
+    && !showReceiptComposer
+    && !isMarkPaidIntent
+  );
   const showCompactMarkPaidNotesState = selectedDossier?.intent === 'markPaid'
     && !showNotesComposer
     && !hasSavedNotes;
   const showEmptyNotesState = !showNotesComposer && !hasSavedNotes;
+  const showEditNotesAction = !hasOpenDossierComposer && hasSavedNotes;
+  const showNotesSaveAction = hasNotesDraftChanges;
+  const notesComposerIdleHelperText = hasSavedNotes
+    ? 'Edita el contenido para mostrar Guardar notas.'
+    : 'Escribe una nota para mostrar Guardar notas.';
   const emptyNotesSectionHelperText = showCompactMarkPaidNotesState
     ? markPaidEmptyNotesHelperText
     : emptyNotesHelperText;
@@ -2735,11 +7157,9 @@ export default function CourseRegistrationsAdminPage() {
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
   const showReceiptSaveAction = canSubmitReceipt || receiptForm.editingId != null;
   const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
-  const receiptSectionHelpText = (
-    selectedDossier?.intent === 'markPaid'
-    && showReceiptComposer
-    && !hasReceipts
-  )
+  const receiptSectionHelpText = isOptionalPaymentEvidenceComposer
+    ? markPaidEvidenceComposerHelpText
+    : isMarkPaidReceiptComposer
     ? markPaidReceiptSectionHelpText
     : showReceiptComposer && receiptForm.editingId != null
       ? editingReceiptComposerHelpText
@@ -2748,30 +7168,36 @@ export default function CourseRegistrationsAdminPage() {
       : showReceiptComposer && hasReceipts
         ? receiptComposerHelpText
         : '';
-  const showAddReceiptAction = !showReceiptComposer && hasReceipts && selectedDossier?.intent !== 'markPaid';
+  const showAddReceiptAction = !hasOpenDossierComposer && hasReceipts && selectedDossier?.intent !== 'markPaid';
   const canHideReceiptUrlField = showReceiptUrlField
     && receiptForm.editingId == null
     && !canSubmitReceipt
     && !hasReceiptMetadataDraft;
   const showReceiptExistingLinkAction = !showReceiptUrlField && !canSubmitReceipt;
   const showReceiptReviewPane = hasReceipts || !showReceiptComposer;
+  const showReceiptUploadWidget = !showReceiptUrlField || receiptForm.editingId != null;
   const showReceiptMetadataFields = (
     receiptForm.editingId != null
-    || showReceiptUrlField
     || Boolean(trimToNull(receiptForm.fileName))
     || canSubmitReceipt
   );
-  const isMarkPaidFirstReceiptFlow = selectedDossier?.intent === 'markPaid'
+  const isMarkPaidFirstReceiptFlow = isMarkPaidIntent
     && !dossierQuery.isLoading
     && !dossierQuery.isError
     && !hasReceipts
     && receiptForm.editingId == null;
   const receiptCancelLabel = isMarkPaidFirstReceiptFlow
-    ? 'Cerrar pago'
+    ? isOptionalPaymentEvidenceComposer
+      ? 'Cancelar evidencia'
+      : 'Cerrar pago'
     : receiptForm.editingId == null
       ? 'Cancelar comprobante'
       : 'Cancelar edición de comprobante';
   const handleCancelReceiptComposer = () => {
+    if (isOptionalPaymentEvidenceComposer) {
+      resetReceiptComposer();
+      return;
+    }
     if (isMarkPaidFirstReceiptFlow) {
       setSelectedDossier(null);
       return;
@@ -2791,10 +7217,13 @@ export default function CourseRegistrationsAdminPage() {
   const hasFollowUpAttachmentUrl = Boolean(trimToNull(followUpForm.attachmentUrl));
   const canHideFollowUpUrlField = showFollowUpUrlField && !hasFollowUpAttachmentUrl && !canHideFollowUpOptionalFields;
   const showFollowUpExistingLinkAction = !showFollowUpUrlField && !hasFollowUpAttachmentUrl;
+  const showFollowUpUploadWidget = !showFollowUpUrlField || followUpForm.editingId != null;
   const showFollowUpCountChip = followUps.length > 1;
   const showFollowUpHistoryPane = followUps.length > 0 || !showFollowUpComposer;
+  const showAddFollowUpAction = !hasOpenDossierComposer && followUps.length > 0;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
   const canSubmitFollowUp = Boolean(trimToNull(followUpForm.notes));
+  const showFollowUpSaveAction = canSubmitFollowUp || followUpForm.editingId != null;
   const showCompactMarkPaidFollowUpState = selectedDossier?.intent === 'markPaid'
     && followUps.length === 0
     && !showFollowUpComposer;
@@ -2814,11 +7243,36 @@ export default function CourseRegistrationsAdminPage() {
       : followUpComposerHelpText;
   const currentMutationRegistrationId = updateStatusMutation.variables?.id ?? null;
   const statusMenuReg = statusMenuTarget?.reg ?? null;
+  const statusMenuActionTargetLabel = statusMenuReg ? getActionTargetLabelForRegistration(statusMenuReg) : '';
+  const showStatusMenuCancelSeparator = Boolean(
+    statusMenuReg
+    && canCancelRegistrationFromStatus(statusMenuReg.crStatus)
+    && (
+      canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus)
+      || canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment')
+    ),
+  );
   const receiptMenuReceipt = receiptMenuTarget?.receipt ?? null;
   const followUpMenuEntry = followUpMenuTarget?.entry ?? null;
+  const receiptMenuActionLabel = receiptMenuReceipt
+    ? receiptDisplayLabelWithContext(
+      receiptMenuReceipt,
+      receiptIdsRequiringFileDisambiguator.has(receiptMenuReceipt.crrId),
+    )
+    : '';
+  const followUpMenuActionLabel = followUpMenuEntry
+    ? followUpActionTargetLabelWithContext(
+      followUpMenuEntry,
+      followUpIdsRequiringActionDisambiguator.has(followUpMenuEntry.crfId),
+    )
+    : '';
   const activeRegistrationCourseSlug = activeRegistration?.crCourseSlug.trim() ?? '';
   const activeRegistrationCourseLabel = activeRegistrationCourseSlug
-    ? (cohortLabelsBySlug.get(activeRegistrationCourseSlug) ?? activeRegistrationCourseSlug)
+    ? (
+      cohortSummaryLabelsBySlug.get(activeRegistrationCourseSlug)
+      ?? cohortLabelsBySlug.get(activeRegistrationCourseSlug)
+      ?? readableCohortFallbackLabel(activeRegistrationCourseSlug)
+    )
     : '';
   const activeRegistrationIdentity = activeRegistration
     ? registrationIdentityDisplay(
@@ -2837,15 +7291,13 @@ export default function CourseRegistrationsAdminPage() {
     : '';
   const showInternalRegistrationReference = Boolean(
     activeRegistration?.crPartyId
-    && !activeRegistration?.crFullName?.trim()
-    && !activeRegistration?.crEmail?.trim()
-    && !activeRegistration?.crPhoneE164?.trim(),
+    && !normalizeRegistrationNameValue(activeRegistration?.crFullName)
+    && registrationNeedsContact(activeRegistration),
   );
   const activeRegistrationSecondaryLine = showInternalRegistrationReference && activeRegistration?.crPartyId
     ? `Sin datos de contacto. Referencia interna: Party #${activeRegistration.crPartyId}.`
     : activeRegistrationIdentity.secondary;
   const isRefreshingDossier = dossierQuery.isFetching || (showSystemEmailHistoryAction && showEmailHistory && emailEventsQuery.isFetching);
-  const hasOpenDossierComposer = showNotesComposer || showReceiptComposer || showFollowUpComposer;
   const hasDossierRefreshContext = hasReceipts
     || followUps.length > 0
     || hasSavedNotes
@@ -2869,13 +7321,18 @@ export default function CourseRegistrationsAdminPage() {
 
   const isConfirmMarkPaidFlow = isMarkPaidIntent && (showMarkPaidAction || hasMarkedPaidInCurrentDossier);
   const showNotesSection = isMarkPaidIntent
-    ? (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
+    ? isMarkPaidFirstReceiptFlow
+      ? hasSavedNotes || showNotesComposer
+      : (!isConfirmMarkPaidFlow || hasSavedNotes || showNotesComposer)
     : (hasSavedNotes || showNotesComposer);
   const showFollowUpSection = isMarkPaidIntent
-    ? (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
+    ? isMarkPaidFirstReceiptFlow
+      ? followUps.length > 0 || showFollowUpComposer
+      : (!isConfirmMarkPaidFlow || followUps.length > 0 || showFollowUpComposer)
     : (followUps.length > 0 || showFollowUpComposer);
   const prioritizePaymentSection = isMarkPaidIntent;
-  const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow;
+  const hasVisibleDossierComposer = hasOpenDossierComposer && !dossierQuery.isLoading && !dossierQuery.isError;
+  const showDossierFooterCloseAction = !isMarkPaidFirstReceiptFlow && !hasVisibleDossierComposer;
   const dossierDialogTitle = isMarkPaidIntent
     ? hasMarkedPaidInCurrentDossier
       ? 'Pago registrado'
@@ -2888,7 +7345,7 @@ export default function CourseRegistrationsAdminPage() {
       size="small"
       startIcon={<ContentCopyIcon fontSize="small" />}
       aria-label={copyCsvButtonAccessibleLabel}
-      title="Copia solo las filas visibles de esta vista."
+      title={copyCsvButtonTitle}
       onClick={() => void handleCopyCsv()}
     >
       {copyCsvButtonLabel}
@@ -2907,7 +7364,7 @@ export default function CourseRegistrationsAdminPage() {
             <Typography variant="h6">
               {showEmptyNotesState ? 'Notas internas (opcional)' : 'Notas internas'}
             </Typography>
-            {!showNotesComposer && hasSavedNotes ? (
+            {showEditNotesAction ? (
               <Button
                 variant="contained"
                 size="small"
@@ -2930,22 +7387,24 @@ export default function CourseRegistrationsAdminPage() {
               />
               <Stack spacing={0.75} alignItems="flex-start">
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<SaveIcon />}
-                    onClick={handleSaveNotes}
-                    disabled={updateNotesMutation.isPending || !hasNotesDraftChanges}
-                  >
-                    Guardar notas
-                  </Button>
+                  {showNotesSaveAction && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<SaveIcon />}
+                      onClick={handleSaveNotes}
+                      disabled={updateNotesMutation.isPending}
+                    >
+                      Guardar notas
+                    </Button>
+                  )}
                   <Button variant="text" size="small" onClick={handleHideNotesComposer}>
                     Cancelar notas
                   </Button>
                 </Stack>
                 {!hasNotesDraftChanges && (
                   <Typography variant="caption" color="text.secondary">
-                    Edita el contenido para habilitar Guardar.
+                    {notesComposerIdleHelperText}
                   </Typography>
                 )}
               </Stack>
@@ -2992,10 +7451,31 @@ export default function CourseRegistrationsAdminPage() {
                   {receiptSectionHelpText}
                 </Typography>
               )}
-              {sharedReceiptCreatedLabel && (
-                <Typography variant="body2" color="text.secondary">
-                  Todos subidos: {sharedReceiptCreatedLabel}
+              {sharedReceiptSummary ? (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  data-testid="course-registration-shared-receipt-summary"
+                >
+                  {sharedReceiptSummary}
                 </Typography>
+              ) : (
+                <>
+                  {sharedReceiptCreatedLabel && (
+                    <Typography variant="body2" color="text.secondary">
+                      Todos subidos: {sharedReceiptCreatedLabel}
+                    </Typography>
+                  )}
+                  {sharedReceiptNotes && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      data-testid="course-registration-shared-receipt-notes"
+                    >
+                      Nota de comprobantes: {sharedReceiptNotes}
+                    </Typography>
+                  )}
+                </>
               )}
             </Box>
             {showAddReceiptAction && (
@@ -3013,18 +7493,20 @@ export default function CourseRegistrationsAdminPage() {
             {showReceiptComposer && (
               <Grid item xs={12} md={showReceiptReviewPane ? 6 : 12} data-testid="course-registration-receipt-composer-pane">
                 <Stack spacing={1.5}>
-                  <GoogleDriveUploadWidget
-                    label={
-                      receiptForm.fileName
-                        ? `Archivo listo: ${receiptForm.fileName}`
-                        : 'Subir comprobante (imagen/PDF)'
-                    }
-                    helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
-                    accept="application/pdf,image/*"
-                    multiple={false}
-                    onComplete={handleReceiptUpload}
-                    dense
-                  />
+                  {showReceiptUploadWidget && (
+                    <GoogleDriveUploadWidget
+                      label={
+                        receiptForm.fileName
+                          ? `Archivo listo: ${receiptForm.fileName}`
+                          : 'Subir comprobante (imagen/PDF)'
+                      }
+                      helperText="Se guardará en Drive y quedará disponible desde esta inscripción."
+                      accept="application/pdf,image/*"
+                      multiple={false}
+                      onComplete={handleReceiptUpload}
+                      dense
+                    />
+                  )}
                   {showReceiptExistingLinkAction && (
                     <Button
                       size="small"
@@ -3060,9 +7542,9 @@ export default function CourseRegistrationsAdminPage() {
                   )}
                   {!showReceiptMetadataFields && (
                     <Typography variant="caption" color="text.secondary">
-                      Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y
-                      {' '}
-                      las notas.
+                      {showReceiptUrlField
+                        ? receiptUrlFallbackHelpText
+                        : 'Primero elige el archivo o pega un enlace; luego podrás ajustar el nombre visible y las notas.'}
                     </Typography>
                   )}
                   <Collapse in={showReceiptMetadataFields} unmountOnExit>
@@ -3109,8 +7591,14 @@ export default function CourseRegistrationsAdminPage() {
                     <Alert
                       severity="info"
                       action={(
-                        <Button color="inherit" size="small" onClick={() => setShowReceiptComposer(true)}>
-                          Agregar primer comprobante
+                        <Button
+                          color="inherit"
+                          size="small"
+                          onClick={() => setShowReceiptComposer(true)}
+                          aria-label={emptyReceiptActionAccessibleLabel}
+                          title={emptyReceiptActionAccessibleLabel}
+                        >
+                          {emptyReceiptActionLabel}
                         </Button>
                       )}
                     >
@@ -3122,9 +7610,13 @@ export default function CourseRegistrationsAdminPage() {
                       receipt,
                       receiptIdsRequiringFileDisambiguator.has(receipt.crrId),
                     );
-                    const receiptCreatedLabel = sharedReceiptCreatedLabel
+                    const receiptCreatedLabel = sharedReceiptCreatedIsInSummary || sharedReceiptCreatedLabel
                       ? ''
                       : formatOptionalDate(receipt.crrCreatedAt);
+                    const isReceiptBeingEdited = receiptForm.editingId === receipt.crrId;
+                    const receiptNotes = receipt.crrNotes?.trim() ?? '';
+                    const showReceiptNotes = Boolean(receiptNotes)
+                      && !(sharedReceiptNotesIsInSummary || receiptNotes === sharedReceiptNotes);
 
                     return (
                       <Paper key={receipt.crrId} variant="outlined" sx={{ p: 1.5 }}>
@@ -3134,10 +7626,10 @@ export default function CourseRegistrationsAdminPage() {
                               component="img"
                               src={receipt.crrFileUrl}
                               alt={receiptLabel}
+                              style={{ objectFit: 'contain' }}
                               sx={{
                                 width: '100%',
                                 maxHeight: 220,
-                                objectFit: 'cover',
                                 borderRadius: 1.5,
                                 bgcolor: 'grey.100',
                               }}
@@ -3148,7 +7640,9 @@ export default function CourseRegistrationsAdminPage() {
                               <Link
                                 href={receipt.crrFileUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
+                                aria-label={`Abrir comprobante ${receiptLabel} en una pestaña nueva`}
+                                title={`Abrir comprobante ${receiptLabel} en una pestaña nueva`}
                                 underline="hover"
                                 color="text.primary"
                                 variant="subtitle2"
@@ -3163,19 +7657,25 @@ export default function CourseRegistrationsAdminPage() {
                                 </Typography>
                               )}
                             </Box>
-                            <IconButton
-                              size="small"
-                              title="Opciones del comprobante"
-                              aria-label={`Abrir acciones para comprobante ${receiptLabel}`}
-                              aria-haspopup="menu"
-                              onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
-                            >
-                              <MoreVertIcon fontSize="small" />
-                            </IconButton>
+                            {isReceiptBeingEdited ? (
+                              <Typography variant="body2" color="text.secondary">
+                                En edición
+                              </Typography>
+                            ) : !showReceiptComposer ? (
+                              <IconButton
+                                size="small"
+                                title="Opciones del comprobante"
+                                aria-label={`Abrir acciones para comprobante ${receiptLabel}`}
+                                aria-haspopup="menu"
+                                onClick={(event) => handleOpenReceiptMenu(event.currentTarget, receipt)}
+                              >
+                                <MoreVertIcon fontSize="small" />
+                              </IconButton>
+                            ) : null}
                           </Stack>
-                          {receipt.crrNotes && (
+                          {showReceiptNotes && (
                             <Typography variant="body2" color="text.secondary">
-                              {receipt.crrNotes}
+                              {receiptNotes}
                             </Typography>
                           )}
                         </Stack>
@@ -3227,6 +7727,7 @@ export default function CourseRegistrationsAdminPage() {
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
               disabled={regsQuery.isFetching || cohortsQuery.isFetching}
+              title={headerRefreshTitle}
             >
               {headerRefreshLabel}
             </Button>
@@ -3290,18 +7791,47 @@ export default function CourseRegistrationsAdminPage() {
               component={RouterLink}
               to={initialEmptyStateAction.to}
               aria-label={initialEmptyStateAction.ariaLabel}
-              title={initialEmptyStateAction.ariaLabel}
+              aria-describedby={initialEmptyStateAction.target ? initialEmptyStateNewTabDescriptionId : undefined}
+              title={initialEmptyStateAction.title}
+              target={initialEmptyStateAction.target}
+              rel={initialEmptyStateAction.rel}
+              endIcon={
+                initialEmptyStateAction.target ? (
+                  <span data-testid="course-registration-initial-empty-state-new-tab-icon" aria-hidden="true">
+                    <OpenInNewIcon fontSize="small" />
+                  </span>
+                ) : undefined
+              }
             >
               {initialEmptyStateAction.label}
             </Button>
           )}
         >
           {initialEmptyStateMessage}
+          {initialEmptyStateAction.target && (
+            <Box
+              id={initialEmptyStateNewTabDescriptionId}
+              component="span"
+              sx={{
+                border: 0,
+                clip: 'rect(0 0 0 0)',
+                height: 1,
+                margin: -1,
+                overflow: 'hidden',
+                padding: 0,
+                position: 'absolute',
+                whiteSpace: 'nowrap',
+                width: 1,
+              }}
+            >
+              {initialEmptyStateNewTabDescription}
+            </Box>
+          )}
         </Alert>
       )}
 
-      {showRegistrationFilterPanel && !showInitialFilterGuidance && (
-        <Paper sx={{ p: 3, borderRadius: 3 }}>
+      {showRegistrationFilterPanel && !showInitialFilterGuidance && !hideBusyListPassiveCurrentViewPanel && (
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-filter-panel">
           <>
             <Grid container spacing={2}>
               {combinedSingleChoiceSummary ? (
@@ -3325,6 +7855,11 @@ export default function CourseRegistrationsAdminPage() {
                     <Typography variant="body2" fontWeight={600}>
                       {combinedSingleChoiceSummary}
                     </Typography>
+                    {combinedSingleChoiceCustomStatusGuidance && (
+                      <Typography variant="caption" color="text.secondary">
+                        {combinedSingleChoiceCustomStatusGuidance}
+                      </Typography>
+                    )}
                     {combinedSingleChoiceContextSummary && (
                       <Typography
                         variant="caption"
@@ -3334,7 +7869,7 @@ export default function CourseRegistrationsAdminPage() {
                         {combinedSingleChoiceContextSummary}
                       </Typography>
                     )}
-                    {showFirstRunFilterHelper && (
+                    {showFirstRunFilterHelper && !combinedSingleChoiceContextSummary && (
                       <Typography variant="caption" color="text.secondary">
                         {combinedSingleChoiceHelperText}
                       </Typography>
@@ -3356,7 +7891,9 @@ export default function CourseRegistrationsAdminPage() {
                         variant="text"
                         sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                         onClick={handleToggleAdvancedFilters}
+                        aria-label={limitToggleAccessibleLabel}
                         aria-expanded={showAdvancedFilters}
+                        title={limitToggleTitle}
                       >
                         {limitToggleLabel}
                       </Button>
@@ -3365,8 +7902,9 @@ export default function CourseRegistrationsAdminPage() {
                 </Grid>
               ) : (
                 <>
-                  <Grid item xs={12} md={filterGridColumns}>
-                    {showCohortFilterUnavailableSummary ? (
+                  {showCohortFilterColumn && (
+                    <Grid item xs={12} md={filterGridColumns}>
+                      {showCohortFilterUnavailableSummary ? (
                       <Stack
                         data-testid="course-registration-cohort-filter-unavailable"
                         spacing={0.5}
@@ -3381,7 +7919,7 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes no disponibles
+                          {unavailableCohortFilterLabel}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterUnavailableMessage}
@@ -3393,8 +7931,9 @@ export default function CourseRegistrationsAdminPage() {
                             sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                             onClick={handleRefresh}
                             disabled={cohortsQuery.isFetching}
+                            title={unavailableCohortFilterRetryTitle}
                           >
-                            {headerRefreshLabel}
+                            {unavailableCohortFilterRetryLabel}
                           </Button>
                         )}
                       </Stack>
@@ -3413,13 +7952,13 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes cargando
+                          Formularios cargando
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {cohortFilterLoadingMessage}
                         </Typography>
                       </Stack>
-                    ) : showEmptyCohortFilterSummary ? (
+                    ) : showEmptyCohortFilterSummaryBlock ? (
                       <Stack
                         data-testid="course-registration-empty-cohort-filter"
                         spacing={0.5}
@@ -3434,13 +7973,13 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohortes no configuradas
+                          Formularios no configurados
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {emptyCohortFilterMessage}
                         </Typography>
                       </Stack>
-                    ) : singleAvailableCohortLabel ? (
+                    ) : showPassiveSingleCohortSummary ? (
                       <Stack
                         data-testid="course-registration-single-cohort-summary"
                         spacing={0.5}
@@ -3455,28 +7994,21 @@ export default function CourseRegistrationsAdminPage() {
                         }}
                       >
                         <Typography variant="caption" color="text.secondary">
-                          Cohorte disponible
+                          Formulario público
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
                           {singleAvailableCohortLabel}
+                          {standaloneSingleChoiceInlineSourceSummary ? ` · ${standaloneSingleChoiceInlineSourceSummary}` : ''}
                         </Typography>
-                        {standaloneSingleChoiceSourceSummary && (
-                          <Typography variant="caption" color="text.secondary">
-                            {standaloneSingleChoiceSourceSummary}
-                          </Typography>
-                        )}
-                        {showFirstRunFilterHelper && (
-                          <Typography variant="caption" color="text.secondary">
-                            {singleAvailableCohortHelperText}
-                          </Typography>
-                        )}
                         {showInlineSingleChoiceLimitToggle && (
                           <Button
                             size="small"
                             variant="text"
                             sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                             onClick={handleToggleAdvancedFilters}
+                            aria-label={limitToggleAccessibleLabel}
                             aria-expanded={showAdvancedFilters}
+                            title={limitToggleTitle}
                           >
                             {limitToggleLabel}
                           </Button>
@@ -3485,7 +8017,7 @@ export default function CourseRegistrationsAdminPage() {
                     ) : (
                       <TextField
                         select
-                        label="Curso / cohorte"
+                        label={COHORT_FILTER_LABEL}
                         value={slug}
                         onChange={(e) => {
                           setHasUsedFilterControl(true);
@@ -3497,9 +8029,9 @@ export default function CourseRegistrationsAdminPage() {
                         error={cohortsQuery.isError}
                         helperText={
                           cohortsQuery.isError
-                            ? 'No se pudieron cargar cohortes.'
+                            ? 'No se pudieron cargar formularios.'
                             : cohortsQuery.isLoading
-                              ? 'Cargando cohortes…'
+                              ? 'Cargando formularios…'
                               : undefined
                         }
                       >
@@ -3510,10 +8042,11 @@ export default function CourseRegistrationsAdminPage() {
                           </MenuItem>
                         ))}
                       </TextField>
-                    )}
-                  </Grid>
+                      )}
+                    </Grid>
+                  )}
                   {showStatusFilterColumn && (
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={statusFilterGridColumns}>
                       {showSingleStatusSummaryBlock && singleVisibleStatus ? (
                         <Stack
                           data-testid="course-registration-single-status-summary"
@@ -3533,12 +8066,8 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                           <Typography variant="body2" fontWeight={600}>
                             {statusFilterLabels[singleVisibleStatus]}
+                            {standaloneSingleChoiceInlineSourceSummary ? ` · ${standaloneSingleChoiceInlineSourceSummary}` : ''}
                           </Typography>
-                          {standaloneSingleChoiceSourceSummary && (
-                            <Typography variant="caption" color="text.secondary">
-                              {standaloneSingleChoiceSourceSummary}
-                            </Typography>
-                          )}
                           {showFirstRunFilterHelper && singleVisibleStatusHelperText && (
                             <Typography variant="caption" color="text.secondary">
                               {singleVisibleStatusHelperText}
@@ -3550,7 +8079,9 @@ export default function CourseRegistrationsAdminPage() {
                               variant="text"
                               sx={{ alignSelf: 'flex-start', mt: 0.5 }}
                               onClick={handleToggleAdvancedFilters}
+                              aria-label={limitToggleAccessibleLabel}
                               aria-expanded={showAdvancedFilters}
+                              title={limitToggleTitle}
                             >
                               {limitToggleLabel}
                             </Button>
@@ -3575,10 +8106,23 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                           <Typography variant="body2" fontWeight={600}>
                             {statusFilterLabels[status]}
+                            {activeStatusInlineSourceSummary ? ` · ${activeStatusInlineSourceSummary}` : ''}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            La vista filtrada ya incluye este estado; usa {resetViewLabel.toLowerCase()} si necesitas volver a ampliar la lista.
-                          </Typography>
+                          {showActiveStatusSummaryHelper && (
+                            <Typography variant="caption" color="text.secondary">
+                              La vista filtrada ya muestra solo este estado.
+                            </Typography>
+                          )}
+                          {showInlineActiveStatusResetAction && (
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ alignSelf: 'flex-start', mt: 0.5 }}
+                              onClick={handleResetFilters}
+                            >
+                              {resetViewLabel}
+                            </Button>
+                          )}
                         </Stack>
                       ) : showSingleCustomStatusSummary && singleVisibleCustomStatus != null ? (
                         <Stack
@@ -3619,7 +8163,7 @@ export default function CourseRegistrationsAdminPage() {
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            Sin filtros de estado
+                            Estados no estándar
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {customStatusFilterGuidance}
@@ -3629,7 +8173,7 @@ export default function CourseRegistrationsAdminPage() {
                         <Stack spacing={1}>
                           {showStatusFilterCaption && (
                             <Typography variant="caption" color="text.secondary">
-                              Filtrar por estado
+                              {statusFilterCaption}
                             </Typography>
                           )}
                           <Stack
@@ -3640,17 +8184,18 @@ export default function CourseRegistrationsAdminPage() {
                             role="group"
                             aria-label={statusFilterGroupLabel}
                           >
-                            {actionableStatusFilters.map((value) => (
+                            {displayedActionableStatusFilters.map((value) => (
                               <Chip
                                 key={value}
                                 clickable
                                 component="button"
                                 type="button"
                                 color={registrationStatusChipColor(value)}
-                                label={statusFilterChipLabel(value, statusCounts, hasVisibleRegistrations)}
+                                label={statusFilterChipLabel(value, statusCounts, showStatusFilterCounts)}
                                 variant={status === value ? 'filled' : 'outlined'}
-                                aria-label={statusFilterChipAriaLabel(value, status === value)}
+                                aria-label={statusFilterChipAccessibleLabel(value, status === value, hasLocalSearch)}
                                 aria-pressed={status === value}
+                                title={statusFilterChipTitle(value, status === value, hasLocalSearch)}
                                 onClick={() => {
                                   setHasUsedFilterControl(true);
                                   setLocalSearch('');
@@ -3671,37 +8216,56 @@ export default function CourseRegistrationsAdminPage() {
                 </>
               )}
             </Grid>
-            {showAdvancedLimitControl && !showInlineSingleChoiceLimitToggle && (
+            {showInlineEmptyCohortFilterGuidance && (
+              <Typography
+                data-testid="course-registration-empty-cohort-filter-inline"
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 1.5 }}
+              >
+                {emptyCohortFilterMessage}
+              </Typography>
+            )}
+            {showLimitAdjustmentAction
+              && !showInlineSingleChoiceLimitToggle
+              && !showEmptyLocalSearchLimitGuidance && (
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
                   variant="text"
                   onClick={handleToggleAdvancedFilters}
+                  aria-label={limitToggleAccessibleLabel}
                   aria-expanded={showAdvancedFilters}
+                  title={limitToggleTitle}
                 >
                   {limitToggleLabel}
                 </Button>
               </Stack>
             )}
-            <Collapse in={showAdvancedFilters && showAdvancedLimitControl} unmountOnExit>
-              <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
-                <TextField
-                  label={LOAD_LIMIT_LABEL}
-                  type="number"
-                  inputProps={{ min: 1 }}
-                  value={limit}
-                  onChange={(e) => {
-                    setHasUsedFilterControl(true);
-                    setLocalSearch('');
-                    setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
-                  }}
-                  helperText={LOAD_LIMIT_HELPER_TEXT}
-                  fullWidth
-                  size="small"
-                />
-              </Box>
-            </Collapse>
-            {showFirstRunFilterHelper && filtersHelpText && !showFilteredEmptyState && (
+            {showAdvancedFilters && showAdvancedLimitControl && (
+              <Collapse in unmountOnExit>
+                <Box sx={{ mt: 2, maxWidth: { xs: '100%', md: 280 } }}>
+                  <TextField
+                    label={LOAD_LIMIT_LABEL}
+                    type="number"
+                    inputProps={{ min: 1 }}
+                    value={limit}
+                    onChange={(e) => {
+                      setHasUsedFilterControl(true);
+                      setLocalSearch('');
+                      setLimit(parsePositiveLimit(e.target.value, DEFAULT_LIMIT));
+                    }}
+                    helperText={LOAD_LIMIT_HELPER_TEXT}
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              </Collapse>
+            )}
+            {showFirstRunFilterHelper
+              && filtersHelpText
+              && !showFilteredEmptyState
+              && !showEmptyCohortFilterSummary && (
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
                 {filtersHelpText}
               </Typography>
@@ -3755,7 +8319,7 @@ export default function CourseRegistrationsAdminPage() {
                     color="text.secondary"
                     sx={{ mt: shouldShowSharedStatusSummary ? 0.75 : 1.5 }}
                   >
-                    Mostrando una sola cohorte: {singleVisibleCohortLabel}.
+                    {sharedVisibleCohortSummary}
                   </Typography>
                 )}
                 {shouldShowSharedSourceSummary && (
@@ -3781,7 +8345,7 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleCreatedAtSummary}
                   </Typography>
                 )}
-                {sharedVisibleMissingContactSummary && (
+                {showSharedVisibleMissingContactSummary && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -3795,7 +8359,7 @@ export default function CourseRegistrationsAdminPage() {
                     {sharedVisibleMissingContactSummary}
                   </Typography>
                 )}
-                {sharedVisibleNotesSummary && (
+                {showSharedNotesSummaryInList && (
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -3842,57 +8406,117 @@ export default function CourseRegistrationsAdminPage() {
       )}
 
       {showRegistrationResultsPanel && (
-        <Paper sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-results-panel">
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="course-registration-results-panel">
           {regsQuery.isError && (
             <Alert
               severity="error"
-              action={showRegistrationErrorInlineRetry ? (
-                <Button color="inherit" size="small" onClick={handleRefresh}>
-                  {registrationErrorRetryLabel}
-                </Button>
+              action={showRegistrationErrorInlineRetry || hasCustomFilters ? (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {showRegistrationErrorInlineRetry && (
+                    <Button color="inherit" size="small" onClick={handleRefresh}>
+                      {registrationErrorRetryLabel}
+                    </Button>
+                  )}
+                  {hasCustomFilters && (
+                    <Button color="inherit" size="small" onClick={handleResetFilters}>
+                      {resetViewLabel}
+                    </Button>
+                  )}
+                </Stack>
               ) : undefined}
             >
               No se pudieron cargar las inscripciones: {regsQuery.error instanceof Error ? regsQuery.error.message : 'Error'}
             </Alert>
           )}
           {regsQuery.isLoading && <Typography>{initialRegistrationLoadingMessage}</Typography>}
-          {showLocalSearchControl && (
+          {showRegistrationResultsToolbar && (
             <Box sx={{ mb: 2 }}>
-              <Stack spacing={1} alignItems="flex-start">
-                <TextField
-                  label={LOCAL_SEARCH_LABEL}
-                  value={localSearch}
-                  onChange={(e) => {
-                    setHasUsedFilterControl(true);
-                    setLocalSearch(normalizeVisibleLocalSearchInput(e.target.value));
-                  }}
-                  placeholder={localSearchPlaceholder}
-                  helperText={localSearchHelperText}
-                  size="small"
-                  fullWidth
-                  data-testid="course-registration-local-search"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: showLocalSearchInlineClearAction ? (
-                      <InputAdornment position="end">
-                        <Tooltip title="Limpiar búsqueda">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            aria-label="Limpiar búsqueda"
-                            onClick={() => setLocalSearch('')}
-                          >
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </InputAdornment>
-                    ) : undefined,
-                  }}
-                />
+              <Stack spacing={1.25} alignItems="stretch">
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={1.5}
+                  alignItems={{ xs: 'stretch', md: 'flex-start' }}
+                >
+                  {showLocalSearchControl && (
+                    <TextField
+                      label={LOCAL_SEARCH_LABEL}
+                      value={localSearch}
+                      onChange={(e) => {
+                        const nextLocalSearch = normalizeVisibleLocalSearchInput(e.target.value);
+                        if (nextLocalSearch) setHasUsedFilterControl(true);
+                        setLocalSearch(nextLocalSearch);
+                      }}
+                      placeholder={localSearchPlaceholder}
+                      helperText={localSearchHelperText}
+                      size="small"
+                      fullWidth
+                      autoComplete="off"
+                      inputProps={{
+                        spellCheck: false,
+                        title: localSearchInputTitle,
+                      }}
+                      data-testid="course-registration-local-search"
+                      sx={{ flex: '1 1 360px' }}
+                      InputProps={{
+                        endAdornment: showLocalSearchInlineClearAction ? (
+                          <InputAdornment position="end">
+                            <Tooltip title="Limpiar búsqueda">
+                              <IconButton
+                                edge="end"
+                                size="small"
+                                aria-label="Limpiar búsqueda"
+                                onClick={handleClearLocalSearch}
+                              >
+                                <ClearIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </InputAdornment>
+                        ) : undefined,
+                      }}
+                    />
+                  )}
+                  {showRegistrationSortControls && (
+                    <Stack
+                      direction={{ xs: 'column', sm: 'row' }}
+                      spacing={1}
+                      sx={{
+                        flex: showLocalSearchControl ? '0 0 auto' : '1 1 auto',
+                        minWidth: { xs: '100%', md: registrationSortKey === 'default' ? 190 : 360 },
+                      }}
+                    >
+                      <TextField
+                        select
+                        label={REGISTRATION_SORT_LABEL}
+                        value={registrationSortKey}
+                        onChange={(e) => handleRegistrationSortKeyChange(e.target.value)}
+                        size="small"
+                        sx={{ minWidth: { xs: '100%', sm: 180 } }}
+                      >
+                        {registrationSortKeys.map((key) => (
+                          <MenuItem key={key} value={key}>
+                            {registrationSortLabels[key]}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      {registrationSortKey !== 'default' && (
+                        <TextField
+                          select
+                          label={REGISTRATION_SORT_DIRECTION_LABEL}
+                          value={registrationSortDirection}
+                          onChange={(e) => handleRegistrationSortDirectionChange(e.target.value)}
+                          size="small"
+                          sx={{ minWidth: { xs: '100%', sm: 170 } }}
+                        >
+                          {registrationSortDirections.map((direction) => (
+                            <MenuItem key={direction} value={direction}>
+                              {registrationSortDirectionLabels[direction]}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
                 {showLocalSearchUtilityRow && (
                   <Stack
                     direction="row"
@@ -3946,19 +8570,38 @@ export default function CourseRegistrationsAdminPage() {
           {!regsQuery.isLoading && showEmptyLocalSearchResults && (
             <Alert
               severity="info"
-              action={(
-                <Button color="inherit" size="small" onClick={() => setLocalSearch('')}>
-                  Limpiar búsqueda
-                </Button>
-              )}
+              data-testid="course-registration-empty-local-search"
+              aria-label={emptyLocalSearchResultsAccessibleLabel}
+              title={emptyLocalSearchResultsAccessibleLabel}
+              action={showEmptyLocalSearchLimitRecoveryAction ? (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button color="inherit" size="small" onClick={handleClearLocalSearch}>
+                    Limpiar búsqueda
+                  </Button>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={handleToggleAdvancedFilters}
+                    aria-expanded={showAdvancedFilters}
+                    aria-label={emptyLocalSearchLimitRecoveryAccessibleLabel}
+                    title={emptyLocalSearchLimitRecoveryTitle}
+                  >
+                    {emptyLocalSearchLimitRecoveryLabel}
+                  </Button>
+                </Stack>
+              ) : undefined}
             >
               {emptyLocalSearchResultsMessage}
             </Alert>
           )}
           {searchedRegistrations.length ? (
-            <Stack spacing={1.5}>
-              <Stack divider={<Divider flexItem />} spacing={2}>
-                {searchedRegistrations.map((reg) => {
+            <LazyPaginatedList
+              items={searchedRegistrations}
+              pagination={{ itemLabel: 'inscripciones', initialRowsPerPage: 25, resetKey: registrationPaginationResetKey }}
+              renderItems={(visibleRegistrations) => (
+                <Stack spacing={1.5}>
+                  <Stack divider={<Divider flexItem />} spacing={2}>
+                    {visibleRegistrations.map((reg) => {
                   const isUpdating = updateStatusMutation.isPending && currentMutationRegistrationId === reg.crId;
                   const rowIdentity = registrationIdentityDisplay(
                     reg.crFullName,
@@ -3968,9 +8611,8 @@ export default function CourseRegistrationsAdminPage() {
                   );
                   const rowSecondaryIdentity =
                     rowIdentity.secondary === missingContactSummary ? '' : rowIdentity.secondary;
-                  const rowUsesGeneratedIdentity = !reg.crFullName?.trim()
-                    && !reg.crEmail?.trim()
-                    && !reg.crPhoneE164?.trim();
+                  const rowUsesGeneratedIdentity = !normalizeRegistrationNameValue(reg.crFullName)
+                    && registrationNeedsContact(reg);
                   const showRowRegistrationDisambiguator =
                     registrationIdsRequiringActionRecordDisambiguator.has(reg.crId)
                     || (
@@ -3978,8 +8620,36 @@ export default function CourseRegistrationsAdminPage() {
                       && !rowSecondaryIdentity
                     );
                   const rowActionTarget = getActionTargetLabelForRegistration(reg);
+                  const useDirectPendingRecoveryAction =
+                    shouldUseDirectPendingRecoveryAction(
+                      reg.crStatus,
+                      showActiveStatusFilterSummary
+                        || statusAlreadyVisibleInBusySearchOnboarding
+                        || localSearchSharedPaidStatusSummary
+                        || (
+                          localSearchSingleResultUsesDirectPaidRecovery
+                          && localSearchSingleResult?.crId === reg.crId
+                        )
+                        || singleStatusSummarySupportsPaidRecovery,
+                    )
+                    || (
+                      showBusyListSearchOnboarding
+                      && hasOnlyPendingRecoveryStatusAction(reg.crStatus)
+                    );
+                  const useStatusIconAction = showBusyStatusIconActions && !useDirectPendingRecoveryAction;
+                  const statusIconActionIsPaymentWorkflow = canOpenPaymentWorkflowFromStatus(reg.crStatus);
+                  const statusIconActionTitle = statusIconActionIsPaymentWorkflow
+                    ? paymentReceiptIconButtonTitle(reg.crStatus, rowActionTarget)
+                    : statusMenuButtonTitle(reg.crStatus, rowActionTarget);
+                  const usePaymentStatusMenuLabel =
+                    showInlinePaymentWorkflowRowLabel && statusIconActionIsPaymentWorkflow;
                   const rowCohortSlug = reg.crCourseSlug.trim();
-                  const rowCohortLabel = cohortLabelsBySlug.get(rowCohortSlug) ?? rowCohortSlug;
+                  const rowCohortLabel = cohortSummaryLabelsBySlug.get(rowCohortSlug)
+                    ?? cohortLabelsBySlug.get(rowCohortSlug)
+                    ?? readableCohortFallbackLabel(rowCohortSlug);
+                  const rowReceiptCount = courseRegistrationReceiptCount(reg);
+                  const rowReceiptSummaryLabel = registrationReceiptContextSummary(rowReceiptCount, reg.crStatus);
+                  const showRowReceiptSummary = Boolean(rowReceiptSummaryLabel);
                   const hasRowNotes = Boolean(reg.crAdminNotes?.trim());
                   const rowMatchesVisibleSearchFields = hasLocalSearch
                     ? registrationMatchesVisibleSearchFields({
@@ -4005,13 +8675,26 @@ export default function CourseRegistrationsAdminPage() {
                   const rowContextSummary = registrationListContextSummary({
                     cohortLabel: rowCohortLabel,
                     createdAt: reg.crCreatedAt,
+                    followUpCount: reg.crFollowUpCount,
                     hasNotes: hasRowNotes && !allVisibleRegistrationsHaveNotes && !rowMatchedOnlyHiddenNote,
+                    receiptCount: showRowReceiptSummary ? null : reg.crReceiptCount,
                     showCreatedAt: !hideDateOnlyRowContext && !hideTinyDefaultListRowDates && !shouldHideSharedCreatedAtContext,
                     showCohort: showRowCohort,
                     showSource: showRowSource,
                     source: reg.crSource,
+                    status: reg.crStatus,
                   });
                   const showRowContext = Boolean(rowContextSummary);
+                  const useDirectPendingRecoveryIconAction =
+                    useDirectPendingRecoveryAction
+                    && (
+                      showBusyDirectRecoveryIconActions
+                      || showRepeatedDirectRecoveryIconActions
+                      || showBusyStatusIconActions
+                    );
+                  const directPendingRecoveryActionLabel = `${pendingStatusMenuLabel(reg.crStatus)} para ${rowActionTarget}`;
+                  const directPendingRecoveryActionTitle =
+                    `${pendingStatusMenuLabel(reg.crStatus)}; actual: ${registrationStatusLabel(reg.crStatus)}`;
                   return (
                     <Box key={reg.crId} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Box sx={{ minWidth: 240 }}>
@@ -4050,7 +8733,7 @@ export default function CourseRegistrationsAdminPage() {
                         )}
                         {showRowRegistrationDisambiguator && (
                           <Typography variant="caption" color="text.secondary">
-                            Registro #{reg.crId}
+                            {registrationRecordLabel(reg.crId)}
                           </Typography>
                         )}
                       </Box>
@@ -4061,25 +8744,124 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       )}
-                      <Button
-                        size="small"
-                        variant="text"
-                        color={registrationStatusButtonColor(reg.crStatus)}
-                        endIcon={<ArrowDropDownIcon />}
-                        title={`Cambiar estado; actual: ${registrationStatusLabel(reg.crStatus)}`}
-                        aria-label={`Cambiar estado para ${rowActionTarget}`}
-                        aria-haspopup="menu"
-                        disabled={isUpdating}
-                        onClick={(event) => handleOpenStatusMenu(event.currentTarget, reg)}
+                      {showRowReceiptSummary && (
+                        <Box sx={{ minWidth: 130 }}>
+                          <Chip
+                            data-testid={`course-registration-row-receipts-${reg.crId}`}
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            icon={<ReceiptLongIcon fontSize="small" />}
+                            label={rowReceiptSummaryLabel}
+                            title={`${courseRegistrationReceiptCountLabel(rowReceiptCount)} guardado${rowReceiptCount === 1 ? '' : 's'}; abre expediente para revisar la evidencia.`}
+                          />
+                        </Box>
+                      )}
+                      <Box
+                        data-testid={`course-registration-row-actions-${reg.crId}`}
+                        sx={{
+                          ml: 'auto',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          flexShrink: 0,
+                        }}
                       >
-                        {registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
-                      </Button>
-                      <Box sx={{ flexGrow: 1 }} />
+                        {useStatusIconAction ? (
+                          <Tooltip title={statusIconActionTitle}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={registrationStatusButtonColor(reg.crStatus)}
+                                title={statusIconActionTitle}
+                                aria-label={statusMenuIconButtonAriaLabel(reg.crStatus, rowActionTarget)}
+                                aria-haspopup="menu"
+                                data-action-icon={statusIconActionIsPaymentWorkflow ? 'payment-receipt' : 'status-menu'}
+                                disabled={isUpdating}
+                                onClick={(event) => {
+                                  handleOpenStatusMenu(event.currentTarget, reg);
+                                }}
+                              >
+                                {statusIconActionIsPaymentWorkflow ? (
+                                  <ReceiptLongIcon fontSize="small" />
+                                ) : (
+                                  <MoreVertIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        ) : useDirectPendingRecoveryIconAction ? (
+                          <Tooltip title={directPendingRecoveryActionTitle}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color={registrationStatusButtonColor('pending_payment')}
+                                title={directPendingRecoveryActionTitle}
+                                aria-label={directPendingRecoveryActionLabel}
+                                data-action-icon="pending-recovery"
+                                disabled={isUpdating}
+                                onClick={() => {
+                                  handleCloseStatusMenu();
+                                  handleQuickStatus(reg, 'pending_payment');
+                                }}
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'currentColor',
+                                }}
+                              >
+                                <UndoIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="text"
+                            color={
+                              useDirectPendingRecoveryAction
+                                ? registrationStatusButtonColor('pending_payment')
+                                : registrationStatusButtonColor(reg.crStatus)
+                            }
+                            endIcon={useDirectPendingRecoveryAction ? undefined : <ArrowDropDownIcon />}
+                            title={
+                              useDirectPendingRecoveryAction
+                                ? directPendingRecoveryActionTitle
+                                : statusMenuButtonTitle(reg.crStatus, rowActionTarget)
+                            }
+                            aria-label={
+                              useDirectPendingRecoveryAction
+                                ? directPendingRecoveryActionLabel
+                                : usePaymentStatusMenuLabel
+                                ? paymentStatusMenuButtonAriaLabel(rowActionTarget)
+                                : `Cambiar estado para ${rowActionTarget}`
+                            }
+                            aria-haspopup={useDirectPendingRecoveryAction ? undefined : 'menu'}
+                            disabled={isUpdating}
+                            onClick={(event) => {
+                              if (useDirectPendingRecoveryAction) {
+                                handleCloseStatusMenu();
+                                handleQuickStatus(reg, 'pending_payment');
+                                return;
+                              }
+
+                              handleOpenStatusMenu(event.currentTarget, reg);
+                            }}
+                          >
+                            {useDirectPendingRecoveryAction
+                              ? pendingStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)
+                              : usePaymentStatusMenuLabel
+                              ? paymentStatusMenuButtonLabel
+                              : registrationStatusButtonLabel(reg.crStatus, useCompactStatusActionLabel)}
+                          </Button>
+                        )}
+                      </Box>
                     </Box>
                   );
-                })}
-              </Stack>
-            </Stack>
+                    })}
+                  </Stack>
+                </Stack>
+              )}
+            />
           ) : null}
         </Paper>
       )}
@@ -4091,6 +8873,8 @@ export default function CourseRegistrationsAdminPage() {
       >
         {statusMenuReg && canOpenPaymentWorkflowFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
+            aria-label={`${openPaymentWorkflowLabel} para ${statusMenuActionTargetLabel}`}
+            title={`${openPaymentWorkflowLabel} para ${statusMenuActionTargetLabel}`}
             onClick={() => {
               handleCloseStatusMenu();
               handleOpenDossier(statusMenuReg, 'markPaid');
@@ -4101,6 +8885,7 @@ export default function CourseRegistrationsAdminPage() {
         )}
         {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'pending_payment') && (
           <MenuItem
+            aria-label={`${pendingStatusMenuLabel(statusMenuReg.crStatus)} para ${statusMenuActionTargetLabel}`}
             title={`Usa esta acción para ${pendingStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
             onClick={() => {
               handleCloseStatusMenu();
@@ -4110,14 +8895,24 @@ export default function CourseRegistrationsAdminPage() {
             {pendingStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
-        {statusMenuReg && canTransitionToStatus(statusMenuReg.crStatus, 'cancelled') && (
+        {showStatusMenuCancelSeparator && (
+          <Divider
+            component="li"
+            data-testid="course-registration-status-menu-cancel-separator"
+            sx={{ my: 0.5 }}
+          />
+        )}
+        {statusMenuReg && canCancelRegistrationFromStatus(statusMenuReg.crStatus) && (
           <MenuItem
+            aria-label={`${cancelStatusMenuLabel(statusMenuReg.crStatus)} para ${statusMenuActionTargetLabel}`}
+            title={`Usa esta acción para ${cancelStatusMenuTargetLabel(statusMenuReg.crStatus)}.`}
+            sx={{ color: 'error.main' }}
             onClick={() => {
               handleCloseStatusMenu();
               handleQuickStatus(statusMenuReg, 'cancelled');
             }}
           >
-            Cancelar inscripción
+            {cancelStatusMenuLabel(statusMenuReg.crStatus)}
           </MenuItem>
         )}
       </Menu>
@@ -4128,12 +8923,20 @@ export default function CourseRegistrationsAdminPage() {
         onClose={handleCloseReceiptMenu}
       >
         {receiptMenuReceipt && (
-          <MenuItem onClick={() => handleEditReceipt(receiptMenuReceipt)}>
+          <MenuItem
+            aria-label={`Editar comprobante ${receiptMenuActionLabel}`}
+            title={`Editar comprobante ${receiptMenuActionLabel}`}
+            onClick={() => handleEditReceipt(receiptMenuReceipt)}
+          >
             Editar comprobante
           </MenuItem>
         )}
         {receiptMenuReceipt && (
-          <MenuItem onClick={() => handleDeleteReceipt(receiptMenuReceipt)}>
+          <MenuItem
+            aria-label={`Eliminar comprobante ${receiptMenuActionLabel}`}
+            title={`Eliminar comprobante ${receiptMenuActionLabel}`}
+            onClick={() => handleDeleteReceipt(receiptMenuReceipt)}
+          >
             Eliminar comprobante
           </MenuItem>
         )}
@@ -4146,22 +8949,26 @@ export default function CourseRegistrationsAdminPage() {
       >
         {showInlineEmptyNotesAction && (
           <MenuItem
+            aria-label={optionalDossierNotesActionLabel}
+            title={optionalDossierNotesActionLabel}
             onClick={() => {
               handleCloseDossierContextMenu();
               handleOpenNotesComposer();
             }}
           >
-            Agregar nota
+            {optionalDossierNotesActionLabel}
           </MenuItem>
         )}
         {showInlineEmptyFollowUpAction && (
           <MenuItem
+            aria-label={optionalDossierFollowUpActionLabel}
+            title={optionalDossierFollowUpActionLabel}
             onClick={() => {
               handleCloseDossierContextMenu();
-              setShowFollowUpComposer(true);
+              handleOpenFollowUpComposer();
             }}
           >
-            Agregar seguimiento
+            {optionalDossierFollowUpActionLabel}
           </MenuItem>
         )}
       </Menu>
@@ -4172,12 +8979,20 @@ export default function CourseRegistrationsAdminPage() {
         onClose={handleCloseFollowUpMenu}
       >
         {followUpMenuEntry && (
-          <MenuItem onClick={() => handleEditFollowUp(followUpMenuEntry)}>
+          <MenuItem
+            aria-label={`Editar seguimiento ${followUpMenuActionLabel}`}
+            title={`Editar seguimiento ${followUpMenuActionLabel}`}
+            onClick={() => handleEditFollowUp(followUpMenuEntry)}
+          >
             Editar seguimiento
           </MenuItem>
         )}
         {followUpMenuEntry && (
-          <MenuItem onClick={() => handleDeleteFollowUp(followUpMenuEntry)}>
+          <MenuItem
+            aria-label={`Eliminar seguimiento ${followUpMenuActionLabel}`}
+            title={`Eliminar seguimiento ${followUpMenuActionLabel}`}
+            onClick={() => handleDeleteFollowUp(followUpMenuEntry)}
+          >
             Eliminar seguimiento
           </MenuItem>
         )}
@@ -4242,7 +9057,7 @@ export default function CourseRegistrationsAdminPage() {
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h6">{activeRegistrationIdentity.primary}</Typography>
-                    {activeRegistrationStatus && statusChip(activeRegistrationStatus)}
+                    {showActiveRegistrationStatusChip && statusChip(activeRegistrationStatus)}
                   </Stack>
                   {activeRegistrationSecondaryLine && (
                     <Typography variant="body2" color="text.secondary">
@@ -4286,8 +9101,10 @@ export default function CourseRegistrationsAdminPage() {
                         <Button
                           variant="outlined"
                           endIcon={<ArrowDropDownIcon />}
+                          aria-label={groupedDossierContextActionsAccessibleLabel}
                           aria-haspopup="menu"
                           aria-expanded={Boolean(dossierContextMenuAnchor)}
+                          title={groupedDossierContextActionsAccessibleLabel}
                           onClick={(event) => setDossierContextMenuAnchor(event.currentTarget)}
                         >
                           {groupedDossierContextActionsLabel}
@@ -4304,7 +9121,7 @@ export default function CourseRegistrationsAdminPage() {
                       {showDirectInlineEmptyFollowUpAction && (
                         <Button
                           variant="outlined"
-                          onClick={() => setShowFollowUpComposer(true)}
+                          onClick={handleOpenFollowUpComposer}
                         >
                           {optionalDossierFollowUpActionLabel}
                         </Button>
@@ -4332,9 +9149,27 @@ export default function CourseRegistrationsAdminPage() {
                           </Typography>
                         </Box>
                       </Stack>
-                      {sharedEmailEventCreatedLabel && (
+                      {sharedEmailEventSummary ? (
                         <Typography variant="body2" color="text.secondary">
-                          Correos registrados: {sharedEmailEventCreatedLabel}
+                          {sharedEmailEventSummary}
+                        </Typography>
+                      ) : (
+                        <>
+                          {sharedEmailEventCreatedLabel && (
+                            <Typography variant="body2" color="text.secondary">
+                              Correos registrados: {sharedEmailEventCreatedLabel}
+                            </Typography>
+                          )}
+                          {sharedEmailEventTypeLabel && (
+                            <Typography variant="body2" color="text.secondary">
+                              Tipo de correo: {sharedEmailEventTypeLabel}
+                            </Typography>
+                          )}
+                        </>
+                      )}
+                      {sharedEmailEventStatusLabel && !sharedEmailEventStatusIsInSummary && (
+                        <Typography variant="body2" color="text.secondary">
+                          Estado de correos: {sharedEmailEventStatusLabel}
                         </Typography>
                       )}
 
@@ -4371,24 +9206,41 @@ export default function CourseRegistrationsAdminPage() {
                         <Stack spacing={1}>
                           {emailEvents.map((entry) => {
                             const emailEventCreatedLabel = sharedEmailEventCreatedLabel ? '' : formatDate(entry.ceCreatedAt);
+                            const showEmailEventMetadata = !sharedEmailEventStatusLabel
+                              || !sharedEmailEventTypeLabel
+                              || Boolean(emailEventCreatedLabel);
+                            const emailEventMessage = entry.ceMessage ?? '';
+                            const hasEmailEventMessage = emailEventMessage.trim() !== '';
+                            if (!showEmailEventMetadata && !hasEmailEventMessage) return null;
 
                             return (
-                              <Paper key={entry.ceId} variant="outlined" sx={{ p: 1.5 }}>
-                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
-                                  <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
-                                  <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
-                                  {emailEventCreatedLabel && (
-                                    <Typography variant="caption" color="text.secondary">
-                                      {emailEventCreatedLabel}
-                                    </Typography>
-                                  )}
-                                </Stack>
-                                {entry.ceMessage && (
+                              <Paper
+                                key={entry.ceId}
+                                variant="outlined"
+                                sx={{ p: 1.5 }}
+                                data-testid="course-registration-email-event-card"
+                              >
+                                {showEmailEventMetadata && (
+                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }} flexWrap="wrap" useFlexGap>
+                                    {!sharedEmailEventStatusLabel && (
+                                      <Chip size="small" label={eventStatusLabel(entry.ceStatus)} color={eventStatusColor(entry.ceStatus)} />
+                                    )}
+                                    {!sharedEmailEventTypeLabel && (
+                                      <Chip size="small" label={eventTypeLabel(entry.ceEventType)} variant="outlined" />
+                                    )}
+                                    {emailEventCreatedLabel && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {emailEventCreatedLabel}
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                )}
+                                {hasEmailEventMessage && (
                                   <Typography
                                     variant="body2"
                                     sx={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                                   >
-                                    {entry.ceMessage}
+                                    {emailEventMessage}
                                   </Typography>
                                 )}
                               </Paper>
@@ -4403,13 +9255,13 @@ export default function CourseRegistrationsAdminPage() {
 
               {prioritizePaymentSection ? (
                 <>
-                  {receiptsSection}
+                  {showReceiptsSection && receiptsSection}
                   {showNotesSection && notesSection}
                 </>
               ) : (
                 <>
                   {showNotesSection && notesSection}
-                  {receiptsSection}
+                  {showReceiptsSection && receiptsSection}
                 </>
               )}
 
@@ -4424,20 +9276,38 @@ export default function CourseRegistrationsAdminPage() {
                           <Chip size="small" label={`${followUps.length} entrad${followUps.length === 1 ? 'a' : 'as'}`} />
                         )}
                       </Stack>
-                      {!showFollowUpComposer && followUps.length > 0 && (
+                      {showAddFollowUpAction && (
                         <Button
                           size="small"
                           variant="contained"
-                          onClick={() => setShowFollowUpComposer(true)}
+                          onClick={handleOpenFollowUpComposer}
                         >
                           Agregar seguimiento
                         </Button>
                       )}
                     </Stack>
-                    {sharedFollowUpCreatedLabel && (
+                    {sharedFollowUpSummary ? (
                       <Typography variant="body2" color="text.secondary">
-                        Todos registrados: {sharedFollowUpCreatedLabel}
+                        {sharedFollowUpSummary}
                       </Typography>
+                    ) : (
+                      <>
+                        {sharedFollowUpCreatedLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Todos registrados: {sharedFollowUpCreatedLabel}
+                          </Typography>
+                        )}
+                        {sharedFollowUpTypeLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Tipo de seguimiento: {sharedFollowUpTypeLabel}
+                          </Typography>
+                        )}
+                        {sharedFollowUpNextLabel && (
+                          <Typography variant="body2" color="text.secondary">
+                            Próximo seguimiento: {sharedFollowUpNextLabel}
+                          </Typography>
+                        )}
+                      </>
                     )}
 
                     <Grid container spacing={2}>
@@ -4509,18 +9379,20 @@ export default function CourseRegistrationsAdminPage() {
                                     fullWidth
                                     InputLabelProps={{ shrink: true }}
                                   />
-                                  <GoogleDriveUploadWidget
-                                    label={
-                                      followUpForm.attachmentName
-                                        ? `Adjunto listo: ${followUpForm.attachmentName}`
-                                        : 'Adjuntar evidencia opcional'
-                                    }
-                                    helperText="Puedes adjuntar un audio, captura, PDF o imagen."
-                                    accept="application/pdf,image/*,audio/*"
-                                    multiple={false}
-                                    onComplete={handleFollowUpUpload}
-                                    dense
-                                  />
+                                  {showFollowUpUploadWidget && (
+                                    <GoogleDriveUploadWidget
+                                      label={
+                                        followUpForm.attachmentName
+                                          ? `Adjunto listo: ${followUpForm.attachmentName}`
+                                          : 'Adjuntar evidencia opcional'
+                                      }
+                                      helperText="Puedes adjuntar un audio, captura, PDF o imagen."
+                                      accept="application/pdf,image/*,audio/*"
+                                      multiple={false}
+                                      onComplete={handleFollowUpUpload}
+                                      dense
+                                    />
+                                  )}
                                   {showFollowUpExistingLinkAction && (
                                     <Button
                                       size="small"
@@ -4569,13 +9441,15 @@ export default function CourseRegistrationsAdminPage() {
                                 </Stack>
                               </Collapse>
                               <Stack direction="row" spacing={1}>
-                                <Button
-                                  variant="contained"
-                                  onClick={handleSubmitFollowUp}
-                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
-                                >
-                                  {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
-                                </Button>
+                                {showFollowUpSaveAction && (
+                                  <Button
+                                    variant="contained"
+                                    onClick={handleSubmitFollowUp}
+                                    disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
+                                  >
+                                    {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
+                                  </Button>
+                                )}
                                 <Button variant="text" onClick={resetFollowUpComposer}>
                                   {followUpForm.editingId == null ? 'Cancelar seguimiento' : 'Cancelar edición de seguimiento'}
                                 </Button>
@@ -4592,15 +9466,21 @@ export default function CourseRegistrationsAdminPage() {
                                 <Typography variant="body2" color="text.secondary">
                                   {markPaidEmptyFollowUpHelperText}
                                 </Typography>
-                                <Button size="small" variant="text" onClick={() => setShowFollowUpComposer(true)}>
-                                  Agregar seguimiento opcional
+                                <Button
+                                  size="small"
+                                  variant="text"
+                                  onClick={handleOpenFollowUpComposer}
+                                  aria-label={markPaidOptionalFollowUpAccessibleLabel}
+                                  title={markPaidOptionalFollowUpAccessibleLabel}
+                                >
+                                  {markPaidOptionalFollowUpActionLabel}
                                 </Button>
                               </Stack>
                             ) : followUps.length === 0 && !showFollowUpComposer ? (
                               <Alert
                                 severity="info"
                                 action={(
-                                  <Button color="inherit" size="small" onClick={() => setShowFollowUpComposer(true)}>
+                                  <Button color="inherit" size="small" onClick={handleOpenFollowUpComposer}>
                                     Registrar primer seguimiento
                                   </Button>
                                 )}
@@ -4614,40 +9494,69 @@ export default function CourseRegistrationsAdminPage() {
                                 followUpIdsRequiringActionDisambiguator.has(entry.crfId),
                               );
                               const followUpSubject = followUpSubjectLabel(entry);
-                              const followUpCreatedLabel = sharedFollowUpCreatedLabel
+                              const followUpCreatedLabel = sharedFollowUpCreatedIsInSummary
+                                || sharedFollowUpCreatedLabel
                                 ? ''
                                 : formatOptionalDate(entry.crfCreatedAt);
-                              const followUpAttachmentLabel =
-                                entry.crfAttachmentName?.trim() || `Adjunto de ${followUpActionLabel}`;
+                              const showFollowUpTypeChip = !sharedFollowUpTypeIsInSummary && !sharedFollowUpTypeLabel;
+                              const showFollowUpNextChip = Boolean(
+                                entry.crfNextFollowUpAt
+                                && !sharedFollowUpNextIsInSummary
+                                && !sharedFollowUpNextLabel,
+                              );
+                              const showFollowUpMetadata = showFollowUpTypeChip
+                                || Boolean(followUpCreatedLabel)
+                                || showFollowUpNextChip;
+                              const trimmedFollowUpAttachmentName = entry.crfAttachmentName?.trim() ?? '';
+                              const followUpAttachmentLabel = trimmedFollowUpAttachmentName
+                                ? trimmedFollowUpAttachmentName
+                                : `Adjunto de ${followUpActionLabel}`;
+                              const isFollowUpBeingEdited = followUpForm.editingId === entry.crfId;
 
                               return (
                                 <Paper key={entry.crfId} variant="outlined" sx={{ p: 1.5 }}>
                                   <Stack spacing={1}>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" useFlexGap>
-                                      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-                                        <Chip size="small" label={eventTypeLabel(entry.crfEntryType)} variant="outlined" />
-                                        {followUpCreatedLabel && (
-                                          <Typography variant="caption" color="text.secondary">
-                                            {followUpCreatedLabel}
-                                          </Typography>
-                                        )}
-                                        {entry.crfNextFollowUpAt && (
-                                          <Chip
-                                            size="small"
-                                            color="warning"
-                                            label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
-                                          />
-                                        )}
-                                      </Stack>
-                                      <IconButton
-                                        size="small"
-                                        title="Opciones del seguimiento"
-                                        aria-label={`Abrir acciones para seguimiento ${followUpActionLabel}`}
-                                        aria-haspopup="menu"
-                                        onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
-                                      >
-                                        <MoreVertIcon fontSize="small" />
-                                      </IconButton>
+                                    <Stack
+                                      direction="row"
+                                      justifyContent={showFollowUpMetadata ? 'space-between' : 'flex-end'}
+                                      alignItems="flex-start"
+                                      flexWrap="wrap"
+                                      useFlexGap
+                                    >
+                                      {showFollowUpMetadata && (
+                                        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                          {showFollowUpTypeChip && (
+                                            <Chip size="small" label={followUpTypeLabel(entry.crfEntryType)} variant="outlined" />
+                                          )}
+                                          {followUpCreatedLabel && (
+                                            <Typography variant="caption" color="text.secondary">
+                                              {followUpCreatedLabel}
+                                            </Typography>
+                                          )}
+                                          {showFollowUpNextChip && (
+                                            <Chip
+                                              size="small"
+                                              color="warning"
+                                              label={`Próximo: ${formatDate(entry.crfNextFollowUpAt)}`}
+                                            />
+                                          )}
+                                        </Stack>
+                                      )}
+                                      {isFollowUpBeingEdited ? (
+                                        <Typography variant="body2" color="text.secondary">
+                                          En edición
+                                        </Typography>
+                                      ) : !showFollowUpComposer ? (
+                                        <IconButton
+                                          size="small"
+                                          title="Opciones del seguimiento"
+                                          aria-label={`Abrir acciones para seguimiento ${followUpActionLabel}`}
+                                          aria-haspopup="menu"
+                                          onClick={(event) => handleOpenFollowUpMenu(event.currentTarget, entry)}
+                                        >
+                                          <MoreVertIcon fontSize="small" />
+                                        </IconButton>
+                                      ) : null}
                                     </Stack>
                                     {followUpSubject && (
                                       <Typography variant="subtitle2">{followUpSubject}</Typography>
@@ -4656,7 +9565,14 @@ export default function CourseRegistrationsAdminPage() {
                                       {entry.crfNotes}
                                     </Typography>
                                     {entry.crfAttachmentUrl && (
-                                      <Link href={entry.crfAttachmentUrl} target="_blank" rel="noreferrer" underline="hover">
+                                      <Link
+                                        href={entry.crfAttachmentUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={`Abrir adjunto ${followUpAttachmentLabel} en una pestaña nueva`}
+                                        title={`Abrir adjunto ${followUpAttachmentLabel} en una pestaña nueva`}
+                                        underline="hover"
+                                      >
                                         <Stack direction="row" spacing={0.75} alignItems="center">
                                           <OpenInNewIcon sx={{ fontSize: 16 }} />
                                           <span>{followUpAttachmentLabel}</span>
@@ -4684,7 +9600,24 @@ export default function CourseRegistrationsAdminPage() {
           </DialogActions>
         )}
       </Dialog>
-
+      <ConfirmDialog
+        open={deleteReceiptConfirmOpen}
+        onClose={() => setDeleteReceiptConfirmOpen(false)}
+        onConfirm={handleDeleteReceiptConfirm}
+        title="Eliminar comprobante"
+        description="¿Eliminar este comprobante?"
+        severity="danger"
+        confirming={deleteReceiptMutation.isPending}
+      />
+      <ConfirmDialog
+        open={deleteFollowUpConfirmOpen}
+        onClose={() => setDeleteFollowUpConfirmOpen(false)}
+        onConfirm={handleDeleteFollowUpConfirm}
+        title="Eliminar entrada de seguimiento"
+        description="¿Eliminar esta entrada de seguimiento?"
+        severity="danger"
+        confirming={deleteFollowUpMutation.isPending}
+      />
     </Stack>
   );
 }

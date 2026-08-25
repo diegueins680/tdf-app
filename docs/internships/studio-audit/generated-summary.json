@@ -1,0 +1,24 @@
+{
+  "inventoryCount": 130,
+  "applicableFeatureCount": 125,
+  "testCaseCount": 174,
+  "exploratoryCaseCount": 14,
+  "strongEvidenceCaseCount": 107,
+  "estimatedExecutionHours": 23.4,
+  "byModule": {
+    "Acceso, cuenta y experiencia transversal": 18,
+    "CRM, contactos y oportunidades": 8,
+    "Calendario, salas, recursos y reservas": 21,
+    "Órdenes y sesiones de grabación": 11,
+    "Cotizaciones, facturación y pagos": 22,
+    "Inventario, equipos y mantenimiento": 13,
+    "Operación, recepción y reportes": 7,
+    "TDF Live Sessions": 7,
+    "Notificaciones e integraciones": 7,
+    "Dependencias compartidas con Domo": 6,
+    "Dependencias compartidas con Escuela": 6,
+    "Datos de estudio relacionados con DDEX": 7,
+    "Roles, permisos y acceso directo": 10,
+    "Prácticas y reportes internos": 31
+  }
+}

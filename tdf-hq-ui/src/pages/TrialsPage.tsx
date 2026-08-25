@@ -24,6 +24,7 @@ import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { TRIALS_WHATSAPP_URL } from '../config/appConfig';
+import { resolveRuntimeFormatOptions } from '../utils/formatters';
 
 interface SlotInput {
   start: string;
@@ -328,10 +329,11 @@ export default function TrialsPage() {
                       sx={fieldSx}
                     />
                     <TextField
+                      type="tel"
                       label="WhatsApp o teléfono"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+593..."
+                      placeholder="+14155552671"
                       fullWidth
                       sx={fieldSx}
                     />
@@ -556,17 +558,18 @@ export default function TrialsPage() {
 function formatSlotLabel(startIso: string, endIso: string) {
   const start = new Date(startIso);
   const end = new Date(endIso);
-  const sameDay =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth() &&
-    start.getDate() === end.getDate();
+  const { locale, timeZone } = resolveRuntimeFormatOptions();
+  const dayKeyFormatter = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const sameDay = dayKeyFormatter.format(start) === dayKeyFormatter.format(end);
 
-  const dateFormatter = new Intl.DateTimeFormat('es-EC', {
+  const dateFormatter = new Intl.DateTimeFormat(locale, {
+    timeZone,
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
-  const timeFormatter = new Intl.DateTimeFormat('es-EC', {
+  const timeFormatter = new Intl.DateTimeFormat(locale, {
+    timeZone,
     hour: 'numeric',
     minute: '2-digit',
   });

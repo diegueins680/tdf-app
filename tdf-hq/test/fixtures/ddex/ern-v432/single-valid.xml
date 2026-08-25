@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ernNewReleaseMessage xmlns="http://ddex.net/xml/ern/432"
+                      xmlns:ern="http://ddex.net/xml/ern/432"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      MessageSchemaVersionId="ern/432"
+                      BusinessProfileVersionId="ern/432"
+                      Language="en">
+  <MessageHeader>
+    <MessageThreadId>THREAD-001</MessageThreadId>
+    <MessageId>MSG-20260804-001</MessageId>
+    <MessageSender>
+      <PartyId>DPID:TDF001</PartyId>
+      <PartyName>
+        <FullName>TDF Records</FullName>
+      </PartyName>
+    </MessageSender>
+    <MessageRecipient>
+      <PartyId>DPID:DSP001</PartyId>
+      <PartyName>
+        <FullName>Digital Service Provider</FullName>
+      </PartyName>
+    </MessageRecipient>
+    <MessageCreatedDateTime>2026-08-04T12:00:00Z</MessageCreatedDateTime>
+  </MessageHeader>
+  <PartyList>
+    <Party IsArtist="true">
+      <PartyId>
+        <DPID>DPID:ARTIST001</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>Test Artist</FullName>
+        <NameToDisplay>Test Artist</NameToDisplay>
+      </PartyName>
+    </Party>
+    <Party IsLabel="true">
+      <PartyId>
+        <DPID>DPID:TDF001</DPID>
+      </PartyId>
+      <PartyName>
+        <FullName>TDF Records</FullName>
+      </PartyName>
+    </Party>
+  </PartyList>
+  <ResourceList>
+    <SoundRecording>
+      <SoundRecordingType>NonMusicalWork</SoundRecordingType>
+      <SoundRecordingId>
+        <ISRC>USTDF2600001</ISRC>
+      </SoundRecordingId>
+      <ResourceReference>A1</ResourceReference>
+      <ReferenceTitle>
+        <TitleText>Test Song</TitleText>
+      </ReferenceTitle>
+      <Duration>PT3M30S</Duration>
+      <SoundRecordingDetailsByTechnicalConfiguration>
+        <TechnicalDetails>
+          <ResourceTechnicalConfiguration>
+            <ContainerFormat>WAV</ContainerFormat>
+          </ResourceTechnicalConfiguration>
+        </TechnicalDetails>
+        <Language>en</Language>
+        <IsExplicit>false</IsExplicit>
+      </SoundRecordingDetailsByTechnicalConfiguration>
+    </SoundRecording>
+  </ResourceList>
+  <ReleaseList>
+    <Release>
+      <ReleaseId>
+        <UPC>012345678901</UPC>
+      </ReleaseId>
+      <ExternalResourceLink>
+        <ResourceReference>A1</ResourceReference>
+      </ExternalResourceLink>
+      <ReleaseReference>R1</ReleaseReference>
+      <ReferenceTitle>
+        <TitleText>Test Single</TitleText>
+      </ReferenceTitle>
+      <ReleaseType>Single</ReleaseType>
+      <ReleaseDate>2026-08-04</ReleaseDate>
+    </Release>
+  </ReleaseList>
+  <ResourceGroup>
+    <ResourceGroupContentItem>
+      <SequenceNumber>1</SequenceNumber>
+      <ResourceType>SoundRecording</ResourceType>
+      <ResourceReference>A1</ResourceReference>
+    </ResourceGroupContentItem>
+  </ResourceGroup>
+  <DealList>
+    <Deal>
+      <DealTerms>
+        <CommercialModelType>SubscriptionModel</CommercialModelType>
+        <Usage>
+          <UseType>OnDemandStream</UseType>
+        </Usage>
+        <TerritoryCode>Worldwide</TerritoryCode>
+        <ValidityStartDate>2026-08-04</ValidityStartDate>
+      </DealTerms>
+      <ReleaseReference>R1</ReleaseReference>
+    </Deal>
+  </DealList>
+</ernNewReleaseMessage>

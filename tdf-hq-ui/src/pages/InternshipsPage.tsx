@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link as RouterLink } from 'react-router-dom';
 import { Internships } from '../api/internships';
 import type {
   InternProfileUpdate,
@@ -37,18 +38,21 @@ import type {
 import { useSession } from '../session/SessionContext';
 import { parseDateForDisplay } from '../utils/dateOnly';
 import { hasInternshipsAccess, hasInternshipsAdminAccess, normalizeAccessRoles } from '../utils/accessControl';
+import { formatDateForUser, formatDateTimeForUser } from '../utils/formatters';
 
 const TASK_STATUS_OPTIONS = [
   { value: 'todo', label: 'Pendiente' },
   { value: 'doing', label: 'En progreso' },
   { value: 'blocked', label: 'Bloqueada' },
   { value: 'done', label: 'Lista' },
+  { value: 'cancelled', label: 'Cancelada' },
 ];
 
 const PROJECT_STATUS_OPTIONS = [
   { value: 'active', label: 'Activo' },
   { value: 'paused', label: 'En pausa' },
   { value: 'completed', label: 'Completado' },
+  { value: 'cancelled', label: 'Cancelado' },
 ];
 
 const PERMISSION_STATUS_LABELS: Record<string, string> = {
@@ -153,19 +157,21 @@ const PERSONAL_CHECKLIST_TODOS = [
   '[Prácticas] Registrar aprendizaje clave',
   '[Prácticas] Preparar demo day',
 ];
+const emptyAdminHoursMessage =
+  'Todavía no hay registros de horas en esta vista. Cuando llegue el primer clock-in, aquí aparecerán entrada, salida y horas.';
+const emptySelfHoursMessage =
+  'Todavía no hay registros de horas. Usa Clock-in para iniciar tu primera jornada; luego aquí verás entrada, salida y horas.';
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—';
   const date = parseDateForDisplay(value);
   if (!date) return value;
-  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(date);
+  return formatDateForUser(date);
 };
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return formatDateTimeForUser(value);
 };
 
 const resolveEntryMinutes = (entry: InternTimeEntryDTO) => {
@@ -187,6 +193,11 @@ const normalizeOptional = (value?: string | null) => {
   return trimmed === '' ? null : trimmed;
 };
 
+const normalizeCreateOptional = (value?: string | null) => {
+  const trimmed = value?.trim() ?? '';
+  return trimmed === '' ? undefined : trimmed;
+};
+
 const normalizeOptionalInt = (value?: string | null) => {
   const trimmed = value?.trim() ?? '';
   if (trimmed === '') return null;
@@ -196,12 +207,35 @@ const normalizeOptionalInt = (value?: string | null) => {
   return parsed;
 };
 
-const buildEmptyTaskForm = (): InternTaskCreate => ({
+interface InternProjectForm {
+  ipcTitle: string;
+  ipcDescription: string;
+  ipcStatus: string;
+  ipcStartAt: string;
+  ipcDueAt: string;
+}
+
+interface InternTaskForm {
+  itcProjectId: string;
+  itcTitle: string;
+  itcDescription: string;
+  itcAssignedTo: number | null;
+  itcDueAt: string;
+}
+
+const buildEmptyTaskForm = (): InternTaskForm => ({
   itcProjectId: '',
   itcTitle: '',
   itcDescription: '',
   itcAssignedTo: null,
   itcDueAt: '',
+});
+
+const buildEmptyPermissionForm = (): InternPermissionCreate => ({
+  ipcCategory: '',
+  ipcReason: '',
+  ipcStartAt: '',
+  ipcEndAt: '',
 });
 
 export default function InternshipsPage() {
@@ -229,7 +263,7 @@ export default function InternshipsPage() {
   const [checklistFeedback, setChecklistFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const [projectForm, setProjectForm] = useState<InternProjectCreate>({
+  const [projectForm, setProjectForm] = useState<InternProjectForm>({
     ipcTitle: '',
     ipcDescription: '',
     ipcStatus: 'active',
@@ -244,15 +278,11 @@ export default function InternshipsPage() {
     skills: '',
     areas: '',
   });
-  const [taskForm, setTaskForm] = useState<InternTaskCreate>(buildEmptyTaskForm);
+  const [taskForm, setTaskForm] = useState<InternTaskForm>(buildEmptyTaskForm);
   const [showTaskComposer, setShowTaskComposer] = useState(false);
   const [todoForm, setTodoForm] = useState<InternTodoCreate>({ itdcText: '' });
-  const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>({
-    ipcCategory: '',
-    ipcReason: '',
-    ipcStartAt: '',
-    ipcEndAt: '',
-  });
+  const [permissionForm, setPermissionForm] = useState<InternPermissionCreate>(buildEmptyPermissionForm);
+  const [showPermissionComposer, setShowPermissionComposer] = useState(false);
 
   const entriesScope = isAdmin ? (selectedPartyId ?? 'all') : 'self';
   const internsQuery = useQuery({
@@ -397,7 +427,8 @@ export default function InternshipsPage() {
     mutationFn: (payload: InternPermissionCreate) => Internships.createPermission(payload),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['internships', 'permissions'] });
-      setPermissionForm({ ipcCategory: '', ipcReason: '', ipcStartAt: '', ipcEndAt: '' });
+      setPermissionForm(buildEmptyPermissionForm());
+      setShowPermissionComposer(false);
     },
   });
   const updatePermissionMutation = useMutation({
@@ -424,8 +455,6 @@ export default function InternshipsPage() {
           ipcTitle: projectTitle,
           ipcDescription: PLAYBOOK_PROJECT_DESCRIPTION,
           ipcStatus: 'active',
-          ipcStartAt: null,
-          ipcDueAt: null,
         });
         finalProjectId = project.ipId;
         projectCreated = true;
@@ -439,8 +468,7 @@ export default function InternshipsPage() {
             itcProjectId: finalProjectId,
             itcTitle: task.title,
             itcDescription: task.description,
-            itcAssignedTo: assigneeId,
-            itcDueAt: null,
+            ...(assigneeId != null ? { itcAssignedTo: assigneeId } : {}),
           }),
         ),
       );
@@ -525,6 +553,7 @@ export default function InternshipsPage() {
   const todos = todosQuery.data ?? [];
   const pendingTodoCount = todos.filter((todo) => !todo.itdDone).length;
   const showTodoCountChip = pendingTodoCount > 0;
+  const hasTodoDraft = todoForm.itdcText.trim().length > 0;
   const entries = entriesQuery.data ?? [];
   const showFirstRunAdminHoursEmptyState =
     isAdmin && internsQuery.isSuccess && entriesQuery.isSuccess && interns.length === 0 && entries.length === 0;
@@ -558,6 +587,17 @@ export default function InternshipsPage() {
   const checklistDataReady = todosQuery.isSuccess;
   const canSeedPlaybook = isAdmin && playbookDataReady && missingPlaybookTasks.length > 0 && !seedPlaybookMutation.isPending;
   const canSeedChecklist = isIntern && checklistDataReady && missingChecklist.length > 0 && !seedChecklistMutation.isPending;
+  const showPlaybookAssigneeField = isAdmin && internsQuery.isSuccess && interns.length > 0;
+  const showPlaybookUnassignedGuidance = isAdmin && internsQuery.isSuccess && interns.length === 0;
+  const playbookSeedActionLabel = seedPlaybookMutation.isPending
+    ? 'Creando…'
+    : showPlaybookUnassignedGuidance
+      ? playbookProjectExists
+        ? 'Completar plan base sin asignar'
+        : 'Generar plan base sin asignar'
+      : playbookProjectExists
+        ? 'Completar plan base'
+        : 'Generar plan base';
 
   const openEntry = isSelfView ? (entries.find((entry) => !entry.iteClockOut) ?? null) : null;
   const totalMinutes = entries.reduce((sum, entry) => sum + (resolveEntryMinutes(entry) ?? 0), 0);
@@ -565,8 +605,10 @@ export default function InternshipsPage() {
   const totalHoursSummaryLabel = showReadOnlyAdminHoursView
     ? `${minutesToHours(totalMinutes)} h registradas en esta vista`
     : `${minutesToHours(totalMinutes)} h registradas`;
+  const showHoursEmptyState = !showFirstRunAdminHoursEmptyState && entries.length === 0;
+  const hoursEmptyStateMessage = isAdmin ? emptyAdminHoursMessage : emptySelfHoursMessage;
 
-  const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
+  const signupPath = '/login?signup=1&intent=internships';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
 
   const handleCopySignup = async () => {
@@ -587,6 +629,11 @@ export default function InternshipsPage() {
   const resetTaskComposer = () => {
     setTaskForm(buildEmptyTaskForm());
     setShowTaskComposer(false);
+  };
+
+  const resetPermissionComposer = () => {
+    setPermissionForm(buildEmptyPermissionForm());
+    setShowPermissionComposer(false);
   };
 
   if (!canAccess) {
@@ -689,22 +736,28 @@ export default function InternshipsPage() {
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
               {isAdmin && (
                 <>
-                  <FormControl size="small" sx={{ minWidth: 240 }}>
-                    <InputLabel id="playbook-assignee-label">Asignar plan a</InputLabel>
-                    <Select
-                      labelId="playbook-assignee-label"
-                      label="Asignar plan a"
-                      value={playbookAssigneeId}
-                      onChange={(event) =>
-                        setPlaybookAssigneeId(event.target.value === '' ? '' : Number(event.target.value))
-                      }
-                    >
-                      <MenuItem value="">Sin asignar</MenuItem>
-                      {interns.map((intern) => (
-                        <MenuItem key={intern.isPartyId} value={intern.isPartyId}>{intern.isName}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  {showPlaybookAssigneeField ? (
+                    <FormControl size="small" sx={{ minWidth: 240 }}>
+                      <InputLabel id="playbook-assignee-label">Asignar plan a</InputLabel>
+                      <Select
+                        labelId="playbook-assignee-label"
+                        label="Asignar plan a"
+                        value={playbookAssigneeId}
+                        onChange={(event) =>
+                          setPlaybookAssigneeId(event.target.value === '' ? '' : Number(event.target.value))
+                        }
+                      >
+                        <MenuItem value="">Sin asignar</MenuItem>
+                        {interns.map((intern) => (
+                          <MenuItem key={intern.isPartyId} value={intern.isPartyId}>{intern.isName}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  ) : showPlaybookUnassignedGuidance ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Todavía no hay pasantes para asignar. Si generas el plan ahora, quedará sin asignar.
+                    </Typography>
+                  ) : null}
                   <Button
                     variant="contained"
                     onClick={() =>
@@ -717,11 +770,7 @@ export default function InternshipsPage() {
                     }
                     disabled={!canSeedPlaybook}
                   >
-                    {seedPlaybookMutation.isPending
-                      ? 'Creando…'
-                      : playbookProjectExists
-                        ? 'Completar plan base'
-                        : 'Generar plan base'}
+                    {playbookSeedActionLabel}
                   </Button>
                 </>
               )}
@@ -939,7 +988,11 @@ export default function InternshipsPage() {
               </Typography>
             )}
 
-            {!showFirstRunAdminHoursEmptyState && (
+            {showHoursEmptyState ? (
+              <Alert severity="info" variant="outlined">
+                {hoursEmptyStateMessage}
+              </Alert>
+            ) : !showFirstRunAdminHoursEmptyState && (
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -950,13 +1003,6 @@ export default function InternshipsPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {entries.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <Typography color="text.secondary">Sin registros todavía.</Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
                   {entries.map((entry) => {
                     const entryMinutes = resolveEntryMinutes(entry);
                     return (
@@ -1073,11 +1119,15 @@ export default function InternshipsPage() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    const payload = {
-                      ...projectForm,
-                      ipcDescription: normalizeOptional(projectForm.ipcDescription),
-                      ipcStartAt: normalizeOptional(projectForm.ipcStartAt),
-                      ipcDueAt: normalizeOptional(projectForm.ipcDueAt),
+                    const description = normalizeCreateOptional(projectForm.ipcDescription);
+                    const startAt = normalizeCreateOptional(projectForm.ipcStartAt);
+                    const dueAt = normalizeCreateOptional(projectForm.ipcDueAt);
+                    const payload: InternProjectCreate = {
+                      ipcTitle: projectForm.ipcTitle,
+                      ipcStatus: projectForm.ipcStatus,
+                      ...(description !== undefined ? { ipcDescription: description } : {}),
+                      ...(startAt !== undefined ? { ipcStartAt: startAt } : {}),
+                      ...(dueAt !== undefined ? { ipcDueAt: dueAt } : {}),
                     };
                     void createProjectMutation.mutateAsync(payload);
                   }}
@@ -1252,10 +1302,14 @@ export default function InternshipsPage() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    const payload = {
-                      ...taskForm,
-                      itcDescription: normalizeOptional(taskForm.itcDescription),
-                      itcDueAt: normalizeOptional(taskForm.itcDueAt),
+                    const description = normalizeCreateOptional(taskForm.itcDescription);
+                    const dueAt = normalizeCreateOptional(taskForm.itcDueAt);
+                    const payload: InternTaskCreate = {
+                      itcProjectId: taskForm.itcProjectId,
+                      itcTitle: taskForm.itcTitle,
+                      ...(description !== undefined ? { itcDescription: description } : {}),
+                      ...(taskForm.itcAssignedTo != null ? { itcAssignedTo: taskForm.itcAssignedTo } : {}),
+                      ...(dueAt !== undefined ? { itcDueAt: dueAt } : {}),
                     };
                     void createTaskMutation.mutateAsync(payload);
                   }}
@@ -1298,7 +1352,21 @@ export default function InternshipsPage() {
                   <Stack spacing={1}>
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between">
                       <Box>
-                        <Typography fontWeight={700}>{task.itTitle}</Typography>
+                        <Typography
+                          component={RouterLink}
+                          to={`/practicas/tareas/${encodeURIComponent(task.itId)}`}
+                          fontWeight={700}
+                          color="primary"
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            minHeight: 44,
+                            textDecoration: 'none',
+                            '&:hover': { textDecoration: 'underline' },
+                          }}
+                        >
+                          {task.itTitle}
+                        </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {task.itProjectName}
                           {task.itDescription ? ` · ${task.itDescription}` : ''}
@@ -1400,17 +1468,21 @@ export default function InternshipsPage() {
                 value={todoForm.itdcText}
                 onChange={(event) => setTodoForm({ itdcText: event.target.value })}
               />
-              <Button
-                variant="contained"
-                onClick={() => void createTodoMutation.mutateAsync(todoForm)}
-                disabled={!todoForm.itdcText.trim() || createTodoMutation.isPending}
-              >
-                Agregar
-              </Button>
+              {hasTodoDraft && (
+                <Button
+                  variant="contained"
+                  onClick={() => void createTodoMutation.mutateAsync(todoForm)}
+                  disabled={!hasTodoDraft || createTodoMutation.isPending}
+                >
+                  Agregar
+                </Button>
+              )}
             </Stack>
 
             {todos.length === 0 && (
-              <Typography color="text.secondary">No hay to-dos aún.</Typography>
+              <Typography color="text.secondary">
+                Escribe el primer to-do arriba. Agregar aparece cuando haya texto.
+              </Typography>
             )}
 
             <Stack spacing={1}>
@@ -1449,63 +1521,100 @@ export default function InternshipsPage() {
       <Card>
         <CardContent>
           <Stack spacing={2}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" fontWeight={700}>Permisos</Typography>
-              {showPermissionCountChip && (
-                <Chip label={formatCountLabel(permissions.length, 'solicitud', 'solicitudes')} variant="outlined" />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              spacing={1}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight={700}>Permisos</Typography>
+                {showPermissionCountChip && (
+                  <Chip label={formatCountLabel(permissions.length, 'solicitud', 'solicitudes')} variant="outlined" />
+                )}
+              </Stack>
+              {!showPermissionComposer && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setShowPermissionComposer(true)}
+                  sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                >
+                  Nueva solicitud
+                </Button>
               )}
             </Stack>
 
-            <Stack spacing={1}>
-              <Typography fontWeight={600}>Solicitar permiso</Typography>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+            {showPermissionComposer && (
+              <Stack spacing={1}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  spacing={1}
+                >
+                  <Typography fontWeight={600}>Nueva solicitud</Typography>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="inherit"
+                    onClick={resetPermissionComposer}
+                    sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                  >
+                    Cancelar solicitud
+                  </Button>
+                </Stack>
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+                  <TextField
+                    label="Tipo de permiso"
+                    value={permissionForm.ipcCategory}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcCategory: event.target.value }))}
+                    fullWidth
+                  />
+                  <TextField
+                    label="Inicio"
+                    type="date"
+                    value={permissionForm.ipcStartAt}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcStartAt: event.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    label="Fin"
+                    type="date"
+                    value={permissionForm.ipcEndAt ?? ''}
+                    onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcEndAt: event.target.value }))}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Stack>
                 <TextField
-                  label="Tipo de permiso"
-                  value={permissionForm.ipcCategory}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcCategory: event.target.value }))}
+                  label="Motivo"
+                  value={permissionForm.ipcReason ?? ''}
+                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcReason: event.target.value }))}
                   fullWidth
+                  multiline
+                  minRows={2}
                 />
-                <TextField
-                  label="Inicio"
-                  type="date"
-                  value={permissionForm.ipcStartAt}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcStartAt: event.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
-                <TextField
-                  label="Fin"
-                  type="date"
-                  value={permissionForm.ipcEndAt ?? ''}
-                  onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcEndAt: event.target.value }))}
-                  InputLabelProps={{ shrink: true }}
-                />
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    const payload = {
+                      ...permissionForm,
+                      ipcReason: normalizeOptional(permissionForm.ipcReason),
+                      ipcEndAt: normalizeOptional(permissionForm.ipcEndAt),
+                    };
+                    void createPermissionMutation.mutateAsync(payload);
+                  }}
+                  disabled={!permissionForm.ipcCategory.trim() || !permissionForm.ipcStartAt || createPermissionMutation.isPending}
+                >
+                  Enviar solicitud
+                </Button>
               </Stack>
-              <TextField
-                label="Motivo"
-                value={permissionForm.ipcReason ?? ''}
-                onChange={(event) => setPermissionForm((prev) => ({ ...prev, ipcReason: event.target.value }))}
-                fullWidth
-                multiline
-                minRows={2}
-              />
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const payload = {
-                    ...permissionForm,
-                    ipcReason: normalizeOptional(permissionForm.ipcReason),
-                    ipcEndAt: normalizeOptional(permissionForm.ipcEndAt),
-                  };
-                  void createPermissionMutation.mutateAsync(payload);
-                }}
-                disabled={!permissionForm.ipcCategory.trim() || !permissionForm.ipcStartAt || createPermissionMutation.isPending}
-              >
-                Enviar solicitud
-              </Button>
-            </Stack>
+            )}
 
-            {permissions.length === 0 && (
-              <Typography color="text.secondary">Sin solicitudes registradas.</Typography>
+            {permissions.length === 0 && !showPermissionComposer && (
+              <Alert severity="info" variant="outlined">
+                Todavía no hay solicitudes. Usa Nueva solicitud cuando necesites registrar una ausencia o permiso.
+              </Alert>
             )}
 
             <Stack spacing={1}>

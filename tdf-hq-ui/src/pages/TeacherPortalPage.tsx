@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -39,9 +39,46 @@ import {
   type TrialAvailabilityUpsert,
   type TrialSubject,
 } from '../api/trials';
+import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
+import { formatDateForUser } from '../utils/formatters';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
+type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
+
+interface TeacherPortalAgendaContract {
+  upcomingClassNoticeWindowMinutes: number;
+  upcomingClassWarningWindowMinutes: number;
+}
+
+/**
+ * Type contract for agenda alert windows.
+ *
+ * @precondition values are finite positive minute durations.
+ * @invariant the warning window is no wider than the notice window, so warning alerts are a subset of upcoming-session alerts.
+ * @postcondition rendered agenda alerts use warning severity inside the warning window and info severity for the remaining notice window.
+ */
+function ensureTeacherPortalAgendaContract(contract: TeacherPortalAgendaContract): TeacherPortalAgendaContract {
+  const noticeMinutes = contract.upcomingClassNoticeWindowMinutes;
+  const warningMinutes = contract.upcomingClassWarningWindowMinutes;
+
+  if (!Number.isFinite(noticeMinutes) || !Number.isFinite(warningMinutes)) {
+    throw new Error('Teacher portal agenda contract precondition failed: windows must be finite minutes.');
+  }
+  if (0 >= noticeMinutes || 0 >= warningMinutes) {
+    throw new Error('Teacher portal agenda contract precondition failed: windows must be positive.');
+  }
+  if (warningMinutes > noticeMinutes) {
+    throw new Error('Teacher portal agenda contract invariant failed: warning window must not exceed notice window.');
+  }
+
+  return contract;
+}
+
+const TEACHER_PORTAL_AGENDA_CONTRACTS = ensureTeacherPortalAgendaContract({
+  upcomingClassNoticeWindowMinutes: 6 * 10 * 2,
+  upcomingClassWarningWindowMinutes: 3 * 10,
+} as const satisfies TeacherPortalAgendaContract);
 
 const toLocalInput = (iso?: string | null) => {
   if (!iso) return '';
@@ -85,7 +122,7 @@ const validateLocalRange = (startValue: string, endValue: string): string | null
   if (!start) return 'Inicio inválido.';
   const end = parseLocalDateTime(endValue);
   if (!end) return 'Fin inválido.';
-  if (end <= start) return 'El fin debe ser posterior al inicio.';
+  if (start >= end) return 'El fin debe ser posterior al inicio.';
   return null;
 };
 
@@ -101,16 +138,36 @@ const parsePositiveIntFieldValue = (value: string): number | '' => {
   return parsed ?? '';
 };
 
-const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-EC', {
+const formatDateTime = (iso: string) =>
+  formatDateForUser(iso, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });
+
+const focusFirstDialogControl = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  window.setTimeout(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    const target = dialog?.querySelector(
+      'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+
+    if (target instanceof HTMLElement) {
+      target.focus();
+    }
+  }, 0);
+};
+
+const focusActionContext = (target: HTMLElement | null) => {
+  if (typeof window === 'undefined' || !target) return;
+
+  window.setTimeout(() => {
+    target.focus();
+  }, 0);
 };
 
 const TabPill = ({ active, label }: { active: boolean; label: string }) => (
@@ -126,6 +183,320 @@ const TabPill = ({ active, label }: { active: boolean; label: string }) => (
   />
 );
 
+interface AgendaClassCardProps {
+  classSession: ClassSessionDTO;
+  markingAttendance: boolean;
+  attendingClassId: number | null;
+  savingClass: boolean;
+  onEdit: (classSession: ClassSessionDTO) => void;
+  onAttend: (classSessionId: number) => void;
+}
+
+function AgendaClassCard(props: AgendaClassCardProps) {
+  const { classSession, markingAttendance, attendingClassId, savingClass, onEdit, onAttend } = props;
+  const agendaCardRef = useRef<HTMLDivElement>(null);
+  const isMarkingAttendance = markingAttendance && attendingClassId === classSession.classSessionId;
+  const agendaActionDisabled = savingClass || markingAttendance;
+  const agendaFocusActions = {
+    edit: () => {
+      onEdit(classSession);
+      focusFirstDialogControl();
+    },
+    attend: () => {
+      onAttend(classSession.classSessionId);
+      focusActionContext(agendaCardRef.current);
+    },
+  };
+
+  return (
+    <Paper ref={agendaCardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>
+            {classSession.subjectName ?? `Materia #${classSession.subjectId}`} · {classSession.studentName ?? `Alumno #${classSession.studentId}`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatDateTime(classSession.startAt)} → {formatDateTime(classSession.endAt)} · {classSession.roomName ?? classSession.roomId ?? 'Sala'}
+          </Typography>
+          <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+            <Chip size="small" label={classSession.status} variant="outlined" />
+            {classSession.notes && <Chip size="small" label="Notas" variant="outlined" />}
+          </Stack>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={agendaActionDisabled}
+            onClick={agendaFocusActions.edit}
+            tabIndex={0}
+            data-focus-target="class-dialog"
+          >
+            {savingClass ? 'Guardando...' : 'Editar'}
+          </Button>
+          <Button
+            onClick={agendaFocusActions.attend}
+            data-focus-return="agenda-card"
+            tabIndex={0}
+            size="small"
+            variant="contained"
+            disabled={classSession.status === 'realizada' || markingAttendance}
+          >
+            {isMarkingAttendance ? 'Marcando...' : 'Marcar realizada'}
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface AgendaClassesListProps {
+  classSessions: ClassSessionDTO[];
+  loading: boolean;
+  resetKey: ScheduleView;
+  markingAttendance: boolean;
+  attendingClassId: number | null;
+  savingClass: boolean;
+  onEdit: (classSession: ClassSessionDTO) => void;
+  onAttend: (classSessionId: number) => void;
+}
+
+function AgendaClassesList(props: AgendaClassesListProps) {
+  const { classSessions, loading, resetKey, markingAttendance, attendingClassId, savingClass, onEdit, onAttend } = props;
+
+  return (
+    <LazyPaginatedList
+      items={classSessions}
+      loading={loading}
+      pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey }}
+      renderItems={(visibleClasses) => (
+        <Stack spacing={1.5}>
+          {visibleClasses.map((classSession) => (
+            <AgendaClassCard
+              key={classSession.classSessionId}
+              classSession={classSession}
+              markingAttendance={markingAttendance}
+              attendingClassId={attendingClassId}
+              savingClass={savingClass}
+              onEdit={onEdit}
+              onAttend={onAttend}
+            />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface StudentCardProps {
+  student: StudentDTO;
+  savingStudent: boolean;
+  onEdit: (student: StudentDTO) => void;
+}
+
+function StudentCard(props: StudentCardProps) {
+  const { student, savingStudent, onEdit } = props;
+  const studentFocusActions = {
+    edit: () => {
+      onEdit(student);
+      focusFirstDialogControl();
+    },
+  };
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>{student.displayName}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
+          </Typography>
+        </Box>
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={savingStudent}
+          onClick={studentFocusActions.edit}
+          tabIndex={0}
+          data-focus-target="student-dialog"
+        >
+          {savingStudent ? 'Guardando...' : 'Editar'}
+        </Button>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface StudentsListProps {
+  students: StudentDTO[];
+  loading: boolean;
+  savingStudent: boolean;
+  onEdit: (student: StudentDTO) => void;
+}
+
+function StudentsList(props: StudentsListProps) {
+  const { students, loading, savingStudent, onEdit } = props;
+
+  return (
+    <LazyPaginatedList
+      items={students}
+      loading={loading}
+      pagination={{ itemLabel: 'alumnos', initialRowsPerPage: 10 }}
+      renderItems={(visibleStudents) => (
+        <Stack spacing={1.5}>
+          {visibleStudents.map((student) => (
+            <StudentCard key={student.studentId} student={student} savingStudent={savingStudent} onEdit={onEdit} />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface AvailabilitySlotCardProps {
+  slot: TrialAvailabilitySlotDTO;
+  deleting: boolean;
+  deletingAvailabilityId: number | null;
+  savingAvailability: boolean;
+  onEdit: (slot: TrialAvailabilitySlotDTO) => void;
+  onDelete: (availabilityId: number) => void;
+}
+
+function AvailabilitySlotCard(props: AvailabilitySlotCardProps) {
+  const { slot, deleting, deletingAvailabilityId, savingAvailability, onEdit, onDelete } = props;
+  const availabilityCardRef = useRef<HTMLDivElement>(null);
+  const isDeletingAvailability = deleting && deletingAvailabilityId === slot.availabilityId;
+  const availabilityActionDisabled = deleting || savingAvailability;
+  const availabilityFocusActions = {
+    edit: () => {
+      onEdit(slot);
+      focusFirstDialogControl();
+    },
+    delete: () => {
+      onDelete(slot.availabilityId);
+      focusActionContext(availabilityCardRef.current);
+    },
+  };
+
+  return (
+    <Paper ref={availabilityCardRef} tabIndex={-1} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
+        <Box>
+          <Typography fontWeight={800}>
+            {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
+          </Typography>
+          {slot.notes && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {slot.notes}
+            </Typography>
+          )}
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={availabilityActionDisabled}
+            onClick={availabilityFocusActions.edit}
+            tabIndex={0}
+            data-focus-target="availability-dialog"
+          >
+            {savingAvailability ? 'Guardando...' : 'Editar'}
+          </Button>
+          <Button
+            onClick={availabilityFocusActions.delete}
+            data-focus-return="availability-card"
+            tabIndex={0}
+            size="small"
+            variant="outlined"
+            color="error"
+            disabled={deleting}
+          >
+            {isDeletingAvailability ? 'Eliminando...' : 'Eliminar'}
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+interface AvailabilitySlotsListProps {
+  slots: TrialAvailabilitySlotDTO[];
+  loading: boolean;
+  resetKey: ScheduleView;
+  deleting: boolean;
+  deletingAvailabilityId: number | null;
+  savingAvailability: boolean;
+  onEdit: (slot: TrialAvailabilitySlotDTO) => void;
+  onDelete: (availabilityId: number) => void;
+}
+
+function AvailabilitySlotsList(props: AvailabilitySlotsListProps) {
+  const {
+    slots,
+    loading,
+    resetKey,
+    deleting,
+    deletingAvailabilityId,
+    savingAvailability,
+    onEdit,
+    onDelete,
+  } = props;
+
+  return (
+    <LazyPaginatedList
+      items={slots}
+      loading={loading}
+      pagination={{ itemLabel: 'horarios', initialRowsPerPage: 10, resetKey }}
+      renderItems={(visibleAvailabilitySlots) => (
+        <Stack spacing={1.5}>
+          {visibleAvailabilitySlots.map((slot) => (
+            <AvailabilitySlotCard
+              key={slot.availabilityId}
+              slot={slot}
+              deleting={deleting}
+              deletingAvailabilityId={deletingAvailabilityId}
+              savingAvailability={savingAvailability}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface SubjectRoomsSummaryProps {
+  allowedRoomIds: string[];
+  roomNameById: { get(roomId: string): string | undefined };
+}
+
+function SubjectRoomsSummary(props: SubjectRoomsSummaryProps) {
+  const { allowedRoomIds, roomNameById } = props;
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Typography fontWeight={800} sx={{ mb: 1 }}>
+        Salas configuradas
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        Si una materia tiene salas configuradas, solo podrás elegir esas salas al crear disponibilidad o clases.
+      </Typography>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {allowedRoomIds.length === 0 && (
+          <Chip size="small" label="Sin restricciones" variant="outlined" />
+        )}
+        {allowedRoomIds.map((roomId) => (
+          <Chip key={roomId} size="small" label={roomNameById.get(roomId) ?? roomId} variant="outlined" />
+        ))}
+      </Stack>
+    </Paper>
+  );
+}
+
 export default function TeacherPortalPage() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -134,10 +505,10 @@ export default function TeacherPortalPage() {
   const getErrorMessage = (error: unknown, fallback: string) =>
     error instanceof Error ? error.message : fallback;
 
-  const [toast, setToast] = useState<{
+  const [toast, setToast] = useState(null as {
     message: string;
     severity: 'success' | 'info' | 'warning' | 'error';
-  } | null>(null);
+  } | null);
   const closeToast = (_?: unknown, reason?: string) => {
     if (reason === 'clickaway') return;
     setToast(null);
@@ -146,10 +517,9 @@ export default function TeacherPortalPage() {
     setToast({ message, severity });
   };
 
-  const [tab, setTab] = useState<PortalTab>('agenda');
-  type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
-  const [agendaView, setAgendaView] = useState<ScheduleView>('week');
-  const [availabilityView, setAvailabilityView] = useState<ScheduleView>('week');
+  const [tab, setTab] = useState('agenda' as PortalTab);
+  const [agendaView, setAgendaView] = useState('week' as ScheduleView);
+  const [availabilityView, setAvailabilityView] = useState('week' as ScheduleView);
 
   const subjectsQuery = useQuery({
     queryKey: ['teacher-portal', 'subjects'],
@@ -166,7 +536,7 @@ export default function TeacherPortalPage() {
     enabled: Boolean(teacherId),
   });
 
-  const activeSubjects = useMemo<TrialSubject[]>(
+  const activeSubjects: TrialSubject[] = useMemo(
     () => (subjectsQuery.data ?? []).filter((s) => s.active),
     [subjectsQuery.data],
   );
@@ -179,7 +549,7 @@ export default function TeacherPortalPage() {
     [teacherId, teachersQuery.data],
   );
 
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState([] as number[]);
   useEffect(() => {
     if (!me) return;
     setSelectedSubjectIds(me.subjects.map((s) => s.subjectId));
@@ -199,7 +569,7 @@ export default function TeacherPortalPage() {
   });
 
   const allowedRoomsForSubject = useMemo(() => {
-    const allowed = new Set<string>();
+    const allowed = new Set([] as string[]);
     selectedSubjectIds.forEach((sid) => {
       const subject = subjectById.get(sid);
       subject?.roomIds.forEach((rid) => allowed.add(rid));
@@ -209,11 +579,11 @@ export default function TeacherPortalPage() {
 
   const [studentDialogOpen, setStudentDialogOpen] = useState(false);
   const [studentEditDialogOpen, setStudentEditDialogOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<StudentDTO | null>(null);
+  const [editingStudent, setEditingStudent] = useState(null as StudentDTO | null);
   const [studentForm, setStudentForm] = useState({ fullName: '', email: '', phone: '' });
   const [studentEditForm, setStudentEditForm] = useState({ displayName: '', email: '', phone: '' });
-  const [studentDialogError, setStudentDialogError] = useState<string | null>(null);
-  const [studentEditDialogError, setStudentEditDialogError] = useState<string | null>(null);
+  const [studentDialogError, setStudentDialogError] = useState(null as string | null);
+  const [studentEditDialogError, setStudentEditDialogError] = useState(null as string | null);
 
   const studentsQuery = useQuery({
     queryKey: ['teacher-students', teacherId],
@@ -236,15 +606,15 @@ export default function TeacherPortalPage() {
   });
 
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
-  const [editingAvailability, setEditingAvailability] = useState<TrialAvailabilitySlotDTO | null>(null);
-  const [availabilityDialogError, setAvailabilityDialogError] = useState<string | null>(null);
-  const [availabilityForm, setAvailabilityForm] = useState<{
-    subjectId: number | '';
-    roomId: string;
-    startAt: string;
-    endAt: string;
-    notes: string;
-  }>({ subjectId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const [editingAvailability, setEditingAvailability] = useState(null as TrialAvailabilitySlotDTO | null);
+  const [availabilityDialogError, setAvailabilityDialogError] = useState(null as string | null);
+  const [availabilityForm, setAvailabilityForm] = useState({
+    subjectId: '' as number | '',
+    roomId: '',
+    startAt: '',
+    endAt: '',
+    notes: '',
+  });
   const availabilityTimeError = useMemo(
     () => (availabilityDialogOpen ? validateLocalRange(availabilityForm.startAt, availabilityForm.endAt) : null),
     [availabilityDialogOpen, availabilityForm.endAt, availabilityForm.startAt],
@@ -287,16 +657,16 @@ export default function TeacherPortalPage() {
   });
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
-  const [editingClass, setEditingClass] = useState<ClassSessionDTO | null>(null);
-  const [classDialogError, setClassDialogError] = useState<string | null>(null);
-  const [classForm, setClassForm] = useState<{
-    subjectId: number | '';
-    studentId: number | '';
-    roomId: string;
-    startAt: string;
-    endAt: string;
-    notes: string;
-  }>({ subjectId: '', studentId: '', roomId: '', startAt: '', endAt: '', notes: '' });
+  const [editingClass, setEditingClass] = useState(null as ClassSessionDTO | null);
+  const [classDialogError, setClassDialogError] = useState(null as string | null);
+  const [classForm, setClassForm] = useState({
+    subjectId: '' as number | '',
+    studentId: '' as number | '',
+    roomId: '',
+    startAt: '',
+    endAt: '',
+    notes: '',
+  });
   const classTimeError = useMemo(
     () => (classDialogOpen ? validateLocalRange(classForm.startAt, classForm.endAt) : null),
     [classDialogOpen, classForm.endAt, classForm.startAt],
@@ -394,9 +764,9 @@ export default function TeacherPortalPage() {
       const startMs = new Date(cls.startAt).getTime();
       if (Number.isNaN(startMs)) return false;
       if (agendaView === 'all') return true;
-      if (agendaView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
-      if (agendaView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
-      return startMs >= nowMs && startMs <= weekEndMs;
+      if (agendaView === 'today') return startMs >= startOfTodayMs && endOfTodayMs > startMs;
+      if (agendaView === 'next24h') return startMs >= nowMs && next24hEndMs > startMs;
+      return startMs >= nowMs && weekEndMs >= startMs;
     });
   }, [agendaView, myClasses]);
 
@@ -416,9 +786,9 @@ export default function TeacherPortalPage() {
       const startMs = new Date(slot.startAt).getTime();
       if (Number.isNaN(startMs)) return false;
       if (availabilityView === 'all') return true;
-      if (availabilityView === 'today') return startMs >= startOfTodayMs && startMs < endOfTodayMs;
-      if (availabilityView === 'next24h') return startMs >= nowMs && startMs < next24hEndMs;
-      return startMs >= nowMs && startMs <= weekEndMs;
+      if (availabilityView === 'today') return startMs >= startOfTodayMs && endOfTodayMs > startMs;
+      if (availabilityView === 'next24h') return startMs >= nowMs && next24hEndMs > startMs;
+      return startMs >= nowMs && weekEndMs >= startMs;
     });
   }, [availabilityView, myAvailability]);
 
@@ -443,12 +813,12 @@ export default function TeacherPortalPage() {
       const startMs = new Date(cls.startAt).getTime();
       const endMs = new Date(cls.endAt).getTime();
       if (Number.isNaN(startMs) || Number.isNaN(endMs)) continue;
-      if (startMs >= startOfTodayMs && startMs < endOfTodayMs) todayCount += 1;
-      if (startMs >= nowMs && startMs <= weekEndMs) {
+      if (startMs >= startOfTodayMs && endOfTodayMs > startMs) todayCount += 1;
+      if (startMs >= nowMs && weekEndMs >= startMs) {
         weekCount += 1;
         weekMinutes += Math.max(0, Math.round((endMs - startMs) / 60000));
       }
-      if (endMs < nowMs && cls.status !== 'realizada') overdueCount += 1;
+      if (nowMs > endMs && cls.status !== 'realizada') overdueCount += 1;
       if (!nextClass && startMs >= nowMs && cls.status !== 'realizada') nextClass = cls;
     }
 
@@ -799,9 +1169,12 @@ export default function TeacherPortalPage() {
               )}
             </Stack>
 
-            {agendaStats.nextClass && agendaStats.nextMinutesAway !== null && agendaStats.nextMinutesAway >= 0 && agendaStats.nextMinutesAway <= 120 && (
+            {agendaStats.nextClass
+              && agendaStats.nextMinutesAway !== null
+              && agendaStats.nextMinutesAway >= 0
+              && TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassNoticeWindowMinutes >= agendaStats.nextMinutesAway && (
               <Alert
-                severity={agendaStats.nextMinutesAway <= 30 ? 'warning' : 'info'}
+                severity={TEACHER_PORTAL_AGENDA_CONTRACTS.upcomingClassWarningWindowMinutes >= agendaStats.nextMinutesAway ? 'warning' : 'info'}
                 sx={{ mt: 2 }}
                 action={(
                   <Stack direction="row" spacing={1}>
@@ -864,37 +1237,18 @@ export default function TeacherPortalPage() {
                   No tienes clases en este filtro.
                 </Typography>
               )}
-              {agendaClasses.map((cls) => (
-                <Paper key={cls.classSessionId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>
-                        {cls.subjectName ?? `Materia #${cls.subjectId}`} · {cls.studentName ?? `Alumno #${cls.studentId}`}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(cls.startAt)} → {formatDateTime(cls.endAt)} · {cls.roomName ?? cls.roomId ?? 'Sala'}
-                      </Typography>
-                      <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap">
-                        <Chip size="small" label={cls.status} variant="outlined" />
-                        {cls.notes && <Chip size="small" label="Notas" variant="outlined" />}
-                      </Stack>
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => openEditClass(cls)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        onClick={() => attendClassMutation.mutate(cls.classSessionId)}
-                        disabled={cls.status === 'realizada' || attendClassMutation.isPending}
-                      >
-                        Marcar realizada
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              ))}
+              {agendaClasses.length > 0 && (
+                <AgendaClassesList
+                  classSessions={agendaClasses}
+                  loading={classesQuery.isFetching}
+                  resetKey={agendaView}
+                  markingAttendance={attendClassMutation.isPending}
+                  attendingClassId={attendClassMutation.variables ?? null}
+                  savingClass={createClassMutation.isPending || updateClassMutation.isPending}
+                  onEdit={openEditClass}
+                  onAttend={(classSessionId) => attendClassMutation.mutate(classSessionId)}
+                />
+              )}
             </Stack>
           </Box>
         )}
@@ -925,21 +1279,14 @@ export default function TeacherPortalPage() {
                   Todavía no tienes alumnos.
                 </Alert>
               )}
-              {myStudents.map((student) => (
-                <Paper key={student.studentId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>{student.displayName}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {[student.email, student.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
-                      </Typography>
-                    </Box>
-                    <Button size="small" variant="outlined" onClick={() => openEditStudent(student)}>
-                      Editar
-                    </Button>
-                  </Stack>
-                </Paper>
-              ))}
+              {myStudents.length > 0 && (
+                <StudentsList
+                  students={myStudents}
+                  loading={studentsQuery.isFetching}
+                  savingStudent={updateStudentMutation.isPending}
+                  onEdit={openEditStudent}
+                />
+              )}
             </Stack>
           </Box>
         )}
@@ -993,24 +1340,12 @@ export default function TeacherPortalPage() {
               </Grid>
 
               <Grid item xs={12} md={5}>
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Typography fontWeight={800} sx={{ mb: 1 }}>
-                    Salas configuradas
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    Si una materia tiene salas configuradas, solo podrás elegir esas salas al crear disponibilidad o clases.
-                  </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {(Array.from(allowedRoomsForSubject) || []).length === 0 && (
-                        <Chip size="small" label="Sin restricciones" variant="outlined" />
-                      )}
-                      {Array.from(allowedRoomsForSubject).map((rid) => (
-                        <Chip key={rid} size="small" label={roomNameById.get(rid) ?? rid} variant="outlined" />
-                      ))}
-                    </Stack>
-                  </Paper>
-                </Grid>
+                <SubjectRoomsSummary
+                  allowedRoomIds={Array.from(allowedRoomsForSubject)}
+                  roomNameById={roomNameById}
+                />
               </Grid>
+            </Grid>
           </Box>
         )}
 
@@ -1082,39 +1417,18 @@ export default function TeacherPortalPage() {
                   No hay disponibilidad en este filtro.
                 </Alert>
               )}
-              {availabilitySlots.map((slot) => (
-                <Paper key={slot.availabilityId} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
-                    <Box>
-                      <Typography fontWeight={800}>
-                        {slot.subjectName ?? `Materia #${slot.subjectId}`} · {slot.roomName ?? slot.roomId}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(slot.startAt)} → {formatDateTime(slot.endAt)}
-                      </Typography>
-                      {slot.notes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {slot.notes}
-                        </Typography>
-                      )}
-                    </Box>
-                    <Stack direction="row" spacing={1}>
-                      <Button size="small" variant="outlined" onClick={() => openEditAvailability(slot)}>
-                        Editar
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        onClick={() => deleteAvailabilityMutation.mutate(slot.availabilityId)}
-                        disabled={deleteAvailabilityMutation.isPending}
-                      >
-                        Eliminar
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              ))}
+              {availabilitySlots.length > 0 && (
+                <AvailabilitySlotsList
+                  slots={availabilitySlots}
+                  loading={availabilityQuery.isFetching}
+                  resetKey={availabilityView}
+                  deleting={deleteAvailabilityMutation.isPending}
+                  deletingAvailabilityId={deleteAvailabilityMutation.variables ?? null}
+                  savingAvailability={upsertAvailabilityMutation.isPending}
+                  onEdit={openEditAvailability}
+                  onDelete={(availabilityId) => deleteAvailabilityMutation.mutate(availabilityId)}
+                />
+              )}
             </Stack>
           </Box>
         )}
@@ -1146,6 +1460,7 @@ export default function TeacherPortalPage() {
               required
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentForm.phone}
               onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -1190,6 +1505,7 @@ export default function TeacherPortalPage() {
               onChange={(e) => setStudentEditForm((prev) => ({ ...prev, email: e.target.value }))}
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentEditForm.phone}
               onChange={(e) => setStudentEditForm((prev) => ({ ...prev, phone: e.target.value }))}

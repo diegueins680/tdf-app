@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -27,10 +28,13 @@ import LinkIcon from '@mui/icons-material/Link';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink } from 'react-router-dom';
 import { Fans } from '../api/fans';
+import { EmptyState } from '../components/PageShell';
+import GroupIcon from '@mui/icons-material/Group';
 import { SocialAPI } from '../api/social';
 import type { PartyFollowDTO, SocialPartyProfileDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { buildVCardSharePayload, parseVCardPayload } from '../utils/vcard';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type TabKey = 'friends' | 'following' | 'followers';
 
@@ -48,6 +52,7 @@ const parsePositivePartyId = (value: string): number | null => {
 };
 
 export default function SocialPage() {
+  useDocumentTitle('Social');
   const qc = useQueryClient();
   const { session } = useSession();
   const [activeTab, setActiveTab] = useState<TabKey>('friends');
@@ -190,7 +195,11 @@ export default function SocialPage() {
     void qc.invalidateQueries({ queryKey: ['social-suggestions'] });
   };
 
-  const addMutation = useMutation<void, Error, number | undefined>({
+  const addMutation = useMutation<void, Error, number | undefined, {
+    previousFriends: PartyFollowDTO[] | undefined;
+    previousFollowing: PartyFollowDTO[] | undefined;
+    previousSuggestions: { sfPartyId: number; sfMutualCount: number }[] | undefined;
+  }>({
     mutationFn: async (targetId) => {
       const numeric =
         (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
@@ -198,21 +207,80 @@ export default function SocialPage() {
       if (numeric === null) throw new Error('Ingresa un ID válido.');
       await SocialAPI.addFriend(numeric);
     },
+    onMutate: async (targetId) => {
+      const numeric =
+        (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
+        ?? parsePositivePartyId(addId);
+      if (numeric === null) return { previousFriends: undefined, previousFollowing: undefined, previousSuggestions: undefined };
+      await qc.cancelQueries({ queryKey: ['social-friends'] });
+      await qc.cancelQueries({ queryKey: ['social-following'] });
+      await qc.cancelQueries({ queryKey: ['social-suggestions'] });
+      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends']);
+      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following']);
+      const previousSuggestions = qc.getQueryData<{ sfPartyId: number; sfMutualCount: number }[]>(['social-suggestions']);
+      const now = new Date().toISOString();
+      const myId = session?.partyId ?? 0;
+      qc.setQueryData<PartyFollowDTO[]>(['social-friends'], (old) => [
+        ...(old ?? []),
+        { pfFollowerId: myId, pfFollowingId: numeric, pfViaNfc: false, pfStartedAt: now },
+      ]);
+      qc.setQueryData<PartyFollowDTO[]>(['social-following'], (old) => [
+        ...(old ?? []),
+        { pfFollowerId: myId, pfFollowingId: numeric, pfViaNfc: false, pfStartedAt: now },
+      ]);
+      qc.setQueryData<{ sfPartyId: number; sfMutualCount: number }[]>(
+        ['social-suggestions'],
+        (old) => (old ?? []).filter((s) => s.sfPartyId !== numeric),
+      );
+      return { previousFriends, previousFollowing, previousSuggestions };
+    },
     onSuccess: () => {
       setAddId('');
-      invalidateAll();
       setFeedback({ kind: 'success', message: 'Listo, conexión agregada.' });
     },
-    onError: (err) => setFeedback({ kind: 'error', message: err.message }),
+    onError: (err, _targetId, context) => {
+      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends'], context.previousFriends);
+      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following'], context.previousFollowing);
+      if (context?.previousSuggestions !== undefined) qc.setQueryData(['social-suggestions'], context.previousSuggestions);
+      setFeedback({ kind: 'error', message: err.message });
+    },
+    onSettled: () => {
+      invalidateAll();
+    },
   });
 
   const removeMutation = useMutation({
     mutationFn: (targetId: number) => SocialAPI.removeFriend(targetId),
+    onMutate: async (targetId) => {
+      await qc.cancelQueries({ queryKey: ['social-friends'] });
+      await qc.cancelQueries({ queryKey: ['social-following'] });
+      await qc.cancelQueries({ queryKey: ['social-followers'] });
+      const previousFriends = qc.getQueryData<PartyFollowDTO[]>(['social-friends']);
+      const previousFollowing = qc.getQueryData<PartyFollowDTO[]>(['social-following']);
+      const previousFollowers = qc.getQueryData<PartyFollowDTO[]>(['social-followers']);
+      qc.setQueryData<PartyFollowDTO[]>(['social-friends'], (old) =>
+        (old ?? []).filter((f) => f.pfFollowerId !== targetId && f.pfFollowingId !== targetId),
+      );
+      qc.setQueryData<PartyFollowDTO[]>(['social-following'], (old) =>
+        (old ?? []).filter((f) => f.pfFollowingId !== targetId),
+      );
+      qc.setQueryData<PartyFollowDTO[]>(['social-followers'], (old) =>
+        (old ?? []).filter((f) => f.pfFollowerId !== targetId),
+      );
+      return { previousFriends, previousFollowing, previousFollowers };
+    },
     onSuccess: () => {
-      invalidateAll();
       setFeedback({ kind: 'success', message: 'Actualizamos tus conexiones.' });
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
+    onError: (err: Error, _targetId, context) => {
+      if (context?.previousFriends !== undefined) qc.setQueryData(['social-friends'], context.previousFriends);
+      if (context?.previousFollowing !== undefined) qc.setQueryData(['social-following'], context.previousFollowing);
+      if (context?.previousFollowers !== undefined) qc.setQueryData(['social-followers'], context.previousFollowers);
+      setFeedback({ kind: 'error', message: err.message });
+    },
+    onSettled: () => {
+      invalidateAll();
+    },
   });
 
   const exchangeMutation = useMutation<void, Error>({
@@ -248,7 +316,7 @@ export default function SocialPage() {
       setCopyMessage('Copiado');
       window.setTimeout(() => setCopyMessage(null), 1800);
     } catch (err) {
-      console.warn('No se pudo copiar', err);
+      logger.warn('No se pudo copiar', err);
       setCopyMessage('No se pudo copiar');
     }
   };
@@ -372,6 +440,7 @@ export default function SocialPage() {
               </Stack>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TextField
+                  type="tel"
                   label="Teléfono / WhatsApp"
                   value={sharePhone}
                   onChange={(e) => setSharePhone(e.target.value)}
@@ -522,7 +591,11 @@ export default function SocialPage() {
                 <Typography color="text.secondary">Buscando conexiones...</Typography>
               </Stack>
             ) : (suggestionsQuery.data?.length ?? 0) === 0 ? (
-              <Alert severity="info">No tenemos sugerencias todavía. Conecta con más personas y vuelve a intentar.</Alert>
+              <EmptyState
+                icon={<GroupIcon />}
+                title="Sin sugerencias"
+                description="No tenemos sugerencias todavía. Conecta con más personas y vuelve a intentar."
+              />
             ) : (
               <Stack divider={<Divider flexItem />} spacing={1}>
                 {suggestionsQuery.data?.map((suggestion) => {
@@ -579,7 +652,11 @@ export default function SocialPage() {
           ) : (
             <>
               {activeData.length === 0 ? (
-                <Alert severity="info">{tabData[activeTab].empty}</Alert>
+                <EmptyState
+                  icon={<GroupIcon />}
+                  title="Vacío"
+                  description={tabData[activeTab].empty}
+                />
               ) : (
                 <Stack divider={<Divider flexItem />} spacing={1}>
                   {activeData.map((row) => {

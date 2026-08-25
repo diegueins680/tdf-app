@@ -14,6 +14,15 @@ const getArtistPromoDayReportMock = jest.fn<(artistId: number, day: string) => P
 const getArtistPromoPdfBlobMock = jest.fn<(artistId: number, day: string) => Promise<Blob>>();
 const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const updatePartyMock = jest.fn<(partyId: number, payload: unknown) => Promise<PartyDTO | null>>();
+const listCatalogItemsMock = jest.fn<() => Promise<{
+  items: Record<string, unknown>[];
+  page: number;
+  pageSize: number;
+  total: number;
+  revision: number;
+  locale: string;
+  catalog: Record<string, unknown>;
+}>>();
 
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
@@ -36,8 +45,18 @@ jest.unstable_mockModule('../api/parties', () => ({
   },
 }));
 
+jest.unstable_mockModule('../api/catalogs', () => ({
+  Catalogs: {
+    listItems: () => listCatalogItemsMock(),
+  },
+}));
+
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
   default: () => null,
+}));
+
+jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
+  useLocalePreferences: () => ({ locale: 'de-DE', timezone: 'Europe/Berlin' }),
 }));
 
 const { default: LabelArtistsPage } = await import('./LabelArtistsPage');
@@ -104,6 +123,7 @@ const buildArtist = (overrides: Partial<ArtistProfileDTO> = {}): ArtistProfileDT
   apWebsiteUrl: null,
   apFeaturedVideoUrl: null,
   apGenres: 'Indie',
+  apGenreIds: ['10000000-0000-4000-8000-000000000004'],
   apHighlights: null,
   apFollowerCount: 12,
   apHasUserAccount: true,
@@ -194,6 +214,7 @@ describe('LabelArtistsPage', () => {
     getArtistPromoPdfBlobMock.mockReset();
     listPartiesMock.mockReset();
     updatePartyMock.mockReset();
+    listCatalogItemsMock.mockReset();
     listArtistProfilesMock.mockResolvedValue([]);
     listPartiesMock.mockResolvedValue([]);
     upsertArtistProfileMock.mockResolvedValue(null);
@@ -204,6 +225,30 @@ describe('LabelArtistsPage', () => {
     getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport({ apdEntries: [] }));
     getArtistPromoPdfBlobMock.mockResolvedValue(new Blob(['pdf']));
     updatePartyMock.mockResolvedValue(null);
+    listCatalogItemsMock.mockResolvedValue({
+      catalog: {},
+      items: [{
+        id: '10000000-0000-4000-8000-000000000004',
+        catalogId: '20000000-0000-4000-8000-000000000001',
+        catalogCode: 'genres',
+        kind: 'genre',
+        code: 'indie',
+        name: 'Indie',
+        nameEs: 'Indie',
+        nameEn: 'Indie',
+        searchAliases: [],
+        sortOrder: 0,
+        active: true,
+        workflowState: 'published',
+        usageCount: 0,
+        version: 1,
+      }],
+      page: 1,
+      pageSize: 500,
+      total: 1,
+      revision: 1,
+      locale: 'de-DE',
+    });
   });
 
   it('keeps the first artist setup free of list-only search, refresh, notes, and table chrome', async () => {
@@ -245,13 +290,107 @@ describe('LabelArtistsPage', () => {
         expect(container.textContent).toContain('La Ruta');
         expect(container.querySelector('input[aria-label="Buscar artistas"]')).not.toBeNull();
         expect(container.querySelector('button[aria-label="Refrescar artistas"]')).not.toBeNull();
+        expect(getButtonsByText(container, 'Refrescar')).toHaveLength(1);
         expect(container.textContent).toContain('Notas rápidas por artista');
         expect(container.textContent).toContain('Promoción diaria y reporte PDF');
-        expect(container.textContent).toContain('Hora de Ecuador (America/Guayaquil)');
+        expect(container.textContent).toContain('Europe/Berlin');
+        expect(container.textContent).not.toContain('America/Guayaquil');
         expect(hasTableHeader(container, 'Artista')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).not.toContain('Todavía no hay perfiles de artista.');
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('returns focus to the refresh button after reloading artists', async () => {
+    let resolveRefresh: (artists: ArtistProfileDTO[]) => void = () => undefined;
+    const refreshPromise = new Promise<ArtistProfileDTO[]>((resolve) => {
+      resolveRefresh = resolve;
+    });
+    listArtistProfilesMock
+      .mockResolvedValueOnce([buildArtist()])
+      .mockImplementationOnce(() => refreshPromise);
+    listPartiesMock.mockResolvedValue([buildParty()]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      let refreshButton: HTMLButtonElement | null = null;
+      await waitForExpectation(() => {
+        refreshButton = container.querySelector<HTMLButtonElement>('button[aria-label="Refrescar artistas"]');
+        expect(refreshButton).not.toBeNull();
+      });
+      if (!refreshButton) throw new Error('Refresh button not found');
+
+      await act(async () => {
+        refreshButton?.focus();
+        await flushPromises();
+      });
+      expect(document.activeElement).toBe(refreshButton);
+
+      await act(async () => {
+        refreshButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+      expect(listArtistProfilesMock).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        resolveRefresh([buildArtist({ apFollowerCount: 13 })]);
+        await refreshPromise;
+        await flushPromises();
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        const focusedRefreshButton = container.querySelector<HTMLButtonElement>('button[aria-label="Refrescar artistas"]');
+        expect(focusedRefreshButton).not.toBeNull();
+        expect(document.activeElement).toBe(focusedRefreshButton);
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('blocks profile writes when the canonical genre catalog cannot be loaded', async () => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist()]);
+    listPartiesMock.mockResolvedValue([buildParty()]);
+    listCatalogItemsMock.mockRejectedValue(
+      Object.assign(new Error('catalog unavailable'), { status: 403 }),
+    );
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      let editButton: HTMLButtonElement | null = null;
+      await waitForExpectation(() => {
+        editButton = container.querySelector<HTMLButtonElement>('button[aria-label="Editar perfil de La Ruta"]');
+        expect(editButton).not.toBeNull();
+      });
+
+      await act(async () => {
+        editButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(document.body.textContent).toContain(
+          'No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.',
+        );
+        const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        const saveButton = dialog
+          ? getButtonsByText(dialog, 'Guardar')[0] as HTMLButtonElement | undefined
+          : undefined;
+        expect(saveButton).toBeDefined();
+        expect(saveButton?.disabled).toBe(true);
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
     } finally {
       await cleanup();
     }

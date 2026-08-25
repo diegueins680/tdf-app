@@ -1,5 +1,6 @@
 import { get, post, put } from './client';
-import type { BookingDTO } from './types';
+import type { BookingDTO, DatafastCheckoutDTO, PaypalCreateDTO } from './types';
+import { decodeLegacyServiceOfferingId } from './services';
 
 const requirePositiveInteger = (value: number, field: string): number => {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -27,7 +28,7 @@ const setOptionalPositiveIntParam = (
 
 export interface BookingUpdatePayload {
   ubTitle?: string;
-  ubServiceType?: string;
+  ubServiceOfferingId?: string;
   ubStatus?: string;
   ubNotes?: string;
   ubStartsAt?: string;
@@ -38,7 +39,119 @@ export interface BookingUpdatePayload {
   ubEngineerName?: string | null;
 }
 
+export interface PublicBookingQuoteDTO {
+  policyVersion: string;
+  currency: string;
+  durationMinutes: number;
+  subtotalMinor: number;
+  taxMinor: number;
+  totalMinor: number;
+  depositMinor: number;
+  balanceMinor: number;
+  depositBps: number;
+  termsVersion: string;
+}
+
+export interface PublicBookingAvailabilityDTO {
+  available: boolean;
+  reason?: string | null;
+  serviceOfferingId: string;
+  startsAt: string;
+  endsAt: string;
+  resourceIds: string[];
+  resourceNames: string[];
+  quote?: PublicBookingQuoteDTO | null;
+}
+
+export interface PublicBookingCheckoutDTO {
+  booking: BookingDTO;
+  checkoutId: string;
+  lookupToken?: string | null;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  holdExpiresAt: string;
+  quote: PublicBookingQuoteDTO;
+  paymentMethods: ('datafast' | 'paypal' | 'bank_transfer')[];
+  manualPayment?: PublicBookingManualPaymentDTO | null;
+}
+
+export interface PublicBookingManualPaymentDTO {
+  paymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  submittedAt?: string | null;
+}
+
+export interface ServiceBookingManualEvidenceDTO {
+  evidenceId: string;
+  paymentMethod: 'bank_transfer' | 'cash' | 'pos';
+  status: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
+  customerReference?: string | null;
+  submittedAmountMinor?: number | null;
+  currency?: string | null;
+  submittedBy?: number | null;
+  submittedAt?: string | null;
+  reviewedBy?: number | null;
+  reviewedAt?: string | null;
+  reviewNotes?: string | null;
+}
+
+export interface ServiceBookingCommerceDTO {
+  bookingId: number;
+  checkoutId: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  depositMinor: number;
+  currency: string;
+  holdExpiresAt: string;
+  manualEvidence?: ServiceBookingManualEvidenceDTO | null;
+}
+
+export interface PublicBookingCheckoutPayload {
+  pbcFullName: string;
+  pbcEmail: string;
+  pbcPhone?: string | null;
+  pbcServiceOfferingId: string;
+  pbcStartsAt: string;
+  pbcDurationMinutes: number;
+  pbcNotes?: string | null;
+  pbcEngineerPartyId?: number | null;
+  pbcEngineerName?: string | null;
+  pbcResourceIds?: string[] | null;
+  pbcTermsAccepted: boolean;
+}
+
+const publicBookingLookupStorageKey = (bookingId: number): string =>
+  `tdf-service-booking-order-lookup:${requirePositiveInteger(bookingId, 'bookingId')}`;
+
+export const storePublicBookingLookupToken = (
+  bookingId: number,
+  lookupToken?: string | null,
+): void => {
+  if (!lookupToken || typeof window === 'undefined') return;
+  window.sessionStorage.setItem(publicBookingLookupStorageKey(bookingId), lookupToken);
+};
+
+export const loadPublicBookingLookupToken = (bookingId: number): string | null => {
+  if (typeof window === 'undefined') return null;
+  return window.sessionStorage.getItem(publicBookingLookupStorageKey(bookingId));
+};
+
+const publicBookingLookupHeaders = (lookupToken: string): RequestInit => ({
+  headers: { 'X-Order-Lookup-Token': lookupToken },
+});
+
 export const Bookings = {
+  publicAvailability: (params: {
+    serviceOfferingId: string;
+    startsAt: string;
+    durationMinutes: number;
+  }) => {
+    const search = new URLSearchParams();
+    search.set('serviceOfferingId', params.serviceOfferingId);
+    search.set('startsAt', params.startsAt);
+    search.set('durationMinutes', String(requirePositiveInteger(params.durationMinutes, 'durationMinutes')));
+    return get<PublicBookingAvailabilityDTO>(`/bookings/public/availability?${search.toString()}`);
+  },
   list: (params?: { bookingId?: number; partyId?: number; engineerPartyId?: number }) => {
     const search = new URLSearchParams();
     setOptionalPositiveIntParam(search, 'bookingId', params?.bookingId);
@@ -53,7 +166,7 @@ export const Bookings = {
     cbEndsAt: string;
     cbStatus: string;
     cbNotes?: string | null;
-    cbServiceType?: string | null;
+    cbServiceOfferingId: string;
     cbPartyId?: number | null;
     cbResourceIds?: string[] | null;
     cbEngineerPartyId?: number | null;
@@ -70,16 +183,93 @@ export const Bookings = {
     pbFullName: string;
     pbEmail: string;
     pbPhone?: string | null;
-    pbServiceType: string;
+    pbServiceOfferingId: string;
     pbStartsAt: string;
     pbDurationMinutes?: number | null;
     pbNotes?: string | null;
     pbEngineerPartyId?: number | null;
     pbEngineerName?: string | null;
     pbResourceIds?: string[] | null;
-  }) =>
-    post<BookingDTO>('/bookings/public', {
-      ...body,
+  }) => {
+    const { pbServiceOfferingId, ...rest } = body;
+    const legacyServiceType = decodeLegacyServiceOfferingId(pbServiceOfferingId);
+    return post<BookingDTO>('/bookings/public', {
+      ...rest,
+      ...(legacyServiceType
+        ? { pbServiceType: legacyServiceType }
+        : { pbServiceOfferingId }),
       pbEngineerPartyId: normalizeOptionalPositiveInteger(body.pbEngineerPartyId, 'pbEngineerPartyId'),
+    });
+  },
+  createPublicCheckout: (body: PublicBookingCheckoutPayload, idempotencyKey: string) =>
+    post<PublicBookingCheckoutDTO>('/bookings/public/checkout', {
+      ...body,
+      pbcEngineerPartyId: normalizeOptionalPositiveInteger(body.pbcEngineerPartyId, 'pbcEngineerPartyId'),
+    }, {
+      headers: { 'Idempotency-Key': idempotencyKey },
     }),
+  getPublicCheckout: (bookingId: number, lookupToken: string) =>
+    get<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}`,
+      { headers: { 'X-Order-Lookup-Token': lookupToken } },
+    ),
+  createPublicDatafastCheckout: (bookingId: number, lookupToken: string) =>
+    post<DatafastCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/datafast/checkout`,
+      {},
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  confirmPublicDatafastStatus: (
+    bookingId: number,
+    resourcePath: string,
+    lookupToken: string,
+  ) => {
+    const search = new URLSearchParams({ resourcePath });
+    return get<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/datafast/status?${search.toString()}`,
+      publicBookingLookupHeaders(lookupToken),
+    );
+  },
+  createPublicPaypalOrder: (bookingId: number, lookupToken: string) =>
+    post<PaypalCreateDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/paypal/create`,
+      {},
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  capturePublicPaypalOrder: (
+    bookingId: number,
+    paypalOrderId: string,
+    lookupToken: string,
+  ) => post<PublicBookingCheckoutDTO>(
+    `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/paypal/capture`,
+    { paypalOrderId },
+    publicBookingLookupHeaders(lookupToken),
+  ),
+  selectPublicManualPayment: (bookingId: number, lookupToken: string) =>
+    post<PublicBookingCheckoutDTO>(
+      `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment`,
+      { paymentMethod: 'bank_transfer' },
+      publicBookingLookupHeaders(lookupToken),
+    ),
+  submitPublicManualEvidence: (
+    bookingId: number,
+    customerReference: string,
+    lookupToken: string,
+  ) => post<PublicBookingCheckoutDTO>(
+    `/bookings/public/orders/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment/evidence`,
+    { customerReference },
+    publicBookingLookupHeaders(lookupToken),
+  ),
+  getCommerce: (bookingId: number) =>
+    get<ServiceBookingCommerceDTO>(
+      `/bookings/${requirePositiveInteger(bookingId, 'bookingId')}/commerce`,
+    ),
+  reviewManualPayment: (
+    bookingId: number,
+    action: 'approve' | 'reject',
+    reviewNotes: string,
+  ) => post<ServiceBookingCommerceDTO>(
+    `/bookings/${requirePositiveInteger(bookingId, 'bookingId')}/manual-payment/review`,
+    { action, reviewNotes },
+  ),
 };

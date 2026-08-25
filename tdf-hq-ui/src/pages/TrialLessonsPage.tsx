@@ -28,6 +28,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Bookings } from '../api/bookings';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type {
   ClassSessionDTO,
   ClassSessionUpdate,
@@ -36,6 +37,8 @@ import type {
 } from '../api/trials';
 import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
+import LazyPaginatedList from '../components/LazyPaginatedList';
+import { formatDateForUser } from '../utils/formatters';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -133,13 +136,16 @@ const addMinutes = (iso: string, minutes: number) => {
   return end.toISOString();
 };
 
-const formatDateTime = (iso: string) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString('es-EC', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
+const formatDateTime = (iso: string) => formatDateForUser(iso, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 export default function TrialLessonsPage() {
+  useDocumentTitle('Escuela / Clases de prueba');
   const qc = useQueryClient();
   const navigate = useNavigate();
   const subjectsQuery = useQuery({
@@ -203,6 +209,7 @@ export default function TrialLessonsPage() {
     })();
   });
   const [quickFiltersExpanded, setQuickFiltersExpanded] = useState(false);
+  const [emptyFiltersExpanded, setEmptyFiltersExpanded] = useState(false);
 
   const toIsoOrUndefined = (val: string) => {
     if (!val) return undefined;
@@ -306,6 +313,7 @@ export default function TrialLessonsPage() {
     setTeacherFilter('all');
     setStatusFilter('all');
     setQuickFiltersExpanded(false);
+    setEmptyFiltersExpanded(false);
     applyRangePreset(7, 30);
   };
 
@@ -488,6 +496,15 @@ export default function TrialLessonsPage() {
   const hasQuickFiltersActive =
     subjectFilter !== 'all' || teacherFilter !== 'all' || statusFilter !== 'all';
   const showQuickFilters = quickFiltersExpanded || hasQuickFiltersActive;
+  const showInitialEmptyState =
+    data.length === 0
+    && !loading
+    && !queryError
+    && !rangeError
+    && !hasQuickFiltersActive;
+  const collapseInitialFilters = showInitialEmptyState && !emptyFiltersExpanded;
+  const showFilterControls = !collapseInitialFilters;
+  const trialPaginationResetKey = [subjectFilter, teacherFilter, statusFilter, fromInput, toInput].join('|');
 
   const handleQuickStatus = (cls: ClassSessionDTO, nextStatus: StatusKey) => {
     statusMutation.mutate({ cls, nextStatus });
@@ -637,66 +654,70 @@ export default function TrialLessonsPage() {
 
       <Paper sx={{ p: 2.5 }} variant="outlined">
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
-            <TextField
-              label="Desde"
-              type="datetime-local"
-              value={fromInput}
-              onChange={(e) => setFromInput(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-            <TextField
-              label="Hasta"
-              type="datetime-local"
-              value={toInput}
-              onChange={(e) => setToInput(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => applyRangePreset(7, 30)}>
-                Últimos 7d / próximos 30d
-              </Button>
-              <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
-                Próximas 12 semanas
-              </Button>
-              <Button variant="text" size="small" onClick={resetFilters}>
-                Restablecer filtros
-              </Button>
-            </Stack>
-          </Stack>
-          {rangeError && (
-            <Alert
-              severity="warning"
-              action={
-                <Button color="inherit" size="small" onClick={resetFilters}>
-                  Corregir rango
-                </Button>
-              }
-            >
-              {rangeError} Ajusta las fechas o restablece los filtros.
-            </Alert>
-          )}
-          {!hasQuickFiltersActive && (
-            <Stack spacing={0.75} alignItems="flex-start">
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => setQuickFiltersExpanded((current) => !current)}
-                sx={{ px: 0, textTransform: 'none' }}
-              >
-                {showQuickFilters ? 'Ocultar filtros rápidos' : 'Filtrar por materia, profesor y estado'}
-              </Button>
-              {!showQuickFilters && (
-                <Typography variant="body2" color="text.secondary" data-testid="trial-lessons-quick-filters-hint">
-                  Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o
-                  estado.
-                </Typography>
+          {showFilterControls && (
+            <>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
+                <TextField
+                  label="Desde"
+                  type="datetime-local"
+                  value={fromInput}
+                  onChange={(e) => setFromInput(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <TextField
+                  label="Hasta"
+                  type="datetime-local"
+                  value={toInput}
+                  onChange={(e) => setToInput(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button variant="outlined" size="small" onClick={() => applyRangePreset(7, 30)}>
+                    Últimos 7d / próximos 30d
+                  </Button>
+                  <Button variant="outlined" size="small" onClick={() => applyRangePreset(0, 90)}>
+                    Próximas 12 semanas
+                  </Button>
+                  <Button variant="text" size="small" onClick={resetFilters}>
+                    Restablecer filtros
+                  </Button>
+                </Stack>
+              </Stack>
+              {rangeError && (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button color="inherit" size="small" onClick={resetFilters}>
+                      Corregir rango
+                    </Button>
+                  }
+                >
+                  {rangeError} Ajusta las fechas o restablece los filtros.
+                </Alert>
               )}
-            </Stack>
+              {!hasQuickFiltersActive && (
+                <Stack spacing={0.75} alignItems="flex-start">
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => setQuickFiltersExpanded((current) => !current)}
+                    sx={{ px: 0, textTransform: 'none' }}
+                  >
+                    {showQuickFilters ? 'Ocultar filtros rápidos' : 'Filtrar por materia, profesor y estado'}
+                  </Button>
+                  {!showQuickFilters && (
+                    <Typography variant="body2" color="text.secondary" data-testid="trial-lessons-quick-filters-hint">
+                      Empieza por el rango de fechas. Abre filtros rápidos solo si necesitas acotar materia, profesor o
+                      estado.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+              {showQuickFilters && chipFilters}
+            </>
           )}
-          {showQuickFilters && chipFilters}
           {loading && <LinearProgress />}
           {queryError && (
             <Alert severity="error">
@@ -709,120 +730,143 @@ export default function TrialLessonsPage() {
             </Alert>
           )}
           {data.length === 0 && !loading && !rangeError && (
-            <Alert severity="info" variant="outlined" data-testid="trial-lessons-empty-state">
+            <Alert
+              severity="info"
+              variant="outlined"
+              data-testid="trial-lessons-empty-state"
+              action={
+                collapseInitialFilters ? (
+                  <Button color="inherit" size="small" onClick={() => setEmptyFiltersExpanded(true)}>
+                    Ajustar fechas
+                  </Button>
+                ) : undefined
+              }
+            >
               <Typography variant="subtitle2">Primeros pasos</Typography>
               <Typography variant="body2" color="text.secondary">
-                Aún no hay clases de prueba en este rango. Crea una nueva clase para registrar horario,
-                profesor y sala; si esperabas ver datos, amplía las fechas o restablece filtros.
+                Aún no hay clases de prueba en este rango. Empieza con Nueva clase para registrar horario,
+                profesor y sala; si esperabas ver datos existentes, ajusta el rango de fechas.
               </Typography>
             </Alert>
           )}
-          <Stack spacing={1.25}>
-            {data.map((cls) => {
-              const meta = statusMeta[normalizeStatus(cls.status)];
-              const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
-              const subject = subjects.find((s) => s.subjectId === cls.subjectId);
-              const room = rooms.find((r) => r.roomId === cls.roomId);
-              const student = students.find((p) => p.studentId === cls.studentId);
-              const rowPending = statusPendingId === cls.classSessionId;
-              const hasBooking = Boolean(cls.bookingId);
-              const updatedDisplay = cls.updatedAt
-                ? formatDateTime(cls.updatedAt)
-                : formatDateTime(cls.endAt ?? cls.startAt);
-              return (
-                <Paper
-                  key={cls.classSessionId}
-                  variant="outlined"
-                  sx={{ p: 1.5, borderRadius: 2, borderColor: meta?.border ?? 'divider' }}
-                >
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 190 }}>
-                      <Chip
-                        size="small"
-                        icon={meta?.icon}
-                        label={meta?.label ?? cls.status}
-                        sx={{
-                          bgcolor: meta?.bg,
-                          color: meta?.color,
-                          borderColor: meta?.border,
-                          borderWidth: 1,
-                          borderStyle: 'solid',
-                          fontWeight: 700,
-                        }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(cls.startAt)}
-                      </Typography>
-                    </Stack>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography fontWeight={700}>{subject?.name ?? 'Materia'}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {teacher?.teacherName ?? cls.teacherName ?? 'Profesor'} · Sala {room?.rName ?? cls.roomName ?? cls.roomId ?? ''}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                        <Chip
-                          size="small"
-                          color={hasBooking ? 'success' : 'default'}
-                          label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
-                        />
-                        <Button
-                          size="small"
-                          variant="text"
-                          sx={{ textTransform: 'none', minWidth: 0 }}
-                          onClick={() => pushToCalendarWithPrefill(cls, subject?.name, student?.displayName)}
-                        >
-                          {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
-                        </Button>
+          <LazyPaginatedList
+            items={data}
+            pagination={{ itemLabel: 'clases', initialRowsPerPage: 10, resetKey: trialPaginationResetKey }}
+            renderItems={(visibleClasses) => (
+              <Stack spacing={1.25}>
+                {visibleClasses.map((cls) => {
+                  const currentStatus = normalizeStatus(cls.status);
+                  const meta = statusMeta[currentStatus];
+                  const teacher = teachers.find((t) => t.teacherId === cls.teacherId);
+                  const subject = subjects.find((s) => s.subjectId === cls.subjectId);
+                  const room = rooms.find((r) => r.roomId === cls.roomId);
+                  const student = students.find((p) => p.studentId === cls.studentId);
+                  const rowPending = statusPendingId === cls.classSessionId;
+                  const hasBooking = Boolean(cls.bookingId);
+                  const updatedDisplay = cls.updatedAt
+                    ? formatDateTime(cls.updatedAt)
+                    : formatDateTime(cls.endAt ?? cls.startAt);
+                  return (
+                    <Paper
+                      key={cls.classSessionId}
+                      data-testid={`trial-lesson-row-${cls.classSessionId}`}
+                      variant="outlined"
+                      sx={{ p: 1.5, borderRadius: 2, borderColor: meta?.border ?? 'divider' }}
+                    >
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 190 }}>
+                          <Chip
+                            size="small"
+                            icon={meta?.icon}
+                            label={meta?.label ?? cls.status}
+                            sx={{
+                              bgcolor: meta?.bg,
+                              color: meta?.color,
+                              borderColor: meta?.border,
+                              borderWidth: 1,
+                              borderStyle: 'solid',
+                              fontWeight: 700,
+                            }}
+                          />
+                          <Typography variant="body2" color="text.secondary">
+                            {formatDateTime(cls.startAt)}
+                          </Typography>
+                        </Stack>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography fontWeight={700}>{subject?.name ?? 'Materia'}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {teacher?.teacherName ?? cls.teacherName ?? 'Profesor'} · Sala {room?.rName ?? cls.roomName ?? cls.roomId ?? ''}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Alumno: {student?.displayName ?? cls.studentName ?? cls.studentId}
+                          </Typography>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                            <Chip
+                              size="small"
+                              color={hasBooking ? 'success' : 'default'}
+                              label={hasBooking ? `Reserva #${cls.bookingId}` : 'Sin reserva vinculada'}
+                            />
+                            <Button
+                              size="small"
+                              variant="text"
+                              sx={{ textTransform: 'none', minWidth: 0 }}
+                              onClick={() => pushToCalendarWithPrefill(cls, subject?.name, student?.displayName)}
+                            >
+                              {hasBooking ? 'Abrir calendario' : 'Crear en calendario'}
+                            </Button>
+                          </Stack>
+                          {cls.notes && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                              {cls.notes}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            Última actualización: {updatedDisplay || 'No disponible'}
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
+                            Editar
+                          </Button>
+                          {currentStatus !== 'realizada' && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              startIcon={
+                                rowPending
+                                  ? <CircularProgress size={14} />
+                                  : <CheckCircleIcon fontSize="small" />
+                              }
+                              onClick={() => handleQuickStatus(cls, 'realizada')}
+                              disabled={rowPending}
+                            >
+                              Realizada
+                            </Button>
+                          )}
+                          {currentStatus !== 'cancelada' && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              color="inherit"
+                              startIcon={
+                                rowPending
+                                  ? <CircularProgress size={14} />
+                                  : <CancelIcon fontSize="small" />
+                              }
+                              onClick={() => handleQuickStatus(cls, 'cancelada')}
+                              disabled={rowPending}
+                            >
+                              Cancelar
+                            </Button>
+                          )}
+                        </Stack>
                       </Stack>
-                      {cls.notes && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {cls.notes}
-                        </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary">
-                        Última actualización: {updatedDisplay || 'No disponible'}
-                      </Typography>
-                    </Box>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Button variant="outlined" size="small" onClick={() => openEditDialog(cls)}>
-                        Editar
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        startIcon={
-                          rowPending
-                            ? <CircularProgress size={14} />
-                            : <CheckCircleIcon fontSize="small" />
-                        }
-                        onClick={() => handleQuickStatus(cls, 'realizada')}
-                        disabled={rowPending || normalizeStatus(cls.status) === 'realizada'}
-                      >
-                        Realizada
-                      </Button>
-                      <Button
-                        variant="text"
-                        size="small"
-                        color="inherit"
-                        startIcon={
-                          rowPending
-                            ? <CircularProgress size={14} />
-                            : <CancelIcon fontSize="small" />
-                        }
-                        onClick={() => handleQuickStatus(cls, 'cancelada')}
-                        disabled={rowPending || normalizeStatus(cls.status) === 'cancelada'}
-                      >
-                        Cancelar
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              );
-            })}
-          </Stack>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            )}
+          />
         </Stack>
       </Paper>
 
@@ -979,6 +1023,7 @@ export default function TrialLessonsPage() {
               fullWidth
             />
             <TextField
+              type="tel"
               label="Teléfono"
               value={studentForm.phone}
               onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}

@@ -1,201 +1,198 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
-import StarIcon from '@mui/icons-material/Star';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
+import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { AppBar, Box, Button, IconButton, Stack, Toolbar, Badge, Typography, Popover, Divider, Tooltip, Dialog, DialogTitle, DialogContent, TextField, InputAdornment, List, ListItemButton, ListItemText } from '@mui/material';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  Toolbar,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Tooltip,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import type { Ref } from 'react';
 import SessionMenu from './SessionMenu';
 import { useSession } from '../session/SessionContext';
 import BrandLogo from './BrandLogo';
-import SearchIcon from '@mui/icons-material/Search';
-import { NAV_GROUPS } from './SidebarNav';
-import { canAccessPath } from '../utils/accessControl';
-import { formatFriendlyPath } from '../utils/navigationLabels';
+import { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
+import NotificationBell from './NotificationBell';
+import {
+  accessRequestPath,
+  evaluateFeatureAccess,
+  featureGroups,
+  featureLabel,
+  featureRegistry,
+  featureSearchText,
+  normalizeFeatureToken,
+} from '../features/featureRegistry';
+import appI18n from '../i18n';
+import { getAnalyticsClient } from '../analytics/posthog';
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
   sidebarOpen?: boolean;
+  toggleButtonRef?: Ref<HTMLButtonElement>;
 }
 
-const CART_META_KEY = 'tdf-marketplace-cart-meta';
-const CART_EVENT = 'tdf-cart-updated';
-const QUICK_FAVORITES_KEY = 'tdf-quick-nav-favorites';
-const QUICK_RECENTS_KEY = 'tdf-quick-nav-recents';
-const MAX_QUICK_RECENTS = 10;
-
-interface CartPreviewItem {
-  title: string;
-  subtotal: string;
+interface QuickNavResultLimitContract {
+  readonly resultsPerKeyboardPage: number;
+  readonly renderedKeyboardPages: number;
 }
 
-const sanitizeCartCount = (raw: unknown): number => {
-  if (typeof raw !== 'number') return 0;
-  if (!Number.isFinite(raw)) return 0;
-  const floored = Math.floor(raw);
-  return floored > 0 ? floored : 0;
-};
+// Cap how many results the command palette renders at once. The limit is
+// expressed as keyboard pages so the invariant is tied to how users navigate.
+const QUICK_NAV_RESULT_LIMIT_CONTRACT = {
+  resultsPerKeyboardPage: 10,
+  renderedKeyboardPages: 3,
+} as const satisfies QuickNavResultLimitContract;
 
-const sanitizeCartPreview = (raw: unknown): CartPreviewItem[] => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      if (!item || typeof item !== 'object') return null;
-      const title = typeof (item as { title?: unknown }).title === 'string' ? (item as { title: string }).title : '';
-      const subtotal =
-        typeof (item as { subtotal?: unknown }).subtotal === 'string'
-          ? (item as { subtotal: string }).subtotal
-          : '';
-      if (!title.trim() || !subtotal.trim()) return null;
-      return { title, subtotal };
-    })
-    .filter((item): item is CartPreviewItem => item != null)
-    .slice(0, 5);
-};
+export const QUICK_NAV_VISIBLE_RESULT_LIMIT =
+  QUICK_NAV_RESULT_LIMIT_CONTRACT.resultsPerKeyboardPage *
+  QUICK_NAV_RESULT_LIMIT_CONTRACT.renderedKeyboardPages;
 
-const readCartMeta = (): { cartId: string; count: number; preview: CartPreviewItem[] } => {
-  try {
-    const raw = localStorage.getItem(CART_META_KEY);
-    if (!raw) return { cartId: '', count: 0, preview: [] };
-    const parsed = JSON.parse(raw) as Partial<{ cartId: string; count: number; preview: CartPreviewItem[] }>;
-    return {
-      cartId: typeof parsed?.cartId === 'string' ? parsed.cartId : '',
-      count: sanitizeCartCount(parsed?.count),
-      preview: sanitizeCartPreview(parsed?.preview),
-    };
-  } catch {
-    return { cartId: '', count: 0, preview: [] };
+function assertValidQuickNavResultLimit(limit: number): void {
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    throw new Error('Quick-nav visible result limit must be a positive safe integer.');
   }
-};
+}
 
-const readStoredStringList = (storageKey: string): string[] => {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
-  } catch {
-    return [];
+assertValidQuickNavResultLimit(QUICK_NAV_VISIBLE_RESULT_LIMIT);
+
+export function limitQuickNavItems<T>(items: readonly T[]): readonly T[] {
+  if (!Array.isArray(items)) {
+    throw new TypeError('Quick-nav items must be provided as an array.');
   }
-};
 
-export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarProps) {
-  const { session, logout } = useSession();
+  // `Array.isArray` narrows the readonly input to `any[]`; restore the element
+  // type so callers keep the precise `readonly T[]` contract.
+  const visibleItems = items.slice(0, QUICK_NAV_VISIBLE_RESULT_LIMIT) as T[];
+  if (
+    visibleItems.length > QUICK_NAV_VISIBLE_RESULT_LIMIT ||
+    visibleItems.length > items.length
+  ) {
+    throw new Error('Quick-nav result limiting violated its postcondition.');
+  }
+
+  return visibleItems;
+}
+
+export default function TopBar({ onToggleSidebar, sidebarOpen = true, toggleButtonRef }: TopBarProps) {
+  const { session } = useSession();
+  const [featureLocale, setFeatureLocale] = useState(
+    () => appI18n.resolvedLanguage ?? appI18n.language ?? 'es',
+  );
   const navigate = useNavigate();
-  const location = useLocation();
   const [quickNavOpen, setQuickNavOpen] = useState(false);
   const [quickQuery, setQuickQuery] = useState('');
   const [quickHighlight, setQuickHighlight] = useState(0);
-  const [quickFavorites, setQuickFavorites] = useState<string[]>([]);
-  const [quickRecents, setQuickRecents] = useState<string[]>([]);
-  const [cartCount, setCartCount] = useState(0);
-  const [cartPreview, setCartPreview] = useState<{ title: string; subtotal: string }[]>([]);
-  const [cartAnchor, setCartAnchor] = useState<HTMLElement | null>(null);
-  const [resourcesAnchor, setResourcesAnchor] = useState<null | HTMLElement>(null);
-  const quickInputRef = useRef<HTMLInputElement | null>(null);
-  const resourcesButtonRef = useRef<HTMLButtonElement | null>(null);
+  const quickItemRefs = useRef<(HTMLElement | null)[]>([]);
+  const quickSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const [quickCreateAnchor, setQuickCreateAnchor] = useState<HTMLElement | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
-    setQuickFavorites(readStoredStringList(QUICK_FAVORITES_KEY));
-    setQuickRecents(readStoredStringList(QUICK_RECENTS_KEY));
+    const handleLanguageChanged = (language: string) => setFeatureLocale(language || 'es');
+    appI18n.on('languageChanged', handleLanguageChanged);
+    return () => appI18n.off('languageChanged', handleLanguageChanged);
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(QUICK_FAVORITES_KEY, JSON.stringify(quickFavorites));
-    } catch {
-      // ignore persistence issues
-    }
-  }, [quickFavorites]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(QUICK_RECENTS_KEY, JSON.stringify(quickRecents));
-    } catch {
-      // ignore persistence issues
-    }
-  }, [quickRecents]);
-
-  useEffect(() => {
-    const meta = readCartMeta();
-    setCartCount(meta.count);
-    setCartPreview(meta.preview);
-    const handler = () => {
-      const next = readCartMeta();
-      setCartCount(next.count);
-      setCartPreview(next.preview);
+  const { quickNavItems, quickCreateItems } = useMemo(() => {
+    const currentSession = {
+      authenticated: Boolean(session),
+      roles: session?.roles,
+      modules: session?.modules,
+      featureFlags: session?.featureFlags,
     };
-    window.addEventListener('storage', handler);
-    window.addEventListener(CART_EVENT, handler as EventListener);
-    return () => {
-      window.removeEventListener('storage', handler);
-      window.removeEventListener(CART_EVENT, handler as EventListener);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
-  const canUsePath = useCallback(
-    (path: string) => canAccessPath(path, session?.roles, session?.modules),
-    [session?.modules, session?.roles],
-  );
-  const canManageAdminAccounts = canUsePath('/configuracion/roles-permisos');
-  const canUseTokenAdmin = canUsePath('/herramientas/token-admin');
-
-  const quickNavItems = useMemo(() => {
-    return NAV_GROUPS.flatMap((group) =>
-      group.items
-        .filter((item) => canUsePath(item.path))
-        .map((item) => ({ ...item, group: group.title })),
-    );
-  }, [canUsePath]);
-
-  const favoritePaths = useMemo(() => new Set(quickFavorites), [quickFavorites]);
-  const recentPathIndex = useMemo(
-    () => new Map(quickRecents.map((path, index) => [path, index])),
-    [quickRecents],
-  );
+    const english = featureLocale.toLowerCase().startsWith('en');
+    const groupById = new Map(featureGroups.map((group) => [
+      group.id,
+      english ? group.labelEn : group.labelEs,
+    ]));
+    const nav: {
+      featureId: string;
+      label: string;
+      path: string;
+      searchText: string;
+      group: string;
+      groupIcon: undefined;
+      locked: boolean;
+      destination: string;
+      missingAccess: string | null;
+    }[] = [];
+    const create: {
+      featureId: string;
+      label: string;
+      locked: boolean;
+      destination: string;
+      missingAccess: string | null;
+    }[] = [];
+    for (const feature of featureRegistry) {
+      const isNavCandidate = feature.searchable && !feature.technical && feature.webRoute && !feature.webRoute.includes(':');
+      const isCreateCandidate = Boolean(feature.quickCreate);
+      if (!isNavCandidate && !isCreateCandidate) continue;
+      if (isNavCandidate) {
+        const decision = evaluateFeatureAccess(feature, currentSession, 'discover');
+        if (decision.state !== 'concealed') {
+          nav.push({
+            featureId: feature.id,
+            label: featureLabel(feature, featureLocale),
+            path: feature.webRoute!,
+            searchText: featureSearchText(feature),
+            group: feature.navigationGroup ? groupById.get(feature.navigationGroup) ?? feature.navigationGroup : (english ? 'Other' : 'Otros'),
+            groupIcon: undefined,
+            locked: decision.state === 'locked',
+            destination: decision.state === 'locked' ? accessRequestPath(feature, 'view') : feature.webRoute!,
+            missingAccess: decision.missingModules[0] ?? decision.missingRoles[0] ?? null,
+          });
+        }
+      }
+      if (isCreateCandidate) {
+        const action = feature.quickCreate!.action;
+        const accessDecision = evaluateFeatureAccess(feature, currentSession, action);
+        if (accessDecision.state !== 'concealed') {
+          create.push({
+            featureId: feature.id,
+            label: feature.quickCreate!.label[english ? 'en' : 'es'],
+            locked: accessDecision.state === 'locked',
+            destination: accessDecision.state === 'locked'
+              ? accessRequestPath(feature, action)
+              : feature.quickCreate!.webDestination,
+            missingAccess: accessDecision.missingModules[0] ?? accessDecision.missingRoles[0] ?? null,
+          });
+        }
+      }
+    }
+    return { quickNavItems: nav, quickCreateItems: create };
+  }, [featureLocale, session]);
 
   const filteredQuickItems = useMemo(() => {
-    const query = quickQuery.trim().toLowerCase();
-    const rankItem = (item: { label: string; path: string }) => {
-      const label = item.label.toLowerCase();
-      let score = 0;
-      if (favoritePaths.has(item.path)) score += 60;
-      const recentIndex = recentPathIndex.get(item.path);
-      if (recentIndex !== undefined) {
-        score += Math.max(0, 25 - recentIndex);
-      }
-      if (location.pathname === item.path) score += 80;
-      if (query) {
-        if (label.startsWith(query)) score += 45;
-        else if (label.includes(query)) score += 25;
-        if (item.path.toLowerCase().includes(query)) score += 10;
-      }
-      return score;
-    };
-    const filtered = query
-      ? quickNavItems.filter(
-          (item) => item.label.toLowerCase().includes(query) || item.path.toLowerCase().includes(query),
-        )
-      : quickNavItems;
-    return [...filtered].sort((a, b) => rankItem(b) - rankItem(a) || a.label.localeCompare(b.label));
-  }, [favoritePaths, location.pathname, quickNavItems, quickQuery, recentPathIndex]);
+    const query = normalizeFeatureToken(quickQuery);
+    if (!query) return quickNavItems;
+    return quickNavItems.filter((item) => item.searchText.includes(query));
+  }, [quickNavItems, quickQuery]);
 
-  const registerQuickRecent = useCallback((path: string) => {
-    setQuickRecents((prev) => [path, ...prev.filter((existing) => existing !== path)].slice(0, MAX_QUICK_RECENTS));
-  }, []);
-
-  const toggleQuickFavorite = useCallback((path: string) => {
-    setQuickFavorites((prev) => (prev.includes(path) ? prev.filter((existing) => existing !== path) : [path, ...prev]));
-  }, []);
+  const visibleQuickItems = useMemo(
+    () => limitQuickNavItems(filteredQuickItems),
+    [filteredQuickItems],
+  );
+  const hiddenQuickCount = filteredQuickItems.length - visibleQuickItems.length;
 
   const openQuickNav = useCallback(() => {
     setQuickNavOpen(true);
@@ -211,15 +208,14 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const tag = (event.target as HTMLElement | null)?.tagName?.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable) return;
+      const isEditable = tag === 'input' || tag === 'textarea' || (event.target as HTMLElement | null)?.isContentEditable;
+      if (isEditable) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         openQuickNav();
-      } else if (event.altKey && event.key.toLowerCase() === 'r') {
-        if (typeof window !== 'undefined' && window.innerWidth < 900) return;
-        event.preventDefault();
-        if (!resourcesButtonRef.current) return;
-        setResourcesAnchor((prev) => (prev ? null : resourcesButtonRef.current));
+      }
+      if (event.key === '?') {
+        setShortcutsOpen(true);
       }
     };
     window.addEventListener('keydown', handler);
@@ -231,125 +227,86 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
   }, [quickQuery]);
 
   useEffect(() => {
-    setResourcesAnchor(null);
-    setCartAnchor(null);
-  }, [location.pathname]);
+    const trimmed = quickQuery.trim();
+    if (quickNavOpen && trimmed.length >= 3 && filteredQuickItems.length === 0) {
+      getAnalyticsClient().capture('feature_search_no_results', {
+        platform: 'web',
+        locale: featureLocale.toLowerCase().startsWith('en') ? 'en' : 'es',
+        query_length: trimmed.length,
+      });
+    }
+  }, [featureLocale, filteredQuickItems.length, quickNavOpen, quickQuery]);
 
   useEffect(() => {
-    if (quickNavOpen) {
-      setTimeout(() => quickInputRef.current?.focus(), 0);
-    }
-  }, [quickNavOpen]);
+    if (!quickNavOpen) return;
+    quickItemRefs.current[quickHighlight]?.scrollIntoView?.({ block: 'nearest' });
+  }, [quickHighlight, quickNavOpen]);
 
   const handleSelectQuick = (idx: number) => {
-    const target = filteredQuickItems[idx];
+    const target = visibleQuickItems[idx];
     if (!target) return;
-    registerQuickRecent(target.path);
-    navigate(target.path);
+    getAnalyticsClient().capture('feature_search_result_selected', {
+      feature_id: target.featureId,
+      platform: 'web',
+      locked: target.locked,
+    });
+    navigate(target.destination);
     closeQuickNav();
   };
-
-  const showQuickPathHints = quickQuery.trim().includes('/');
-  const currentSectionLabel = useMemo(() => formatFriendlyPath(location.pathname), [location.pathname]);
-  const contextualDefaultPaths = useMemo(() => {
-    if (location.pathname.startsWith('/crm') || location.pathname.startsWith('/social')) {
-      return ['/crm/contactos', '/crm/leads', '/social/inbox'];
-    }
-    if (location.pathname.startsWith('/estudio')) {
-      return ['/estudio/calendario', '/estudio/ordenes', '/estudio/salas'];
-    }
-    if (location.pathname.startsWith('/escuela') || location.pathname.startsWith('/mi-profesor')) {
-      return ['/escuela/clases', '/escuela/profesores', '/mi-profesor'];
-    }
-    if (location.pathname.startsWith('/label')) {
-      return ['/label/artistas', '/label/releases', '/label/assets'];
-    }
-    if (location.pathname.startsWith('/operacion')) {
-      return ['/operacion/inventario', '/operacion/ordenes-marketplace', '/operacion/reservas-equipo'];
-    }
-    if (location.pathname.startsWith('/configuracion') || location.pathname.startsWith('/admin')) {
-      return ['/configuracion/estado', '/configuracion/cms', '/configuracion/preferencias'];
-    }
-    if (location.pathname.startsWith('/finanzas')) {
-      return ['/finanzas/pagos'];
-    }
-    return ['/crm/contactos', '/label/releases', '/estudio/calendario', '/operacion/inventario'];
-  }, [location.pathname]);
-  const shortcutStripItems = useMemo(() => {
-    const preferredPaths = [...contextualDefaultPaths, ...quickFavorites, ...quickRecents];
-    const seen = new Set<string>();
-    return preferredPaths
-      .filter((path) => {
-        if (!path || path === location.pathname) return false;
-        if (seen.has(path)) return false;
-        seen.add(path);
-        return true;
-      })
-      .map((path) => quickNavItems.find((item) => item.path === path))
-      .filter((item): item is (typeof quickNavItems)[number] => Boolean(item))
-      .slice(0, 5);
-  }, [contextualDefaultPaths, location.pathname, quickFavorites, quickNavItems, quickRecents]);
-
-  const handleOpenCart = (event: React.MouseEvent<HTMLElement>) => {
-    setCartAnchor(event.currentTarget);
-  };
-  const handleCloseCart = () => setCartAnchor(null);
-  const cartOpen = Boolean(cartAnchor);
-  const resourcesOpen = Boolean(resourcesAnchor);
 
   return (
     <AppBar
       elevation={0}
       position="sticky"
       sx={{
-        bgcolor: '#0f1118',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        bgcolor: 'background.paper',
+        borderBottom: '1px solid',
+        borderColor: 'divider',
       }}
     >
       <Toolbar
         sx={{
-          minHeight: { xs: 80, md: 92 },
-          px: { xs: 2, md: 4 },
+          minHeight: { xs: 64, md: 72 },
+          px: { xs: 2, md: 3 },
         }}
       >
         <Tooltip title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}>
           <IconButton
+            ref={toggleButtonRef}
             edge="start"
             onClick={onToggleSidebar}
-            sx={{ color: '#f8fafc', mr: 1 }}
+            sx={{ color: 'text.primary', mr: 1.5, minWidth: 44, minHeight: 44 }}
             aria-label={sidebarOpen ? 'Ocultar menú lateral' : 'Mostrar menú lateral'}
           >
             {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
           </IconButton>
         </Tooltip>
+
         <Box
           component={RouterLink}
           to="/inicio"
           sx={{
-            display: 'inline-flex',
+            display: { xs: 'none', sm: 'inline-flex' },
             alignItems: 'center',
-            flexGrow: 1,
-            mr: 1.5,
+            mr: 3,
           }}
           aria-label="Ir al inicio"
         >
           <BrandLogo
             variant="wordmark"
-            size={55}
+            size={42}
             sx={{
-              height: { xs: 32, sm: 44, md: 54 },
-              filter: 'brightness(0) invert(1) drop-shadow(0 10px 26px rgba(0,0,0,0.45))',
+              height: { xs: 28, sm: 36, md: 42 },
+              filter: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'brightness(0) invert(1)'
+                  : 'none',
             }}
           />
         </Box>
 
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          sx={{ ml: 'auto' }}
-        >
-          <Tooltip title="Cmd/Ctrl + K para saltar a una sección">
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ flexGrow: 1 }}>
+          <Tooltip title="Cmd/Ctrl + K">
             <Button
               color="inherit"
               variant="outlined"
@@ -357,221 +314,107 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
               startIcon={<SearchIcon fontSize="small" />}
               sx={{
                 textTransform: 'none',
-                borderColor: 'rgba(148,163,184,0.4)',
-                minWidth: { xs: 40, sm: 'auto' },
+                borderColor: 'divider',
+                color: 'text.secondary',
+                justifyContent: 'flex-start',
+                minWidth: { xs: 44, sm: 220, md: 280 },
+                minHeight: 44,
                 px: { xs: 1.25, sm: 1.75 },
+                py: 0.75,
               }}
               aria-keyshortcuts="Control+K Meta+K"
               aria-label="Buscar sección"
             >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Buscar sección</Box>
-            </Button>
-          </Tooltip>
-          <Tooltip title="Alt+R abre recursos">
-            <Button
-              color="inherit"
-              onClick={(e) => setResourcesAnchor(e.currentTarget)}
-              sx={{ textTransform: 'none', display: { xs: 'none', md: 'inline-flex' } }}
-              aria-haspopup="true"
-              aria-expanded={resourcesOpen ? 'true' : undefined}
-              aria-label="Abrir recursos"
-              aria-keyshortcuts="Alt+R"
-              ref={resourcesButtonRef}
-            >
-              Recursos
-            </Button>
-          </Tooltip>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/marketplace"
-            sx={{ textTransform: 'none', position: 'relative', minWidth: { xs: 44, sm: 'auto' }, px: { xs: 1.25, sm: 2 } }}
-            onMouseEnter={handleOpenCart}
-            onClick={handleOpenCart}
-            aria-label="Abrir carrito"
-          >
-            <Badge
-              color="secondary"
-              badgeContent={cartCount > 9 ? '9+' : cartCount}
-              invisible={cartCount <= 0}
-              sx={{ '& .MuiBadge-badge': { right: -6, top: 6 } }}
-            >
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Carrito
+                Buscar sección
               </Box>
-              <Box component="span" sx={{ display: { xs: 'inline-flex', sm: 'none' }, alignItems: 'center' }}>
-                <ShoppingCartOutlinedIcon fontSize="small" />
+              <Box
+                component="span"
+                sx={{
+                  display: { xs: 'none', md: 'inline' },
+                  ml: 'auto',
+                  pl: 1.5,
+                  fontSize: '0.75rem',
+                  color: 'text.secondary',
+                  fontWeight: 500,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                ⌘K
               </Box>
-            </Badge>
-          </Button>
-
-          {canManageAdminAccounts && (
-            <Button
-              color="inherit"
-              variant="outlined"
-              size="small"
-              component={RouterLink}
-              to="/configuracion/roles-permisos"
-              sx={{
-                textTransform: 'none',
-                borderColor: 'rgba(59,130,246,0.35)',
-                color: '#93c5fd',
-                '&:hover': { borderColor: 'rgba(59,130,246,0.6)', bgcolor: 'rgba(59,130,246,0.08)' },
-                display: { xs: 'none', md: 'inline-flex' },
-              }}
-            >
-              Panel admin
             </Button>
-          )}
+          </Tooltip>
+        </Stack>
+
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto', color: 'text.primary' }}>
           {session ? (
             <>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={handleLogout}
-                sx={{ textTransform: 'none', borderRadius: 999, display: { xs: 'none', sm: 'inline-flex' } }}
-              >
-                Salir
-              </Button>
+              <Tooltip title="Creación rápida">
+                <Button
+                  color="inherit"
+                  onClick={(event) => setQuickCreateAnchor(event.currentTarget)}
+                  startIcon={<AddCircleOutlineIcon />}
+                  aria-haspopup="menu"
+                  aria-expanded={Boolean(quickCreateAnchor)}
+                  aria-controls={quickCreateAnchor ? 'global-quick-create-menu' : undefined}
+                  sx={{ minHeight: 44, minWidth: 44, textTransform: 'none' }}
+                >
+                  <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>Crear</Box>
+                </Button>
+              </Tooltip>
+              <NotificationBell />
               <SessionMenu />
             </>
           ) : (
-            <Button color="inherit" component={RouterLink} to="/login">
+            <Button color="inherit" component={RouterLink} to="/login" sx={{ fontWeight: 600 }}>
               Ingresar
             </Button>
           )}
         </Stack>
       </Toolbar>
-      <Box
-        sx={{
-          px: { xs: 2, md: 4 },
-          pb: 1.25,
-          pt: 0.25,
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          bgcolor: 'rgba(15,17,24,0.94)',
-        }}
+
+      <Menu
+        id="global-quick-create-menu"
+        anchorEl={quickCreateAnchor}
+        open={Boolean(quickCreateAnchor)}
+        onClose={() => setQuickCreateAnchor(null)}
+        MenuListProps={{ 'aria-label': 'Creación rápida' }}
       >
-        <Stack
-          direction={{ xs: 'column', lg: 'row' }}
-          spacing={1}
-          justifyContent="space-between"
-          alignItems={{ xs: 'flex-start', lg: 'center' }}
-          useFlexGap
-        >
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-            <Typography variant="caption" sx={{ color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.35 }}>
-              Ahora
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#f8fafc', fontWeight: 700 }}>
-              {currentSectionLabel}
-            </Typography>
-          </Stack>
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            sx={{
-              width: '100%',
-              maxWidth: { xs: '100%', lg: 'auto' },
-              overflowX: { xs: 'auto', lg: 'visible' },
-              pb: { xs: 0.25, lg: 0 },
-              '&::-webkit-scrollbar': { display: 'none' },
+        {quickCreateItems.map((item) => (
+          <MenuItem
+            key={item.featureId}
+            onClick={() => {
+              setQuickCreateAnchor(null);
+              getAnalyticsClient().capture('quick_create_selected', {
+                feature_id: item.featureId,
+                platform: 'web',
+                locked: item.locked,
+              });
+              navigate(item.destination);
             }}
+            sx={{ minHeight: 44, gap: 1.25 }}
           >
-            {shortcutStripItems.map((item) => {
-              const favorite = favoritePaths.has(item.path);
-              return (
-                <Button
-                  key={item.path}
-                  size="small"
-                  component={RouterLink}
-                  to={item.path}
-                  onClick={() => registerQuickRecent(item.path)}
-                  variant={favorite ? 'contained' : 'outlined'}
-                  color={favorite ? 'secondary' : 'inherit'}
-                  sx={{
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap',
-                    borderColor: favorite ? undefined : 'rgba(148,163,184,0.35)',
-                  }}
-                >
-                  {item.label}
-                </Button>
-              );
-            })}
-            <Button
-              size="small"
-              color="inherit"
-              variant="text"
-              onClick={openQuickNav}
-              sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
-            >
-              Más secciones
-            </Button>
-          </Stack>
-        </Stack>
-      </Box>
-      <Popover
-        open={cartOpen}
-        anchorEl={cartAnchor}
-        onClose={handleCloseCart}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{ sx: { mt: 1, minWidth: 240, p: 1 } }}
-      >
-        <Typography variant="subtitle2" sx={{ px: 1, py: 0.5, fontWeight: 700 }}>
-          Carrito
-        </Typography>
-        <Divider />
-        {cartPreview.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ px: 1, py: 1 }}>
-            Vacío. Explora el marketplace.
-          </Typography>
-        ) : (
-          <Stack sx={{ px: 1, py: 1 }} spacing={0.5}>
-            {cartPreview.map((item, idx) => (
-              <Stack key={`${item.title}-${idx}`} direction="row" justifyContent="space-between">
-                <Typography variant="body2" sx={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.title}
-                </Typography>
-                <Typography variant="body2" fontWeight={700}>
-                  {item.subtotal}
-                </Typography>
-              </Stack>
-            ))}
-            <Stack spacing={0.5}>
-              <Button
-                size="small"
-                variant="contained"
-                component={RouterLink}
-                to="/marketplace"
-                onClick={handleCloseCart}
-              >
-                Ir al carrito
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                component={RouterLink}
-                to="/marketplace"
-                onClick={() => {
-                  handleCloseCart();
-                  localStorage.setItem('tdf-marketplace-payment', 'card');
-                }}
-              >
-                Pagar con tarjeta
-              </Button>
-            </Stack>
-          </Stack>
-        )}
-      </Popover>
+            {item.locked ? <LockOutlinedIcon aria-hidden="true" fontSize="small" /> : <AddCircleOutlineIcon aria-hidden="true" fontSize="small" />}
+            <ListItemText
+              primary={item.label}
+              secondary={item.locked ? `Requiere ${item.missingAccess ?? 'permiso'} · Solicitar acceso` : undefined}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
+
+      {/* Quick-nav dialog */}
       <Dialog
         open={quickNavOpen}
         onClose={closeQuickNav}
         fullWidth
         maxWidth="sm"
+        aria-labelledby="quick-nav-dialog-title"
+        TransitionProps={{
+          onEntered: () => quickSearchInputRef.current?.focus(),
+        }}
       >
-        <DialogTitle>Ir a otra sección</DialogTitle>
+        <DialogTitle id="quick-nav-dialog-title" sx={{ pb: 1 }}>Ir a otra sección</DialogTitle>
         <DialogContent>
           <TextField
             fullWidth
@@ -579,16 +422,16 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             placeholder="Escribe para buscar (ej: inventario, leads, marketplace)"
             value={quickQuery}
             onChange={(e) => setQuickQuery(e.target.value)}
-            inputRef={quickInputRef}
+            inputRef={quickSearchInputRef}
             onKeyDown={(event) => {
               if (event.key === 'ArrowDown') {
                 event.preventDefault();
-                setQuickHighlight((prev) => (prev + 1) % Math.max(filteredQuickItems.length, 1));
+                setQuickHighlight((prev) => (prev + 1) % Math.max(visibleQuickItems.length, 1));
               } else if (event.key === 'ArrowUp') {
                 event.preventDefault();
                 setQuickHighlight((prev) => {
-                  if (filteredQuickItems.length === 0) return 0;
-                  return prev <= 0 ? filteredQuickItems.length - 1 : prev - 1;
+                  if (visibleQuickItems.length === 0) return 0;
+                  return prev <= 0 ? visibleQuickItems.length - 1 : prev - 1;
                 });
               } else if (event.key === 'Enter') {
                 event.preventDefault();
@@ -606,103 +449,59 @@ export default function TopBar({ onToggleSidebar, sidebarOpen = true }: TopBarPr
             }}
             sx={{ mb: 1.25 }}
           />
-          {!quickQuery.trim() && (quickFavorites.length > 0 || quickRecents.length > 0) && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              Mostrando primero tus favoritos y secciones recientes.
-            </Typography>
-          )}
+          <Typography role="status" aria-live="polite" variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            {filteredQuickItems.length} {filteredQuickItems.length === 1 ? 'resultado' : 'resultados'}
+          </Typography>
           {filteredQuickItems.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
               Sin coincidencias. Prueba con otra palabra clave.
             </Typography>
           ) : (
             <List dense>
-              {filteredQuickItems.slice(0, 30).map((item, idx) => (
-                <ListItemButton
-                  key={`${item.path}-${idx}`}
-                  selected={idx === quickHighlight}
-                  onClick={() => handleSelectQuick(idx)}
-                >
-                  <ListItemText
-                    primary={item.label}
-                    secondary={`${item.group}${recentPathIndex.has(item.path) ? ' · Reciente' : ''}`}
-                    primaryTypographyProps={{ fontWeight: idx === quickHighlight ? 700 : 500 }}
-                  />
-                  <Stack direction="row" spacing={0.25} alignItems="center">
-                    {showQuickPathHints && (
-                      <Typography variant="caption" color="text.secondary">
-                        {item.path}
-                      </Typography>
-                    )}
-                    <Tooltip title={favoritePaths.has(item.path) ? 'Quitar de favoritos' : 'Agregar a favoritos'}>
-                      <IconButton
-                        size="small"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          toggleQuickFavorite(item.path);
-                        }}
-                        aria-label={favoritePaths.has(item.path) ? 'Quitar favorito' : 'Marcar favorito'}
+              {visibleQuickItems.map((item, idx) => (
+                <ListItem key={`${item.path}-${idx}`} disablePadding>
+                  <ListItemButton
+                    ref={(node: HTMLElement | null) => {
+                      quickItemRefs.current[idx] = node;
+                    }}
+                    selected={idx === quickHighlight}
+                    onClick={() => handleSelectQuick(idx)}
+                    sx={{ borderRadius: 1.5, mb: 0.25 }}
+                  >
+                    {item.groupIcon && (
+                      <Box
+                        component="span"
+                        aria-hidden="true"
+                        sx={{ display: 'inline-flex', color: 'text.secondary', mr: 1.5 }}
                       >
-                        {favoritePaths.has(item.path) ? (
-                          <StarIcon fontSize="small" color="warning" />
-                        ) : (
-                          <StarBorderIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </ListItemButton>
+                        {item.groupIcon}
+                      </Box>
+                    )}
+                    {item.locked ? <LockOutlinedIcon aria-hidden="true" sx={{ color: 'text.secondary', mr: 1.5 }} /> : null}
+                    <ListItemText
+                      primary={item.label}
+                      secondary={item.locked ? `${item.group} · Requiere ${item.missingAccess ?? 'permiso'} · Solicitar acceso` : item.group}
+                      primaryTypographyProps={{ fontWeight: idx === quickHighlight ? 700 : 500 }}
+                    />
+                  </ListItemButton>
+                </ListItem>
               ))}
             </List>
           )}
+          {hiddenQuickCount > 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, px: 0.5 }}>
+              Mostrando {visibleQuickItems.length} de {filteredQuickItems.length}. Escribe para refinar la búsqueda.
+            </Typography>
+          )}
         </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
+          <Typography variant="caption" color="text.secondary">
+            ↑↓ para navegar · ↵ para abrir · esc para cerrar
+          </Typography>
+        </DialogActions>
       </Dialog>
-      <Menu
-        anchorEl={resourcesAnchor}
-        open={resourcesOpen}
-        onClose={() => setResourcesAnchor(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        MenuListProps={{ autoFocusItem: resourcesOpen }}
-      >
-        <MenuItem component={RouterLink} to="/manual" onClick={() => setResourcesAnchor(null)}>
-          Manual
-        </MenuItem>
-        <MenuItem component={RouterLink} to="/docs" onClick={() => setResourcesAnchor(null)}>
-          Documentación
-        </MenuItem>
-        <MenuItem component={RouterLink} to="/acerca" onClick={() => setResourcesAnchor(null)}>
-          Acerca de
-        </MenuItem>
-        <MenuItem component={RouterLink} to="/donar" onClick={() => setResourcesAnchor(null)}>
-          Donar
-        </MenuItem>
-        <MenuItem component={RouterLink} to="/feedback" onClick={() => setResourcesAnchor(null)}>
-          Sugerencias
-        </MenuItem>
-        {canUsePath('/herramientas/chatkit') && (
-          <MenuItem component={RouterLink} to="/herramientas/chatkit" onClick={() => setResourcesAnchor(null)}>
-            ChatKit
-          </MenuItem>
-        )}
-        {canUsePath('/herramientas/tidal-agent') && (
-          <MenuItem component={RouterLink} to="/herramientas/tidal-agent" onClick={() => setResourcesAnchor(null)}>
-            Agente Tidal
-          </MenuItem>
-        )}
-        <MenuItem component={RouterLink} to="/herramientas/creador-musical" onClick={() => setResourcesAnchor(null)}>
-          Creador musical
-        </MenuItem>
-        {canUseTokenAdmin && (
-          <MenuItem component={RouterLink} to="/herramientas/token-admin" onClick={() => setResourcesAnchor(null)}>
-            Token API
-          </MenuItem>
-        )}
-        <MenuItem component={RouterLink} to="/seguridad" onClick={() => setResourcesAnchor(null)}>
-          Seguridad
-        </MenuItem>
-      </Menu>
+
+      <KeyboardShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </AppBar>
   );
 }
