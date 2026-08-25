@@ -5,10 +5,17 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import RegisterPage from "../Register";
 import { vi } from "vitest";
 
-const mockOpenRegister = vi.fn();
-const mockCashDrop = vi.fn();
-const mockCountRegister = vi.fn();
-const mockCloseRegister = vi.fn();
+const {
+  mockOpenRegister,
+  mockCashDrop,
+  mockCountRegister,
+  mockCloseRegister,
+} = vi.hoisted(() => ({
+  mockOpenRegister: vi.fn(),
+  mockCashDrop: vi.fn(),
+  mockCountRegister: vi.fn(),
+  mockCloseRegister: vi.fn(),
+}));
 
 vi.mock("../../../api/bar", () => ({
   openRegister: mockOpenRegister,
@@ -35,7 +42,7 @@ function renderRegister(path = "/bar/register") {
 
 describe("RegisterPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it("shows info when booking or station is missing", () => {

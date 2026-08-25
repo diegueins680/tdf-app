@@ -26,6 +26,7 @@ import ResetPasswordPage from './pages/public/ResetPasswordPage';
 import ChangePasswordPage from './pages/account/ChangePasswordPage';
 import TrialQueuePage from './pages/trials/TrialQueuePage';
 import StudentProfilePage from './pages/students/StudentProfilePage';
+import StudentDashboard from './pages/students/StudentDashboard';
 import PackageListLite from './features/packages/PackageList';
 import Payments from './features/payments/Payments';
 import ReceiptView from './features/receipts/ReceiptView';
@@ -113,6 +114,7 @@ export default function App() {
               <Route path="cohortes" element={<Placeholder title="Escuela · Cohortes" />} />
               <Route path="estudiantes" element={<Placeholder title="Escuela · Estudiantes" description="Lista de estudiantes matriculados. Click en un estudiante para ver su perfil y progreso." />} />
               <Route path="estudiantes/:id" element={<StudentProfilePage />} />
+              <Route path="estudiante/:studentId/dashboard" element={<StudentDashboard />} />
               <Route path="inscripciones" element={<Placeholder title="Escuela · Inscripciones" />} />
               <Route path="pagos" element={<Placeholder title="Escuela · Pagos" />} />
             </Route>

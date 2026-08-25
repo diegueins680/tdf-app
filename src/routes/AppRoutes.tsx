@@ -4,7 +4,6 @@ import SideNav from '../components/SideNav';
 import MetadataPage from '../pages/Metadata';
 import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
-import MetadataPage from '../pages/Metadata';
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
