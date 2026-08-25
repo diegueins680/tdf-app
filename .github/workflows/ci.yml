@@ -9,9 +9,11 @@ on:
       - 'tdf-mobile/**'
       - 'scripts/**'
       - 'test/personas/**'
+      - 'test/internships/**'
       - 'e2e/web/**'
       - 'playwright.config.mjs'
       - 'docs/persona-testing/**'
+      - 'docs/internships/**'
       - 'package.json'
       - 'package-lock.json'
       - '.npmrc'
@@ -326,6 +328,9 @@ jobs:
 
       - name: Test the production release contract
         run: npm run test:production-release
+
+      - name: Rehearse the studio internship audit migration and rollback
+        run: sh scripts/test-studio-internship-audit-migration.sh
 
       - name: Rehearse service-storefront checkout runtime migration
         run: ./scripts/test-service-storefront-checkout-runtime-migration.sh

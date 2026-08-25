@@ -85,7 +85,7 @@ describe('ReleaseFeed', () => {
     expect(screen.getByText('Ingresa con tu cuenta para ver lanzamientos personalizados y seguir artistas.')).not.toBeNull();
     expect(screen.getByRole('link', { name: 'Inicia sesión' }).getAttribute('href')).toBe('/login?redirect=/fans');
     expect(screen.getByRole('link', { name: 'Crear cuenta fan' }).getAttribute('href')).toBe(
-      '/login?signup=1&roles=Fan&redirect=/fans',
+      '/login?signup=1&intent=follow_artists&redirect=/fans',
     );
   });
 

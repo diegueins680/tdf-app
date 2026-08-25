@@ -54,7 +54,7 @@ import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsApp
 import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
 import           TDF.Routes.DomoQuotes (PublicDomoQuotesAPI)
 import           TDF.API.LiveSessions (LiveSessionsAPI)
-import           TDF.API.Feedback    (FeedbackAPI)
+import           TDF.API.Feedback    (FeedbackAPI, InternalFeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
 import           TDF.API.Label (LabelAPI)
@@ -587,6 +587,7 @@ type ProtectedAPI =
   :<|> "social-events" :> SocialEventsAPI
   :<|> ContractsAPI
   :<|> InternshipsAPI
+  :<|> "feedback" :> "internal" :> InternalFeedbackAPI
   :<|> AdsAdminAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI

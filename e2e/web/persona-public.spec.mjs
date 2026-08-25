@@ -103,6 +103,7 @@ function observeRuntime(page) {
       reason === 'net::ERR_ABORTED'
       || reason === 'cancelled'
       || reason === 'Load request cancelled'
+      || reason === 'NS_BINDING_ABORTED'
     ) return;
     failedRequests.push(`${request.method()} ${new URL(request.url()).pathname}: ${reason}`);
   });
@@ -166,6 +167,7 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
   await page.getByLabel('Apellido').fill('Paredes');
   await page.getByRole('textbox', { name: 'Correo *', exact: true }).fill('per-01.elena@persona.test');
   await page.getByLabel('Contraseña *').last().fill('fictional-password-not-a-secret');
+  await page.getByLabel('Acepto los términos y la política de privacidad').check();
   await page.getByRole('button', { name: 'Crear e ingresar' }).click();
 
   await expect(page).toHaveURL(/\/fans$/);

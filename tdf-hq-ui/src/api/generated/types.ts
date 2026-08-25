@@ -2566,6 +2566,341 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/feedback/internal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the reporter's private reports or all reports for an authorized administrator */
+        get: operations["listInternalFeedback"];
+        put?: never;
+        /** Save an internal report draft linked to the existing feedback record */
+        post: operations["createInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export access-scoped reports as CSV */
+        get: operations["exportInternalFeedbackCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/export.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export access-scoped reports as JSON */
+        get: operations["exportInternalFeedbackJson"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/legacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read legacy public feedback without exposing storage paths */
+        get: operations["listLegacyFeedbackForAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        /** Read one authorized internal report with evidence, discussion, history, and retests */
+        get: operations["getInternalFeedback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update reporter draft/information or administrator triage fields */
+        patch: operations["updateInternalFeedback"];
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a draft and record receipt without a real external notification */
+        post: operations["submitInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a comment, information request, or information response */
+        post: operations["commentOnInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an authorized small evidence file */
+        post: operations["uploadInternalFeedbackEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link externally stored HTTPS video or evidence */
+        post: operations["linkInternalFeedbackEvidence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/evidence/{evidenceId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download an authorized private evidence file */
+        get: operations["downloadInternalFeedbackEvidence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/internal/{reportId}/retests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Append a requested retest result without replacing history */
+        post: operations["retestInternalFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List access-scoped internship audit plans */
+        get: operations["listInternAuditPlans"];
+        put?: never;
+        /** Create an inactive audit plan for an existing draft project and task */
+        post: operations["createInternAuditPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        /** Read calculated plan progress and completion readiness */
+        get: operations["getInternAuditPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Record an authorized plan status or completion exception */
+        patch: operations["updateInternAuditPlan"];
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Explicitly activate and assign an approved draft plan */
+        post: operations["activateInternAuditPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List structured cases and their latest execution */
+        get: operations["listInternTestCases"];
+        put?: never;
+        /** Add a structured case while the plan remains a draft */
+        post: operations["createInternTestCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/daily-summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List session summaries for the plan */
+        get: operations["listInternAuditDailySummaries"];
+        put?: never;
+        /** Record the assigned intern's end-of-session summary */
+        post: operations["createInternAuditDailySummary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/audit-plans/{planId}/final-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the structured final summary */
+        get: operations["getInternAuditFinalSummary"];
+        /** Save conclusions or submit the final summary */
+        put: operations["updateInternAuditFinalSummary"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/test-cases/{testCaseId}/executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List every preserved execution and retest */
+        get: operations["listInternTestExecutions"];
+        put?: never;
+        /** Append a test execution */
+        post: operations["createInternTestExecution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internships/test-executions/{executionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update only a non-terminal in-progress execution */
+        patch: operations["updateInternTestExecution"];
+        trace?: never;
+    };
     "/ddex/references": {
         parameters: {
             query?: never;
@@ -6425,6 +6760,12 @@ export interface components {
         GoogleLoginRequest: {
             /** @description Google ID token returned by Google Identity Services */
             idToken: string;
+            /** @description Optional consent to receive TDF product and marketing updates when creating an account. */
+            marketingOptIn?: boolean;
+            /** @description Account terms acceptance when Google is used from signup. */
+            termsAccepted?: boolean;
+            /** @description Version of the account terms accepted during Google signup. */
+            termsVersion?: string;
         };
         SignupRequest: {
             /** @example Diego */
@@ -6443,6 +6784,15 @@ export interface components {
              * @example changeme123
              */
             password: string;
+            /** @description Optional consent to receive TDF product and marketing updates. */
+            marketingOptIn?: boolean;
+            /**
+             * @description Required account terms acceptance paired with termsVersion.
+             * @enum {boolean}
+             */
+            termsAccepted: true;
+            /** @description Version of the account terms accepted during signup. */
+            termsVersion: string;
             /** @description Artist or band ids to follow after account creation; this does not assign a security role. */
             fanArtistIds?: number[];
             /**
@@ -6458,6 +6808,8 @@ export interface components {
             partyId?: number;
             roles?: components["schemas"]["Role"][];
             modules?: string[];
+            /** @description Present on Google authentication to distinguish a newly created account from an existing login. */
+            accountCreated?: boolean;
         };
         SessionResponse: {
             username: string;
@@ -7896,6 +8248,452 @@ export interface components {
             refreshToken?: string | null;
             expiresIn: number;
             tokenType?: string | null;
+        };
+        /** @enum {string} */
+        InternalReportState: "draft" | "submitted" | "received" | "needs_information" | "confirmed" | "prioritized" | "in_progress" | "ready_for_retest" | "verified" | "closed" | "duplicate" | "discarded";
+        /** @enum {string} */
+        InternalReportType: "error" | "suggestion" | "idea" | "question" | "accessibility" | "permissions" | "performance" | "content_translation";
+        InternalFeedbackCreate: {
+            ifcTitle: string;
+            ifcDescription: string;
+            /** Format: uuid */
+            ifcCategoryId: string;
+            /** Format: uuid */
+            ifcProposedSeverityId: string;
+            ifcReportType: components["schemas"]["InternalReportType"];
+            ifcModuleName: string;
+            ifcFeatureName?: string | null;
+            /** @enum {string} */
+            ifcEnvironment: "staging" | "test" | "local" | "production-read-only";
+            ifcUrlOrScreen?: string | null;
+            ifcPlatform: string;
+            ifcDevice?: string | null;
+            ifcBrowser?: string | null;
+            ifcLanguage: string;
+            ifcAccountRole: string;
+            ifcReproductionSteps?: string | null;
+            ifcExpectedResult?: string | null;
+            ifcActualResult?: string | null;
+            ifcFrequency?: string | null;
+            /** Format: uuid */
+            ifcTestCaseId?: string | null;
+            /** Format: uuid */
+            ifcTestExecutionId?: string | null;
+            /** Format: uuid */
+            ifcInternshipProjectId?: string | null;
+            /** Format: uuid */
+            ifcInternshipTaskId?: string | null;
+            ifcBlocking?: boolean;
+            ifcVideoLinks?: string | null;
+        };
+        /** @description Reporter fields are accepted only for owned drafts/information responses. Authoritative fields are administrator-only. */
+        InternalFeedbackUpdate: {
+            ifuTitle?: string;
+            ifuDescription?: string;
+            /** Format: uuid */
+            ifuCategoryId?: string;
+            /** Format: uuid */
+            ifuProposedSeverityId?: string;
+            ifuReportType?: components["schemas"]["InternalReportType"];
+            ifuModuleName?: string;
+            ifuFeatureName?: string | null;
+            ifuEnvironment?: string;
+            ifuUrlOrScreen?: string | null;
+            ifuPlatform?: string;
+            ifuDevice?: string | null;
+            ifuBrowser?: string | null;
+            ifuLanguage?: string;
+            ifuAccountRole?: string;
+            ifuReproductionSteps?: string | null;
+            ifuExpectedResult?: string | null;
+            ifuActualResult?: string | null;
+            ifuFrequency?: string | null;
+            ifuBlocking?: boolean;
+            ifuVideoLinks?: string | null;
+            ifuState?: components["schemas"]["InternalReportState"];
+            /** Format: uuid */
+            ifuAuthoritativeSeverityId?: string | null;
+            /** @enum {string|null} */
+            ifuPriority?: "low" | "medium" | "high" | "urgent" | null;
+            /** Format: int64 */
+            ifuAssignedTo?: number | null;
+            /** Format: uuid */
+            ifuDuplicateOf?: string | null;
+            ifuResolution?: string | null;
+            ifuRetestResult?: string | null;
+            ifuClosureReason?: string | null;
+            /** Format: uri */
+            ifuGithubIssueUrl?: string | null;
+        };
+        InternalFeedbackSummary: {
+            /** Format: uuid */
+            ifsId: string;
+            ifsTitle: string;
+            ifsReportType: components["schemas"]["InternalReportType"];
+            ifsState: components["schemas"]["InternalReportState"];
+            ifsModuleName: string;
+            ifsFeatureName?: string | null;
+            ifsEnvironment: string;
+            ifsPlatform: string;
+            /** Format: uuid */
+            ifsProposedSeverityId?: string | null;
+            /** Format: uuid */
+            ifsAuthoritativeSeverityId?: string | null;
+            ifsPriority?: string | null;
+            ifsBlocking: boolean;
+            /** Format: int64 */
+            ifsReporterPartyId: number;
+            ifsReporterName: string;
+            /** Format: uuid */
+            ifsInternshipProjectId?: string | null;
+            /** Format: uuid */
+            ifsInternshipTaskId?: string | null;
+            /** Format: uuid */
+            ifsTestCaseId?: string | null;
+            /** Format: uuid */
+            ifsTestExecutionId?: string | null;
+            /** Format: uuid */
+            ifsDuplicateOf?: string | null;
+            /** Format: date-time */
+            ifsCreatedAt: string;
+            /** Format: date-time */
+            ifsUpdatedAt: string;
+        };
+        InternalFeedbackEvidence: {
+            /** Format: uuid */
+            ifeId: string;
+            /** @enum {string} */
+            ifeKind: "attachment" | "external_link" | "video_link" | "retest";
+            ifeOriginalFileName?: string | null;
+            ifeContentType?: string | null;
+            ifeSizeBytes?: number | null;
+            /** Format: uri */
+            ifeExternalUrl?: string | null;
+            ifeCaption?: string | null;
+            /** Format: int64 */
+            ifeUploadedBy: number;
+            /** Format: date-time */
+            ifeCreatedAt: string;
+        };
+        InternalFeedbackEvidenceLinkCreate: {
+            /** Format: uri */
+            ifelUrl: string;
+            ifelCaption?: string | null;
+            /** @enum {string|null} */
+            ifelKind?: "external_link" | "video_link" | "retest" | null;
+        };
+        InternalFeedbackCommentCreate: {
+            /** @enum {string|null} */
+            ifccKind?: "comment" | "information_request" | "information_response" | null;
+            ifccBody: string;
+        };
+        InternalFeedbackComment: {
+            /** Format: uuid */
+            ifcmId: string;
+            /** Format: int64 */
+            ifcmAuthorPartyId: number;
+            ifcmAuthorName: string;
+            ifcmKind: string;
+            ifcmBody: string;
+            /** Format: date-time */
+            ifcmCreatedAt: string;
+        };
+        InternalFeedbackHistory: {
+            /** Format: uuid */
+            ifhId: string;
+            /** Format: int64 */
+            ifhActorPartyId: number;
+            ifhActorName: string;
+            ifhAction: string;
+            ifhPreviousState?: string | null;
+            ifhNewState?: string | null;
+            ifhMetadata?: string | null;
+            /** Format: date-time */
+            ifhCreatedAt: string;
+        };
+        InternalFeedbackRetestCreate: {
+            /** Format: uuid */
+            ifrcExecutionId?: string | null;
+            /** @enum {string} */
+            ifrcResult: "passed" | "failed" | "blocked";
+            ifrcNotes?: string | null;
+            ifrcEvidenceSummary?: string | null;
+        };
+        InternalFeedbackRetest: {
+            /** Format: uuid */
+            ifrtId: string;
+            /** Format: uuid */
+            ifrtExecutionId?: string | null;
+            /** Format: int64 */
+            ifrtTesterPartyId: number;
+            ifrtTesterName: string;
+            ifrtResult: string;
+            ifrtNotes?: string | null;
+            ifrtEvidenceSummary?: string | null;
+            /** Format: date-time */
+            ifrtCreatedAt: string;
+        };
+        InternalFeedback: {
+            ifrSummary: components["schemas"]["InternalFeedbackSummary"];
+            ifrDescription: string;
+            /** Format: uuid */
+            ifrCategoryId?: string | null;
+            ifrUrlOrScreen?: string | null;
+            ifrDevice?: string | null;
+            ifrBrowser?: string | null;
+            ifrLanguage: string;
+            ifrAccountRole: string;
+            ifrReproductionSteps?: string | null;
+            ifrExpectedResult?: string | null;
+            ifrActualResult?: string | null;
+            ifrFrequency?: string | null;
+            /** Format: int64 */
+            ifrAssignedTo?: number | null;
+            ifrResolution?: string | null;
+            ifrRetestResult?: string | null;
+            ifrClosureReason?: string | null;
+            /** Format: uri */
+            ifrGithubIssueUrl?: string | null;
+            ifrVideoLinks?: string | null;
+            /** Format: date-time */
+            ifrSubmittedAt?: string | null;
+            /** Format: date-time */
+            ifrClosedAt?: string | null;
+            /** @description False when the owning internship audit is completed or cancelled and the report is read-only. */
+            ifrAuditPlanMutable: boolean;
+            ifrEvidence: components["schemas"]["InternalFeedbackEvidence"][];
+            ifrComments: components["schemas"]["InternalFeedbackComment"][];
+            ifrHistory: components["schemas"]["InternalFeedbackHistory"][];
+            ifrRetests: components["schemas"]["InternalFeedbackRetest"][];
+            ifrPotentialDuplicates: components["schemas"]["InternalFeedbackSummary"][];
+        };
+        LegacyFeedback: {
+            /** Format: uuid */
+            lfdId: string;
+            lfdTitle: string;
+            lfdDescription: string;
+            /** Format: uuid */
+            lfdCategoryId?: string | null;
+            /** Format: uuid */
+            lfdSeverityId?: string | null;
+            /** Format: email */
+            lfdContactEmail?: string | null;
+            lfdConsent: boolean;
+            /** Format: int64 */
+            lfdCreatedBy?: number | null;
+            lfdHasAttachment: boolean;
+            /** Format: date-time */
+            lfdCreatedAt: string;
+        };
+        InternAuditPlanCreate: {
+            /** Format: uuid */
+            iapcProjectId: string;
+            /** Format: uuid */
+            iapcTaskId: string;
+            /** @enum {string} */
+            iapcEnvironment: "staging";
+            iapcDurationDays?: number;
+            iapcExpectedHoursMin?: number;
+            iapcExpectedHoursMax?: number;
+            iapcMidpointPercent?: number;
+            /** Format: int64 */
+            iapcProposedAssignee?: number | null;
+            iapcFinalReviewRequired?: boolean;
+        };
+        InternAuditPlanUpdate: {
+            iapuCompletionJustification?: string | null;
+            iapuApproveException?: boolean;
+            /**
+             * @description Activation is intentionally available only through the explicit activate endpoint.
+             * @enum {string}
+             */
+            iapuStatus?: "draft" | "completed" | "cancelled";
+        };
+        InternAuditPlan: {
+            /** Format: uuid */
+            iapId: string;
+            /** Format: uuid */
+            iapProjectId: string;
+            /** Format: uuid */
+            iapTaskId: string;
+            iapEnvironment: string;
+            iapStatus: string;
+            iapDurationDays: number;
+            iapExpectedHoursMin: number;
+            iapExpectedHoursMax: number;
+            iapMidpointPercent: number;
+            /** Format: int64 */
+            iapProposedAssignee?: number | null;
+            iapFinalReviewRequired: boolean;
+            iapCompletionJustification?: string | null;
+            /** Format: int64 */
+            iapCompletionApprovedBy?: number | null;
+            /** Format: date-time */
+            iapCompletionApprovedAt?: string | null;
+            iapCaseCount: number;
+            iapExecutedCaseCount: number;
+            iapCriticalRemaining: number;
+            iapOpenBlockerCount: number;
+            iapFailedWithoutReport: number;
+            iapEvidenceMissing: number;
+            iapCalculatedProgress: number;
+            iapCanComplete: boolean;
+            /** Format: date-time */
+            iapCreatedAt: string;
+            /** Format: date-time */
+            iapUpdatedAt: string;
+        };
+        InternTestCaseCreate: {
+            itccStableId: string;
+            itccModuleName: string;
+            itccFeatureName: string;
+            itccUserRole: string;
+            itccObjective: string;
+            itccBusinessPurpose: string;
+            itccPreconditions: string;
+            itccRequiredTestData: string;
+            /** @enum {string} */
+            itccEnvironment: "staging";
+            itccPlatform: string;
+            itccBrowserOrDevice: string;
+            /** @enum {string} */
+            itccLanguage: "es" | "en";
+            itccDetailedSteps: string;
+            itccExpectedResult: string;
+            itccExpectedPersistedState: string;
+            itccExpectedSideEffects: string;
+            itccCleanupInstructions: string;
+            /** @enum {string} */
+            itccCriticality: "low" | "medium" | "high" | "critical";
+            /** @enum {string} */
+            itccEvidenceRequirement: "light" | "strong";
+            itccExploratoryCharter?: string | null;
+            itccApplicable?: boolean;
+            itccSortOrder?: number;
+        };
+        InternTestCase: {
+            /** Format: uuid */
+            itcId: string;
+            /** Format: uuid */
+            itcPlanId: string;
+            itcLatestExecution?: components["schemas"]["InternTestExecution"];
+        } & {
+            itcStableId: string;
+            itcModuleName: string;
+            itcFeatureName: string;
+            itcUserRole: string;
+            itcObjective: string;
+            itcBusinessPurpose: string;
+            itcPreconditions: string;
+            itcRequiredTestData: string;
+            itcEnvironment: string;
+            itcPlatform: string;
+            itcBrowserOrDevice: string;
+            itcLanguage: string;
+            itcDetailedSteps: string;
+            itcExpectedResult: string;
+            itcExpectedPersistedState: string;
+            itcExpectedSideEffects: string;
+            itcCleanupInstructions: string;
+            itcCriticality: string;
+            itcEvidenceRequirement: string;
+            itcExploratoryCharter?: string | null;
+            itcApplicable: boolean;
+            itcSortOrder: number;
+        };
+        InternTestExecutionCreate: {
+            /** @enum {string} */
+            itecStatus: "pending" | "in_progress" | "passed" | "failed" | "blocked" | "not_applicable" | "ready_for_retest" | "verified";
+            itecActualResult?: string | null;
+            itecPersistedStateObserved?: string | null;
+            itecSideEffectsObserved?: string | null;
+            itecBlockerReason?: string | null;
+            itecEvidenceSummary?: string | null;
+        };
+        InternTestExecutionUpdate: {
+            /** @enum {string} */
+            iteuStatus?: "pending" | "in_progress" | "passed" | "failed" | "blocked" | "not_applicable" | "ready_for_retest" | "verified";
+            iteuActualResult?: string | null;
+            iteuPersistedStateObserved?: string | null;
+            iteuSideEffectsObserved?: string | null;
+            iteuBlockerReason?: string | null;
+            iteuEvidenceSummary?: string | null;
+        };
+        InternTestExecution: {
+            /** Format: uuid */
+            itexId: string;
+            /** Format: uuid */
+            itexTestCaseId: string;
+            itexExecutionNumber: number;
+            /** Format: int64 */
+            itexExecutorPartyId: number;
+            itexStatus: string;
+            itexActualResult?: string | null;
+            itexPersistedStateObserved?: string | null;
+            itexSideEffectsObserved?: string | null;
+            itexBlockerReason?: string | null;
+            itexEvidenceSummary?: string | null;
+            /** Format: date-time */
+            itexStartedAt?: string | null;
+            /** Format: date-time */
+            itexCompletedAt?: string | null;
+            /** Format: date-time */
+            itexCreatedAt: string;
+            /** Format: date-time */
+            itexUpdatedAt: string;
+        };
+        InternDailySummaryCreate: {
+            /** Format: date */
+            idscWorkDate: string;
+            idscMinutesWorked: number;
+            idscModulesTested: string;
+            idscCasesCompleted: number;
+            idscReportsCreated: number;
+            idscBlockers?: string | null;
+            idscNextStep: string;
+        };
+        InternDailySummary: {
+            /** Format: uuid */
+            idsId: string;
+            /** Format: uuid */
+            idsTaskId: string;
+            /** Format: int64 */
+            idsAuthorPartyId: number;
+            /** Format: date */
+            idsWorkDate: string;
+            idsMinutesWorked: number;
+            idsModulesTested: string;
+            idsCasesCompleted: number;
+            idsReportsCreated: number;
+            idsBlockers?: string | null;
+            idsNextStep: string;
+            /** Format: date-time */
+            idsCreatedAt: string;
+        };
+        InternFinalSummaryUpdate: {
+            ifsuConclusions?: string | null;
+            ifsuSubmit?: boolean;
+        };
+        InternFinalSummary: {
+            /** Format: uuid */
+            ifsId: string;
+            /** Format: uuid */
+            ifsPlanId: string;
+            /** Format: int64 */
+            ifsAuthorPartyId: number;
+            /** @description JSON snapshot generated from executions and reports */
+            ifsGeneratedSnapshot: string;
+            ifsConclusions?: string | null;
+            /** Format: date-time */
+            ifsSubmittedAt?: string | null;
+            /** Format: int64 */
+            ifsApprovedBy?: number | null;
+            /** Format: date-time */
+            ifsApprovedAt?: string | null;
+            /** Format: date-time */
+            ifsCreatedAt: string;
+            /** Format: date-time */
+            ifsUpdatedAt: string;
         };
         FeedbackMultipart: {
             title: string;
@@ -13945,6 +14743,766 @@ export interface operations {
             };
             /** @description Invalid multipart data, catalog reference, consent, or attachment */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternalFeedback: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+                q?: string;
+                mine?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access-scoped reports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackSummary"][];
+                };
+            };
+            /** @description Intern/reporting access is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Invalid report or traceability fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reporter cannot use the requested task/test relationship */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    exportInternalFeedbackCsv: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+        };
+    };
+    exportInternalFeedbackJson: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["InternalReportState"];
+                module?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackSummary"][];
+                };
+            };
+        };
+    };
+    listLegacyFeedbackForAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Legacy feedback */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LegacyFeedback"][];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Internal report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Unknown or private report */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Attempt to modify an authoritative field */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid state transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Received report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedback"];
+                };
+            };
+            /** @description Report is not a valid draft */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    commentOnInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackCommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Comment recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackComment"];
+                };
+            };
+        };
+    };
+    uploadInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    caption?: string;
+                    /** Format: binary */
+                    attachment: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Evidence stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackEvidence"];
+                };
+            };
+            /** @description Invalid type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    linkInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackEvidenceLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Evidence link stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackEvidence"];
+                };
+            };
+        };
+    };
+    downloadInternalFeedbackEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+                evidenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Unknown */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    retestInternalFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternalFeedbackRetestCreate"];
+            };
+        };
+        responses: {
+            /** @description Retest recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalFeedbackRetest"];
+                };
+            };
+            /** @description Report is not ready for retest */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternAuditPlans: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit plans */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"][];
+                };
+            };
+        };
+    };
+    createInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternAuditPlanCreate"];
+            };
+        };
+        responses: {
+            /** @description Draft plan */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Administrator access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Audit plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Unknown or unauthorized plan */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternAuditPlanUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+        };
+    };
+    activateInternAuditPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Activated plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternAuditPlan"];
+                };
+            };
+            /** @description Plan cannot be safely activated */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternTestCases: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Test cases */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestCase"][];
+                };
+            };
+        };
+    };
+    createInternTestCase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestCaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Test case created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestCase"];
+                };
+            };
+            /** @description Active plans are immutable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listInternAuditDailySummaries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Daily summaries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternDailySummary"][];
+                };
+            };
+        };
+    };
+    createInternAuditDailySummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternDailySummaryCreate"];
+            };
+        };
+        responses: {
+            /** @description Daily summary recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternDailySummary"];
+                };
+            };
+        };
+    };
+    getInternAuditFinalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Final summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternFinalSummary"];
+                };
+            };
+        };
+    };
+    updateInternAuditFinalSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternFinalSummaryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Final summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternFinalSummary"];
+                };
+            };
+        };
+    };
+    listInternTestExecutions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Executions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"][];
+                };
+            };
+        };
+    };
+    createInternTestExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                testCaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestExecutionCreate"];
+            };
+        };
+        responses: {
+            /** @description Execution appended */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"];
+                };
+            };
+        };
+    };
+    updateInternTestExecution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                executionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InternTestExecutionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Execution updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternTestExecution"];
+                };
+            };
+            /** @description Terminal executions are immutable */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

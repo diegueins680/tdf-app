@@ -61,7 +61,7 @@ export function buildSignupPayload(
   form: SignupFormState,
   favoriteArtistIds: number[],
   claimArtistId?: number | null,
-): SignupPayload {
+): Omit<SignupPayload, 'termsAccepted' | 'termsVersion'> {
   const normalizedClaimId = parsePositiveSafeInt(claimArtistId);
   const normalizedFavoriteArtistIds = normalizePositiveSafeIntList(favoriteArtistIds);
 

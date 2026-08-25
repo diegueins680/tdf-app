@@ -45,12 +45,14 @@ const TASK_STATUS_OPTIONS = [
   { value: 'doing', label: 'En progreso' },
   { value: 'blocked', label: 'Bloqueada' },
   { value: 'done', label: 'Lista' },
+  { value: 'cancelled', label: 'Cancelada' },
 ];
 
 const PROJECT_STATUS_OPTIONS = [
   { value: 'active', label: 'Activo' },
   { value: 'paused', label: 'En pausa' },
   { value: 'completed', label: 'Completado' },
+  { value: 'cancelled', label: 'Cancelado' },
 ];
 
 const PERMISSION_STATUS_LABELS: Record<string, string> = {
@@ -606,7 +608,7 @@ export default function InternshipsPage() {
   const showHoursEmptyState = !showFirstRunAdminHoursEmptyState && entries.length === 0;
   const hoursEmptyStateMessage = isAdmin ? emptyAdminHoursMessage : emptySelfHoursMessage;
 
-  const signupPath = '/login?signup=1&roles=Intern&redirect=/practicas';
+  const signupPath = '/login?signup=1&intent=internships';
   const signupUrl = typeof window !== 'undefined' ? `${window.location.origin}${signupPath}` : signupPath;
 
   const handleCopySignup = async () => {

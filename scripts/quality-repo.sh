@@ -13,6 +13,16 @@ run_npm() {
 }
 
 echo "▶ Verifying repository-wide invariants"
+run_npm run generate:studio-internship-audit --prefix "$ROOT"
+git -C "$ROOT" diff --exit-code -- \
+  docs/internships/studio-audit/generated-summary.json \
+  docs/internships/studio-audit/studio-feature-inventory.csv \
+  docs/internships/studio-audit/test-case-index.csv \
+  test/internships/studio-audit/draft-project.json \
+  test/internships/studio-audit/draft-stuart-account.json \
+  test/internships/studio-audit/studio-feature-inventory.json \
+  test/internships/studio-audit/test-cases.json
+node --test "$ROOT/scripts/__tests__/studio-internship-audit.test.mjs"
 run_npm run verify:formal --prefix "$ROOT"
 run_npm run test:auto-loop --prefix "$ROOT"
 run_npm run test:formal --prefix "$ROOT"

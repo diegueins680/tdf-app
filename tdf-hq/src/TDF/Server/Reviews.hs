@@ -4,6 +4,8 @@
 module TDF.Server.Reviews
   ( reviewsPublicServer
   , reviewsProtectedServer
+  , publicReviewTargetStatement
+  , eligibilitySql
   ) where
 
 import Control.Monad (unless, when)
@@ -104,21 +106,37 @@ visibleReviewId _ = Nothing
 
 ensurePublicTarget :: Text -> Text -> AppM ()
 ensurePublicTarget targetKind targetId = do
-  rows <- jsonRows statement [PersistText targetId]
+  rows <- jsonRows (publicReviewTargetStatement targetKind) [PersistText targetId]
   when (null rows) (throwError err404 {errBody = "review target not found"})
-  where
-    statement = case targetKind of
-      "event" ->
-        ( "SELECT to_jsonb(TRUE) FROM social_event event WHERE event.id::text=? AND ("
-       <> "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR "
-       <> postgresVisibleImportedMetadataClause "event.metadata"
-       <> ")" )
-      "marketplace_listing" -> "SELECT to_jsonb(TRUE) FROM marketplace_listing WHERE id::text=?"
-      "service_offering" ->
-        "SELECT to_jsonb(TRUE) FROM service_offering WHERE id::text=?"
-      "service_package" ->
-        "SELECT to_jsonb(TRUE) FROM service_storefront_package WHERE id::text=?"
-      _ -> "SELECT to_jsonb(FALSE) WHERE FALSE"
+
+publicReviewTargetStatement :: Text -> Text
+publicReviewTargetStatement targetKind = case targetKind of
+  "event" ->
+    ( "SELECT to_jsonb(TRUE) FROM social_event event WHERE event.id::text=? AND ("
+   <> "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR "
+   <> postgresVisibleImportedMetadataClause "event.metadata"
+   <> ")" )
+  "marketplace_listing" ->
+    ( "SELECT to_jsonb(TRUE) FROM marketplace_listing listing WHERE listing.id::text=? AND ("
+   <> marketplaceListingPublicClause "listing"
+   <> ")" )
+  "service_offering" ->
+    ( "SELECT to_jsonb(TRUE) FROM service_offering WHERE id::text=? "
+   <> "AND active AND deprecated_at IS NULL" )
+  "service_package" ->
+    "SELECT to_jsonb(TRUE) FROM service_storefront_package WHERE id::text=? AND active"
+  _ -> "SELECT to_jsonb(FALSE) WHERE FALSE"
+
+-- Delivery deactivates a sale listing and stamps updated_at in the same
+-- transaction as the immutable fulfillment event. A later explicit withdrawal
+-- changes updated_at, so it must override that historical delivery exception.
+marketplaceListingPublicClause :: Text -> Text
+marketplaceListingPublicClause listing =
+  listing <> ".active OR EXISTS (SELECT 1 FROM marketplace_order_item public_item " <>
+  "JOIN marketplace_sale_fulfillment_event delivered " <>
+  "ON delivered.order_id=public_item.order_id AND delivered.to_status='delivered' " <>
+  "WHERE public_item.listing_id=" <> listing <> ".id " <>
+  "AND delivered.created_at=" <> listing <> ".updated_at)"
 
 listReviewEligibility :: AuthedUser -> Maybe Text -> Maybe Text -> AppM [Value]
 listReviewEligibility user rawTargetKind rawTargetId = do
@@ -133,7 +151,9 @@ eligibilitySql =
   "coalesce(event.end_time,event.start_time) completed_at " <>
   "FROM event_ticket_order orders JOIN social_event event ON event.id=orders.event_id " <>
   "WHERE orders.buyer_party_id=?::bigint AND experience_review_source_is_eligible(" <>
-  "'event',event.id::text,'event_ticket_order',orders.id::text,?::bigint) " <>
+  "'event',event.id::text,'event_ticket_order',orders.id::text,?::bigint) AND (" <>
+  "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR " <>
+  postgresVisibleImportedMetadataClause "event.metadata" <> ") " <>
   "UNION ALL " <>
   "SELECT 'marketplace_listing',listing.id::text,listing.title,'marketplace_order',orders.id::text," <>
   "coalesce(sale.delivered_at,rental.returned_at,sale.updated_at,rental.updated_at,orders.updated_at) " <>
@@ -142,19 +162,21 @@ eligibilitySql =
   "LEFT JOIN marketplace_sale_order_runtime sale ON sale.order_id=orders.id " <>
   "LEFT JOIN marketplace_rental_order_runtime rental ON rental.order_id=orders.id " <>
   "WHERE experience_review_source_is_eligible('marketplace_listing',listing.id::text," <>
-  "'marketplace_order',orders.id::text,?::bigint) " <>
+  "'marketplace_order',orders.id::text,?::bigint) AND (" <>
+  marketplaceListingPublicClause "listing" <> ") " <>
   "UNION ALL " <>
   "SELECT 'service_offering',offering.id::text,offering.name_es,'service_booking',booking.id::text," <>
   "coalesce(runtime.completed_at,booking.ends_at) " <>
   "FROM booking booking JOIN service_offering offering ON offering.id=booking.service_offering_id " <>
   "LEFT JOIN service_booking_checkout_runtime runtime ON runtime.booking_id=booking.id " <>
-  "WHERE booking.party_id=?::bigint AND experience_review_source_is_eligible(" <>
+  "WHERE offering.active AND offering.deprecated_at IS NULL " <>
+  "AND booking.party_id=?::bigint AND experience_review_source_is_eligible(" <>
   "'service_offering',offering.id::text,'service_booking',booking.id::text,?::bigint) " <>
   "UNION ALL " <>
   "SELECT 'service_package',package.id::text,package.name,'service_storefront_order',orders.id::text," <>
   "orders.updated_at FROM service_storefront_order orders " <>
   "JOIN service_storefront_package package ON package.id=orders.package_id " <>
-  "WHERE experience_review_source_is_eligible('service_package',package.id::text," <>
+  "WHERE package.active AND experience_review_source_is_eligible('service_package',package.id::text," <>
   "'service_storefront_order',orders.id::text,?::bigint)), " <>
   "requested AS (SELECT ?::text target_kind,?::text target_id) " <>
   "SELECT jsonb_build_object('targetKind',candidate.target_kind,'targetId',candidate.target_id," <>
@@ -195,6 +217,7 @@ createReview user idempotency request@ExperienceReviewCreateRequest
   case prior of
     Just value -> pure value
     Nothing -> do
+      ensurePublicTarget targetKind targetId
       eligible <- runDB
         (rawSql
           "SELECT experience_review_source_is_eligible(?,?,?,?,?)"

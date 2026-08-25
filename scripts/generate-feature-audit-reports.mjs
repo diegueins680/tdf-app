@@ -98,7 +98,7 @@ function platformAvailability(feature, platform) {
   if (platform === 'web') return feature.webRoute ? 'available' : 'not-available';
   const kind = feature.mobilePresentation.kind;
   if (['security-concealed', 'technical'].includes(kind)) return 'not-available';
-  if (kind === 'native' && feature.mobilePresentation.destination) return 'native';
+  if (['native', 'native-contextual'].includes(kind) && feature.mobilePresentation.destination) return 'native';
   if ((kind === 'web-only' || kind === 'external-web')
     && (feature.mobilePresentation.destination || feature.webRoute)) return 'web-fallback';
   return 'not-available';

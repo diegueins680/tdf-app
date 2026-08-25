@@ -154,6 +154,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Solicitudes de prueba', path: '/escuela/trial-queue' },
       { label: 'Portal del profesor', path: '/mi-profesor' },
       { label: 'Panel de pasantes', path: '/practicas' },
+      { label: 'Reportes de pruebas', path: '/feedback/interno' },
     ],
   },
   {

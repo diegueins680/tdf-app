@@ -38,6 +38,8 @@ const FanClubMemberProfilePage = lazy(() => import('../pages/FanClubMemberProfil
 const InstagramConnectPage = lazy(() => import('../pages/InstagramConnectPage'));
 const InternshipsPage = lazy(() => import('../pages/InternshipsPage'));
 const InternTaskDetailPage = lazy(() => import('../pages/InternTaskDetailPage'));
+const InternAuditPlanPage = lazy(() => import('../pages/InternAuditPlanPage'));
+const InternalFeedbackPage = lazy(() => import('../pages/InternalFeedbackPage'));
 const InventoryPage = lazy(() => import('../pages/InventoryPage'));
 const KanbanPage = lazy(() => import('../pages/KanbanPage'));
 const LabelArtistsPage = lazy(() => import('../pages/LabelArtistsPage'));
@@ -132,6 +134,9 @@ export function renderProtectedRoutes() {
         <Route path="/fans/clubs/:artistId/members/:partyId" element={<FanClubMemberProfilePage />} />
         <Route path="/practicas" element={<InternshipsPage />} />
         <Route path="/practicas/tareas/:taskId" element={<InternTaskDetailPage />} />
+        <Route path="/practicas/auditorias/:planId" element={<InternAuditPlanPage />} />
+        <Route path="/feedback/interno" element={<InternalFeedbackPage />} />
+        <Route path="/feedback/interno/:reportId" element={<InternalFeedbackPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
         <Route path="/admin/commerce/provider-events" element={<CommerceProviderEventsPage />} />
         <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />

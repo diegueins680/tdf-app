@@ -12,7 +12,7 @@ No finding below is based on human testimony. “Hypothesis” language denotes 
 - **Actual / evidence:** The baseline audit rejected seven missing destinations. `RUN-005` independently failed the mobile registry test. No user data was involved.
 - **Impact:** A user can be promised a native path that cannot resolve, creating a dead end and undermining parity/feature metrics. The affected flows are high-reach discovery and profile/community entry points.
 - **Suspected root cause (inference):** Feature metadata advanced ahead of the Expo route tree and generated-registry validation was not consistently run with the submodule present.
-- **Improvement / acceptance:** Fixed by assigning truthful `external-web` treatment, resolver-aware web detail URLs and no false quick-create destination. `RUN-008` must remain green with 137 features/156 web/38 mobile routes.
+- **Improvement / acceptance:** Initially fixed by assigning truthful `external-web` treatment while the screens were absent. The completed directory work now restores six implemented search/detail/management families to native routes while home remains a truthful web continuation. `RUN-008` must remain green with 139 features/159 web/44 mobile routes.
 - **Regression requirement:** `npm run audit:features` and mobile `featureRegistry.test.ts` in CI.
 - **Effort / related work:** Small, implemented. Related prior parity discussion: `docs/feature-discoverability-audit/2026-08-06/experimental-and-incomplete-features.md`. No GitHub issue created.
 
@@ -51,7 +51,7 @@ No finding below is based on human testimony. “Hypothesis” language denotes 
 - **Preconditions:** Generate the expanded endpoint inventory from current source.
 - **Reproduction:** Run `ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports`; inspect `pending-backend-capabilities.csv`. Run without the opt-in to exercise the failing quality gate.
 - **Expected:** Each concrete endpoint has an explicit feature/action or justified API-only/concealed/technical disposition and source-backed handler/record-scope authorization evidence.
-- **Actual / evidence:** 40 of 548 endpoints remain “API-only pending explicit product/security disposition”; [current packet](../feature-discoverability-audit/2026-08-21/README.md).
+- **Actual / evidence:** 40 of 557 endpoints remain “API-only pending explicit product/security disposition”; [current packet](../feature-discoverability-audit/2026-08-21/README.md).
 - **Impact:** Coverage and discoverability claims cannot demonstrate backend enforcement for these endpoints. Public routes need validation/rate-limit review; protected catalog/security mutations deserve exact-action and record-scope review.
 - **Suspected root cause (inference):** API surface growth after the earlier packet plus a historical parser limitation for parameterized Servant aliases.
 - **Improvement / acceptance:** Owners review all 40, map or deliberately classify each, add positive/negative tests, and make the default generator pass without `ALLOW_PENDING_FEATURE_DISPOSITIONS`.
@@ -64,7 +64,7 @@ No finding below is based on human testimony. “Hypothesis” language denotes 
 - **Affected:** Release managers, admins, mobile/web owners; every epic relying on inventory and parity.
 - **Preconditions / reproduction:** Compare 2026-08-06 generated counts to current route/API/registry source.
 - **Expected:** The auditable inventory is regenerable into a current dated packet and reports parser/coverage gaps.
-- **Actual / evidence:** Prior packet: 115 features, 125 web routes, 35 mobile routes, 408 endpoints, 2,530 matrix rows. Current packet: 137 features, 156 actual web routes, 38 mobile routes, 548 endpoints, 3,014 rows.
+- **Actual / evidence:** Prior packet: 115 features, 125 web routes, 35 mobile routes, 408 endpoints, 2,530 matrix rows. Current packet: 139 features, 159 actual web routes, 44 mobile routes, 557 endpoints, 3,058 rows.
 - **Impact:** Release and permission decisions can omit newly implemented functionality or overstate endpoint disposition completeness.
 - **Suspected root cause (confirmed/inferred):** Output was pinned to a historical directory, and `WorkItemFilters api` was not expanded correctly.
 - **Improvement / acceptance:** Implemented date-configurable output and generic type-parameter substitution; generated the 2026-08-21 packet and preserved pending endpoints as a gate.

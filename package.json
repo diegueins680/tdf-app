@@ -54,6 +54,8 @@
     "test:music-directory-visual-artifacts": "node --test scripts/__tests__/music-directory-visual-artifacts.test.mjs",
     "generate:persona-program": "node scripts/persona-test-program.mjs generate",
     "test:persona-program": "node scripts/persona-test-program.mjs validate && node --test scripts/__tests__/persona-test-program.test.mjs",
+    "generate:studio-internship-audit": "node test/internships/studio-audit/generate-studio-audit.mjs",
+    "test:studio-internship-audit": "node test/internships/studio-audit/generate-studio-audit.mjs && node --test scripts/__tests__/studio-internship-audit.test.mjs && sh scripts/test-studio-internship-audit-migration.sh",
     "test:e2e:web": "playwright test",
     "test:e2e:web:critical": "playwright test --grep @critical",
     "artists:enrich": "node scripts/artist-enrichment.mjs",
@@ -113,6 +115,7 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "audit-ci": "^7.1.0",
+    "axe-core": "^4.13.0",
     "detox": "^20.51.1",
     "jest-environment-node": "^30.4.1",
     "react-native-reanimated": "~4.1.1"

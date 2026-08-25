@@ -4,12 +4,12 @@ Baseline: `origin/main` at `560ac9954b655ba8aa719963a2c890110b74a232`, plus the 
 
 ## Counts
 
-- 137 feature records: 44 primary destinations, 57 important submodules, 26 contextual routes and 10 technical routes.
-- 122 unique registry web-route declarations; the router audit resolves 156 actual web paths/redirects.
-- 35 features with native mobile treatment; 38 actual Expo Router paths.
-- 3,014 role × module × feature × action × platform rows for 11 representative fixtures and 17 actions.
-- 548 expanded concrete backend endpoints: 493 mapped to stable features; 40 pending explicit disposition.
-- Endpoint dispositions: 458 user/admin interface mapped, 32 documented API-only, 3 security-sensitive concealed, 11 technical API-only, 4 technical/static and 40 pending.
+- 139 feature records: 44 primary destinations, 59 important submodules, 26 contextual routes and 10 technical routes.
+- 124 unique registry web-route declarations; the router audit resolves 159 actual web paths/redirects.
+- 37 features with native mobile treatment; 44 actual Expo Router paths.
+- 3,058 role × module × feature × action × platform rows for 11 representative fixtures and 17 actions.
+- 557 expanded concrete backend endpoints: 502 mapped to stable features; 40 pending explicit disposition.
+- Endpoint dispositions: 467 user/admin interface mapped, 32 documented API-only, 3 security-sensitive concealed, 11 technical API-only, 4 technical/static and 40 pending.
 
 ## Artifacts
 

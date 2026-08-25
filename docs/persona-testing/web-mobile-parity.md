@@ -1,6 +1,6 @@
 # Web/mobile parity assessment
 
-The feature registry is the parity authority. Current treatments are 35 native, 11 native-contextual, 24 explicit external-web, 46 web-only, 10 security-concealed, 10 technical and one registry entry that audits to web-only by default. “Parity” means a truthful, safe treatment—not that every feature must be rebuilt natively.
+The feature registry is the parity authority. Current treatments are 37 native, 15 native-contextual, 20 explicit external-web, 47 web-only, 10 security-concealed and 10 technical. “Parity” means a truthful, safe treatment—not that every feature must be rebuilt natively.
 
 ## Native strengths
 
@@ -11,16 +11,16 @@ The Expo app has real screens for authentication/onboarding, social/community, a
 | Area | Current treatment | User-continuity requirement |
 |---|---|---|
 | Public platform/commerce/distribution | External responsive web | Deep link to stable public URL; never imply authenticated release management is public |
-| Home and directory search | External responsive web after PT-001 | Preserve locale/query/referrer; return to app where supported |
-| Public profile/classified/event/venue detail | Context-resolved web detail | Use record-specific URL, safe browser session and explicit back/return behavior |
-| Classified management | Authenticated web | Preserve protected intent through login and prevent public edit URLs |
+| Home | External responsive web after PT-001 | Preserve locale/query/referrer; return to app where supported |
+| Directory search and public profile/classified/event/venue detail | Native | Keep server projections authoritative and preserve record-specific navigation/back behavior |
+| Classified management | Authenticated native | Preserve protected intent through login and keep edit/submit operations capability-scoped |
 | Marketplace/service checkout | Web | Preserve authoritative cart/order state; no duplicate charge on app/browser transition |
 | Booking/order tracking | Capability-bearing contextual web link | Never place capability/token in logs or analytics; support recovery from confirmation |
 | Trials, Live Session intake, courses/registration | Shareable web | Keep consent/files/forms accessible and retain entered state under interruption |
 | Domo discovery/quote | Public/contextual web | Carry inquiry/quote identity safely through acceptance, deposit and staff follow-up |
 | Release creation and browser audio tooling | Web | Do not render native placeholder success; make upload/draft status authoritative |
 
-The seven false native destinations corrected by PT-001 were home, directory search, four directory detail families and classified management/quick-create. Their web fallback is now explicit; generated registry and mobile tests enforce that native destinations exist.
+PT-001 correctly removed seven false native destinations when their screens did not exist. The completed directory implementation now restores directory search, four directory detail families and classified management/quick-create to six real native routes; home intentionally remains an explicit web continuation. Generated registry, route-audit and mobile tests enforce that every native destination exists.
 
 ## Missing or incomplete equivalents
 
@@ -28,7 +28,7 @@ The seven false native destinations corrected by PT-001 were home, directory sea
 - Native release authoring is absent; contextual viewing is not authoring parity.
 - Teacher, intern and broad administration workflows remain primarily web-only.
 - Native contract create/detail is incomplete and concealed.
-- Public directory discovery and classifieds management are web fallbacks in the pinned client.
+- Directory moderation remains web-only even though public discovery, detail and classified management are native.
 - Marketplace catalog/secure checkout and most public lead/commerce surfaces remain web-based.
 - Android Detox configuration is absent; the configured simulator is iOS-only and tied to a local iPhone 16 identifier.
 
@@ -36,7 +36,7 @@ The seven false native destinations corrected by PT-001 were home, directory sea
 
 Verified locally:
 
-- Feature audit: 137 features, 156 web routes and 38 Expo routes resolve.
+- Feature audit: 139 features, 159 web routes and 44 Expo routes resolve.
 - Mobile lint/typecheck/Jest: pass; generated registry assertions pass.
 - Chromium phone/tablet public discovery preserves filters and reflows at 320 CSS pixels.
 

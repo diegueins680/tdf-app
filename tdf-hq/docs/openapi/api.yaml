@@ -3640,6 +3640,300 @@ paths:
           description: Feedback accepted
         '400':
           description: Invalid multipart data, catalog reference, consent, or attachment
+  /feedback/internal:
+    get:
+      tags: [Internal feedback]
+      summary: List the reporter's private reports or all reports for an authorized administrator
+      operationId: listInternalFeedback
+      parameters:
+        - { name: state, in: query, schema: { $ref: '#/components/schemas/InternalReportState' } }
+        - { name: module, in: query, schema: { type: string } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: mine, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Access-scoped reports
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackSummary' } } } }
+        '403': { description: Intern/reporting access is required }
+    post:
+      tags: [Internal feedback]
+      summary: Save an internal report draft linked to the existing feedback record
+      operationId: createInternalFeedback
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackCreate' } } }
+      responses:
+        '201': { description: Draft created, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedback' } } } }
+        '400': { description: Invalid report or traceability fields }
+        '403': { description: Reporter cannot use the requested task/test relationship }
+  /feedback/internal/export.csv:
+    get:
+      tags: [Internal feedback]
+      summary: Export access-scoped reports as CSV
+      operationId: exportInternalFeedbackCsv
+      parameters:
+        - { name: state, in: query, schema: { $ref: '#/components/schemas/InternalReportState' } }
+        - { name: module, in: query, schema: { type: string } }
+      responses:
+        '200': { description: CSV export, content: { text/plain: { schema: { type: string } } } }
+  /feedback/internal/export.json:
+    get:
+      tags: [Internal feedback]
+      summary: Export access-scoped reports as JSON
+      operationId: exportInternalFeedbackJson
+      parameters:
+        - { name: state, in: query, schema: { $ref: '#/components/schemas/InternalReportState' } }
+        - { name: module, in: query, schema: { type: string } }
+      responses:
+        '200': { description: JSON export, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackSummary' } } } } }
+  /feedback/internal/legacy:
+    get:
+      tags: [Internal feedback]
+      summary: Read legacy public feedback without exposing storage paths
+      operationId: listLegacyFeedbackForAdmin
+      responses:
+        '200': { description: Legacy feedback, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LegacyFeedback' } } } } }
+        '403': { description: Administrator access required }
+  /feedback/internal/{reportId}:
+    parameters:
+      - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Internal feedback]
+      summary: Read one authorized internal report with evidence, discussion, history, and retests
+      operationId: getInternalFeedback
+      responses:
+        '200': { description: Internal report, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedback' } } } }
+        '404': { description: Unknown or private report }
+    patch:
+      tags: [Internal feedback]
+      summary: Update reporter draft/information or administrator triage fields
+      operationId: updateInternalFeedback
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackUpdate' } } }
+      responses:
+        '200': { description: Updated report, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedback' } } } }
+        '403': { description: Attempt to modify an authoritative field }
+        '409': { description: Invalid state transition }
+  /feedback/internal/{reportId}/submit:
+    post:
+      tags: [Internal feedback]
+      summary: Submit a draft and record receipt without a real external notification
+      operationId: submitInternalFeedback
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Received report, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedback' } } } }
+        '409': { description: Report is not a valid draft }
+  /feedback/internal/{reportId}/comments:
+    post:
+      tags: [Internal feedback]
+      summary: Add a comment, information request, or information response
+      operationId: commentOnInternalFeedback
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackCommentCreate' } } }
+      responses:
+        '201': { description: Comment recorded, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackComment' } } } }
+  /feedback/internal/{reportId}/evidence:
+    post:
+      tags: [Internal feedback]
+      summary: Upload an authorized small evidence file
+      operationId: uploadInternalFeedbackEvidence
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [attachment]
+              properties:
+                caption: { type: string, maxLength: 500 }
+                attachment: { type: string, format: binary }
+      responses:
+        '201': { description: Evidence stored, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackEvidence' } } } }
+        '400': { description: Invalid type, filename, size, or multipart shape }
+  /feedback/internal/{reportId}/evidence-links:
+    post:
+      tags: [Internal feedback]
+      summary: Link externally stored HTTPS video or evidence
+      operationId: linkInternalFeedbackEvidence
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackEvidenceLinkCreate' } } }
+      responses:
+        '201': { description: Evidence link stored, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackEvidence' } } } }
+  /feedback/internal/{reportId}/evidence/{evidenceId}/file:
+    get:
+      tags: [Internal feedback]
+      summary: Download an authorized private evidence file
+      operationId: downloadInternalFeedbackEvidence
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: evidenceId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Private evidence, content: { application/octet-stream: { schema: { type: string, format: binary } } } }
+        '404': { description: Unknown, unrelated, or unauthorized evidence }
+  /feedback/internal/{reportId}/retests:
+    post:
+      tags: [Internal feedback]
+      summary: Append a requested retest result without replacing history
+      operationId: retestInternalFeedback
+      parameters:
+        - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackRetestCreate' } } }
+      responses:
+        '201': { description: Retest recorded, content: { application/json: { schema: { $ref: '#/components/schemas/InternalFeedbackRetest' } } } }
+        '409': { description: Report is not ready for retest }
+  /internships/audit-plans:
+    get:
+      tags: [Internships]
+      summary: List access-scoped internship audit plans
+      operationId: listInternAuditPlans
+      responses:
+        '200': { description: Audit plans, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternAuditPlan' } } } } }
+    post:
+      tags: [Internships]
+      summary: Create an inactive audit plan for an existing draft project and task
+      operationId: createInternAuditPlan
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlanCreate' } } }
+      responses:
+        '201': { description: Draft plan, content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlan' } } } }
+        '403': { description: Administrator access required }
+  /internships/audit-plans/{planId}:
+    parameters:
+      - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Internships]
+      summary: Read calculated plan progress and completion readiness
+      operationId: getInternAuditPlan
+      responses:
+        '200': { description: Audit plan, content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlan' } } } }
+        '404': { description: Unknown or unauthorized plan }
+    patch:
+      tags: [Internships]
+      summary: Record an authorized plan status or completion exception
+      operationId: updateInternAuditPlan
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlanUpdate' } } }
+      responses:
+        '200': { description: Updated plan, content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlan' } } } }
+  /internships/audit-plans/{planId}/activate:
+    post:
+      tags: [Internships]
+      summary: Explicitly activate and assign an approved draft plan
+      operationId: activateInternAuditPlan
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Activated plan, content: { application/json: { schema: { $ref: '#/components/schemas/InternAuditPlan' } } } }
+        '409': { description: Plan cannot be safely activated }
+  /internships/audit-plans/{planId}/cases:
+    get:
+      tags: [Internships]
+      summary: List structured cases and their latest execution
+      operationId: listInternTestCases
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Test cases, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternTestCase' } } } } }
+    post:
+      tags: [Internships]
+      summary: Add a structured case while the plan remains a draft
+      operationId: createInternTestCase
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternTestCaseCreate' } } }
+      responses:
+        '201': { description: Test case created, content: { application/json: { schema: { $ref: '#/components/schemas/InternTestCase' } } } }
+        '409': { description: Active plans are immutable }
+  /internships/audit-plans/{planId}/daily-summaries:
+    get:
+      tags: [Internships]
+      summary: List session summaries for the plan
+      operationId: listInternAuditDailySummaries
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Daily summaries, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternDailySummary' } } } } }
+    post:
+      tags: [Internships]
+      summary: Record the assigned intern's end-of-session summary
+      operationId: createInternAuditDailySummary
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternDailySummaryCreate' } } }
+      responses:
+        '201': { description: Daily summary recorded, content: { application/json: { schema: { $ref: '#/components/schemas/InternDailySummary' } } } }
+  /internships/audit-plans/{planId}/final-summary:
+    get:
+      tags: [Internships]
+      summary: Read the structured final summary
+      operationId: getInternAuditFinalSummary
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Final summary, content: { application/json: { schema: { $ref: '#/components/schemas/InternFinalSummary' } } } }
+    put:
+      tags: [Internships]
+      summary: Save conclusions or submit the final summary
+      operationId: updateInternAuditFinalSummary
+      parameters:
+        - { name: planId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternFinalSummaryUpdate' } } }
+      responses:
+        '200': { description: Final summary, content: { application/json: { schema: { $ref: '#/components/schemas/InternFinalSummary' } } } }
+  /internships/test-cases/{testCaseId}/executions:
+    get:
+      tags: [Internships]
+      summary: List every preserved execution and retest
+      operationId: listInternTestExecutions
+      parameters:
+        - { name: testCaseId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Executions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/InternTestExecution' } } } } }
+    post:
+      tags: [Internships]
+      summary: Append a test execution
+      operationId: createInternTestExecution
+      parameters:
+        - { name: testCaseId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternTestExecutionCreate' } } }
+      responses:
+        '201': { description: Execution appended, content: { application/json: { schema: { $ref: '#/components/schemas/InternTestExecution' } } } }
+  /internships/test-executions/{executionId}:
+    patch:
+      tags: [Internships]
+      summary: Update only a non-terminal in-progress execution
+      operationId: updateInternTestExecution
+      parameters:
+        - { name: executionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/InternTestExecutionUpdate' } } }
+      responses:
+        '200': { description: Execution updated, content: { application/json: { schema: { $ref: '#/components/schemas/InternTestExecution' } } } }
+        '409': { description: Terminal executions are immutable }
   /ddex/references:
     get:
       tags: [DDEX]
@@ -7389,15 +7683,26 @@ components:
           format: password
     GoogleLoginRequest:
       type: object
+      additionalProperties: false
       required: [idToken]
       properties:
         idToken:
           type: string
           description: Google ID token returned by Google Identity Services
+        marketingOptIn:
+          type: boolean
+          description: Optional consent to receive TDF product and marketing updates when creating an account.
+        termsAccepted:
+          type: boolean
+          description: Account terms acceptance when Google is used from signup.
+        termsVersion:
+          type: string
+          maxLength: 100
+          description: Version of the account terms accepted during Google signup.
     SignupRequest:
       type: object
       additionalProperties: false
-      required: [firstName, lastName, email, password]
+      required: [firstName, lastName, email, password, termsAccepted, termsVersion]
       properties:
         firstName:
           type: string
@@ -7417,6 +7722,17 @@ components:
           type: string
           format: password
           example: changeme123
+        marketingOptIn:
+          type: boolean
+          description: Optional consent to receive TDF product and marketing updates.
+        termsAccepted:
+          type: boolean
+          enum: [true]
+          description: Required account terms acceptance paired with termsVersion.
+        termsVersion:
+          type: string
+          maxLength: 100
+          description: Version of the account terms accepted during signup.
         fanArtistIds:
           type: array
           items:
@@ -7446,6 +7762,9 @@ components:
           items:
             type: string
             description: Enabled modules for the user.
+        accountCreated:
+          type: boolean
+          description: Present on Google authentication to distinguish a newly created account from an existing login.
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
@@ -10101,6 +10420,413 @@ components:
         tokenType:
           type: string
           nullable: true
+    InternalReportState:
+      type: string
+      enum: [draft, submitted, received, needs_information, confirmed, prioritized, in_progress, ready_for_retest, verified, closed, duplicate, discarded]
+    InternalReportType:
+      type: string
+      enum: [error, suggestion, idea, question, accessibility, permissions, performance, content_translation]
+    InternalFeedbackCreate:
+      type: object
+      additionalProperties: false
+      required: [ifcTitle, ifcDescription, ifcCategoryId, ifcProposedSeverityId, ifcReportType, ifcModuleName, ifcEnvironment, ifcPlatform, ifcLanguage, ifcAccountRole]
+      properties:
+        ifcTitle: { type: string, minLength: 1, maxLength: 160 }
+        ifcDescription: { type: string, minLength: 1, maxLength: 5000 }
+        ifcCategoryId: { type: string, format: uuid }
+        ifcProposedSeverityId: { type: string, format: uuid }
+        ifcReportType: { $ref: '#/components/schemas/InternalReportType' }
+        ifcModuleName: { type: string, minLength: 1, maxLength: 120 }
+        ifcFeatureName: { type: string, maxLength: 160, nullable: true }
+        ifcEnvironment: { type: string, enum: [staging, test, local, production-read-only] }
+        ifcUrlOrScreen: { type: string, maxLength: 2000, nullable: true }
+        ifcPlatform: { type: string, maxLength: 80 }
+        ifcDevice: { type: string, maxLength: 160, nullable: true }
+        ifcBrowser: { type: string, maxLength: 160, nullable: true }
+        ifcLanguage: { type: string, maxLength: 20 }
+        ifcAccountRole: { type: string, maxLength: 100 }
+        ifcReproductionSteps: { type: string, maxLength: 10000, nullable: true }
+        ifcExpectedResult: { type: string, maxLength: 5000, nullable: true }
+        ifcActualResult: { type: string, maxLength: 5000, nullable: true }
+        ifcFrequency: { type: string, maxLength: 160, nullable: true }
+        ifcTestCaseId: { type: string, format: uuid, nullable: true }
+        ifcTestExecutionId: { type: string, format: uuid, nullable: true }
+        ifcInternshipProjectId: { type: string, format: uuid, nullable: true }
+        ifcInternshipTaskId: { type: string, format: uuid, nullable: true }
+        ifcBlocking: { type: boolean }
+        ifcVideoLinks: { type: string, maxLength: 10000, nullable: true }
+    InternalFeedbackUpdate:
+      type: object
+      description: Reporter fields are accepted only for owned drafts/information responses. Authoritative fields are administrator-only.
+      additionalProperties: false
+      properties:
+        ifuTitle: { type: string, maxLength: 160 }
+        ifuDescription: { type: string, maxLength: 5000 }
+        ifuCategoryId: { type: string, format: uuid }
+        ifuProposedSeverityId: { type: string, format: uuid }
+        ifuReportType: { $ref: '#/components/schemas/InternalReportType' }
+        ifuModuleName: { type: string, maxLength: 120 }
+        ifuFeatureName: { type: string, maxLength: 160, nullable: true }
+        ifuEnvironment: { type: string }
+        ifuUrlOrScreen: { type: string, nullable: true }
+        ifuPlatform: { type: string }
+        ifuDevice: { type: string, nullable: true }
+        ifuBrowser: { type: string, nullable: true }
+        ifuLanguage: { type: string }
+        ifuAccountRole: { type: string }
+        ifuReproductionSteps: { type: string, nullable: true }
+        ifuExpectedResult: { type: string, nullable: true }
+        ifuActualResult: { type: string, nullable: true }
+        ifuFrequency: { type: string, nullable: true }
+        ifuBlocking: { type: boolean }
+        ifuVideoLinks: { type: string, nullable: true }
+        ifuState: { $ref: '#/components/schemas/InternalReportState' }
+        ifuAuthoritativeSeverityId: { type: string, format: uuid, nullable: true }
+        ifuPriority: { type: string, enum: [low, medium, high, urgent], nullable: true }
+        ifuAssignedTo: { type: integer, format: int64, minimum: 1, nullable: true }
+        ifuDuplicateOf: { type: string, format: uuid, nullable: true }
+        ifuResolution: { type: string, nullable: true }
+        ifuRetestResult: { type: string, nullable: true }
+        ifuClosureReason: { type: string, nullable: true }
+        ifuGithubIssueUrl: { type: string, format: uri, nullable: true }
+    InternalFeedbackSummary:
+      type: object
+      required: [ifsId, ifsTitle, ifsReportType, ifsState, ifsModuleName, ifsEnvironment, ifsPlatform, ifsBlocking, ifsReporterPartyId, ifsReporterName, ifsCreatedAt, ifsUpdatedAt]
+      properties:
+        ifsId: { type: string, format: uuid }
+        ifsTitle: { type: string }
+        ifsReportType: { $ref: '#/components/schemas/InternalReportType' }
+        ifsState: { $ref: '#/components/schemas/InternalReportState' }
+        ifsModuleName: { type: string }
+        ifsFeatureName: { type: string, nullable: true }
+        ifsEnvironment: { type: string }
+        ifsPlatform: { type: string }
+        ifsProposedSeverityId: { type: string, format: uuid, nullable: true }
+        ifsAuthoritativeSeverityId: { type: string, format: uuid, nullable: true }
+        ifsPriority: { type: string, nullable: true }
+        ifsBlocking: { type: boolean }
+        ifsReporterPartyId: { type: integer, format: int64 }
+        ifsReporterName: { type: string }
+        ifsInternshipProjectId: { type: string, format: uuid, nullable: true }
+        ifsInternshipTaskId: { type: string, format: uuid, nullable: true }
+        ifsTestCaseId: { type: string, format: uuid, nullable: true }
+        ifsTestExecutionId: { type: string, format: uuid, nullable: true }
+        ifsDuplicateOf: { type: string, format: uuid, nullable: true }
+        ifsCreatedAt: { type: string, format: date-time }
+        ifsUpdatedAt: { type: string, format: date-time }
+    InternalFeedbackEvidence:
+      type: object
+      required: [ifeId, ifeKind, ifeUploadedBy, ifeCreatedAt]
+      properties:
+        ifeId: { type: string, format: uuid }
+        ifeKind: { type: string, enum: [attachment, external_link, video_link, retest] }
+        ifeOriginalFileName: { type: string, nullable: true }
+        ifeContentType: { type: string, nullable: true }
+        ifeSizeBytes: { type: integer, nullable: true }
+        ifeExternalUrl: { type: string, format: uri, nullable: true }
+        ifeCaption: { type: string, nullable: true }
+        ifeUploadedBy: { type: integer, format: int64 }
+        ifeCreatedAt: { type: string, format: date-time }
+    InternalFeedbackEvidenceLinkCreate:
+      type: object
+      additionalProperties: false
+      required: [ifelUrl]
+      properties:
+        ifelUrl: { type: string, format: uri }
+        ifelCaption: { type: string, maxLength: 500, nullable: true }
+        ifelKind: { type: string, enum: [external_link, video_link, retest], nullable: true }
+    InternalFeedbackCommentCreate:
+      type: object
+      additionalProperties: false
+      required: [ifccBody]
+      properties:
+        ifccKind: { type: string, enum: [comment, information_request, information_response], nullable: true }
+        ifccBody: { type: string, minLength: 1, maxLength: 10000 }
+    InternalFeedbackComment:
+      type: object
+      required: [ifcmId, ifcmAuthorPartyId, ifcmAuthorName, ifcmKind, ifcmBody, ifcmCreatedAt]
+      properties:
+        ifcmId: { type: string, format: uuid }
+        ifcmAuthorPartyId: { type: integer, format: int64 }
+        ifcmAuthorName: { type: string }
+        ifcmKind: { type: string }
+        ifcmBody: { type: string }
+        ifcmCreatedAt: { type: string, format: date-time }
+    InternalFeedbackHistory:
+      type: object
+      required: [ifhId, ifhActorPartyId, ifhActorName, ifhAction, ifhCreatedAt]
+      properties:
+        ifhId: { type: string, format: uuid }
+        ifhActorPartyId: { type: integer, format: int64 }
+        ifhActorName: { type: string }
+        ifhAction: { type: string }
+        ifhPreviousState: { type: string, nullable: true }
+        ifhNewState: { type: string, nullable: true }
+        ifhMetadata: { type: string, nullable: true }
+        ifhCreatedAt: { type: string, format: date-time }
+    InternalFeedbackRetestCreate:
+      type: object
+      additionalProperties: false
+      required: [ifrcResult]
+      properties:
+        ifrcExecutionId: { type: string, format: uuid, nullable: true }
+        ifrcResult: { type: string, enum: [passed, failed, blocked] }
+        ifrcNotes: { type: string, maxLength: 5000, nullable: true }
+        ifrcEvidenceSummary: { type: string, maxLength: 5000, nullable: true }
+    InternalFeedbackRetest:
+      type: object
+      required: [ifrtId, ifrtTesterPartyId, ifrtTesterName, ifrtResult, ifrtCreatedAt]
+      properties:
+        ifrtId: { type: string, format: uuid }
+        ifrtExecutionId: { type: string, format: uuid, nullable: true }
+        ifrtTesterPartyId: { type: integer, format: int64 }
+        ifrtTesterName: { type: string }
+        ifrtResult: { type: string }
+        ifrtNotes: { type: string, nullable: true }
+        ifrtEvidenceSummary: { type: string, nullable: true }
+        ifrtCreatedAt: { type: string, format: date-time }
+    InternalFeedback:
+      type: object
+      required: [ifrSummary, ifrDescription, ifrLanguage, ifrAccountRole, ifrAuditPlanMutable, ifrEvidence, ifrComments, ifrHistory, ifrRetests, ifrPotentialDuplicates]
+      properties:
+        ifrSummary: { $ref: '#/components/schemas/InternalFeedbackSummary' }
+        ifrDescription: { type: string }
+        ifrCategoryId: { type: string, format: uuid, nullable: true }
+        ifrUrlOrScreen: { type: string, nullable: true }
+        ifrDevice: { type: string, nullable: true }
+        ifrBrowser: { type: string, nullable: true }
+        ifrLanguage: { type: string }
+        ifrAccountRole: { type: string }
+        ifrReproductionSteps: { type: string, nullable: true }
+        ifrExpectedResult: { type: string, nullable: true }
+        ifrActualResult: { type: string, nullable: true }
+        ifrFrequency: { type: string, nullable: true }
+        ifrAssignedTo: { type: integer, format: int64, nullable: true }
+        ifrResolution: { type: string, nullable: true }
+        ifrRetestResult: { type: string, nullable: true }
+        ifrClosureReason: { type: string, nullable: true }
+        ifrGithubIssueUrl: { type: string, format: uri, nullable: true }
+        ifrVideoLinks: { type: string, nullable: true }
+        ifrSubmittedAt: { type: string, format: date-time, nullable: true }
+        ifrClosedAt: { type: string, format: date-time, nullable: true }
+        ifrAuditPlanMutable: { type: boolean, description: False when the owning internship audit is completed or cancelled and the report is read-only. }
+        ifrEvidence: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackEvidence' } }
+        ifrComments: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackComment' } }
+        ifrHistory: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackHistory' } }
+        ifrRetests: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackRetest' } }
+        ifrPotentialDuplicates: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackSummary' } }
+    LegacyFeedback:
+      type: object
+      required: [lfdId, lfdTitle, lfdDescription, lfdConsent, lfdHasAttachment, lfdCreatedAt]
+      properties:
+        lfdId: { type: string, format: uuid }
+        lfdTitle: { type: string }
+        lfdDescription: { type: string }
+        lfdCategoryId: { type: string, format: uuid, nullable: true }
+        lfdSeverityId: { type: string, format: uuid, nullable: true }
+        lfdContactEmail: { type: string, format: email, nullable: true }
+        lfdConsent: { type: boolean }
+        lfdCreatedBy: { type: integer, format: int64, nullable: true }
+        lfdHasAttachment: { type: boolean }
+        lfdCreatedAt: { type: string, format: date-time }
+    InternAuditPlanCreate:
+      type: object
+      additionalProperties: false
+      required: [iapcProjectId, iapcTaskId, iapcEnvironment]
+      properties:
+        iapcProjectId: { type: string, format: uuid }
+        iapcTaskId: { type: string, format: uuid }
+        iapcEnvironment: { type: string, enum: [staging] }
+        iapcDurationDays: { type: integer, minimum: 1, maximum: 90 }
+        iapcExpectedHoursMin: { type: integer, minimum: 1 }
+        iapcExpectedHoursMax: { type: integer, minimum: 1 }
+        iapcMidpointPercent: { type: integer, minimum: 1, maximum: 99 }
+        iapcProposedAssignee: { type: integer, format: int64, minimum: 1, nullable: true }
+        iapcFinalReviewRequired: { type: boolean }
+    InternAuditPlanUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        iapuCompletionJustification: { type: string, nullable: true }
+        iapuApproveException: { type: boolean }
+        iapuStatus:
+          type: string
+          enum: [draft, completed, cancelled]
+          description: Activation is intentionally available only through the explicit activate endpoint.
+    InternAuditPlan:
+      type: object
+      required: [iapId, iapProjectId, iapTaskId, iapEnvironment, iapStatus, iapDurationDays, iapExpectedHoursMin, iapExpectedHoursMax, iapMidpointPercent, iapFinalReviewRequired, iapCaseCount, iapExecutedCaseCount, iapCriticalRemaining, iapOpenBlockerCount, iapFailedWithoutReport, iapEvidenceMissing, iapCalculatedProgress, iapCanComplete, iapCreatedAt, iapUpdatedAt]
+      properties:
+        iapId: { type: string, format: uuid }
+        iapProjectId: { type: string, format: uuid }
+        iapTaskId: { type: string, format: uuid }
+        iapEnvironment: { type: string }
+        iapStatus: { type: string }
+        iapDurationDays: { type: integer }
+        iapExpectedHoursMin: { type: integer }
+        iapExpectedHoursMax: { type: integer }
+        iapMidpointPercent: { type: integer }
+        iapProposedAssignee: { type: integer, format: int64, nullable: true }
+        iapFinalReviewRequired: { type: boolean }
+        iapCompletionJustification: { type: string, nullable: true }
+        iapCompletionApprovedBy: { type: integer, format: int64, nullable: true }
+        iapCompletionApprovedAt: { type: string, format: date-time, nullable: true }
+        iapCaseCount: { type: integer }
+        iapExecutedCaseCount: { type: integer }
+        iapCriticalRemaining: { type: integer }
+        iapOpenBlockerCount: { type: integer }
+        iapFailedWithoutReport: { type: integer }
+        iapEvidenceMissing: { type: integer }
+        iapCalculatedProgress: { type: integer, minimum: 0, maximum: 100 }
+        iapCanComplete: { type: boolean }
+        iapCreatedAt: { type: string, format: date-time }
+        iapUpdatedAt: { type: string, format: date-time }
+    InternTestCaseCreate:
+      type: object
+      additionalProperties: false
+      required: [itccStableId, itccModuleName, itccFeatureName, itccUserRole, itccObjective, itccBusinessPurpose, itccPreconditions, itccRequiredTestData, itccEnvironment, itccPlatform, itccBrowserOrDevice, itccLanguage, itccDetailedSteps, itccExpectedResult, itccExpectedPersistedState, itccExpectedSideEffects, itccCleanupInstructions, itccCriticality, itccEvidenceRequirement]
+      properties:
+        itccStableId: { type: string, minLength: 3, maxLength: 40, pattern: '^[A-Z][A-Z0-9-]{2,39}$' }
+        itccModuleName: { type: string, minLength: 1, maxLength: 120 }
+        itccFeatureName: { type: string, minLength: 1, maxLength: 160 }
+        itccUserRole: { type: string, minLength: 1, maxLength: 100 }
+        itccObjective: { type: string, minLength: 1, maxLength: 3000 }
+        itccBusinessPurpose: { type: string, minLength: 1, maxLength: 3000 }
+        itccPreconditions: { type: string, minLength: 1, maxLength: 5000 }
+        itccRequiredTestData: { type: string, minLength: 1, maxLength: 5000 }
+        itccEnvironment: { type: string, enum: [staging] }
+        itccPlatform: { type: string, minLength: 1, maxLength: 120 }
+        itccBrowserOrDevice: { type: string, minLength: 1, maxLength: 200 }
+        itccLanguage: { type: string, enum: [es, en] }
+        itccDetailedSteps: { type: string, minLength: 1, maxLength: 12000 }
+        itccExpectedResult: { type: string, minLength: 1, maxLength: 5000 }
+        itccExpectedPersistedState: { type: string, minLength: 1, maxLength: 5000 }
+        itccExpectedSideEffects: { type: string, minLength: 1, maxLength: 5000 }
+        itccCleanupInstructions: { type: string, minLength: 1, maxLength: 5000 }
+        itccCriticality: { type: string, enum: [low, medium, high, critical] }
+        itccEvidenceRequirement: { type: string, enum: [light, strong] }
+        itccExploratoryCharter: { type: string, maxLength: 5000, nullable: true }
+        itccApplicable: { type: boolean }
+        itccSortOrder: { type: integer, minimum: 0 }
+    InternTestCase:
+      allOf:
+        - type: object
+          required: [itcId, itcPlanId, itcStableId]
+          properties:
+            itcId: { type: string, format: uuid }
+            itcPlanId: { type: string, format: uuid }
+            itcLatestExecution: { $ref: '#/components/schemas/InternTestExecution', nullable: true }
+        - type: object
+          required: [itcStableId, itcModuleName, itcFeatureName, itcUserRole, itcObjective, itcBusinessPurpose, itcPreconditions, itcRequiredTestData, itcEnvironment, itcPlatform, itcBrowserOrDevice, itcLanguage, itcDetailedSteps, itcExpectedResult, itcExpectedPersistedState, itcExpectedSideEffects, itcCleanupInstructions, itcCriticality, itcEvidenceRequirement, itcApplicable, itcSortOrder]
+          properties:
+            itcStableId: { type: string }
+            itcModuleName: { type: string }
+            itcFeatureName: { type: string }
+            itcUserRole: { type: string }
+            itcObjective: { type: string }
+            itcBusinessPurpose: { type: string }
+            itcPreconditions: { type: string }
+            itcRequiredTestData: { type: string }
+            itcEnvironment: { type: string }
+            itcPlatform: { type: string }
+            itcBrowserOrDevice: { type: string }
+            itcLanguage: { type: string }
+            itcDetailedSteps: { type: string }
+            itcExpectedResult: { type: string }
+            itcExpectedPersistedState: { type: string }
+            itcExpectedSideEffects: { type: string }
+            itcCleanupInstructions: { type: string }
+            itcCriticality: { type: string }
+            itcEvidenceRequirement: { type: string }
+            itcExploratoryCharter: { type: string, nullable: true }
+            itcApplicable: { type: boolean }
+            itcSortOrder: { type: integer }
+    InternTestExecutionCreate:
+      type: object
+      additionalProperties: false
+      required: [itecStatus]
+      properties:
+        itecStatus: { type: string, enum: [pending, in_progress, passed, failed, blocked, not_applicable, ready_for_retest, verified] }
+        itecActualResult: { type: string, maxLength: 5000, nullable: true }
+        itecPersistedStateObserved: { type: string, maxLength: 5000, nullable: true }
+        itecSideEffectsObserved: { type: string, maxLength: 5000, nullable: true }
+        itecBlockerReason: { type: string, maxLength: 5000, nullable: true }
+        itecEvidenceSummary: { type: string, maxLength: 5000, nullable: true }
+    InternTestExecutionUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        iteuStatus: { type: string, enum: [pending, in_progress, passed, failed, blocked, not_applicable, ready_for_retest, verified] }
+        iteuActualResult: { type: string, maxLength: 5000, nullable: true }
+        iteuPersistedStateObserved: { type: string, maxLength: 5000, nullable: true }
+        iteuSideEffectsObserved: { type: string, maxLength: 5000, nullable: true }
+        iteuBlockerReason: { type: string, maxLength: 5000, nullable: true }
+        iteuEvidenceSummary: { type: string, maxLength: 5000, nullable: true }
+    InternTestExecution:
+      type: object
+      required: [itexId, itexTestCaseId, itexExecutionNumber, itexExecutorPartyId, itexStatus, itexCreatedAt, itexUpdatedAt]
+      properties:
+        itexId: { type: string, format: uuid }
+        itexTestCaseId: { type: string, format: uuid }
+        itexExecutionNumber: { type: integer, minimum: 1 }
+        itexExecutorPartyId: { type: integer, format: int64 }
+        itexStatus: { type: string }
+        itexActualResult: { type: string, nullable: true }
+        itexPersistedStateObserved: { type: string, nullable: true }
+        itexSideEffectsObserved: { type: string, nullable: true }
+        itexBlockerReason: { type: string, nullable: true }
+        itexEvidenceSummary: { type: string, nullable: true }
+        itexStartedAt: { type: string, format: date-time, nullable: true }
+        itexCompletedAt: { type: string, format: date-time, nullable: true }
+        itexCreatedAt: { type: string, format: date-time }
+        itexUpdatedAt: { type: string, format: date-time }
+    InternDailySummaryCreate:
+      type: object
+      additionalProperties: false
+      required: [idscWorkDate, idscMinutesWorked, idscModulesTested, idscCasesCompleted, idscReportsCreated, idscNextStep]
+      properties:
+        idscWorkDate: { type: string, format: date }
+        idscMinutesWorked: { type: integer, minimum: 1, maximum: 1440 }
+        idscModulesTested: { type: string, minLength: 1, maxLength: 2000 }
+        idscCasesCompleted: { type: integer, minimum: 0 }
+        idscReportsCreated: { type: integer, minimum: 0 }
+        idscBlockers: { type: string, maxLength: 5000, nullable: true }
+        idscNextStep: { type: string, minLength: 1, maxLength: 2000 }
+    InternDailySummary:
+      type: object
+      required: [idsId, idsTaskId, idsAuthorPartyId, idsWorkDate, idsMinutesWorked, idsModulesTested, idsCasesCompleted, idsReportsCreated, idsNextStep, idsCreatedAt]
+      properties:
+        idsId: { type: string, format: uuid }
+        idsTaskId: { type: string, format: uuid }
+        idsAuthorPartyId: { type: integer, format: int64 }
+        idsWorkDate: { type: string, format: date }
+        idsMinutesWorked: { type: integer }
+        idsModulesTested: { type: string }
+        idsCasesCompleted: { type: integer }
+        idsReportsCreated: { type: integer }
+        idsBlockers: { type: string, nullable: true }
+        idsNextStep: { type: string }
+        idsCreatedAt: { type: string, format: date-time }
+    InternFinalSummaryUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        ifsuConclusions: { type: string, maxLength: 12000, nullable: true }
+        ifsuSubmit: { type: boolean }
+    InternFinalSummary:
+      type: object
+      required: [ifsId, ifsPlanId, ifsAuthorPartyId, ifsGeneratedSnapshot, ifsCreatedAt, ifsUpdatedAt]
+      properties:
+        ifsId: { type: string, format: uuid }
+        ifsPlanId: { type: string, format: uuid }
+        ifsAuthorPartyId: { type: integer, format: int64 }
+        ifsGeneratedSnapshot: { type: string, description: JSON snapshot generated from executions and reports }
+        ifsConclusions: { type: string, nullable: true }
+        ifsSubmittedAt: { type: string, format: date-time, nullable: true }
+        ifsApprovedBy: { type: integer, format: int64, nullable: true }
+        ifsApprovedAt: { type: string, format: date-time, nullable: true }
+        ifsCreatedAt: { type: string, format: date-time }
+        ifsUpdatedAt: { type: string, format: date-time }
     FeedbackMultipart:
       type: object
       additionalProperties: false

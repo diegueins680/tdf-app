@@ -47,7 +47,29 @@ import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
-import { pickLandingPath, readSafeRedirectPath } from '../utils/loginRouting';
+import {
+  readOnboardingIntent,
+  readSafeRedirectPath,
+  resolvePostAuthPath,
+  type OnboardingIntent,
+} from '../utils/loginRouting';
+import { useAnalytics } from '../analytics/useAnalytics';
+import { captureGrowthEvent } from '../analytics/growthAttribution';
+import { captureFirstValueOnce, markWebSignupCompleted } from '../analytics/onboardingProgress';
+
+const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
+// Mirrors the server's rejected Unicode categories: Control, Format,
+// LineSeparator, and ParagraphSeparator.
+// eslint-disable-next-line no-control-regex
+const hasUnsafePasswordCharacter = (value: string) => /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(value);
+const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
+  events: 'descubrir eventos',
+  follow_artists: 'seguir artistas',
+  artist_profile: 'crear o reclamar un perfil de artista',
+  internships: 'postular a prácticas',
+  learning: 'aprender o enseñar',
+  professional_tools: 'explorar herramientas profesionales',
+};
 
 const LANDING_LABELS: Record<string, string> = {
   '/configuracion/roles-permisos': 'Roles y permisos',
@@ -163,18 +185,27 @@ export default function LoginPage() {
     phone: '',
     password: '',
   });
+  const [signupIntent, setSignupIntent] = useState<OnboardingIntent | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
-  const passwordHint = 'Usa 8+ caracteres con mayúsculas, minúsculas y un número.';
+  const analytics = useAnalytics();
+  const passwordHint = 'Usa al menos 8 caracteres y como máximo 72 bytes UTF-8, sin caracteres de control ni formato oculto.';
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
+  const signupNameInputRef = useRef<HTMLInputElement | null>(null);
+  const signupEmailInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
+  const googleCredentialHandlerRef = useRef<(response: { credential?: string }) => void | Promise<void>>(
+    () => undefined,
+  );
   const [googleButtonWidth, setGoogleButtonWidth] = useState(320);
   const [googleStatus, setGoogleStatus] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
@@ -251,7 +282,7 @@ export default function LoginPage() {
     mutationFn: (payload: { username: string; password: string }) => loginRequest(payload),
   });
   const googleLoginMutation = useMutation({
-    mutationFn: (payload: { idToken: string }) => googleLoginRequest(payload),
+    mutationFn: googleLoginRequest,
   });
   const resetMutation = useMutation({
     mutationFn: (email: string) => requestPasswordReset(email),
@@ -272,6 +303,7 @@ export default function LoginPage() {
   const redirectPath = useMemo(() => {
     return readSafeRedirectPath(location.search);
   }, [location.search]);
+  const requestedIntent = useMemo(() => readOnboardingIntent(location.search), [location.search]);
   const serviceStatus = String(healthQuery.data?.status ?? '').toLowerCase();
   const serviceChecking = healthQuery.isLoading && !healthQuery.data;
   const servicePreparing = serviceChecking || (serviceStatus !== '' && serviceStatus !== 'ok');
@@ -279,19 +311,16 @@ export default function LoginPage() {
 
   const signupPreset = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    const intent = (params.get('intent') ?? '').trim().toLowerCase();
+    const intent = readOnboardingIntent(location.search);
     const openSignup = params.get('signup') === '1'
-      || intent === 'artist'
-      || intent === 'artista'
-      || intent === 'intern'
-      || intent === 'practicante'
-      || intent === 'pasante';
+      || intent !== null;
     const claimRaw = params.get('claimArtistId') ?? params.get('claim');
     const claimArtistId = parsePositiveSafeInt(claimRaw);
 
     return {
       openSignup,
       claimArtistId,
+      intent,
     };
   }, [location.search]);
 
@@ -311,8 +340,27 @@ export default function LoginPage() {
     });
     setFavoriteArtistIds([]);
     setClaimArtistId(signupPreset.claimArtistId);
+    setSignupIntent(signupPreset.intent);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
+    captureGrowthEvent(analytics, 'signup_started', {
+      route: '/login',
+      entry: 'campaign_link',
+      intent: signupPreset.intent ?? 'general',
+    });
+    if (signupPreset.intent) {
+      captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent: signupPreset.intent });
+    }
     signupMutation.reset();
-  }, [location.search, signupPreset.claimArtistId, signupPreset.openSignup, signupMutation]);
+  }, [analytics, location.search, signupPreset.claimArtistId, signupPreset.intent, signupPreset.openSignup, signupMutation]);
+
+  useEffect(() => {
+    captureGrowthEvent(analytics, 'auth_mode_viewed', {
+      route: '/login',
+      mode: signupPreset.openSignup ? 'signup' : 'login',
+      intent: requestedIntent ?? 'general',
+    });
+  }, [analytics, requestedIntent, signupPreset.openSignup]);
 
   const fanArtistsQuery = useQuery({
     queryKey: ['signup', 'artists'],
@@ -341,17 +389,31 @@ export default function LoginPage() {
     } else if (favoriteArtistIds.length > 0) {
       title = 'Tus artistas favoritos';
       steps.push('Guardaremos estas relaciones sin convertirlas en permisos.');
-      steps.push('Podrás solicitar acceso de Fan mediante el flujo revisado.');
+      steps.push('Podrás continuar a la comunidad con tu cuenta Customer.');
+    } else if (signupIntent === 'artist_profile') {
+      title = 'Perfil de artista';
+      steps.push('Crearemos tu cuenta Customer sin autoasignar permisos.');
+      steps.push('Después podrás reclamar un perfil verificable o enviar una solicitud revisada.');
+    } else if (signupIntent === 'internships') {
+      title = 'Postulación a prácticas';
+      steps.push('Crearemos tu cuenta base para identificar la solicitud.');
+      steps.push('Después abrirás la solicitud de acceso a Prácticas para revisión.');
+    } else if (signupIntent === 'follow_artists') {
+      title = 'Comunidad de fans';
+      steps.push('Crearemos tu cuenta Customer y abriremos la comunidad.');
+      steps.push('Podrás seguir artistas y guardar contenido inmediatamente.');
     } else {
       steps.push('Crearemos la cuenta con la política base persistida.');
       steps.push('Las asignaciones adicionales requieren el flujo de revisión correspondiente.');
     }
 
-    const landingPath = redirectPath ?? '/inicio';
-    const landingLabel = LANDING_LABELS[landingPath] ?? landingPath;
+    const landingPath = resolvePostAuthPath(signupIntent, ['Customer'], [], redirectPath);
+    const landingLabel = landingPath.startsWith('/solicitudes-acceso/nueva')
+      ? 'Solicitud de acceso revisada'
+      : LANDING_LABELS[landingPath] ?? landingPath;
 
     return { title, steps, landingLabel, note };
-  }, [claimArtistId, favoriteArtistIds.length, redirectPath]);
+  }, [claimArtistId, favoriteArtistIds.length, redirectPath, signupIntent]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -365,6 +427,7 @@ export default function LoginPage() {
     const normalizedIdentifier = identifier.trim();
     const normalizedPassword = password.trim();
     if (!normalizedIdentifier || !normalizedPassword) {
+      captureGrowthEvent(analytics, 'login_validation_failed', { route: '/login', reason: 'missing_credentials' });
       setFormError('Ingresa tu usuario o correo y la contraseña.');
       return;
     }
@@ -385,12 +448,13 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
-      const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
-      const targetPath = redirectPath ?? landingPath;
+      const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
       login(nextSession, { remember: rememberDevice });
+      captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
       navigate(targetPath, { replace: true });
     } catch (error) {
+      captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });
       const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setFormError(message.trim() === '' ? 'No se pudo iniciar sesión.' : message);
     }
@@ -405,6 +469,12 @@ export default function LoginPage() {
         } else {
           setFormError(message);
         }
+        return;
+      }
+      if (signupDialogOpen && !termsAccepted) {
+        const message = 'Acepta los términos y la política de privacidad para continuar con Google.';
+        setGoogleError(message);
+        setSignupFeedback({ type: 'error', message });
         return;
       }
       const credential = credentialResponse?.credential;
@@ -423,7 +493,14 @@ export default function LoginPage() {
       try {
         setGoogleStatus('Conectando con Google…');
         setGoogleError(null);
-        const response = await googleLoginMutation.mutateAsync({ idToken: credential });
+        const response = await googleLoginMutation.mutateAsync({
+          idToken: credential,
+          ...(signupDialogOpen ? {
+            marketingOptIn,
+            termsAccepted: true,
+            termsVersion: ACCOUNT_TERMS_VERSION,
+          } : {}),
+        });
         const nextSession = await buildResolvedSession({
           username: fallbackUsername,
           displayName: fallbackName,
@@ -432,14 +509,26 @@ export default function LoginPage() {
           modules: response.modules,
           partyId: response.partyId,
         });
-        const landingPath = pickLandingPath(nextSession.roles, nextSession.modules);
-        const targetPath = redirectPath ?? landingPath;
+        if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
+        const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
+        const targetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
+        const googleCreatedAccount = response.accountCreated === true;
+        captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
+          route: '/login',
+          method: 'google',
+          ...(googleCreatedAccount ? { intent: signupIntent ?? 'general' } : {}),
+        });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
         navigate(targetPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
+        captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
+          route: '/login',
+          method: 'google',
+          ...(signupDialogOpen ? { intent: signupIntent ?? 'general' } : {}),
+        });
         setGoogleError(message);
         if (signupDialogOpen) {
           setSignupFeedback({ type: 'error', message });
@@ -450,8 +539,12 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, servicePreparing, signupDialogOpen],
+    [analytics, buildResolvedSession, googleLoginMutation, login, marketingOptIn, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
+
+  useEffect(() => {
+    googleCredentialHandlerRef.current = handleGoogleCredential;
+  }, [handleGoogleCredential]);
 
   useEffect(() => {
     if (serviceStatus === 'ok') {
@@ -496,7 +589,9 @@ export default function LoginPage() {
         if (!googleInitRef.current) {
           google.initialize({
             client_id: googleClientId,
-            callback: handleGoogleCredential,
+            callback: (credentialResponse: { credential?: string }) => {
+              void googleCredentialHandlerRef.current(credentialResponse);
+            },
             ux_mode: 'popup',
             auto_select: false,
           });
@@ -530,7 +625,7 @@ export default function LoginPage() {
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen]);
+  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, termsAccepted]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -585,7 +680,7 @@ export default function LoginPage() {
     }
   };
 
-  const openSignupDialog = () => {
+  const openSignupDialog = (intent: OnboardingIntent | null = requestedIntent) => {
     setSignupDialogOpen(true);
     setSignupFeedback(null);
     setShowSignupPassword(false);
@@ -598,6 +693,15 @@ export default function LoginPage() {
     });
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
+    setSignupIntent(intent);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
+    captureGrowthEvent(analytics, 'signup_started', {
+      route: '/login',
+      entry: 'quick_route',
+      intent: intent ?? 'general',
+    });
+    if (intent) captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent });
     signupMutation.reset();
   };
 
@@ -607,6 +711,9 @@ export default function LoginPage() {
     setShowSignupPassword(false);
     setFavoriteArtistIds([]);
     setClaimArtistId(null);
+    setSignupIntent(null);
+    setTermsAccepted(false);
+    setMarketingOptIn(false);
     signupMutation.reset();
   };
 
@@ -618,25 +725,39 @@ export default function LoginPage() {
 
     const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
     if (!claimIsValid) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'claim_unavailable', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: 'El perfil seleccionado ya no está disponible para reclamar.' });
       return;
     }
 
-    const payload = buildSignupPayload(signupForm, favoriteArtistIds, claimArtistId ?? undefined);
+    const payload = {
+      ...buildSignupPayload(signupForm, favoriteArtistIds, claimArtistId ?? undefined),
+      marketingOptIn,
+      termsAccepted: true as const,
+      termsVersion: ACCOUNT_TERMS_VERSION,
+    };
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
+      if (!payload.firstName && !payload.lastName) signupNameInputRef.current?.focus();
+      else signupEmailInputRef.current?.focus();
       return;
     }
-    if (payload.password.length < 8) {
-      setSignupFeedback({ type: 'error', message: 'La contraseña debe tener al menos 8 caracteres.' });
+    const passwordBytes = new TextEncoder().encode(payload.password.trim()).length;
+    if (Array.from(payload.password.trim()).length < 8 || passwordBytes > 72 || hasUnsafePasswordCharacter(payload.password)) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'invalid_password', intent: signupIntent ?? 'general' });
+      setSignupFeedback({ type: 'error', message: passwordHint });
+      return;
+    }
+    if (!termsAccepted) {
+      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'terms_not_accepted', intent: signupIntent ?? 'general' });
+      setSignupFeedback({ type: 'error', message: 'Acepta los términos y la política de privacidad para continuar.' });
       return;
     }
     setSignupFeedback(null);
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
-      const landingPath = pickLandingPath(effectiveRoles, response.modules);
-      const targetPath = redirectPath ?? landingPath;
       const shouldFollowArtists = favoriteArtistIds.length > 0;
       const selectedFanArtistIds = favoriteArtistIds;
       const nextSession = await buildResolvedSession({
@@ -647,18 +768,33 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
+      markWebSignupCompleted(response.partyId);
+      const targetPath = resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath);
       login(nextSession, { remember: rememberDevice });
+      captureGrowthEvent(analytics, 'signup_completed', {
+        route: '/login',
+        method: 'password',
+        intent: signupIntent ?? 'general',
+        destination: targetPath.split('?')[0],
+      });
       if (shouldFollowArtists) {
         void Promise.all(
-          selectedFanArtistIds.map((artistId) =>
-            Fans.follow(artistId).catch((followErr) => {
+          selectedFanArtistIds.map(async (artistId) => {
+            try {
+              await Fans.follow(artistId);
+              return true;
+            } catch (followErr) {
               logger.warn('No se pudo seguir al artista después del registro', followErr);
-            }),
-          ),
-        );
+              return false;
+            }
+          }),
+        ).then((results) => {
+          if (results.some(Boolean)) captureFirstValueOnce(analytics, nextSession.partyId, 'artist_followed');
+        });
       }
       navigate(targetPath, { replace: true });
     } catch (err) {
+      captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'No pudimos crear la cuenta. Intenta de nuevo.',
@@ -683,7 +819,7 @@ export default function LoginPage() {
   }
 
   if (session) {
-    const landing = redirectPath ?? pickLandingPath(session.roles ?? [], session.modules);
+    const landing = resolvePostAuthPath(requestedIntent, session.roles ?? [], session.modules, redirectPath);
     return <Navigate to={landing} replace />;
   }
 
@@ -887,7 +1023,7 @@ export default function LoginPage() {
                     <Button
                       variant="outlined"
                       size="large"
-                      onClick={() => openSignupDialog()}
+                      onClick={() => openSignupDialog(null)}
                       sx={{ minWidth: 180, textTransform: 'none' }}
                     >
                       Crear cuenta general
@@ -1026,7 +1162,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => navigate('/artista/crear')}
+                              onClick={() => openSignupDialog('artist_profile')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1073,7 +1209,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => openSignupDialog()}
+                              onClick={() => openSignupDialog('follow_artists')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1120,7 +1256,7 @@ export default function LoginPage() {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={() => openSignupDialog()}
+                              onClick={() => openSignupDialog('internships')}
                               sx={{
                                 alignSelf: 'flex-start',
                                 textTransform: 'none',
@@ -1192,7 +1328,39 @@ export default function LoginPage() {
         <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
-            {googleClientId && (
+            {signupIntent && (
+              <Alert severity="info">
+                Personalizaremos el siguiente paso para “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Esta elección no asigna permisos.
+              </Alert>
+            )}
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
+                />
+              )}
+              label={(
+                <Typography variant="body2">
+                  Acepto los{' '}
+                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
+                  {' '}y la{' '}
+                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
+                </Typography>
+              )}
+            />
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={marketingOptIn}
+                  onChange={(event) => setMarketingOptIn(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Quiero recibir novedades de TDF' }}
+                />
+              )}
+              label="Quiero recibir novedades de TDF (opcional)."
+            />
+            {googleClientId && termsAccepted && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   Crear e ingresar con Google
@@ -1216,6 +1384,7 @@ export default function LoginPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Nombre"
+                inputRef={signupNameInputRef}
                 value={signupForm.firstName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
                 fullWidth
@@ -1231,6 +1400,7 @@ export default function LoginPage() {
             </Stack>
             <TextField
               label="Correo *"
+              inputRef={signupEmailInputRef}
               type="email"
               value={signupForm.email}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
@@ -1238,18 +1408,8 @@ export default function LoginPage() {
               placeholder="tu.correo@tdf.com"
               sx={dialogFieldSx}
             />
-            <TextField
-              label="Celular (opcional)"
-              type="tel"
-              autoComplete="tel"
-              value={signupForm.phone}
-              onChange={(event) => setSignupForm((prev) => ({ ...prev, phone: event.target.value }))}
-              inputProps={{ inputMode: 'tel' }}
-              fullWidth
-              sx={dialogFieldSx}
-            />
             <Alert severity="info">
-              La cuenta recibe únicamente el acceso base definido por la política persistida. Los roles adicionales requieren revisión y aprobación.
+              Crearemos una cuenta Customer. Cualquier acceso adicional requiere una solicitud revisada o una comprobación de perfil existente.
             </Alert>
             {(claimableArtists.length > 0 || claimArtistId) && (
               <Stack spacing={1}>
@@ -1384,14 +1544,11 @@ export default function LoginPage() {
                 </Stack>
               </Stack>
             </Paper>
-            <Typography variant="body2" color="text.secondary">
-              Al crear la cuenta aceptas los términos de servicio de TDF Records y recibes acceso inmediato al panel.
-            </Typography>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={closeSignupDialog}>Cancelar</Button>
-          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing}>
+          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
             {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
           </Button>
         </DialogActions>

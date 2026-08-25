@@ -255,12 +255,34 @@ export function validateFlyConfig(toml) {
   const deploy = exactlyOneTable(tables, 'deploy');
   const services = tables.get('services') ?? [];
   const healthChecks = tables.get('services.http_checks') ?? [];
+  const mounts = tables.get('mounts') ?? [];
   const runMigrations = String(env.get('RUN_MIGRATIONS') ?? '').trim().toLowerCase();
   const autoApplyProductionMigrations = String(
     env.get('AUTO_APPLY_PRODUCTION_MIGRATIONS') ?? '',
   ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
+  const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
+  const internalFeedbackUploadRoot = String(
+    env.get('TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT') ?? '',
+  ).trim();
+  const normalizedAssetsRoot = path.posix.normalize(assetsRoot);
+  const normalizedUploadRoot = path.posix.normalize(internalFeedbackUploadRoot);
+  const privateFeedbackRoot = `${normalizedAssetsRoot}/.internal-feedback`;
+  const uploadRootIsPrivate = assetsRoot.startsWith('/')
+    && normalizedAssetsRoot === assetsRoot
+    && internalFeedbackUploadRoot.startsWith('/')
+    && normalizedUploadRoot === internalFeedbackUploadRoot
+    && normalizedUploadRoot === privateFeedbackRoot;
+  const uploadRootIsDurable = uploadRootIsPrivate
+    && mounts.some((mount) => {
+      const destination = String(mount.get('destination') ?? '').trim();
+      const normalizedDestination = path.posix.normalize(destination);
+      return destination.startsWith('/')
+        && normalizedDestination === destination
+        && (normalizedUploadRoot === normalizedDestination
+          || normalizedUploadRoot.startsWith(`${normalizedDestination}/`));
+    });
   const hasHealthCheck = services.length === 1 && healthChecks.some((check) => (
     String(check.get('path') ?? '').trim() === '/health'
       && String(check.get('protocol') ?? '').trim().toLowerCase() === 'http'
@@ -287,6 +309,11 @@ export function validateFlyConfig(toml) {
   if (defaultLocale !== 'es') {
     throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
   }
+  if (!uploadRootIsDurable) {
+    throw new Error(
+      'fly.toml must place TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT in the reserved private subtree beneath a persistent mount.',
+    );
+  }
   if (!hasHealthCheck) {
     throw new Error('fly.toml must define an HTTP /health readiness check.');
   }
@@ -299,6 +326,7 @@ export function validateFlyConfig(toml) {
     autoApplyProductionMigrations: true,
     eventDiscoveryEnabled: false,
     defaultLocale: 'es',
+    internalFeedbackUploadRoot: normalizedUploadRoot,
     healthCheckPath: '/health',
     strategy: 'rolling',
     maxUnavailable: 1,

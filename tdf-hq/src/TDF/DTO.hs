@@ -984,6 +984,9 @@ instance FromJSON LoginRequest where
 
 data GoogleLoginRequest = GoogleLoginRequest
   { idToken :: Text
+  , marketingOptIn :: Maybe Bool
+  , termsAccepted :: Maybe Bool
+  , termsVersion :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GoogleLoginRequest where
   parseJSON = genericParseJSON strictDecodeOptions
@@ -996,6 +999,8 @@ data SignupRequest = SignupRequest
   , password        :: Text
   , googleIdToken   :: Maybe Text
   , marketingOptIn  :: Maybe Bool
+  , termsAccepted   :: Maybe Bool
+  , termsVersion    :: Maybe Text
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64
   } deriving (Show, Generic)
@@ -1038,6 +1043,7 @@ data LoginResponse = LoginResponse
   , partyId :: Int64
   , roles   :: [RoleEnum]
   , modules :: [Text]
+  , accountCreated :: Maybe Bool
   } deriving (Show, Generic)
 instance ToJSON LoginResponse
 

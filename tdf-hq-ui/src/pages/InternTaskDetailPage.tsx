@@ -28,6 +28,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { Internships } from '../api/internships';
+import { InternAudit } from '../api/internAudit';
 import type { InternProjectDTO, InternTaskDTO, InternTaskUpdate } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
@@ -40,6 +41,7 @@ const TASK_STATUS_OPTIONS = [
   { value: 'doing', label: 'En progreso' },
   { value: 'blocked', label: 'Bloqueada' },
   { value: 'done', label: 'Lista' },
+  { value: 'cancelled', label: 'Cancelada' },
 ] as const;
 
 const TASK_STATUS_LABELS: Record<string, string> = Object.fromEntries(
@@ -117,6 +119,12 @@ export default function InternTaskDetailPage() {
     queryFn: Internships.listProjects,
     enabled: isAdmin && editing,
   });
+  const auditPlansQuery = useQuery({
+    queryKey: ['intern-audit', 'plans'],
+    queryFn: InternAudit.listPlans,
+    enabled: Boolean(task),
+  });
+  const auditPlan = auditPlansQuery.data?.find((candidate) => candidate.iapTaskId === taskId);
 
   useEffect(() => {
     if (!task || editing) return;
@@ -184,23 +192,24 @@ export default function InternTaskDetailPage() {
 
     const progressText = taskForm.progress.trim();
     const progress = Number(progressText);
-    if (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100) {
-      setFeedback({ severity: 'error', message: 'El avance debe ser un número entero entre 0 y 100.' });
-      return;
-    }
-    if (!TASK_STATUS_OPTIONS.some((option) => option.value === taskForm.status)) {
-      setFeedback({ severity: 'error', message: 'Selecciona un estado válido.' });
-      return;
+    if (!auditPlan) {
+      if (!/^\d+$/.test(progressText) || !Number.isInteger(progress) || progress < 0 || progress > 100) {
+        setFeedback({ severity: 'error', message: 'El avance debe ser un número entero entre 0 y 100.' });
+        return;
+      }
+      if (!TASK_STATUS_OPTIONS.some((option) => option.value === taskForm.status)) {
+        setFeedback({ severity: 'error', message: 'Selecciona un estado válido.' });
+        return;
+      }
     }
 
-    let payload: InternTaskUpdate = {
-      ituStatus: taskForm.status,
-      ituProgress: progress,
-    };
+    let payload: InternTaskUpdate = auditPlan
+      ? {}
+      : { ituStatus: taskForm.status, ituProgress: progress };
 
     if (isAdmin) {
       const title = taskForm.title.trim();
-      if (taskForm.projectId.trim() === '') {
+      if (!auditPlan && taskForm.projectId.trim() === '') {
         setFeedback({ severity: 'error', message: 'Selecciona el proyecto de la tarea.' });
         return;
       }
@@ -210,11 +219,13 @@ export default function InternTaskDetailPage() {
       }
       payload = {
         ...payload,
-        ituProjectId: taskForm.projectId,
         ituTitle: title,
         ituDescription: taskForm.description.trim() || null,
-        ituAssignedTo: taskForm.assignedTo === '' ? null : Number(taskForm.assignedTo),
         ituDueAt: taskForm.dueAt || null,
+        ...(!auditPlan ? {
+          ituProjectId: taskForm.projectId,
+          ituAssignedTo: taskForm.assignedTo === '' ? null : Number(taskForm.assignedTo),
+        } : {}),
       };
     }
 
@@ -249,7 +260,7 @@ export default function InternTaskDetailPage() {
       maxWidth="md"
       actions={(
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-          {task && !editing && (
+          {task && !editing && (isAdmin || !auditPlan) && (
             <Button
               variant="contained"
               startIcon={<EditOutlinedIcon />}
@@ -257,6 +268,21 @@ export default function InternTaskDetailPage() {
               sx={{ minHeight: 44 }}
             >
               {isAdmin ? 'Editar tarea' : 'Actualizar avance'}
+            </Button>
+          )}
+          {auditPlan && !editing && (
+            <Button
+              component={RouterLink}
+              to={`/practicas/auditorias/${encodeURIComponent(auditPlan.iapId)}`}
+              variant="outlined"
+              sx={{ minHeight: 44 }}
+            >
+              Abrir plan de pruebas
+            </Button>
+          )}
+          {task && !editing && (
+            <Button component={RouterLink} to="/feedback/interno" variant="text" sx={{ minHeight: 44 }}>
+              Ver reportes
             </Button>
           )}
           <Link
@@ -304,6 +330,13 @@ export default function InternTaskDetailPage() {
                   </Typography>
                 </Box>
 
+                {auditPlan && (
+                  <Alert severity="info">
+                    El estado y el avance se administran desde el plan de pruebas para conservar sus criterios de cierre.
+                    El proyecto y el responsable también quedan fijados durante la auditoría.
+                  </Alert>
+                )}
+
                 {isAdmin && (
                   <>
                     <FormControl fullWidth required>
@@ -312,6 +345,7 @@ export default function InternTaskDetailPage() {
                         labelId="task-project-label"
                         label="Proyecto"
                         value={taskForm.projectId}
+                        disabled={Boolean(auditPlan)}
                         onChange={(event) => setTaskForm((current) => current && ({
                           ...current,
                           projectId: event.target.value,
@@ -357,6 +391,7 @@ export default function InternTaskDetailPage() {
                       labelId="task-status-label"
                       label="Estado"
                       value={taskForm.status}
+                      disabled={Boolean(auditPlan)}
                       onChange={(event) => setTaskForm((current) => current && ({
                         ...current,
                         status: event.target.value,
@@ -370,7 +405,7 @@ export default function InternTaskDetailPage() {
                   <TextField
                     label="Avance %"
                     type="number"
-                    required
+                    required={!auditPlan}
                     fullWidth
                     value={taskForm.progress}
                     onChange={(event) => setTaskForm((current) => current && ({
@@ -378,6 +413,8 @@ export default function InternTaskDetailPage() {
                       progress: event.target.value,
                     }))}
                     inputProps={{ min: 0, max: 100, step: 1 }}
+                    disabled={Boolean(auditPlan)}
+                    helperText={auditPlan ? 'Se calcula automáticamente con los casos ejecutados.' : undefined}
                   />
                 </Stack>
 
@@ -389,6 +426,7 @@ export default function InternTaskDetailPage() {
                         labelId="task-assignee-label"
                         label="Responsable"
                         value={taskForm.assignedTo}
+                        disabled={Boolean(auditPlan)}
                         onChange={(event) => setTaskForm((current) => current && ({
                           ...current,
                           assignedTo: event.target.value,
@@ -527,7 +565,7 @@ export default function InternTaskDetailPage() {
                   <Button variant="outlined" startIcon={<ContentCopyOutlinedIcon />} onClick={() => void copyTaskLink()}>
                     Copiar enlace
                   </Button>
-                  {isAdmin && (
+                  {isAdmin && auditPlansQuery.isSuccess && !auditPlan && (
                     <Button
                       color="error"
                       variant="outlined"

@@ -161,6 +161,9 @@ export interface SignupPayload {
   email: string;
   phone?: string;
   password: string;
+  marketingOptIn?: boolean;
+  termsAccepted: true;
+  termsVersion: string;
   fanArtistIds?: number[];
   claimArtistId?: number;
 }

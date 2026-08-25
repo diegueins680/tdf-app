@@ -2283,6 +2283,7 @@ data InternProjectDTO = InternProjectDTO
   , ipTitle     :: Text
   , ipDescription :: Maybe Text
   , ipStatus    :: Text
+  , ipActivationStatus :: Text
   , ipStartAt   :: Maybe Day
   , ipDueAt     :: Maybe Day
   , ipCreatedAt :: UTCTime
@@ -2295,6 +2296,7 @@ data InternProjectCreate = InternProjectCreate
   { ipcTitle       :: Text
   , ipcDescription :: Maybe Text
   , ipcStatus      :: Maybe Text
+  , ipcActivationStatus :: Maybe Text
   , ipcStartAt     :: Maybe Day
   , ipcDueAt       :: Maybe Day
   } deriving (Show, Generic)
@@ -2303,7 +2305,7 @@ instance FromJSON InternProjectCreate where
   parseJSON value = do
     rejectNullOptionalFields
       "InternProjectCreate"
-      ["ipcDescription", "ipcStatus", "ipcStartAt", "ipcDueAt"]
+      ["ipcDescription", "ipcStatus", "ipcActivationStatus", "ipcStartAt", "ipcDueAt"]
       value
     genericParseJSON strictObjectOptions value
 
@@ -2353,9 +2355,11 @@ data InternTaskDTO = InternTaskDTO
   , itTitle       :: Text
   , itDescription :: Maybe Text
   , itStatus      :: Text
+  , itActivationStatus :: Text
   , itProgress    :: Int
   , itAssignedTo  :: Maybe Int64
   , itAssignedName :: Maybe Text
+  , itProposedAssignee :: Maybe Int64
   , itDueAt       :: Maybe Day
   , itCreatedAt   :: UTCTime
   , itUpdatedAt   :: UTCTime
@@ -2368,6 +2372,8 @@ data InternTaskCreate = InternTaskCreate
   , itcTitle      :: Text
   , itcDescription :: Maybe Text
   , itcAssignedTo :: Maybe Int64
+  , itcProposedAssignee :: Maybe Int64
+  , itcActivationStatus :: Maybe Text
   , itcDueAt      :: Maybe Day
   } deriving (Show, Generic)
 instance ToJSON InternTaskCreate
@@ -2375,7 +2381,7 @@ instance FromJSON InternTaskCreate where
   parseJSON value = do
     rejectNullOptionalFields
       "InternTaskCreate"
-      ["itcDescription", "itcAssignedTo", "itcDueAt"]
+      ["itcDescription", "itcAssignedTo", "itcProposedAssignee", "itcActivationStatus", "itcDueAt"]
       value
     genericParseJSON strictObjectOptions value
 

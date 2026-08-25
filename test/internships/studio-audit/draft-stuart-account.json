@@ -1,0 +1,38 @@
+{
+  "status": "existing-account-verified-runtime-only",
+  "exactIdentityRequired": true,
+  "displayName": "Stewart Moreira",
+  "requestedName": "Stuart",
+  "spellingDifferenceVerified": true,
+  "email": null,
+  "partyId": null,
+  "accountActive": true,
+  "observedActiveRoles": [
+    "Intern",
+    "Reception",
+    "Customer",
+    "Fan"
+  ],
+  "observedEffectiveModules": [
+    "Internships",
+    "CRM",
+    "Packages",
+    "Scheduling"
+  ],
+  "requiredPermanentRolesForAssignment": [
+    "Intern"
+  ],
+  "requiredPermanentModulesForAssignment": [
+    "Internships"
+  ],
+  "temporaryModules": [],
+  "selfServiceRoleGrantAllowed": false,
+  "permissionRequestWorkflowRequired": true,
+  "approverRoles": [
+    "Manager",
+    "Admin"
+  ],
+  "leastPrivilegeReviewRequiredBeforeActivation": true,
+  "activationRequiresSeparateApproval": true,
+  "notes": "Production identity was verified read-only on 2026-08-23. Exact party ID and email are deliberately omitted from source control and must be supplied at runtime. Do not create a duplicate account or broaden production access for staging tests."
+}

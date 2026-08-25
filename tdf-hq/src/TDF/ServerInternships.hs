@@ -30,8 +30,8 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
-import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectList, update, (==.), (=.), (<-.))
-import           Database.Persist.Sql       (SqlPersistT, fromSqlKey, runSqlPool, toSqlKey)
+import           Database.Persist           (Entity(..), Key, SelectOpt(..), count, delete, getBy, getEntity, getJustEntity, insert, selectList, toPersistValue, update, (==.), (=.), (<-.))
+import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
 
@@ -42,12 +42,13 @@ import           TDF.Catalog.Security       (loadCanonicalPartyRoleMap, selectCa
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra            as ME
+import           TDF.ServerInternAudit      (internAuditServer)
 
 internProjectStatuses :: [Text]
-internProjectStatuses = ["active", "paused", "completed"]
+internProjectStatuses = ["active", "paused", "completed", "cancelled"]
 
 internTaskStatuses :: [Text]
-internTaskStatuses = ["todo", "doing", "blocked", "done"]
+internTaskStatuses = ["todo", "doing", "blocked", "done", "cancelled"]
 
 internPermissionStatuses :: [Text]
 internPermissionStatuses = ["pending", "approved", "rejected"]
@@ -347,6 +348,10 @@ validateInternStatusValue fieldName allowedStatuses rawStatus
       BL.fromStrict . TE.encodeUtf8 $
         fieldName <> " must be one of: " <> T.intercalate ", " allowedStatuses
 
+validateInternActivationStatus :: Text -> Either ServerError Text
+validateInternActivationStatus =
+  validateInternStatusValue "activationStatus" ["draft", "active"]
+
 internshipsServer
   :: ( MonadReader Env m
      , MonadIO m
@@ -367,6 +372,7 @@ internshipsServer user =
   :<|> clockInH
   :<|> clockOutH
   :<|> (listPermissionsH :<|> createPermissionH :<|> updatePermissionH)
+  :<|> internAuditServer user
   where
     ensureAdmin :: MonadError ServerError m => m ()
     ensureAdmin = unless (isAdmin user) $
@@ -490,11 +496,17 @@ internshipsServer user =
       projects <- if isAdmin user
         then withPool $ selectList [] [Desc ME.InternProjectCreatedAt]
         else do
-          tasks <- withPool $ selectList [ME.InternTaskAssignedTo ==. Just (auPartyId user)] []
+          tasks <- withPool $ selectList
+            [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+            , ME.InternTaskActivationStatus ==. "active"
+            ] []
           let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
           if null projectIds
             then pure []
-            else withPool $ selectList [ME.InternProjectId <-. projectIds] [Desc ME.InternProjectCreatedAt]
+            else withPool $ selectList
+              [ ME.InternProjectId <-. projectIds
+              , ME.InternProjectActivationStatus ==. "active"
+              ] [Desc ME.InternProjectCreatedAt]
       pure (map toProjectDTO projects)
 
     createProjectH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => InternProjectCreate -> m InternProjectDTO
@@ -503,12 +515,17 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternProjectTitle ipcTitle)
       statusVal <- either throwError pure (validateInternProjectStatusInput ipcStatus)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus ipcActivationStatus
       either throwError pure (validateInternProjectDateRange ipcStartAt ipcDueAt)
       ent <- withPool $ do
         newId <- insert ME.InternProject
           { ME.internProjectTitle       = titleVal
           , ME.internProjectDescription = ipcDescription
           , ME.internProjectStatus      = statusVal
+          , ME.internProjectActivationStatus = fromMaybe "active" activationStatus
+          , ME.internProjectActivatedAt = if activationStatus == Just "draft" then Nothing else Just now
+          , ME.internProjectNotificationsEnabled = False
           , ME.internProjectStartAt     = ipcStartAt
           , ME.internProjectDueAt       = ipcDueAt
           , ME.internProjectCreatedBy   = auPartyId user
@@ -522,36 +539,53 @@ internshipsServer user =
     updateProjectH rawId InternProjectUpdate{..} = do
       ensureAdmin
       projectKey <- parseKey @ME.InternProject rawId
-      now <- liftIO getCurrentTime
       titleUpdate <- either throwError pure (validateInternProjectTitleUpdate ipuTitle)
       statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
-      mEntity <- withPool $ getEntity projectKey
-      ent <- maybe (throwError err404) pure mEntity
-      let project = entityVal ent
-      either throwError pure $
-        validateInternProjectDateUpdate
-          (ME.internProjectStartAt project)
-          (ME.internProjectDueAt project)
-          ipuStartAt
-          ipuDueAt
-      let updates = catMaybes
+      let auditControlledUpdate = isJust ipuStatus || isJust ipuStartAt || isJust ipuDueAt
+          updates = catMaybes
             [ fmap (ME.InternProjectTitle =.) titleUpdate
             , fmap (ME.InternProjectDescription =.) ipuDescription
             , fmap (ME.InternProjectStatus =.) statusUpdate
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
             , fmap (ME.InternProjectDueAt =.) ipuDueAt
             ]
-      unless (null updates) $
-        withPool $ update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
-      updated <- withPool $ getJustEntity projectKey
-      pure (toProjectDTO updated)
+      result <- withPool $ do
+        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
+          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
+        mEntity <- getEntity projectKey
+        case mEntity of
+          Nothing -> pure (Left err404)
+          Just ent -> do
+            let project = entityVal ent
+            auditPlanCount <- if auditControlledUpdate
+              then count [ME.InternAuditPlanProjectId ==. projectKey]
+              else pure 0
+            if auditPlanCount > 0
+              then pure (Left err409
+                { errBody = "Audit project status and schedule are controlled by its audit plans"
+                })
+              else case validateInternProjectDateUpdate
+                (ME.internProjectStartAt project)
+                (ME.internProjectDueAt project)
+                ipuStartAt
+                ipuDueAt of
+                  Left err -> pure (Left err)
+                  Right () -> do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) $
+                      update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
+                    Right <$> getJustEntity projectKey
+      either throwError (pure . toProjectDTO) result
 
     listTasksH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTaskDTO]
     listTasksH = do
       ensureInternAccess
       let baseFilters = if isAdmin user
             then []
-            else [ME.InternTaskAssignedTo ==. Just (auPartyId user)]
+            else
+              [ ME.InternTaskAssignedTo ==. Just (auPartyId user)
+              , ME.InternTaskActivationStatus ==. "active"
+              ]
       tasks <- withPool $ selectList baseFilters [Desc ME.InternTaskUpdatedAt]
       let projectIds = nub (map (ME.internTaskProjectId . entityVal) tasks)
       projectMap <- loadProjectMap projectIds
@@ -566,17 +600,25 @@ internshipsServer user =
       now <- liftIO getCurrentTime
       titleVal <- either throwError pure (validateInternTaskTitle itcTitle)
       assignedTo <- either throwError pure (validateOptionalInternPartyIdInput "assignedTo" itcAssignedTo)
+      proposedAssignee <- either throwError pure (validateOptionalInternPartyIdInput "proposedAssignee" itcProposedAssignee)
+      activationStatus <- either throwError pure $
+        traverse validateInternActivationStatus itcActivationStatus
+      when (activationStatus == Just "draft" && isJust assignedTo) $
+        throwError err400 { errBody = "Draft tasks must use proposedAssignee instead of assignedTo" }
       mProject <- withPool $ getEntity projectKey
       _ <- maybe (throwError err404) pure mProject
       let assignedKey = fmap toSqlKey assignedTo
+          proposedKey = fmap toSqlKey (proposedAssignee <|> assignedTo)
       ent <- withPool $ do
         newId <- insert ME.InternTask
           { ME.internTaskProjectId   = projectKey
           , ME.internTaskTitle       = titleVal
           , ME.internTaskDescription = itcDescription
           , ME.internTaskStatus      = "todo"
+          , ME.internTaskActivationStatus = fromMaybe "active" activationStatus
           , ME.internTaskProgress    = 0
           , ME.internTaskAssignedTo  = assignedKey
+          , ME.internTaskProposedAssignee = proposedKey
           , ME.internTaskDueAt       = itcDueAt
           , ME.internTaskCreatedBy   = auPartyId user
           , ME.internTaskCreatedAt   = now
@@ -591,15 +633,12 @@ internshipsServer user =
     updateTaskH rawId InternTaskUpdate{..} = do
       ensureInternAccess
       taskKey <- parseKey @ME.InternTask rawId
-      now <- liftIO getCurrentTime
-      mEntity <- withPool $ getEntity taskKey
-      ent <- maybe (throwError err404) pure mEntity
-      let task = entityVal ent
-          assignedKey = ME.internTaskAssignedTo task
-          isOwner = assignedKey == Just (auPartyId user)
-          isAdminUser = isAdmin user
-      unless (isAdminUser || isOwner) $
-        throwError err403 { errBody = "Only admins or assignees can update tasks" }
+      let isAdminUser = isAdmin user
+          auditControlledUpdate = isJust ituStatus
+            || isJust ituProgress
+            || isJust ituAssignedTo
+            || isJust ituProjectId
+            || isJust ituDueAt
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
       projectUpdate <-
         if isAdminUser
@@ -635,9 +674,29 @@ internshipsServer user =
               then catMaybes (adminUpdates ++ commonUpdates)
               else catMaybes commonUpdates
       result <- withPool $ do
-        unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
-        getEntity taskKey
-      entUpdated <- maybe (throwError err404) pure result
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure (Right Nothing)
+          _ -> do
+            lockedTask <- getJustEntity taskKey
+            let isOwner = ME.internTaskAssignedTo (entityVal lockedTask) == Just (auPartyId user)
+            if not (isAdminUser || isOwner)
+              then pure (Left err403
+                { errBody = "Only admins or assignees can update tasks"
+                })
+              else do
+                mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+                if isJust mAuditPlan && auditControlledUpdate
+                  then pure (Left err409
+                    { errBody = "Audit task project, assignee, status, progress, and due date are controlled by its audit plan"
+                    })
+                  else do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) (update taskKey (updates ++ [ME.InternTaskUpdatedAt =. now]))
+                    Right <$> getEntity taskKey
+      mUpdated <- either throwError pure result
+      entUpdated <- maybe (throwError err404) pure mUpdated
       let projectKey = ME.internTaskProjectId (entityVal entUpdated)
           assigned = ME.internTaskAssignedTo (entityVal entUpdated)
       projectMap <- loadProjectMap [projectKey]
@@ -648,12 +707,22 @@ internshipsServer user =
     deleteTaskH rawId = do
       ensureAdmin
       taskKey <- parseKey @ME.InternTask rawId
-      mEntity <- withPool $ getEntity taskKey
-      case mEntity of
+      result <- withPool $ do
+        locked <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
+          [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        case locked of
+          [] -> pure Nothing
+          _ -> do
+            mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
+            case mAuditPlan of
+              Just _ -> pure (Just False)
+              Nothing -> delete taskKey >> pure (Just True)
+      case result of
         Nothing -> throwError err404
-        Just _ -> do
-          withPool $ delete taskKey
-          pure NoContent
+        Just False -> throwError err409
+          { errBody = "Audit-owned tasks cannot be deleted; cancel the audit plan instead"
+          }
+        Just True -> pure NoContent
 
     listTodosH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTodoDTO]
     listTodosH = do
@@ -858,6 +927,7 @@ internshipsServer user =
       , ipTitle       = ME.internProjectTitle project
       , ipDescription = ME.internProjectDescription project
       , ipStatus      = ME.internProjectStatus project
+      , ipActivationStatus = ME.internProjectActivationStatus project
       , ipStartAt     = ME.internProjectStartAt project
       , ipDueAt       = ME.internProjectDueAt project
       , ipCreatedAt   = ME.internProjectCreatedAt project
@@ -876,9 +946,11 @@ internshipsServer user =
       , itTitle        = ME.internTaskTitle task
       , itDescription  = ME.internTaskDescription task
       , itStatus       = ME.internTaskStatus task
+      , itActivationStatus = ME.internTaskActivationStatus task
       , itProgress     = ME.internTaskProgress task
       , itAssignedTo   = fmap fromSqlKey (ME.internTaskAssignedTo task)
       , itAssignedName = ME.internTaskAssignedTo task >>= (`Map.lookup` partyMap)
+      , itProposedAssignee = fmap fromSqlKey (ME.internTaskProposedAssignee task)
       , itDueAt        = ME.internTaskDueAt task
       , itCreatedAt    = ME.internTaskCreatedAt task
       , itUpdatedAt    = ME.internTaskUpdatedAt task

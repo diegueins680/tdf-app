@@ -81,7 +81,7 @@
       "command": "npm run generate:features && npm run audit:features",
       "scope": "web/mobile feature registry parity",
       "status": "passed",
-      "result": "137 features, 156 web routes, and 38 mobile routes validated after replacing seven false native destinations with truthful web fallbacks.",
+      "result": "139 features, 159 web routes, and 44 mobile routes validated after retaining home as a truthful web continuation, restoring six completed directory search/detail/management families to native routes, and integrating governed onboarding and studio-audit routes.",
       "evidence": "docs/persona-testing/execution-report.md#run-008"
     },
     {
@@ -89,7 +89,7 @@
       "command": "ALLOW_PENDING_FEATURE_DISPOSITIONS=1 npm run generate:feature-audit-reports",
       "scope": "current feature, route, role and backend capability inventory",
       "status": "passed-with-gate",
-      "result": "Generated a 2026-08-21 packet for 137 features, 3014 role/action/platform rows, and 548 endpoints. Forty endpoints remain pending explicit interface/security disposition; the default command still fails until they are resolved.",
+      "result": "Generated a 2026-08-21 packet for 139 features, 3058 role/action/platform rows, and 557 endpoints. Forty endpoints remain pending explicit interface/security disposition; the default command still fails until they are resolved.",
       "evidence": "docs/feature-discoverability-audit/2026-08-21/README.md"
     },
     {
