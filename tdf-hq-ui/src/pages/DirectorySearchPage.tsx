@@ -55,6 +55,13 @@ const resolveImageUrl = (value: string | null | undefined): string | undefined =
   try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
 };
 
+const DIRECTORY_IMAGE_FALLBACKS: Record<DirectoryEntityType, string> = {
+  profile: '/artist-fallback.svg',
+  classified: '/directory-fallback.svg',
+  event: '/event-fallback.svg',
+  venue: '/directory-fallback.svg',
+};
+
 const CITY_STORAGE_KEY = 'tdf.directory.cityId';
 const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
   all: 'Todo',
@@ -329,6 +336,8 @@ export default function DirectorySearchPage() {
 
 function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem; sessionActive: boolean; layout: 'list' | 'grid' }) {
   const path = resultPath(item);
+  const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
+  const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
   const favorite = useMutation({
     mutationFn: () => Directory.addFavorite(item.type, item.id),
   });
@@ -347,22 +356,23 @@ function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem
         overflow: 'hidden',
       }}
     >
-      {resolveImageUrl(item.imageUrl) && (
-        <CardMedia
-          component="img"
-          image={resolveImageUrl(item.imageUrl)}
-          alt={`Foto de ${item.title}`}
-          loading="lazy"
-          sx={{
-            width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
-            height: layout === 'grid' ? 220 : { xs: 240, sm: 'auto' },
-            minHeight: layout === 'list' ? { sm: 220 } : undefined,
-            objectFit: 'cover',
-            objectPosition: 'center',
-            flexShrink: 0,
-          }}
-        />
-      )}
+      <CardMedia
+        component="img"
+        image={imageUrl}
+        alt={item.imageUrl ? `Foto de ${item.title}` : `Imagen de referencia de ${item.title}`}
+        loading="lazy"
+        onError={(event) => {
+          if (event.currentTarget.src !== fallbackImageUrl) event.currentTarget.src = fallbackImageUrl;
+        }}
+        sx={{
+          width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
+          height: layout === 'grid' ? 220 : { xs: 240, sm: 'auto' },
+          minHeight: layout === 'list' ? { sm: 220 } : undefined,
+          objectFit: 'cover',
+          objectPosition: 'center',
+          flexShrink: 0,
+        }}
+      />
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
         <CardContent sx={{ flex: 1 }}>
           <Stack direction="row" justifyContent="space-between" gap={2}>

@@ -7,6 +7,7 @@ import {
   Box,
   Card,
   CardContent,
+  CardMedia,
   CircularProgress,
   InputAdornment,
   Stack,
@@ -15,8 +16,16 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { DateTime } from 'luxon';
+import { API_BASE_URL } from '../api/client';
 import { SocialEventsAPI, type PublicUpcomingEventDTO } from '../api/socialEvents';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+
+const EVENT_IMAGE_FALLBACK = '/event-fallback.svg';
+
+const resolveEventImageUrl = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
+};
 
 const formatEventDate = (value?: string | null) => {
   if (!value) return 'Fecha por confirmar';
@@ -85,17 +94,61 @@ export default function UpcomingEventsPublicPage() {
       {eventsQuery.isError && <Alert severity="error">No pudimos cargar los próximos eventos. Intenta de nuevo.</Alert>}
       {eventsQuery.isSuccess && events.length === 0 && <Alert severity="info">No hay eventos próximos para esa ciudad.</Alert>}
       <Stack spacing={2}>
-        {events.map((event) => (
-          <Card key={event.publicUpcomingEventId} component={RouterLink} to={eventPath(event)} sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { boxShadow: 5 } }}>
-            <CardContent>
-              <Typography variant="h6" component="h2" fontWeight={750}>{event.publicUpcomingEventTitle}</Typography>
-              <Typography color="primary" sx={{ mt: 0.75 }}>{formatEventDate(event.publicUpcomingEventStart)}</Typography>
-              {event.publicUpcomingEventCity && <Typography color="text.secondary" sx={{ mt: 0.5 }}>{event.publicUpcomingEventCity}</Typography>}
-              {event.publicUpcomingEventDescription && <Typography color="text.secondary" sx={{ mt: 1 }}>{event.publicUpcomingEventDescription}</Typography>}
-            </CardContent>
-          </Card>
-        ))}
+        {events.map((event) => <EventCard key={event.publicUpcomingEventId} event={event} />)}
       </Stack>
     </Box>
+  );
+}
+
+function EventCard({ event }: { event: PublicUpcomingEventDTO }) {
+  const fallbackImageUrl = new URL(EVENT_IMAGE_FALLBACK, window.location.origin).toString();
+  const imageUrl = resolveEventImageUrl(event.publicUpcomingEventImageUrl) ?? fallbackImageUrl;
+
+  return (
+    <Card
+      component={RouterLink}
+      to={eventPath(event)}
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        overflow: 'hidden',
+        textDecoration: 'none',
+        color: 'inherit',
+        '&:hover': { boxShadow: 5 },
+      }}
+    >
+      <CardMedia
+        component="img"
+        image={imageUrl}
+        alt={event.publicUpcomingEventImageUrl
+          ? `Afiche de ${event.publicUpcomingEventTitle}`
+          : `Imagen de referencia para ${event.publicUpcomingEventTitle}`}
+        loading="lazy"
+        onError={(loadEvent) => {
+          if (loadEvent.currentTarget.src !== fallbackImageUrl) loadEvent.currentTarget.src = fallbackImageUrl;
+        }}
+        sx={{
+          width: { xs: '100%', sm: 240 },
+          height: { xs: 220, sm: 'auto' },
+          minHeight: { sm: 220 },
+          objectFit: 'cover',
+          objectPosition: 'center',
+          flexShrink: 0,
+        }}
+      />
+      <CardContent sx={{ minWidth: 0, alignSelf: 'center' }}>
+        <Typography variant="h6" component="h2" fontWeight={750}>{event.publicUpcomingEventTitle}</Typography>
+        <Typography color="primary" sx={{ mt: 0.75 }}>{formatEventDate(event.publicUpcomingEventStart)}</Typography>
+        {event.publicUpcomingEventCity && <Typography color="text.secondary" sx={{ mt: 0.5 }}>{event.publicUpcomingEventCity}</Typography>}
+        {event.publicUpcomingEventDescription && (
+          <Typography
+            color="text.secondary"
+            sx={{ mt: 1, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+          >
+            {event.publicUpcomingEventDescription}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 }

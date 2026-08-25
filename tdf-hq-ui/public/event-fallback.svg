@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title description">
+  <title id="title">Afiche de evento no disponible</title>
+  <desc id="description">Escenario abstracto de TDF iluminado en tonos violeta y turquesa.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#100b21"/>
+      <stop offset="0.58" stop-color="#392064"/>
+      <stop offset="1" stop-color="#075d68"/>
+    </linearGradient>
+    <radialGradient id="spotlight" cx="50%" cy="15%" r="62%">
+      <stop offset="0" stop-color="#ddd6fe" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#ddd6fe" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#background)"/>
+  <rect width="1200" height="800" fill="url(#spotlight)"/>
+  <g fill="none" stroke="#ede9fe" stroke-linecap="round" stroke-linejoin="round" opacity=".84">
+    <path d="M310 575h580M375 575V345h450v230M335 345h530l-60-95H395z" stroke-width="26"/>
+    <path d="M480 345 410 575M600 345v230M720 345l70 230" stroke-width="18" opacity=".55"/>
+    <circle cx="430" cy="286" r="18" fill="#ede9fe" stroke="none"/>
+    <circle cx="600" cy="286" r="18" fill="#ede9fe" stroke="none"/>
+    <circle cx="770" cy="286" r="18" fill="#ede9fe" stroke="none"/>
+  </g>
+  <text x="600" y="720" text-anchor="middle" fill="#f5f3ff" font-family="system-ui, sans-serif" font-size="48" font-weight="700" letter-spacing="10">AGENDA TDF</text>
+</svg>
