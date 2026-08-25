@@ -3,7 +3,8 @@ import type { InternAuditPlanDTO, InternExecutionStatus } from '../api/types';
 export const executionEvidenceRequired = (
   evidenceRequirement: string,
   status: InternExecutionStatus,
-) => evidenceRequirement === 'strong' || status === 'failed' || status === 'blocked';
+) => ['passed', 'failed', 'blocked', 'not_applicable', 'verified'].includes(status)
+  && (evidenceRequirement === 'strong' || status === 'failed' || status === 'blocked');
 
 export const dailySummaryMutationsAllowed = (
   status: InternAuditPlanDTO['iapStatus'],

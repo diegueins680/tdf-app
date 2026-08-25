@@ -6,8 +6,12 @@ describe('intern audit execution evidence requirements', () => {
     expect(executionEvidenceRequired('light', 'blocked')).toBe(true);
   });
 
-  it('continues to require evidence for strong cases and keeps non-terminal light cases optional', () => {
+  it('requires strong evidence only for terminal results', () => {
     expect(executionEvidenceRequired('strong', 'passed')).toBe(true);
+    expect(executionEvidenceRequired('strong', 'verified')).toBe(true);
+    expect(executionEvidenceRequired('strong', 'pending')).toBe(false);
+    expect(executionEvidenceRequired('strong', 'in_progress')).toBe(false);
+    expect(executionEvidenceRequired('strong', 'ready_for_retest')).toBe(false);
     expect(executionEvidenceRequired('light', 'in_progress')).toBe(false);
   });
 });

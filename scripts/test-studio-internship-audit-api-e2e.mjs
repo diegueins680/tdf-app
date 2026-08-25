@@ -894,12 +894,46 @@ const recordedRetest = await request(`/feedback/internal/${reportId}/retests`, {
 });
 assert.ok(recordedRetest.ifrtExecutionId, 'A UI-style retest must create a linked immutable execution');
 assert.notEqual(recordedRetest.ifrtExecutionId, failedExecution.itexId, 'A supplied stale execution must never be reused');
-for (const update of [
-  { ifuState: 'verified', ifuResolution: 'Corregido y comprobado en base desechable.' },
-  { ifuState: 'closed', ifuClosureReason: 'Retest aprobado con evidencia ficticia.' },
-]) {
-  await request(`/feedback/internal/${reportId}`, { token: admin.token, method: 'PATCH', json: update });
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'verified', ifuResolution: 'Corregido y comprobado en base desechable.' },
+});
+for (const nextState of ['in_progress', 'ready_for_retest']) {
+  await request(`/feedback/internal/${reportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: nextState },
+  });
 }
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuState: 'verified' },
+});
+const reopenedCycleRetest = await request(`/feedback/internal/${reportId}/retests`, {
+  token: intern.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ifrcResult: 'passed',
+    ifrcNotes: 'El retest posterior a la reapertura volvió a confirmar una sola fila ficticia.',
+    ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-REOPENED-001',
+  },
+});
+assert.ok(reopenedCycleRetest.ifrtExecutionId, 'A reopened cycle must create a fresh immutable retest execution');
+assert.notEqual(reopenedCycleRetest.ifrtExecutionId, recordedRetest.ifrtExecutionId);
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'verified' },
+});
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'closed', ifuClosureReason: 'Retest aprobado con evidencia ficticia.' },
+});
 
 await request(`/internships/audit-plans/${plan.iapId}/daily-summaries`, {
   token: admin.token,
@@ -1053,9 +1087,9 @@ await request(`/feedback/internal/${finalizedDraft.ifrSummary.ifsId}/evidence-li
 const executions = await request(`/internships/test-cases/${testCase.itcId}/executions`, { token: admin.token });
 assert.deepEqual(
   executions.map((execution) => execution.itexExecutionNumber),
-  [9, 8, 7, 6, 5, 4, 3, 2, 1],
+  [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
 );
-assert.equal(executions[0].itexId, recordedRetest.ifrtExecutionId);
+assert.equal(executions[0].itexId, reopenedCycleRetest.ifrtExecutionId);
 assert.equal(executions[0].itexStatus, 'verified');
 assert.ok(executions.some((execution) => execution.itexId === failedExecution.itexId));
 assert.ok(executions.some((execution) => execution.itexId === secondFailedExecution.itexId));
@@ -1089,7 +1123,7 @@ const finalReport = await request(`/feedback/internal/${reportId}`, { token: adm
 assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.equal(finalReport.ifrAuditPlanMutable, false);
 assert.ok(finalReport.ifrHistory.length >= 10);
-assert.equal(finalReport.ifrRetests.length, 2);
+assert.equal(finalReport.ifrRetests.length, 3);
 const finalizedExecutionOnlyAdminDraft = await request(
   `/feedback/internal/${executionOnlyAdminDraft.ifrSummary.ifsId}`,
   { token: admin.token },

@@ -505,12 +505,20 @@ internalFeedbackServer user =
                   _ -> []
             retestPassed <- if stateUpdate == Just "verified"
               then do
+                latestReadyCycle <- selectFirst
+                  [ ME.InternalFeedbackHistoryReportId ==. reportKey
+                  , ME.InternalFeedbackHistoryNewState ==. Just "ready_for_retest"
+                  ]
+                  [Desc ME.InternalFeedbackHistoryCreatedAt]
                 latestRetest <- selectFirst
                   [ME.InternalFeedbackRetestReportId ==. reportKey]
                   [Desc ME.InternalFeedbackRetestCreatedAt]
-                pure $ maybe False
-                  ((== "passed") . ME.internalFeedbackRetestResult . entityVal)
-                  latestRetest
+                pure $ case (latestReadyCycle, latestRetest) of
+                  (Just (Entity _ readyCycle), Just (Entity _ retest)) ->
+                    ME.internalFeedbackRetestResult retest == "passed"
+                      && ME.internalFeedbackRetestCreatedAt retest
+                        >= ME.internalFeedbackHistoryCreatedAt readyCycle
+                  _ -> False
               else pure True
             if not retestPassed
               then pure (Left "retest_required")
@@ -541,7 +549,7 @@ internalFeedbackServer user =
       case updateResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
         Left "retest_required" -> throwError err409
-          { errBody = "Verification requires the latest recorded retest to have passed" }
+          { errBody = "Verification requires a passing retest from the current ready-for-retest cycle" }
         Left "changed" -> throwError err409
           { errBody = "Report changed during this update; reload it before retrying" }
         Left _ -> throwError err500
