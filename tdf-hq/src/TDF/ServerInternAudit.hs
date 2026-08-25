@@ -531,7 +531,7 @@ internAuditServer user =
       ensureActivePlanMutation planEnt
       unless (isAdminUser || ME.internTestExecutionExecutorPartyId execution == auPartyId user) $
         throwError err403 { errBody = "Only the execution owner or an administrator may update it" }
-      when (ME.internTestExecutionStatus execution `elem` terminalExecutionStatuses && not isAdminUser) $
+      when (ME.internTestExecutionStatus execution `elem` terminalExecutionStatuses) $
         throwError err409 { errBody = "Completed executions are immutable; create a new execution for retesting" }
       status <- case iteuStatus of
         Nothing -> pure (ME.internTestExecutionStatus execution)

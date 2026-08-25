@@ -602,6 +602,24 @@ const failedExecution = await request(`/internships/test-cases/${testCase.itcId}
     itecEvidenceSummary: 'EVIDENCIA-E2E-FAILED-001',
   },
 });
+await request(`/internships/test-executions/${failedExecution.itexId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: {
+    iteuStatus: 'passed',
+    iteuActualResult: 'Un administrador no puede reescribir un fallo terminal.',
+    iteuEvidenceSummary: 'EVIDENCIA-E2E-ADMIN-TERMINAL-REWRITE-REJECTED',
+  },
+});
+const executionsAfterAdminRewriteAttempt = await request(
+  `/internships/test-cases/${testCase.itcId}/executions`,
+  { token: admin.token },
+);
+assert.equal(
+  executionsAfterAdminRewriteAttempt.find((execution) => execution.itexId === failedExecution.itexId)?.itexStatus,
+  'failed',
+);
 await request(`/internships/test-cases/${testCase.itcId}/executions`, {
   token: intern.token,
   method: 'POST',
