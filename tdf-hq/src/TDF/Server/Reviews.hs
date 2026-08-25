@@ -1,5 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Server.Reviews
   ( reviewsPublicServer

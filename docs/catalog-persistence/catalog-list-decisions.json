@@ -6954,56 +6954,6 @@
       "reviewed": true
     },
     {
-      "id": "7ce7e818e76567a66ad5",
-      "classification": "governed-reference-data",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
-      "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "cbb4b83dfc2c8da596a4",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-retain",
-      "risk": "Changing navigation or UI constants could break rendering or user experience.",
-      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "770fc9c86bf4e2895825",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing automation constants could break script execution or data capture.",
-      "justification": "Automation script constants are implementation mechanics for data capture and processing, not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "4067b810ede8798454d7",
-      "classification": "governed-reference-data",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
-      "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "785d27b94969c66b7064",
-      "classification": "governed-reference-data",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
-      "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
-      "reviewed": true
-    },
-    {
       "id": "86d102f7ab4e7888140b",
       "classification": "dynamic-business-catalog",
       "disposition": "retain-in-code",

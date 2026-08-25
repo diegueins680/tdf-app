@@ -137,10 +137,10 @@ describe('api client', () => {
     }));
     const controller = new AbortController();
 
-    const request = get('/superseded-search', { signal: controller.signal });
+    const cancelledRequest = get('/superseded-search', { signal: controller.signal });
     controller.abort();
 
-    await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    await expect(cancelledRequest).rejects.toMatchObject({ name: 'AbortError' });
     expect(getPendingApiRequestCount()).toBe(0);
   });
 

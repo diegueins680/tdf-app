@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.APITypesSpec (spec) where
 

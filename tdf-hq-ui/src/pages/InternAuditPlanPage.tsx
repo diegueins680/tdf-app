@@ -37,6 +37,7 @@ import {
   buildInternalReportHref,
   dailySummaryMutationsAllowed,
   executionEvidenceRequired,
+  formatGeneratedSnapshot,
 } from './internAuditPlanLogic';
 
 const STATUS_LABELS: Record<InternExecutionStatus, string> = {
@@ -441,7 +442,7 @@ export default function InternAuditPlanPage() {
               <Stack spacing={2}>
                 <Typography variant="h5">Informe final</Typography>
                 {finalQuery.data?.ifsGeneratedSnapshot && (
-                  <Alert severity="info"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{JSON.stringify(JSON.parse(finalQuery.data.ifsGeneratedSnapshot), null, 2)}</pre></Alert>
+                  <Alert severity="info"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{formatGeneratedSnapshot(finalQuery.data.ifsGeneratedSnapshot)}</pre></Alert>
                 )}
                 <TextField label="Conclusiones y tres recomendaciones prioritarias" value={conclusions || finalQuery.data?.ifsConclusions || ''} onChange={(event) => setConclusions(event.target.value)} multiline minRows={8} helperText="Incluye diferencias web/móvil, accesibilidad, riesgos restantes y lo que no pudiste encontrar o entender." />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>

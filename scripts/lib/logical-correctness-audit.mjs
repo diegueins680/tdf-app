@@ -644,10 +644,26 @@ function auditHaskellLogical(source, filePath) {
 function auditSqlLogical(source, filePath) {
   const findings = [];
   const lines = source.split(/\r?\n/);
+  const rowTypeBindings = new Map(
+    [...source.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*)\s+([A-Za-z_][A-Za-z0-9_.]*)%ROWTYPE\s*;/gi)]
+      .map((match) => [match[1].toLowerCase(), match[2].toLowerCase()]),
+  );
 
   // 1. SELECT * in migrations
   const selectStarPattern = /\bSELECT\s+\*/gi;
   for (const match of source.matchAll(selectStarPattern)) {
+    const rowFetch = source.slice(match.index).match(
+      /^SELECT\s+\*\s+INTO\s+([A-Za-z_][A-Za-z0-9_]*)\s+FROM\s+([A-Za-z_][A-Za-z0-9_.]*)\b/i,
+    );
+    const destinationName = rowFetch?.[1].toLowerCase();
+    const sourceTable = rowFetch?.[2].toLowerCase();
+    // A table's %ROWTYPE variable is deliberately schema-aligned with that
+    // table. Fetching its complete row is both type-checked by PostgreSQL and
+    // required by trigger code that reads several fields from the result.
+    if (destinationName && sourceTable && rowTypeBindings.get(destinationName) === sourceTable) {
+      continue;
+    }
+
     const line = lineNumberAt(source, match.index);
     findings.push({
       rule: 'select-star',

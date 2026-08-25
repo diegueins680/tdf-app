@@ -179,11 +179,11 @@ function NewInternalReport() {
     setForm((current) => ({ ...current, [key]: value }));
 
   const updateReportType = (reportType: InternalReportType) => {
-    const category = internalReportCategory(catalogs.categories, reportType);
+    const selectedDraftCategory = internalReportCategory(catalogs.categories, reportType);
     setForm((current) => ({
       ...current,
       ifcReportType: reportType,
-      ifcCategoryId: category?.id ?? '',
+      ifcCategoryId: selectedDraftCategory?.id ?? '',
     }));
   };
 
@@ -233,7 +233,7 @@ function NewInternalReport() {
 function ReportDetail({ reportId }: { reportId: string }) {
   const { session } = useSession();
   const queryClient = useQueryClient();
-  const catalogs = useFeedbackCatalogs();
+  const detailCatalogs = useFeedbackCatalogs();
   const isAdmin = hasInternshipsAdminAccess(session?.roles, session?.modules);
   const [message, setMessage] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
   const [comment, setComment] = useState('');
@@ -296,11 +296,11 @@ function ReportDetail({ reportId }: { reportId: string }) {
   const setReporterField = <K extends keyof InternalFeedbackUpdate>(key: K, value: InternalFeedbackUpdate[K]) =>
     setReporterUpdate((current) => ({ ...current, [key]: value }));
   const setReporterReportType = (reportType: InternalReportType) => {
-    const category = internalReportCategory(catalogs.categories, reportType);
+    const selectedDetailCategory = internalReportCategory(detailCatalogs.categories, reportType);
     setReporterUpdate((current) => ({
       ...current,
       ifuReportType: reportType,
-      ifuCategoryId: category?.id,
+      ifuCategoryId: selectedDetailCategory?.id,
     }));
   };
   const saveReporterUpdate = () => {
@@ -311,7 +311,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
   };
 
   return (
-    <PageShell title={summary.ifsTitle} subtitle={`${internalReportTypeLabel(catalogs.categories, summary.ifsReportType)} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
+    <PageShell title={summary.ifsTitle} subtitle={`${internalReportTypeLabel(detailCatalogs.categories, summary.ifsReportType)} · ${STATE_LABELS[summary.ifsState]}`} maxWidth="lg" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Reportes</Button>}>
       <Stack spacing={2.5}>
         {message && <Alert severity={message.severity}>{message.text}</Alert>}
         {!reportIsMutable && <Alert severity="info">La auditoría terminó. Este reporte y su evidencia permanecen disponibles en modo de sólo lectura.</Alert>}
@@ -337,9 +337,9 @@ function ReportDetail({ reportId }: { reportId: string }) {
           <Alert severity="info">Guarda los cambios antes de enviar. El historial registra qué campos cambiaron.</Alert>
           <Grid container spacing={2}>
             <Grid item xs={12} md={8}><TextField label="Título" value={reporterUpdate.ifuTitle ?? ''} onChange={(event) => setReporterField('ifuTitle', event.target.value)} required fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Tipo de reporte" value={reporterUpdate.ifuReportType ?? 'error'} onChange={(event) => setReporterReportType(event.target.value as InternalReportType)} disabled={!catalogs.categories.length} fullWidth>{internalReportTypeOptions(catalogs.categories).map(({ category, reportType }) => <MenuItem key={category.id} value={reportType}>{category.name}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={4}><TextField select label="Tipo de reporte" value={reporterUpdate.ifuReportType ?? 'error'} onChange={(event) => setReporterReportType(event.target.value as InternalReportType)} disabled={!detailCatalogs.categories.length} fullWidth>{internalReportTypeOptions(detailCatalogs.categories).map(({ category, reportType }) => <MenuItem key={category.id} value={reportType}>{category.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12}><TextField label="Descripción" value={reporterUpdate.ifuDescription ?? ''} onChange={(event) => setReporterField('ifuDescription', event.target.value)} required fullWidth multiline minRows={4} /></Grid>
-            <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={reporterUpdate.ifuProposedSeverityId ?? ''} onChange={(event) => setReporterField('ifuProposedSeverityId', event.target.value)} fullWidth>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={reporterUpdate.ifuProposedSeverityId ?? ''} onChange={(event) => setReporterField('ifuProposedSeverityId', event.target.value)} fullWidth>{detailCatalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField label="Módulo" value={reporterUpdate.ifuModuleName ?? ''} onChange={(event) => setReporterField('ifuModuleName', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Función" value={reporterUpdate.ifuFeatureName ?? ''} onChange={(event) => setReporterField('ifuFeatureName', event.target.value || null)} fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField select label="Entorno" value={reporterUpdate.ifuEnvironment ?? ''} onChange={(event) => setReporterField('ifuEnvironment', event.target.value)} fullWidth><MenuItem value="staging">Staging</MenuItem><MenuItem value="test">Pruebas</MenuItem><MenuItem value="local">Local</MenuItem><MenuItem value="production-read-only">Producción: sólo lectura autorizada</MenuItem></TextField></Grid>
@@ -389,7 +389,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
           <Typography variant="h6">Triage administrativo</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}><TextField select label="Nuevo estado" value={adminUpdate.ifuState ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuState: event.target.value as InternalReportState }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{internalReportAdminTransitions(summary.ifsState, summary.ifsTestCaseId).map((state) => <MenuItem key={state} value={state}>{STATE_LABELS[state]}</MenuItem>)}</TextField></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Severidad administrativa" value={adminUpdate.ifuAuthoritativeSeverityId ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuAuthoritativeSeverityId: event.target.value || null }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={4}><TextField select label="Severidad administrativa" value={adminUpdate.ifuAuthoritativeSeverityId ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuAuthoritativeSeverityId: event.target.value || null }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{detailCatalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={4}><TextField select label="Prioridad" value={adminUpdate.ifuPriority ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuPriority: event.target.value || null }))} fullWidth><MenuItem value="">Sin cambio</MenuItem><MenuItem value="low">Baja</MenuItem><MenuItem value="medium">Media</MenuItem><MenuItem value="high">Alta</MenuItem><MenuItem value="urgent">Urgente</MenuItem></TextField></Grid>
             <Grid item xs={12}><TextField label="Resolución" value={adminUpdate.ifuResolution ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuResolution: event.target.value || null }))} fullWidth multiline /></Grid>
             <Grid item xs={12} md={6}><TextField label="Motivo de cierre" value={adminUpdate.ifuClosureReason ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuClosureReason: event.target.value || null }))} fullWidth /></Grid>
@@ -408,37 +408,37 @@ function ReportDetail({ reportId }: { reportId: string }) {
 
 function ReportsList() {
   const { session } = useSession();
-  const catalogs = useFeedbackCatalogs();
-  const isAdmin = hasInternshipsAdminAccess(session?.roles, session?.modules);
+  const listCatalogs = useFeedbackCatalogs();
+  const canAdministerList = hasInternshipsAdminAccess(session?.roles, session?.modules);
   const [state, setState] = useState('');
   const [moduleName, setModuleName] = useState('');
   const [search, setSearch] = useState('');
-  const query = useQuery({
+  const reportsQuery = useQuery({
     queryKey: ['internal-feedback', 'list', state, moduleName, search],
     queryFn: () => InternalFeedback.list({ state, module: moduleName, q: search }),
   });
   const legacyQuery = useQuery({
     queryKey: ['internal-feedback', 'legacy'],
     queryFn: InternalFeedback.listLegacy,
-    enabled: isAdmin,
+    enabled: canAdministerList,
   });
-  const modules = useMemo(() => [...new Set((query.data ?? []).map((item) => item.ifsModuleName))].sort(), [query.data]);
+  const modules = useMemo(() => [...new Set((reportsQuery.data ?? []).map((item) => item.ifsModuleName))].sort(), [reportsQuery.data]);
 
   return (
-    <PageShell title={isAdmin ? 'Reportes internos de pruebas' : 'Mis reportes'} subtitle="Seguimiento desde borrador hasta verificación y cierre" maxWidth="lg" actions={isAdmin ? <Button component={RouterLink} to="/feedback/interno/nuevo" variant="contained" startIcon={<AddIcon />}>Crear reporte</Button> : undefined}>
+    <PageShell title={canAdministerList ? 'Reportes internos de pruebas' : 'Mis reportes'} subtitle="Seguimiento desde borrador hasta verificación y cierre" maxWidth="lg" actions={canAdministerList ? <Button component={RouterLink} to="/feedback/interno/nuevo" variant="contained" startIcon={<AddIcon />}>Crear reporte</Button> : undefined}>
       <Stack spacing={2}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <TextField label="Buscar" value={search} onChange={(event) => setSearch(event.target.value)} />
           <TextField select label="Estado" value={state} onChange={(event) => setState(event.target.value)} sx={{ minWidth: 220 }}><MenuItem value="">Todos</MenuItem>{Object.entries(STATE_LABELS).map(([value, label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</TextField>
           <TextField select label="Módulo" value={moduleName} onChange={(event) => setModuleName(event.target.value)} sx={{ minWidth: 220 }}><MenuItem value="">Todos</MenuItem>{modules.map((module) => <MenuItem key={module} value={module}>{module}</MenuItem>)}</TextField>
-          {isAdmin && <Button startIcon={<DownloadIcon />} onClick={() => { void InternalFeedback.exportCsv({ state, module: moduleName }).then((body) => saveBlob(body, 'reportes-internos.csv', 'text/csv;charset=utf-8')); }}>CSV</Button>}
-          {isAdmin && <Button startIcon={<DownloadIcon />} onClick={() => { void InternalFeedback.exportJson({ state, module: moduleName }).then((body) => saveBlob(JSON.stringify(body, null, 2), 'reportes-internos.json', 'application/json')); }}>JSON</Button>}
+          {canAdministerList && <Button startIcon={<DownloadIcon />} onClick={() => { void InternalFeedback.exportCsv({ state, module: moduleName }).then((body) => saveBlob(body, 'reportes-internos.csv', 'text/csv;charset=utf-8')); }}>CSV</Button>}
+          {canAdministerList && <Button startIcon={<DownloadIcon />} onClick={() => { void InternalFeedback.exportJson({ state, module: moduleName }).then((body) => saveBlob(JSON.stringify(body, null, 2), 'reportes-internos.json', 'application/json')); }}>JSON</Button>}
         </Stack>
-        {query.isLoading && <LinearProgress />}
-        {query.error && <Alert severity="error">{errorMessage(query.error, 'No se pudieron cargar los reportes.')}</Alert>}
-        {!query.isLoading && !query.data?.length && <EmptyState title="No hay reportes" description={isAdmin ? 'Los borradores y reportes enviados aparecerán aquí.' : 'Crea reportes desde un caso de tu plan de auditoría activo para conservar su trazabilidad.'} actionLabel={isAdmin ? 'Crear reporte' : undefined} actionHref={isAdmin ? '/feedback/interno/nuevo' : undefined} />}
-        <Grid container spacing={2}>{query.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(catalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{isAdmin && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
-        {isAdmin && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
+        {reportsQuery.isLoading && <LinearProgress />}
+        {reportsQuery.error && <Alert severity="error">{errorMessage(reportsQuery.error, 'No se pudieron cargar los reportes.')}</Alert>}
+        {!reportsQuery.isLoading && !reportsQuery.data?.length && <EmptyState title="No hay reportes" description={canAdministerList ? 'Los borradores y reportes enviados aparecerán aquí.' : 'Crea reportes desde un caso de tu plan de auditoría activo para conservar su trazabilidad.'} actionLabel={canAdministerList ? 'Crear reporte' : undefined} actionHref={canAdministerList ? '/feedback/interno/nuevo' : undefined} />}
+        <Grid container spacing={2}>{reportsQuery.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(listCatalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{canAdministerList && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
+        {canAdministerList && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
       </Stack>
     </PageShell>
   );

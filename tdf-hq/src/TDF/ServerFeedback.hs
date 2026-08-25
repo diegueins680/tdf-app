@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.ServerFeedback
   ( feedbackServer

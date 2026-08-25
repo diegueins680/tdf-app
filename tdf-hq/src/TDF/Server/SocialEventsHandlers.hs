@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeOperators #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
