@@ -201,6 +201,53 @@ test('logical audit defers to GHC when incomplete patterns are compiler errors',
   }
 });
 
+test('logical audit accepts schema-aligned PL/pgSQL row fetches but rejects other SELECT stars', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-sql-rowtype-test-'));
+  const sourcePath = path.join(tempRoot, 'row-fetches.sql');
+
+  try {
+    await fs.writeFile(
+      sourcePath,
+      [
+        'CREATE FUNCTION validate_checkout() RETURNS trigger LANGUAGE plpgsql AS $$',
+        'DECLARE',
+        '  checkout commerce_checkout_session%ROWTYPE;',
+        '  mismatched commerce_checkout_session%ROWTYPE;',
+        'BEGIN',
+        '  SELECT * INTO checkout',
+        '    FROM commerce_checkout_session WHERE id = NEW.checkout_id;',
+        '  SELECT * INTO mismatched FROM commerce_payment_attempt WHERE id = NEW.attempt_id;',
+        '  SELECT * FROM legacy_checkout;',
+        '  RETURN NEW;',
+        'END $$;',
+      ].join('\n'),
+      'utf8',
+    );
+
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: tempRoot });
+    await execFileAsync('git', ['add', 'row-fetches.sql'], { cwd: tempRoot });
+
+    const findings = await collectLogicalFindings(tempRoot);
+    const selectStarFindings = findings.filter((finding) => finding.rule === 'select-star');
+
+    assert.deepEqual(
+      selectStarFindings.map((finding) => ({ line: finding.line, snippet: finding.snippet })),
+      [
+        {
+          line: 8,
+          snippet: 'SELECT * INTO mismatched FROM commerce_payment_attempt WHERE id = NEW.attempt_id;',
+        },
+        {
+          line: 9,
+          snippet: 'SELECT * FROM legacy_checkout;',
+        },
+      ],
+    );
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('logical audit flags promises created without await or catch', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'logical-audit-promise-test-'));
   const sourcePath = path.join(tempRoot, 'promises.js');

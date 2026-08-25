@@ -472,9 +472,9 @@ export default function LoginPage() {
         return;
       }
       if (signupDialogOpen && !termsAccepted) {
-        const message = 'Acepta los términos y la política de privacidad para continuar con Google.';
-        setGoogleError(message);
-        setSignupFeedback({ type: 'error', message });
+        const termsErrorMessage = 'Acepta los términos y la política de privacidad para continuar con Google.';
+        setGoogleError(termsErrorMessage);
+        setSignupFeedback({ type: 'error', message: termsErrorMessage });
         return;
       }
       const credential = credentialResponse?.credential;
@@ -511,7 +511,7 @@ export default function LoginPage() {
         });
         if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
-        const targetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
+        const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
         const googleCreatedAccount = response.accountCreated === true;
         captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
@@ -521,7 +521,7 @@ export default function LoginPage() {
         });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(targetPath, { replace: true });
+        navigate(googleTargetPath, { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
         captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {

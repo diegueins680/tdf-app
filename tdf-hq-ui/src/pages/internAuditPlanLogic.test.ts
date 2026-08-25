@@ -3,6 +3,7 @@ import {
   buildInternalReportHref,
   dailySummaryMutationsAllowed,
   executionEvidenceRequired,
+  formatGeneratedSnapshot,
 } from './internAuditPlanLogic';
 
 describe('intern audit linked report context', () => {
@@ -59,5 +60,17 @@ describe('intern audit administrative completion actions', () => {
     expect(adminCompletionAction('draft', false)).toBe('none');
     expect(adminCompletionAction('completed', false)).toBe('none');
     expect(adminCompletionAction('cancelled', false)).toBe('none');
+  });
+});
+
+describe('intern audit generated snapshot formatting', () => {
+  it('pretty-prints valid JSON snapshots', () => {
+    expect(formatGeneratedSnapshot('{"completed":true,"failures":0}')).toBe(
+      '{\n  "completed": true,\n  "failures": 0\n}',
+    );
+  });
+
+  it('renders malformed snapshots verbatim instead of throwing during render', () => {
+    expect(formatGeneratedSnapshot('{"completed":')).toBe('{"completed":');
   });
 });

@@ -51,3 +51,12 @@ export const adminCompletionAction = (
   if (status !== 'active') return 'none' as const;
   return canComplete ? 'standard' as const : 'exception' as const;
 };
+
+export const formatGeneratedSnapshot = (snapshot: string): string => {
+  try {
+    const parsedSnapshot: unknown = JSON.parse(snapshot);
+    return JSON.stringify(parsedSnapshot, null, 2);
+  } catch {
+    return snapshot;
+  }
+};
