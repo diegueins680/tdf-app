@@ -525,6 +525,12 @@ await request(`/internships/tasks/${task.itId}`, {
   expected: 409,
   json: { ituProjectId: activeProject.ipId },
 });
+await request(`/internships/tasks/${task.itId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ituDueAt: '2099-01-01' },
+});
 
 const midpointExecutions = await Promise.all([
   request(`/internships/test-cases/${testCase.itcId}/executions`, {

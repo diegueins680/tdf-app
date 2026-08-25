@@ -624,6 +624,7 @@ internshipsServer user =
             || isJust ituProgress
             || isJust ituAssignedTo
             || isJust ituProjectId
+            || isJust ituDueAt
       either throwError pure (validateInternTaskUpdatePermissions isAdminUser InternTaskUpdate{..})
       projectUpdate <-
         if isAdminUser
@@ -674,7 +675,7 @@ internshipsServer user =
                 mAuditPlan <- getBy (ME.UniqueInternAuditPlanTask taskKey)
                 if isJust mAuditPlan && auditControlledUpdate
                   then pure (Left err409
-                    { errBody = "Audit task project, assignee, status, and progress are controlled by its audit plan"
+                    { errBody = "Audit task project, assignee, status, progress, and due date are controlled by its audit plan"
                     })
                   else do
                     now <- liftIO getCurrentTime
