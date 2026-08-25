@@ -705,6 +705,7 @@
       "globalMenu": true,
       "permissions": { "discover": {}, "view": {}, "create": {}, "edit": { "recordScope": "owner-or-admin" }, "delete": { "recordScope": "owner-or-admin" }, "publish": { "recordScope": "owner-or-admin" } },
       "mobilePresentation": { "kind": "native", "destination": "/(tabs)/events", "documentedException": null },
+      "aliases": ["/social/events/*"],
       "apiScopes": [{ "pathPrefix": "/social-events/events", "methods": { "GET": "view", "POST": "create", "PUT": "edit", "PATCH": "edit", "DELETE": "delete" } }, { "pathPrefix": "/social-events/me/city-subscriptions", "methods": { "GET": "view", "PUT": "edit" } }]
     },
     {

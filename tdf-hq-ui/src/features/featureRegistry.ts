@@ -229,6 +229,7 @@ function routePatternToRegex(pattern: string): RegExp {
   if (pattern === '/') return /^\/$/;
   const segments = pattern.split('/').filter(Boolean);
   const body = segments.map((segment) => {
+    if (segment === '*') return '(?:/.*)?';
     if (!segment.startsWith(':')) return `/${escapeRegex(segment)}`;
     return segment.endsWith('?') ? '(?:/[^/]+)?' : '/[^/]+';
   }).join('');
