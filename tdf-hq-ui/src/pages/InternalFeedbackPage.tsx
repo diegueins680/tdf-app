@@ -31,7 +31,7 @@ import type { InternalReportState, InternalReportType } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
-import { internalReportMutationsAllowed } from './internalFeedbackLogic';
+import { internalReportContextDefaults, internalReportMutationsAllowed } from './internalFeedbackLogic';
 
 const CATEGORY_CATALOG = 'feedback-categories';
 const SEVERITY_CATALOG = 'feedback-severities';
@@ -140,6 +140,7 @@ function NewInternalReport() {
   const [searchParams] = useSearchParams();
   const catalogs = useFeedbackCatalogs();
   const typeOptions = internalReportTypeOptions(catalogs.categories);
+  const reportContext = internalReportContextDefaults(searchParams, session?.roles);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [form, setForm] = useState<InternalFeedbackCreate>({
     ifcTitle: '',
@@ -149,13 +150,13 @@ function NewInternalReport() {
     ifcReportType: 'error',
     ifcModuleName: searchParams.get('module') || '',
     ifcFeatureName: searchParams.get('feature') || '',
-    ifcEnvironment: 'staging',
+    ifcEnvironment: reportContext.environment,
     ifcUrlOrScreen: '',
     ifcPlatform: 'web',
     ifcDevice: '',
     ifcBrowser: '',
     ifcLanguage: 'es',
-    ifcAccountRole: session?.roles?.[0] || 'Intern',
+    ifcAccountRole: reportContext.accountRole,
     ifcReproductionSteps: '',
     ifcExpectedResult: '',
     ifcActualResult: '',
@@ -198,7 +199,8 @@ function NewInternalReport() {
 
   const errorRequired = form.ifcReportType === 'error';
   const canSave = form.ifcTitle.trim() && form.ifcDescription.trim() && form.ifcCategoryId
-    && form.ifcProposedSeverityId && form.ifcModuleName.trim() && form.ifcPlatform.trim();
+    && form.ifcProposedSeverityId && form.ifcModuleName.trim() && form.ifcPlatform.trim()
+    && form.ifcAccountRole.trim();
 
   return (
     <PageShell title="Crear reporte interno" subtitle="Guarda un borrador antes de enviarlo" maxWidth="md" actions={<Button component={RouterLink} to="/feedback/interno" startIcon={<ArrowBackIcon />}>Mis reportes</Button>}>
@@ -214,9 +216,10 @@ function NewInternalReport() {
             <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={form.ifcProposedSeverityId} onChange={(event) => update('ifcProposedSeverityId', event.target.value)} fullWidth disabled={!catalogs.severities.length}>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField label="Módulo" value={form.ifcModuleName} onChange={(event) => update('ifcModuleName', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Función" value={form.ifcFeatureName ?? ''} onChange={(event) => update('ifcFeatureName', event.target.value)} fullWidth /></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Entorno" value={form.ifcEnvironment} onChange={(event) => update('ifcEnvironment', event.target.value)} fullWidth><MenuItem value="staging">Staging</MenuItem><MenuItem value="test">Pruebas</MenuItem><MenuItem value="local">Local</MenuItem><MenuItem value="production-read-only">Producción: sólo lectura autorizada</MenuItem></TextField></Grid>
-            <Grid item xs={12} md={4}><TextField select label="Plataforma" value={form.ifcPlatform} onChange={(event) => update('ifcPlatform', event.target.value)} fullWidth><MenuItem value="web">Web</MenuItem><MenuItem value="native-mobile">App móvil</MenuItem><MenuItem value="mobile-web">Web móvil</MenuItem><MenuItem value="api">API</MenuItem></TextField></Grid>
-            <Grid item xs={12} md={4}><TextField label="Idioma" value={form.ifcLanguage} onChange={(event) => update('ifcLanguage', event.target.value)} fullWidth /></Grid>
+            <Grid item xs={12} md={6}><TextField select label="Entorno" value={form.ifcEnvironment} onChange={(event) => update('ifcEnvironment', event.target.value)} disabled={reportContext.auditLinked} helperText={reportContext.auditLinked ? 'Heredado del caso de auditoría vinculado.' : undefined} fullWidth><MenuItem value="staging">Staging</MenuItem><MenuItem value="test">Pruebas</MenuItem><MenuItem value="local">Local</MenuItem><MenuItem value="production-read-only">Producción: sólo lectura autorizada</MenuItem></TextField></Grid>
+            <Grid item xs={12} md={6}><TextField label="Rol bajo prueba" value={form.ifcAccountRole} onChange={(event) => update('ifcAccountRole', event.target.value)} helperText={reportContext.auditLinked ? 'Heredado del caso; corrígelo si ejecutaste con otro rol autorizado.' : 'Indica el rol con el que reprodujiste el hallazgo.'} required fullWidth /></Grid>
+            <Grid item xs={12} md={6}><TextField select label="Plataforma" value={form.ifcPlatform} onChange={(event) => update('ifcPlatform', event.target.value)} fullWidth><MenuItem value="web">Web</MenuItem><MenuItem value="native-mobile">App móvil</MenuItem><MenuItem value="mobile-web">Web móvil</MenuItem><MenuItem value="api">API</MenuItem></TextField></Grid>
+            <Grid item xs={12} md={6}><TextField label="Idioma" value={form.ifcLanguage} onChange={(event) => update('ifcLanguage', event.target.value)} fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Pantalla o URL" value={form.ifcUrlOrScreen ?? ''} onChange={(event) => update('ifcUrlOrScreen', event.target.value)} fullWidth /></Grid>
             <Grid item xs={12} md={3}><TextField label="Dispositivo" value={form.ifcDevice ?? ''} onChange={(event) => update('ifcDevice', event.target.value)} fullWidth /></Grid>
             <Grid item xs={12} md={3}><TextField label="Navegador" value={form.ifcBrowser ?? ''} onChange={(event) => update('ifcBrowser', event.target.value)} fullWidth /></Grid>
@@ -349,6 +352,8 @@ function ReportDetail({ reportId }: { reportId: string }) {
             <Grid item xs={12} md={6}><TextField select label="Gravedad propuesta" value={reporterUpdate.ifuProposedSeverityId ?? ''} onChange={(event) => setReporterField('ifuProposedSeverityId', event.target.value)} fullWidth>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={6}><TextField label="Módulo" value={reporterUpdate.ifuModuleName ?? ''} onChange={(event) => setReporterField('ifuModuleName', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="Función" value={reporterUpdate.ifuFeatureName ?? ''} onChange={(event) => setReporterField('ifuFeatureName', event.target.value || null)} fullWidth /></Grid>
+            <Grid item xs={12} md={6}><TextField select label="Entorno" value={reporterUpdate.ifuEnvironment ?? ''} onChange={(event) => setReporterField('ifuEnvironment', event.target.value)} fullWidth><MenuItem value="staging">Staging</MenuItem><MenuItem value="test">Pruebas</MenuItem><MenuItem value="local">Local</MenuItem><MenuItem value="production-read-only">Producción: sólo lectura autorizada</MenuItem></TextField></Grid>
+            <Grid item xs={12} md={6}><TextField label="Rol bajo prueba" value={reporterUpdate.ifuAccountRole ?? ''} onChange={(event) => setReporterField('ifuAccountRole', event.target.value)} required fullWidth /></Grid>
             <Grid item xs={12}><TextField label="Pasos exactos" value={reporterUpdate.ifuReproductionSteps ?? ''} onChange={(event) => setReporterField('ifuReproductionSteps', event.target.value || null)} fullWidth multiline minRows={3} /></Grid>
             <Grid item xs={12} md={6}><TextField label="Resultado esperado" value={reporterUpdate.ifuExpectedResult ?? ''} onChange={(event) => setReporterField('ifuExpectedResult', event.target.value || null)} fullWidth multiline minRows={3} /></Grid>
             <Grid item xs={12} md={6}><TextField label="Resultado observado" value={reporterUpdate.ifuActualResult ?? ''} onChange={(event) => setReporterField('ifuActualResult', event.target.value || null)} fullWidth multiline minRows={3} /></Grid>

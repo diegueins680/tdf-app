@@ -302,10 +302,13 @@ internalFeedbackServer user =
       trace <- validateTraceability requestedTrace
       contactEmail <- withPool $ maybe Nothing M.partyPrimaryEmail <$> get (auPartyId user)
       entitiesResult <- withPool $ do
-        planActive <- maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
-        if not planActive
-          then pure Nothing
-          else Just <$> do
+        planContext <- maybe
+          (pure (Right ()))
+          (`lockActiveAuditPlanForTaskEnvironment` environment)
+          (traceTaskId trace)
+        case planContext of
+          Left contextError -> pure (Left contextError)
+          Right () -> Right <$> do
             now <- liftIO getCurrentTime
             feedbackId <- insert Feedback
               { feedbackTitle = title
@@ -371,10 +374,13 @@ internalFeedbackServer user =
             report <- getJustEntity reportId
             feedback <- getJustEntity feedbackId
             pure (report, feedback)
-      entities <- maybe
-        (throwError err409 { errBody = "Finalized audit plans do not accept new reports" })
-        pure
-        entitiesResult
+      entities <- case entitiesResult of
+        Left "finalized" ->
+          throwError err409 { errBody = "Finalized audit plans do not accept new reports" }
+        Left "environment_mismatch" ->
+          throwError err400 { errBody = "Audit-linked report environment must match the owning audit plan" }
+        Left _ -> throwError err500
+        Right value -> pure value
       let (reportEnt, feedbackEnt) = entities
       recordAudit reportEnt "draft_created" Nothing
       buildReportDTO reportEnt feedbackEnt
@@ -465,6 +471,8 @@ internalFeedbackServer user =
           effectiveReport = report
             { ME.internalFeedbackReportReportType =
                 fromMaybe (ME.internalFeedbackReportReportType report) reportTypeUpdate
+            , ME.internalFeedbackReportEnvironment =
+                fromMaybe (ME.internalFeedbackReportEnvironment report) environmentUpdate
             , ME.internalFeedbackReportReproductionSteps =
                 fromMaybe (ME.internalFeedbackReportReproductionSteps report) reproductionUpdate
             , ME.internalFeedbackReportExpectedResult =
@@ -527,10 +535,12 @@ internalFeedbackServer user =
             Just (Just targetKey) -> targetKey
             _ -> reportKey
       updateResult <- withPool $ do
-        planActive <- lockActiveAuditPlanForReport report
-        if not planActive
-          then pure (Left ("finalized" :: Text))
-          else do
+        planContext <- lockActiveAuditPlanForReportEnvironment
+          report
+          (ME.internalFeedbackReportEnvironment effectiveReport)
+        case planContext of
+          Left contextError -> pure (Left contextError)
+          Right () -> do
             lockedReports <- lockInternalFeedbackReportsForUpdate reportKey targetKeyForLock
             case find ((== reportKey) . entityKey) lockedReports of
               Nothing -> pure (Left "changed")
@@ -615,6 +625,8 @@ internalFeedbackServer user =
                               pure (Right ())
       case updateResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "environment_mismatch" -> throwError err400
+          { errBody = "Audit-linked report environment must match the owning audit plan" }
         Left "retest_required" -> throwError err409
           { errBody = "Verification requires a passing retest from the current ready-for-retest cycle" }
         Left "changed" -> throwError err409
@@ -640,10 +652,12 @@ internalFeedbackServer user =
         throwError err409 { errBody = "Only draft reports can be submitted" }
       validateSubmissionCompleteness report feedback
       submissionResult <- withPool $ do
-        planActive <- lockActiveAuditPlanForReport report
-        if not planActive
-          then pure (Left ("finalized" :: Text))
-          else do
+        planContext <- lockActiveAuditPlanForReportEnvironment
+          report
+          (ME.internalFeedbackReportEnvironment report)
+        case planContext of
+          Left contextError -> pure (Left contextError)
+          Right () -> do
             now <- liftIO getCurrentTime
             changed <- updateWhereCount
               [ ME.InternalFeedbackReportId ==. reportKey
@@ -680,6 +694,8 @@ internalFeedbackServer user =
                 pure (Right ())
       case submissionResult of
         Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "environment_mismatch" -> throwError err400
+          { errBody = "Audit-linked report environment must match the owning audit plan" }
         Left "changed" -> throwError err409
           { errBody = "Report changed before submission; reload it before retrying" }
         Left _ -> throwError err500
@@ -1344,9 +1360,34 @@ lockActiveAuditPlanForTask taskKey = do
     [Single "active"] -> True
     _ -> False
 
+lockActiveAuditPlanForTaskEnvironment
+  :: ME.InternTaskId
+  -> Text
+  -> SqlPersistT IO (Either Text ())
+lockActiveAuditPlanForTaskEnvironment taskKey expectedEnvironment = do
+  rows <- (rawSql
+    "SELECT status, environment FROM intern_audit_plan WHERE task_id = ? FOR UPDATE"
+    [toPersistValue taskKey]
+    :: SqlPersistT IO [(Single Text, Single Text)])
+  pure $ case rows of
+    [] -> Right ()
+    [(Single "active", Single environment)]
+      | environment == expectedEnvironment -> Right ()
+      | otherwise -> Left "environment_mismatch"
+    _ -> Left "finalized"
+
 lockActiveAuditPlanForReport :: ME.InternalFeedbackReport -> SqlPersistT IO Bool
 lockActiveAuditPlanForReport report =
   maybe (pure True) lockActiveAuditPlanForTask
+    (ME.internalFeedbackReportInternshipTaskId report)
+
+lockActiveAuditPlanForReportEnvironment
+  :: ME.InternalFeedbackReport
+  -> Text
+  -> SqlPersistT IO (Either Text ())
+lockActiveAuditPlanForReportEnvironment report expectedEnvironment =
+  maybe (pure (Right ()))
+    (`lockActiveAuditPlanForTaskEnvironment` expectedEnvironment)
     (ME.internalFeedbackReportInternshipTaskId report)
 
 finalizedReportMutationConflict :: ServerError

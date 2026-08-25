@@ -1,8 +1,28 @@
 import {
   adminCompletionAction,
+  buildInternalReportHref,
   dailySummaryMutationsAllowed,
   executionEvidenceRequired,
 } from './internAuditPlanLogic';
+
+describe('intern audit linked report context', () => {
+  it('carries the case environment and role under test into the report draft', () => {
+    const href = buildInternalReportHref({
+      itcPlanId: 'plan-1',
+      itcId: 'case-1',
+      itcModuleName: 'Recepción',
+      itcFeatureName: 'Ingreso de visitantes',
+      itcEnvironment: 'staging',
+      itcUserRole: 'Reception',
+      itcLatestExecution: { itexId: 'execution-1' },
+    }, { iapProjectId: 'project-1', iapTaskId: 'task-1' });
+    const query = new URL(href, 'https://tdf.test').searchParams;
+
+    expect(query.get('environment')).toBe('staging');
+    expect(query.get('accountRole')).toBe('Reception');
+    expect(query.get('executionId')).toBe('execution-1');
+  });
+});
 
 describe('intern audit execution evidence requirements', () => {
   it('requires evidence for every failed or blocked result, including light-evidence cases', () => {

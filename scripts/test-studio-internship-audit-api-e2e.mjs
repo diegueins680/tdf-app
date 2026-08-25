@@ -837,6 +837,16 @@ await request('/feedback/internal', {
   expected: 400,
   json: { ...reportCreate, ifcCategoryId: ideaCategory.id },
 });
+await request('/feedback/internal', {
+  token: intern.token,
+  method: 'POST',
+  expected: 400,
+  json: {
+    ...reportCreate,
+    ifcTitle: 'No aceptar un entorno distinto al plan vinculado',
+    ifcEnvironment: 'local',
+  },
+});
 const draftReport = await request('/feedback/internal', {
   token: intern.token,
   method: 'POST',
@@ -846,6 +856,8 @@ const draftReport = await request('/feedback/internal', {
 const reportId = draftReport.ifrSummary.ifsId;
 assert.equal(draftReport.ifrSummary.ifsState, 'draft');
 assert.equal(draftReport.ifrAuditPlanMutable, true);
+assert.equal(draftReport.ifrSummary.ifsEnvironment, 'staging');
+assert.equal(draftReport.ifrAccountRole, 'Intern');
 const executionOnlyAdminDraft = await request('/feedback/internal', {
   token: admin.token,
   method: 'POST',
@@ -864,12 +876,22 @@ assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestCaseId, testCase.itcId);
 assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestExecutionId, failedExecution.itexId);
 assert.equal(executionOnlyAdminDraft.ifrAuditPlanMutable, true);
 
+await request(`/feedback/internal/${reportId}`, {
+  token: intern.token,
+  method: 'PATCH',
+  expected: 400,
+  json: { ifuEnvironment: 'test' },
+});
 const editedReport = await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
   method: 'PATCH',
-  json: { ifuDescription: `${reportCreate.ifcDescription} Borrador revisado.` },
+  json: {
+    ifuDescription: `${reportCreate.ifcDescription} Borrador revisado.`,
+    ifuAccountRole: 'Reception',
+  },
 });
 assert.match(editedReport.ifrDescription, /Borrador revisado/);
+assert.equal(editedReport.ifrAccountRole, 'Reception');
 await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
   method: 'PATCH',

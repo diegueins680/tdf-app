@@ -34,6 +34,7 @@ import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
 import {
   adminCompletionAction,
+  buildInternalReportHref,
   dailySummaryMutationsAllowed,
   executionEvidenceRequired,
 } from './internAuditPlanLogic';
@@ -74,21 +75,6 @@ const emptyExecution: InternTestExecutionCreate = {
   itecSideEffectsObserved: '',
   itecBlockerReason: '',
   itecEvidenceSummary: '',
-};
-
-const reportHref = (testCase: InternTestCaseDTO, plan: { iapProjectId: string; iapTaskId: string }) => {
-  const query = new URLSearchParams({
-    planId: testCase.itcPlanId,
-    projectId: plan.iapProjectId,
-    taskId: plan.iapTaskId,
-    testCaseId: testCase.itcId,
-    module: testCase.itcModuleName,
-    feature: testCase.itcFeatureName,
-  });
-  if (testCase.itcLatestExecution?.itexId) {
-    query.set('executionId', testCase.itcLatestExecution.itexId);
-  }
-  return `/feedback/interno/nuevo?${query.toString()}`;
 };
 
 function ExecutionHistory({ testCaseId }: { testCaseId: string }) {
@@ -412,7 +398,7 @@ export default function InternAuditPlanPage() {
                           <TextField label="Resumen o enlace de evidencia" value={executionForm.itecEvidenceSummary ?? ''} onChange={(event) => setExecutionForm((current) => ({ ...current, itecEvidenceSummary: event.target.value }))} required={executionEvidenceRequired(testCase.itcEvidenceRequirement, executionForm.itecStatus)} helperText="No incluyas contraseñas ni datos personales. Los videos pesados deben enlazarse desde un servicio externo autorizado." />
                           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                             <Button type="submit" variant="contained" disabled={saveExecution.isPending}>Guardar resultado</Button>
-                            <Button component={RouterLink} to={reportHref(testCase, plan)} startIcon={<BugReportOutlinedIcon />} variant="outlined">Crear reporte vinculado</Button>
+                            <Button component={RouterLink} to={buildInternalReportHref(testCase, plan)} startIcon={<BugReportOutlinedIcon />} variant="outlined">Crear reporte vinculado</Button>
                           </Stack>
                         </Stack>
                       </Box> : <Alert severity="info">La auditoría finalizada conserva el historial en modo de solo lectura.</Alert>}

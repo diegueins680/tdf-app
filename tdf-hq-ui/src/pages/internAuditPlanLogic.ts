@@ -1,4 +1,33 @@
-import type { InternAuditPlanDTO, InternExecutionStatus } from '../api/types';
+import type {
+  InternAuditPlanDTO,
+  InternExecutionStatus,
+  InternTestCaseDTO,
+  InternTestExecutionDTO,
+} from '../api/types';
+
+export const buildInternalReportHref = (
+  testCase: Pick<
+    InternTestCaseDTO,
+    'itcPlanId' | 'itcId' | 'itcModuleName' | 'itcFeatureName' | 'itcEnvironment'
+      | 'itcUserRole'
+  > & { itcLatestExecution?: Pick<InternTestExecutionDTO, 'itexId'> | null },
+  plan: { iapProjectId: string; iapTaskId: string },
+) => {
+  const query = new URLSearchParams({
+    planId: testCase.itcPlanId,
+    projectId: plan.iapProjectId,
+    taskId: plan.iapTaskId,
+    testCaseId: testCase.itcId,
+    module: testCase.itcModuleName,
+    feature: testCase.itcFeatureName,
+    environment: testCase.itcEnvironment,
+    accountRole: testCase.itcUserRole,
+  });
+  if (testCase.itcLatestExecution?.itexId) {
+    query.set('executionId', testCase.itcLatestExecution.itexId);
+  }
+  return `/feedback/interno/nuevo?${query.toString()}`;
+};
 
 export const executionEvidenceRequired = (
   evidenceRequirement: string,
