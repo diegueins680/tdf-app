@@ -15,6 +15,8 @@ No step below implies approval. The required order is:
 
 The regenerated mobile OpenAPI client and feature registry were committed to the matching `tdf-mobile` feature branch, and the parent repository records that submodule revision. A staging or production release must preserve that pairing and must not publish an orphaned submodule reference.
 
+The production `fly.toml` routes internal feedback uploads to `/data/assets/feedback/internal`, beneath the existing persistent `tdf_assets` mount. Production release validation fails closed when `TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT` is absent, relative, normalized outside its declared path, or not beneath a persistent mount. This configuration is release readiness only; it does not authorize or perform a production deployment.
+
 CI regenerates and diff-checks the audit artifacts in repository quality, rehearses the new migration and rollback in migration quality, exercises the mocked Chromium journey through the existing Playwright job, and checks OpenAPI client drift through the existing contract job. The disposable backend API lifecycle script remains a required pre-deployment command because the current backend CI container topology does not expose the local database lifecycle expected by that script.
 
 ## Dedicated staging topology

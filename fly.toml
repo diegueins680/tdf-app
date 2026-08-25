@@ -22,6 +22,7 @@ primary_region = "gru"
   ARTIST_ENRICHMENT_BATCH_SIZE = "500"
   ARTIST_ENRICHMENT_STALE_DAYS = "90"
   HQ_ASSETS_DIR = "/data/assets"
+  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/feedback/internal"
   TZ = "America/Guayaquil"
   # TICKETMASTER_API_KEY is set as a Fly secret (flyctl secrets set TICKETMASTER_API_KEY=...)
   # VITE_PAYPAL_CLIENT_ID is set as a Fly secret (flyctl secrets set VITE_PAYPAL_CLIENT_ID=...)

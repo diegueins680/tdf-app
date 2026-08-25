@@ -36,6 +36,12 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   EVENT_DISCOVERY_ENABLED = "false"
+  HQ_ASSETS_DIR = "/data/assets"
+  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/feedback/internal"
+
+[[mounts]]
+  source = "tdf_assets"
+  destination = "/data/assets"
 
 [deploy]
   strategy = "rolling"
@@ -449,9 +455,28 @@ test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged ro
   assert.equal(validation.runMigrations, false);
   assert.equal(validation.autoApplyProductionMigrations, true);
   assert.equal(validation.eventDiscoveryEnabled, false);
+  assert.equal(validation.internalFeedbackUploadRoot, '/data/assets/feedback/internal');
   assert.equal(validation.healthCheckPath, '/health');
   assert.equal(validation.strategy, 'rolling');
   assert.equal(validation.maxUnavailable, 1);
+});
+
+test('validateFlyConfig requires durable internal feedback evidence storage', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/feedback/internal"',
+        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/app/uploads/feedback/internal"',
+      ),
+    ),
+    /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT|persistent mount/i,
+  );
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace('  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/feedback/internal"\n', ''),
+    ),
+    /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT|persistent mount/i,
+  );
 });
 
 test('validateFlyConfig fails closed when startup migrations are enabled', () => {
