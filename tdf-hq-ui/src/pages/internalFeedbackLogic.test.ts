@@ -40,8 +40,8 @@ describe('internal report mutation controls', () => {
 });
 
 describe('internal report retest controls', () => {
-  it('does not offer the retest-only state to standalone reports', () => {
-    expect(internalReportAdminTransitions('in_progress', null)).toEqual(['discarded']);
+  it('offers standalone reports a direct completion path instead of retesting', () => {
+    expect(internalReportAdminTransitions('in_progress', null)).toEqual(['verified', 'discarded']);
     expect(internalReportAdminTransitions('in_progress', 'case-1')).toEqual([
       'ready_for_retest',
       'discarded',

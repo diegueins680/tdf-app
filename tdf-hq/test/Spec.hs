@@ -13179,6 +13179,11 @@ main = hspec $ do
                     errHTTPCode err `shouldBe` 409
                     BL.unpack (errBody err) `shouldContain` "linked test case"
                 Right value -> expectationFailure ("Expected unlinked transition rejection, got " <> show value)
+            (validateReportStateTransition False "in_progress" "verified" :: Either ServerError Text)
+                `shouldBe` Right "verified"
+            case (validateReportStateTransition True "in_progress" "verified" :: Either ServerError Text) of
+                Left err -> errHTTPCode err `shouldBe` 409
+                Right value -> expectationFailure ("Expected linked verification rejection, got " <> show value)
             (validateReportStateTransition False "in_progress" "discarded" :: Either ServerError Text)
                 `shouldBe` Right "discarded"
 

@@ -584,6 +584,7 @@ internalFeedbackServer user =
                             (\value -> [ME.InternalFeedbackReportDuplicateOf =. value])
                             resolvedDuplicateUpdate
                       retestPassed <- if stateUpdate == Just "verified"
+                        && isJust (ME.internalFeedbackReportTestCaseId lockedReport)
                         then do
                           latestReadyCycle <- selectFirst
                             [ ME.InternalFeedbackHistoryReportId ==. reportKey
@@ -1451,10 +1452,14 @@ validateStateTransition previous rawNext = do
 
 validateReportStateTransition :: MonadError ServerError m => Bool -> Text -> Text -> m Text
 validateReportStateTransition hasTestCase previous rawNext = do
-  next <- validateStateTransition previous rawNext
-  when (next == "ready_for_retest" && not hasTestCase) $
-    throwError err409 { errBody = "Ready-for-retest reports require a linked test case" }
-  pure next
+  next <- validateInternalReportState "state" rawNext
+  if not hasTestCase && previous == "in_progress" && next == "verified"
+    then pure next
+    else do
+      validatedNext <- validateStateTransition previous next
+      when (validatedNext == "ready_for_retest" && not hasTestCase) $
+        throwError err409 { errBody = "Ready-for-retest reports require a linked test case" }
+      pure validatedNext
 
 validatePriority :: MonadError ServerError m => Text -> m Text
 validatePriority = validateChoice "priority" ["low", "medium", "high", "urgent"]

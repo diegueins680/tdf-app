@@ -20,8 +20,10 @@ export const internalReportMutationsAllowed = (auditPlanMutable: boolean) => aud
 export const internalReportAdminTransitions = (
   state: InternalReportState,
   testCaseId: string | null | undefined,
-) => ADMIN_TRANSITIONS[state].filter((nextState) =>
-  nextState !== 'ready_for_retest' || Boolean(testCaseId));
+): InternalReportState[] => {
+  if (state === 'in_progress' && !testCaseId) return ['verified', 'discarded'];
+  return ADMIN_TRANSITIONS[state];
+};
 
 export const internalReportRetestAllowed = (
   state: InternalReportState,

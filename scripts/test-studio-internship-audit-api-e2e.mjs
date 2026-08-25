@@ -911,6 +911,21 @@ const standaloneAfterRejectedRetest = await request(`/feedback/internal/${standa
   token: admin.token,
 });
 assert.equal(standaloneAfterRejectedRetest.ifrSummary.ifsState, 'in_progress');
+const verifiedStandalone = await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'verified' },
+});
+assert.equal(verifiedStandalone.ifrSummary.ifsState, 'verified');
+const closedStandalone = await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: {
+    ifuState: 'closed',
+    ifuClosureReason: 'La idea independiente se revisó sin requerir un retest.',
+  },
+});
+assert.equal(closedStandalone.ifrSummary.ifsState, 'closed');
 
 await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
