@@ -1,0 +1,291 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e57]
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e67]
+      - link [ref=e217] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e222]
+      - link [ref=e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e90]
+      - link [ref=e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e100]
+      - link [ref=e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e112]:
+          - img "tdf.records.label's profile picture" [ref=e113]
+    - generic [ref=e114]:
+      - link [ref=e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e122]
+      - link [ref=e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e130]
+  - main [ref=e134]:
+    - generic [ref=e228]:
+      - navigation "Thread list" [ref=e229]:
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - button [ref=e232] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e234]
+              - img "Down chevron icon" [ref=e237]
+            - button [ref=e241] [cursor=pointer]:
+              - img "New message" [ref=e243]
+          - tablist [ref=e248]:
+            - tab "Primary" [selected] [ref=e249] [cursor=pointer]
+            - tab "General" [ref=e252] [cursor=pointer]
+            - tab "From ads" [ref=e255] [cursor=pointer]
+            - tab "Requests" [ref=e259] [cursor=pointer]
+          - generic [ref=e265]:
+            - img "Search" [ref=e267]
+            - textbox "Search" [ref=e270]
+          - generic [ref=e271]:
+            - generic [ref=e273]:
+              - list [ref=e275]:
+                - listitem [ref=e276]
+                - listitem [ref=e277]:
+                  - button "Weekend plans? Your note" [ref=e279] [cursor=pointer]:
+                    - generic [ref=e280]:
+                      - generic [ref=e281]: Weekend plans?
+                      - generic [ref=e287]:
+                        - link [ref=e289]
+                        - generic [ref=e290]: Your note
+                - listitem [ref=e292]:
+                  - button "Note unavailable. Use the latest version of the Instagram app to see this note. _seereendipia_'s profile picture Julieta 💫" [ref=e295] [cursor=pointer]:
+                    - generic [ref=e296]:
+                      - generic [ref=e297]: Note unavailable. Use the latest version of the Instagram app to see this note.
+                      - generic [ref=e304]:
+                        - link [ref=e306]:
+                          - img "_seereendipia_'s profile picture" [ref=e307]
+                        - generic [ref=e308]: Julieta 💫
+                - listitem [ref=e311]:
+                  - button "FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️ anajusegovia's profile picture Ana Julia/ DJ JU🫧" [ref=e314] [cursor=pointer]:
+                    - generic [ref=e315]:
+                      - generic [ref=e316]: FUERAS MI NOVIA Y YO TU PRÍNCIPEEE🗣️🗣️🗣️
+                      - generic [ref=e323]:
+                        - link [ref=e325]:
+                          - img "anajusegovia's profile picture" [ref=e326]
+                        - generic [ref=e327]: Ana Julia/ DJ JU🫧
+                - listitem [ref=e330]:
+                  - button "Tengo ganas de algo pero no sé qué 🙃 danyrivadeneira7's profile picture Dany Rivadeneira López" [ref=e333] [cursor=pointer]:
+                    - generic [ref=e334]:
+                      - generic [ref=e335]: Tengo ganas de algo pero no sé qué 🙃
+                      - generic [ref=e342]:
+                        - link [ref=e344]:
+                          - img "danyrivadeneira7's profile picture" [ref=e345]
+                        - generic [ref=e346]: Dany Rivadeneira López
+                - listitem [ref=e349]:
+                  - button "Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa. fede.idrovo's profile picture Fede Ib" [ref=e352] [cursor=pointer]:
+                    - generic [ref=e353]:
+                      - generic [ref=e354]: Persuadir es un arte. Usarlo para cambiar lo que ya es justo, otra cosa.
+                      - generic [ref=e361]:
+                        - link [ref=e363]:
+                          - img "fede.idrovo's profile picture" [ref=e364]
+                        - generic [ref=e365]: Fede Ib
+                - listitem [ref=e368]:
+                  - button "No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥 strange_soul.col's profile picture Strange Soul Dj" [ref=e371] [cursor=pointer]:
+                    - generic [ref=e372]:
+                      - generic [ref=e373]: No abandonen a quienes les han dado tantas alegrías, fuerza escena electrónica 🔥
+                      - generic [ref=e380]:
+                        - link [ref=e382]:
+                          - img "strange_soul.col's profile picture" [ref=e383]
+                        - generic [ref=e384]: Strange Soul Dj
+                - listitem [ref=e387]:
+                  - button "nunca confiarle a alguien más que gestione el viaje dimeabiluuu____'s profile picture ✹ emilia ✹" [ref=e390] [cursor=pointer]:
+                    - generic [ref=e391]:
+                      - generic [ref=e392]: nunca confiarle a alguien más que gestione el viaje
+                      - generic [ref=e399]:
+                        - link [ref=e401]:
+                          - img "dimeabiluuu____'s profile picture" [ref=e402]
+                        - generic [ref=e403]: ✹ emilia ✹
+                - listitem [ref=e406]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Smile Groundation, Apple Gabriel, Don Carlos rakelovsky's profile picture Rakelovsky" [ref=e409] [cursor=pointer]:
+                    - generic [ref=e410]:
+                      - generic [ref=e416]:
+                        - generic [ref=e417]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e419]
+                          - generic [ref=e423]: Smile
+                        - generic [ref=e424]: Groundation, Apple Gabriel, Don Carlos
+                      - generic [ref=e425]:
+                        - link [ref=e427]:
+                          - img "rakelovsky's profile picture" [ref=e428]
+                        - generic [ref=e429]: Rakelovsky
+                - listitem [ref=e432]:
+                  - button "Si saben de una batalla de farmeo de aura, me avisan 🤑 isaac_erazo20's profile picture Isaac André" [ref=e435] [cursor=pointer]:
+                    - generic [ref=e436]:
+                      - generic [ref=e437]: Si saben de una batalla de farmeo de aura, me avisan 🤑
+                      - generic [ref=e444]:
+                        - link [ref=e446]:
+                          - img "isaac_erazo20's profile picture" [ref=e447]
+                        - generic [ref=e448]: Isaac André
+              - button "Next" [ref=e451] [cursor=pointer]
+            - generic [ref=e456]:
+              - 'button "user-profile-picture Edmundo You: Sí, no hay problema 6 hours ago" [ref=e460] [cursor=pointer]':
+                - generic [ref=e462]:
+                  - img "user-profile-picture" [ref=e466]
+                  - generic [ref=e469]:
+                    - generic [ref=e470]: Edmundo
+                    - generic [ref=e476]:
+                      - generic [ref=e477]: "You: Sí, no hay problema"
+                      - generic [ref=e479]:
+                        - generic [ref=e480]: ·
+                        - generic "6 hours ago" [ref=e485]: 6h
+              - button "user-profile-picture Oldboy Liked a message 11 hours ago" [ref=e489] [cursor=pointer]:
+                - generic [ref=e491]:
+                  - img "user-profile-picture" [ref=e495]
+                  - generic [ref=e498]:
+                    - generic [ref=e499]: Oldboy
+                    - generic [ref=e505]:
+                      - generic [ref=e506]: Liked a message
+                      - generic [ref=e508]:
+                        - generic [ref=e509]: ·
+                        - generic "11 hours ago" [ref=e514]: 11h
+              - button "user-profile-picture EL DOMO Pululahua EL sent an attachment. 22 hours ago" [ref=e518] [cursor=pointer]:
+                - generic [ref=e520]:
+                  - img "user-profile-picture" [ref=e524]
+                  - generic [ref=e527]:
+                    - generic [ref=e528]: EL DOMO Pululahua
+                    - generic [ref=e534]:
+                      - generic [ref=e535]: EL sent an attachment.
+                      - generic [ref=e537]:
+                        - generic [ref=e538]: ·
+                        - generic "22 hours ago" [ref=e543]: 22h
+              - 'button "user-profile-picture Fabro Alomìa Torres You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso. 22 hours ago More options" [pressed] [ref=e741] [cursor=pointer]':
+                - generic [ref=e549]:
+                  - img "user-profile-picture" [ref=e553]
+                  - generic [ref=e556]:
+                    - generic [ref=e557]: Fabro Alomìa Torres
+                    - generic [ref=e563]:
+                      - generic [ref=e564]: "You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso."
+                      - generic [ref=e566]:
+                        - generic [ref=e567]: ·
+                        - generic "22 hours ago" [ref=e572]: 22h
+                  - button [ref=e744]:
+                    - img "More options" [ref=e747]
+              - button "user-profile-picture Carlos Pabón Recalde Carlos sent an attachment. 22 hours ago" [ref=e576] [cursor=pointer]:
+                - generic [ref=e578]:
+                  - img "user-profile-picture" [ref=e582]
+                  - generic [ref=e585]:
+                    - generic [ref=e586]: Carlos Pabón Recalde
+                    - generic [ref=e592]:
+                      - generic [ref=e593]: Carlos sent an attachment.
+                      - generic [ref=e595]:
+                        - generic [ref=e596]: ·
+                        - generic "22 hours ago" [ref=e601]: 22h
+              - button "user-profile-picture Diego Saa Diego sent an attachment. a day ago" [ref=e605] [cursor=pointer]:
+                - generic [ref=e607]:
+                  - img "user-profile-picture" [ref=e611]
+                  - generic [ref=e614]:
+                    - generic [ref=e615]: Diego Saa
+                    - generic [ref=e621]:
+                      - generic [ref=e622]: Diego sent an attachment.
+                      - generic [ref=e624]:
+                        - generic [ref=e625]: ·
+                        - generic "a day ago" [ref=e630]: 1d
+              - 'button "user-profile-picture Emanuele Pilo-Pais L. You: Increíble a day ago" [ref=e634] [cursor=pointer]':
+                - generic [ref=e636]:
+                  - img "user-profile-picture" [ref=e640]
+                  - generic [ref=e643]:
+                    - generic [ref=e644]: Emanuele Pilo-Pais L.
+                    - generic [ref=e650]:
+                      - generic [ref=e651]: "You: Increíble"
+                      - generic [ref=e653]:
+                        - generic [ref=e654]: ·
+                        - generic "a day ago" [ref=e659]: 1d
+              - button "user-profile-picture reemus Liked a message a day ago" [ref=e663] [cursor=pointer]:
+                - generic [ref=e665]:
+                  - img "user-profile-picture" [ref=e669]
+                  - generic [ref=e672]:
+                    - generic [ref=e673]: reemus
+                    - generic [ref=e679]:
+                      - generic [ref=e680]: Liked a message
+                      - generic [ref=e682]:
+                        - generic [ref=e683]: ·
+                        - generic "a day ago" [ref=e688]: 1d
+              - button [ref=e711] [cursor=pointer]:
+                - generic [ref=e713]:
+                  - status "Loading..." [ref=e716]
+                  - generic [ref=e719]:
+                    - status "Loading..." [ref=e721]
+                    - status "Loading..." [ref=e723]
+      - generic [ref=e752]:
+        - generic [ref=e756]:
+          - link "Open the profile page of planet_303" [ref=e757] [cursor=pointer]:
+            - /url: /planet_303/
+            - generic [ref=e758]:
+              - img "user-profile-picture" [ref=e762]
+              - generic [ref=e763]:
+                - heading "Fabro Alomìa Torres" [level=2] [ref=e765]
+                - generic [ref=e767]: planet_303
+          - generic [ref=e771]:
+            - button [ref=e772] [cursor=pointer]:
+              - img "Audio call" [ref=e774]
+            - button [ref=e776] [cursor=pointer]:
+              - img "Video call" [ref=e778]
+            - button [ref=e781] [cursor=pointer]:
+              - img "Conversation information" [ref=e783]
+        - generic [ref=e787]:
+          - generic [ref=e792]:
+            - progressbar [ref=e795]:
+              - img "Loading..." [ref=e796]
+            - generic [ref=e837]:
+              - generic [ref=e838]: Tue 10:12 AM
+              - group [ref=e841]:
+                - generic [ref=e846]:
+                  - generic [ref=e849]:
+                    - text: Hola, Fabro
+                    - img "👋" [ref=e851]
+                    - text: "Te escribimos una sola vez más por si no alcanzaste a revisar TDF. Puedes crear tu perfil como DJ y conectar tu música con artistas y experiencias de la escena aquí:"
+                    - link "https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a" [ref=e853] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                    - text: Si ya lo hiciste, cuéntanos únicamente con qué nombre aparece tu perfil; si no te interesa, no volvemos a escribir. — TDF Records
+                  - link "TDF Records" [ref=e854] [cursor=pointer]:
+                    - /url: https://tdf-app.pages.dev/login?signup=1&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+            - generic [ref=e861]:
+              - generic [ref=e862]: Tue 11:15 PM
+              - group [ref=e865]:
+                - generic [ref=e866]: Holaaa
+            - group [ref=e876]:
+              - generic [ref=e877]: Esto me salió
+            - group [ref=e887]:
+              - generic [ref=e889]:
+                - link "Open the profile page of planet_303" [ref=e892] [cursor=pointer]:
+                  - /url: /planet_303
+                  - img "user-profile-picture" [ref=e895]
+                - button [ref=e898] [cursor=pointer]
+            - generic [ref=e906]:
+              - generic [ref=e907]: Thu 1:54 PM
+              - group [ref=e910]:
+                - generic [ref=e916]:
+                  - text: ¡Hola, Fabro! Gracias por compartir la captura
+                  - img "🙌" [ref=e918]
+                  - text: Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso.
+          - generic [ref=e928]:
+            - button [ref=e931] [cursor=pointer]:
+              - img "Choose an emoji" [ref=e933]
+            - generic [ref=e935]:
+              - textbox [active] [ref=e936]:
+                - paragraph [ref=e937]
+              - generic: Message...
+            - generic [ref=e938]:
+              - button [ref=e939] [cursor=pointer]:
+                - img "Voice Clip" [ref=e941]
+              - button [ref=e944] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=e946]
+              - button [ref=e951] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=e953]
