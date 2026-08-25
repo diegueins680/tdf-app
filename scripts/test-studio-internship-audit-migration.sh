@@ -340,10 +340,10 @@ INSERT INTO intern_test_execution(
   evidence_summary,started_at,completed_at
 ) VALUES (
   '60000000-0000-4000-8000-000000000003','50000000-0000-4000-8000-000000000002',
-  3,2,'verified','Duplicate rejected on retest','screenshot://STU-CRM-001-retest',NOW(),NOW()
+  5,2,'verified','Duplicate rejected on retest','screenshot://STU-CRM-001-retest',NOW(),NOW()
 );
 SQL
-assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM intern_test_execution WHERE test_case_id='50000000-0000-4000-8000-000000000002';")" "3" "retest preserves execution history"
+assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM intern_test_execution WHERE test_case_id='50000000-0000-4000-8000-000000000002';")" "5" "retest preserves execution history"
 
 apply_file tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate_rollback.sql
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM pg_trigger WHERE tgname='trg_enforce_intern_audit_historical_failures' AND NOT tgisinternal;")" "0" "historical failure gate rollback"
