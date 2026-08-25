@@ -308,7 +308,8 @@ import TDF.ServerInstagramOAuth
       validateInstagramRedirectUri,
       validateInstagramUsername )
 import TDF.Server
-    ( buildWhatsappCtaFor,
+    ( assetsServePathAllowed,
+      buildWhatsappCtaFor,
       loadCourseRegistrationReceiptCounts,
       toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
@@ -8911,6 +8912,13 @@ main = hspec $ do
                 (Just "rk_meta")
                 `shouldBe`
                     "https://drive.usercontent.google.com/download?id=1A_B-99&export=download"
+
+    describe "assetsServePathAllowed" $
+        it "keeps the internal evidence subtree outside the public raw asset route" $ do
+            assetsServePathAllowed [] `shouldBe` True
+            assetsServePathAllowed ["inventory", "fixture.png"] `shouldBe` True
+            assetsServePathAllowed [".internal-feedback"] `shouldBe` False
+            assetsServePathAllowed [".internal-feedback", "report", "evidence.png"] `shouldBe` False
 
     describe "sanitizeFeedbackAttachmentFileName" $ do
         it "reduces attachment names to a stable safe basename" $ do

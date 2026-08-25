@@ -73,7 +73,8 @@ import           Numeric (showHex)
 import           System.Directory (getFileSize)
 import           System.FilePath ((</>))
 import           System.IO (hPutStrLn, stderr)
-import qualified Network.Wai as Wai (Request)
+import           Network.HTTP.Types.Status (status404)
+import qualified Network.Wai as Wai
 import           Servant
 import           Servant.Multipart (FileData(..), Tmp)
 import           Servant.Server.Experimental.Auth (AuthHandler)
@@ -9698,7 +9699,15 @@ inventoryStaticServer assetsRoot =
 
 assetsServeServer :: FilePath -> ServerT Api.AssetsServeAPI AppM
 assetsServeServer assetsRoot =
-  serveDirectoryFileServer assetsRoot
+  case serveDirectoryFileServer assetsRoot of
+    Tagged staticApplication -> Tagged $ \request sendResponse ->
+      if assetsServePathAllowed (Wai.pathInfo request)
+        then staticApplication request sendResponse
+        else sendResponse (Wai.responseLBS status404 [] "Not found")
+
+assetsServePathAllowed :: [Text] -> Bool
+assetsServePathAllowed (firstSegment : _) = firstSegment /= ".internal-feedback"
+assetsServePathAllowed [] = True
 
 bookingServer :: AuthedUser -> ServerT BookingAPI AppM
 bookingServer user =

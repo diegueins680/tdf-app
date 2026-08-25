@@ -14,7 +14,7 @@ Reporter queries are party-scoped; unauthorized report and evidence access retur
 
 ## Evidence handling
 
-Attachments are validated for multipart shape, filename, MIME type, size, safe storage name, report access, and download authorization. The database stores the original display name separately from a generated storage key. Heavy video is an HTTPS link, not a direct upload. Evidence content must be fictional and secret-free. Storage configuration must point to a private staging bucket/directory; public object ACLs are prohibited. The production Fly configuration places internal evidence beneath its persistent asset volume, and release validation rejects an upload root that is not covered by a declared persistent mount.
+Attachments are validated for multipart shape, filename, MIME type, size, safe storage name, report access, and download authorization. The database stores the original display name separately from a generated storage key. Heavy video is an HTTPS link, not a direct upload. Evidence content must be fictional and secret-free. Storage configuration must point to a private staging bucket/directory; public object ACLs are prohibited. The production Fly configuration places internal evidence in a reserved subtree beneath its persistent asset volume, the public raw-file route rejects that subtree, and release validation rejects any upload root outside that private mounted location.
 
 ## External providers
 

@@ -262,12 +262,19 @@ export function validateFlyConfig(toml) {
   ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
+  const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
   const internalFeedbackUploadRoot = String(
     env.get('TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT') ?? '',
   ).trim();
+  const normalizedAssetsRoot = path.posix.normalize(assetsRoot);
   const normalizedUploadRoot = path.posix.normalize(internalFeedbackUploadRoot);
-  const uploadRootIsDurable = internalFeedbackUploadRoot.startsWith('/')
+  const privateFeedbackRoot = `${normalizedAssetsRoot}/.internal-feedback`;
+  const uploadRootIsPrivate = assetsRoot.startsWith('/')
+    && normalizedAssetsRoot === assetsRoot
+    && internalFeedbackUploadRoot.startsWith('/')
     && normalizedUploadRoot === internalFeedbackUploadRoot
+    && normalizedUploadRoot === privateFeedbackRoot;
+  const uploadRootIsDurable = uploadRootIsPrivate
     && mounts.some((mount) => {
       const destination = String(mount.get('destination') ?? '').trim();
       const normalizedDestination = path.posix.normalize(destination);
@@ -304,7 +311,7 @@ export function validateFlyConfig(toml) {
   }
   if (!uploadRootIsDurable) {
     throw new Error(
-      'fly.toml must place TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT beneath a persistent mount.',
+      'fly.toml must place TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT in the reserved private subtree beneath a persistent mount.',
     );
   }
   if (!hasHealthCheck) {
