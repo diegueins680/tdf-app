@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import SellPage from "../Sell";
 import { vi } from "vitest";
 
-const mockGetMenu = vi.fn();
-const mockPostSale = vi.fn();
+const { mockGetMenu, mockPostSale } = vi.hoisted(() => ({
+  mockGetMenu: vi.fn(),
+  mockPostSale: vi.fn(),
+}));
 
 vi.mock("../../../api/bar", () => ({
   getMenu: mockGetMenu,
@@ -31,7 +33,7 @@ function renderSellPage(path = "/bar/sell") {
 
 describe("SellPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it("shows a guidance alert when required query params are missing", () => {

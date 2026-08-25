@@ -6,7 +6,10 @@ import { normalizeRoles } from '../config/menu';
 import MetadataPage from '../pages/Metadata';
 import { METADATA_ROUTES } from '../features/metadata/routes';
 import SessionInputList from '../pages/SessionInputList';
+<<<<<<< HEAD:archives/tdf-root-ui-legacy/routes/AppRoutes.tsx
 import ArtistsPage from '../pages/ArtistsPage';
+=======
+>>>>>>> tdf-ui/main:src/routes/AppRoutes.tsx
 
 export type Role =
   | 'admin' | 'finanzas' | 'booker' | 'ingeniero' | 'productor'
