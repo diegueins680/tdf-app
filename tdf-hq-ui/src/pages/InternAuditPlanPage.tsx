@@ -32,7 +32,11 @@ import type {
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
-import { dailySummaryMutationsAllowed, executionEvidenceRequired } from './internAuditPlanLogic';
+import {
+  adminCompletionAction,
+  dailySummaryMutationsAllowed,
+  executionEvidenceRequired,
+} from './internAuditPlanLogic';
 
 const STATUS_LABELS: Record<InternExecutionStatus, string> = {
   pending: 'Pendiente',
@@ -121,6 +125,7 @@ export default function InternAuditPlanPage() {
   const [expandedCase, setExpandedCase] = useState<string | false>(false);
   const [executionForm, setExecutionForm] = useState<InternTestExecutionCreate>(emptyExecution);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'error'; text: string } | null>(null);
+  const [completionExceptionJustification, setCompletionExceptionJustification] = useState('');
   const [daily, setDaily] = useState<InternDailySummaryCreate>({
     idscWorkDate: new Date().toISOString().slice(0, 10),
     idscMinutesWorked: 60,
@@ -189,9 +194,10 @@ export default function InternAuditPlanPage() {
   });
 
   const completePlan = useMutation({
-    mutationFn: () => InternAudit.completePlan(planId),
+    mutationFn: (exceptionJustification?: string) => InternAudit.completePlan(planId, exceptionJustification),
     onSuccess: async (completedPlan) => {
       queryClient.setQueryData(['intern-audit', 'plan', planId], completedPlan);
+      setCompletionExceptionJustification('');
       setFeedback({ severity: 'success', text: 'La revisión administrativa quedó aprobada y la auditoría se completó.' });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['intern-audit', 'final', planId] }),
@@ -234,6 +240,9 @@ export default function InternAuditPlanPage() {
   const canCreateDailySummary = plan
     ? dailySummaryMutationsAllowed(plan.iapStatus, plan.iapProposedAssignee, session?.partyId)
     : false;
+  const completionAction = plan
+    ? adminCompletionAction(plan.iapStatus, plan.iapCanComplete)
+    : 'none';
 
   return (
     <PageShell
@@ -294,17 +303,50 @@ export default function InternAuditPlanPage() {
                     Activar plan aprobado
                   </Button>
                 )}
-                {isAdmin && plan.iapStatus === 'active' && plan.iapCanComplete && (
+                {isAdmin && completionAction === 'standard' && (
                   <Button
                     variant="contained"
                     color="success"
                     onClick={() => {
-                      if (window.confirm('Aprobar la revisión final y completar esta auditoría. ¿Continuar?')) completePlan.mutate();
+                      if (window.confirm('Aprobar la revisión final y completar esta auditoría. ¿Continuar?')) completePlan.mutate(undefined);
                     }}
                     disabled={completePlan.isPending}
                   >
                     Aprobar y completar auditoría
                   </Button>
+                )}
+                {isAdmin && completionAction === 'exception' && (
+                  <Stack spacing={1.5}>
+                    <Alert severity="warning">
+                      Si un bloqueo justificado impide cumplir los criterios automáticos, puedes cerrar el plan con
+                      una excepción administrativa. La justificación, tu identidad y la fecha quedarán en el
+                      historial y no podrán modificarse después del cierre.
+                    </Alert>
+                    <TextField
+                      label="Justificación de la excepción"
+                      value={completionExceptionJustification}
+                      onChange={(event) => setCompletionExceptionJustification(event.target.value)}
+                      multiline
+                      minRows={3}
+                      required
+                      inputProps={{ maxLength: 5000 }}
+                      helperText="Explica qué criterio no puede cumplirse, por qué y qué riesgo se acepta o difiere."
+                    />
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      onClick={() => {
+                        const justification = completionExceptionJustification.trim();
+                        if (!justification) return;
+                        if (window.confirm('Completar con excepción dejará una aprobación permanente y auditable. ¿Continuar?')) {
+                          completePlan.mutate(justification);
+                        }
+                      }}
+                      disabled={completePlan.isPending || !completionExceptionJustification.trim()}
+                    >
+                      Completar con excepción documentada
+                    </Button>
+                  </Stack>
                 )}
               </Stack>
             </CardContent>

@@ -216,6 +216,8 @@ internAuditServer user =
     updatePlanH rawPlanId IA.InternAuditPlanUpdate{..} = do
       ensureAdmin
       ent@(Entity planKey plan) <- loadPlan rawPlanId
+      when (ME.internAuditPlanStatus plan `elem` ["completed", "cancelled"]) $
+        throwError finalizedMutationConflict
       justification <- case iapuCompletionJustification of
         Nothing -> pure Nothing
         Just Nothing -> pure (Just Nothing)

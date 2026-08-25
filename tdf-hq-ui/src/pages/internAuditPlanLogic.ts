@@ -14,3 +14,11 @@ export const dailySummaryMutationsAllowed = (
   && assignedPartyId != null
   && currentPartyId != null
   && assignedPartyId === currentPartyId;
+
+export const adminCompletionAction = (
+  status: InternAuditPlanDTO['iapStatus'],
+  canComplete: boolean,
+) => {
+  if (status !== 'active') return 'none' as const;
+  return canComplete ? 'standard' as const : 'exception' as const;
+};

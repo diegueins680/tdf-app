@@ -1,4 +1,8 @@
-import { dailySummaryMutationsAllowed, executionEvidenceRequired } from './internAuditPlanLogic';
+import {
+  adminCompletionAction,
+  dailySummaryMutationsAllowed,
+  executionEvidenceRequired,
+} from './internAuditPlanLogic';
 
 describe('intern audit execution evidence requirements', () => {
   it('requires evidence for every failed or blocked result, including light-evidence cases', () => {
@@ -25,5 +29,15 @@ describe('intern audit daily-summary permissions', () => {
   it('keeps the summary read-only when the plan is finalized or unassigned', () => {
     expect(dailySummaryMutationsAllowed('completed', 911, 911)).toBe(false);
     expect(dailySummaryMutationsAllowed('active', null, 911)).toBe(false);
+  });
+});
+
+describe('intern audit administrative completion actions', () => {
+  it('offers a documented exception only for an active plan with unmet automatic gates', () => {
+    expect(adminCompletionAction('active', true)).toBe('standard');
+    expect(adminCompletionAction('active', false)).toBe('exception');
+    expect(adminCompletionAction('draft', false)).toBe('none');
+    expect(adminCompletionAction('completed', false)).toBe('none');
+    expect(adminCompletionAction('cancelled', false)).toBe('none');
   });
 });

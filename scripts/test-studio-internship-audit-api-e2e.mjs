@@ -402,6 +402,70 @@ await request(`/internships/audit-plans/${nonApplicablePlan.iapId}/activate`, {
   expected: 409,
 });
 
+const exceptionProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Proyecto completado con excepción documentada',
+    ipcDescription: 'Fixture para conservar de forma inmutable una excepción administrativa.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
+const exceptionTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: exceptionProject.ipId,
+    itcTitle: 'E2E — Plan con bloqueo externo aceptado',
+    itcDescription: 'La excepción aprobada no puede reescribirse después del cierre.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const exceptionPlan = await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    iapcProjectId: exceptionProject.ipId,
+    iapcTaskId: exceptionTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+await createAuditCase(exceptionPlan.iapId, 'STU-EXC-001');
+await request(`/internships/audit-plans/${exceptionPlan.iapId}/activate`, {
+  token: admin.token,
+  method: 'POST',
+});
+const approvedExceptionJustification = 'El proveedor ficticio no está disponible; Diego acepta diferir este caso con el riesgo documentado.';
+const completedWithException = await request(`/internships/audit-plans/${exceptionPlan.iapId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: {
+    iapuCompletionJustification: approvedExceptionJustification,
+    iapuApproveException: true,
+    iapuStatus: 'completed',
+  },
+});
+assert.equal(completedWithException.iapStatus, 'completed');
+assert.equal(completedWithException.iapCompletionJustification, approvedExceptionJustification);
+assert.equal(completedWithException.iapCompletionApprovedBy, admin.partyId);
+assert.ok(completedWithException.iapCompletionApprovedAt);
+await request(`/internships/audit-plans/${exceptionPlan.iapId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { iapuCompletionJustification: 'Texto posterior que no debe reemplazar la aprobación original.' },
+});
+const immutableExceptionPlan = await request(`/internships/audit-plans/${exceptionPlan.iapId}`, { token: admin.token });
+assert.equal(immutableExceptionPlan.iapCompletionJustification, approvedExceptionJustification);
+assert.equal(immutableExceptionPlan.iapCompletionApprovedBy, completedWithException.iapCompletionApprovedBy);
+assert.equal(immutableExceptionPlan.iapCompletionApprovedAt, completedWithException.iapCompletionApprovedAt);
+
 const project = await request('/internships/projects', {
   token: admin.token,
   method: 'POST',

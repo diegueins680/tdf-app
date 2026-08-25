@@ -36,6 +36,7 @@ describe('studio internship audit API', () => {
 
     await InternAudit.listCases('plan/one');
     await InternAudit.completePlan('plan/one');
+    await InternAudit.completePlan('plan/exception', 'Bloqueo externo documentado y aprobado.');
     await InternAudit.createExecution('case/one', { itecStatus: 'failed', itecActualResult: 'Falla visible' });
     await InternAudit.updateExecution('execution/one', { itecStatus: 'in_progress', itecEvidenceSummary: 'Captura segura' });
     await InternAudit.createDailySummary('plan/one', {
@@ -52,6 +53,14 @@ describe('studio internship audit API', () => {
     expect(patchMock).toHaveBeenCalledWith(
       '/internships/audit-plans/plan%2Fone',
       { iapuStatus: 'completed' },
+    );
+    expect(patchMock).toHaveBeenCalledWith(
+      '/internships/audit-plans/plan%2Fexception',
+      {
+        iapuCompletionJustification: 'Bloqueo externo documentado y aprobado.',
+        iapuApproveException: true,
+        iapuStatus: 'completed',
+      },
     );
     expect(postMock).toHaveBeenCalledWith(
       '/internships/test-cases/case%2Fone/executions',
