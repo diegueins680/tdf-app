@@ -48,7 +48,7 @@ jest.unstable_mockModule('./RouteLoadingFallback', () => ({
   default: () => <div data-testid="route-loading" />,
 }));
 
-const { Shell } = await import('./AppShell');
+const { Shell, canonicalizeLegacySocialEventsPath } = await import('./AppShell');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -71,6 +71,8 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
             <Route path="/operacion/ordenes-marketplace" element={<div>Marketplace orders admin body</div>} />
             <Route path="/configuracion/estado" element={<div>System status body</div>} />
             <Route path="/inicio" element={<div>Home body</div>} />
+            <Route path="/social/eventos" element={<div>Public events body</div>} />
+            <Route path="/social/events" element={<div>Legacy events body</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -98,6 +100,27 @@ describe('Shell', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  it('canonicalizes the legacy social events route and preserves deep links', () => {
+    expect(canonicalizeLegacySocialEventsPath('/social/events', '?city=Quito', '#agenda'))
+      .toBe('/social/eventos?city=Quito#agenda');
+    expect(canonicalizeLegacySocialEventsPath('/social/events/94'))
+      .toBe('/social/eventos/94');
+    expect(canonicalizeLegacySocialEventsPath('/social/events-descubiertos'))
+      .toBeNull();
+  });
+
+  it('redirects the legacy social events route to the canonical agenda', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/social/events?city=Quito#agenda');
+
+    try {
+      expect(container.textContent).toContain('Public events body');
+    } finally {
+      await cleanup();
+    }
   });
 
   it('hides global floating helpers on the dense course registrations admin page', async () => {
