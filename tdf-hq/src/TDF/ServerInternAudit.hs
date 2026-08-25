@@ -8,9 +8,9 @@
 module TDF.ServerInternAudit
   ( internAuditServer
   , finalSummarySubmissionIsFresh
+  , projectStatusForTaskOutcomes
   , reportBlocksCompletion
   , reportStateCountsForFailure
-  , shouldCompleteProject
   , validateExecutionStatus
   , validateReportableText
   ) where
@@ -142,12 +142,12 @@ internAuditServer user =
         roles <- either (throwError . serverFailure) pure rolesResult
         unless (M.Intern `elem` roles) $
           throwError err400 { errBody = "proposedAssignee must have the Intern role" }
-      now <- liftIO getCurrentTime
       entity <- withPool $ do
         _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
           [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
         _ <- (rawSql "SELECT id::text FROM intern_task WHERE id = ? FOR UPDATE"
           [toPersistValue taskKey] :: SqlPersistT IO [Single Text])
+        now <- liftIO getCurrentTime
         project <- get projectKey
         task <- get taskKey
         case (project, task) of
@@ -216,7 +216,6 @@ internAuditServer user =
     updatePlanH rawPlanId IA.InternAuditPlanUpdate{..} = do
       ensureAdmin
       ent@(Entity planKey plan) <- loadPlan rawPlanId
-      now <- liftIO getCurrentTime
       justification <- case iapuCompletionJustification of
         Nothing -> pure Nothing
         Just Nothing -> pure (Just Nothing)
@@ -242,64 +241,57 @@ internAuditServer user =
             [ fmap (ME.InternAuditPlanCompletionJustification =.) justification
             , fmap (ME.InternAuditPlanStatus =.) requestedStatus
             ]
-          approvalUpdates =
-            if requestedStatus == Just "completed"
-              then [ ME.InternAuditPlanCompletionApprovedBy =. Just (auPartyId user)
-                   , ME.InternAuditPlanCompletionApprovedAt =. Just now
-                   , ME.InternAuditPlanCompletionExceptionApproved =. approvesException
-                   ]
-              else []
       transitioned <- withPool $ do
-        changed <- updateWhereCount
-          [ ME.InternAuditPlanId ==. planKey
-          , ME.InternAuditPlanStatus ==. ME.internAuditPlanStatus plan
-          ]
-          (updates ++ approvalUpdates ++ [ME.InternAuditPlanUpdatedAt =. now])
-        if changed /= 1
+        when (requestedStatus `elem` [Just "completed", Just "cancelled"]) $
+          lockInternProject (ME.internAuditPlanProjectId plan)
+        statusMatches <- lockAuditPlanInStatus planKey (ME.internAuditPlanStatus plan)
+        if not statusMatches
           then pure False
           else do
-            case requestedStatus of
-              Just "completed" -> do
-                updateWhere
-                  [ ME.InternFinalSummaryPlanId ==. planKey
-                  , ME.InternFinalSummarySubmittedAt !=. Nothing
-                  ]
-                  [ ME.InternFinalSummaryApprovedBy =. Just (auPartyId user)
-                  , ME.InternFinalSummaryApprovedAt =. Just now
-                  , ME.InternFinalSummaryUpdatedAt =. now
-                  ]
-                update (ME.internAuditPlanTaskId plan)
-                  [ ME.InternTaskStatus =. "done"
-                  , ME.InternTaskProgress =. 100
-                  , ME.InternTaskUpdatedAt =. now
-                  ]
-                remainingTasks <- count
-                  [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
-                  , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
-                  , ME.InternTaskStatus /<-. ["done", "cancelled"]
-                  ]
-                when (shouldCompleteProject remainingTasks) $
-                  update (ME.internAuditPlanProjectId plan)
-                    [ ME.InternProjectStatus =. "completed"
-                    , ME.InternProjectUpdatedAt =. now
-                    ]
-              Just "cancelled" -> do
-                update (ME.internAuditPlanTaskId plan)
-                  [ ME.InternTaskStatus =. "cancelled"
-                  , ME.InternTaskUpdatedAt =. now
-                  ]
-                remainingTasks <- count
-                  [ ME.InternTaskProjectId ==. ME.internAuditPlanProjectId plan
-                  , ME.InternTaskId !=. ME.internAuditPlanTaskId plan
-                  , ME.InternTaskStatus /<-. ["done", "cancelled"]
-                  ]
-                when (remainingTasks == 0) $
-                  update (ME.internAuditPlanProjectId plan)
-                    [ ME.InternProjectStatus =. "cancelled"
-                    , ME.InternProjectUpdatedAt =. now
-                    ]
-              _ -> pure ()
-            pure True
+            now <- liftIO getCurrentTime
+            let approvalUpdates =
+                  if requestedStatus == Just "completed"
+                    then [ ME.InternAuditPlanCompletionApprovedBy =. Just (auPartyId user)
+                         , ME.InternAuditPlanCompletionApprovedAt =. Just now
+                         , ME.InternAuditPlanCompletionExceptionApproved =. approvesException
+                         ]
+                    else []
+            changed <- updateWhereCount
+              [ ME.InternAuditPlanId ==. planKey
+              , ME.InternAuditPlanStatus ==. ME.internAuditPlanStatus plan
+              ]
+              (updates ++ approvalUpdates ++ [ME.InternAuditPlanUpdatedAt =. now])
+            if changed /= 1
+              then pure False
+              else do
+                case requestedStatus of
+                  Just "completed" -> do
+                    updateWhere
+                      [ ME.InternFinalSummaryPlanId ==. planKey
+                      , ME.InternFinalSummarySubmittedAt !=. Nothing
+                      ]
+                      [ ME.InternFinalSummaryApprovedBy =. Just (auPartyId user)
+                      , ME.InternFinalSummaryApprovedAt =. Just now
+                      , ME.InternFinalSummaryUpdatedAt =. now
+                      ]
+                    update (ME.internAuditPlanTaskId plan)
+                      [ ME.InternTaskStatus =. "done"
+                      , ME.InternTaskProgress =. 100
+                      , ME.InternTaskUpdatedAt =. now
+                      ]
+                    updateProjectFromTaskOutcomes
+                      (ME.internAuditPlanProjectId plan)
+                      now
+                  Just "cancelled" -> do
+                    update (ME.internAuditPlanTaskId plan)
+                      [ ME.InternTaskStatus =. "cancelled"
+                      , ME.InternTaskUpdatedAt =. now
+                      ]
+                    updateProjectFromTaskOutcomes
+                      (ME.internAuditPlanProjectId plan)
+                      now
+                  _ -> pure ()
+                pure True
       unless transitioned $
         throwError err409 { errBody = "Audit plan changed during this update; reload it before retrying" }
       audit "intern_audit_plan" rawPlanId "updated"
@@ -320,27 +312,24 @@ internAuditServer user =
       roles <- either (throwError . serverFailure) pure rolesResult
       unless (M.Intern `elem` roles) $
         throwError err409 { errBody = "The proposed assignee does not have the Intern role" }
-      caseCount <- withPool $ count
-        [ ME.InternTestCasePlanId ==. planKey
-        , ME.InternTestCaseApplicable ==. True
-        ]
-      when (caseCount == 0) $
-        throwError err409 { errBody = "At least one applicable test case is required before activation" }
       testTransport <- liftIO isTestRuntime
-      now <- liftIO getCurrentTime
-      let activationDay = utctDay now
-          dueDay = addDays (fromIntegral (ME.internAuditPlanDurationDays plan)) activationDay
       activated <- withPool $ do
-        changed <- updateWhereCount
-          [ ME.InternAuditPlanId ==. planKey
-          , ME.InternAuditPlanStatus ==. "draft"
+        lockInternProject (ME.internAuditPlanProjectId plan)
+        draft <- lockDraftAuditPlan planKey
+        caseCount <- count
+          [ ME.InternTestCasePlanId ==. planKey
+          , ME.InternTestCaseApplicable ==. True
           ]
-          [ ME.InternAuditPlanStatus =. "active"
-          , ME.InternAuditPlanUpdatedAt =. now
-          ]
-        if changed /= 1
+        if not draft || caseCount == 0
           then pure False
           else do
+            now <- liftIO getCurrentTime
+            let activationDay = utctDay now
+                dueDay = addDays (fromIntegral (ME.internAuditPlanDurationDays plan)) activationDay
+            update planKey
+              [ ME.InternAuditPlanStatus =. "active"
+              , ME.InternAuditPlanUpdatedAt =. now
+              ]
             update (ME.internAuditPlanProjectId plan)
               [ ME.InternProjectActivationStatus =. "active"
               , ME.InternProjectStatus =. "active"
@@ -381,7 +370,8 @@ internAuditServer user =
               }
             pure True
       unless activated $
-        throwError err409 { errBody = "Audit plan changed before activation; reload it before retrying" }
+        throwError err409
+          { errBody = "Audit plan changed before activation or has no applicable test cases; reload it before retrying" }
       audit "intern_audit_plan" rawPlanId "activated" Nothing
       updated <- withPool $ getJustEntity planKey
       toPlanDTO updated
@@ -496,14 +486,14 @@ internAuditServer user =
       evidenceSummary <- validatedOptional "evidenceSummary" 5000 itecEvidenceSummary
       validateExecutionPayload status actualResult blockerReason
       validateStrongEvidence testCase status evidenceSummary
-      now <- liftIO getCurrentTime
-      let startedAt = if status == "pending" then Nothing else Just now
-          completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
       result <- withPool $ do
         active <- lockActiveAuditPlan planKey
         if not active
           then pure Nothing
           else do
+            now <- liftIO getCurrentTime
+            let startedAt = if status == "pending" then Nothing else Just now
+                completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
             lockInternTestExecutionSequence caseKey
             latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
               [Desc ME.InternTestExecutionExecutionNumber]
@@ -556,10 +546,7 @@ internAuditServer user =
           evidenceSummary = fromMaybe (ME.internTestExecutionEvidenceSummary execution) evidenceSummaryUpdate
       validateExecutionPayload status actualResult blockerReason
       validateStrongEvidence testCase status evidenceSummary
-      now <- liftIO getCurrentTime
-      let startedAt = ME.internTestExecutionStartedAt execution <|?> if status == "pending" then Nothing else Just now
-          completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
-          updates = catMaybes
+      let updates = catMaybes
             [ fmap (ME.InternTestExecutionStatus =.) iteuStatusCanonical
             , fmap (ME.InternTestExecutionActualResult =.) actualResultUpdate
             , fmap (ME.InternTestExecutionPersistedStateObserved =.) persistedStateUpdate
@@ -573,6 +560,9 @@ internAuditServer user =
         if not active
           then pure (Left ("finalized" :: Text))
           else do
+            now <- liftIO getCurrentTime
+            let startedAt = ME.internTestExecutionStartedAt execution <|?> if status == "pending" then Nothing else Just now
+                completedAt = if status `elem` terminalExecutionStatuses then Just now else Nothing
             changed <- updateWhereCount
               [ ME.InternTestExecutionId ==. executionKey
               , ME.InternTestExecutionStatus ==. ME.internTestExecutionStatus execution
@@ -619,12 +609,12 @@ internAuditServer user =
       blockers <- validatedOptional "blockers" 5000 idscBlockers
       when (idscCasesCompleted < 0 || idscReportsCreated < 0) $
         throwError err400 { errBody = "Summary counts must not be negative" }
-      now <- liftIO getCurrentTime
       result <- withPool $ do
         active <- lockActiveAuditPlan planKey
         if not active
           then pure Nothing
           else do
+            now <- liftIO getCurrentTime
             summaryId <- insert ME.InternDailySummary
               { ME.internDailySummaryTaskId = ME.internAuditPlanTaskId plan
               , ME.internDailySummaryAuthorPartyId = auPartyId user
@@ -1081,8 +1071,14 @@ finalSummarySubmissionIsFresh Nothing _ = False
 finalSummarySubmissionIsFresh (Just submittedAt) sourceUpdates =
   all (<= submittedAt) sourceUpdates
 
-shouldCompleteProject :: Int -> Bool
-shouldCompleteProject = (== 0)
+projectStatusForTaskOutcomes :: [Text] -> Maybe Text
+projectStatusForTaskOutcomes statuses
+  | null statuses = Nothing
+  | any (`notElem` terminalStatuses) statuses = Nothing
+  | all (== "cancelled") statuses = Just "cancelled"
+  | otherwise = Just "completed"
+  where
+    terminalStatuses = ["done", "cancelled"]
 
 validateExecutionPayload :: MonadError ServerError m => Text -> Maybe Text -> Maybe Text -> m ()
 validateExecutionPayload status actualResult blockerReason = do
@@ -1175,6 +1171,26 @@ lockInternAuditNotification planKey template = do
     [PersistText ("intern-audit-notification:" <> toPathPiece planKey <> ":" <> template)]
     :: SqlPersistT IO [Single Int64])
   pure ()
+
+lockInternProject :: ME.InternProjectId -> SqlPersistT IO ()
+lockInternProject projectKey = do
+  _ <- (rawSql
+    "SELECT id FROM intern_project WHERE id = ? FOR UPDATE"
+    [toPersistValue projectKey]
+    :: SqlPersistT IO [Single ME.InternProjectId])
+  pure ()
+
+updateProjectFromTaskOutcomes
+  :: ME.InternProjectId
+  -> UTCTime
+  -> SqlPersistT IO ()
+updateProjectFromTaskOutcomes projectKey now = do
+  tasks <- selectList [ME.InternTaskProjectId ==. projectKey] []
+  forM_ (projectStatusForTaskOutcomes (map (ME.internTaskStatus . entityVal) tasks)) $ \status ->
+    update projectKey
+      [ ME.InternProjectStatus =. status
+      , ME.InternProjectUpdatedAt =. now
+      ]
 
 lockActiveAuditPlan :: ME.InternAuditPlanId -> SqlPersistT IO Bool
 lockActiveAuditPlan planKey = lockAuditPlanInStatus planKey "active"

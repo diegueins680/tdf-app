@@ -178,6 +178,68 @@ assert.equal(
   'active',
 );
 
+const mixedTerminalProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Proyecto con resultados terminales mixtos',
+    ipcDescription: 'Una tarea completada y otra cancelada deben cerrar el proyecto como completado.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
+const completedSiblingTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: mixedTerminalProject.ipId,
+    itcTitle: 'E2E — Trabajo hermano completado',
+    itcDescription: 'Este resultado debe tener prioridad sobre una cancelación hermana.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'active',
+  },
+});
+await request(`/internships/tasks/${completedSiblingTask.itId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ituStatus: 'done', ituProgress: 100 },
+});
+const mixedCancelledTask = await request('/internships/tasks', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    itcProjectId: mixedTerminalProject.ipId,
+    itcTitle: 'E2E — Auditoría hermana cancelada',
+    itcDescription: 'Cancelar la última tarea no debe ocultar el trabajo hermano completado.',
+    itcProposedAssignee: intern.partyId,
+    itcActivationStatus: 'draft',
+  },
+});
+const mixedCancelledPlan = await request('/internships/audit-plans', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    iapcProjectId: mixedTerminalProject.ipId,
+    iapcTaskId: mixedCancelledTask.itId,
+    iapcEnvironment: 'staging',
+    iapcProposedAssignee: intern.partyId,
+  },
+});
+await request(`/internships/audit-plans/${mixedCancelledPlan.iapId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { iapuStatus: 'cancelled' },
+});
+const projectsAfterMixedTerminalOutcomes = await request('/internships/projects', { token: admin.token });
+assert.equal(
+  projectsAfterMixedTerminalOutcomes.find((candidate) => candidate.ipId === mixedTerminalProject.ipId)?.ipStatus,
+  'completed',
+);
+
 const racingTask = await request('/internships/tasks', {
   token: admin.token,
   method: 'POST',
@@ -453,9 +515,9 @@ const concurrentExecutionUpdates = await Promise.all([
     token: intern.token,
     method: 'PATCH',
     json: {
-      iteuStatus: 'failed',
-      iteuActualResult: 'La ejecución concurrente observó un fallo sintético.',
-      iteuEvidenceSummary: 'EVIDENCIA-E2E-CONCURRENT-FAIL',
+      iteuStatus: 'passed',
+      iteuActualResult: 'La ejecución concurrente confirmó una segunda respuesta válida.',
+      iteuEvidenceSummary: 'EVIDENCIA-E2E-CONCURRENT-PASS-ALTERNATE',
     },
   }),
 ]);

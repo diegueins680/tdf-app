@@ -250,9 +250,9 @@ import TDF.ServerInternships
       validateOptionalInternTaskStatusInput )
 import TDF.ServerInternAudit
     ( finalSummarySubmissionIsFresh,
+      projectStatusForTaskOutcomes,
       reportBlocksCompletion,
       reportStateCountsForFailure,
-      shouldCompleteProject,
       validateExecutionStatus,
       validateReportableText )
 import TDF.ServerProposals
@@ -13046,7 +13046,7 @@ main = hspec $ do
                 Left err -> errHTTPCode err `shouldBe` 400
                 Right value -> expectationFailure ("Expected control rejection, got " <> show value)
 
-        it "keeps completion tied to submitted reports, completed retests, and every project task" $ do
+        it "keeps completion tied to submitted reports and completed retests" $ do
             let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)
             reportStateCountsForFailure "draft" (Just submittedAt) `shouldBe` False
             reportStateCountsForFailure "submitted" (Just submittedAt) `shouldBe` True
@@ -13056,8 +13056,14 @@ main = hspec $ do
             reportBlocksCompletion False "received" `shouldBe` False
             reportBlocksCompletion True "confirmed" `shouldBe` True
             reportBlocksCompletion True "closed" `shouldBe` False
-            shouldCompleteProject 0 `shouldBe` True
-            shouldCompleteProject 1 `shouldBe` False
+
+        it "derives a deterministic project terminal state from every sibling outcome" $ do
+            projectStatusForTaskOutcomes [] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["done", "todo"] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["cancelled", "blocked"] `shouldBe` Nothing
+            projectStatusForTaskOutcomes ["cancelled", "cancelled"] `shouldBe` Just "cancelled"
+            projectStatusForTaskOutcomes ["done", "cancelled"] `shouldBe` Just "completed"
+            projectStatusForTaskOutcomes ["cancelled", "done"] `shouldBe` Just "completed"
 
         it "requires final-summary submission to be at least as new as its source data" $ do
             let submittedAt = UTCTime (fromGregorian 2026 8 23) (secondsToDiffTime 3600)

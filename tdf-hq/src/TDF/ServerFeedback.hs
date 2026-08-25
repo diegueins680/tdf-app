@@ -299,13 +299,13 @@ internalFeedbackServer user =
         ifcTestCaseId
         ifcTestExecutionId
       validateTraceability trace
-      now <- liftIO getCurrentTime
       contactEmail <- withPool $ maybe Nothing M.partyPrimaryEmail <$> get (auPartyId user)
       entitiesResult <- withPool $ do
         planActive <- maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
         if not planActive
           then pure Nothing
           else Just <$> do
+            now <- liftIO getCurrentTime
             feedbackId <- insert Feedback
               { feedbackTitle = title
               , feedbackDescription = description
@@ -452,7 +452,6 @@ internalFeedbackServer user =
       duplicateUpdate <- traverse (traverse (resolveDuplicateTarget reportKey)) ifuDuplicateOf
       videoLinksUpdate <- traverse validateVideoLinks ifuVideoLinks
       githubIssueUpdate <- traverse (traverse validateGithubIssueUrl) ifuGithubIssueUrl
-      now <- liftIO getCurrentTime
       let effectiveClosureReason = case ifuClosureReason of
             Nothing -> ME.internalFeedbackReportClosureReason report
             Just _ -> fromMaybe Nothing closureReasonUpdate
@@ -493,15 +492,16 @@ internalFeedbackServer user =
             , fmap (ME.InternalFeedbackReportClosureReason =.) closureReasonUpdate
             , fmap (ME.InternalFeedbackReportGithubIssueUrl =.) githubIssueUpdate
             ]
-          closedUpdate = case stateUpdate of
-            Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
-            Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
-            _ -> []
       updateResult <- withPool $ do
         planActive <- lockActiveAuditPlanForReport report
         if not planActive
           then pure (Left ("finalized" :: Text))
           else do
+            now <- liftIO getCurrentTime
+            let closedUpdate = case stateUpdate of
+                  Just "closed" -> [ME.InternalFeedbackReportClosedAt =. Just now]
+                  Just _ | state == "closed" -> [ME.InternalFeedbackReportClosedAt =. Nothing]
+                  _ -> []
             retestPassed <- if stateUpdate == Just "verified"
               then do
                 latestRetest <- selectFirst
@@ -559,12 +559,12 @@ internalFeedbackServer user =
       unless (ME.internalFeedbackReportState report == "draft") $
         throwError err409 { errBody = "Only draft reports can be submitted" }
       validateSubmissionCompleteness report feedback
-      now <- liftIO getCurrentTime
       submissionResult <- withPool $ do
         planActive <- lockActiveAuditPlanForReport report
         if not planActive
           then pure (Left ("finalized" :: Text))
           else do
+            now <- liftIO getCurrentTime
             changed <- updateWhereCount
               [ ME.InternalFeedbackReportId ==. reportKey
               , ME.InternalFeedbackReportVersion ==. ME.internalFeedbackReportVersion report
@@ -621,7 +621,6 @@ internalFeedbackServer user =
         throwError err409 { errBody = "Additional information cannot be requested from the current state" }
       when (kind == "information_response" && ME.internalFeedbackReportReporterPartyId report /= auPartyId user) $
         throwError err403 { errBody = "Only the reporter may answer an information request" }
-      now <- liftIO getCurrentTime
       let nextState = case kind of
             "information_request" -> Just "needs_information"
             "information_response" | ME.internalFeedbackReportState report == "needs_information" -> Just "received"
@@ -631,6 +630,7 @@ internalFeedbackServer user =
         if not planActive
           then pure (Left ("finalized" :: Text))
           else do
+            now <- liftIO getCurrentTime
             stateAvailable <- case nextState of
               Nothing -> pure True
               Just target -> do
@@ -684,13 +684,13 @@ internalFeedbackServer user =
       either throwError pure (validateFeedbackAttachmentSize size)
       caption <- validateOptionalInternalText "caption" 1000 ifepCaption
       uploadRoot <- liftIO internalFeedbackUploadRoot
-      now <- liftIO getCurrentTime
       entResult <- withPool $ do
         planActive <- lockActiveAuditPlanForReport (entityVal reportEnt)
         if not planActive
           then pure Nothing
           else do
             storedPath <- liftIO $ storeInternalAttachment uploadRoot rawReportId safeName ifepAttachment
+            now <- liftIO getCurrentTime
             evidenceId <- insert ME.InternalFeedbackEvidence
               { ME.internalFeedbackEvidenceReportId = reportKey
               , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
@@ -715,12 +715,12 @@ internalFeedbackServer user =
       url <- validateExternalEvidenceUrl ifelUrl
       kind <- validateChoice "evidence kind" ["external_link", "video_link", "retest"] (fromMaybe "video_link" ifelKind)
       caption <- validateOptionalInternalText "caption" 1000 ifelCaption
-      now <- liftIO getCurrentTime
       entResult <- withPool $ do
         planActive <- lockActiveAuditPlanForReport (entityVal reportEnt)
         if not planActive
           then pure Nothing
           else do
+            now <- liftIO getCurrentTime
             evidenceId <- insert ME.InternalFeedbackEvidence
               { ME.internalFeedbackEvidenceReportId = reportKey
               , ME.internalFeedbackEvidenceUploadedBy = auPartyId user
@@ -775,12 +775,12 @@ internalFeedbackServer user =
       evidenceSummary <- validateOptionalInternalText "retestEvidenceSummary" 5000 ifrcEvidenceSummary
       unless (hasMeaningful notes && hasMeaningful evidenceSummary) $
         throwError err400 { errBody = "Retesting requires notes and an evidence summary" }
-      now <- liftIO getCurrentTime
       entResult <- withPool $ do
         planActive <- lockActiveAuditPlanForTask taskKey
         if not planActive
           then pure Nothing
           else do
+            now <- liftIO getCurrentTime
             lockInternTestExecutionSequence caseKey
             latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
               [Desc ME.InternTestExecutionExecutionNumber]
