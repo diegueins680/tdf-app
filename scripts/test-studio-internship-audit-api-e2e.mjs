@@ -549,6 +549,11 @@ const activated = await request(`/internships/audit-plans/${plan.iapId}/activate
   method: 'POST',
 });
 assert.equal(activated.iapStatus, 'active');
+const projectsAfterPrimaryActivation = await request('/internships/projects', { token: admin.token });
+const projectAfterPrimaryActivation = projectsAfterPrimaryActivation.find((candidate) => candidate.ipId === project.ipId);
+assert.equal(projectAfterPrimaryActivation?.ipStatus, 'active');
+assert.ok(projectAfterPrimaryActivation?.ipStartAt);
+assert.ok(projectAfterPrimaryActivation?.ipDueAt);
 await createAuditCase(plan.iapId, 'STU-E2E-LATE', {}, 409);
 const internPlan = await request(`/internships/audit-plans/${plan.iapId}`, { token: intern.token });
 assert.equal(internPlan.iapProposedAssignee, intern.partyId);
@@ -595,6 +600,90 @@ await request(`/internships/tasks/${task.itId}`, {
   expected: 409,
   json: { ituDueAt: '2099-01-01' },
 });
+for (const payload of [
+  { ipuStatus: 'cancelled' },
+  { ipuStartAt: '2099-01-01' },
+  { ipuDueAt: '2099-01-02' },
+]) {
+  await request(`/internships/projects/${project.ipId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    expected: 409,
+    json: payload,
+  });
+}
+const projectsAfterRejectedAuditProjectEdits = await request('/internships/projects', { token: admin.token });
+const projectAfterRejectedAuditProjectEdits = projectsAfterRejectedAuditProjectEdits.find(
+  (candidate) => candidate.ipId === project.ipId,
+);
+assert.equal(projectAfterRejectedAuditProjectEdits?.ipStatus, projectAfterPrimaryActivation.ipStatus);
+assert.equal(projectAfterRejectedAuditProjectEdits?.ipStartAt, projectAfterPrimaryActivation.ipStartAt);
+assert.equal(projectAfterRejectedAuditProjectEdits?.ipDueAt, projectAfterPrimaryActivation.ipDueAt);
+
+const siblingScheduleProject = await request('/internships/projects', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ipcTitle: 'E2E — Proyecto con dos auditorías hermanas',
+    ipcDescription: 'La segunda activación no debe reiniciar ni acortar el calendario compartido.',
+    ipcStatus: 'active',
+    ipcActivationStatus: 'draft',
+  },
+});
+const createSiblingSchedulePlan = async (suffix, durationDays) => {
+  const scheduleTask = await request('/internships/tasks', {
+    token: admin.token,
+    method: 'POST',
+    expected: 201,
+    json: {
+      itcProjectId: siblingScheduleProject.ipId,
+      itcTitle: `E2E — Auditoría hermana ${suffix}`,
+      itcDescription: 'Fixture de calendario agregado para planes hermanos.',
+      itcProposedAssignee: intern.partyId,
+      itcActivationStatus: 'draft',
+    },
+  });
+  const schedulePlan = await request('/internships/audit-plans', {
+    token: admin.token,
+    method: 'POST',
+    expected: 201,
+    json: {
+      iapcProjectId: siblingScheduleProject.ipId,
+      iapcTaskId: scheduleTask.itId,
+      iapcEnvironment: 'staging',
+      iapcDurationDays: durationDays,
+      iapcProposedAssignee: intern.partyId,
+    },
+  });
+  await createAuditCase(schedulePlan.iapId, `STU-SIBLING-SCHEDULE-${suffix}`, {
+    itccCriticality: 'low',
+    itccEvidenceRequirement: 'light',
+  });
+  return schedulePlan;
+};
+const longSiblingSchedulePlan = await createSiblingSchedulePlan('LONG', 30);
+const shortSiblingSchedulePlan = await createSiblingSchedulePlan('SHORT', 7);
+await request(`/internships/audit-plans/${longSiblingSchedulePlan.iapId}/activate`, {
+  token: admin.token,
+  method: 'POST',
+});
+const projectsAfterFirstSiblingActivation = await request('/internships/projects', { token: admin.token });
+const projectAfterFirstSiblingActivation = projectsAfterFirstSiblingActivation.find(
+  (candidate) => candidate.ipId === siblingScheduleProject.ipId,
+);
+assert.ok(projectAfterFirstSiblingActivation?.ipStartAt);
+assert.ok(projectAfterFirstSiblingActivation?.ipDueAt);
+await request(`/internships/audit-plans/${shortSiblingSchedulePlan.iapId}/activate`, {
+  token: admin.token,
+  method: 'POST',
+});
+const projectsAfterSecondSiblingActivation = await request('/internships/projects', { token: admin.token });
+const projectAfterSecondSiblingActivation = projectsAfterSecondSiblingActivation.find(
+  (candidate) => candidate.ipId === siblingScheduleProject.ipId,
+);
+assert.equal(projectAfterSecondSiblingActivation?.ipStartAt, projectAfterFirstSiblingActivation.ipStartAt);
+assert.equal(projectAfterSecondSiblingActivation?.ipDueAt, projectAfterFirstSiblingActivation.ipDueAt);
 
 const midpointExecutions = await Promise.all([
   request(`/internships/test-cases/${testCase.itcId}/executions`, {

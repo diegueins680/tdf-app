@@ -153,6 +153,7 @@ internAuditServer user =
         case (project, task) of
           (Just projectValue, Just taskValue)
             | ME.internTaskProjectId taskValue == projectKey
+              && ME.internProjectStatus projectValue == "active"
               && ME.internProjectActivationStatus projectValue == "draft"
               && not (ME.internProjectNotificationsEnabled projectValue)
               && not (isJust (ME.internProjectActivatedAt projectValue))
@@ -326,8 +327,18 @@ internAuditServer user =
           then pure False
           else do
             now <- liftIO getCurrentTime
+            project <- getJust (ME.internAuditPlanProjectId plan)
             let activationDay = utctDay now
                 dueDay = addDays (fromIntegral (ME.internAuditPlanDurationDays plan)) activationDay
+                projectActivatedAt = case ME.internProjectActivatedAt project of
+                  Nothing -> Just now
+                  existing -> existing
+                projectStartDay = case ME.internProjectActivatedAt project of
+                  Nothing -> activationDay
+                  Just _ -> maybe activationDay (min activationDay) (ME.internProjectStartAt project)
+                projectDueDay = case ME.internProjectActivatedAt project of
+                  Nothing -> dueDay
+                  Just _ -> maybe dueDay (max dueDay) (ME.internProjectDueAt project)
             update planKey
               [ ME.InternAuditPlanStatus =. "active"
               , ME.InternAuditPlanUpdatedAt =. now
@@ -335,10 +346,10 @@ internAuditServer user =
             update (ME.internAuditPlanProjectId plan)
               [ ME.InternProjectActivationStatus =. "active"
               , ME.InternProjectStatus =. "active"
-              , ME.InternProjectActivatedAt =. Just now
+              , ME.InternProjectActivatedAt =. projectActivatedAt
               , ME.InternProjectNotificationsEnabled =. True
-              , ME.InternProjectStartAt =. Just activationDay
-              , ME.InternProjectDueAt =. Just dueDay
+              , ME.InternProjectStartAt =. Just projectStartDay
+              , ME.InternProjectDueAt =. Just projectDueDay
               , ME.InternProjectUpdatedAt =. now
               ]
             update (ME.internAuditPlanTaskId plan)

@@ -30,7 +30,7 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import           Data.Time                  (Day, diffUTCTime, getCurrentTime)
-import           Database.Persist           (Entity(..), Key, SelectOpt(..), delete, getBy, getEntity, getJustEntity, insert, selectList, toPersistValue, update, (==.), (=.), (<-.))
+import           Database.Persist           (Entity(..), Key, SelectOpt(..), count, delete, getBy, getEntity, getJustEntity, insert, selectList, toPersistValue, update, (==.), (=.), (<-.))
 import           Database.Persist.Sql       (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
 import           Servant
 import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPiece)
@@ -539,29 +539,43 @@ internshipsServer user =
     updateProjectH rawId InternProjectUpdate{..} = do
       ensureAdmin
       projectKey <- parseKey @ME.InternProject rawId
-      now <- liftIO getCurrentTime
       titleUpdate <- either throwError pure (validateInternProjectTitleUpdate ipuTitle)
       statusUpdate <- either throwError pure (validateOptionalInternProjectStatusInput ipuStatus)
-      mEntity <- withPool $ getEntity projectKey
-      ent <- maybe (throwError err404) pure mEntity
-      let project = entityVal ent
-      either throwError pure $
-        validateInternProjectDateUpdate
-          (ME.internProjectStartAt project)
-          (ME.internProjectDueAt project)
-          ipuStartAt
-          ipuDueAt
-      let updates = catMaybes
+      let auditControlledUpdate = isJust ipuStatus || isJust ipuStartAt || isJust ipuDueAt
+          updates = catMaybes
             [ fmap (ME.InternProjectTitle =.) titleUpdate
             , fmap (ME.InternProjectDescription =.) ipuDescription
             , fmap (ME.InternProjectStatus =.) statusUpdate
             , fmap (ME.InternProjectStartAt =.) ipuStartAt
             , fmap (ME.InternProjectDueAt =.) ipuDueAt
             ]
-      unless (null updates) $
-        withPool $ update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
-      updated <- withPool $ getJustEntity projectKey
-      pure (toProjectDTO updated)
+      result <- withPool $ do
+        _ <- (rawSql "SELECT id::text FROM intern_project WHERE id = ? FOR UPDATE"
+          [toPersistValue projectKey] :: SqlPersistT IO [Single Text])
+        mEntity <- getEntity projectKey
+        case mEntity of
+          Nothing -> pure (Left err404)
+          Just ent -> do
+            let project = entityVal ent
+            auditPlanCount <- if auditControlledUpdate
+              then count [ME.InternAuditPlanProjectId ==. projectKey]
+              else pure 0
+            if auditPlanCount > 0
+              then pure (Left err409
+                { errBody = "Audit project status and schedule are controlled by its audit plans"
+                })
+              else case validateInternProjectDateUpdate
+                (ME.internProjectStartAt project)
+                (ME.internProjectDueAt project)
+                ipuStartAt
+                ipuDueAt of
+                  Left err -> pure (Left err)
+                  Right () -> do
+                    now <- liftIO getCurrentTime
+                    unless (null updates) $
+                      update projectKey (updates ++ [ME.InternProjectUpdatedAt =. now])
+                    Right <$> getJustEntity projectKey
+      either throwError (pure . toProjectDTO) result
 
     listTasksH :: (MonadReader Env m, MonadIO m, MonadError ServerError m) => m [InternTaskDTO]
     listTasksH = do
