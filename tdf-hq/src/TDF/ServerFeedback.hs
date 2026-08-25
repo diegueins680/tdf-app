@@ -527,17 +527,17 @@ internalFeedbackServer user =
             Just (Just targetKey) -> targetKey
             _ -> reportKey
       updateResult <- withPool $ do
-        lockedReports <- lockInternalFeedbackReportsForUpdate reportKey targetKeyForLock
-        case find ((== reportKey) . entityKey) lockedReports of
-          Nothing -> pure (Left ("changed" :: Text))
-          Just (Entity _ lockedReport)
-            | ME.internalFeedbackReportVersion lockedReport /= ME.internalFeedbackReportVersion report ->
-                pure (Left "changed")
-            | otherwise -> do
-              planActive <- lockActiveAuditPlanForReport lockedReport
-              if not planActive
-                then pure (Left "finalized")
-                else do
+        planActive <- lockActiveAuditPlanForReport report
+        if not planActive
+          then pure (Left ("finalized" :: Text))
+          else do
+            lockedReports <- lockInternalFeedbackReportsForUpdate reportKey targetKeyForLock
+            case find ((== reportKey) . entityKey) lockedReports of
+              Nothing -> pure (Left "changed")
+              Just (Entity _ lockedReport)
+                | ME.internalFeedbackReportVersion lockedReport /= ME.internalFeedbackReportVersion report ->
+                    pure (Left "changed")
+                | otherwise -> do
                   duplicateResolution <- case duplicateTargetUpdate of
                     Nothing
                       | state == "duplicate" && effectiveState /= "duplicate" ->
@@ -841,7 +841,7 @@ internalFeedbackServer user =
     createRetestH rawReportId InternalFeedbackRetestCreate{..} = do
       ensureInternalAccess
       (reportEnt@(Entity reportKey report), _) <- loadAccessibleReport rawReportId
-      unless (ME.internalFeedbackReportState report == "ready_for_retest" || isAdminUser) $
+      unless (ME.internalFeedbackReportState report == "ready_for_retest") $
         throwError err409 { errBody = "This report is not ready for retesting" }
       result <- validateChoice "retest result" ["passed", "failed", "blocked"] ifrcResult
       explicitExecutionKey <- traverse (parseInternalKey @ME.InternTestExecution) ifrcExecutionId
@@ -858,50 +858,66 @@ internalFeedbackServer user =
       entResult <- withPool $ do
         planActive <- lockActiveAuditPlanForTask taskKey
         if not planActive
-          then pure Nothing
+          then pure (Left ("finalized" :: Text))
           else do
-            now <- liftIO getCurrentTime
-            lockInternTestExecutionSequence caseKey
-            latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
-              [Desc ME.InternTestExecutionExecutionNumber]
-            let nextNumber = maybe 1
-                  ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
-                  latest
-                executionStatus = case result of
-                  "passed" -> "verified"
-                  other -> other
-            executionKey <- insert ME.InternTestExecution
-              { ME.internTestExecutionTestCaseId = caseKey
-              , ME.internTestExecutionExecutionNumber = nextNumber
-              , ME.internTestExecutionExecutorPartyId = auPartyId user
-              , ME.internTestExecutionStatus = executionStatus
-              , ME.internTestExecutionActualResult = notes
-              , ME.internTestExecutionPersistedStateObserved = Nothing
-              , ME.internTestExecutionSideEffectsObserved = Nothing
-              , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
-              , ME.internTestExecutionEvidenceSummary = evidenceSummary
-              , ME.internTestExecutionStartedAt = Just now
-              , ME.internTestExecutionCompletedAt = Just now
-              , ME.internTestExecutionCreatedAt = now
-              , ME.internTestExecutionUpdatedAt = now
-              }
-            retestId <- insert ME.InternalFeedbackRetest
-              { ME.internalFeedbackRetestReportId = reportKey
-              , ME.internalFeedbackRetestExecutionId = Just executionKey
-              , ME.internalFeedbackRetestTesterPartyId = auPartyId user
-              , ME.internalFeedbackRetestResult = result
-              , ME.internalFeedbackRetestNotes = notes
-              , ME.internalFeedbackRetestEvidenceSummary = evidenceSummary
-              , ME.internalFeedbackRetestCreatedAt = now
-              }
-            update reportKey
-              [ ME.InternalFeedbackReportRetestResult =. Just result
-              , ME.InternalFeedbackReportVersion +=. 1
-              , ME.InternalFeedbackReportUpdatedAt =. now
-              ]
-            insertHistory reportKey "retest_recorded" Nothing (Just result)
-            Just <$> getJustEntity retestId
-      ent <- maybe (throwError finalizedReportMutationConflict) pure entResult
+            lockedReports <- lockInternalFeedbackReportsForUpdate reportKey reportKey
+            case find ((== reportKey) . entityKey) lockedReports of
+              Nothing -> pure (Left "changed")
+              Just (Entity _ lockedReport)
+                | ME.internalFeedbackReportVersion lockedReport /= ME.internalFeedbackReportVersion report ->
+                    pure (Left "changed")
+                | ME.internalFeedbackReportState lockedReport /= "ready_for_retest" ->
+                    pure (Left "not_ready")
+                | otherwise -> do
+                    now <- liftIO getCurrentTime
+                    lockInternTestExecutionSequence caseKey
+                    latest <- selectFirst [ME.InternTestExecutionTestCaseId ==. caseKey]
+                      [Desc ME.InternTestExecutionExecutionNumber]
+                    let nextNumber = maybe 1
+                          ((+ 1) . ME.internTestExecutionExecutionNumber . entityVal)
+                          latest
+                        executionStatus = case result of
+                          "passed" -> "verified"
+                          other -> other
+                    executionKey <- insert ME.InternTestExecution
+                      { ME.internTestExecutionTestCaseId = caseKey
+                      , ME.internTestExecutionExecutionNumber = nextNumber
+                      , ME.internTestExecutionExecutorPartyId = auPartyId user
+                      , ME.internTestExecutionStatus = executionStatus
+                      , ME.internTestExecutionActualResult = notes
+                      , ME.internTestExecutionPersistedStateObserved = Nothing
+                      , ME.internTestExecutionSideEffectsObserved = Nothing
+                      , ME.internTestExecutionBlockerReason = if result == "blocked" then notes else Nothing
+                      , ME.internTestExecutionEvidenceSummary = evidenceSummary
+                      , ME.internTestExecutionStartedAt = Just now
+                      , ME.internTestExecutionCompletedAt = Just now
+                      , ME.internTestExecutionCreatedAt = now
+                      , ME.internTestExecutionUpdatedAt = now
+                      }
+                    retestId <- insert ME.InternalFeedbackRetest
+                      { ME.internalFeedbackRetestReportId = reportKey
+                      , ME.internalFeedbackRetestExecutionId = Just executionKey
+                      , ME.internalFeedbackRetestTesterPartyId = auPartyId user
+                      , ME.internalFeedbackRetestResult = result
+                      , ME.internalFeedbackRetestNotes = notes
+                      , ME.internalFeedbackRetestEvidenceSummary = evidenceSummary
+                      , ME.internalFeedbackRetestCreatedAt = now
+                      }
+                    update reportKey
+                      [ ME.InternalFeedbackReportRetestResult =. Just result
+                      , ME.InternalFeedbackReportVersion +=. 1
+                      , ME.InternalFeedbackReportUpdatedAt =. now
+                      ]
+                    insertHistory reportKey "retest_recorded" Nothing (Just result)
+                    Right <$> getJustEntity retestId
+      ent <- case entResult of
+        Left "finalized" -> throwError finalizedReportMutationConflict
+        Left "changed" -> throwError err409
+          { errBody = "Report changed before retest creation; reload it before retrying" }
+        Left "not_ready" -> throwError err409
+          { errBody = "This report is not ready for retesting" }
+        Left _ -> throwError err500
+        Right value -> pure value
       enqueueTeamNotification reportEnt "internal_feedback_retest_recorded" "immediate"
       recordAudit reportEnt "retest_recorded" (Just $ object ["result" .= result])
       toRetestDTO ent

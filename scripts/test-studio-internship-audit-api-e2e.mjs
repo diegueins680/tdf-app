@@ -1047,6 +1047,16 @@ const triaged = await request(`/feedback/internal/${reportId}`, {
 });
 assert.equal(triaged.ifrSummary.ifsPriority, 'high');
 assert.equal(triaged.ifrAssignedTo, admin.partyId);
+await request(`/feedback/internal/${reportId}/retests`, {
+  token: admin.token,
+  method: 'POST',
+  expected: 409,
+  json: {
+    ifrcResult: 'passed',
+    ifrcNotes: 'Un administrador tampoco puede adelantar el retest.',
+    ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-ADMIN-PREMATURO',
+  },
+});
 
 await request(`/feedback/internal/${reportId}/comments`, {
   token: admin.token,
@@ -1087,6 +1097,48 @@ for (const nextState of ['confirmed', 'in_progress', 'ready_for_retest']) {
     method: 'PATCH',
     json: { ifuState: nextState },
   });
+}
+
+const concurrentRetestAndReopen = await Promise.all([
+  requestStatus(`/feedback/internal/${reportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: 'in_progress' },
+  }),
+  requestStatus(`/feedback/internal/${reportId}/retests`, {
+    token: intern.token,
+    method: 'POST',
+    json: {
+      ifrcResult: 'failed',
+      ifrcNotes: 'Retest concurrente controlado para validar la serialización.',
+      ifrcEvidenceSummary: 'EVIDENCIA-E2E-RETEST-CONCURRENTE',
+    },
+  }),
+]);
+assert.ok(concurrentRetestAndReopen.every((status) => [200, 201, 409].includes(status)));
+assert.ok(concurrentRetestAndReopen.some((status) => status === 200 || status === 201));
+const reportAfterConcurrentRetest = await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+});
+if (concurrentRetestAndReopen.every((status) => status !== 409)) {
+  const concurrentRetest = reportAfterConcurrentRetest.ifrRetests.find(
+    (retest) => retest.ifrtEvidenceSummary === 'EVIDENCIA-E2E-RETEST-CONCURRENTE',
+  );
+  const reopenHistory = [...reportAfterConcurrentRetest.ifrHistory]
+    .reverse()
+    .find((history) => history.ifhNewState === 'in_progress');
+  assert.ok(concurrentRetest);
+  assert.ok(reopenHistory);
+  assert.ok(Date.parse(concurrentRetest.ifrtCreatedAt) <= Date.parse(reopenHistory.ifhCreatedAt));
+}
+if (reportAfterConcurrentRetest.ifrSummary.ifsState === 'in_progress') {
+  await request(`/feedback/internal/${reportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: 'ready_for_retest' },
+  });
+} else {
+  assert.equal(reportAfterConcurrentRetest.ifrSummary.ifsState, 'ready_for_retest');
 }
 
 await request(`/feedback/internal/${reportId}`, {
