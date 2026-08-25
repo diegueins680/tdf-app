@@ -22,12 +22,32 @@ import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
+const LEGACY_SOCIAL_EVENTS_PATH = '/social/events';
+
+export function canonicalizeLegacySocialEventsPath(
+  pathname: string,
+  search = '',
+  hash = '',
+) {
+  const isLegacyEventsPath =
+    pathname === LEGACY_SOCIAL_EVENTS_PATH
+    || pathname.startsWith(`${LEGACY_SOCIAL_EVENTS_PATH}/`);
+  if (!isLegacyEventsPath) return null;
+
+  const suffix = pathname.slice(LEGACY_SOCIAL_EVENTS_PATH.length);
+  return `/social/eventos${suffix}${search}${hash}`;
+}
 
 export function Shell() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const { session, loading } = useSession();
   const location = useLocation();
+  const legacyEventsTarget = canonicalizeLegacySocialEventsPath(
+    location.pathname,
+    location.search,
+    location.hash,
+  );
   const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
   const recordedPathRef = useRef('');
   const navigationPreferences = useNavigationPreferences(Boolean(session));
@@ -106,7 +126,7 @@ export function Shell() {
   }, [isDesktop, sidebarCollapsed]);
 
   useEffect(() => {
-    if (!session || loading) return;
+    if (!session || loading || legacyEventsTarget) return;
     const decision = evaluatePathAccess(location.pathname, {
       authenticated: true,
       roles: session.roles,
@@ -130,10 +150,14 @@ export function Shell() {
         route_registered: false,
       });
     }
-  }, [loading, location.pathname, navigationPreferences.visit, session]);
+  }, [legacyEventsTarget, loading, location.pathname, navigationPreferences.visit, session]);
 
   if (loading) {
     return <RouteLoadingFallback />;
+  }
+
+  if (legacyEventsTarget) {
+    return <Navigate to={legacyEventsTarget} replace />;
   }
 
   if (!session) {
