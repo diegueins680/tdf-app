@@ -117,10 +117,13 @@ apply_file tdf-hq/sql/2026-08-21_studio_internship_audit.sql
 apply_file tdf-hq/sql/2026-08-21_studio_internship_audit.sql
 apply_file tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql
 apply_file tdf-hq/sql/2026-08-24_studio_audit_completion_exception.sql
+apply_file tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql
+apply_file tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql
 
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.tables WHERE table_name IN ('intern_audit_plan','intern_test_case','intern_test_execution','internal_feedback_report','internal_feedback_evidence','internal_feedback_history');")" "6" "normalized workflow tables"
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.columns WHERE table_name='intern_task' AND column_name IN ('activation_status','proposed_assignee');")" "2" "draft task columns"
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.columns WHERE table_name='intern_audit_plan' AND column_name='completion_exception_approved';")" "1" "explicit completion exception column"
+assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM pg_trigger WHERE tgname='trg_enforce_intern_audit_historical_failures' AND NOT tgisinternal;")" "1" "historical failure completion gate"
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party(id,display_name,primary_email) VALUES
@@ -295,6 +298,8 @@ INSERT INTO intern_test_execution(
 SQL
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM intern_test_execution WHERE test_case_id='50000000-0000-4000-8000-000000000002';")" "3" "retest preserves execution history"
 
+apply_file tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate_rollback.sql
+assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM pg_trigger WHERE tgname='trg_enforce_intern_audit_historical_failures' AND NOT tgisinternal;")" "0" "historical failure gate rollback"
 apply_file tdf-hq/sql/2026-08-21_studio_internship_audit_rollback.sql
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM information_schema.tables WHERE table_name='internal_feedback_report';")" "0" "rollback removes normalized internal workflow"
 assert_equal "$(psql_exec -Atqc "SELECT count(*) FROM feedback WHERE id='70000000-0000-4000-8000-000000000001';")" "1" "rollback preserves legacy feedback"

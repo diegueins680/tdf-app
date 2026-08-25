@@ -28,6 +28,7 @@ test('staging baseline covers every migration before the studio audit and leaves
   assert.doesNotMatch(sql, /\('2026-08-21_studio_internship_audit', '[0-9a-f]{64}',/u);
   assert.doesNotMatch(sql, /\('2026-08-24_ticket_qr_constraint_compatibility', '[0-9a-f]{64}',/u);
   assert.doesNotMatch(sql, /\('2026-08-24_studio_audit_completion_exception', '[0-9a-f]{64}',/u);
+  assert.doesNotMatch(sql, /\('2026-08-24_studio_audit_historical_failure_gate', '[0-9a-f]{64}',/u);
   assert.match(sql, /ON CONFLICT \(migration_id\) DO NOTHING/u);
   assert.match(sql, /RENAME CONSTRAINT unique_ticket_q_r_code TO unique_ticket_qr_code/u);
   assert.match(sql, /uq_event_ticket_order_stripe_payment_intent[\s\S]*stripe_payment_intent_id IS NOT NULL/u);
@@ -65,6 +66,8 @@ test('runtime-only staging replay is independently guarded and excludes migratio
   assert.match(sql, /BEGIN CANONICAL STAGING RUNTIME MIGRATION 2026-08-02_ddex_catalog_core/u);
   assert.match(sql, /DDEX synthetic bootstrap identifiers exceed the canonical integer range/u);
   assert.match(sql, /CREATE TABLE IF NOT EXISTS commerce_checkout_session/u);
+  assert.match(sql, /Synthetic staging requires one active es locale reference/u);
+  assert.match(sql, /item\.code = 'es'[\s\S]*default_locale = TRUE/u);
   assert.equal(sql.match(/^BEGIN;\s*$/gmu)?.length, 1);
   assert.equal(sql.match(/^COMMIT;\s*$/gmu)?.length, 1);
   assert.doesNotMatch(sql, /INSERT INTO public\.tdf_schema_migration/u);

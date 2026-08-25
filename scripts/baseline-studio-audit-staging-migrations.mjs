@@ -65,6 +65,45 @@ ALTER TABLE public.ddex_import_plan
   ADD CONSTRAINT ddex_import_plan_document_id_fkey
     FOREIGN KEY (document_id) REFERENCES public.ddex_document(id) ON DELETE CASCADE;`;
 
+const stagingRegionalConfigSql = `-- Keep the deterministic staging database aligned with the staging runtime
+-- contract. Canonical internationalization seeds use English as their neutral
+-- default, while this Spanish-first internship environment explicitly uses es.
+DO $staging_locale_reference_guard$
+BEGIN
+  IF (
+    SELECT count(*)
+    FROM public.locale_reference
+    WHERE code = 'es' AND active AND deprecated_at IS NULL
+  ) <> 1 THEN
+    RAISE EXCEPTION 'Synthetic staging requires one active es locale reference';
+  END IF;
+END
+$staging_locale_reference_guard$;
+
+UPDATE public.deployment_locale_enablement enabled
+SET default_locale = FALSE,
+    updated_at = CURRENT_TIMESTAMP,
+    version = enabled.version + 1
+FROM public.locale_reference item
+WHERE enabled.locale_id = item.id
+  AND enabled.deployment_code = 'default'
+  AND enabled.default_locale
+  AND item.code <> 'es';
+
+INSERT INTO public.deployment_locale_enablement (
+  deployment_code, locale_id, enabled, default_locale, updated_at, version
+)
+SELECT 'default', item.id, TRUE, TRUE, CURRENT_TIMESTAMP, 1
+FROM public.locale_reference item
+WHERE item.code = 'es' AND item.active AND item.deprecated_at IS NULL
+ON CONFLICT (deployment_code, locale_id) DO UPDATE
+SET enabled = TRUE,
+    default_locale = TRUE,
+    updated_at = CURRENT_TIMESTAMP,
+    version = public.deployment_locale_enablement.version + 1
+WHERE NOT public.deployment_locale_enablement.enabled
+   OR NOT public.deployment_locale_enablement.default_locale;`;
+
 export function buildStudioAuditStagingRuntimeSql(entries) {
   const startIndex = entries.findIndex(({ id }) => id === runtimeMigrationStartId);
   if (startIndex < 0) {
@@ -131,6 +170,8 @@ ${ddexIntegerCompatibilitySql}
 -- BEGIN CANONICAL STAGING RUNTIME MIGRATION REPLAY
 ${runtimeSql}
 -- END CANONICAL STAGING RUNTIME MIGRATION REPLAY
+
+${stagingRegionalConfigSql}
 COMMIT;
 `;
 }

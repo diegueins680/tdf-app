@@ -56,6 +56,17 @@ BEGIN
         AND COALESCE(latest.status, 'pending') NOT IN ('passed', 'not_applicable', 'verified')
     ),
     count(*) FILTER (
+      WHERE test_case.applicable AND latest.status = 'failed'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM internal_feedback_report report
+          WHERE (report.test_case_id = test_case.id
+             OR report.test_execution_id = latest.execution_id)
+            AND report.state <> 'draft'
+            AND report.submitted_at IS NOT NULL
+        )
+    ),
+    count(*) FILTER (
       WHERE test_case.applicable
         AND test_case.evidence_requirement = 'strong'
         AND latest.status IN ('passed', 'failed', 'blocked', 'not_applicable', 'verified')
@@ -68,25 +79,10 @@ BEGIN
              OR report.test_execution_id = latest.execution_id
         )
     )
-  INTO missing_cases, missing_critical, missing_evidence
+  INTO missing_cases, missing_critical, failed_without_report, missing_evidence
   FROM intern_test_case test_case
   LEFT JOIN latest ON latest.test_case_id = test_case.id
   WHERE test_case.plan_id = target_plan.id;
-
-  SELECT count(*) INTO failed_without_report
-  FROM intern_test_execution execution
-  JOIN intern_test_case test_case ON test_case.id = execution.test_case_id
-  WHERE test_case.plan_id = target_plan.id
-    AND test_case.applicable
-    AND execution.status IN ('failed', 'blocked')
-    AND NOT EXISTS (
-      SELECT 1
-      FROM internal_feedback_report report
-      WHERE (report.test_case_id = test_case.id
-         OR report.test_execution_id = execution.id)
-        AND report.state <> 'draft'
-        AND report.submitted_at IS NOT NULL
-    );
 
   SELECT count(*) INTO unresolved_blockers
   FROM internal_feedback_report report
