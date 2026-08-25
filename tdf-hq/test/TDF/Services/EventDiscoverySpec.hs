@@ -381,6 +381,38 @@ spec = do
               Social.socialEventMetadata row
                 `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
 
+    it "keeps draft refreshes private without regressing an existing lifecycle state" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
+      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) event
+      lifecycleChanges <-
+        reconcileImportedEvents
+          pool
+          (fixtureTime 11 0)
+          [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+      lifecycleChanges `shouldBe` 0
+
+      importedRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case importedRef of
+        Nothing -> expectationFailure "Expected a persisted source reference"
+        Just (Entity _ ref) -> do
+          importedEvent <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+          (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEvent))
+            `shouldBe` Just "00000000-0000-4000-8000-000000000233"
+          (Social.socialEventMetadata =<< importedEvent)
+            `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
+
     it "preserves materialization publication holds across auto-publish refreshes" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
@@ -641,6 +673,9 @@ initializeEventDiscoverySchema = do
     "CREATE TABLE workflow_state (id TEXT PRIMARY KEY, workflow_id TEXT NOT NULL, code TEXT NOT NULL, name_es TEXT NOT NULL, name_en TEXT NOT NULL, active BOOLEAN NOT NULL)"
     []
   rawExecute
+    "CREATE TABLE workflow_transition (id INTEGER PRIMARY KEY, workflow_id TEXT NOT NULL, from_state_id TEXT NOT NULL, to_state_id TEXT NOT NULL, active BOOLEAN NOT NULL, required_permission_id TEXT NULL, requires_review BOOLEAN NOT NULL, requires_distinct_approver BOOLEAN NOT NULL, effective_from TIMESTAMP NULL, effective_until TIMESTAMP NULL)"
+    []
+  rawExecute
     "CREATE TABLE event_type (id TEXT PRIMARY KEY, catalog_id TEXT NOT NULL, code TEXT NOT NULL UNIQUE, name_es TEXT NOT NULL, name_en TEXT NOT NULL, current_slug TEXT NULL, active BOOLEAN NOT NULL, deprecated_at TIMESTAMP NULL, workflow_state_id TEXT NOT NULL, effective_from DATE NULL, effective_until DATE NULL)"
     []
   rawExecute
@@ -654,6 +689,9 @@ initializeEventDiscoverySchema = do
     []
   rawExecute
     "INSERT INTO workflow_state (id, workflow_id, code, name_es, name_en, active) VALUES ('51000000-0000-4000-8000-000000000001', '51000000-0000-4000-8000-000000000006', 'published', 'Publicado', 'Published', 1), ('00000000-0000-4000-8000-000000000231', '00000000-0000-4000-8000-000000000104', 'planning', 'En planificación', 'Planning', 1), ('00000000-0000-4000-8000-000000000232', '00000000-0000-4000-8000-000000000104', 'announced', 'Anunciado', 'Announced', 1), ('00000000-0000-4000-8000-000000000233', '00000000-0000-4000-8000-000000000104', 'on_sale', 'En venta', 'On sale', 1), ('00000000-0000-4000-8000-000000000234', '00000000-0000-4000-8000-000000000104', 'live', 'En vivo', 'Live', 1), ('00000000-0000-4000-8000-000000000235', '00000000-0000-4000-8000-000000000104', 'postponed', 'Pospuesto', 'Postponed', 1), ('00000000-0000-4000-8000-000000000236', '00000000-0000-4000-8000-000000000104', 'unavailable', 'No disponible', 'Unavailable', 1), ('00000000-0000-4000-8000-000000000237', '00000000-0000-4000-8000-000000000104', 'out_of_scope', 'Fuera de cobertura', 'Out of scope', 1), ('00000000-0000-4000-8000-000000000238', '00000000-0000-4000-8000-000000000104', 'completed', 'Completado', 'Completed', 1), ('00000000-0000-4000-8000-000000000239', '00000000-0000-4000-8000-000000000104', 'cancelled', 'Cancelado', 'Cancelled', 1)"
+    []
+  rawExecute
+    "INSERT INTO workflow_transition (id, workflow_id, from_state_id, to_state_id, active, required_permission_id, requires_review, requires_distinct_approver, effective_from, effective_until) VALUES (1, '00000000-0000-4000-8000-000000000104', '00000000-0000-4000-8000-000000000233', '00000000-0000-4000-8000-000000000237', 1, NULL, 0, 0, NULL, NULL)"
     []
   rawExecute
     "INSERT INTO event_type (id, catalog_id, code, name_es, name_en, current_slug, active, deprecated_at, workflow_state_id, effective_from, effective_until) VALUES ('51000000-0000-4000-8000-000000000002', '51000000-0000-4000-8000-000000000007', 'festival', 'Festival', 'Festival', 'festival', 1, NULL, '51000000-0000-4000-8000-000000000001', NULL, NULL)"

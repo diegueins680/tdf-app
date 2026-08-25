@@ -1755,7 +1755,11 @@ reconcileImportedEvents pool now activeCities =
                 (Map.toList activeCityKeys)
 
     updateImportedLifecycle eventKey eventRow status isPublic = do
-      workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
+      desiredWorkflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
+      workflowStateId <-
+        resolveAllowedImportedUpdateStateId
+          (Social.socialEventWorkflowStateId eventRow)
+          desiredWorkflowStateId
       update
         eventKey
         [ Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -1908,7 +1912,11 @@ refreshCanonicalVisibility now eventKey = do
                   (normalizeImportedSourceStatus . Social.externalEventRefSourceStatus)
                   bestActiveRef
           ticketUrl = bestActiveRef >>= Social.externalEventRefSourceUrl
-      workflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
+      desiredWorkflowStateId <- EventLifecycle.resolveActiveSocialEventStateId status
+      workflowStateId <-
+        resolveAllowedImportedUpdateStateId
+          (Social.socialEventWorkflowStateId eventRow)
+          desiredWorkflowStateId
       update
         eventKey
         [ Social.SocialEventWorkflowStateId =. Just workflowStateId
@@ -1955,6 +1963,24 @@ normalizeImportedSourceStatus rawStatus
   where
     normalized = T.toCaseFold (T.strip rawStatus)
 
+-- Automated imports may hide an event without regressing its persisted
+-- lifecycle. The catalog trigger is authoritative: use the desired state only
+-- when the database exposes a direct transition, otherwise preserve the
+-- current state and let metadata control public visibility.
+resolveAllowedImportedUpdateStateId ::
+  Maybe UUID ->
+  UUID ->
+  SqlPersistT IO UUID
+resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
+  case currentStateId of
+    Nothing -> pure desiredStateId
+    Just currentState -> do
+      allowed <-
+        EventLifecycle.socialEventTransitionAllowed
+          currentState
+          desiredStateId
+      pure (if allowed then desiredStateId else currentState)
+
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
   eventTypeUuid <- resolvePublishedEventTypeId now discoveredEventType
@@ -1970,7 +1996,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
           )
           existingRef
       effectiveAutoPublish = autoPublish && not materializationPublicationHeld
-  workflowStateId <-
+  desiredWorkflowStateId <-
     EventLifecycle.resolveActiveSocialEventStateId
       (if effectiveAutoPublish then discoveredEventStatus else "planning")
   (venueKey, venueCreated) <-
@@ -2001,7 +2027,12 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
                 then providerShouldReplaceCanonical discoveredEventProvider existingEventKey
                 else draftMayReplaceCanonical existingEventKey
         if shouldReplace
-          then
+          then do
+            existingEvent <- get existingEventKey
+            workflowStateId <-
+              resolveAllowedImportedUpdateStateId
+                (existingEvent >>= Social.socialEventWorkflowStateId)
+                desiredWorkflowStateId
             update
               existingEventKey
               [ Social.SocialEventTitle =. discoveredEventTitle
@@ -2040,7 +2071,12 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
                   then providerShouldReplaceCanonical discoveredEventProvider candidateKey
                   else draftMayReplaceCanonical candidateKey
               if shouldReplace
-                then
+                then do
+                  candidateEvent <- get candidateKey
+                  workflowStateId <-
+                    resolveAllowedImportedUpdateStateId
+                      (candidateEvent >>= Social.socialEventWorkflowStateId)
+                      desiredWorkflowStateId
                   update
                     candidateKey
                     [ Social.SocialEventTitle =. discoveredEventTitle
@@ -2067,7 +2103,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
                     , Social.socialEventVenueId = Just venueKey
                     , Social.socialEventTimezone = importedEventTimeZone discoveredEventVenue
                     , Social.socialEventEventTypeId = Just eventTypeUuid
-                    , Social.socialEventWorkflowStateId = Just workflowStateId
+                    , Social.socialEventWorkflowStateId = Just desiredWorkflowStateId
                     , Social.socialEventStartTime = discoveredEventStart
                     , Social.socialEventEndTime = Just discoveredEventEnd
                     , Social.socialEventPriceCents = discoveredEventPriceCents
