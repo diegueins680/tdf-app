@@ -14,8 +14,14 @@ const searchResponse = {
     imageUrl: 'https://images.example.test/synthetic-bassist.webp',
     location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
     sponsored: false, score: 0.8,
+  }, {
+    id: '44444444-4444-4444-8444-444444444444', type: 'profile', slug: 'profile-without-photo',
+    title: 'Profile Without Photo', summary: 'Fixture sin una foto cargada.',
+    imageUrl: null,
+    location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
+    sponsored: false, score: 0.7,
   }],
-  sponsoredItems: [], facets: { entityTypes: { profile: 1 }, cities: [], total: 1 },
+  sponsoredItems: [], facets: { entityTypes: { profile: 2 }, cities: [], total: 2 },
 };
 
 jest.unstable_mockModule('../api/directory', () => ({
@@ -65,6 +71,8 @@ describe('DirectorySearchPage', () => {
       await waitFor(() => {
         const profileImage = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Bassist"]');
         expect(profileImage?.src).toBe('https://images.example.test/synthetic-bassist.webp');
+        const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Imagen de referencia de Profile Without Photo"]');
+        expect(fallbackImage?.src).toBe('http://localhost/artist-fallback.svg');
       });
       await expectNoSeriousAccessibilityViolations(container);
     } finally {

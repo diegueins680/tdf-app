@@ -44,4 +44,33 @@ describe('UpcomingEventsPublicPage', () => {
       expect.objectContaining({ city: 'Quito', limit: 50 }),
     ));
   });
+
+  it('renders each event with its poster or the event fallback', async () => {
+    listPublicUpcomingEventsMock.mockResolvedValue([
+      {
+        publicUpcomingEventId: '94',
+        publicUpcomingEventTitle: 'Erick Brian en Quito – Tour 2026',
+        publicUpcomingEventDescription: 'Una noche de música en Quito.',
+        publicUpcomingEventStart: '2026-08-27T23:00:00Z',
+        publicUpcomingEventCity: 'Quito',
+        publicUpcomingEventImageUrl: 'https://images.example.test/erick-brian.jpeg',
+        publicUpcomingEventWorkflowStateCode: 'published',
+      },
+      {
+        publicUpcomingEventId: '84',
+        publicUpcomingEventTitle: 'Evento sin afiche',
+        publicUpcomingEventStart: '2026-08-28T23:00:00Z',
+        publicUpcomingEventCity: 'Quito',
+        publicUpcomingEventImageUrl: null,
+        publicUpcomingEventWorkflowStateCode: 'published',
+      },
+    ]);
+
+    renderPage();
+
+    const poster = await screen.findByRole('img', { name: 'Afiche de Erick Brian en Quito – Tour 2026' });
+    expect(poster.getAttribute('src')).toBe('https://images.example.test/erick-brian.jpeg');
+    const fallback = screen.getByRole('img', { name: 'Imagen de referencia para Evento sin afiche' });
+    expect(fallback.getAttribute('src')).toBe('http://localhost/event-fallback.svg');
+  });
 });
