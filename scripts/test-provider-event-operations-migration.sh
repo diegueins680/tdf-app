@@ -56,6 +56,7 @@ psql_exec -c "CREATE OR REPLACE FUNCTION trigger_set_timestamp() RETURNS trigger
 apply_file tdf-hq/sql/2026-08-04_service_storefront.sql
 apply_file tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
+apply_file tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql
 apply_file tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql
 apply_file tdf-hq/sql/2026-08-14_provider_event_operations.sql

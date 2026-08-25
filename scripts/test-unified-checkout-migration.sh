@@ -42,6 +42,16 @@ apply_migration() {
     < "$TDF_CHECKOUT_MIGRATION_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql" >/dev/null
 }
 
+apply_compatibility() {
+  docker exec -i -e "PGOPTIONS=-c statement_timeout=5000" "$TDF_CHECKOUT_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_checkout_migration_test \
+    < "$TDF_CHECKOUT_MIGRATION_ROOT/tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql" >/dev/null
+}
+
+rollback_compatibility() {
+  docker exec -i -e "PGOPTIONS=-c statement_timeout=5000" "$TDF_CHECKOUT_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_checkout_migration_test \
+    < "$TDF_CHECKOUT_MIGRATION_ROOT/tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility_rollback.sql" >/dev/null
+}
+
 rollback_migration() {
   docker exec -i -e "PGOPTIONS=-c statement_timeout=5000" "$TDF_CHECKOUT_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_checkout_migration_test \
     < "$TDF_CHECKOUT_MIGRATION_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core_rollback.sql" >/dev/null
@@ -49,11 +59,26 @@ rollback_migration() {
 
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 apply_migration
+apply_compatibility
+apply_compatibility
 
 table_count=$(psql_exec -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE 'commerce_%';")
 test "$table_count" = "18"
+rollback_compatibility
+legacy_binding_count=$(psql_exec -Atc "SELECT count(*) FROM pg_proc WHERE oid IN (
+  'commerce_validate_payment_attempt()'::regprocedure,
+  'commerce_validate_provider_binding()'::regprocedure
+) AND strpos(pg_get_functiondef(oid), '%ROWTYPE') > 0;")
+test "$legacy_binding_count" = "2"
 rollback_migration
 apply_migration
+apply_compatibility
+
+safe_binding_count=$(psql_exec -Atc "SELECT count(*) FROM pg_proc WHERE oid IN (
+  'commerce_validate_payment_attempt()'::regprocedure,
+  'commerce_validate_provider_binding()'::regprocedure
+) AND strpos(pg_get_functiondef(oid), '%ROWTYPE') = 0;")
+test "$safe_binding_count" = "2"
 
 checkout_id="10000000-0000-0000-0000-000000000001"
 payment_id="20000000-0000-0000-0000-000000000001"
@@ -140,4 +165,4 @@ if rollback_migration >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Unified checkout migration passed dry-run, rollback, binding, inbox, hold, and ledger constraint checks."
+echo "Unified checkout migration passed immutable checksum restoration, compatibility rollback/reapply, binding, inbox, hold, and ledger constraint checks."

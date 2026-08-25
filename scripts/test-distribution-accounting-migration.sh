@@ -39,7 +39,10 @@ apply_file() {
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-02_ddex_catalog_core.sql"
 apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql"
 apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-13_distribution_accounting_core.sql"
+apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql"
+apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql"
 
 schema_count=$(psql_exec -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_name IN (
   'distribution_product_version','distribution_release_version','distribution_rights_declaration',
@@ -50,8 +53,27 @@ schema_count=$(psql_exec -Atc "SELECT count(*) FROM information_schema.tables WH
   'distribution_beneficiary_payout_profile','distribution_payout');")
 test "$schema_count" = "17"
 
+apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql"
+legacy_binding_count=$(psql_exec -Atc "SELECT count(*) FROM pg_proc WHERE oid IN (
+  'distribution_validate_submission_gate()'::regprocedure,
+  'distribution_validate_delivery()'::regprocedure,
+  'distribution_validate_status_evidence()'::regprocedure,
+  'distribution_validate_recipient_status()'::regprocedure,
+  'distribution_validate_payout_gate()'::regprocedure
+) AND strpos(pg_get_functiondef(oid), '%ROWTYPE') > 0;")
+test "$legacy_binding_count" = "5"
 apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-13_distribution_accounting_core_rollback.sql"
 apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-13_distribution_accounting_core.sql"
+apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql"
+
+safe_binding_count=$(psql_exec -Atc "SELECT count(*) FROM pg_proc WHERE oid IN (
+  'distribution_validate_submission_gate()'::regprocedure,
+  'distribution_validate_delivery()'::regprocedure,
+  'distribution_validate_status_evidence()'::regprocedure,
+  'distribution_validate_recipient_status()'::regprocedure,
+  'distribution_validate_payout_gate()'::regprocedure
+) AND strpos(pg_get_functiondef(oid), '%ROWTYPE') = 0;")
+test "$safe_binding_count" = "5"
 
 release_id=$(psql_exec -Atc "INSERT INTO catalog_release(title,release_type,status) VALUES ('Migration Test Single','Single','Draft') RETURNING id;")
 version_id="40000000-0000-0000-0000-000000000001"
@@ -205,4 +227,4 @@ if apply_file "$TDF_DISTRIBUTION_ROOT/tdf-hq/sql/2026-08-13_distribution_account
   exit 1
 fi
 
-echo "Distribution migration passed rollback, lifecycle, split, package, evidence, royalty, separation-of-duty, and payout-gate checks."
+echo "Distribution migration passed immutable checksum restoration, compatibility rollback/reapply, lifecycle, split, package, evidence, royalty, separation-of-duty, and payout-gate checks."

@@ -116,6 +116,7 @@ psql_exec -c "
 " >/dev/null
 
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
+apply_file tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql
 apply_file tdf-hq/sql/2026-08-17_service_booking_manual_payments.sql
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql

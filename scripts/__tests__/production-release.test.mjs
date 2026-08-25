@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import {
@@ -133,6 +134,30 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   assert.ok(resumeIndex >= 0, 'resume migration must be registered');
   assert.equal(writerResumeIndex, resumeIndex + 1, 'writer resume must follow locale recovery');
   assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
+});
+
+test('already-applied production migrations retain their recorded checksums', () => {
+  const expected = new Map([
+    [
+      '../../tdf-hq/sql/2026-08-13_unified_checkout_core.sql',
+      '79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0',
+    ],
+    [
+      '../../tdf-hq/sql/2026-08-13_distribution_accounting_core.sql',
+      'ab983f7af3b192e6425b29096e800f7095ef185d288a0f639a280d1a5e361278',
+    ],
+    [
+      '../../tdf-hq/sql/2026-08-18_music_directory_profile_images.sql',
+      '63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312',
+    ],
+  ]);
+
+  for (const [relativePath, checksum] of expected) {
+    const actual = createHash('sha256')
+      .update(readFileSync(new URL(relativePath, import.meta.url)))
+      .digest('hex');
+    assert.equal(actual, checksum, `${relativePath} must remain byte-for-byte immutable`);
+  }
 });
 
 test('production release refuses to omit a migration outside the release ancestry', () => {
@@ -621,6 +646,17 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
   const sql = buildSchemaVerificationSql();
 
   assert.match(sql, /\\set\s+ON_ERROR_STOP\s+(?:on|1)/i);
+  for (const triggerMarker of [
+    'checkout_environment',
+    'attempt_provider',
+    'checkout_status',
+    'package_release_version_id',
+    'delivery_environment',
+    'evidence_delivery_attempt_id',
+    'statement_net_minor',
+  ]) {
+    assert.match(sql, new RegExp(triggerMarker));
+  }
   for (const requiredObject of [
     'event_ticket_order',
     'checkout_idempotency_key',

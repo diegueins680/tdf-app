@@ -101,6 +101,7 @@ psql_exec -c "
 " >/dev/null
 
 apply_file tdf-hq/sql/2026-08-13_unified_checkout_core.sql
+apply_file tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql
 apply_file tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql
 apply_file tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql
 apply_file tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql
