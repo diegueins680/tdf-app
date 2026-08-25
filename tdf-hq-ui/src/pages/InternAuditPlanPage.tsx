@@ -32,7 +32,7 @@ import type {
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
-import { executionEvidenceRequired } from './internAuditPlanLogic';
+import { dailySummaryMutationsAllowed, executionEvidenceRequired } from './internAuditPlanLogic';
 
 const STATUS_LABELS: Record<InternExecutionStatus, string> = {
   pending: 'Pendiente',
@@ -231,6 +231,9 @@ export default function InternAuditPlanPage() {
 
   const plan = planQuery.data;
   const loading = planQuery.isLoading || casesQuery.isLoading;
+  const canCreateDailySummary = plan
+    ? dailySummaryMutationsAllowed(plan.iapStatus, plan.iapProposedAssignee, session?.partyId)
+    : false;
 
   return (
     <PageShell
@@ -380,17 +383,21 @@ export default function InternAuditPlanPage() {
             <CardContent>
               <Stack spacing={2}>
                 <Typography variant="h5">Resumen de la jornada</Typography>
-                <Typography variant="body2">Registra primero tu salida en Prácticas y luego deja este resumen breve.</Typography>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField label="Fecha" type="date" value={daily.idscWorkDate} onChange={(event) => setDaily((current) => ({ ...current, idscWorkDate: event.target.value }))} InputLabelProps={{ shrink: true }} required />
-                  <TextField label="Minutos trabajados" type="number" value={daily.idscMinutesWorked} onChange={(event) => setDaily((current) => ({ ...current, idscMinutesWorked: Number(event.target.value) }))} inputProps={{ min: 1, max: 1440 }} required />
-                  <TextField label="Casos completados" type="number" value={daily.idscCasesCompleted} onChange={(event) => setDaily((current) => ({ ...current, idscCasesCompleted: Number(event.target.value) }))} inputProps={{ min: 0 }} />
-                  <TextField label="Reportes creados" type="number" value={daily.idscReportsCreated} onChange={(event) => setDaily((current) => ({ ...current, idscReportsCreated: Number(event.target.value) }))} inputProps={{ min: 0 }} />
-                </Stack>
-                <TextField label="Módulos probados" value={daily.idscModulesTested} onChange={(event) => setDaily((current) => ({ ...current, idscModulesTested: event.target.value }))} required multiline />
-                <TextField label="Bloqueos" value={daily.idscBlockers ?? ''} onChange={(event) => setDaily((current) => ({ ...current, idscBlockers: event.target.value }))} multiline />
-                <TextField label="Próximo paso" value={daily.idscNextStep} onChange={(event) => setDaily((current) => ({ ...current, idscNextStep: event.target.value }))} required multiline />
-                <Button variant="contained" onClick={() => saveDaily.mutate()} disabled={plan.iapStatus !== 'active' || saveDaily.isPending || !daily.idscModulesTested.trim() || !daily.idscNextStep.trim()}>Guardar resumen</Button>
+                {canCreateDailySummary ? <>
+                  <Typography variant="body2">Registra primero tu salida en Prácticas y luego deja este resumen breve.</Typography>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                    <TextField label="Fecha" type="date" value={daily.idscWorkDate} onChange={(event) => setDaily((current) => ({ ...current, idscWorkDate: event.target.value }))} InputLabelProps={{ shrink: true }} required />
+                    <TextField label="Minutos trabajados" type="number" value={daily.idscMinutesWorked} onChange={(event) => setDaily((current) => ({ ...current, idscMinutesWorked: Number(event.target.value) }))} inputProps={{ min: 1, max: 1440 }} required />
+                    <TextField label="Casos completados" type="number" value={daily.idscCasesCompleted} onChange={(event) => setDaily((current) => ({ ...current, idscCasesCompleted: Number(event.target.value) }))} inputProps={{ min: 0 }} />
+                    <TextField label="Reportes creados" type="number" value={daily.idscReportsCreated} onChange={(event) => setDaily((current) => ({ ...current, idscReportsCreated: Number(event.target.value) }))} inputProps={{ min: 0 }} />
+                  </Stack>
+                  <TextField label="Módulos probados" value={daily.idscModulesTested} onChange={(event) => setDaily((current) => ({ ...current, idscModulesTested: event.target.value }))} required multiline />
+                  <TextField label="Bloqueos" value={daily.idscBlockers ?? ''} onChange={(event) => setDaily((current) => ({ ...current, idscBlockers: event.target.value }))} multiline />
+                  <TextField label="Próximo paso" value={daily.idscNextStep} onChange={(event) => setDaily((current) => ({ ...current, idscNextStep: event.target.value }))} required multiline />
+                  <Button variant="contained" onClick={() => saveDaily.mutate()} disabled={saveDaily.isPending || !daily.idscModulesTested.trim() || !daily.idscNextStep.trim()}>Guardar resumen</Button>
+                </> : (
+                  <Alert severity="info">Sólo la persona asignada puede registrar el resumen mientras la auditoría está activa.</Alert>
+                )}
                 <Typography variant="body2">Jornadas registradas: {dailyQuery.data?.length ?? 0}</Typography>
               </Stack>
             </CardContent>

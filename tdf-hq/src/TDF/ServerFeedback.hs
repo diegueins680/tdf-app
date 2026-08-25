@@ -294,12 +294,12 @@ internalFeedbackServer user =
       actualResult <- validateOptionalInternalText "actualResult" 5000 ifcActualResult
       frequency <- validateOptionalInternalText "frequency" 160 ifcFrequency
       videoLinks <- validateVideoLinks ifcVideoLinks
-      trace <- resolveTraceability
+      requestedTrace <- resolveTraceability
         ifcInternshipProjectId
         ifcInternshipTaskId
         ifcTestCaseId
         ifcTestExecutionId
-      validateTraceability trace
+      trace <- validateTraceability requestedTrace
       contactEmail <- withPool $ maybe Nothing M.partyPrimaryEmail <$> get (auPartyId user)
       entitiesResult <- withPool $ do
         planActive <- maybe (pure True) lockActiveAuditPlanForTask (traceTaskId trace)
@@ -900,8 +900,24 @@ internalFeedbackServer user =
           | ME.internAuditPlanProjectId planValue /= projectKey ->
               throwError err400 { errBody = "The execution does not belong to the referenced project" }
         _ -> pure ()
-      unless isAdminUser $ case (traceTaskId, task) of
-        (Just taskKey, Just (Just taskValue))
+      let derivedPlan = executionPlan <|> testCasePlan
+          derivedTask = task >>= id
+          canonicalTaskId = traceTaskId
+            <|> (ME.internAuditPlanTaskId <$> derivedPlan)
+          canonicalTrace = Traceability
+            { traceProjectId = traceProjectId
+                <|> (ME.internAuditPlanProjectId <$> derivedPlan)
+                <|> (ME.internTaskProjectId <$> derivedTask)
+            , traceTaskId = canonicalTaskId
+            , traceTestCaseId = traceTestCaseId
+                <|> (ME.internTestExecutionTestCaseId <$> (execution >>= id))
+            , traceExecutionId = traceExecutionId
+            }
+      canonicalTask <- traverse
+        (loadTraceEntity "The traceability task does not exist")
+        canonicalTaskId
+      unless isAdminUser $ case (canonicalTaskId, canonicalTask) of
+        (Just taskKey, Just taskValue)
           | ME.internTaskActivationStatus taskValue == "active"
             && ME.internTaskAssignedTo taskValue == Just (auPartyId user) -> do
               auditPlan <- withPool $ getBy (ME.UniqueInternAuditPlanTask taskKey)
@@ -909,6 +925,7 @@ internalFeedbackServer user =
                 unless (ME.internAuditPlanStatus plan == "active") $
                   throwError err409 { errBody = "Finalized audit plans do not accept new reports" }
         _ -> throwError err403 { errBody = "Intern reports must link to the reporter's active assigned task" }
+      pure canonicalTrace
       where
         loadTracePlan Nothing = pure Nothing
         loadTracePlan (Just Nothing) = pure Nothing

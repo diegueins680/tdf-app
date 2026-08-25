@@ -118,6 +118,7 @@ test('@critical synthetic intern records a failed case and reaches a trace-linke
   await page.goto(`/practicas/auditorias/${planId}`);
   await expect(page.getByRole('heading', { name: 'Auditoría funcional y de experiencia del manejo del estudio' })).toBeVisible();
   await expect(page.getByText('Avance calculado: 1%')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardar resumen' })).toBeVisible();
   await page.getByText('STU-SCH-001').click();
   await page.getByLabel('Resultado').last().click();
   await page.getByRole('option', { name: 'Fallido' }).click();
@@ -137,6 +138,14 @@ test('@critical synthetic intern records a failed case and reaches a trace-linke
 
 test('@critical synthetic administrator can see all-report controls and prepare triage without activation', async ({ page }) => {
   await mockShell(page, 'StudioManager', 913);
+  await page.route(`**/internships/audit-plans/${planId}`, (route) => route.fulfill({ json: plan }));
+  await page.route(`**/internships/audit-plans/${planId}/cases`, (route) => route.fulfill({ json: [testCase] }));
+  await page.route(`**/internships/audit-plans/${planId}/daily-summaries`, (route) => route.fulfill({ json: [] }));
+  await page.route(`**/internships/audit-plans/${planId}/final-summary`, (route) => route.fulfill({ status: 404, json: { error: 'not submitted' } }));
+  await page.route(`**/internships/test-cases/${caseId}/executions`, (route) => route.fulfill({ json: [] }));
+  await page.goto(`/practicas/auditorias/${planId}`);
+  await expect(page.getByText('Sólo la persona asignada puede registrar el resumen mientras la auditoría está activa.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardar resumen' })).toHaveCount(0);
   const report = {
     ifsId: reportId, ifsTitle: 'Conflicto de sala no bloqueado', ifsReportType: 'error', ifsState: 'received',
     ifsModuleName: 'Calendario', ifsFeatureName: 'Conflicto de sala', ifsEnvironment: 'staging', ifsPlatform: 'web',

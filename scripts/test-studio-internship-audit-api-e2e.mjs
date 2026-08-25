@@ -613,6 +613,23 @@ const draftReport = await request('/feedback/internal', {
 const reportId = draftReport.ifrSummary.ifsId;
 assert.equal(draftReport.ifrSummary.ifsState, 'draft');
 assert.equal(draftReport.ifrAuditPlanMutable, true);
+const executionOnlyAdminDraft = await request('/feedback/internal', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ...reportCreate,
+    ifcTitle: 'Reporte administrativo derivado sólo desde la ejecución',
+    ifcInternshipProjectId: null,
+    ifcInternshipTaskId: null,
+    ifcTestCaseId: null,
+  },
+});
+assert.equal(executionOnlyAdminDraft.ifrSummary.ifsInternshipProjectId, project.ipId);
+assert.equal(executionOnlyAdminDraft.ifrSummary.ifsInternshipTaskId, task.itId);
+assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestCaseId, testCase.itcId);
+assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestExecutionId, failedExecution.itexId);
+assert.equal(executionOnlyAdminDraft.ifrAuditPlanMutable, true);
 
 const editedReport = await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
@@ -1017,6 +1034,17 @@ assert.equal(finalReport.ifrSummary.ifsState, 'closed');
 assert.equal(finalReport.ifrAuditPlanMutable, false);
 assert.ok(finalReport.ifrHistory.length >= 10);
 assert.equal(finalReport.ifrRetests.length, 2);
+const finalizedExecutionOnlyAdminDraft = await request(
+  `/feedback/internal/${executionOnlyAdminDraft.ifrSummary.ifsId}`,
+  { token: admin.token },
+);
+assert.equal(finalizedExecutionOnlyAdminDraft.ifrAuditPlanMutable, false);
+await request(`/feedback/internal/${executionOnlyAdminDraft.ifrSummary.ifsId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuPriority: 'low' },
+});
 const csv = await request('/feedback/internal/export.csv', { token: admin.token });
 assert.match(csv, /El guardado duplica el registro ficticio/);
 const exported = await request('/feedback/internal/export.json', { token: admin.token });
