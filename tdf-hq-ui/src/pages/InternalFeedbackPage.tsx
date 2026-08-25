@@ -31,7 +31,12 @@ import type { InternalReportState, InternalReportType } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
-import { internalReportContextDefaults, internalReportMutationsAllowed } from './internalFeedbackLogic';
+import {
+  internalReportAdminTransitions,
+  internalReportContextDefaults,
+  internalReportMutationsAllowed,
+  internalReportRetestAllowed,
+} from './internalFeedbackLogic';
 
 const CATEGORY_CATALOG = 'feedback-categories';
 const SEVERITY_CATALOG = 'feedback-severities';
@@ -71,21 +76,6 @@ const STATE_LABELS: Record<InternalReportState, string> = {
   closed: 'Cerrado',
   duplicate: 'Duplicado',
   discarded: 'Descartado',
-};
-
-const ADMIN_TRANSITIONS: Record<InternalReportState, InternalReportState[]> = {
-  draft: [],
-  submitted: [],
-  received: ['needs_information', 'confirmed', 'duplicate', 'discarded'],
-  needs_information: ['received', 'confirmed', 'discarded'],
-  confirmed: ['prioritized', 'in_progress', 'duplicate', 'discarded'],
-  prioritized: ['in_progress', 'discarded'],
-  in_progress: ['ready_for_retest', 'discarded'],
-  ready_for_retest: ['verified', 'in_progress'],
-  verified: ['closed', 'in_progress'],
-  closed: ['received'],
-  duplicate: ['received'],
-  discarded: ['received'],
 };
 
 const publishedItems = (page?: CatalogPage): CatalogItem[] =>
@@ -388,7 +378,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
           </Stack></CardContent></Card></Grid>
         </Grid>
 
-        {reportIsMutable && summary.ifsState === 'ready_for_retest' && <Card variant="outlined"><CardContent><Stack spacing={2}>
+        {internalReportRetestAllowed(summary.ifsState, summary.ifsTestCaseId, report.ifrAuditPlanMutable) && <Card variant="outlined"><CardContent><Stack spacing={2}>
           <Typography variant="h6">Registrar retest</Typography>
           <TextField select label="Resultado" value={retestResult} onChange={(event) => setRetestResult(event.target.value)}><MenuItem value="passed">Aprobado</MenuItem><MenuItem value="failed">Fallido</MenuItem><MenuItem value="blocked">Bloqueado</MenuItem></TextField>
           <TextField label="Qué comprobaste y evidencia" value={retestNotes} onChange={(event) => setRetestNotes(event.target.value)} multiline minRows={3} />
@@ -398,7 +388,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
         {isAdmin && reportIsMutable && <Card variant="outlined"><CardContent><Stack spacing={2}>
           <Typography variant="h6">Triage administrativo</Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={4}><TextField select label="Nuevo estado" value={adminUpdate.ifuState ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuState: event.target.value as InternalReportState }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{ADMIN_TRANSITIONS[summary.ifsState].map((state) => <MenuItem key={state} value={state}>{STATE_LABELS[state]}</MenuItem>)}</TextField></Grid>
+            <Grid item xs={12} md={4}><TextField select label="Nuevo estado" value={adminUpdate.ifuState ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuState: event.target.value as InternalReportState }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{internalReportAdminTransitions(summary.ifsState, summary.ifsTestCaseId).map((state) => <MenuItem key={state} value={state}>{STATE_LABELS[state]}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={4}><TextField select label="Severidad administrativa" value={adminUpdate.ifuAuthoritativeSeverityId ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuAuthoritativeSeverityId: event.target.value || null }))} fullWidth><MenuItem value="">Sin cambio</MenuItem>{catalogs.severities.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
             <Grid item xs={12} md={4}><TextField select label="Prioridad" value={adminUpdate.ifuPriority ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuPriority: event.target.value || null }))} fullWidth><MenuItem value="">Sin cambio</MenuItem><MenuItem value="low">Baja</MenuItem><MenuItem value="medium">Media</MenuItem><MenuItem value="high">Alta</MenuItem><MenuItem value="urgent">Urgente</MenuItem></TextField></Grid>
             <Grid item xs={12}><TextField label="Resolución" value={adminUpdate.ifuResolution ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuResolution: event.target.value || null }))} fullWidth multiline /></Grid>

@@ -876,6 +876,57 @@ assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestCaseId, testCase.itcId);
 assert.equal(executionOnlyAdminDraft.ifrSummary.ifsTestExecutionId, failedExecution.itexId);
 assert.equal(executionOnlyAdminDraft.ifrAuditPlanMutable, true);
 
+const standaloneAdminDraft = await request('/feedback/internal', {
+  token: admin.token,
+  method: 'POST',
+  expected: 201,
+  json: {
+    ...reportCreate,
+    ifcTitle: 'Reporte administrativo sin caso de prueba vinculado',
+    ifcCategoryId: ideaCategory.id,
+    ifcReportType: 'idea',
+    ifcInternshipProjectId: null,
+    ifcInternshipTaskId: null,
+    ifcTestCaseId: null,
+    ifcTestExecutionId: null,
+  },
+});
+const standaloneReportId = standaloneAdminDraft.ifrSummary.ifsId;
+assert.equal(standaloneAdminDraft.ifrSummary.ifsTestCaseId, null);
+await request(`/feedback/internal/${standaloneReportId}/submit`, { token: admin.token, method: 'POST' });
+for (const nextState of ['confirmed', 'in_progress']) {
+  await request(`/feedback/internal/${standaloneReportId}`, {
+    token: admin.token,
+    method: 'PATCH',
+    json: { ifuState: nextState },
+  });
+}
+await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 409,
+  json: { ifuState: 'ready_for_retest' },
+});
+const standaloneAfterRejectedRetest = await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+});
+assert.equal(standaloneAfterRejectedRetest.ifrSummary.ifsState, 'in_progress');
+const verifiedStandalone = await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: { ifuState: 'verified' },
+});
+assert.equal(verifiedStandalone.ifrSummary.ifsState, 'verified');
+const closedStandalone = await request(`/feedback/internal/${standaloneReportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  json: {
+    ifuState: 'closed',
+    ifuClosureReason: 'La idea independiente se revisó sin requerir un retest.',
+  },
+});
+assert.equal(closedStandalone.ifrSummary.ifsState, 'closed');
+
 await request(`/feedback/internal/${reportId}`, {
   token: intern.token,
   method: 'PATCH',
