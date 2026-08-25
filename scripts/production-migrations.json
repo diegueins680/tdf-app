@@ -325,6 +325,16 @@
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
       "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+    },
+    {
+      "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
+      "path": "tdf-hq/sql/2026-08-25_commerce_trigger_row_binding_compatibility.sql",
+      "introducedBy": "fa7621b3014923677916bdd2e6e2e2dea8bbf339"
+    },
+    {
+      "id": "2026-08-25_distribution_trigger_row_binding_compatibility",
+      "path": "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
+      "introducedBy": "fa7621b3014923677916bdd2e6e2e2dea8bbf339"
     }
   ]
 }
