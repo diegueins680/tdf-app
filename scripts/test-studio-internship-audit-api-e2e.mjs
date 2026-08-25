@@ -990,6 +990,15 @@ await request(`/feedback/internal/${reportId}`, {
   method: 'PATCH',
   json: { ifuState: 'received' },
 });
+await request(`/feedback/internal/${reportId}`, {
+  token: admin.token,
+  method: 'PATCH',
+  expected: 403,
+  json: {
+    ifuTitle: 'El administrador no puede reemplazar el contenido del reporte',
+    ifuActualResult: 'El administrador tampoco puede reemplazar la evidencia narrada.',
+  },
+});
 
 const duplicateSourceDraft = await request('/feedback/internal', {
   token: intern.token,
@@ -1053,6 +1062,12 @@ await request(`/feedback/internal/${reportId}`, {
   method: 'PATCH',
   expected: 403,
   json: { ifuBlocking: false },
+});
+await request(`/feedback/internal/${reportId}`, {
+  token: intern.token,
+  method: 'PATCH',
+  expected: 400,
+  json: { ifuActualResult: null },
 });
 await request(`/feedback/internal/${reportId}`, {
   token: intern.token,

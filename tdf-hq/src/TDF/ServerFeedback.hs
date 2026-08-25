@@ -400,20 +400,22 @@ internalFeedbackServer user =
             , isJust ifuClosureReason
             , isJust ifuGithubIssueUrl
             ]
-          hasReporterFields = or
+          hasReporterContentFields = or
             [ isJust ifuTitle, isJust ifuDescription, isJust ifuCategoryId
             , isJust ifuProposedSeverityId, isJust ifuReportType, isJust ifuModuleName
             , isJust ifuFeatureName, isJust ifuEnvironment, isJust ifuUrlOrScreen
             , isJust ifuPlatform, isJust ifuDevice, isJust ifuBrowser, isJust ifuLanguage
             , isJust ifuAccountRole, isJust ifuReproductionSteps, isJust ifuExpectedResult
-            , isJust ifuActualResult, isJust ifuFrequency, isJust ifuBlocking, isJust ifuVideoLinks
+            , isJust ifuActualResult, isJust ifuFrequency, isJust ifuVideoLinks
             ]
       unless (isAdminUser || owner) $ throwError err404
       when (not isAdminUser && hasAdminFields) $
         throwError err403 { errBody = "Only administrators may set authoritative severity, priority, assignment, resolution, duplicate, state, or closure" }
+      when (hasReporterContentFields && not owner) $
+        throwError err403 { errBody = "Only the reporter may update reporter-authored report content" }
       when (not isAdminUser && isJust ifuBlocking && state /= "draft") $
         throwError err403 { errBody = "Only administrators may change blocker classification after submission" }
-      when (not isAdminUser && hasReporterFields && state `notElem` ["draft", "needs_information"]) $
+      when (hasReporterContentFields && state `notElem` ["draft", "needs_information"]) $
         throwError err409 { errBody = "Submitted report fields may only be expanded when more information is requested" }
       titleUpdate <- traverse (either throwError pure . validateFeedbackTitle) ifuTitle
       descriptionUpdate <- traverse (either throwError pure . validateFeedbackDescription) ifuDescription
@@ -456,13 +458,33 @@ internalFeedbackServer user =
           throwError err400 { errBody = "A report cannot be a duplicate of itself" }
       videoLinksUpdate <- traverse validateVideoLinks ifuVideoLinks
       githubIssueUpdate <- traverse (traverse validateGithubIssueUrl) ifuGithubIssueUrl
-      let effectiveClosureReason = case ifuClosureReason of
+      let effectiveFeedback = feedback
+            { feedbackTitle = fromMaybe (feedbackTitle feedback) titleUpdate
+            , feedbackDescription = fromMaybe (feedbackDescription feedback) descriptionUpdate
+            }
+          effectiveReport = report
+            { ME.internalFeedbackReportReportType =
+                fromMaybe (ME.internalFeedbackReportReportType report) reportTypeUpdate
+            , ME.internalFeedbackReportReproductionSteps =
+                fromMaybe (ME.internalFeedbackReportReproductionSteps report) reproductionUpdate
+            , ME.internalFeedbackReportExpectedResult =
+                fromMaybe (ME.internalFeedbackReportExpectedResult report) expectedUpdate
+            , ME.internalFeedbackReportActualResult =
+                fromMaybe (ME.internalFeedbackReportActualResult report) actualUpdate
+            }
+          effectiveClosureReason = case ifuClosureReason of
             Nothing -> ME.internalFeedbackReportClosureReason report
             Just _ -> fromMaybe Nothing closureReasonUpdate
           effectiveState = fromMaybe state stateUpdate
           effectiveDuplicatePresent = case duplicateTargetUpdate of
             Nothing -> isJust (ME.internalFeedbackReportDuplicateOf report)
             Just target -> isJust target
+      when (state /= "draft" && hasReporterContentFields) $ do
+        validateSubmissionCompleteness effectiveReport effectiveFeedback
+        when (ME.internalFeedbackReportReportType report == "error") $
+          validateSubmissionCompleteness
+            effectiveReport { ME.internalFeedbackReportReportType = "error" }
+            effectiveFeedback
       when (stateUpdate == Just "closed" && not (hasMeaningful effectiveClosureReason)) $
         throwError err400 { errBody = "Closing a report requires a closure reason" }
       when (effectiveState == "duplicate" && not effectiveDuplicatePresent) $
