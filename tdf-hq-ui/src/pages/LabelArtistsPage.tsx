@@ -25,16 +25,26 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { DateTime } from 'luxon';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
-import type { ArtistProfileDTO, ArtistProfileUpsert } from '../api/types';
+import type {
+  ArtistProfileDTO,
+  ArtistProfileUpsert,
+  ArtistPromoDayReportDTO,
+  ArtistPromoSlotDTO,
+  ArtistPromoSlotUpsert,
+} from '../api/types';
 
 interface ArtistFormState {
   partyId: number | null;
@@ -52,6 +62,24 @@ interface ArtistFormState {
   genres: string;
   highlights: string;
 }
+
+interface PromotionFormState {
+  startTime: string;
+  medium: string;
+  program: string;
+  interviewerHost: string;
+  bandMembers: string;
+  status: string;
+  notes: string;
+}
+
+interface BannerState {
+  severity: 'success' | 'error' | 'info' | 'warning';
+  message: string;
+}
+
+const ECUADOR_TIMEZONE = 'America/Guayaquil';
+const DEFAULT_PROMOTION_TIME = '09:00';
 
 function buildEmptyForm(): ArtistFormState {
   return {
@@ -72,10 +100,77 @@ function buildEmptyForm(): ArtistFormState {
   };
 }
 
+function buildEmptyPromotionForm(): PromotionFormState {
+  return {
+    startTime: DEFAULT_PROMOTION_TIME,
+    medium: '',
+    program: '',
+    interviewerHost: '',
+    bandMembers: '',
+    status: '',
+    notes: '',
+  };
+}
+
 const toNullableField = (value: string) => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
+
+const todayInEcuador = () => DateTime.now().setZone(ECUADOR_TIMEZONE).toISODate() ?? '';
+
+const sortPromotionSlots = (slots: ArtistPromoSlotDTO[]) =>
+  [...slots].sort((a, b) => {
+    const timeCmp = a.apsStartTime.localeCompare(b.apsStartTime);
+    if (timeCmp !== 0) return timeCmp;
+    const mediumCmp = a.apsMedium.localeCompare(b.apsMedium);
+    if (mediumCmp !== 0) return mediumCmp;
+    return a.apsProgram.localeCompare(b.apsProgram);
+  });
+
+const buildPromotionPdfFilename = (artist: ArtistProfileDTO | null, day: string) => {
+  const base =
+    artist?.apSlug?.trim() ||
+    artist?.apDisplayName
+      ?.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') ||
+    `artista-${artist?.apArtistId ?? 'sin-id'}`;
+  return `promo-diario-${base}-${day}.pdf`;
+};
+
+const triggerBlobDownload = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const openBlobPreview = (blob: Blob, fallbackFileName: string) => {
+  const url = URL.createObjectURL(blob);
+  const previewWindow = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!previewWindow) {
+    triggerBlobDownload(blob, fallbackFileName);
+    return false;
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return true;
+};
+
+function promotionFormFromSlot(slot: ArtistPromoSlotDTO): PromotionFormState {
+  return {
+    startTime: slot.apsStartTime,
+    medium: slot.apsMedium,
+    program: slot.apsProgram,
+    interviewerHost: slot.apsInterviewerHost,
+    bandMembers: slot.apsBandMembers,
+    status: slot.apsStatus ?? '',
+    notes: slot.apsNotes ?? '',
+  };
+}
 
 function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
   return {
@@ -103,10 +198,15 @@ export default function LabelArtistsPage() {
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
   const [form, setForm] = useState<ArtistFormState>(buildEmptyForm);
   const [formError, setFormError] = useState<string | null>(null);
-  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [banner, setBanner] = useState<BannerState | null>(null);
   const [heroImageFileName, setHeroImageFileName] = useState('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
+  const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
+  const [promotionDay, setPromotionDay] = useState(todayInEcuador);
+  const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
+  const [promotionFormError, setPromotionFormError] = useState<string | null>(null);
+  const [editingPromotionId, setEditingPromotionId] = useState<number | null>(null);
 
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
@@ -120,11 +220,55 @@ export default function LabelArtistsPage() {
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
   const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const partyMap = useMemo(() => new Map(parties.map((p) => [p.partyId, p])), [parties]);
+  const selectedPromotionArtist = useMemo(
+    () => artists.find((artist) => artist.apArtistId === promotionArtistId) ?? null,
+    [artists, promotionArtistId],
+  );
+
+  const promotionsQuery = useQuery({
+    queryKey: ['admin', 'artist-promotions', promotionArtistId, promotionDay],
+    queryFn: () => Admin.listArtistPromoSlots(promotionArtistId!, promotionDay),
+    enabled: Boolean(promotionArtistId && promotionDay),
+  });
+  const promotionReportQuery = useQuery({
+    queryKey: ['admin', 'artist-promotion-report', promotionArtistId, promotionDay],
+    queryFn: () => Admin.getArtistPromoDayReport(promotionArtistId!, promotionDay),
+    enabled: Boolean(promotionArtistId && promotionDay),
+  });
+
+  const promotionSlots = useMemo(
+    () => sortPromotionSlots(promotionsQuery.data ?? []),
+    [promotionsQuery.data],
+  );
+  const promotionReport = useMemo<ArtistPromoDayReportDTO | null>(() => {
+    if (promotionReportQuery.data) return promotionReportQuery.data;
+    if (!selectedPromotionArtist) return null;
+    return {
+      apdArtistId: selectedPromotionArtist.apArtistId,
+      apdArtistName: selectedPromotionArtist.apDisplayName,
+      apdDay: promotionDay,
+      apdTimezone: `Hora de Ecuador (${ECUADOR_TIMEZONE})`,
+      apdDayHeader:
+        DateTime.fromISO(promotionDay, { zone: ECUADOR_TIMEZONE }).setLocale('es').toFormat("cccc d 'de' LLLL 'de' yyyy"),
+      apdEntries: promotionSlots,
+    };
+  }, [promotionDay, promotionReportQuery.data, promotionSlots, selectedPromotionArtist]);
 
   const sortedArtists = useMemo(
     () => [...artists].sort((a, b) => a.apDisplayName.localeCompare(b.apDisplayName)),
     [artists],
   );
+
+  useEffect(() => {
+    if (artists.length === 0) {
+      setPromotionArtistId(null);
+      return;
+    }
+    setPromotionArtistId((prev) =>
+      prev && artists.some((artist) => artist.apArtistId === prev) ? prev : artists[0].apArtistId,
+    );
+  }, [artists]);
+
   useEffect(() => {
     if (!form.heroImageUrl) {
       setHeroImageFileName('');
@@ -144,6 +288,12 @@ export default function LabelArtistsPage() {
     });
     setNoteDrafts((prev) => ({ ...draftMap, ...prev }));
   }, [artists, partyMap]);
+
+  useEffect(() => {
+    setPromotionForm(buildEmptyPromotionForm());
+    setPromotionFormError(null);
+    setEditingPromotionId(null);
+  }, [promotionArtistId, promotionDay]);
 
   const filteredArtists = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -206,12 +356,12 @@ export default function LabelArtistsPage() {
       return partyId;
     },
     onSuccess: async () => {
-      setBannerMessage('Nota guardada.');
+      setBanner({ severity: 'success', message: 'Nota guardada.' });
       await qc.invalidateQueries({ queryKey: ['parties'] });
       setNoteDrafts((prev) => prev);
     },
     onError: (err: unknown) => {
-      setBannerMessage(err instanceof Error ? err.message : 'No se pudo guardar la nota.');
+      setBanner({ severity: 'error', message: err instanceof Error ? err.message : 'No se pudo guardar la nota.' });
     },
   });
 
@@ -246,7 +396,7 @@ export default function LabelArtistsPage() {
       return Admin.upsertArtistProfile(body);
     },
     onSuccess: (dto) => {
-      setBannerMessage(`Perfil de ${dto.apDisplayName} guardado.`);
+      setBanner({ severity: 'success', message: `Perfil de ${dto.apDisplayName} guardado.` });
       setDialogOpen(false);
       setSelectedArtist(null);
       setForm(buildEmptyForm());
@@ -257,6 +407,102 @@ export default function LabelArtistsPage() {
     },
     onError: (err: unknown) => {
       setFormError(err instanceof Error ? err.message : 'No se pudo guardar el perfil.');
+    },
+  });
+
+  const savePromotionMutation = useMutation({
+    mutationFn: async ({
+      artistId,
+      day,
+      draft,
+      promotionId,
+    }: {
+      artistId: number;
+      day: string;
+      draft: PromotionFormState;
+      promotionId?: number | null;
+    }) => {
+      const payload: ArtistPromoSlotUpsert = {
+        apsuDay: day,
+        apsuStartTime: draft.startTime,
+        apsuMedium: draft.medium.trim(),
+        apsuProgram: draft.program.trim(),
+        apsuInterviewerHost: draft.interviewerHost.trim(),
+        apsuBandMembers: draft.bandMembers.trim(),
+        apsuStatus: toNullableField(draft.status),
+        apsuNotes: toNullableField(draft.notes),
+      };
+      if (!payload.apsuStartTime.trim()) {
+        throw new Error('Define una hora para el espacio promocional.');
+      }
+      if (!payload.apsuMedium) throw new Error('El medio es obligatorio.');
+      if (!payload.apsuProgram) throw new Error('El programa es obligatorio.');
+      if (!payload.apsuInterviewerHost) throw new Error('El entrevistador o host es obligatorio.');
+      if (!payload.apsuBandMembers) throw new Error('Indica los miembros participantes.');
+      return promotionId
+        ? Admin.updateArtistPromoSlot(artistId, promotionId, payload)
+        : Admin.createArtistPromoSlot(artistId, payload);
+    },
+    onSuccess: async (slot, variables) => {
+      setBanner({
+        severity: 'success',
+        message: variables.promotionId ? 'Espacio promocional actualizado.' : 'Espacio promocional creado.',
+      });
+      setPromotionForm(buildEmptyPromotionForm());
+      setPromotionFormError(null);
+      setEditingPromotionId(null);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin', 'artist-promotions', slot.apsArtistId, variables.day] }),
+        qc.invalidateQueries({ queryKey: ['admin', 'artist-promotion-report', slot.apsArtistId, variables.day] }),
+      ]);
+    },
+    onError: (err: unknown) => {
+      setPromotionFormError(err instanceof Error ? err.message : 'No se pudo guardar el espacio promocional.');
+    },
+  });
+
+  const deletePromotionMutation = useMutation({
+    mutationFn: ({ artistId, promotionId }: { artistId: number; promotionId: number; day: string }) =>
+      Admin.deleteArtistPromoSlot(artistId, promotionId),
+    onSuccess: async (_, variables) => {
+      if (editingPromotionId === variables.promotionId) {
+        setPromotionForm(buildEmptyPromotionForm());
+        setPromotionFormError(null);
+        setEditingPromotionId(null);
+      }
+      setBanner({ severity: 'success', message: 'Espacio promocional eliminado.' });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin', 'artist-promotions', variables.artistId, variables.day] }),
+        qc.invalidateQueries({ queryKey: ['admin', 'artist-promotion-report', variables.artistId, variables.day] }),
+      ]);
+    },
+    onError: (err: unknown) => {
+      setBanner({ severity: 'error', message: err instanceof Error ? err.message : 'No se pudo eliminar el espacio promocional.' });
+    },
+  });
+
+  const previewPdfMutation = useMutation({
+    mutationFn: ({ artistId, day }: { artistId: number; day: string }) => Admin.getArtistPromoPdfBlob(artistId, day),
+    onSuccess: (blob) => {
+      const opened = openBlobPreview(blob, buildPromotionPdfFilename(selectedPromotionArtist, promotionDay));
+      setBanner({
+        severity: 'success',
+        message: opened ? 'Vista previa PDF abierta en otra pestaña.' : 'No se pudo abrir la pestaña; descargamos el PDF.',
+      });
+    },
+    onError: (err: unknown) => {
+      setBanner({ severity: 'error', message: err instanceof Error ? err.message : 'No se pudo abrir la vista previa PDF.' });
+    },
+  });
+
+  const downloadPdfMutation = useMutation({
+    mutationFn: ({ artistId, day }: { artistId: number; day: string }) => Admin.getArtistPromoPdfBlob(artistId, day),
+    onSuccess: (blob) => {
+      triggerBlobDownload(blob, buildPromotionPdfFilename(selectedPromotionArtist, promotionDay));
+      setBanner({ severity: 'success', message: 'PDF de promoción descargado.' });
+    },
+    onError: (err: unknown) => {
+      setBanner({ severity: 'error', message: err instanceof Error ? err.message : 'No se pudo descargar el PDF de promoción.' });
     },
   });
 
@@ -294,6 +540,54 @@ export default function LabelArtistsPage() {
     void qc.invalidateQueries({ queryKey: ['admin', 'artists'] });
   };
 
+  const handlePromotionEdit = (slot: ArtistPromoSlotDTO) => {
+    setEditingPromotionId(slot.apsPromotionId);
+    setPromotionForm(promotionFormFromSlot(slot));
+    setPromotionFormError(null);
+  };
+
+  const handlePromotionCancel = () => {
+    setEditingPromotionId(null);
+    setPromotionForm(buildEmptyPromotionForm());
+    setPromotionFormError(null);
+  };
+
+  const handlePromotionSubmit = () => {
+    if (!promotionArtistId) {
+      setPromotionFormError('Selecciona un artista para registrar la agenda promocional.');
+      return;
+    }
+    savePromotionMutation.mutate({
+      artistId: promotionArtistId,
+      day: promotionDay,
+      draft: promotionForm,
+      promotionId: editingPromotionId,
+    });
+  };
+
+  const handlePromotionDelete = (slot: ArtistPromoSlotDTO) => {
+    if (!promotionArtistId) return;
+    const confirmed = window.confirm(
+      `Eliminar el espacio de ${slot.apsStartTime} en ${slot.apsMedium} para ${selectedPromotionArtist?.apDisplayName ?? 'este artista'}?`,
+    );
+    if (!confirmed) return;
+    deletePromotionMutation.mutate({ artistId: promotionArtistId, promotionId: slot.apsPromotionId, day: promotionDay });
+  };
+
+  const handlePromotionPreviewRefresh = () => {
+    void promotionReportQuery.refetch();
+  };
+
+  const handlePromotionPdfPreview = () => {
+    if (!promotionArtistId) return;
+    previewPdfMutation.mutate({ artistId: promotionArtistId, day: promotionDay });
+  };
+
+  const handlePromotionPdfDownload = () => {
+    if (!promotionArtistId) return;
+    downloadPdfMutation.mutate({ artistId: promotionArtistId, day: promotionDay });
+  };
+
   const renderLinkChip = (label: string, url: string | null) => {
     if (!url) return null;
     return (
@@ -314,9 +608,9 @@ export default function LabelArtistsPage() {
 
   return (
     <Stack spacing={3}>
-      {bannerMessage && (
-        <Alert severity="success" onClose={() => setBannerMessage(null)}>
-          {bannerMessage}
+      {banner && (
+        <Alert severity={banner.severity} onClose={() => setBanner(null)}>
+          {banner.message}
         </Alert>
       )}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems="flex-start">
@@ -522,8 +816,299 @@ export default function LabelArtistsPage() {
               </Table>
             </Box>
           )}
-        </CardContent>
+      </CardContent>
       </Card>
+
+      {hasArtistProfiles && (
+        <Card>
+          <CardContent>
+            <Stack spacing={2.5}>
+              <Stack spacing={0.5}>
+                <Typography variant="h6">Promoción diaria y reporte PDF</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Gestiona la agenda promocional por artista y genera el PDF diario ordenado por hora en formato Ecuador.
+                </Typography>
+              </Stack>
+
+              <Alert severity="info" variant="outlined">
+                El reporte usa horario de Ecuador ({ECUADOR_TIMEZONE}) y un PDF por artista + día seleccionado.
+              </Alert>
+
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems={{ xs: 'stretch', lg: 'center' }}>
+                <Autocomplete
+                  options={sortedArtists}
+                  value={selectedPromotionArtist}
+                  onChange={(_, value) => setPromotionArtistId(value?.apArtistId ?? null)}
+                  getOptionLabel={(option) => option.apDisplayName}
+                  isOptionEqualToValue={(option, value) => option.apArtistId === value.apArtistId}
+                  sx={{ minWidth: { xs: '100%', md: 280 } }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Artista del reporte"
+                      helperText="Cada PDF se genera para un artista y un día concretos."
+                    />
+                  )}
+                />
+                <TextField
+                  label="Día"
+                  type="date"
+                  value={promotionDay}
+                  onChange={(event) => setPromotionDay(event.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: { xs: '100%', md: 220 } }}
+                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
+                  <Button
+                    variant="outlined"
+                    startIcon={<RefreshIcon />}
+                    onClick={handlePromotionPreviewRefresh}
+                    disabled={!promotionArtistId || promotionReportQuery.isFetching}
+                  >
+                    {promotionReportQuery.isFetching ? 'Actualizando…' : 'Vista previa'}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<VisibilityIcon />}
+                    onClick={handlePromotionPdfPreview}
+                    disabled={!promotionArtistId || previewPdfMutation.isPending}
+                  >
+                    {previewPdfMutation.isPending ? 'Generando PDF…' : 'Ver PDF'}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<PictureAsPdfIcon />}
+                    onClick={handlePromotionPdfDownload}
+                    disabled={!promotionArtistId || downloadPdfMutation.isPending}
+                  >
+                    {downloadPdfMutation.isPending ? 'Descargando…' : 'Descargar PDF'}
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Stack direction={{ xs: 'column', xl: 'row' }} spacing={2} alignItems="stretch">
+                <Card variant="outlined" sx={{ flex: 1 }}>
+                  <CardContent>
+                    <Stack spacing={2}>
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        {editingPromotionId ? 'Editar espacio promocional' : 'Nuevo espacio promocional'}
+                      </Typography>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Hora"
+                          type="time"
+                          value={promotionForm.startTime}
+                          onChange={(event) => setPromotionForm((prev) => ({ ...prev, startTime: event.target.value }))}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{ step: 60 }}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Medio"
+                          value={promotionForm.medium}
+                          onChange={(event) => setPromotionForm((prev) => ({ ...prev, medium: event.target.value }))}
+                          fullWidth
+                        />
+                      </Stack>
+                      <TextField
+                        label="Programa"
+                        value={promotionForm.program}
+                        onChange={(event) => setPromotionForm((prev) => ({ ...prev, program: event.target.value }))}
+                        fullWidth
+                      />
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Entrevistador / host"
+                          value={promotionForm.interviewerHost}
+                          onChange={(event) =>
+                            setPromotionForm((prev) => ({ ...prev, interviewerHost: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                        <TextField
+                          label="Miembros participantes"
+                          value={promotionForm.bandMembers}
+                          onChange={(event) => setPromotionForm((prev) => ({ ...prev, bandMembers: event.target.value }))}
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Estado (opcional)"
+                          value={promotionForm.status}
+                          onChange={(event) => setPromotionForm((prev) => ({ ...prev, status: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Notas (opcional)"
+                          value={promotionForm.notes}
+                          onChange={(event) => setPromotionForm((prev) => ({ ...prev, notes: event.target.value }))}
+                          fullWidth
+                          multiline
+                          minRows={2}
+                        />
+                      </Stack>
+                      {promotionFormError && <Alert severity="error">{promotionFormError}</Alert>}
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="contained"
+                          onClick={handlePromotionSubmit}
+                          disabled={!promotionArtistId || savePromotionMutation.isPending}
+                        >
+                          {savePromotionMutation.isPending
+                            ? 'Guardando…'
+                            : editingPromotionId
+                              ? 'Actualizar espacio'
+                              : 'Guardar espacio'}
+                        </Button>
+                        {editingPromotionId && (
+                          <Button variant="text" color="inherit" onClick={handlePromotionCancel}>
+                            Cancelar edición
+                          </Button>
+                        )}
+                      </Stack>
+                    </Stack>
+                  </CardContent>
+                </Card>
+
+                <Card variant="outlined" sx={{ flex: 1 }}>
+                  <CardContent>
+                    <Stack spacing={1.5}>
+                      <Typography variant="subtitle1" fontWeight={700}>Vista previa del reporte</Typography>
+                      {promotionReport && (
+                        <>
+                          <Typography variant="body1" fontWeight={700}>
+                            {promotionReport.apdArtistName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {promotionReport.apdDayHeader} · {promotionReport.apdTimezone}
+                          </Typography>
+                        </>
+                      )}
+                      {promotionReportQuery.error && (
+                        <Alert severity="error">
+                          No pudimos cargar la vista previa del reporte para este día.
+                        </Alert>
+                      )}
+                      {promotionReportQuery.isLoading && <Typography color="text.secondary">Cargando vista previa…</Typography>}
+                      {promotionReport && promotionReport.apdEntries.length === 0 && !promotionReportQuery.isLoading && (
+                        <Alert severity="info" variant="outlined">
+                          No hay espacios promocionales registrados para este artista en la fecha seleccionada.
+                        </Alert>
+                      )}
+                      {promotionReport && promotionReport.apdEntries.length > 0 && (
+                        <Box sx={{ overflowX: 'auto' }}>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Hora</TableCell>
+                                <TableCell>Medio</TableCell>
+                                <TableCell>Programa</TableCell>
+                                <TableCell>Entrevistador / host</TableCell>
+                                <TableCell>Miembros participantes</TableCell>
+                                <TableCell>Estado</TableCell>
+                                <TableCell>Notas</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {promotionReport.apdEntries.map((slot) => (
+                                <TableRow key={`preview-${slot.apsPromotionId}`}>
+                                  <TableCell>{slot.apsStartTime}</TableCell>
+                                  <TableCell>{slot.apsMedium}</TableCell>
+                                  <TableCell>{slot.apsProgram}</TableCell>
+                                  <TableCell>{slot.apsInterviewerHost}</TableCell>
+                                  <TableCell>{slot.apsBandMembers}</TableCell>
+                                  <TableCell>{slot.apsStatus ?? '—'}</TableCell>
+                                  <TableCell>{slot.apsNotes ?? '—'}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </Box>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Stack>
+
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1.5}>
+                    <Typography variant="subtitle1" fontWeight={700}>Agenda editable del día</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Esta tabla alimenta directamente la vista previa y el PDF diario. El backend la ordena por hora.
+                    </Typography>
+                    {promotionsQuery.error && (
+                      <Alert severity="error">
+                        No pudimos cargar la agenda promocional del artista seleccionado.
+                      </Alert>
+                    )}
+                    {promotionsQuery.isLoading && <Typography color="text.secondary">Cargando agenda…</Typography>}
+                    {!promotionsQuery.isLoading && !promotionsQuery.error && promotionSlots.length === 0 && (
+                      <Alert severity="info" variant="outlined">
+                        Todavía no hay espacios cargados para este día.
+                      </Alert>
+                    )}
+                    {promotionSlots.length > 0 && (
+                      <Box sx={{ overflowX: 'auto' }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Hora</TableCell>
+                              <TableCell>Medio</TableCell>
+                              <TableCell>Programa</TableCell>
+                              <TableCell>Entrevistador / host</TableCell>
+                              <TableCell>Miembros participantes</TableCell>
+                              <TableCell>Estado</TableCell>
+                              <TableCell>Notas</TableCell>
+                              <TableCell align="right">Acciones</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {promotionSlots.map((slot) => (
+                              <TableRow key={slot.apsPromotionId} hover>
+                                <TableCell>{slot.apsStartTime}</TableCell>
+                                <TableCell>{slot.apsMedium}</TableCell>
+                                <TableCell>{slot.apsProgram}</TableCell>
+                                <TableCell>{slot.apsInterviewerHost}</TableCell>
+                                <TableCell>{slot.apsBandMembers}</TableCell>
+                                <TableCell>{slot.apsStatus ?? '—'}</TableCell>
+                                <TableCell>{slot.apsNotes ?? '—'}</TableCell>
+                                <TableCell align="right">
+                                  <Tooltip title="Editar espacio">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handlePromotionEdit(slot)}
+                                      aria-label={`Editar espacio promocional ${slot.apsStartTime} ${slot.apsProgram}`}
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Eliminar espacio">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => handlePromotionDelete(slot)}
+                                      aria-label={`Eliminar espacio promocional ${slot.apsStartTime} ${slot.apsProgram}`}
+                                      disabled={deletePromotionMutation.isPending}
+                                    >
+                                      <DeleteOutlineIcon fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </Box>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>{selectedArtist ? 'Editar perfil de artista' : 'Nuevo perfil de artista'}</DialogTitle>

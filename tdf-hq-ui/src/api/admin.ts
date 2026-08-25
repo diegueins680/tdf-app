@@ -1,7 +1,11 @@
-import { get, post, put, del, patch } from './client';
+import { get, post, put, del, patch, API_BASE_URL } from './client';
+import { buildAuthorizationHeader } from './authHeader';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
+  ArtistPromoDayReportDTO,
+  ArtistPromoSlotDTO,
+  ArtistPromoSlotUpsert,
   ArtistReleaseDTO,
   ArtistReleaseUpsert,
   DropdownOptionDTO,
@@ -86,6 +90,50 @@ export interface AdminWhatsAppSendResponse {
   message?: string | null;
 }
 
+const normalizeNetworkError = (err: unknown, fallbackMessage: string) => {
+  const wrapped = new Error(fallbackMessage);
+  (wrapped as Error & { cause?: unknown }).cause = err;
+  return wrapped;
+};
+
+const joinApiUrl = (path: string) => {
+  if (!API_BASE_URL) return path;
+  const baseHasSlash = API_BASE_URL.endsWith('/');
+  const pathHasSlash = path.startsWith('/');
+  if (baseHasSlash && pathHasSlash) return `${API_BASE_URL}${path.slice(1)}`;
+  if (!baseHasSlash && !pathHasSlash) return `${API_BASE_URL}/${path}`;
+  return `${API_BASE_URL}${path}`;
+};
+
+const buildArtistPromoDayQuery = (day: string) => {
+  const params = new URLSearchParams({ day });
+  return `?${params.toString()}`;
+};
+
+async function getArtistPromoPdfBlob(artistId: number, day: string): Promise<Blob> {
+  const authHeader = buildAuthorizationHeader();
+  let res: Response;
+  try {
+    res = await fetch(
+      joinApiUrl(`/admin/artists/${encodeURIComponent(String(artistId))}/promotions/report/pdf${buildArtistPromoDayQuery(day)}`),
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          ...(authHeader ? { Authorization: authHeader } : {}),
+        },
+      },
+    );
+  } catch (err) {
+    throw normalizeNetworkError(err, 'No se pudo contactar la API del reporte PDF de promoción.');
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(body.trim() || `No se pudo generar el PDF de promoción (${res.status})`);
+  }
+  return res.blob();
+}
+
 export const Admin = {
   listUsers: (includeInactive?: boolean) =>
     get<AdminUser[]>(`/admin/users${includeInactive ? '?includeInactive=true' : ''}`),
@@ -111,6 +159,22 @@ export const Admin = {
   listArtistProfiles: () => get<ArtistProfileDTO[]>('/admin/artists/profiles'),
   upsertArtistProfile: (payload: ArtistProfileUpsert) =>
     post<ArtistProfileDTO>('/admin/artists/profiles', payload),
+  listArtistPromoSlots: (artistId: number, day: string) =>
+    get<ArtistPromoSlotDTO[]>(`/admin/artists/${encodeURIComponent(String(artistId))}/promotions${buildArtistPromoDayQuery(day)}`),
+  createArtistPromoSlot: (artistId: number, payload: ArtistPromoSlotUpsert) =>
+    post<ArtistPromoSlotDTO>(`/admin/artists/${encodeURIComponent(String(artistId))}/promotions`, payload),
+  updateArtistPromoSlot: (artistId: number, promotionId: number, payload: ArtistPromoSlotUpsert) =>
+    put<ArtistPromoSlotDTO>(
+      `/admin/artists/${encodeURIComponent(String(artistId))}/promotions/${encodeURIComponent(String(promotionId))}`,
+      payload,
+    ),
+  deleteArtistPromoSlot: (artistId: number, promotionId: number) =>
+    del(`/admin/artists/${encodeURIComponent(String(artistId))}/promotions/${encodeURIComponent(String(promotionId))}`),
+  getArtistPromoDayReport: (artistId: number, day: string) =>
+    get<ArtistPromoDayReportDTO>(
+      `/admin/artists/${encodeURIComponent(String(artistId))}/promotions/report${buildArtistPromoDayQuery(day)}`,
+    ),
+  getArtistPromoPdfBlob: (artistId: number, day: string) => getArtistPromoPdfBlob(artistId, day),
   createArtistRelease: (payload: ArtistReleaseUpsert) =>
     post<ArtistReleaseDTO>('/admin/artists/releases', payload),
   updateArtistRelease: (releaseId: number, payload: ArtistReleaseUpsert) =>

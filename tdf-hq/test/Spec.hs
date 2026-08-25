@@ -96,6 +96,7 @@ import TDF.Models.SocialEventsModels (EventFinanceEntry (..), EventInvitationId,
 import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Models (Party (..), RoleEnum (..), SocialSyncPost (..), SocialSyncRun (..))
 import qualified TDF.ModelsExtra as ME
+import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Profiles.ArtistSpec as ArtistSpec
 import qualified TDF.ServerAdminSpec as ServerAdminSpec
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
@@ -6324,6 +6325,7 @@ main = hspec $ do
                     expectationFailure ("Expected unexpected multipart file to be rejected, got: " <> show payload)
 
     APITypesSpec.spec
+    ArtistPromotionSpec.spec
     ArtistSpec.spec
     ServerSpec.spec
     ServerAdminSpec.spec

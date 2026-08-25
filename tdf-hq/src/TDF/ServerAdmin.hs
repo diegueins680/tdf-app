@@ -124,6 +124,14 @@ import           Data.Aeson (object, (.=))
 import           TDF.Seed               (seedAll)
 import qualified TDF.Email              as Email
 import qualified TDF.Email.Service      as EmailSvc
+import           TDF.Artists.Promotion  ( createArtistPromoSlotRecord
+                                        , deleteArtistPromoSlotRecord
+                                        , generateArtistPromoDayReportPdf
+                                        , listArtistPromoSlotsForDay
+                                        , loadArtistPromoDayReport
+                                        , updateArtistPromoSlotRecord
+                                        )
+import qualified TDF.Handlers.InputList as InputList
 import           TDF.Profiles.Artist    ( loadAllArtistProfilesDTO
                                         , upsertArtistProfileRecord
                                         )
@@ -189,6 +197,7 @@ adminServer user =
     artistsRouter =
       (listArtistProfilesAdmin :<|> upsertArtistProfileAdmin)
       :<|> (createArtistReleaseAdmin :<|> updateArtistReleaseAdmin)
+      :<|> artistPromotionsRouter
 
     logsRouter =
       listLogsHandler :<|> clearLogsProtected
@@ -621,6 +630,87 @@ adminServer user =
             ]
           entity <- withPool $ getJustEntity releaseKey
           pure (artistReleaseEntityToDTOAdmin entity)
+
+    artistPromotionsRouter rawArtistId =
+           listArtistPromoSlotsAdmin rawArtistId
+      :<|> createArtistPromoSlotAdmin rawArtistId
+      :<|> updateArtistPromoSlotAdmin rawArtistId
+      :<|> deleteArtistPromoSlotAdmin rawArtistId
+      :<|> artistPromoDayReportAdmin rawArtistId
+      :<|> artistPromoDayReportPdfAdmin rawArtistId
+
+    listArtistPromoSlotsAdmin rawArtistId dayVal = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      withPool $ listArtistPromoSlotsForDay artistKey dayVal
+
+    createArtistPromoSlotAdmin rawArtistId payload = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      now <- liftIO getCurrentTime
+      case createArtistPromoSlotRecord artistKey payload now of
+        Left errMsg ->
+          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Right action ->
+          withPool action
+
+    updateArtistPromoSlotAdmin rawArtistId rawPromotionId payload = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      promotionId <- either throwError pure (validatePositiveAdminLookupId "promotionId" rawPromotionId)
+      let promotionKey = toSqlKey promotionId
+      now <- liftIO getCurrentTime
+      case updateArtistPromoSlotRecord artistKey promotionKey payload now of
+        Left errMsg ->
+          throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Right action -> do
+          mDto <- withPool action
+          maybe (throwError err404) pure mDto
+
+    deleteArtistPromoSlotAdmin rawArtistId rawPromotionId = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      promotionId <- either throwError pure (validatePositiveAdminLookupId "promotionId" rawPromotionId)
+      let promotionKey = toSqlKey promotionId
+      deleted <- withPool $ deleteArtistPromoSlotRecord artistKey promotionKey
+      unless deleted (throwError err404)
+      pure NoContent
+
+    artistPromoDayReportAdmin rawArtistId dayVal = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      maybe (throwError err404) pure mReport
+
+    artistPromoDayReportPdfAdmin rawArtistId dayVal = do
+      ensureModule ModuleAdmin user
+      artistKey <- resolveArtistKey rawArtistId
+      let artistId = fromSqlKey artistKey
+      mReport <- withPool $ loadArtistPromoDayReport artistKey dayVal
+      report <- maybe (throwError err404) pure mReport
+      pdfResult <- liftIO (generateArtistPromoDayReportPdf report)
+      case pdfResult of
+        Left errMsg ->
+          throwError err500 { errBody = BL.fromStrict (TE.encodeUtf8 errMsg) }
+        Right pdf -> do
+          let rawFileName =
+                T.concat
+                  [ "promo-diario-artista-"
+                  , T.pack (show artistId)
+                  , "-"
+                  , T.pack (show dayVal)
+                  ]
+              fileName = InputList.sanitizeFileName rawFileName <> ".pdf"
+              disposition = T.concat ["attachment; filename=\"", fileName, "\""]
+          pure (addHeader disposition pdf)
+
+    resolveArtistKey rawArtistId = do
+      artistId <- either throwError pure (validatePositiveAdminLookupId "artistId" rawArtistId)
+      let artistKey = toSqlKey artistId
+      mParty <- withPool $ get artistKey
+      case mParty of
+        Nothing -> throwError err404
+        Just _  -> pure artistKey
 
     listOptions rawCategory mIncludeInactive = do
       ensureModule ModuleAdmin user

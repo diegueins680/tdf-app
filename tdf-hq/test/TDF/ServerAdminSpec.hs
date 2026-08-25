@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
 module TDF.ServerAdminSpec (spec) where
@@ -10,11 +11,11 @@ import Data.Aeson (Value, eitherDecode, encode)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
 import qualified Data.Text as T
-import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Data.Time (Day, UTCTime (..), fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..), get, insert, selectList)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant (Header, Headers, NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Test.Hspec
 
 import TDF.API.Admin
@@ -36,11 +37,14 @@ import TDF.DB (Env (..))
 import TDF.DTO
     ( ArtistProfileDTO
     , ArtistProfileUpsert (..)
+    , ArtistPromoDayReportDTO (..)
+    , ArtistPromoSlotDTO (..)
+    , ArtistPromoSlotUpsert (..)
     , ArtistReleaseDTO
     , ArtistReleaseUpsert (..)
     , LogEntryDTO
     )
-import TDF.Models (Party (..), RoleEnum (..), UserCredential (..))
+import TDF.Models (ArtistProfile (..), ArtistPromoSlot (..), Party (..), RoleEnum (..), UserCredential (..))
 import qualified TDF.ModelsExtra as ME
 import TDF.ServerAdmin (
     adminServer,
@@ -526,9 +530,11 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         ("Expected invalid WhatsApp resend message id to be rejected, got " <> show value)
 
         it "rejects non-positive artist and release ids before admin artist writes hit the database" $ do
-            let artistProfiles :<|> artistReleases = artistsHandlersFor (mkUser [Admin])
+            let artistProfiles :<|> artistReleases :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
                 _listProfiles :<|> upsertArtistProfile = artistProfiles
                 createArtistRelease :<|> updateArtistRelease = artistReleases
+                _listPromotions :<|> createArtistPromotion :<|> updateArtistPromotion :<|> deleteArtistPromotion :<|> _previewPromotionReport :<|> _promotionReportPdf =
+                    artistPromotions 0
                 invalidArtistProfilePayload =
                     ArtistProfileUpsert
                         { apuArtistId = 0
@@ -558,6 +564,17 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                         }
                 validArtistReleasePayload =
                     invalidArtistReleasePayload { aruArtistId = 7 }
+                validArtistPromotionPayload =
+                    ArtistPromoSlotUpsert
+                        { apsuDay = fromGregorian 2026 4 23
+                        , apsuStartTime = "09:00"
+                        , apsuMedium = "Radio"
+                        , apsuProgram = "Despertar"
+                        , apsuInterviewerHost = "Ada"
+                        , apsuBandMembers = "La Ruta"
+                        , apsuStatus = Nothing
+                        , apsuNotes = Nothing
+                        }
 
             profileResult <- runAdminTest (upsertArtistProfile invalidArtistProfilePayload)
             case profileResult of
@@ -585,6 +602,127 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                 Right value ->
                     expectationFailure
                         ("Expected invalid artist release id to be rejected, got " <> show value)
+
+            createPromotionResult <- runAdminTest (createArtistPromotion validArtistPromotionPayload)
+            case createPromotionResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "artistId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist promotion artist id to be rejected, got " <> show value)
+
+            updatePromotionResult <- runAdminTest (updateArtistPromotion 0 validArtistPromotionPayload)
+            case updatePromotionResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist promotion id to be rejected, got " <> show value)
+
+            deletePromotionResult <- runAdminTest (deleteArtistPromotion 0)
+            case deletePromotionResult of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 400
+                    BL8.unpack (errBody err) `shouldContain` "promotionId must be a positive integer"
+                Right value ->
+                    expectationFailure
+                        ("Expected invalid artist promotion delete id to be rejected, got " <> show value)
+
+        it "returns artist promotion report previews ordered by Ecuador schedule time" $ do
+            pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeArtistPromotionSchema pool
+            cfg <- loadConfig
+            let env = dummyEnv { envPool = pool, envConfig = cfg }
+                _artistProfiles :<|> _artistReleases :<|> artistPromotions = artistsHandlersFor (mkUser [Admin])
+                _listPromotions :<|> _createArtistPromotion :<|> _updateArtistPromotion :<|> _deleteArtistPromotion :<|> previewPromotionReport :<|> _promotionReportPdf =
+                    artistPromotions 7
+                now = UTCTime (fromGregorian 2026 4 23) (secondsToDiffTime 0)
+                reportDay = fromGregorian 2026 4 23
+            artistKey <- runSqlPool
+                (insert
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "La Ruta"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Nothing
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyCreatedAt = now
+                        }
+                )
+                pool
+            fromSqlKey artistKey `shouldBe` 7
+            _ <- runSqlPool
+                (insert
+                    ArtistProfile
+                        { artistProfileArtistPartyId = artistKey
+                        , artistProfileSlug = Just "la-ruta"
+                        , artistProfileBio = Nothing
+                        , artistProfileCity = Just "Quito"
+                        , artistProfileHeroImageUrl = Nothing
+                        , artistProfileSpotifyArtistId = Nothing
+                        , artistProfileSpotifyUrl = Nothing
+                        , artistProfileYoutubeChannelId = Nothing
+                        , artistProfileYoutubeUrl = Nothing
+                        , artistProfileWebsiteUrl = Nothing
+                        , artistProfileFeaturedVideoUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileHighlights = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = Just now
+                        }
+                )
+                pool
+            _ <- runSqlPool
+                (insert
+                    ArtistPromoSlot
+                        { artistPromoSlotArtistPartyId = artistKey
+                        , artistPromoSlotDay = reportDay
+                        , artistPromoSlotStartTime = read "11:30:00"
+                        , artistPromoSlotMedium = "TV"
+                        , artistPromoSlotProgram = "Magazine PM"
+                        , artistPromoSlotInterviewerHost = "Host Dos"
+                        , artistPromoSlotBandMembers = "Trío"
+                        , artistPromoSlotStatus = Just "confirmado"
+                        , artistPromoSlotNotes = Nothing
+                        , artistPromoSlotCreatedAt = now
+                        , artistPromoSlotUpdatedAt = now
+                        }
+                )
+                pool
+            _ <- runSqlPool
+                (insert
+                    ArtistPromoSlot
+                        { artistPromoSlotArtistPartyId = artistKey
+                        , artistPromoSlotDay = reportDay
+                        , artistPromoSlotStartTime = read "08:15:00"
+                        , artistPromoSlotMedium = "Radio"
+                        , artistPromoSlotProgram = "Despertar"
+                        , artistPromoSlotInterviewerHost = "Host Uno"
+                        , artistPromoSlotBandMembers = "Dúo"
+                        , artistPromoSlotStatus = Nothing
+                        , artistPromoSlotNotes = Just "Llegar temprano"
+                        , artistPromoSlotCreatedAt = now
+                        , artistPromoSlotUpdatedAt = now
+                        }
+                )
+                pool
+
+            result <- runAdminTestWith env (previewPromotionReport reportDay)
+            case result of
+                Left err ->
+                    expectationFailure ("Expected artist promotion preview to succeed, got " <> show err)
+                Right report -> do
+                    apdArtistId report `shouldBe` 7
+                    apdArtistName report `shouldBe` "La Ruta"
+                    apdTimezone report `shouldBe` "Hora de Ecuador (America/Guayaquil)"
+                    map apsStartTime (apdEntries report) `shouldBe` ["08:15", "11:30"]
 
     describe "admin user creation invariants" $ do
         it "rejects creating a second credential for the same party instead of forking login state" $ do
@@ -1066,6 +1204,65 @@ initializeAdminUsersSchema = do
         \)"
         []
 
+initializeArtistPromotionSchema :: SqlPersistT IO ()
+initializeArtistPromotionSchema = do
+    rawExecute "PRAGMA foreign_keys = ON" []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"party\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"legal_name\" VARCHAR NULL,\
+        \\"display_name\" VARCHAR NOT NULL,\
+        \\"is_org\" BOOLEAN NOT NULL,\
+        \\"tax_id\" VARCHAR NULL,\
+        \\"primary_email\" VARCHAR NULL,\
+        \\"primary_phone\" VARCHAR NULL,\
+        \\"whatsapp\" VARCHAR NULL,\
+        \\"instagram\" VARCHAR NULL,\
+        \\"emergency_contact\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_profile\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"slug\" VARCHAR NULL,\
+        \\"bio\" VARCHAR NULL,\
+        \\"city\" VARCHAR NULL,\
+        \\"hero_image_url\" VARCHAR NULL,\
+        \\"spotify_artist_id\" VARCHAR NULL,\
+        \\"spotify_url\" VARCHAR NULL,\
+        \\"youtube_channel_id\" VARCHAR NULL,\
+        \\"youtube_url\" VARCHAR NULL,\
+        \\"website_url\" VARCHAR NULL,\
+        \\"featured_video_url\" VARCHAR NULL,\
+        \\"genres\" VARCHAR NULL,\
+        \\"highlights\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NULL,\
+        \CONSTRAINT \"unique_artist_profile\" UNIQUE (\"artist_party_id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"artist_promo_slot\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"day\" DATE NOT NULL,\
+        \\"start_time\" TIME NOT NULL,\
+        \\"medium\" VARCHAR NOT NULL,\
+        \\"program\" VARCHAR NOT NULL,\
+        \\"interviewer_host\" VARCHAR NOT NULL,\
+        \\"band_members\" VARCHAR NOT NULL,\
+        \\"status\" VARCHAR NULL,\
+        \\"notes\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\") ON DELETE CASCADE\
+        \)"
+        []
+
 seedWhatsAppAdminMessage :: UTCTime -> T.Text -> T.Text -> ME.WhatsAppMessage
 seedWhatsAppAdminMessage now externalId direction =
     ME.WhatsAppMessage
@@ -1144,7 +1341,14 @@ artistsHandlersFor
     -> ((AdminTestM [ArtistProfileDTO]
         :<|> (ArtistProfileUpsert -> AdminTestM ArtistProfileDTO))
         :<|> ((ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)
-        :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO)))
+        :<|> (Int64 -> ArtistReleaseUpsert -> AdminTestM ArtistReleaseDTO))
+        :<|> (Int64
+            -> ((Day -> AdminTestM [ArtistPromoSlotDTO])
+            :<|> (ArtistPromoSlotUpsert -> AdminTestM ArtistPromoSlotDTO)
+            :<|> (Int64 -> ArtistPromoSlotUpsert -> AdminTestM ArtistPromoSlotDTO)
+            :<|> (Int64 -> AdminTestM NoContent)
+            :<|> (Day -> AdminTestM ArtistPromoDayReportDTO)
+            :<|> (Day -> AdminTestM (Headers '[Header "Content-Disposition" T.Text] BL8.ByteString)))))
 artistsHandlersFor user =
     case adminServer user of
         _seed

@@ -19,7 +19,7 @@ import           Data.Aeson (ToJSON(..), FromJSON(..), withText, Value(String))
 import           GHC.Generics (Generic)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Time (UTCTime, Day)
+import           Data.Time (UTCTime, Day, TimeOfDay)
 import           Data.UUID (UUID)
 import           Database.Persist.TH
 import           TDF.UUIDInstances ()
@@ -272,6 +272,19 @@ ArtistRelease
     spotifyUrl       Text Maybe
     youtubeUrl       Text Maybe
     createdAt        UTCTime
+    deriving Show Generic
+ArtistPromoSlot
+    artistPartyId    PartyId
+    day              Day
+    startTime        TimeOfDay
+    medium           Text
+    program          Text
+    interviewerHost  Text
+    bandMembers      Text
+    status           Text Maybe
+    notes            Text Maybe
+    createdAt        UTCTime
+    updatedAt        UTCTime
     deriving Show Generic
 FanProfile
     fanPartyId       PartyId

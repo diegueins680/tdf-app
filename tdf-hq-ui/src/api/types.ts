@@ -463,6 +463,41 @@ export interface ArtistReleaseUpsert {
   aruYoutubeUrl?: string | null;
 }
 
+export interface ArtistPromoSlotDTO {
+  apsPromotionId: number;
+  apsArtistId: number;
+  apsDay: string;
+  apsStartTime: string;
+  apsMedium: string;
+  apsProgram: string;
+  apsInterviewerHost: string;
+  apsBandMembers: string;
+  apsStatus?: string | null;
+  apsNotes?: string | null;
+  apsCreatedAt: string;
+  apsUpdatedAt: string;
+}
+
+export interface ArtistPromoSlotUpsert {
+  apsuDay: string;
+  apsuStartTime: string;
+  apsuMedium: string;
+  apsuProgram: string;
+  apsuInterviewerHost: string;
+  apsuBandMembers: string;
+  apsuStatus?: string | null;
+  apsuNotes?: string | null;
+}
+
+export interface ArtistPromoDayReportDTO {
+  apdArtistId: number;
+  apdArtistName: string;
+  apdDay: string;
+  apdTimezone: string;
+  apdDayHeader: string;
+  apdEntries: ArtistPromoSlotDTO[];
+}
+
 export interface FanProfileDTO {
   fpArtistId: number;
   fpDisplayName?: string | null;

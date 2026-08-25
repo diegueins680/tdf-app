@@ -41,6 +41,7 @@ executable tdf-hq-exe
     TDF.API.SocialEventsAPI
     TDF.API.Types
     TDF.API.WhatsApp
+    TDF.Artists.Promotion
     TDF.Auth
     TDF.Config
     TDF.Cron
@@ -190,6 +191,8 @@ test-suite tdf-hq-test
     TDF.API.Types
     TDF.API.WhatsApp
     TDF.APITypesSpec
+    TDF.Artists.Promotion
+    TDF.Artists.PromotionSpec
     TDF.Auth
     TDF.Config
     TDF.Cors
