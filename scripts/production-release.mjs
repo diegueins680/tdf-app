@@ -11,6 +11,7 @@ import { promisify } from 'node:util';
 import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
+  buildMachineDeployArgs,
   buildMachineRollbackImage,
   buildMigrationBatchSql,
   buildSchemaPreflightSql,
@@ -529,26 +530,6 @@ async function smokeMachine(context, machineId, expectedSha = context.sha) {
   }
 }
 
-function deployArgs(context, selector, machineId, image = context.image, sha = context.sha) {
-  return [
-    'flyctl', 'deploy', '.',
-    '--app', context.app,
-    '--config', 'fly.toml',
-    '--image', image,
-    '--env', `SOURCE_COMMIT=${sha}`,
-    '--env', `GIT_SHA=${sha}`,
-    '--env', 'RUN_MIGRATIONS=false',
-    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'EVENT_DISCOVERY_ENABLED=false',
-    '--strategy', 'rolling',
-    '--max-unavailable', '1',
-    '--wait-timeout', '10m',
-    '--update-only',
-    '--yes',
-    selector, machineId,
-  ];
-}
-
 function previousImage(machine) {
   return buildMachineRollbackImage(machine);
 }
@@ -568,17 +549,14 @@ async function rollbackMachine(context, machine) {
   const image = machine.releaseSnapshot?.image ?? previousImage(machine);
   const sha = previousSha(machine);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
-  await run([
-    'flyctl', 'machine', 'update', machine.id,
-    '--app', context.app,
-    '--image', image,
-    '--env', `SOURCE_COMMIT=${sha}`,
-    '--env', `GIT_SHA=${sha}`,
-    '--env', 'RUN_MIGRATIONS=false',
-    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'EVENT_DISCOVERY_ENABLED=false',
-    '--yes',
-  ]);
+  // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
+  // duplicates Docker Hub digest references as repo@digest@digest before the API call.
+  await run(buildMachineDeployArgs({
+    app: context.app,
+    image,
+    sha,
+    onlyMachine: machine.id,
+  }));
   const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
   if (!restored) throw new Error(`Rolled-back Machine ${machine.id} disappeared.`);
   if (restored.image_ref?.digest !== machine.releaseSnapshot?.imageDigest) {
@@ -816,7 +794,12 @@ async function executeRelease(context) {
 
     await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
     touchedMachines.add(canary.id);
-    await run(deployArgs(context, '--only-machines', canary.id, context.resolvedImage));
+    await run(buildMachineDeployArgs({
+      app: context.app,
+      image: context.resolvedImage,
+      sha: context.sha,
+      onlyMachine: canary.id,
+    }));
     try {
       report.canary = await verifyTargetMachine(context, canary.id);
     } catch (error) {
@@ -829,7 +812,12 @@ async function executeRelease(context) {
       await heartbeatReleaseLease(context, leaseToken);
       await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
       touchedMachines.add(machine.id);
-      await run(deployArgs(context, '--only-machines', machine.id, context.resolvedImage));
+      await run(buildMachineDeployArgs({
+        app: context.app,
+        image: context.resolvedImage,
+        sha: context.sha,
+        onlyMachine: machine.id,
+      }));
       report.rollout.push(await verifyTargetMachine(context, machine.id));
     }
     report.fleet = await verifyFleet(context, originalMachines);

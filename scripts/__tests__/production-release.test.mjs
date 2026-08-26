@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
+  buildMachineDeployArgs,
   buildMachineRollbackImage,
   buildMigrationBatchSql,
   buildReleaseSteps,
@@ -564,6 +565,26 @@ test('buildMachineRollbackImage removes Fly Docker Hub mirror and duplicate dige
   assert.equal(buildMachineRollbackImage({
     image_ref: `docker-hub-mirror.fly.io/diegueins680/tdf-hq@${digest}@${digest}`,
   }), `diegueins680/tdf-hq@${digest}`);
+});
+
+test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks', () => {
+  const digest = `sha256:${'b'.repeat(64)}`;
+  const image = `diegueins680/tdf-hq@${digest}`;
+  const args = buildMachineDeployArgs({
+    app: 'tdf-hq',
+    image,
+    sha: normalizedReleaseSha,
+    onlyMachine: 'canary-machine',
+  });
+
+  assert.deepEqual(args.slice(0, 3), ['flyctl', 'deploy', '.']);
+  assert.equal(args[args.indexOf('--image') + 1], image);
+  assert.equal(args.filter((value) => value === digest).length, 0);
+  assert.equal(args.filter((value) => value === image).length, 1);
+  assert.deepEqual(args.slice(-2), ['--only-machines', 'canary-machine']);
+  assert.ok(args.includes('--update-only'));
+  assert.ok(!args.includes('machine'));
+  assert.ok(!args.includes('update'));
 });
 
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {

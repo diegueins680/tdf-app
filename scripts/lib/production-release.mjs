@@ -2100,7 +2100,7 @@ END
 $verify$;`;
 }
 
-function deployCommand({ app, image, sha, onlyMachine, excludeMachine }) {
+export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMachine }) {
   const args = [
     'flyctl', 'deploy', '.',
     '--app', app,
@@ -2158,7 +2158,7 @@ export function buildReleaseSteps(options = {}) {
     id: 'rollback-canary',
     mutating: true,
     beforeStep: 'deploy-remaining',
-    command: deployCommand({
+    command: buildMachineDeployArgs({
       app,
       image: previousImage,
       sha: previousSha,
@@ -2171,7 +2171,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: deployCommand({ app, image, sha, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2184,7 +2184,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: deployCommand({ app, image, sha, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,
