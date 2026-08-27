@@ -93,6 +93,25 @@ const artists: ArtistProfileDTO[] = [
     apFollowerCount: ARTIST_RANKING_FIXTURE.majorFollowerCount,
     apHasUserAccount: true,
   },
+  {
+    apArtistId: 3,
+    apDisplayName: 'Verde 70',
+    apSlug: 'verde70',
+    apBio: 'Banda ecuatoriana.',
+    apCity: 'Quito',
+    apGenres: 'Rock',
+    apGenreIds: ['10000000-0000-4000-8000-000000000004'],
+    apHeroImageUrl: null,
+    apSpotifyArtistId: null,
+    apSpotifyUrl: null,
+    apYoutubeChannelId: null,
+    apYoutubeUrl: null,
+    apWebsiteUrl: null,
+    apFeaturedVideoUrl: null,
+    apHighlights: null,
+    apFollowerCount: 1,
+    apHasUserAccount: false,
+  },
 ];
 
 function renderPage() {
@@ -140,6 +159,9 @@ describe('TdfPlatformPage', () => {
     expect(screen.getByText(ARTIST_RANKING_FIXTURE.majorFollowerLabel)).not.toBeNull();
     expect(screen.getByRole('img', { name: 'Imagen de Artista Mayor' }).getAttribute('src')).toBe(
       'https://cdn.example.test/major.jpg',
+    );
+    expect(screen.getByRole('img', { name: 'Imagen de Verde 70' }).getAttribute('src')).toBe(
+      'https://i.scdn.co/image/ab6761610000e5ebce05ab580a219a575432052e',
     );
   });
 });

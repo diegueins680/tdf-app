@@ -11,7 +11,7 @@ const searchResponse = {
   items: [{
     id: '11111111-1111-4111-8111-111111111111', type: 'profile', slug: 'synthetic-bassist',
     title: 'Synthetic Bassist', summary: 'Fixture público de prueba.',
-    imageUrl: 'https://images.example.test/synthetic-bassist.webp',
+    imageUrl: '/assets/serve/directory/profiles/synthetic-bassist.webp',
     location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
     sponsored: false, score: 0.8,
   }, {
@@ -42,6 +42,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/directory/OpenStreetMapResults', () => ({ default: () => <div>Mapa OSM aproximado</div> }));
 jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
+jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.fly.dev' }));
 
 const { default: DirectorySearchPage } = await import('./DirectorySearchPage');
 
@@ -70,7 +71,7 @@ describe('DirectorySearchPage', () => {
       expect(container.textContent).toContain('Resultados orgánicos');
       await waitFor(() => {
         const profileImage = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Bassist"]');
-        expect(profileImage?.src).toBe('https://images.example.test/synthetic-bassist.webp');
+        expect(profileImage?.src).toBe('https://tdf-hq.fly.dev/assets/serve/directory/profiles/synthetic-bassist.webp');
         const fallbackImage = container.querySelector<HTMLImageElement>('img[alt="Imagen de referencia de Profile Without Photo"]');
         expect(fallbackImage?.src).toBe('http://localhost/artist-fallback.svg');
       });

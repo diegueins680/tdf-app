@@ -30,6 +30,13 @@ forward `2026-08-18_music_directory_profile_image_host_compatibility.sql`; la mi
 original permanece byte a byte inmutable para conservar su checksum. La nueva migración sustituye
 la función de proyección, reindexa únicamente valores distintos y dispone de rollback propio.
 
+La reconciliación `2026-08-26_music_directory_profile_media_reconciliation.sql` asocia el WebP
+optimizado que ya forma parte del artefacto del backend con el perfil público de Diego Saá cuando el
+perfil canónico todavía no tiene imagen y la fuente histórica de la misma Party demuestra que sí
+existe una foto. La operación conserva la imagen histórica, evita enviar su `data:` de gran tamaño en
+cada búsqueda, refresca la proyección inmediatamente y es idempotente. El rollback retira solo la
+entrada marcada con procedencia `packaged-profile-media` y vuelve a refrescar la búsqueda.
+
 ## Etapas
 
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,
