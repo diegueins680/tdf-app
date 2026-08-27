@@ -11,6 +11,7 @@ export const ARTIST_HERO_FALLBACKS = {
   'el-bloque': 'https://i.scdn.co/image/ab6761610000e5eb15c68c09518671450cc315f1',
   skankafe: 'https://i.scdn.co/image/ab6761610000e5eb172b1792c8a9096500cbceb0',
   'quimika-soul': 'https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e',
+  'e-quimika-soul': 'https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e',
   'juano-ledesma': 'https://i.scdn.co/image/ab6761610000e5eb37e1fe32d15f7741170599df',
 } as const satisfies Readonly<Record<string, string>>;
 
