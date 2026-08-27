@@ -385,6 +385,9 @@ until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | 
   sleep 1
 done
 
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/assets/serve/directory/profiles/diego-saa-bajista.webp" |
+  cmp - "$TDF_DIRECTORY_ROOT/tdf-hq/assets/directory/profiles/diego-saa-bajista.webp"
+
 curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=es" |
   node -e '
     let raw = "";
