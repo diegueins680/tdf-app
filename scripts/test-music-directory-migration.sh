@@ -111,6 +111,54 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_ima
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-18_music_directory_profile_image_host_compatibility.sql" >/dev/null
 
+test -s "$TDF_DIRECTORY_ROOT/tdf-hq/assets/directory/profiles/diego-saa-bajista.webp"
+
+psql_exec <<'SQL' >/dev/null
+WITH created_party AS (
+  INSERT INTO party(display_name,is_org,created_at)
+  VALUES ('Packaged profile media reconciliation fixture',FALSE,now())
+  RETURNING id
+), created_artist AS (
+  INSERT INTO artist_profile(artist_party_id,slug,hero_image_url,created_at)
+  SELECT id,'packaged-profile-media-source','data:image/png;base64,c3ludGhldGlj',now()
+  FROM created_party
+  RETURNING artist_party_id
+)
+INSERT INTO directory_profile(
+  id,subject_party_id,profile_kind,public_name,slug,bio,portfolio,
+  profile_status,visibility,moderation_status,onsite
+)
+SELECT
+  'd1000000-0000-4000-8000-000000000099',artist_party_id,'person',
+  'Packaged profile media fixture','diego-saa-bajista',
+  'Synthetic profile used to prove packaged media reconciliation.','[]'::jsonb,
+  'published','public','allowed',TRUE
+FROM created_artist;
+
+SELECT directory_refresh_profile_search('d1000000-0000-4000-8000-000000000099');
+SQL
+
+packaged_image_before=$(psql_exec -Atc "SELECT coalesce(image_url,'') FROM directory_search_document WHERE entity_kind='profile' AND entity_id='d1000000-0000-4000-8000-000000000099';")
+test -z "$packaged_image_before"
+
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql" >/dev/null
+packaged_portfolio_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile profile CROSS JOIN LATERAL jsonb_array_elements(profile.portfolio) entry(value) WHERE profile.slug='diego-saa-bajista' AND entry.value->>'source'='packaged-profile-media';")
+packaged_image_url=$(psql_exec -Atc "SELECT image_url FROM directory_search_document WHERE entity_kind='profile' AND entity_id='d1000000-0000-4000-8000-000000000099';")
+test "$packaged_portfolio_count" = "1"
+test "$packaged_image_url" = "/assets/serve/directory/profiles/diego-saa-bajista.webp"
+
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation_rollback.sql" >/dev/null
+packaged_portfolio_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile profile CROSS JOIN LATERAL jsonb_array_elements(profile.portfolio) entry(value) WHERE profile.slug='diego-saa-bajista' AND entry.value->>'source'='packaged-profile-media';")
+packaged_image_after_rollback=$(psql_exec -Atc "SELECT coalesce(image_url,'') FROM directory_search_document WHERE entity_kind='profile' AND entity_id='d1000000-0000-4000-8000-000000000099';")
+test "$packaged_portfolio_count" = "0"
+test -z "$packaged_image_after_rollback"
+
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql" >/dev/null
+packaged_portfolio_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile profile CROSS JOIN LATERAL jsonb_array_elements(profile.portfolio) entry(value) WHERE profile.slug='diego-saa-bajista' AND entry.value->>'source'='packaged-profile-media';")
+test "$packaged_portfolio_count" = "1"
+
 unicode_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://música.example/profile.webp\"}]'::jsonb);")
 ipv6_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://[::1]/profile.webp\"}]'::jsonb);")
 malformed_authority_fallback=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"thumbnailUrl\":\"http://%\",\"url\":\"https://images.example.test/fallback.webp\"}]'::jsonb);")
