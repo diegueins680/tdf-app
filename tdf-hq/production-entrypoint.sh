@@ -25,14 +25,18 @@ esac
 packaged_assets="${TDF_PACKAGED_ASSETS_DIR:-/app/assets}"
 served_assets="${HQ_ASSETS_DIR:-}"
 
-if [ -n "${served_assets}" ] && [ "${served_assets}" != "${packaged_assets}" ]; then
+if [ -n "${served_assets}" ]; then
   if [ ! -d "${packaged_assets}" ]; then
     echo "Packaged assets directory is missing or unreadable" >&2
     exit 66
   fi
   mkdir -p "${served_assets}"
-  cp -R "${packaged_assets}/." "${served_assets}/"
-  echo "Packaged assets synchronized to the served asset directory"
+  packaged_assets_canonical="$(CDPATH= cd "${packaged_assets}" && pwd -P)"
+  served_assets_canonical="$(CDPATH= cd "${served_assets}" && pwd -P)"
+  if [ "${served_assets_canonical}" != "${packaged_assets_canonical}" ]; then
+    cp -R "${packaged_assets_canonical}/." "${served_assets_canonical}/"
+    echo "Packaged assets synchronized to the served asset directory"
+  fi
 fi
 
 if [ "${auto_apply}" = "true" ]; then
