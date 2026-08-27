@@ -12,10 +12,17 @@ const entrypoint = path.join(repoRoot, 'tdf-hq', 'production-entrypoint.sh');
 function fixture() {
   const directory = mkdtempSync(path.join(tmpdir(), 'tdf-production-entrypoint-'));
   const binDirectory = path.join(directory, 'bin');
+  const packagedAssets = path.join(directory, 'packaged-assets');
+  const servedAssets = path.join(directory, 'served-assets');
   const migrationSql = path.join(directory, 'migrations.sql');
   const psqlLog = path.join(directory, 'psql.log');
   const serverLog = path.join(directory, 'server.log');
   mkdirSync(binDirectory);
+  mkdirSync(path.join(packagedAssets, 'directory', 'profiles'), { recursive: true });
+  writeFileSync(
+    path.join(packagedAssets, 'directory', 'profiles', 'artist.webp'),
+    'packaged artist photo',
+  );
   writeFileSync(migrationSql, 'SELECT 1;\n');
   writeFileSync(
     path.join(binDirectory, 'psql'),
@@ -30,7 +37,9 @@ function fixture() {
   return {
     directory,
     migrationSql,
+    packagedAssets,
     psqlLog,
+    servedAssets,
     serverBin: path.join(binDirectory, 'server'),
     serverLog,
     path: `${binDirectory}:${process.env.PATH}`,
@@ -64,6 +73,40 @@ test('production entrypoint applies reviewed SQL then disables Persistent migrat
   assert.match(result.stdout, /schema verification passed/i);
   assert.match(readFileSync(current.psqlLog, 'utf8'), /-X -v ON_ERROR_STOP=1 -f/);
   assert.equal(readFileSync(current.serverLog, 'utf8'), 'RUN_MIGRATIONS=false\nAPP_PORT=18881\n');
+});
+
+test('production entrypoint copies packaged assets into the served asset volume', (context) => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+
+  const result = run(current, {
+    HQ_ASSETS_DIR: current.servedAssets,
+    TDF_PACKAGED_ASSETS_DIR: current.packagedAssets,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /packaged assets synchronized/i);
+  assert.equal(
+    readFileSync(path.join(current.servedAssets, 'directory', 'profiles', 'artist.webp'), 'utf8'),
+    'packaged artist photo',
+  );
+});
+
+test('production entrypoint skips asset self-copy for equivalent paths', (context) => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+
+  const result = run(current, {
+    HQ_ASSETS_DIR: `${current.packagedAssets}/`,
+    TDF_PACKAGED_ASSETS_DIR: current.packagedAssets,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /packaged assets synchronized/i);
+  assert.equal(
+    readFileSync(path.join(current.packagedAssets, 'directory', 'profiles', 'artist.webp'), 'utf8'),
+    'packaged artist photo',
+  );
 });
 
 test('production entrypoint rejects inferred and reviewed migrations together', (context) => {
