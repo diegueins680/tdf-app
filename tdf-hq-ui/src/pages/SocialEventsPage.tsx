@@ -1160,7 +1160,7 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
-        {eventCreateUiState.showCreateWelcome && (
+        {eventsQuery.isSuccess && eventCreateUiState.showCreateWelcome && (
           <Card
             variant="outlined"
             sx={{

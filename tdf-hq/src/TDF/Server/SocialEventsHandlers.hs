@@ -2193,11 +2193,7 @@ socialEventsServer user =
                         else selectVisibleSocialEvents filters dateOrder limit offset
                     )
                     envPool
-        forM rows $ \(Entity eid eventRow) -> do
-            artists <- loadEventArtists envPool eid
-            sources <- liftIO (loadExternalEventSources envPool eid)
-            dto <- liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eid eventRow artists) envPool) >>= either throwError pure
-            pure dto{eventSources = Just sources}
+        loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
 
     resolveSubscribedEventIds ::
         [Entity EventCity] ->
@@ -8446,6 +8442,251 @@ loadEventArtists pool eventKey = do
                 pool
     either throwError pure (sequence loaded)
 
+data EventWorkflowProjection = EventWorkflowProjection
+    { ewpCode :: T.Text
+    , ewpNameEs :: T.Text
+    , ewpNameEn :: T.Text
+    , ewpPublicListable :: Bool
+    , ewpTicketPurchaseEnabled :: Bool
+    }
+
+loadSocialEventListDTOs ::
+    T.Text ->
+    ConnectionPool ->
+    [Entity SocialEvent] ->
+    AppM [EventDTO]
+loadSocialEventListDTOs _ _ [] = pure []
+loadSocialEventListDTOs configuredDefault pool eventRows = do
+    let eventKeys = map entityKey eventRows
+    (artistsResult, sourcesByEvent, workflowsById) <-
+        liftIO $
+            runSqlPool
+                ( do
+                    artists <- loadEventArtistsByEvent eventKeys
+                    sources <- loadExternalEventSourcesByEvent eventKeys
+                    workflows <- loadEventWorkflowProjections eventRows
+                    pure (artists, sources, workflows)
+                )
+                pool
+    artistsByEvent <- either throwError pure artistsResult
+    either throwError pure $
+        forM eventRows $ \(Entity eventKey eventRow) -> do
+            _ <-
+                either (Left . storedEventMetadataServerError) Right $
+                    decodeStoredEventMetadata (socialEventMetadata eventRow)
+            workflowStateId <-
+                maybe
+                    (Left err500{errBody = "Event has no canonical workflow state"})
+                    Right
+                    (socialEventWorkflowStateId eventRow)
+            workflow <-
+                maybe
+                    (Left err500{errBody = "Event references an invalid workflow state"})
+                    Right
+                    (Map.lookup workflowStateId workflowsById)
+            dto <-
+                eventEntityToDTOWithWorkflow
+                    configuredDefault
+                    eventKey
+                    eventRow
+                    (Map.findWithDefault [] eventKey artistsByEvent)
+                    workflow
+            pure
+                dto
+                    { eventSources =
+                        Just (Map.findWithDefault [] eventKey sourcesByEvent)
+                    }
+
+loadEventArtistsByEvent ::
+    [SocialEventId] ->
+    SqlPersistT IO (Either ServerError (Map.Map SocialEventId [ArtistDTO]))
+loadEventArtistsByEvent [] = pure (Right Map.empty)
+loadEventArtistsByEvent eventKeys = do
+    artistLinks <- selectList [EventArtistEventId <-. eventKeys] []
+    let artistKeys = nub (map (eventArtistArtistId . entityVal) artistLinks)
+    artistRows <- selectList [ArtistProfileId <-. artistKeys] []
+    membershipRows <-
+        selectList
+            [ArtistGenreMembershipArtistId <-. artistKeys]
+            [Asc ArtistGenreMembershipSortOrder]
+    legacyGenreRows <- selectList [ArtistGenreArtistId <-. artistKeys] []
+    let membershipGenreIds =
+            nub (map (artistGenreMembershipGenreId . entityVal) membershipRows)
+    genreRows <-
+        if null membershipGenreIds
+            then pure []
+            else
+                selectList
+                    [Catalog.GenreId <-. map Catalog.GenreKey membershipGenreIds]
+                    []
+    let artistsById =
+            Map.fromList
+                [ (artistKey, artistRow)
+                | Entity artistKey artistRow <- artistRows
+                ]
+        membershipsByArtist =
+            Map.fromListWith (flip (++))
+                [ (artistGenreMembershipArtistId membership, [membership])
+                | Entity _ membership <- membershipRows
+                ]
+        legacyGenresByArtist =
+            Map.fromListWith (flip (++))
+                [ (artistGenreArtistId legacyGenre, [legacyGenreEntity])
+                | legacyGenreEntity@(Entity _ legacyGenre) <- legacyGenreRows
+                ]
+        genresById =
+            Map.fromList
+                [ (genreId, genre)
+                | Entity (Catalog.GenreKey genreId) genre <- genreRows
+                ]
+        artistDTOResultById =
+            Map.fromList
+                [ (artistKey, artistDTOFor artistKey)
+                | artistKey <- artistKeys
+                ]
+        artistDTOFor artistKey =
+            case Map.lookup artistKey artistsById of
+                Nothing -> Right unknownArtistDTO
+                Just artist ->
+                    let memberships =
+                            Map.findWithDefault [] artistKey membershipsByArtist
+                        availableMemberships =
+                            mapMaybe
+                                ( \membership -> do
+                                    genre <-
+                                        Map.lookup
+                                            (artistGenreMembershipGenreId membership)
+                                            genresById
+                                    pure
+                                        ( artistGenreMembershipGenreId membership
+                                        , Catalog.genreNameEs genre
+                                        )
+                                )
+                                memberships
+                        (genreList, genreIds)
+                            | null memberships =
+                                ( artistGenresFromRowsAndFallback
+                                    (Map.findWithDefault [] artistKey legacyGenresByArtist)
+                                    (artistProfileGenres artist)
+                                , []
+                                )
+                            | otherwise =
+                                (map snd availableMemberships, map fst availableMemberships)
+                     in artistProfileToDTO artistKey artist genreList genreIds
+        linkedArtistResults =
+            [ fmap
+                (\artistDTO -> (eventArtistEventId link, [artistDTO]))
+                (Map.findWithDefault (Right unknownArtistDTO) (eventArtistArtistId link) artistDTOResultById)
+            | Entity _ link <- artistLinks
+            ]
+    pure $
+        fmap
+            (Map.fromListWith (flip (++)))
+            (sequence linkedArtistResults)
+  where
+    unknownArtistDTO =
+        ArtistDTO
+            { artistId = Nothing
+            , artistPartyId = Nothing
+            , artistName = "(unknown)"
+            , artistGenres = []
+            , artistGenreIds = []
+            , artistBio = Nothing
+            , artistAvatarUrl = Nothing
+            , artistSocialLinks = Nothing
+            , artistCreatedAt = Nothing
+            , artistUpdatedAt = Nothing
+            }
+
+loadExternalEventSourcesByEvent ::
+    [SocialEventId] ->
+    SqlPersistT IO (Map.Map SocialEventId [EventSourceDTO])
+loadExternalEventSourcesByEvent [] = pure Map.empty
+loadExternalEventSourcesByEvent eventKeys = do
+    refs <- selectList [ExternalEventRefEventId <-. eventKeys] []
+    let providerKeys = nub (map (externalEventRefProvider . entityVal) refs)
+    sourceRows <-
+        selectList [EventDiscoverySourceSourceKey <-. providerKeys] []
+    let sourcesByKey =
+            Map.fromList
+                [ ( eventDiscoverySourceSourceKey source
+                  , (eventDiscoverySourcePriority source, eventDiscoverySourceName source)
+                  )
+                | Entity _ source <- sourceRows
+                ]
+        rankedSourcesByEvent =
+            Map.fromListWith (flip (++))
+                [ ( externalEventRefEventId ref
+                  , [ ( priority
+                      , EventSourceDTO
+                            { eventSourceProvider = externalEventRefProvider ref
+                            , eventSourceLabel = label
+                            , eventSourceUrl = externalEventRefSourceUrl ref
+                            , eventSourcePriceCents = externalEventRefPriceCents ref
+                            , eventSourceCurrency = externalEventRefCurrency ref
+                            , eventSourceStatus = externalEventRefSourceStatus ref
+                            }
+                      )
+                    ]
+                  )
+                | Entity _ ref <- refs
+                , let (priority, label) =
+                        Map.findWithDefault
+                            (1000, externalEventRefProvider ref)
+                            (externalEventRefProvider ref)
+                            sourcesByKey
+                ]
+    pure (Map.map (map snd . sortOn (Down . fst)) rankedSourcesByEvent)
+
+loadEventWorkflowProjections ::
+    [Entity SocialEvent] ->
+    SqlPersistT IO (Map.Map UUID.UUID EventWorkflowProjection)
+loadEventWorkflowProjections eventRows = do
+    let stateIds =
+            nub (mapMaybe (socialEventWorkflowStateId . entityVal) eventRows)
+        requestedStateIds = Set.fromList stateIds
+    stateRows <-
+        rawSql
+            "SELECT state.id, state.code, state.name_es, state.name_en FROM workflow_state state JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE ORDER BY state.id"
+            [PersistText EventLifecycle.socialEventWorkflowCode]
+    capabilityRows <-
+        rawSql
+            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
+            [PersistText EventLifecycle.socialEventWorkflowCode]
+    let typedStateRows =
+            stateRows
+                :: [(Single UUID.UUID, Single T.Text, Single T.Text, Single T.Text)]
+        typedCapabilityRows =
+            capabilityRows :: [(Single UUID.UUID, Single T.Text)]
+        capabilitiesByState =
+            Map.fromListWith Set.union
+                [ ( stateId
+                  , Set.singleton capabilityCode
+                  )
+                | (Single stateId, Single capabilityCode) <- typedCapabilityRows
+                ]
+    pure $
+        Map.fromList
+            [ ( stateId
+              , EventWorkflowProjection
+                    { ewpCode = stateCode
+                    , ewpNameEs = nameEs
+                    , ewpNameEn = nameEn
+                    , ewpPublicListable =
+                        "public-listable" `Set.member` capabilities
+                    , ewpTicketPurchaseEnabled =
+                        "ticket-purchase" `Set.member` capabilities
+                    }
+              )
+            | (Single stateId, Single stateCode, Single nameEs, Single nameEn) <- typedStateRows
+            , stateId `Set.member` requestedStateIds
+            , let capabilities =
+                    Map.findWithDefault
+                        Set.empty
+                        stateId
+                        capabilitiesByState
+            ]
+
 momentReactionEntityToDTO :: Map.Map UUID.UUID Catalog.ReactionType -> Entity EventMomentReaction -> Maybe EventMomentReactionDTO
 momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
     reactionTypeId <- eventMomentReactionReactionTypeId reactionRow
@@ -8894,7 +9135,7 @@ eventEntityToDTO :: T.Text -> SocialEventId -> SocialEvent -> [ArtistDTO] -> Sql
 eventEntityToDTO configuredDefault eid eventRow artists = do
     case decodeStoredEventMetadata (socialEventMetadata eventRow) of
       Left message -> pure (Left (storedEventMetadataServerError message))
-      Right metadata -> case socialEventWorkflowStateId eventRow of
+      Right _ -> case socialEventWorkflowStateId eventRow of
         Nothing -> pure (Left err500{errBody = "Event has no canonical workflow state"})
         Just workflowStateId -> do
           workflowState <- EventLifecycle.loadActiveSocialEventState workflowStateId
@@ -8903,35 +9144,65 @@ eventEntityToDTO configuredDefault eid eventRow artists = do
             Just (stateCode, nameEs, nameEn) -> do
               publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
               ticketPurchaseEnabled <- EventLifecycle.socialEventStateHasCapability workflowStateId "ticket-purchase"
-              pure . Right $
-                EventDTO
-                  { eventId = Just (renderKeyText eid)
-                  , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
-                  , eventTitle = socialEventTitle eventRow
-                  , eventDescription = socialEventDescription eventRow
-                  , eventStart = socialEventStartTime eventRow
-                  , eventEnd = socialEventEndTime eventRow
-                  , eventTimezone = socialEventTimezone eventRow
-                  , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
-                  , eventPriceCents = socialEventPriceCents eventRow
-                  , eventCapacity = socialEventCapacity eventRow
-                  , eventTicketUrl = emTicketUrl metadata
-                  , eventImageUrl = emImageUrl metadata
-                  , eventIsPublic = emIsPublic metadata <|> Just True
-                  , eventTypeId = UUID.toText <$> socialEventEventTypeId eventRow
-                  , eventWorkflowStateId = Just (UUID.toText workflowStateId)
-                  , eventWorkflowStateCode = Just stateCode
-                  , eventWorkflowStateNameEs = Just nameEs
-                  , eventWorkflowStateNameEn = Just nameEn
-                  , eventPublicListable = Just publicListable
-                  , eventTicketPurchaseEnabled = Just ticketPurchaseEnabled
-                  , eventCurrency = emCurrency metadata <|> Just configuredDefault
-                  , eventBudgetCents = emBudgetCents metadata
-                  , eventSources = Nothing
-                  , eventCreatedAt = Just (socialEventCreatedAt eventRow)
-                  , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
-                  , eventArtists = artists
-                  }
+              pure $
+                eventEntityToDTOWithWorkflow
+                  configuredDefault
+                  eid
+                  eventRow
+                  artists
+                  EventWorkflowProjection
+                    { ewpCode = stateCode
+                    , ewpNameEs = nameEs
+                    , ewpNameEn = nameEn
+                    , ewpPublicListable = publicListable
+                    , ewpTicketPurchaseEnabled = ticketPurchaseEnabled
+                    }
+
+eventEntityToDTOWithWorkflow ::
+    T.Text ->
+    SocialEventId ->
+    SocialEvent ->
+    [ArtistDTO] ->
+    EventWorkflowProjection ->
+    Either ServerError EventDTO
+eventEntityToDTOWithWorkflow configuredDefault eid eventRow artists workflow = do
+    metadata <-
+        either (Left . storedEventMetadataServerError) Right $
+            decodeStoredEventMetadata (socialEventMetadata eventRow)
+    workflowStateId <-
+        maybe
+            (Left err500{errBody = "Event has no canonical workflow state"})
+            Right
+            (socialEventWorkflowStateId eventRow)
+    Right
+        EventDTO
+            { eventId = Just (renderKeyText eid)
+            , eventOrganizerPartyId = socialEventOrganizerPartyId eventRow
+            , eventTitle = socialEventTitle eventRow
+            , eventDescription = socialEventDescription eventRow
+            , eventStart = socialEventStartTime eventRow
+            , eventEnd = socialEventEndTime eventRow
+            , eventTimezone = socialEventTimezone eventRow
+            , eventVenueId = fmap renderKeyText (socialEventVenueId eventRow)
+            , eventPriceCents = socialEventPriceCents eventRow
+            , eventCapacity = socialEventCapacity eventRow
+            , eventTicketUrl = emTicketUrl metadata
+            , eventImageUrl = emImageUrl metadata
+            , eventIsPublic = emIsPublic metadata <|> Just True
+            , eventTypeId = UUID.toText <$> socialEventEventTypeId eventRow
+            , eventWorkflowStateId = Just (UUID.toText workflowStateId)
+            , eventWorkflowStateCode = Just (ewpCode workflow)
+            , eventWorkflowStateNameEs = Just (ewpNameEs workflow)
+            , eventWorkflowStateNameEn = Just (ewpNameEn workflow)
+            , eventPublicListable = Just (ewpPublicListable workflow)
+            , eventTicketPurchaseEnabled = Just (ewpTicketPurchaseEnabled workflow)
+            , eventCurrency = emCurrency metadata <|> Just configuredDefault
+            , eventBudgetCents = emBudgetCents metadata
+            , eventSources = Nothing
+            , eventCreatedAt = Just (socialEventCreatedAt eventRow)
+            , eventUpdatedAt = Just (socialEventUpdatedAt eventRow)
+            , eventArtists = artists
+            }
 
 ticketTierEntityToDTO :: SocialEventId -> Entity EventTicketTier -> TicketTierDTO
 ticketTierEntityToDTO eventKey (Entity tierKey tier) =
