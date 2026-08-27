@@ -37,6 +37,7 @@ import TDF.DTO.SocialEventsDTO
     , EventMetadataUpdateDTO (..)
     , EventMomentCreateDTO (..)
     , EventMomentDTO
+    , EventSourceDTO (..)
     , EventUpdateDTO (..)
     , InvitationDTO (..)
     , NullableFieldUpdate (..)
@@ -587,9 +588,18 @@ spec = describe "social event handler helpers" $ do
                     )
                     env
         case listResult of
-            Right events ->
+            Right events -> do
                 map eventId events
                     `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22"]
+                case filter ((== Just "14") . eventId) events of
+                    [publicEvent] ->
+                        map eventSourceProvider (maybe [] id (eventSources publicEvent))
+                            `shouldMatchList` ["ticketmaster", "buenplan"]
+                    matchingEvents ->
+                        expectationFailure
+                            ( "Expected one public canonical event projection, got: "
+                                <> show matchingEvents
+                            )
             Left err ->
                 expectationFailure
                     ("Expected canonical public event list to succeed, got: " <> show err)
