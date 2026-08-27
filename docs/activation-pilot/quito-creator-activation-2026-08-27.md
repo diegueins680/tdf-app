@@ -63,7 +63,8 @@ moderador no observa contraseñas ni conserva correos, teléfonos, handles o enl
   espacios culturales.
 - Priorizar conversaciones que ya mostraron interés textual significativo. Una reacción por sí sola
   no equivale a consentimiento ni justifica seguimiento.
-- Usar códigos `QAC-01` a `QAC-05` en notas y evidencia sanitizada.
+- Usar códigos `QAR-01` y `QAR-02` para el ensayo aislado, y `QAC-01` a `QAC-05` para la cohorte de
+  activación, en notas y evidencia sanitizada.
 - No reclutar menores ni personas sobre las que exista una relación laboral evaluativa directa.
 - Compensación, grabación y conservación de evidencia requieren aprobación específica antes de la
   primera invitación.

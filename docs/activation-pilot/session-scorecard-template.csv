@@ -1,2 +1,2 @@
 session_date_local,participant_code,phase,device_category,platform,connection_type,participation_consent,recording_consent,quote_consent,public_profile_consent,start_time_local,end_time_local,elapsed_minutes,signup_completed,profile_management_found,profile_created,image_added,publication_understood,profile_published,profile_found_in_search,link_shared_or_returned_48h,neutral_prompts,moderator_takeover,backtracks,visible_errors,recovery_completed,completion_status,abandonment_step,primary_blocker_code,quote_redacted,followup_status,notes_sanitized
-,QAC-01,A,,,,no,no,no,no,,,,no,no,no,no,no,no,no,pending,0,no,0,0,no,not_started,,,,pending,
+,QAR-01,A,,,,no,no,no,no,,,,no,no,no,no,no,no,no,pending,0,no,0,0,no,not_started,,,,pending,
