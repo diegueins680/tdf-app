@@ -7,6 +7,12 @@ describe('getArtistHeroImage', () => {
     );
   });
 
+  it('preserves the same artwork for the legacy production slug', () => {
+    expect(getArtistHeroImage(null, 'e-quimika-soul')).toBe(
+      'https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e',
+    );
+  });
+
   it('keeps the global fallback for unknown legacy slugs', () => {
     expect(getArtistHeroImage(null, 'unknown-artist')).toBe(ARTIST_GLOBAL_FALLBACK);
   });
