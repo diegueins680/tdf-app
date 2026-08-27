@@ -21,7 +21,8 @@ moderador tome control del dispositivo.
 
 El piloto de cinco personas se considera validado únicamente si:
 
-- al menos 3 de 5 completan publicación y búsqueda pública;
+- al menos 3 de 5 completan publicación y búsqueda pública en 15 minutos o menos cada una, con
+  máximo una indicación neutral por persona contabilizada como éxito;
 - las 5 comprenden, antes de pulsar `Publicar`, qué información quedará visible;
 - ninguna necesita que el moderador escriba, navegue o publique por ella;
 - no aparece un hallazgo de privacidad, seguridad o pérdida de datos de severidad Blocker/Critical;
@@ -47,8 +48,8 @@ dato sensible.
 Avanzar solo cuando:
 
 1. la Fase A no tenga hallazgos Blocker/Critical abiertos;
-2. el cambio de imagen del directorio esté fusionado y exista una autorización separada para su
-   despliegue;
+2. el cambio de imagen del directorio esté fusionado, su despliegue separado haya terminado
+   correctamente y la imagen se haya verificado en el entorno exacto que usará la cohorte;
 3. el build móvil de vista previa esté disponible si se va a probar continuidad nativa;
 4. cada participante acepte crear y, en su caso, publicar su propio perfil;
 5. el canal y el texto de invitación hayan sido confirmados por el operador.
