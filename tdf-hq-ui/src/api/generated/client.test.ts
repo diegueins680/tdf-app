@@ -132,6 +132,19 @@ describe('generated ApiClient', () => {
     expect(headers?.has('Content-Type')).toBe(false);
   });
 
+  it('includes the session cookie when no in-memory bearer token remains after reload', async () => {
+    buildAuthorizationHeaderMock.mockReturnValue(undefined);
+    fetchMock.mockResolvedValueOnce(buildResponse({ body: '[]' }));
+
+    const client = new ApiClient('https://api.tdf.test');
+    await client.getUsers();
+
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const headers = init?.headers as Headers | undefined;
+    expect(init?.credentials).toBe('include');
+    expect(headers?.has('Authorization')).toBe(false);
+  });
+
   it('wraps network failures with a stable API error message', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('network down'));
 

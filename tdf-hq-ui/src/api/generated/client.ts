@@ -119,6 +119,7 @@ export class ApiClient {
     try {
       response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers,
       });
     } catch (err) {
