@@ -15,6 +15,7 @@ interface SocialEventsCreateUiStateInput {
   canCreateEvent: boolean;
   eventCount: number;
   filtersActive: boolean;
+  listLoadSucceeded: boolean;
 }
 
 interface SocialEventsCreateUiState {
@@ -115,15 +116,17 @@ export function getSocialEventsCreateUiState({
   canCreateEvent,
   eventCount,
   filtersActive,
+  listLoadSucceeded,
 }: SocialEventsCreateUiStateInput): SocialEventsCreateUiState {
   const isFirstRun = eventCount === 0 && !filtersActive;
+  const showCreateWelcome = canCreateEvent && isFirstRun && listLoadSucceeded;
 
   return {
     createWelcomeDescription: isFirstRun
       ? FIRST_EVENT_CREATE_DESCRIPTION
       : FOLLOW_UP_EVENT_CREATE_DESCRIPTION,
-    showCreateWelcome: canCreateEvent && isFirstRun,
-    showCreateToolbarAction: canCreateEvent && !isFirstRun,
+    showCreateWelcome,
+    showCreateToolbarAction: canCreateEvent && !showCreateWelcome,
   };
 }
 

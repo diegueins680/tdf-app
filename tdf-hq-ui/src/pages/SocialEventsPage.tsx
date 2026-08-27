@@ -485,6 +485,7 @@ export default function SocialEventsPage() {
     canCreateEvent: hasSession,
     eventCount: events.length,
     filtersActive: eventFiltersActive,
+    listLoadSucceeded: eventsQuery.isSuccess,
   });
   const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
 
@@ -1160,7 +1161,7 @@ export default function SocialEventsPage() {
             </Alert>
           )}
         </Stack>
-        {eventsQuery.isSuccess && eventCreateUiState.showCreateWelcome && (
+        {eventCreateUiState.showCreateWelcome && (
           <Card
             variant="outlined"
             sx={{

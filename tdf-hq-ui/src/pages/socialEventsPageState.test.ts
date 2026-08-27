@@ -54,6 +54,7 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: true,
       eventCount: 0,
       filtersActive: false,
+      listLoadSucceeded: true,
     })).toEqual({
       createWelcomeDescription:
         'Empieza con el nombre y la fecha. Podrás sumar colaboradores, venue y detalles sin salir del flujo.',
@@ -67,6 +68,7 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: true,
       eventCount: 2,
       filtersActive: false,
+      listLoadSucceeded: true,
     })).toEqual({
       createWelcomeDescription:
         'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
@@ -80,6 +82,7 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: true,
       eventCount: 0,
       filtersActive: true,
+      listLoadSucceeded: true,
     })).toEqual({
       createWelcomeDescription:
         'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
@@ -93,11 +96,26 @@ describe('getSocialEventsCreateUiState', () => {
       canCreateEvent: false,
       eventCount: 2,
       filtersActive: false,
+      listLoadSucceeded: true,
     })).toEqual({
       createWelcomeDescription:
         'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.',
       showCreateWelcome: false,
       showCreateToolbarAction: false,
+    });
+  });
+
+  it('keeps a compact create action while the first event list is unavailable', () => {
+    expect(getSocialEventsCreateUiState({
+      canCreateEvent: true,
+      eventCount: 0,
+      filtersActive: false,
+      listLoadSucceeded: false,
+    })).toEqual({
+      createWelcomeDescription:
+        'Empieza con el nombre y la fecha. Podrás sumar colaboradores, venue y detalles sin salir del flujo.',
+      showCreateWelcome: false,
+      showCreateToolbarAction: true,
     });
   });
 });
