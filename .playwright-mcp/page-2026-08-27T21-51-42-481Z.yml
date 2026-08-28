@@ -1,0 +1,428 @@
+- generic [ref=f146e4]:
+  - generic [ref=f146e18]:
+    - generic [ref=f146e21]:
+      - link [ref=f146e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f146e31]
+      - generic [ref=f146e34]:
+        - link [ref=f146e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f146e44]
+        - link [ref=f146e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f146e54]
+        - link [ref=f146e61] [cursor=pointer]:
+          - /url: /direct/t/17843516804769984
+          - img "Messages" [ref=f146e66]
+        - link [ref=f146e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f146e77]
+        - link [ref=f146e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f146e89]
+        - link [ref=f146e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f146e100]
+        - link [ref=f146e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f146e110]
+        - link [ref=f146e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f146e122]:
+            - img "tdf.records.label's profile picture" [ref=f146e123]
+      - generic [ref=f146e124]:
+        - link [ref=f146e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f146e132]
+        - link [ref=f146e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f146e140]
+    - generic [ref=f146e143]:
+      - main [ref=f146e144]:
+        - generic [ref=f146e146]:
+          - generic [ref=f146e147]:
+            - generic [ref=f146e148]:
+              - link [ref=f146e154] [cursor=pointer]:
+                - /url: /calavery.inc/
+                - img "calavery.inc's profile picture" [ref=f146e155]
+              - generic [ref=f146e156]:
+                - generic [ref=f146e157]:
+                  - generic [ref=f146e158]:
+                    - link [ref=f146e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "calavery.inc" [level=2] [ref=f146e161]
+                    - button [ref=f146e163] [cursor=pointer]:
+                      - img "Options" [ref=f146e165]
+                  - generic [ref=f146e169]: Calavery Inc
+                  - generic [ref=f146e171]:
+                    - generic [ref=f146e173]:
+                      - generic [ref=f146e174]: "316"
+                      - text: posts
+                    - link "932 followers" [ref=f146e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f146e177]:
+                        - generic "932" [ref=f146e178]
+                        - text: followers
+                    - link "2,581 following" [ref=f146e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f146e181]:
+                        - generic [ref=f146e182]: 2,581
+                        - text: following
+                - generic [ref=f146e183]:
+                  - generic [ref=f146e184]:
+                    - generic [ref=f146e185]:
+                      - button [ref=f146e186] [cursor=pointer]:
+                        - generic [ref=f146e187]:
+                          - text: CALAVERY INCManagemet
+                          - link "@crystalpeakthrash" [ref=f146e188]:
+                            - /url: /crystalpeakthrash/
+                          - link "@cadaverous_banda.ec" [ref=f146e189]:
+                            - /url: /cadaverous_banda.ec/
+                      - generic [ref=f146e190]:
+                        - text: ...
+                        - button "more" [ref=f146e191] [cursor=pointer]
+                    - link "Threads calavery.inc" [ref=f146e195] [cursor=pointer]:
+                      - /url: https://www.threads.com/@calavery.inc?xmt=AQG0vMuDHYZUdbPcH-NPAYy6pHW2GI5WIny8ivn-3cZj4eo
+                      - img "Threads" [ref=f146e197]
+                      - generic [ref=f146e199]: calavery.inc
+                  - link "Followed by iavq.ec, quitobohemio + 8 more" [ref=f146e201] [cursor=pointer]:
+                    - /url: /calavery.inc/followers/mutualOnly
+                    - generic [ref=f146e203]:
+                      - generic [ref=f146e205]:
+                        - button [ref=f146e206]:
+                          - link [ref=f146e207]
+                        - button [ref=f146e208]:
+                          - link [ref=f146e209]
+                        - button [ref=f146e210]:
+                          - link [ref=f146e211]
+                      - generic [ref=f146e212]: Followed by iavq.ec, quitobohemio + 8 more
+            - generic [ref=f146e217]:
+              - button "Follow Back" [ref=f146e219] [cursor=pointer]
+              - button "Message" [ref=f146e223] [cursor=pointer]
+              - button [ref=f146e225] [cursor=pointer]:
+                - img "Similar accounts" [ref=f146e227]
+            - generic:
+              - menu
+          - generic [ref=f146e230]:
+            - tablist [ref=f146e231]:
+              - link [ref=f146e233] [cursor=pointer]:
+                - /url: /calavery.inc/
+                - img "Posts" [ref=f146e235]
+              - link [ref=f146e246] [cursor=pointer]:
+                - /url: /calavery.inc/reels/
+                - img "Reels" [ref=f146e248]
+              - link [ref=f146e251] [cursor=pointer]:
+                - /url: /calavery.inc/reposts/
+                - img "Reposts" [ref=f146e253]
+              - link [ref=f146e256] [cursor=pointer]:
+                - /url: /calavery.inc/tagged/
+                - img "Tagged" [ref=f146e258]
+            - tabpanel
+          - generic [ref=f146e265]:
+            - generic [ref=f146e266]:
+              - link [ref=f146e268] [cursor=pointer]:
+                - /url: /silvestreskalon/reel/DcRWfXgBoHK/
+                - 'img "🌝Estamos listos para farmear mijos este sábado junto a ustedes. 🔥Nos vemos en el @festival_mestizonica para el bailoteo, puro tracketeo. #ska #punk #hartosabor #ecuador🇪🇨" [ref=f146e271]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f146e274] [cursor=pointer]:
+                - /url: /legadodelmetal/p/DcNR7J7l_v_/
+                - img "Photo shared by Legado del Metal on August 18, 2026 tagging @xionland, @dezenzoec, @cosmos.music.lab, @calavery.inc, and @festival_mestizonica. May be an image of ‎poster and ‎text that says '‎مم Mesti MestiZÓNICA ZÓNIGA 6 BANDAS 1 CONVERSACIÓN ESPECIAL MESTIZÓNICA Distintos estilos, distintas perspectivas y una misma fecha marcada en el calendario. Ya disponible en YouTube‎'‎‎." [ref=f146e277]
+              - link [ref=f146e280] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DcHpN2Llk45/
+                - img "Photo shared by ✨Festival Mestizónica ✨ on August 16, 2026 tagging @dezenzoec, @cosmos.music.lab, and @calavery.inc. May be an image of poster, concert and text." [ref=f146e283]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e286] [cursor=pointer]:
+                - /url: /eblis.desperation/reel/DcHa873PCvs/
+                - img "Cotiza tu camiseta ¿Cómo? Escríbenos por interno y te enviaremos toda la información. Somos Eblis Desperation 💀🤘🏼" [ref=f146e289]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f146e291]:
+              - link [ref=f146e293] [cursor=pointer]:
+                - /url: /legadodelmetal/reel/DcFRX01ACpw/
+                - img [ref=f146e296]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f146e299] [cursor=pointer]:
+                - /url: /legadodelmetal/p/DcFNO3fl6_5/
+                - img "Photo shared by Legado del Metal on August 15, 2026 tagging @xionland, @keltoiec, @xu3g0, @calavery.inc, and @festival_mestizonica. May be an image of poster, costume and text that says 'MestiZONIGA Mesti ZÓNICA 2DA EDICIÓN DEL FESTIVAL QUE MEZCLA RITMOS, ESTILOS Y ENERGÍAS'." [ref=f146e302]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e305] [cursor=pointer]:
+                - /url: /carnival_sessions/p/Db_kppcPGfh/
+                - img "Photo by Carnival Sessions in Quito, Ecuador with @erickpunky, @nerizbelial, @cxre_masek, @crystalpeakthrash, and @calavery.inc. May be an image of poster and text." [ref=f146e308]
+              - link [ref=f146e311] [cursor=pointer]:
+                - /url: /thondatheband/p/Db9mbPPR31W/
+                - 'img "Photo shared by Thonda The Band on August 12, 2026 tagging @mike._.soto, @republicaurbana, @legadodelmetal, @byron_bass_aatrox_ec, @johanndrummer, @crystalpeakthrash, @almost_rockers, @horizonmetalband, @grill_rock_guitarreria_cavero, @calavery.inc, and @maniactv.ec. May be an image of poster, concert and text that says ''THONDA PRESENTANDO SU NUEVO TRABAJO MUSICAL ELLOS CRISTALPEAK 29 29DEAGOSTO DE AGOSTO HORIZON GUITARRERIA GUITARRERÍAC CAVERO $8 E $10 096 313 4917 PARTIO PARTICIPASENELSORTEODEUN CIPASENE LSORTEO CONELAPOYO: CONEL ESTUDIO DIFUNDEN LEGADO DEL METAL MANIAC ALMOSTRDCKERS ALMOSTROCKERS TROCKERS- ALMOST RU REPÚBLICAURBANA REPUBLICA''." [ref=f146e314]'
+            - generic [ref=f146e316]:
+              - link [ref=f146e318] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/Db6aWVlltqk/
+                - img "Photo shared by ✨Festival Mestizónica ✨ on August 11, 2026 tagging @dezenzoec, @cosmos.music.lab, @laboleraquito, and @calavery.inc. May be an image of poster and text that says 'MestiZCNICA PUÑO DEZELİZO NEPENTA MRAATa FILUESTRE EKALON KAWИMa ¿CÓMO COMPRAR TUS ENTRADAS? GUÍA RÁPIDA DE COMPRA GENERAL $8 APORTE MENORES DE EDAD $4'." [ref=f146e321]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e324] [cursor=pointer]:
+                - /url: /eblis.desperation/p/Dbo6m_9tyIN/
+                - 'img "Photo shared by Eblis Desperation 💀 on August 04, 2026 tagging @calavery.inc. May be an image of poster and text that says ''(HELLNFEST FEST HELLN EBLIS RPAOH 자등 Y CONELLOS: CON ELLOS: DESCOMÜNAL 時身内サる madbrain 05 05sntienbre O septiembre 19ho0 CHAE ENTRADASA AVENTAE ENTRADASALAVENTAEN: EN: TEATROSANGABRIEL.COM OAL00968148181 SAM ANGABRIEL''." [ref=f146e327]'
+              - link [ref=f146e330] [cursor=pointer]:
+                - /url: /momentdeviure/p/DbUQbduGLFY/
+                - img "Photo shared by Moment de Viure on July 27, 2026 tagging @renny_ak47, @pablo_antonio333.ed, @andredavid182, @sayluna777, @calavery.inc, and @quitoenllamasfest. May be an image of guitar, crowd and text." [ref=f146e333]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e336] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DbI1n8nvub9/
+                - img "Photo by ✨Festival Mestizónica ✨ in La Bolera Quito with @keltoiec, @punoec, @mangataband.uio, @silvestreskalon, @dezenzoec, @cosmos.music.lab, @_kawina__, @laboleraquito, @calavery.inc, and @nepenta_rapcore. May be an image of ‎poster and ‎text that says '‎MestiZONICA !ពី DEZENIZO NEPENTA WAnORTR FILUESTRE EKALON KAWИHA ENTRADA $8 GENERAL $4 DE EDAD MENORES SÁBADO 14:00 22-AGO CentroCuervidBspe Centro הל Bи3apB la belera‎'‎‎." [ref=f146e339]
+            - generic [ref=f146e564]:
+              - link [ref=f146e566] [cursor=pointer]:
+                - /url: /festival_mestizonica/reel/DbCSit2BcMa/
+                - img "Esto fue un poco de lo que vivimos en la primera edición del Mestizónica!! Este año regresamos con más ganas, con más bandas geniales y todo el poder de la música original que se está haciendo en la capital... Esta semana lanzamos el cartel oficial! Nos vemos pronto!! (próximamente más videos de las otras bandas que nos acompañaron)" [ref=f146e569]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f146e572] [cursor=pointer]:
+                - /url: /romasanta.ec/p/Da8_at_HGiT/
+                - img "Photo shared by Romasanta on July 18, 2026 tagging @iwviana, @calavery.inc, and @prometeoquito. May be an image of violin, concert and text." [ref=f146e575]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e578] [cursor=pointer]:
+                - /url: /vaimetalmcschuldiner/reel/Da8gzZqy-vp/
+                - img "@vultureontheprowl en su segunda visita a Ecuador para destruir el escenario. Pilas buitres allá nos vemos. 🔥🤘🏻" [ref=f146e581]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f146e584] [cursor=pointer]:
+                - /url: /calavery.inc/p/Da0CxcYRlj4/
+                - img "Photo by Calavery Inc in NECRONIKrestobar with @necronikrestobar, and @vultureontheprowl. May be an image of poster and text that says 'DUALITY OF CHAOS TOUR CALAUERY INC presenta VULTUREDSEY R糕 THEPROW VULTUREONTHE.PROUL(PERU) ዐበ THE UTHEPROW PROWL PERÚ) QUITO SÁBADO 1-AGO-15:00 1-AGO 15:00 VALOR $10 NECRONIK DIEGO DIEGODE.ALMAGROYLIZAROOGARCIA E ALMAGRO LIZARDO GARCIA ALMOST ROCKERS ESCENA RU 幽玉aMAS VAM proweiv CiCIo ALIANZA መ'." [ref=f146e587]
+            - generic [ref=f146e589]:
+              - link [ref=f146e591] [cursor=pointer]:
+                - /url: /romasanta.ec/reel/Datw1nXBvFc/
+                - 'img "¡Gracias por hacer posible una noche inolvidable! A nuestro público, músicos invitados, equipo de producción, staff y a cada persona que puso su talento y esfuerzo para hacer realidad el Acústico 360: ¡gracias por ser parte de esta experiencia! Nos vemos en la próxima. 🎶" [ref=f146e594]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f146e597] [cursor=pointer]:
+                - /url: /calavery.inc/p/DalJwxXEUL2/
+                - img "Photo by Calavery Inc on July 09, 2026. May be an image of poster and text that says 'DUALITY OF CHAOS TOUR CALAUERY INC CALAUERYINEpresenta presenta I QUITO SÁBADO 1-AGO AGO 15:00 VALOR $10 NECRONIK DIEGO DIEGODEALMAGROYLZAROOGARCIA DE ALMAGRO LIZARDO GARCIA ALMOS ROCKERS RU ESCENA ٥ proweiv A VAM CiClo ALIANZA'." [ref=f146e600]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e603] [cursor=pointer]:
+                - /url: /prometeoquito/p/Dagz3pxjEjF/
+                - img "Photo shared by Prometeo Quito on July 07, 2026 tagging @romasanta.ec, and @calavery.inc. May be an image of poster, drum, concert and text that says '中 ACÚSTICO 360° ROMASANTA PROMETEO TEATR PROMETEO NUCLEO.. EQ PICHINCHA'." [ref=f146e606]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e609] [cursor=pointer]:
+                - /url: /eblis.desperation/reel/Dagwy2gtELB/
+                - 'img "Se llama Eblis Desperation 💀 y hacemos deathcore desde Ecuador 🇪🇨 #eblisdesperation #3guitarras #deathcore #quito #ecuador" [ref=f146e612]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f146e614]:
+              - link "Carousel" [ref=f146e616] [cursor=pointer]:
+                - /url: /romasanta.ec/p/DaePdFNnIWn/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f146e621] [cursor=pointer]:
+                - /url: /festival_mestizonica/p/DaHqz24yHYk/
+                - img "Photo by ✨Festival Mestizónica ✨ in Ecuador with @dezenzoec, @cosmos.music.lab, and @calavery.inc. May be an image of poster and text that says 'DEZENZO PRESENTA MestTECNICA StIZONIG SÁBADO 15-AGO'." [ref=f146e624]
+              - link [ref=f146e627] [cursor=pointer]:
+                - /url: /eblis.desperation/p/DZ84wtZjTnZ/
+                - img "Photo shared by Eblis Desperation 💀 on June 23, 2026 tagging @calavery.inc. May be an image of guitar, gas mask and text." [ref=f146e630]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link "Carousel" [ref=f146e633] [cursor=pointer]:
+                - /url: /thondatheband/p/DZ8pnBQkeLf/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f146e341]:
+        - generic [ref=f146e342]:
+          - generic [ref=f146e344]:
+            - link "Meta" [ref=f146e346] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f146e349] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f146e352] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f146e355] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f146e358] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f146e361] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f146e364] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f146e367] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f146e370] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f146e373] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f146e376] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f146e379] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f146e382] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f146e385] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f146e388] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f146e390]:
+            - generic [ref=f146e391] [cursor=pointer]:
+              - generic [ref=f146e392]:
+                - generic [ref=f146e393]: English
+                - img "Down chevron icon" [ref=f146e396]
+              - combobox "Switch Display Language" [ref=f146e398]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f146e399]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f146e402] [cursor=pointer]:
+              - generic "Messages" [ref=f146e403]:
+                - generic [ref=f146e404]:
+                  - img "Messages" [ref=f146e407]
+                  - generic [ref=f146e410]: Messages
+                - generic [ref=f146e411]:
+                  - button "User avatar Klaus Revolución" [ref=f146e413]:
+                    - img "User avatar" [ref=f146e416]
+                  - button "User avatar Zoe Moff" [ref=f146e418]:
+                    - img "User avatar" [ref=f146e421]
+                  - button "User avatar Santiii" [ref=f146e423]:
+                    - img "User avatar" [ref=f146e426]
+            - generic [ref=f146e472]:
+              - generic [ref=f146e474]:
+                - generic [ref=f146e475]:
+                  - button [ref=f146e477] [cursor=pointer]:
+                    - img "Go back" [ref=f146e479]
+                  - link "Open the profile page of calavery.inc" [ref=f146e482] [cursor=pointer]:
+                    - /url: /calavery.inc/
+                    - generic [ref=f146e483]:
+                      - img "user-profile-picture" [ref=f146e486]
+                      - heading "Calavery Inc" [level=2] [ref=f146e490]
+                  - generic [ref=f146e492]:
+                    - button [ref=f146e493] [cursor=pointer]:
+                      - img "Expand" [ref=f146e495]
+                    - button [ref=f146e497] [cursor=pointer]:
+                      - img "Close" [ref=f146e499]
+                - separator [ref=f146e502]
+              - generic "Calavery Inc" [ref=f146e503]:
+                - generic [ref=f146e505]:
+                  - generic [ref=f146e509]:
+                    - generic [ref=f146e510]:
+                      - img "user-profile-picture" [ref=f146e514]
+                      - generic [ref=f146e515]:
+                        - heading "Calavery Inc" [level=2] [ref=f146e518]
+                        - generic [ref=f146e520]: calavery.inc · Instagram
+                        - link "View profile" [ref=f146e523] [cursor=pointer]:
+                          - /url: /calavery.inc/
+                    - generic [ref=f146e639]:
+                      - generic [ref=f146e640]: 4:51 PM
+                      - group [ref=f146e643]:
+                        - generic [ref=f146e648]:
+                          - generic [ref=f146e651]:
+                            - text: Hola, equipo de Calavery
+                            - img "👋" [ref=f146e653]
+                            - text: "Vimos su trabajo de management con bandas ecuatorianas y su participación reciente en circuitos de Quito como Festival Mestizónica y La Bolera. En TDF estamos construyendo una comunidad para conectar artistas, managers, espacios y públicos, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí:"
+                            - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_calaverymanagement" [ref=f146e655] [cursor=pointer]:
+                              - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_calaverymanagement
+                            - text: Si la prueban, nos gustaría saber qué herramientas les servirían para gestionar bandas, fechas y alianzas. — TDF Records
+                          - link "TDF Records" [ref=f146e656] [cursor=pointer]:
+                            - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_calaverymanagement
+                  - generic [ref=f146e533]:
+                    - button [ref=f146e536] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f146e538]
+                    - generic [ref=f146e540]:
+                      - textbox [active] [ref=f146e541]:
+                        - paragraph [ref=f146e661]
+                      - generic: Message...
+                    - generic [ref=f146e543]:
+                      - button [ref=f146e662] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f146e664]
+                      - button [ref=f146e667] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f146e669]
+                      - button [ref=f146e674] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f146e676]

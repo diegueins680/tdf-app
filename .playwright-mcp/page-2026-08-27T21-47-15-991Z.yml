@@ -1,0 +1,239 @@
+- generic [ref=f116e4]:
+  - generic [ref=f116e18]:
+    - generic [ref=f116e21]:
+      - link [ref=f116e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f116e31]
+      - generic [ref=f116e34]:
+        - link [ref=f116e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f116e44]
+        - link [ref=f116e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f116e54]
+        - link [ref=f116e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f116e66]
+        - link [ref=f116e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f116e77]
+        - link [ref=f116e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f116e89]
+        - link [ref=f116e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f116e100]
+        - link [ref=f116e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f116e110]
+        - link [ref=f116e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f116e122]:
+            - img "tdf.records.label's profile picture" [ref=f116e123]
+      - generic [ref=f116e124]:
+        - link [ref=f116e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f116e132]
+        - link [ref=f116e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f116e140]
+    - generic [ref=f116e143]:
+      - main [ref=f116e144]:
+        - generic [ref=f116e146]:
+          - generic [ref=f116e147]:
+            - generic [ref=f116e148]:
+              - button [ref=f116e153] [cursor=pointer]:
+                - link [ref=f116e155]:
+                  - img "iraizoviedocanta's profile picture" [ref=f116e156]
+              - generic [ref=f116e157]:
+                - generic [ref=f116e158]:
+                  - generic [ref=f116e159]:
+                    - link [ref=f116e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "iraizoviedocanta" [level=2] [ref=f116e162]
+                    - button [ref=f116e164] [cursor=pointer]:
+                      - img "Options" [ref=f116e166]
+                  - generic [ref=f116e170]: Iraíz Oviedo Canta
+                  - generic [ref=f116e172]:
+                    - generic [ref=f116e174]:
+                      - generic [ref=f116e175]: "785"
+                      - text: posts
+                    - link "3,977 followers" [ref=f116e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f116e178]:
+                        - generic "3,977" [ref=f116e179]
+                        - text: followers
+                    - link "1,911 following" [ref=f116e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f116e182]:
+                        - generic [ref=f116e183]: 1,911
+                        - text: following
+                - generic [ref=f116e184]:
+                  - generic [ref=f116e185]:
+                    - button [ref=f116e187] [cursor=pointer]:
+                      - generic [ref=f116e188]: Cantante. "En la voz, un continente".Escucha el estreno de "Me curé" en vivo🔥🖤👇
+                    - button "Link icon youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more" [ref=f116e190] [cursor=pointer]:
+                      - generic [ref=f116e191]:
+                        - img "Link icon" [ref=f116e193]
+                        - generic [ref=f116e196]: youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more
+                  - link "Followed by jabieralaviajera, pifrecuency + 54 more" [ref=f116e197] [cursor=pointer]:
+                    - /url: /iraizoviedocanta/followers/mutualOnly
+                    - generic [ref=f116e199]:
+                      - generic [ref=f116e201]:
+                        - button [ref=f116e202]:
+                          - link [ref=f116e203]
+                        - button [ref=f116e204]:
+                          - link [ref=f116e205]
+                        - button [ref=f116e206]:
+                          - link [ref=f116e207]
+                      - generic [ref=f116e208]: Followed by jabieralaviajera, pifrecuency + 54 more
+            - generic [ref=f116e213]:
+              - button "Follow Back" [ref=f116e215] [cursor=pointer]
+              - button "Message" [ref=f116e219] [cursor=pointer]
+              - button [ref=f116e221] [cursor=pointer]:
+                - img "Similar accounts" [ref=f116e223]
+            - menu [ref=f116e227]:
+              - generic [ref=f116e229]:
+                - generic [ref=f116e231]:
+                  - status "Loading..." [ref=f116e233]
+                  - status "Loading..." [ref=f116e235]
+                - generic [ref=f116e237]:
+                  - status "Loading..." [ref=f116e239]
+                  - status "Loading..." [ref=f116e241]
+                - generic [ref=f116e243]:
+                  - status "Loading..." [ref=f116e245]
+                  - status "Loading..." [ref=f116e247]
+                - generic [ref=f116e249]:
+                  - status "Loading..." [ref=f116e251]
+                  - status "Loading..." [ref=f116e253]
+                - generic [ref=f116e255]:
+                  - status "Loading..." [ref=f116e257]
+                  - status "Loading..." [ref=f116e259]
+                - generic [ref=f116e261]:
+                  - status "Loading..." [ref=f116e263]
+                  - status "Loading..." [ref=f116e265]
+                - generic [ref=f116e267]:
+                  - status "Loading..." [ref=f116e269]
+                  - status "Loading..." [ref=f116e271]
+          - generic [ref=f116e272]:
+            - tablist [ref=f116e273]:
+              - link [ref=f116e275] [cursor=pointer]:
+                - /url: /iraizoviedocanta/
+                - img "Posts" [ref=f116e277]
+              - link [ref=f116e288] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reels/
+                - img "Reels" [ref=f116e290]
+              - link [ref=f116e293] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reposts/
+                - img "Reposts" [ref=f116e295]
+              - link [ref=f116e298] [cursor=pointer]:
+                - /url: /iraizoviedocanta/tagged/
+                - img "Tagged" [ref=f116e300]
+            - tabpanel
+          - progressbar [ref=f116e304]:
+            - img "Loading..." [ref=f116e305]
+      - contentinfo [ref=f116e318]:
+        - generic [ref=f116e319]:
+          - generic [ref=f116e321]:
+            - link "Meta" [ref=f116e323] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f116e326] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f116e329] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f116e332] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f116e335] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f116e338] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f116e341] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f116e344] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f116e347] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f116e350] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f116e353] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f116e356] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f116e359] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f116e362] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f116e365] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f116e367]:
+            - generic [ref=f116e368] [cursor=pointer]:
+              - generic [ref=f116e369]:
+                - generic [ref=f116e370]: English
+                - img "Down chevron icon" [ref=f116e373]
+              - combobox "Switch Display Language" [ref=f116e375]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f116e376]: © 2026 Instagram from Meta
+  - button [ref=f116e379] [cursor=pointer]:
+    - generic "Messages" [ref=f116e380]:
+      - generic [ref=f116e381]:
+        - img "Messages" [ref=f116e384]
+        - generic [ref=f116e387]: Messages
+      - generic [ref=f116e388]:
+        - button "User avatar Kenneth Vega" [ref=f116e390]:
+          - img "User avatar" [ref=f116e393]
+        - button "User avatar SAMAEL" [ref=f116e395]:
+          - img "User avatar" [ref=f116e398]
+        - button "User avatar Oldboy" [ref=f116e400]:
+          - img "User avatar" [ref=f116e403]

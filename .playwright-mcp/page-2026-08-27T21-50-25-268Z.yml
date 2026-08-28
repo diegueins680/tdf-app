@@ -1,0 +1,328 @@
+- generic [ref=f140e4]:
+  - generic [ref=f140e18]:
+    - generic [ref=f140e21]:
+      - link [ref=f140e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f140e31]
+      - generic [ref=f140e34]:
+        - link [ref=f140e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f140e44]
+        - link [ref=f140e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f140e54]
+        - link [ref=f140e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f140e66]
+        - link [ref=f140e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f140e77]
+        - link [ref=f140e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f140e89]
+        - link [ref=f140e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f140e100]
+        - link [ref=f140e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f140e110]
+        - link [ref=f140e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f140e122]:
+            - img "tdf.records.label's profile picture" [ref=f140e123]
+      - generic [ref=f140e124]:
+        - link [ref=f140e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f140e132]
+        - link [ref=f140e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f140e140]
+    - generic [ref=f140e143]:
+      - main [ref=f140e144]:
+        - generic [ref=f140e146]:
+          - generic [ref=f140e147]:
+            - generic [ref=f140e148]:
+              - button [ref=f140e153] [cursor=pointer]:
+                - link [ref=f140e155]:
+                  - img "zoemoff's profile picture" [ref=f140e156]
+              - generic [ref=f140e157]:
+                - generic [ref=f140e158]:
+                  - generic [ref=f140e159]:
+                    - link [ref=f140e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "zoemoff" [level=2] [ref=f140e162]
+                    - button [ref=f140e164] [cursor=pointer]:
+                      - img "Options" [ref=f140e166]
+                  - generic [ref=f140e170]:
+                    - generic [ref=f140e171]: Zoe Moff
+                    - generic [ref=f140e172]: she/her
+                  - generic [ref=f140e173]:
+                    - generic [ref=f140e175]:
+                      - generic [ref=f140e176]: "145"
+                      - text: posts
+                    - link "15K followers" [ref=f140e178] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f140e179]:
+                        - generic "15,087" [ref=f140e180]: 15K
+                        - text: followers
+                    - link "2,838 following" [ref=f140e182] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f140e183]:
+                        - generic [ref=f140e184]: 2,838
+                        - text: following
+                - generic [ref=f140e185]:
+                  - generic [ref=f140e186]:
+                    - generic [ref=f140e187]: Musician/band
+                    - generic [ref=f140e189]:
+                      - button [ref=f140e190] [cursor=pointer]:
+                        - generic [ref=f140e191]:
+                          - text: 🎓 B.S Music Business
+                          - link "@cudenver" [ref=f140e192]:
+                            - /url: /cudenver/
+                          - link "@berkleecollege" [ref=f140e193]:
+                            - /url: /berkleecollege/
+                          - text: 👩‍💻Te ayudo a entender la Industria🎵🎵 Booking / MGMT
+                          - link "@jimenagonik" [ref=f140e194]:
+                            - /url: /jimenagonik/
+                      - generic [ref=f140e195]:
+                        - text: ...
+                        - button "more" [ref=f140e196] [cursor=pointer]
+                    - heading [level=1]
+                    - generic [ref=f140e198]:
+                      - button "Link icon linktr.ee/zoemoff and 4 more" [ref=f140e199] [cursor=pointer]:
+                        - generic [ref=f140e200]:
+                          - img "Link icon" [ref=f140e202]
+                          - generic [ref=f140e205]: linktr.ee/zoemoff and 4 more
+                      - link "Threads zoemoff" [ref=f140e207] [cursor=pointer]:
+                        - /url: https://www.threads.com/@zoemoff?xmt=AQG0RihRNmNATrKvrvPsv6eXYHdEZ4me6YHmMyHFQgu7Iok
+                        - img "Threads" [ref=f140e209]
+                        - generic [ref=f140e211]: zoemoff
+                  - link "Followed by domibrown_, davidantuanvilla + 13 more" [ref=f140e213] [cursor=pointer]:
+                    - /url: /zoemoff/followers/mutualOnly
+                    - generic [ref=f140e215]:
+                      - generic [ref=f140e217]:
+                        - button [ref=f140e218]:
+                          - link [ref=f140e219]
+                        - button [ref=f140e220]:
+                          - link [ref=f140e221]
+                        - button [ref=f140e222]:
+                          - link [ref=f140e223]
+                      - generic [ref=f140e224]: Followed by domibrown_, davidantuanvilla + 13 more
+            - generic [ref=f140e229]:
+              - button "Following Down chevron icon" [ref=f140e231] [cursor=pointer]:
+                - generic [ref=f140e232]:
+                  - generic [ref=f140e233]: Following
+                  - img "Down chevron icon" [ref=f140e236]
+              - button "Message" [ref=f140e239] [cursor=pointer]
+              - button [ref=f140e241] [cursor=pointer]:
+                - img "Similar accounts" [ref=f140e243]
+            - generic:
+              - menu
+          - generic [ref=f140e246]:
+            - tablist [ref=f140e247]:
+              - link [ref=f140e249] [cursor=pointer]:
+                - /url: /zoemoff/
+                - img "Posts" [ref=f140e251]
+              - link [ref=f140e262] [cursor=pointer]:
+                - /url: /zoemoff/reels/
+                - img "Reels" [ref=f140e264]
+              - link [ref=f140e267] [cursor=pointer]:
+                - /url: /zoemoff/reposts/
+                - img "Reposts" [ref=f140e269]
+              - link [ref=f140e272] [cursor=pointer]:
+                - /url: /zoemoff/tagged/
+                - img "Tagged" [ref=f140e274]
+            - tabpanel
+          - generic [ref=f140e281]:
+            - generic [ref=f140e282]:
+              - link [ref=f140e284] [cursor=pointer]:
+                - /url: /zoemoff/p/Da3abtnjuDX/
+                - img "Photo by Zoe Moff on July 16, 2026. May be a selfie of one or more people, hair and text that says '中限限公公 POR S NO ME CONOCÉS PORSINOMECONOCÉS:) :) Notas Notas Listo SOY ZOE MOFF BOOKER, MANAGER COMUNICADORA Alguien que aprendió industria musical desde adentro arriba del escenario,'." [ref=f140e287]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f140e290] [cursor=pointer]:
+                - /url: /zoemoff/reel/CeM5f7aFuq1/
+                - 'img "Love Theory - Kirk 💚 ••• #lovetheory #kirk #groove #bassist #bassworld #femalebassist" [ref=f140e293]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f140e296] [cursor=pointer]:
+                - /url: /zoemoff/reel/DbnpbkzzqZ4/
+                - img "Muchos artistas me preguntan sobre el mundo de la prensa, obviamente agentes de prensa especializados podrán guiaremos mejor. Mientras tanto y en proyectos en desarollo con poca capacidad de inversión, yo recomiendo usar herramientas disponibles online que hagan que el SEO de tu marca se empiece a mover 📩💚" [ref=f140e299]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f140e302] [cursor=pointer]:
+                - /url: /zoemoff/p/DbzBmFdIDIa/
+                - img "Photo by Zoe Moff on August 08, 2026. May be a meme of airplane and text that says '5 cláusulas que todo todocontrato contrato creativo necesita (para que te paguen, te protejan y te tomen en serio)'." [ref=f140e305]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f140e307]:
+              - link [ref=f140e309] [cursor=pointer]:
+                - /url: /zoemoff/p/DbrNTDYINnR/
+                - img "Photo shared by Zoe Moff on August 05, 2026 tagging @dantor_music, @alpogo.tickets, @isla_prods, @mafulagencia, and @trenzartecolectivo.mx. May be an image of poster and text that says 'MAFÜL L TALKS 1s DE AGOSTO 99 RECORDS CONDESA CDMX PANEI DE PROFESIONALES DE LA iNDUSTRIA ςίι NETWORKING MA ု 기산이 mafül NINETY NINE RECORDS TRENZARTE 開 balpogo'." [ref=f140e312]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f140e315] [cursor=pointer]:
+                - /url: /zoemoff/p/DbnnSjTE5-6/
+                - img "Photo shared by Zoe Moff on August 04, 2026 tagging @subversivalatam. May be an image of poster, magazine and text that says 'VIAJERO HOSTELS SUBVERSIVA PRESENTA ZOE MOFF CHARLA DE MUSIC BUSINESS Cómo potenciar e internacionalizar tu proyecto musical A'." [ref=f140e318]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f140e321] [cursor=pointer]:
+                - /url: /lulaenverano/reel/Dbbl2q6P9Ct/
+                - img "¿ Conocían este formato de shows en vivo? Comenten a qué residencias fueron y las analizamos😌 Gracias @spotifyargentina por el espacio!!!!" [ref=f140e324]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f140e327] [cursor=pointer]:
+                - /url: /zoemoff/reel/DaMQUUHtPqJ/
+                - img "Si te sentiste identificado, buenas tardes bienvenido a esta comunidad 🤓💽🙏💚" [ref=f140e330]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f140e332]:
+              - link [ref=f140e334] [cursor=pointer]:
+                - /url: /zoemoff/reel/DbBtrcMpYz6/
+                - img "El algoritmo puede ayudar, pero una comunidad comprometida hace mucho más 💚 Este Día del Amigo, celebremos también a quienes acompañan carreras, sostienen proyectos y hacen circular música nueva! Etiquetá a tu amigo artista y ayudanos a descubrir nueva musica 📩💽" [ref=f140e337]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f140e340] [cursor=pointer]:
+                - /url: /zoemoff/reel/DadDWe2un82/
+                - 'img "Así se ve un initerario real de Gira 👇💽 Y esto es solo una parada :0 Acá les comparto una parte poco visible del trabajo en giras: la organización interna ! Con los n1 en ecuador🇪🇨@subversivalatam Tenes preguntas de cómo funciona la logística en Giras? 📩" [ref=f140e343]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f140e346] [cursor=pointer]:
+                - /url: /zoemoff/reel/DZnVM-yv4x3/
+                - 'img "Manipulación emocional o marketing musical? 🤔 Este caso es interesante porque muestra algo clave: una canción no se lanza solo con un posteo, se lanza con una narrativa. Antes de pedirle a la gente que escuche, tenés que instalar una pregunta: Qué está pasando? Qué viene? Por qué debería importarme? Eso es marketing musical. Ahora, la línea fina está en cómo lo hacés. Generar misterio, conversación y expectativa puede ser una gran herramienta. Pero si la estrategia depende de hacerle creer a tu comunidad que estás atravesando algo grave, opino que no es lo mejor. La atención puede traer views, pero la confianza construye carrera. Ustedes qué piensan? 📩" [ref=f140e349]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f140e352] [cursor=pointer]:
+                - /url: /zoemoff/reel/DZnWrJ7v-h7/
+                - img "no es click bait un stream= $0.003 una venta directa= $10 las matemáticas no mienten 📲" [ref=f140e355]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f140e357]:
+        - generic [ref=f140e358]:
+          - generic [ref=f140e360]:
+            - link "Meta" [ref=f140e362] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f140e365] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f140e368] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f140e371] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f140e374] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f140e377] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f140e380] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f140e383] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f140e386] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f140e389] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f140e392] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f140e395] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f140e398] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f140e401] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f140e404] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f140e406]:
+            - generic [ref=f140e407] [cursor=pointer]:
+              - generic [ref=f140e408]:
+                - generic [ref=f140e409]: English
+                - img "Down chevron icon" [ref=f140e412]
+              - combobox "Switch Display Language" [ref=f140e414]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f140e415]: © 2026 Instagram from Meta
+  - button [ref=f140e418] [cursor=pointer]:
+    - generic "Messages" [ref=f140e419]:
+      - generic [ref=f140e420]:
+        - img "Messages" [ref=f140e423]
+        - generic [ref=f140e426]: Messages
+      - generic [ref=f140e427]:
+        - button "User avatar SAMAEL" [ref=f140e429]:
+          - img "User avatar" [ref=f140e432]
+        - button "User avatar Oldboy" [ref=f140e434]:
+          - img "User avatar" [ref=f140e437]
+        - button "User avatar Klaus Revolución" [ref=f140e439]:
+          - img "User avatar" [ref=f140e442]

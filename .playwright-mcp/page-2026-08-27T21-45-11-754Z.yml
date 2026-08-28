@@ -1,0 +1,268 @@
+- generic [ref=f87e4]:
+  - generic [ref=f87e18]:
+    - generic [ref=f87e21]:
+      - link [ref=f87e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f87e31]
+      - generic [ref=f87e34]:
+        - link [ref=f87e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f87e44]
+        - link [ref=f87e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f87e54]
+        - link [ref=f87e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f87e66]
+        - link [ref=f87e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f87e77]
+        - link [ref=f87e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f87e89]
+        - link [ref=f87e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f87e100]
+        - link [ref=f87e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f87e110]
+        - link [ref=f87e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f87e122]:
+            - img "tdf.records.label's profile picture" [ref=f87e123]
+      - generic [ref=f87e124]:
+        - link [ref=f87e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f87e132]
+        - link [ref=f87e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f87e140]
+    - generic [ref=f87e143]:
+      - main [ref=f87e144]:
+        - generic [ref=f87e146]:
+          - generic [ref=f87e147]:
+            - generic [ref=f87e148]:
+              - button [ref=f87e153] [cursor=pointer]:
+                - link [ref=f87e155]:
+                  - img "jotaefe.life's profile picture" [ref=f87e156]
+              - generic [ref=f87e157]:
+                - generic [ref=f87e158]:
+                  - generic [ref=f87e159]:
+                    - link [ref=f87e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "jotaefe.life" [level=2] [ref=f87e162]
+                    - button [ref=f87e164] [cursor=pointer]:
+                      - img "Options" [ref=f87e166]
+                  - generic [ref=f87e170]: J. F.
+                  - generic [ref=f87e172]:
+                    - generic [ref=f87e174]:
+                      - generic [ref=f87e175]: 2,300
+                      - text: posts
+                    - link "1,895 followers" [ref=f87e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f87e178]:
+                        - generic "1,895" [ref=f87e179]
+                        - text: followers
+                    - link "2,748 following" [ref=f87e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f87e182]:
+                        - generic [ref=f87e183]: 2,748
+                        - text: following
+                - generic [ref=f87e184]:
+                  - generic [ref=f87e185]:
+                    - generic [ref=f87e186]:
+                      - 'button "Colecciono cosas que llaman mi atención · Amante de libros, música y cine. #BookClub #MusicLover Pink Floyd 🌈⃤🌘 ·" [ref=f87e187] [cursor=pointer]'
+                      - generic [ref=f87e188]:
+                        - text: ...
+                        - button "more" [ref=f87e189] [cursor=pointer]
+                    - button "Link icon tap.bio/jfcarpio and 1 more" [ref=f87e192] [cursor=pointer]:
+                      - generic [ref=f87e193]:
+                        - img "Link icon" [ref=f87e195]
+                        - generic [ref=f87e198]: tap.bio/jfcarpio and 1 more
+                  - link "Followed by miguelgallardokeys, erikagm.ec + 4 more" [ref=f87e199] [cursor=pointer]:
+                    - /url: /jotaefe.life/followers/mutualOnly
+                    - generic [ref=f87e201]:
+                      - generic [ref=f87e203]:
+                        - button [ref=f87e204]:
+                          - link [ref=f87e205]
+                        - button [ref=f87e206]:
+                          - link [ref=f87e207]
+                        - button [ref=f87e208]:
+                          - link [ref=f87e209]
+                      - generic [ref=f87e210]: Followed by miguelgallardokeys, erikagm.ec + 4 more
+            - generic [ref=f87e215]:
+              - button "Following Down chevron icon" [ref=f87e217] [cursor=pointer]:
+                - generic [ref=f87e218]:
+                  - generic [ref=f87e219]: Following
+                  - img "Down chevron icon" [ref=f87e222]
+              - button "Message" [ref=f87e225] [cursor=pointer]
+              - button [ref=f87e227] [cursor=pointer]:
+                - img "Similar accounts" [ref=f87e229]
+            - menu [ref=f87e233]:
+              - list [ref=f87e237]:
+                - listitem [ref=f87e238]
+                - listitem [ref=f87e239]
+                - listitem [ref=f87e240]:
+                  - link "View Humor highlight" [ref=f87e243] [cursor=pointer]:
+                    - /url: /stories/highlights/17935086170129857/
+                    - button "jotaefe.life's highlight story picture Humor" [ref=f87e244]:
+                      - button [ref=f87e245]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e248]
+                      - generic [ref=f87e249]: Humor
+                - listitem [ref=f87e252]:
+                  - link "View Música highlight" [ref=f87e255] [cursor=pointer]:
+                    - /url: /stories/highlights/17937055897132066/
+                    - button "jotaefe.life's highlight story picture Música" [ref=f87e256]:
+                      - button [ref=f87e257]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e260]
+                      - generic [ref=f87e261]: Música
+                - listitem [ref=f87e264]:
+                  - link "View Mente highlight" [ref=f87e267] [cursor=pointer]:
+                    - /url: /stories/highlights/17891112182639269/
+                    - button "jotaefe.life's highlight story picture Mente" [ref=f87e268]:
+                      - button [ref=f87e269]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e272]
+                      - generic [ref=f87e273]: Mente
+                - listitem [ref=f87e276]:
+                  - link "View Artes highlight" [ref=f87e279] [cursor=pointer]:
+                    - /url: /stories/highlights/17937988763000889/
+                    - button "jotaefe.life's highlight story picture Artes" [ref=f87e280]:
+                      - button [ref=f87e281]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e284]
+                      - generic [ref=f87e285]: Artes
+                - listitem [ref=f87e288]:
+                  - link "View Viajes highlight" [ref=f87e291] [cursor=pointer]:
+                    - /url: /stories/highlights/17879183342302202/
+                    - button "jotaefe.life's highlight story picture Viajes" [ref=f87e292]:
+                      - button [ref=f87e293]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e296]
+                      - generic [ref=f87e297]: Viajes
+                - listitem [ref=f87e300]:
+                  - link "View Sabores highlight" [ref=f87e303] [cursor=pointer]:
+                    - /url: /stories/highlights/17953948405687027/
+                    - button "jotaefe.life's highlight story picture Sabores" [ref=f87e304]:
+                      - button [ref=f87e305]:
+                        - img "jotaefe.life's highlight story picture" [ref=f87e308]
+                      - generic [ref=f87e309]: Sabores
+          - generic [ref=f87e312]:
+            - tablist [ref=f87e313]:
+              - link [ref=f87e315] [cursor=pointer]:
+                - /url: /jotaefe.life/
+                - img "Posts" [ref=f87e317]
+              - link [ref=f87e328] [cursor=pointer]:
+                - /url: /jotaefe.life/reels/
+                - img "Reels" [ref=f87e330]
+              - link [ref=f87e333] [cursor=pointer]:
+                - /url: /jotaefe.life/reposts/
+                - img "Reposts" [ref=f87e335]
+              - link [ref=f87e338] [cursor=pointer]:
+                - /url: /jotaefe.life/tagged/
+                - img "Tagged" [ref=f87e340]
+            - tabpanel
+          - progressbar [ref=f87e344]:
+            - img "Loading..." [ref=f87e345]
+      - contentinfo [ref=f87e358]:
+        - generic [ref=f87e359]:
+          - generic [ref=f87e361]:
+            - link "Meta" [ref=f87e363] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f87e366] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f87e369] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f87e372] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f87e375] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f87e378] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f87e381] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f87e384] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f87e387] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f87e390] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f87e393] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f87e396] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f87e399] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f87e402] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f87e405] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f87e407]:
+            - generic [ref=f87e408] [cursor=pointer]:
+              - generic [ref=f87e409]:
+                - generic [ref=f87e410]: English
+                - img "Down chevron icon" [ref=f87e413]
+              - combobox "Switch Display Language" [ref=f87e415]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f87e416]: © 2026 Instagram from Meta
+  - button [ref=f87e419] [cursor=pointer]:
+    - generic "Messages" [ref=f87e420]:
+      - generic [ref=f87e421]:
+        - img "Messages" [ref=f87e424]
+        - generic [ref=f87e427]: Messages
+      - generic [ref=f87e428]:
+        - button "User avatar Kenneth Vega" [ref=f87e430]:
+          - img "User avatar" [ref=f87e433]
+        - button "User avatar SAMAEL" [ref=f87e435]:
+          - img "User avatar" [ref=f87e438]
+        - button "User avatar Oldboy" [ref=f87e440]:
+          - img "User avatar" [ref=f87e443]

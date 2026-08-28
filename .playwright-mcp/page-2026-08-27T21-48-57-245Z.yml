@@ -1,0 +1,44 @@
+- generic [ref=f133e2]:
+  - generic [ref=f133e3]:
+    - banner [ref=f133e4]:
+      - generic:
+        - link "Instagram" [ref=f133e6] [cursor=pointer]:
+          - /url: /
+        - generic:
+          - list:
+            - listitem [ref=f133e7]:
+              - link [ref=f133e8] [cursor=pointer]:
+                - /url: /accounts/login/
+                - strong [ref=f133e9]: Log in
+    - generic [ref=f133e11]:
+      - heading "Sorry, this page isn't available." [level=2] [ref=f133e12]
+      - paragraph [ref=f133e13]:
+        - text: The link you followed may be broken, or the page may have been removed.
+        - link "Go back to Instagram." [ref=f133e14] [cursor=pointer]:
+          - /url: /
+  - contentinfo [ref=f133e15]:
+    - generic [ref=f133e16]:
+      - navigation [ref=f133e17]:
+        - list [ref=f133e18]:
+          - listitem [ref=f133e19]:
+            - link "About us" [ref=f133e20] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us
+          - listitem [ref=f133e21]:
+            - link "Support" [ref=f133e22] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+          - listitem [ref=f133e23]:
+            - link "Press" [ref=f133e24] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+          - listitem [ref=f133e25]:
+            - link "API" [ref=f133e26] [cursor=pointer]:
+              - /url: ""
+          - listitem [ref=f133e27]:
+            - link "Jobs" [ref=f133e28] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+          - listitem [ref=f133e29]:
+            - link "Privacy" [ref=f133e30] [cursor=pointer]:
+              - /url: /legal/privacy/
+          - listitem [ref=f133e31]:
+            - link "Terms" [ref=f133e32] [cursor=pointer]:
+              - /url: /legal/terms/
+      - paragraph [ref=f133e33]: © 2026 Instagram

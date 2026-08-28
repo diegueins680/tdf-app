@@ -1,0 +1,250 @@
+- generic [ref=f93e4]:
+  - generic [ref=f93e18]:
+    - generic [ref=f93e21]:
+      - link [ref=f93e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f93e31]
+      - generic [ref=f93e34]:
+        - link [ref=f93e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f93e44]
+        - link [ref=f93e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f93e54]
+        - link [ref=f93e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f93e66]
+        - link [ref=f93e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f93e77]
+        - link [ref=f93e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f93e89]
+        - link [ref=f93e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f93e100]
+        - link [ref=f93e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f93e110]
+        - link [ref=f93e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f93e122]:
+            - img "tdf.records.label's profile picture" [ref=f93e123]
+      - generic [ref=f93e124]:
+        - link [ref=f93e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f93e132]
+        - link [ref=f93e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f93e140]
+    - generic [ref=f93e143]:
+      - main [ref=f93e144]:
+        - generic [ref=f93e146]:
+          - generic [ref=f93e147]:
+            - generic [ref=f93e148]:
+              - button [ref=f93e153] [cursor=pointer]:
+                - link [ref=f93e155]:
+                  - img "lo_montoya's profile picture" [ref=f93e156]
+              - generic [ref=f93e157]:
+                - generic [ref=f93e158]:
+                  - generic [ref=f93e159]:
+                    - link [ref=f93e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "lo_montoya" [level=2] [ref=f93e162]
+                    - button [ref=f93e164] [cursor=pointer]:
+                      - img "Options" [ref=f93e166]
+                  - generic [ref=f93e170]: Christopher López Montoya
+                  - generic [ref=f93e172]:
+                    - generic [ref=f93e174]:
+                      - generic [ref=f93e175]: "251"
+                      - text: posts
+                    - link "2,285 followers" [ref=f93e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f93e178]:
+                        - generic "2,285" [ref=f93e179]
+                        - text: followers
+                    - link "6,906 following" [ref=f93e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f93e182]:
+                        - generic [ref=f93e183]: 6,906
+                        - text: following
+                - generic [ref=f93e184]:
+                  - generic [ref=f93e185]:
+                    - generic [ref=f93e186]: Artist
+                    - button [ref=f93e189] [cursor=pointer]:
+                      - generic [ref=f93e190]:
+                        - text: ~LO_MontoyA~🇪🇨ARTISTA🎙️ Ecuatoriano 👉🇪🇨Cantante y Bailarín 🎶🔥😈
+                        - link "#mételeflow" [ref=f93e191]:
+                          - /url: /explore/tags/m%C3%A9teleflow/
+                        - text: Ya escucharon mis canciones? ⬇️😎
+                    - heading [level=1]
+                    - generic [ref=f93e192]:
+                      - button "Link icon open.spotify.com/track/4JnUwFlc8dUM1kKMJF8AsB?si=N4NFgZdTRxSh-6AO9Z-kZw and 1 more" [ref=f93e193] [cursor=pointer]:
+                        - generic [ref=f93e194]:
+                          - img "Link icon" [ref=f93e196]
+                          - generic [ref=f93e199]: open.spotify.com/track/4JnUwFlc8dUM1kKMJF8AsB?si=N4NFgZdTRxSh-6AO9Z-kZw and 1 more
+                      - link "Threads lo_montoya" [ref=f93e201] [cursor=pointer]:
+                        - /url: https://www.threads.com/@lo_montoya?xmt=AQG00b9JmryEfpYL_58vZayHoCJz9keQp8jdyAjiR7Atow0
+                        - img "Threads" [ref=f93e203]
+                        - generic [ref=f93e205]: lo_montoya
+                  - link "Followed by stefymunozc, caro_jacome__, and ladebochadagarcia" [ref=f93e207] [cursor=pointer]:
+                    - /url: /lo_montoya/followers/mutualOnly
+                    - generic [ref=f93e209]:
+                      - generic [ref=f93e211]:
+                        - button [ref=f93e212]:
+                          - link [ref=f93e213]
+                        - button [ref=f93e214]:
+                          - link [ref=f93e215]
+                        - button [ref=f93e216]:
+                          - link [ref=f93e217]
+                      - generic [ref=f93e218]: Followed by stefymunozc, caro_jacome__, and ladebochadagarcia
+            - generic [ref=f93e223]:
+              - button "Follow Back" [ref=f93e225] [cursor=pointer]
+              - button "Message" [ref=f93e229] [cursor=pointer]
+              - button [ref=f93e231] [cursor=pointer]:
+                - img "Similar accounts" [ref=f93e233]
+            - menu [ref=f93e237]:
+              - generic [ref=f93e239]:
+                - generic [ref=f93e241]:
+                  - status "Loading..." [ref=f93e243]
+                  - status "Loading..." [ref=f93e245]
+                - generic [ref=f93e247]:
+                  - status "Loading..." [ref=f93e249]
+                  - status "Loading..." [ref=f93e251]
+                - generic [ref=f93e253]:
+                  - status "Loading..." [ref=f93e255]
+                  - status "Loading..." [ref=f93e257]
+                - generic [ref=f93e259]:
+                  - status "Loading..." [ref=f93e261]
+                  - status "Loading..." [ref=f93e263]
+                - generic [ref=f93e265]:
+                  - status "Loading..." [ref=f93e267]
+                  - status "Loading..." [ref=f93e269]
+                - generic [ref=f93e271]:
+                  - status "Loading..." [ref=f93e273]
+                  - status "Loading..." [ref=f93e275]
+                - generic [ref=f93e277]:
+                  - status "Loading..." [ref=f93e279]
+                  - status "Loading..." [ref=f93e281]
+          - generic [ref=f93e282]:
+            - tablist [ref=f93e283]:
+              - link [ref=f93e285] [cursor=pointer]:
+                - /url: /lo_montoya/
+                - img "Posts" [ref=f93e287]
+              - link [ref=f93e298] [cursor=pointer]:
+                - /url: /lo_montoya/reels/
+                - img "Reels" [ref=f93e300]
+              - link [ref=f93e303] [cursor=pointer]:
+                - /url: /lo_montoya/reposts/
+                - img "Reposts" [ref=f93e305]
+              - link [ref=f93e308] [cursor=pointer]:
+                - /url: /lo_montoya/tagged/
+                - img "Tagged" [ref=f93e310]
+            - tabpanel
+          - progressbar [ref=f93e314]:
+            - img "Loading..." [ref=f93e315]
+      - contentinfo [ref=f93e328]:
+        - generic [ref=f93e329]:
+          - generic [ref=f93e331]:
+            - link "Meta" [ref=f93e333] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f93e336] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f93e339] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f93e342] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f93e345] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f93e348] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f93e351] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f93e354] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f93e357] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f93e360] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f93e363] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f93e366] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f93e369] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f93e372] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f93e375] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f93e377]:
+            - generic [ref=f93e378] [cursor=pointer]:
+              - generic [ref=f93e379]:
+                - generic [ref=f93e380]: English
+                - img "Down chevron icon" [ref=f93e383]
+              - combobox "Switch Display Language" [ref=f93e385]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f93e386]: © 2026 Instagram from Meta
+  - button [ref=f93e389] [cursor=pointer]:
+    - generic "Messages" [ref=f93e390]:
+      - generic [ref=f93e391]:
+        - img "Messages" [ref=f93e394]
+        - generic [ref=f93e397]: Messages
+      - generic [ref=f93e398]:
+        - button "User avatar Kenneth Vega" [ref=f93e400]:
+          - img "User avatar" [ref=f93e403]
+        - button "User avatar SAMAEL" [ref=f93e405]:
+          - img "User avatar" [ref=f93e408]
+        - button "User avatar Oldboy" [ref=f93e410]:
+          - img "User avatar" [ref=f93e413]

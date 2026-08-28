@@ -1,0 +1,400 @@
+- generic [ref=f134e4]:
+  - generic [ref=f134e7]:
+    - generic [ref=f134e18]:
+      - generic [ref=f134e21]:
+        - link [ref=f134e26] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=f134e31]
+        - generic [ref=f134e34]:
+          - link "Home Home" [ref=f134e516] [cursor=pointer]:
+            - /url: /
+            - generic [ref=f134e40]:
+              - img "Home" [ref=f134e44]
+              - generic [ref=f134e517]: Home
+          - link "Reels Reels" [ref=f134e522] [cursor=pointer]:
+            - /url: /reels/
+            - generic [ref=f134e50]:
+              - img "Reels" [ref=f134e54]
+              - generic [ref=f134e523]: Reels
+          - link "Messages Messages" [ref=f134e528] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=f134e62]:
+              - img "Messages" [ref=f134e66]
+              - generic [ref=f134e529]: Messages
+          - link "Search Search" [ref=f134e534] [cursor=pointer]:
+            - /url: /explore/
+            - generic [ref=f134e73]:
+              - img "Search" [ref=f134e77]
+              - generic [ref=f134e535]: Search
+          - link "Notifications Notifications" [ref=f134e541] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f134e542]:
+              - img "Notifications" [ref=f134e546]
+              - generic [ref=f134e548]: Notifications
+          - link "New post Create" [ref=f134e553] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f134e96]:
+              - img "New post" [ref=f134e100]
+              - generic [ref=f134e554]: Create
+          - link "Professional dashboard Dashboard" [ref=f134e559] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f134e106]:
+              - img "Professional dashboard" [ref=f134e110]
+              - generic [ref=f134e560]: Dashboard
+          - link "tdf.records.label's profile picture Profile" [ref=f134e565] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - generic [ref=f134e118]:
+              - link [ref=f134e123]:
+                - img "tdf.records.label's profile picture" [ref=f134e124]
+              - generic [ref=f134e566]: Profile
+        - generic [ref=f134e125]:
+          - link "Settings More" [ref=f134e571] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f134e129]:
+              - img "Settings" [ref=f134e572]
+              - generic [ref=f134e574]: More
+          - link "Also from Meta Also from Meta" [ref=f134e579] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f134e137]:
+              - img "Also from Meta" [ref=f134e141]
+              - generic [ref=f134e580]: Also from Meta
+      - generic [ref=f134e144]:
+        - main [ref=f134e145]:
+          - generic [ref=f134e147]:
+            - generic [ref=f134e148]:
+              - generic [ref=f134e149]:
+                - generic [ref=f134e153]:
+                  - button "Note..." [ref=f134e154] [cursor=pointer]
+                  - button [ref=f134e166] [cursor=pointer]:
+                    - img "Change profile photo" [ref=f134e167]
+                - generic [ref=f134e168]:
+                  - generic [ref=f134e169]:
+                    - generic [ref=f134e170]:
+                      - link [ref=f134e172] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "tdf.records.label" [level=2] [ref=f134e173]
+                      - button [ref=f134e175] [cursor=pointer]:
+                        - img "Options" [ref=f134e177]
+                    - generic [ref=f134e180]: TDF Records
+                    - generic [ref=f134e182]:
+                      - generic [ref=f134e184]:
+                        - generic [ref=f134e185]: "338"
+                        - text: posts
+                      - link "4,076 followers" [ref=f134e187] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f134e188]:
+                          - generic "4,076" [ref=f134e189]
+                          - text: followers
+                      - link "1,932 following" [ref=f134e191] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f134e192]:
+                          - generic [ref=f134e193]: 1,932
+                          - text: following
+                  - generic [ref=f134e195]:
+                    - generic [ref=f134e196]: Entrepreneur
+                    - generic [ref=f134e198]:
+                      - button [ref=f134e199] [cursor=pointer]:
+                        - generic [ref=f134e200]: ⏺️ Estudio de grabación🎹 Renta de equipos🎛️ Mezcla y mastering🖥️ Edición🎸
+                      - generic [ref=f134e201]:
+                        - text: ...
+                        - button "more" [ref=f134e202] [cursor=pointer]
+                    - heading "Félix Oralabal y calle C, Quito, Ecuador 170510" [level=1] [ref=f134e204]
+                    - generic [ref=f134e205]:
+                      - generic [ref=f134e206]:
+                        - img "Link icon" [ref=f134e208]
+                        - link "linktr.ee/tdfestudiodegrabacion" [ref=f134e212] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ftdfestudiodegrabacion%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAaeRzbIFS7xfuP68Ghff1dOBIZaSfgPrcG_Fw7W79ruQzTQtxguJwOoAR5Xc1g_aem_9CTlS93kN7NA2-IYzGe3iA&e=AUDg3OzlMBjtGa0Xlaqb-sgCaDi2Z-7ZeW7Drtu_ldUpB8Hqbs2XKDyW9U_ugkjWVB3tZSZqJ9JcqjeANA9u0rQfLH-ueq8RnXcaYdyjfd3lyVBulRnJpskRmz_6Jd1gWv3xyG80XbVr
+                      - link "Threads tdf.records.label" [ref=f134e215] [cursor=pointer]:
+                        - /url: https://www.threads.com/@tdf.records.label?xmt=AQG0uXWazcELHKfpJu4MO7W1ZE0iaSt3XCyekL19DppnkWU
+                        - img "Threads" [ref=f134e217]
+                        - generic [ref=f134e219]: tdf.records.label
+              - generic [ref=f134e225]:
+                - link "Edit profile" [ref=f134e227] [cursor=pointer]:
+                  - /url: /accounts/edit/
+                - link "View archive" [ref=f134e229] [cursor=pointer]:
+                  - /url: /archive/stories/
+              - menu [ref=f134e231]:
+                - list [ref=f134e235]:
+                  - listitem [ref=f134e236]
+                  - listitem [ref=f134e237]
+                  - listitem [ref=f134e238]:
+                    - link "View Tour Colombia highlight" [ref=f134e241] [cursor=pointer]:
+                      - /url: /stories/highlights/18020134514197304/
+                      - button "tdf.records.label's highlight story picture Tour Colombia" [ref=f134e242]:
+                        - button [ref=f134e243]:
+                          - img "tdf.records.label's highlight story picture" [ref=f134e246]
+                        - generic [ref=f134e247]: Tour Colombia
+                  - listitem [ref=f134e250]:
+                    - link "View G U E S T S highlight" [ref=f134e253] [cursor=pointer]:
+                      - /url: /stories/highlights/18029198257359774/
+                      - button "tdf.records.label's highlight story picture G U E S T S" [ref=f134e254]:
+                        - button [ref=f134e255]:
+                          - img "tdf.records.label's highlight story picture" [ref=f134e258]
+                        - generic [ref=f134e259]: G U E S T S
+                  - listitem [ref=f134e262]:
+                    - link "View S Y N T H S highlight" [ref=f134e265] [cursor=pointer]:
+                      - /url: /stories/highlights/18200542021155753/
+                      - button "tdf.records.label's highlight story picture S Y N T H S" [ref=f134e266]:
+                        - button [ref=f134e267]:
+                          - img "tdf.records.label's highlight story picture" [ref=f134e270]
+                        - generic [ref=f134e271]: S Y N T H S
+                  - listitem [ref=f134e274]:
+                    - link "View E S T U D I O highlight" [ref=f134e277] [cursor=pointer]:
+                      - /url: /stories/highlights/17928456047228438/
+                      - button "tdf.records.label's highlight story picture E S T U D I O" [ref=f134e278]:
+                        - button [ref=f134e279]:
+                          - img "tdf.records.label's highlight story picture" [ref=f134e282]
+                        - generic [ref=f134e283]: E S T U D I O
+                  - listitem [ref=f134e286]:
+                    - button "Plus icon New" [ref=f134e289] [cursor=pointer]:
+                      - img "Plus icon" [ref=f134e293]
+                      - generic [ref=f134e295]: New
+            - generic [ref=f134e298]:
+              - tablist [ref=f134e299]:
+                - link [ref=f134e301] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                  - img "Posts" [ref=f134e303]
+                - link [ref=f134e314] [cursor=pointer]:
+                  - /url: /tdf.records.label/reels/
+                  - img "Reels" [ref=f134e316]
+                - link [ref=f134e319] [cursor=pointer]:
+                  - /url: /tdf.records.label/saved/
+                  - img "Saved" [ref=f134e321]
+                - link [ref=f134e324] [cursor=pointer]:
+                  - /url: /tdf.records.label/reposts/
+                  - img "Reposts" [ref=f134e326]
+                - link [ref=f134e329] [cursor=pointer]:
+                  - /url: /tdf.records.label/tagged/
+                  - img "Tagged" [ref=f134e331]
+              - tabpanel
+            - generic [ref=f134e439]:
+              - generic [ref=f134e440]:
+                - link [ref=f134e442] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DRnkzyTjlVD/
+                  - img "Photo by TDF Records on November 28, 2025." [ref=f134e445]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+                - link [ref=f134e448] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DRihKjAEVSV/
+                  - img "Photo by TDF Records on November 26, 2025." [ref=f134e451]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+                - link [ref=f134e454] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DRdPZsqErwy/
+                  - img "Photo by TDF Records on November 24, 2025." [ref=f134e457]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+                - link [ref=f134e460] [cursor=pointer]:
+                  - /url: /juano_music/reel/DXPB2bjDn-E/
+                  - 'img "🌙 LUNE VOCAL – Juan Ledesma & Diego Saa Una experiencia sonora que conecta lo emocional con la pista de baile. Lune Vocal es un viaje dentro del house, donde las atmósferas envolventes, vocales hipnóticas y grooves elegantes se fusionan para crear una vibra única y profunda. Perfecto para quienes sienten la música más allá del ritmo. Este lanzamiento representa la esencia del sonido moderno del house: minimalista, energético y con alma. 🎧 Disponible ya en todas las plataformas digitales 📀 Release oficial por TDF Records #LuneVocal #JuanLedesma #DiegoSaa #TDFRecords #HouseMusic DeepHouse TechHouse ElectronicMusic NewMusic NowPlaying MusicRelease UndergroundHouse HouseVibes DJLife ProducerLife ClubMusic DanceMusic SpotifyMusic AppleMusic Beatport SoundCloud ElectronicVibes MusicLovers GlobalHouse ReleaseDay" [ref=f134e463]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+              - generic [ref=f134e465]:
+                - link [ref=f134e467] [cursor=pointer]:
+                  - /url: /blackpalacio_music/p/DV_V39QjlPa/
+                  - img "Photo shared by BlackPalacio on March 17, 2026 tagging @kenihosik9, @juandiegoillescas, @gosh88c, @0iego.saa, @tdf.records.label, and @santi.agocobo." [ref=f134e470]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f134e473] [cursor=pointer]:
+                  - /url: /takijanaskaec/reel/DUqPOqfjqsS/
+                  - img "🎙️✨ ¡De vuelta al estudio después de varios años! Para nosotros, como Takijana, es una felicidad enorme regresar a la escena con más fuerza, más pasión y con el amor por la música latiendo más fuerte que nunca. Esto recién comienza… 👀🔥 Atentos, que se vienen grandes noticias. 🎶🚀" [ref=f134e476]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+                - link [ref=f134e479] [cursor=pointer]:
+                  - /url: /tdf.records.label/reel/DRS8IbTErRQ/
+                  - 'img "¿Están listos? ☠️ Este domingo, 7PM estrenamos una edición especial de las TDF Sessions, con @holger.quinonez.banda 💥 https://www.youtube.com/watch?v=9387ent0ELc No digan que no les avisamos. #tdfsessions" [ref=f134e482]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+                - link [ref=f134e485] [cursor=pointer]:
+                  - /url: /tdf.records.label/reel/DRNzpZQEWh6/
+                  - 'img "Algo así fue grabar una sesión con @holger.quinonez.banda 😜 Ese domingo, 7pm sale la sesión completa. ¡Pilas ahí! Comparte 🔁 y pasa la voz 🗣️ #MakingOf #TdfSessions" [ref=f134e488]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+              - generic [ref=f134e490]:
+                - link [ref=f134e492] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DRI0l18ET7U/
+                  - img "Photo by TDF Records on November 16, 2025." [ref=f134e495]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f134e498] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DQS1u8bkdTB/
+                  - img "Photo by TDF Records on October 26, 2025." [ref=f134e501]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f134e504] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DQMt-XpEelT/
+                  - img "Photo by TDF Records on October 24, 2025." [ref=f134e507]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f134e510] [cursor=pointer]:
+                  - /url: /tdf.records.label/p/DQIXj-YkV37/
+                  - img "Photo by TDF Records on October 22, 2025." [ref=f134e513]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+        - contentinfo [ref=f134e349]:
+          - generic [ref=f134e350]:
+            - generic [ref=f134e352]:
+              - link "Meta" [ref=f134e354] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=f134e357] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=f134e360] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=f134e363] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=f134e366] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=f134e369] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=f134e372] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=f134e375] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=f134e378] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=f134e381] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=f134e384] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=f134e387] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Threads" [ref=f134e390] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=f134e393] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=f134e396] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=f134e398]:
+              - generic [ref=f134e399] [cursor=pointer]:
+                - generic [ref=f134e400]:
+                  - generic [ref=f134e401]: English
+                  - img "Down chevron icon" [ref=f134e404]
+                - combobox "Switch Display Language" [ref=f134e406]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=f134e407]: © 2026 Instagram from Meta
+    - dialog [ref=f134e588]:
+      - generic [ref=f134e594]:
+        - link "Settings Settings" [active] [ref=f134e595] [cursor=pointer]:
+          - /url: /accounts/edit/
+          - generic [ref=f134e598]:
+            - img "Settings" [ref=f134e601]
+            - generic [ref=f134e604]: Settings
+        - link "Your activity Your activity" [ref=f134e609] [cursor=pointer]:
+          - /url: /your_activity/interactions
+          - generic [ref=f134e612]:
+            - img "Your activity" [ref=f134e615]
+            - generic [ref=f134e617]: Your activity
+        - link "Saved Saved" [ref=f134e622] [cursor=pointer]:
+          - /url: /tdf.records.label/saved/
+          - generic [ref=f134e625]:
+            - img "Saved" [ref=f134e628]
+            - generic [ref=f134e630]: Saved
+        - button "Theme icon Switch appearance" [ref=f134e636] [cursor=pointer]:
+          - generic [ref=f134e639]:
+            - img "Theme icon" [ref=f134e642]
+            - generic [ref=f134e644]: Switch appearance
+        - link "Scheduled content Scheduled content" [ref=f134e649] [cursor=pointer]:
+          - /url: /scheduled_content/
+          - generic [ref=f134e652]:
+            - img "Scheduled content" [ref=f134e655]
+            - generic [ref=f134e663]: Scheduled content
+        - button "Report a problem Report a problem" [ref=f134e668] [cursor=pointer]:
+          - generic [ref=f134e671]:
+            - img "Report a problem" [ref=f134e674]
+            - generic [ref=f134e676]: Report a problem
+        - link "Meta Business Suite Meta Business Suite Meta Business Suite" [ref=f134e682] [cursor=pointer]:
+          - /url: https://business.facebook.com/business/loginrequest/ig/?next=%2Flatest%2F%3Fnav_ref%3Dig_web_left_nav_more_menu_mbs_entrypoint_oidc&app=436761779744620
+          - generic [ref=f134e685]:
+            - img "Meta Business Suite" [ref=f134e688]
+            - generic [ref=f134e692]: Meta Business Suite
+            - img "Meta Business Suite" [ref=f134e699]
+        - button "Switch accounts" [ref=f134e701] [cursor=pointer]
+        - button "Log out" [ref=f134e711] [cursor=pointer]
+  - button [ref=f134e410] [cursor=pointer]:
+    - generic "Messages" [ref=f134e411]:
+      - generic [ref=f134e412]:
+        - img "Messages" [ref=f134e415]
+        - generic [ref=f134e418]: Messages
+      - generic [ref=f134e419]:
+        - button "User avatar Kenneth Vega" [ref=f134e421]:
+          - img "User avatar" [ref=f134e424]
+        - button "User avatar SAMAEL" [ref=f134e426]:
+          - img "User avatar" [ref=f134e429]
+        - button "User avatar Oldboy" [ref=f134e431]:
+          - img "User avatar" [ref=f134e434]

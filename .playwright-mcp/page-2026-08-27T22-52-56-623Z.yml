@@ -1,0 +1,372 @@
+- generic [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e3417] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - generic [ref=e14]:
+      - link "Saltar al contenido principal" [ref=e3418] [cursor=pointer]:
+        - /url: "#main-content"
+      - navigation "Navegación de la aplicación" [ref=e3419]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: MENÚ
+          - generic [ref=e20]:
+            - textbox "Buscar sección" [ref=e3420]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=e25]:
+          - listitem [ref=e26]:
+            - generic [ref=e27]: ATAJOS
+            - list [ref=e30]:
+              - link "Chat Reciente · GENTE" [ref=e3421] [cursor=pointer]:
+                - /url: /chat
+                - generic [ref=e34]:
+                  - generic [ref=e35]: Chat
+                  - paragraph [ref=e36]: Reciente · GENTE
+              - link "Empresas Reciente · GENTE" [ref=e3422] [cursor=pointer]:
+                - /url: /crm/empresas
+                - generic [ref=e40]:
+                  - generic [ref=e41]: Empresas
+                  - paragraph [ref=e42]: Reciente · GENTE
+          - listitem [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]: CREAR
+              - button "Mostrar CREAR" [ref=e3423] [cursor=pointer]
+          - listitem [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: GENTE
+              - button "Ocultar GENTE" [expanded] [ref=e3424] [cursor=pointer]
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link "Comunidad" [ref=e3425] [cursor=pointer]:
+                  - /url: /fans
+              - listitem [ref=e73]:
+                - link "Tienda" [ref=e3426] [cursor=pointer]:
+                  - /url: /marketplace
+              - listitem [ref=e79]:
+                - link "Lanzamientos públicos" [ref=e3427] [cursor=pointer]:
+                  - /url: /records
+              - listitem [ref=e85]:
+                - link "Reservar estudio" [ref=e3428] [cursor=pointer]:
+                  - /url: /reservar
+              - listitem [ref=e91]:
+                - link "Agenda de pruebas" [ref=e3429] [cursor=pointer]:
+                  - /url: /trials
+              - listitem [ref=e97]:
+                - link "Registro live sessions" [ref=e3430] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+              - listitem [ref=e103]:
+                - link "Donaciones" [ref=e3431] [cursor=pointer]:
+                  - /url: /donar
+              - listitem [ref=e109]:
+                - link "Domo Pululahua" [ref=e3432] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+              - listitem [ref=e115]:
+                - link "Conexiones" [ref=e3433] [cursor=pointer]:
+                  - /url: /social
+              - listitem [ref=e121]:
+                - link "Instagram" [ref=e3434] [cursor=pointer]:
+                  - /url: /social/instagram
+              - listitem [ref=e127]:
+                - link "Chat" [ref=e3435] [cursor=pointer]:
+                  - /url: /chat
+              - listitem [ref=e133]:
+                - link "Inbox social" [ref=e3436] [cursor=pointer]:
+                  - /url: /social/inbox
+              - listitem [ref=e139]:
+                - link "Eventos sociales" [ref=e3437] [cursor=pointer]:
+                  - /url: /social/eventos
+              - listitem [ref=e145]:
+                - link "Contactos" [ref=e3438] [cursor=pointer]:
+                  - /url: /crm/contactos
+              - listitem [ref=e151]:
+                - link "Empresas" [ref=e3439] [cursor=pointer]:
+                  - /url: /crm/empresas
+              - listitem [ref=e157]:
+                - link "Leads" [ref=e3440] [cursor=pointer]:
+                  - /url: /crm/leads
+          - listitem [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]: SELLO
+              - button "Mostrar SELLO" [ref=e3441] [cursor=pointer]
+          - listitem [ref=e173]:
+            - generic [ref=e174]:
+              - generic [ref=e175]: OPERAR
+              - button "Mostrar OPERAR" [ref=e3442] [cursor=pointer]
+          - listitem [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e186]: ADMIN
+              - button "Mostrar ADMIN" [ref=e3443] [cursor=pointer]
+          - listitem [ref=e197]:
+            - generic [ref=e198]:
+              - generic [ref=e199]: HERRAMIENTAS
+              - button "Mostrar HERRAMIENTAS" [ref=e3444] [cursor=pointer]
+          - listitem [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]: AYUDA
+              - button "Mostrar AYUDA" [ref=e3445] [cursor=pointer]
+      - generic [ref=e217]:
+        - banner [ref=e218]:
+          - generic [ref=e219]:
+            - button "Ocultar menú lateral" [ref=e3446] [cursor=pointer]
+            - link "Ir al inicio" [ref=e3447] [cursor=pointer]:
+              - /url: /inicio
+              - img "TDF Records logo"
+            - button "Buscar sección" [ref=e3448] [cursor=pointer]:
+              - generic [ref=e230]: ⌘K
+            - generic [ref=e231]:
+              - button "Creación rápida" [ref=e3449] [cursor=pointer]:
+                - generic [ref=e236]: Crear
+              - button "Notificaciones" [ref=e3450] [cursor=pointer]:
+                - generic [ref=e238]: "0"
+              - button "Abrir menú de sesión" [ref=e3451] [cursor=pointer]:
+                - generic [ref=e243]: D
+        - status [ref=e244]:
+          - progressbar "Cargando datos" [ref=e3452]
+        - main [ref=e247]:
+          - generic [ref=e249]:
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - heading "Contactos" [level=3] [ref=e3455]
+                - paragraph [ref=e299]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=e3456] [cursor=pointer]
+            - generic [ref=e263]:
+              - generic "Buscar contactos" [ref=e3457]:
+                - generic [ref=e302]:
+                  - textbox "Buscar contactos" [ref=e3458]:
+                    - /placeholder: Buscar por nombre, email o Instagram
+                  - group
+              - generic [ref=e2433]: Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.
+              - generic [ref=e2434]:
+                - table [ref=e2435]:
+                  - rowgroup [ref=e2436]:
+                    - row [ref=e3459]:
+                      - columnheader "Nombre" [ref=e3460]
+                      - columnheader "Contacto" [ref=e3461]
+                      - columnheader "Acciones" [ref=e3462]
+                  - rowgroup [ref=e2441]:
+                    - row [ref=e3463]:
+                      - cell [ref=e3464]:
+                        - button [ref=e3465] [cursor=pointer]:
+                          - paragraph [ref=e2446]: Arkabuz
+                      - cell "arkabuz.galapagos" [ref=e3466]
+                      - cell [ref=e3467]:
+                        - button "Abrir acciones para Arkabuz" [ref=e3468] [cursor=pointer]
+                    - row [ref=e3469]:
+                      - cell [ref=e3470]:
+                        - button [ref=e3471] [cursor=pointer]:
+                          - paragraph [ref=e2456]: El Bloque
+                      - cell "Falta correo e Instagram" [ref=e3472]
+                      - cell [ref=e3473]:
+                        - button "Abrir acciones para El Bloque" [active] [ref=e3474] [cursor=pointer]
+                    - row [ref=e3475]:
+                      - cell [ref=e3476]:
+                        - button [ref=e3477] [cursor=pointer]:
+                          - paragraph [ref=e2466]: Skanka Fe
+                      - cell "Falta correo e Instagram" [ref=e3478]
+                      - cell [ref=e3479]:
+                        - button "Abrir acciones para Skanka Fe" [ref=e3480] [cursor=pointer]
+                    - row [ref=e3481]:
+                      - cell [ref=e3482]:
+                        - button [ref=e3483] [cursor=pointer]:
+                          - paragraph [ref=e2476]: Quimika Soul
+                      - cell "Falta correo e Instagram" [ref=e3484]
+                      - cell [ref=e3485]:
+                        - button "Abrir acciones para Quimika Soul" [ref=e3486] [cursor=pointer]
+                    - row [ref=e3487]:
+                      - cell [ref=e3488]:
+                        - button [ref=e3489] [cursor=pointer]:
+                          - paragraph [ref=e2486]: Juano Ledesma (duplicado)
+                      - cell "Falta correo e Instagram" [ref=e3490]
+                      - cell [ref=e3491]:
+                        - button "Abrir acciones para Juano Ledesma (duplicado)" [ref=e3492] [cursor=pointer]
+                    - row [ref=e3493]:
+                      - cell [ref=e3494]:
+                        - button [ref=e3495] [cursor=pointer]:
+                          - paragraph [ref=e2496]: César Galarza
+                      - cell "Falta correo e Instagram" [ref=e3496]
+                      - cell [ref=e3497]:
+                        - button "Abrir acciones para César Galarza" [ref=e3498] [cursor=pointer]
+                    - row [ref=e3499]:
+                      - cell [ref=e3500]:
+                        - button [ref=e3501] [cursor=pointer]:
+                          - paragraph [ref=e2506]: Fabricio Alomía
+                      - cell "Falta correo e Instagram" [ref=e3502]
+                      - cell [ref=e3503]:
+                        - button "Abrir acciones para Fabricio Alomía" [ref=e3504] [cursor=pointer]
+                    - row [ref=e3505]:
+                      - cell "Juan Ledesma Usuario creado" [ref=e3506]:
+                        - generic [ref=e2514]:
+                          - button [ref=e3507] [cursor=pointer]:
+                            - paragraph [ref=e2516]: Juan Ledesma
+                          - generic [ref=e2517]: Usuario creado
+                      - cell "juan.ledesma@tdfrecords.com" [ref=e3508]
+                      - cell [ref=e3509]:
+                        - button "Abrir acciones para Juan Ledesma" [ref=e3510] [cursor=pointer]
+                    - row [ref=e3511]:
+                      - cell "Diego Saa Usuario creado" [ref=e3512]:
+                        - generic [ref=e2526]:
+                          - button [ref=e3513] [cursor=pointer]:
+                            - paragraph [ref=e2528]: Diego Saa
+                          - generic [ref=e2529]: Usuario creado
+                      - cell "info@tdfrecords.net" [ref=e3514]
+                      - cell [ref=e3515]:
+                        - button "Abrir acciones para Diego Saa" [ref=e3516] [cursor=pointer]
+                    - row [ref=e3517]:
+                      - cell "Front Desk Manager Usuario creado" [ref=e3518]:
+                        - generic [ref=e2538]:
+                          - button [ref=e3519] [cursor=pointer]:
+                            - paragraph [ref=e2540]: Front Desk Manager
+                          - generic [ref=e2541]: Usuario creado
+                      - cell "Falta correo e Instagram" [ref=e3520]
+                      - cell [ref=e3521]:
+                        - button "Abrir acciones para Front Desk Manager" [ref=e3522] [cursor=pointer]
+                    - row [ref=e3523]:
+                      - cell "Reception Usuario creado" [ref=e3524]:
+                        - generic [ref=e2550]:
+                          - button [ref=e3525] [cursor=pointer]:
+                            - paragraph [ref=e2552]: Reception
+                          - generic [ref=e2553]: Usuario creado
+                      - cell "Falta correo e Instagram" [ref=e3526]
+                      - cell [ref=e3527]:
+                        - button "Abrir acciones para Reception" [ref=e3528] [cursor=pointer]
+                    - row [ref=e3529]:
+                      - cell "Accounting Usuario creado" [ref=e3530]:
+                        - generic [ref=e2562]:
+                          - button [ref=e3531] [cursor=pointer]:
+                            - paragraph [ref=e2564]: Accounting
+                          - generic [ref=e2565]: Usuario creado
+                      - cell "Falta correo e Instagram" [ref=e3532]
+                      - cell [ref=e3533]:
+                        - button "Abrir acciones para Accounting" [ref=e3534] [cursor=pointer]
+                    - row [ref=e3535]:
+                      - cell "Scheduling Usuario creado" [ref=e3536]:
+                        - generic [ref=e2574]:
+                          - button [ref=e3537] [cursor=pointer]:
+                            - paragraph [ref=e2576]: Scheduling
+                          - generic [ref=e2577]: Usuario creado
+                      - cell "Falta correo e Instagram" [ref=e3538]
+                      - cell [ref=e3539]:
+                        - button "Abrir acciones para Scheduling" [ref=e3540] [cursor=pointer]
+                    - row [ref=e3541]:
+                      - cell "Packages Usuario creado" [ref=e3542]:
+                        - generic [ref=e2586]:
+                          - button [ref=e3543] [cursor=pointer]:
+                            - paragraph [ref=e2588]: Packages
+                          - generic [ref=e2589]: Usuario creado
+                      - cell "Falta correo e Instagram" [ref=e3544]
+                      - cell [ref=e3545]:
+                        - button "Abrir acciones para Packages" [ref=e3546] [cursor=pointer]
+                    - row [ref=e3547]:
+                      - cell "Carlos De smedt Usuario creado" [ref=e3548]:
+                        - generic [ref=e2598]:
+                          - button [ref=e3549] [cursor=pointer]:
+                            - paragraph [ref=e2600]: Carlos De smedt
+                          - generic [ref=e2601]: Usuario creado
+                      - cell "wikicarlos@gmail.com" [ref=e3550]
+                      - cell [ref=e3551]:
+                        - button "Abrir acciones para Carlos De smedt" [ref=e3552] [cursor=pointer]
+                    - row [ref=e3553]:
+                      - cell "Julián Saa Usuario creado" [ref=e3554]:
+                        - generic [ref=e2610]:
+                          - button [ref=e3555] [cursor=pointer]:
+                            - paragraph [ref=e2612]: Julián Saa
+                          - generic [ref=e2613]: Usuario creado
+                      - cell "diego.saa@fcaq.k12.ec" [ref=e3556]
+                      - cell [ref=e3557]:
+                        - button "Abrir acciones para Julián Saa" [ref=e3558] [cursor=pointer]
+                    - row [ref=e3559]:
+                      - cell "Julián Saa Usuario creado" [ref=e3560]:
+                        - generic [ref=e2622]:
+                          - button [ref=e3561] [cursor=pointer]:
+                            - paragraph [ref=e2624]: Julián Saa
+                          - generic [ref=e2625]: Usuario creado
+                      - cell "diego.saa@tdf.com" [ref=e3562]
+                      - cell [ref=e3563]:
+                        - button "Abrir acciones para Julián Saa" [ref=e3564] [cursor=pointer]
+                    - row [ref=e3565]:
+                      - cell "Diego Saa Usuario creado" [ref=e3566]:
+                        - generic [ref=e2634]:
+                          - button [ref=e3567] [cursor=pointer]:
+                            - paragraph [ref=e2636]: Diego Saa
+                          - generic [ref=e2637]: Usuario creado
+                      - cell "diego@tdfrecords.net" [ref=e3568]
+                      - cell [ref=e3569]:
+                        - button "Abrir acciones para Diego Saa" [ref=e3570] [cursor=pointer]
+                    - row [ref=e3571]:
+                      - cell "Luis Alejandro Freire Díaz Usuario creado" [ref=e3572]:
+                        - generic [ref=e2646]:
+                          - button [ref=e3573] [cursor=pointer]:
+                            - paragraph [ref=e2648]: Luis Alejandro Freire Díaz
+                          - generic [ref=e2649]: Usuario creado
+                      - cell "lfrocker94@gmail.com" [ref=e3574]
+                      - cell [ref=e3575]:
+                        - button "Abrir acciones para Luis Alejandro Freire Díaz" [ref=e3576] [cursor=pointer]
+                    - row [ref=e3577]:
+                      - cell "Otro man Usuario creado" [ref=e3578]:
+                        - generic [ref=e2658]:
+                          - button [ref=e3579] [cursor=pointer]:
+                            - paragraph [ref=e2660]: Otro man
+                          - generic [ref=e2661]: Usuario creado
+                      - cell "cuco.saa@gmail.com" [ref=e3580]
+                      - cell [ref=e3581]:
+                        - button "Abrir acciones para Otro man" [ref=e3582] [cursor=pointer]
+                    - row [ref=e3583]:
+                      - cell [ref=e3584]:
+                        - button [ref=e3585] [cursor=pointer]:
+                          - paragraph [ref=e2672]: Federico Molinari
+                      - cell "federico__molinari_" [ref=e3586]
+                      - cell [ref=e3587]:
+                        - button "Abrir acciones para Federico Molinari" [ref=e3588] [cursor=pointer]
+                    - row [ref=e3589]:
+                      - cell [ref=e3590]:
+                        - button [ref=e3591] [cursor=pointer]:
+                          - paragraph [ref=e2682]: Categal
+                      - cell "Falta correo e Instagram" [ref=e3592]
+                      - cell [ref=e3593]:
+                        - button "Abrir acciones para Categal" [ref=e3594] [cursor=pointer]
+                    - row [ref=e3595]:
+                      - cell [ref=e3596]:
+                        - button [ref=e3597] [cursor=pointer]:
+                          - paragraph [ref=e2692]: Los Morrison
+                      - cell "Falta correo e Instagram" [ref=e3598]
+                      - cell [ref=e3599]:
+                        - button "Abrir acciones para Los Morrison" [ref=e3600] [cursor=pointer]
+                    - row [ref=e3601]:
+                      - cell [ref=e3602]:
+                        - button [ref=e3603] [cursor=pointer]:
+                          - paragraph [ref=e2702]: Barrelshots
+                      - cell "Falta correo e Instagram" [ref=e3604]
+                      - cell [ref=e3605]:
+                        - button "Abrir acciones para Barrelshots" [ref=e3606] [cursor=pointer]
+                    - row [ref=e3607]:
+                      - cell [ref=e3608]:
+                        - button [ref=e3609] [cursor=pointer]:
+                          - paragraph [ref=e2712]: Machaka
+                      - cell "Falta correo e Instagram" [ref=e3610]
+                      - cell [ref=e3611]:
+                        - button "Abrir acciones para Machaka" [ref=e3612] [cursor=pointer]
+                - generic [ref=e2720]:
+                  - paragraph [ref=e2721]: Por página
+                  - generic [ref=e2722]:
+                    - combobox "Por página 25" [ref=e3613] [cursor=pointer]: "25"
+                    - textbox: "25"
+                  - paragraph [ref=e2724]: 1–25 de 184 contactos
+                  - generic [ref=e2725]:
+                    - button "Ir a la página anterior" [disabled]
+                    - button "Ir a la página siguiente" [ref=e3614] [cursor=pointer]
+          - generic [ref=e270]:
+            - status [ref=e271]:
+              - generic [ref=e274]: "API: online"
+            - button "Abrir ChatKit" [ref=e3615] [cursor=pointer]
+    - generic "Control de radio":
+      - generic [ref=e278]:
+        - button "Reproducir radio" [ref=e3616] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=e3617]:
+          - button "Saltar a la estación anterior" [ref=e3618] [cursor=pointer]
+        - generic "Saltar al siguiente" [ref=e3619]:
+          - button "Saltar a la siguiente estación" [ref=e3620] [cursor=pointer]
+        - button "Silenciar radio" [ref=e3621] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=e3622] [cursor=pointer]
+        - button "Expandir radio" [ref=e3623] [cursor=pointer]
+        - generic [ref=e293]:
+          - generic [ref=e294]: "En pausa: stream.rcast.net"
+          - text: Live

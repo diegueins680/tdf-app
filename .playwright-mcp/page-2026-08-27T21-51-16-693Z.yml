@@ -1,0 +1,472 @@
+- generic [ref=f143e4]:
+  - generic [ref=f143e18]:
+    - generic [ref=f143e21]:
+      - link [ref=f143e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f143e31]
+      - generic [ref=f143e34]:
+        - link [ref=f143e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f143e44]
+        - link [ref=f143e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f143e54]
+        - link [ref=f143e61] [cursor=pointer]:
+          - /url: /direct/t/118703699519749
+          - img "Messages" [ref=f143e66]
+        - link [ref=f143e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f143e77]
+        - link [ref=f143e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f143e89]
+        - link [ref=f143e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f143e100]
+        - link [ref=f143e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f143e110]
+        - link [ref=f143e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f143e122]:
+            - img "tdf.records.label's profile picture" [ref=f143e123]
+      - generic [ref=f143e124]:
+        - link [ref=f143e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f143e132]
+        - link [ref=f143e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f143e140]
+    - generic [ref=f143e143]:
+      - main [ref=f143e144]:
+        - generic [ref=f143e146]:
+          - generic [ref=f143e147]:
+            - generic [ref=f143e148]:
+              - link [ref=f143e154] [cursor=pointer]:
+                - /url: /santiii.mmm/
+                - img "santiii.mmm's profile picture" [ref=f143e155]
+              - generic [ref=f143e156]:
+                - generic [ref=f143e157]:
+                  - generic [ref=f143e158]:
+                    - link [ref=f143e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "santiii.mmm" [level=2] [ref=f143e161]
+                    - button [ref=f143e163] [cursor=pointer]:
+                      - img "Options" [ref=f143e165]
+                  - generic [ref=f143e169]: Santiii
+                  - generic [ref=f143e171]:
+                    - generic [ref=f143e173]:
+                      - generic [ref=f143e174]: "0"
+                      - text: posts
+                    - link "487 followers" [ref=f143e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f143e177]:
+                        - generic "487" [ref=f143e178]
+                        - text: followers
+                    - link "189 following" [ref=f143e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f143e181]:
+                        - generic [ref=f143e182]: "189"
+                        - text: following
+                - generic [ref=f143e183]:
+                  - generic [ref=f143e185]:
+                    - button [ref=f143e186] [cursor=pointer]:
+                      - generic [ref=f143e187]: 🕷️🤍🎒📍| UIO - PORTOVIEJO🎓| Estudiante - Administración de Empresas - ESPE💼| Equipo de Producción - DMYSP
+                    - generic [ref=f143e188]:
+                      - text: ...
+                      - button "more" [ref=f143e189] [cursor=pointer]
+                  - link "Followed by edm.ndo and alexfreedom_" [ref=f143e191] [cursor=pointer]:
+                    - /url: /santiii.mmm/followers/mutualOnly
+                    - generic [ref=f143e193]:
+                      - generic [ref=f143e195]:
+                        - button [ref=f143e196]:
+                          - link [ref=f143e197]
+                        - button [ref=f143e198]:
+                          - link [ref=f143e199]
+                      - generic [ref=f143e200]: Followed by edm.ndo and alexfreedom_
+            - generic [ref=f143e205]:
+              - button "Following Down chevron icon" [ref=f143e207] [cursor=pointer]:
+                - generic [ref=f143e208]:
+                  - generic [ref=f143e209]: Following
+                  - img "Down chevron icon" [ref=f143e212]
+              - button "Message" [ref=f143e215] [cursor=pointer]
+              - button [ref=f143e217] [cursor=pointer]:
+                - img "Similar accounts" [ref=f143e219]
+            - menu [ref=f143e223]:
+              - list [ref=f143e227]:
+                - listitem [ref=f143e228]
+                - listitem [ref=f143e229]
+                - listitem [ref=f143e230]:
+                  - link "View DMYSP highlight" [ref=f143e233] [cursor=pointer]:
+                    - /url: /stories/highlights/17941041401899072/
+                    - button "santiii.mmm's highlight story picture DMYSP" [ref=f143e234]:
+                      - button [ref=f143e235]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e238]
+                      - generic [ref=f143e239]: DMYSP
+                - listitem [ref=f143e242]:
+                  - link "View UIO highlight" [ref=f143e245] [cursor=pointer]:
+                    - /url: /stories/highlights/18054275458845198/
+                    - button "santiii.mmm's highlight story picture UIO" [ref=f143e246]:
+                      - button [ref=f143e247]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e250]
+                      - generic [ref=f143e251]: UIO
+                - listitem [ref=f143e254]:
+                  - link "View 🇪🇨 highlight" [ref=f143e257] [cursor=pointer]:
+                    - /url: /stories/highlights/18210560554320429/
+                    - button "santiii.mmm's highlight story picture 🇪🇨" [ref=f143e258]:
+                      - button [ref=f143e259]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e262]
+                      - generic [ref=f143e263]: 🇪🇨
+                - listitem [ref=f143e266]:
+                  - link "View ??? highlight" [ref=f143e269] [cursor=pointer]:
+                    - /url: /stories/highlights/18113892037951443/
+                    - button "santiii.mmm's highlight story picture ???" [ref=f143e270]:
+                      - button [ref=f143e271]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e274]
+                      - generic [ref=f143e275]: "???"
+                - listitem [ref=f143e278]:
+                  - link "View S highlight" [ref=f143e281] [cursor=pointer]:
+                    - /url: /stories/highlights/18007430219393819/
+                    - button "santiii.mmm's highlight story picture S" [ref=f143e282]:
+                      - button [ref=f143e283]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e286]
+                      - generic [ref=f143e287]: S
+                - listitem [ref=f143e290]:
+                  - link "View . highlight" [ref=f143e293] [cursor=pointer]:
+                    - /url: /stories/highlights/17878381776488199/
+                    - button "santiii.mmm's highlight story picture ." [ref=f143e294]:
+                      - button [ref=f143e295]:
+                        - img "santiii.mmm's highlight story picture" [ref=f143e298]
+                      - generic [ref=f143e299]: .
+          - generic [ref=f143e302]:
+            - tablist [ref=f143e303]:
+              - link [ref=f143e305] [cursor=pointer]:
+                - /url: /santiii.mmm/
+                - img "Posts" [ref=f143e307]
+              - link [ref=f143e318] [cursor=pointer]:
+                - /url: /santiii.mmm/reposts/
+                - img "Reposts" [ref=f143e320]
+              - link [ref=f143e323] [cursor=pointer]:
+                - /url: /santiii.mmm/tagged/
+                - img "Tagged" [ref=f143e325]
+            - tabpanel
+          - generic [ref=f143e329]:
+            - generic [ref=f143e331]:
+              - img "Camera" [ref=f143e332]
+              - heading "No posts yet" [level=1] [ref=f143e337]
+            - generic [ref=f143e338]:
+              - generic [ref=f143e339]:
+                - heading "Suggested for you" [level=4] [ref=f143e341]
+                - link "See all" [ref=f143e342] [cursor=pointer]:
+                  - /url: /santiii.mmm/
+              - generic [ref=f143e345]:
+                - list [ref=f143e347]:
+                  - listitem [ref=f143e348]
+                  - listitem [ref=f143e349]:
+                    - generic [ref=f143e351]:
+                      - button "Dismiss xm_aleee's profile picture xm_aleee aluuu" [ref=f143e352] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e354]
+                        - generic [ref=f143e357]:
+                          - link [ref=f143e359]:
+                            - /url: /xm_aleee/
+                            - img "xm_aleee's profile picture" [ref=f143e360]
+                          - link "xm_aleee" [ref=f143e364]:
+                            - /url: /xm_aleee/
+                          - generic [ref=f143e367]: aluuu
+                      - button "Follow" [ref=f143e372] [cursor=pointer]
+                  - listitem [ref=f143e373]:
+                    - generic [ref=f143e375]:
+                      - button "Dismiss ni3el_t's profile picture ni3el_t Daniel" [ref=f143e376] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e378]
+                        - generic [ref=f143e381]:
+                          - link [ref=f143e383]:
+                            - /url: /ni3el_t/
+                            - img "ni3el_t's profile picture" [ref=f143e384]
+                          - link "ni3el_t" [ref=f143e388]:
+                            - /url: /ni3el_t/
+                          - generic [ref=f143e391]: Daniel
+                      - button "Follow" [ref=f143e396] [cursor=pointer]
+                  - listitem [ref=f143e397]:
+                    - generic [ref=f143e399]:
+                      - button "Dismiss cynthia._.karo's profile picture cynthia._.karo 𝒦𝒶𝓇ℴ𝓁𝒾𝓃ℯ🍒" [ref=f143e400] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e402]
+                        - generic [ref=f143e405]:
+                          - link [ref=f143e407]:
+                            - /url: /cynthia._.karo/
+                            - img "cynthia._.karo's profile picture" [ref=f143e408]
+                          - link "cynthia._.karo" [ref=f143e412]:
+                            - /url: /cynthia._.karo/
+                          - generic [ref=f143e415]: 𝒦𝒶𝓇ℴ𝓁𝒾𝓃ℯ🍒
+                      - button "Follow" [ref=f143e420] [cursor=pointer]
+                  - listitem [ref=f143e421]:
+                    - generic [ref=f143e423]:
+                      - button "Dismiss r3al_m0lly's profile picture r3al_m0lly Bfakxz Ksimsj" [ref=f143e424] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e426]
+                        - generic [ref=f143e429]:
+                          - link [ref=f143e431]:
+                            - /url: /r3al_m0lly/
+                            - img "r3al_m0lly's profile picture" [ref=f143e432]
+                          - link "r3al_m0lly" [ref=f143e436]:
+                            - /url: /r3al_m0lly/
+                          - generic [ref=f143e439]: Bfakxz Ksimsj
+                      - button "Follow" [ref=f143e444] [cursor=pointer]
+                  - listitem [ref=f143e445]:
+                    - generic [ref=f143e447]:
+                      - button "Dismiss ibeale_more's profile picture ibeale_more Ale Morejon" [ref=f143e448] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e450]
+                        - generic [ref=f143e453]:
+                          - link [ref=f143e455]:
+                            - /url: /ibeale_more/
+                            - img "ibeale_more's profile picture" [ref=f143e456]
+                          - link "ibeale_more" [ref=f143e460]:
+                            - /url: /ibeale_more/
+                          - generic [ref=f143e463]: Ale Morejon
+                      - button "Follow" [ref=f143e468] [cursor=pointer]
+                  - listitem [ref=f143e469]:
+                    - generic [ref=f143e471]:
+                      - button "Dismiss fck.yuji's profile picture fck.yuji Yuji" [ref=f143e472] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e474]
+                        - generic [ref=f143e477]:
+                          - link [ref=f143e479]:
+                            - /url: /fck.yuji/
+                            - img "fck.yuji's profile picture" [ref=f143e480]
+                          - link "fck.yuji" [ref=f143e484]:
+                            - /url: /fck.yuji/
+                          - generic [ref=f143e487]: Yuji
+                      - button "Follow" [ref=f143e492] [cursor=pointer]
+                  - listitem [ref=f143e493]:
+                    - generic [ref=f143e495]:
+                      - button "Dismiss yuntiff._.u's profile picture yuntiff._.u ꔫTiffany☆" [ref=f143e496] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e498]
+                        - generic [ref=f143e501]:
+                          - link [ref=f143e503]:
+                            - /url: /yuntiff._.u/
+                            - img "yuntiff._.u's profile picture" [ref=f143e504]
+                          - link "yuntiff._.u" [ref=f143e508]:
+                            - /url: /yuntiff._.u/
+                          - generic [ref=f143e511]: ꔫTiffany☆
+                      - button "Follow" [ref=f143e516] [cursor=pointer]
+                  - listitem [ref=f143e517]:
+                    - generic [ref=f143e519]:
+                      - button "Dismiss salo.0_'s profile picture salo.0_ SALOMÉ." [ref=f143e520] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e522]
+                        - generic [ref=f143e525]:
+                          - link [ref=f143e527]:
+                            - /url: /salo.0_/
+                            - img "salo.0_'s profile picture" [ref=f143e528]
+                          - link "salo.0_" [ref=f143e532]:
+                            - /url: /salo.0_/
+                          - generic [ref=f143e535]: SALOMÉ.
+                      - button "Follow" [ref=f143e540] [cursor=pointer]
+                  - listitem [ref=f143e541]:
+                    - generic [ref=f143e543]:
+                      - button "Dismiss russbel_issac's profile picture russbel_issac Russbel Yaguachi" [ref=f143e544] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e546]
+                        - generic [ref=f143e549]:
+                          - link [ref=f143e551]:
+                            - /url: /russbel_issac/
+                            - img "russbel_issac's profile picture" [ref=f143e552]
+                          - link "russbel_issac" [ref=f143e556]:
+                            - /url: /russbel_issac/
+                          - generic [ref=f143e559]: Russbel Yaguachi
+                      - button "Follow" [ref=f143e564] [cursor=pointer]
+                  - listitem [ref=f143e565]:
+                    - generic [ref=f143e567]:
+                      - button "Dismiss josssie___._'s profile picture josssie___._ Jossy" [ref=f143e568] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e570]
+                        - generic [ref=f143e573]:
+                          - link [ref=f143e575]:
+                            - /url: /josssie___._/
+                            - img "josssie___._'s profile picture" [ref=f143e576]
+                          - link "josssie___._" [ref=f143e580]:
+                            - /url: /josssie___._/
+                          - generic [ref=f143e583]: Jossy
+                      - button "Follow" [ref=f143e588] [cursor=pointer]
+                  - listitem [ref=f143e589]:
+                    - generic [ref=f143e591]:
+                      - button "Dismiss cam_ortega0's profile picture cam_ortega0 camm" [ref=f143e592] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e594]
+                        - generic [ref=f143e597]:
+                          - link [ref=f143e599]:
+                            - /url: /cam_ortega0/
+                            - img "cam_ortega0's profile picture" [ref=f143e600]
+                          - link "cam_ortega0" [ref=f143e604]:
+                            - /url: /cam_ortega0/
+                          - generic [ref=f143e607]: camm
+                      - button "Follow" [ref=f143e612] [cursor=pointer]
+                  - listitem [ref=f143e613]:
+                    - generic [ref=f143e615]:
+                      - button "Dismiss nath.ly1401's profile picture nath.ly1401 ." [ref=f143e616] [cursor=pointer]:
+                        - button "Dismiss" [ref=f143e618]
+                        - generic [ref=f143e621]:
+                          - link [ref=f143e623]:
+                            - /url: /nath.ly1401/
+                            - img "nath.ly1401's profile picture" [ref=f143e624]
+                          - link "nath.ly1401" [ref=f143e628]:
+                            - /url: /nath.ly1401/
+                          - generic [ref=f143e631]: .
+                      - button "Follow" [ref=f143e636] [cursor=pointer]
+                - button "Next" [ref=f143e637] [cursor=pointer]
+      - contentinfo [ref=f143e639]:
+        - generic [ref=f143e640]:
+          - generic [ref=f143e642]:
+            - link "Meta" [ref=f143e644] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f143e647] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f143e650] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f143e653] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f143e656] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f143e659] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f143e662] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f143e665] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f143e668] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f143e671] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f143e674] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f143e677] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f143e680] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f143e683] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f143e686] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f143e688]:
+            - generic [ref=f143e689] [cursor=pointer]:
+              - generic [ref=f143e690]:
+                - generic [ref=f143e691]: English
+                - img "Down chevron icon" [ref=f143e694]
+              - combobox "Switch Display Language" [ref=f143e696]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f143e697]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f143e700] [cursor=pointer]:
+              - generic "Messages" [ref=f143e701]:
+                - generic [ref=f143e702]:
+                  - img "Messages" [ref=f143e705]
+                  - generic [ref=f143e708]: Messages
+                - generic [ref=f143e709]:
+                  - button "User avatar Oldboy" [ref=f143e711]:
+                    - img "User avatar" [ref=f143e714]
+                  - button "User avatar Klaus Revolución" [ref=f143e716]:
+                    - img "User avatar" [ref=f143e719]
+                  - button "User avatar Zoe Moff" [ref=f143e721]:
+                    - img "User avatar" [ref=f143e724]
+            - generic [ref=f143e770]:
+              - generic [ref=f143e772]:
+                - generic [ref=f143e773]:
+                  - button [ref=f143e775] [cursor=pointer]:
+                    - img "Go back" [ref=f143e777]
+                  - link "Open the profile page of santiii.mmm" [ref=f143e780] [cursor=pointer]:
+                    - /url: /santiii.mmm/
+                    - generic [ref=f143e781]:
+                      - img "user-profile-picture" [ref=f143e784]
+                      - heading "Santiii" [level=2] [ref=f143e788]
+                  - generic [ref=f143e790]:
+                    - button [ref=f143e791] [cursor=pointer]:
+                      - img "Expand" [ref=f143e793]
+                    - button [ref=f143e795] [cursor=pointer]:
+                      - img "Close" [ref=f143e797]
+                - separator [ref=f143e800]
+              - generic "Santiii" [ref=f143e801]:
+                - generic [ref=f143e803]:
+                  - generic [ref=f143e807]:
+                    - generic [ref=f143e808]:
+                      - img "user-profile-picture" [ref=f143e812]
+                      - generic [ref=f143e813]:
+                        - heading "Santiii" [level=2] [ref=f143e816]
+                        - generic [ref=f143e818]: santiii.mmm · Instagram
+                        - link "View profile" [ref=f143e821] [cursor=pointer]:
+                          - /url: /santiii.mmm/
+                    - generic [ref=f143e917]:
+                      - generic [ref=f143e918]: 4:51 PM
+                      - group [ref=f143e921]:
+                        - generic [ref=f143e926]:
+                          - generic [ref=f143e929]:
+                            - text: Hola, Santi
+                            - img "👋" [ref=f143e931]
+                            - text: "Vimos que estás entre Quito y Portoviejo, trabajas en producción con DMYSP y ya has conectado a TDF con tus historias. En TDF estamos construyendo una comunidad para reunir productores, artistas, espacios y públicos, mostrar proyectos y activar colaboraciones. Puedes conocerla aquí:"
+                            - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_santiiproduccion" [ref=f143e933] [cursor=pointer]:
+                              - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_santiiproduccion
+                            - text: Si la pruebas, nos gustaría saber qué herramientas te servirían para producción y coordinación de proyectos. — TDF Records
+                          - link "TDF Records" [ref=f143e934] [cursor=pointer]:
+                            - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_santiiproduccion
+                  - generic [ref=f143e884]:
+                    - button [ref=f143e887] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f143e889]
+                    - generic [ref=f143e891]:
+                      - textbox [active] [ref=f143e892]:
+                        - paragraph [ref=f143e939]
+                      - generic: Message...
+                    - generic [ref=f143e894]:
+                      - button [ref=f143e940] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f143e942]
+                      - button [ref=f143e945] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f143e947]
+                      - button [ref=f143e952] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f143e954]

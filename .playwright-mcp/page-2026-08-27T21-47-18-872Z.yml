@@ -1,0 +1,12 @@
+- button [ref=f118e19] [cursor=pointer]:
+  - generic "Messages" [ref=f118e20]:
+    - generic [ref=f118e21]:
+      - img "Messages" [ref=f118e24]
+      - generic [ref=f118e27]: Messages
+    - generic [ref=f118e28]:
+      - button "User avatar Kenneth Vega" [ref=f118e30]:
+        - img "User avatar" [ref=f118e33]
+      - button "User avatar SAMAEL" [ref=f118e35]:
+        - img "User avatar" [ref=f118e38]
+      - button "User avatar Oldboy" [ref=f118e40]:
+        - img "User avatar" [ref=f118e43]

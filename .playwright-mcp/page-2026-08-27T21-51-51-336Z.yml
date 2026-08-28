@@ -1,0 +1,255 @@
+- generic [ref=f149e4]:
+  - generic [ref=f149e18]:
+    - generic [ref=f149e21]:
+      - link [ref=f149e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f149e31]
+      - generic [ref=f149e34]:
+        - link [ref=f149e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f149e44]
+        - link [ref=f149e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f149e54]
+        - link [ref=f149e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f149e66]
+        - link [ref=f149e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f149e77]
+        - link [ref=f149e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f149e89]
+        - link [ref=f149e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f149e100]
+        - link [ref=f149e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f149e110]
+        - link [ref=f149e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f149e122]:
+            - img "tdf.records.label's profile picture" [ref=f149e123]
+      - generic [ref=f149e124]:
+        - link [ref=f149e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f149e132]
+        - link [ref=f149e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f149e140]
+    - generic [ref=f149e143]:
+      - main [ref=f149e144]:
+        - generic [ref=f149e146]:
+          - generic [ref=f149e147]:
+            - generic [ref=f149e148]:
+              - button [ref=f149e153] [cursor=pointer]:
+                - link [ref=f149e155]:
+                  - img "iraizoviedocanta's profile picture" [ref=f149e156]
+              - generic [ref=f149e157]:
+                - generic [ref=f149e158]:
+                  - generic [ref=f149e159]:
+                    - link [ref=f149e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "iraizoviedocanta" [level=2] [ref=f149e162]
+                    - button [ref=f149e164] [cursor=pointer]:
+                      - img "Options" [ref=f149e166]
+                  - generic [ref=f149e170]: Iraíz Oviedo Canta
+                  - generic [ref=f149e172]:
+                    - generic [ref=f149e174]:
+                      - generic [ref=f149e175]: "785"
+                      - text: posts
+                    - link "3,977 followers" [ref=f149e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f149e178]:
+                        - generic "3,977" [ref=f149e179]
+                        - text: followers
+                    - link "1,911 following" [ref=f149e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f149e182]:
+                        - generic [ref=f149e183]: 1,911
+                        - text: following
+                - generic [ref=f149e184]:
+                  - generic [ref=f149e185]:
+                    - button [ref=f149e187] [cursor=pointer]:
+                      - generic [ref=f149e188]: Cantante. "En la voz, un continente".Escucha el estreno de "Me curé" en vivo🔥🖤👇
+                    - button "Link icon youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more" [ref=f149e190] [cursor=pointer]:
+                      - generic [ref=f149e191]:
+                        - img "Link icon" [ref=f149e193]
+                        - generic [ref=f149e196]: youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more
+                  - link "Followed by pifrecuency, ladiablabanda + 54 more" [ref=f149e197] [cursor=pointer]:
+                    - /url: /iraizoviedocanta/followers/mutualOnly
+                    - generic [ref=f149e199]:
+                      - generic [ref=f149e201]:
+                        - button [ref=f149e202]:
+                          - link [ref=f149e203]
+                        - button [ref=f149e204]:
+                          - link [ref=f149e205]
+                        - button [ref=f149e206]:
+                          - link [ref=f149e207]
+                      - generic [ref=f149e208]: Followed by pifrecuency, ladiablabanda + 54 more
+            - generic [ref=f149e213]:
+              - button "Follow Back" [ref=f149e215] [cursor=pointer]
+              - button "Message" [ref=f149e219] [cursor=pointer]
+              - button [ref=f149e221] [cursor=pointer]:
+                - img "Similar accounts" [ref=f149e223]
+            - menu [ref=f149e227]:
+              - list [ref=f149e231]:
+                - listitem [ref=f149e232]
+                - listitem [ref=f149e233]
+                - listitem [ref=f149e234]:
+                  - link "View Espantamales highlight" [ref=f149e237] [cursor=pointer]:
+                    - /url: /stories/highlights/18204197653354944/
+                    - button "iraizoviedocanta's highlight story picture Espantamales" [ref=f149e238]:
+                      - button [ref=f149e239]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f149e242]
+                      - generic [ref=f149e243]: Espantamales
+                - listitem [ref=f149e246]:
+                  - link "View TintaBohemia2025 highlight" [ref=f149e249] [cursor=pointer]:
+                    - /url: /stories/highlights/18163049500339132/
+                    - button "iraizoviedocanta's highlight story picture TintaBohemia2025" [ref=f149e250]:
+                      - button [ref=f149e251]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f149e254]
+                      - generic [ref=f149e255]: TintaBohemia2025
+                - listitem [ref=f149e258]:
+                  - link "View íntimo highlight" [ref=f149e261] [cursor=pointer]:
+                    - /url: /stories/highlights/18043125350039618/
+                    - button "iraizoviedocanta's highlight story picture íntimo" [ref=f149e262]:
+                      - button [ref=f149e263]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f149e266]
+                      - generic [ref=f149e267]: íntimo
+                - listitem [ref=f149e270]:
+                  - link "View Viva Quito highlight" [ref=f149e273] [cursor=pointer]:
+                    - /url: /stories/highlights/17972939582504821/
+                    - button "iraizoviedocanta's highlight story picture Viva Quito" [ref=f149e274]:
+                      - button [ref=f149e275]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f149e278]
+                      - generic [ref=f149e279]: Viva Quito
+                - listitem [ref=f149e282]:
+                  - link "View Lasfloresbuenas highlight" [ref=f149e285] [cursor=pointer]:
+                    - /url: /stories/highlights/18031772368716809/
+                    - button "iraizoviedocanta's highlight story picture Lasfloresbuenas" [ref=f149e286]:
+                      - button [ref=f149e287]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f149e290]
+                      - generic [ref=f149e291]: Lasfloresbuenas
+          - generic [ref=f149e294]:
+            - tablist [ref=f149e295]:
+              - link [ref=f149e297] [cursor=pointer]:
+                - /url: /iraizoviedocanta/
+                - img "Posts" [ref=f149e299]
+              - link [ref=f149e310] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reels/
+                - img "Reels" [ref=f149e312]
+              - link [ref=f149e315] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reposts/
+                - img "Reposts" [ref=f149e317]
+              - link [ref=f149e320] [cursor=pointer]:
+                - /url: /iraizoviedocanta/tagged/
+                - img "Tagged" [ref=f149e322]
+            - tabpanel
+          - progressbar [ref=f149e326]:
+            - img "Loading..." [ref=f149e327]
+      - contentinfo [ref=f149e340]:
+        - generic [ref=f149e341]:
+          - generic [ref=f149e343]:
+            - link "Meta" [ref=f149e345] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f149e348] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f149e351] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f149e354] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f149e357] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f149e360] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f149e363] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f149e366] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f149e369] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f149e372] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f149e375] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f149e378] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f149e381] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f149e384] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f149e387] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f149e389]:
+            - generic [ref=f149e390] [cursor=pointer]:
+              - generic [ref=f149e391]:
+                - generic [ref=f149e392]: English
+                - img "Down chevron icon" [ref=f149e395]
+              - combobox "Switch Display Language" [ref=f149e397]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f149e398]: © 2026 Instagram from Meta
+  - button [ref=f149e401] [cursor=pointer]:
+    - generic "Messages" [ref=f149e402]:
+      - generic [ref=f149e403]:
+        - img "Messages" [ref=f149e406]
+        - generic [ref=f149e409]: Messages
+      - generic [ref=f149e410]:
+        - button "User avatar Zoe Moff" [ref=f149e412]:
+          - img "User avatar" [ref=f149e415]
+        - button "User avatar Santiii" [ref=f149e417]:
+          - img "User avatar" [ref=f149e420]
+        - button "User avatar Calavery Inc" [ref=f149e422]:
+          - img "User avatar" [ref=f149e425]

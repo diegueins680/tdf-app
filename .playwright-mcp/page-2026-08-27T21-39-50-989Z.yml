@@ -1,0 +1,105 @@
+- generic [ref=f57e9]:
+  - generic [ref=f57e12]:
+    - link [ref=f57e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f57e22]
+    - generic [ref=f57e25]:
+      - link [ref=f57e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f57e35]
+      - link [ref=f57e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f57e45]
+      - link [ref=f57e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f57e57]
+      - link [ref=f57e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f57e67]
+      - link [ref=f57e74] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f57e79]
+      - link [ref=f57e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f57e90]
+      - link [ref=f57e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f57e100]
+      - link [ref=f57e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f57e112]:
+          - img "tdf.records.label's profile picture" [ref=f57e113]
+    - generic [ref=f57e114]:
+      - link [ref=f57e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f57e122]
+      - link [ref=f57e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f57e130]
+  - main [ref=f57e134]:
+    - generic [ref=f57e136]:
+      - navigation "Thread list" [ref=f57e137]:
+        - generic [ref=f57e138]:
+          - generic [ref=f57e139]:
+            - status "Loading..." [ref=f57e140]
+            - status "Loading..." [ref=f57e142]
+          - generic [ref=f57e143]:
+            - status "Loading..." [ref=f57e145]
+            - generic [ref=f57e146]:
+              - status "Loading..." [ref=f57e147]
+              - status "Loading..." [ref=f57e148]
+          - generic [ref=f57e149]:
+            - status "Loading..." [ref=f57e151]
+            - generic [ref=f57e152]:
+              - status "Loading..." [ref=f57e153]
+              - status "Loading..." [ref=f57e154]
+          - generic [ref=f57e155]:
+            - status "Loading..." [ref=f57e157]
+            - generic [ref=f57e158]:
+              - status "Loading..." [ref=f57e159]
+              - status "Loading..." [ref=f57e160]
+          - generic [ref=f57e161]:
+            - status "Loading..." [ref=f57e163]
+            - generic [ref=f57e164]:
+              - status "Loading..." [ref=f57e165]
+              - status "Loading..." [ref=f57e166]
+          - generic [ref=f57e167]:
+            - status "Loading..." [ref=f57e169]
+            - generic [ref=f57e170]:
+              - status "Loading..." [ref=f57e171]
+              - status "Loading..." [ref=f57e172]
+          - generic [ref=f57e173]:
+            - status "Loading..." [ref=f57e175]
+            - generic [ref=f57e176]:
+              - status "Loading..." [ref=f57e177]
+              - status "Loading..." [ref=f57e178]
+          - generic [ref=f57e179]:
+            - status "Loading..." [ref=f57e181]
+            - generic [ref=f57e182]:
+              - status "Loading..." [ref=f57e183]
+              - status "Loading..." [ref=f57e184]
+          - generic [ref=f57e185]:
+            - status "Loading..." [ref=f57e187]
+            - generic [ref=f57e188]:
+              - status "Loading..." [ref=f57e189]
+              - status "Loading..." [ref=f57e190]
+          - generic [ref=f57e191]:
+            - status "Loading..." [ref=f57e193]
+            - generic [ref=f57e194]:
+              - status "Loading..." [ref=f57e195]
+              - status "Loading..." [ref=f57e196]
+          - generic [ref=f57e197]:
+            - status "Loading..." [ref=f57e199]
+            - generic [ref=f57e200]:
+              - status "Loading..." [ref=f57e201]
+              - status "Loading..." [ref=f57e202]
+          - generic [ref=f57e203]:
+            - status "Loading..." [ref=f57e205]
+            - generic [ref=f57e206]:
+              - status "Loading..." [ref=f57e207]
+              - status "Loading..." [ref=f57e208]
+      - generic [ref=f57e211]:
+        - status "Loading..." [ref=f57e212]
+        - status "Loading..." [ref=f57e213]
+        - status "Loading..." [ref=f57e214]
+        - status "Loading..." [ref=f57e215]

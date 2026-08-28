@@ -1,0 +1,381 @@
+- generic [ref=f127e4]:
+  - generic [ref=f127e18]:
+    - generic [ref=f127e21]:
+      - link [ref=f127e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f127e31]
+      - generic [ref=f127e34]:
+        - link [ref=f127e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f127e44]
+        - link [ref=f127e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f127e54]
+        - link [ref=f127e61] [cursor=pointer]:
+          - /url: /direct/t/101936611209205
+          - img "Messages" [ref=f127e66]
+        - link [ref=f127e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f127e77]
+        - link [ref=f127e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f127e89]
+        - link [ref=f127e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f127e100]
+        - link [ref=f127e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f127e110]
+        - link [ref=f127e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f127e122]:
+            - img "tdf.records.label's profile picture" [ref=f127e123]
+      - generic [ref=f127e124]:
+        - link [ref=f127e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f127e132]
+        - link [ref=f127e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f127e140]
+    - generic [ref=f127e143]:
+      - main [ref=f127e144]:
+        - generic [ref=f127e146]:
+          - generic [ref=f127e147]:
+            - generic [ref=f127e148]:
+              - button [ref=f127e153] [cursor=pointer]:
+                - link [ref=f127e155]:
+                  - img "iraizoviedocanta's profile picture" [ref=f127e156]
+              - generic [ref=f127e157]:
+                - generic [ref=f127e158]:
+                  - generic [ref=f127e159]:
+                    - link [ref=f127e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "iraizoviedocanta" [level=2] [ref=f127e162]
+                    - button [ref=f127e164] [cursor=pointer]:
+                      - img "Options" [ref=f127e166]
+                  - generic [ref=f127e170]: Iraíz Oviedo Canta
+                  - generic [ref=f127e172]:
+                    - generic [ref=f127e174]:
+                      - generic [ref=f127e175]: "785"
+                      - text: posts
+                    - link "3,977 followers" [ref=f127e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f127e178]:
+                        - generic "3,977" [ref=f127e179]
+                        - text: followers
+                    - link "1,911 following" [ref=f127e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f127e182]:
+                        - generic [ref=f127e183]: 1,911
+                        - text: following
+                - generic [ref=f127e184]:
+                  - generic [ref=f127e185]:
+                    - button [ref=f127e187] [cursor=pointer]:
+                      - generic [ref=f127e188]: Cantante. "En la voz, un continente".Escucha el estreno de "Me curé" en vivo🔥🖤👇
+                    - button "Link icon youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more" [ref=f127e190] [cursor=pointer]:
+                      - generic [ref=f127e191]:
+                        - img "Link icon" [ref=f127e193]
+                        - generic [ref=f127e196]: youtu.be/Y9E6M1de_78?si=ofugC9-J1W6cVibb and 2 more
+                  - link "Followed by zambaje, quitobohemio + 54 more" [ref=f127e197] [cursor=pointer]:
+                    - /url: /iraizoviedocanta/followers/mutualOnly
+                    - generic [ref=f127e199]:
+                      - generic [ref=f127e201]:
+                        - button [ref=f127e202]:
+                          - link [ref=f127e203]
+                        - button [ref=f127e204]:
+                          - link [ref=f127e205]
+                        - button [ref=f127e206]:
+                          - link [ref=f127e207]
+                      - generic [ref=f127e208]: Followed by zambaje, quitobohemio + 54 more
+            - generic [ref=f127e213]:
+              - button "Follow Back" [ref=f127e215] [cursor=pointer]
+              - button "Message" [ref=f127e219] [cursor=pointer]
+              - button [ref=f127e221] [cursor=pointer]:
+                - img "Similar accounts" [ref=f127e223]
+            - menu [ref=f127e227]:
+              - list [ref=f127e231]:
+                - listitem [ref=f127e232]
+                - listitem [ref=f127e233]
+                - listitem [ref=f127e234]:
+                  - link "View Espantamales highlight" [ref=f127e237] [cursor=pointer]:
+                    - /url: /stories/highlights/18204197653354944/
+                    - button "iraizoviedocanta's highlight story picture Espantamales" [ref=f127e238]:
+                      - button [ref=f127e239]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f127e242]
+                      - generic [ref=f127e243]: Espantamales
+                - listitem [ref=f127e246]:
+                  - link "View TintaBohemia2025 highlight" [ref=f127e249] [cursor=pointer]:
+                    - /url: /stories/highlights/18163049500339132/
+                    - button "iraizoviedocanta's highlight story picture TintaBohemia2025" [ref=f127e250]:
+                      - button [ref=f127e251]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f127e254]
+                      - generic [ref=f127e255]: TintaBohemia2025
+                - listitem [ref=f127e258]:
+                  - link "View íntimo highlight" [ref=f127e261] [cursor=pointer]:
+                    - /url: /stories/highlights/18043125350039618/
+                    - button "iraizoviedocanta's highlight story picture íntimo" [ref=f127e262]:
+                      - button [ref=f127e263]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f127e266]
+                      - generic [ref=f127e267]: íntimo
+                - listitem [ref=f127e270]:
+                  - link "View Viva Quito highlight" [ref=f127e273] [cursor=pointer]:
+                    - /url: /stories/highlights/17972939582504821/
+                    - button "iraizoviedocanta's highlight story picture Viva Quito" [ref=f127e274]:
+                      - button [ref=f127e275]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f127e278]
+                      - generic [ref=f127e279]: Viva Quito
+                - listitem [ref=f127e282]:
+                  - link "View Lasfloresbuenas highlight" [ref=f127e285] [cursor=pointer]:
+                    - /url: /stories/highlights/18031772368716809/
+                    - button "iraizoviedocanta's highlight story picture Lasfloresbuenas" [ref=f127e286]:
+                      - button [ref=f127e287]:
+                        - img "iraizoviedocanta's highlight story picture" [ref=f127e290]
+                      - generic [ref=f127e291]: Lasfloresbuenas
+          - generic [ref=f127e294]:
+            - tablist [ref=f127e295]:
+              - link [ref=f127e297] [cursor=pointer]:
+                - /url: /iraizoviedocanta/
+                - img "Posts" [ref=f127e299]
+              - link [ref=f127e310] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reels/
+                - img "Reels" [ref=f127e312]
+              - link [ref=f127e315] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reposts/
+                - img "Reposts" [ref=f127e317]
+              - link [ref=f127e320] [cursor=pointer]:
+                - /url: /iraizoviedocanta/tagged/
+                - img "Tagged" [ref=f127e322]
+            - tabpanel
+          - generic [ref=f127e329]:
+            - generic [ref=f127e330]:
+              - link [ref=f127e332] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/DbBe2vSxGqQ/
+                - 'img "Amigx, date cuenta 💎 ¿Cuántas veces más? Una y otra vez, el mismo espejo. Por eso y para no olvidarme, hice \"Me curé\". El miércoles podrán verlo grabado en vivo en el lanzamiento de mi #Tintabohemia con mi hermosa banda. Sígueme en YouTube para verlo 🫰 #boleros #musicalatinaomericana #parati" [ref=f127e335]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f127e338] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/DcPT3WwRl6H/
+                - 'img "Ya está al aire 🦋 En la escuela me enseñaron a bordar, pero no lo recordaba. Gracias a mi querida amiga @jennyruizc las manos han vuelto a moverse y qué mejor que junto a mi vals \"Mariposa\" que ha llegado a sus corazones. Gracias por abrazar mi #TintaBohemia y con este valscecito vamos cerrando un ciclo, marcado a pulso. #vals #musicadelecuador #musicanacional #musicalatinaomericana" [ref=f127e341]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f127e344] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/DbWrqy0xTVB/
+                - img "Del maestro Euclides Lara, un vals con cariño, para el Perú, pueblo cultor de este ritmo que ha hecho una escuela generosa para toda Latinoamérica. \"Te quiero tanto\" desde el Ecuador para el Perú." [ref=f127e347]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f127e350] [cursor=pointer]:
+                - /url: /willietamayomusic/reel/DcjLdV9O9xi/
+                - 'img "Buenos días a todos, aquí les spoileo un poco de la nueva producción donde un Caballero y 6 Damas enamorarán con sus voces al público. Gracias @carlos_grijalva_musico y @danielabarraproduc por confiar en @wtshowsec para producir Él y Ellas junto a las hermosas @karlakanora @vivianagonzalezmusic @iraizoviedocanta @naranjovargasoficial @normitanavarro.oficial @maria_esther_bowen Podrán ver esta maravilla el Domingo 20 de septiembre a las 18H00 en el @teatrosangabrielquito #produccion #wtshows #reels #musica #viral" [ref=f127e353]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f127e355]:
+              - link [ref=f127e357] [cursor=pointer]:
+                - /url: /ycomosebaila.asi/reel/DcZ_raVOCG4/
+                - 'img "Nuestra hermana Iraiz Oviedo viene a celebrar con nosotros el aniversario de la Peña Quiteña con su banda! No se pueden perder este gran festejo! 🔥 ¿CUÁNDO? Sábado 12 de septiembre | Desde las 7pm ¿DÓNDE? La Casa de Cuenca (La Pradera N30-120 y San Salvador) PROGRAMACIÓN: 💃 7:00 pm - Taller de Danza: Albazo 🎤 8:30 pm - Micrófono Abierto 🎸 En vivo: Iraiz Oviedo / Los Peñafiel + invitados especiales 🎧 Cierre: DJ Sonido Makas ENTRADAS: 🎟️ Preventa 1: $10 (16 al 30 de agosto) 🎟️ Preventa 2: $12 (1 al 11 de sept) 🎟️ Puerta: $15 Compra tu preventa por transferencia. Datos en nuestras historias destacadas. Envía tu comprobante por DM o a: 📲 Isa 0999015064 / Danny 0983493970" [ref=f127e360]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f127e363] [cursor=pointer]:
+                - /url: /carlos_grijalva_musico/p/DcZ4uj8g38G/
+                - img "Photo by Carlos Grijalva in Teatro San Gabriel with @willietamayomusic, @iraizoviedocanta, @teatrosangabrielquito, @danielabarraproduc, and @wtshowsec. May be an image of poster and text that says 'PRESI Carlos c Grijalv ÉL ÉLYELLA Y ELLA ELCANTOR EL Y Y LLGANIORNGENEIS 6 DAMAS INVITADAS MUY Y ESPECIALES MARÍANORMITEN_KARIA MARIA NORMITA KARTA ESTHERNWWRRODKANOR-A VAVARRO KANORA FOWFN IRAI% OVTFDO Boletos Boletosalaventaen la venta en www.teatrosangabriel.com www. yen boleterias del teatro TEATROSAN TEATRO SAN DOMINGO GABRIEL 20 201800 18H00 PRNT ・業大 INFORMACIÓN 099 271 5957 AH GABRIEL'." [ref=f127e366]
+              - link [ref=f127e369] [cursor=pointer]:
+                - /url: /ycomosebaila.asi/p/DcUoCDMDi2O/
+                - 'img "Photo shared by La Peña Quiteña on August 21, 2026 tagging @jafreco, @iraizoviedocanta, @chamiza_pizzeria, @quitobohemio, @lospeniafiel, and @sonidomakas. May be an image of poster and text that says ''SABADO 12 Quitera SEPTIEMBRE 19h00 WWILERSAHU IRAIZ LOS PENAFIEL INVITADOS INVITADOS.ESPECIALES. ESPECIALES DJSONIDO MAKAS MICROFONO ABIERTO TALLER TALLERDEDANZATALBAZO DEDANZA DANZ ALBAZO LA CASA DE CUENCA (.) DIRECCIÓN: LA PRADERA N30-120 Y SAN SALVADOR GOOD SA IN a INSITU sound LA OCTAVA CHAWAR JAFRECO-''." [ref=f127e372]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f127e375] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/DcMIOAgx9jC/
+                - 'img "Escucha los bombazos románticos de mi show en vivo. \"Sueños de amor\" de Juan \"Inti\" Limachi. Porque en la bohemia, también se baila. Compártelo con esa persona especial 💋💘💥 #parati #593ecuador🇪🇨 #bomba #musicadelecuador" [ref=f127e378]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f127e380]:
+              - link [ref=f127e382] [cursor=pointer]:
+                - /url: /iraizoviedocanta/p/DcEcixYkYWk/
+                - img [ref=f127e385]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f127e388] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/Db8V6JbRaDm/
+                - 'img "En Ecuador tenemos una creadora de éxitos única y su nombre a veces pasa desapercibido. La maestra Beatriz Congo es autora de éxitos que si los escuchan, seguramente los llevan guardados en su memoria, los han bailado o incluso, los han dedicado. \"Tan sólo quiero escuchar de tus labios una palabra de amor\". \"El camaleón cambia de colores, lo hace según la estación\". Pero este coro, desde el sur de Quito, emocionado cantó: \"sabor a miel tiene tus labios y como almíbar son tus besos\". Gracias Beatriz Congo por tu música preciosa, con miel del valle y sentimiento ecuatoriano." [ref=f127e391]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f127e394] [cursor=pointer]:
+                - /url: /iraizoviedocanta/reel/DbyCRLWxs6e/
+                - img "Me conmueve ver como cada vez más mis canciones resuenan en ustedes. En La Nueva Aurora,gracias a @culturaquito estuve con mis máximos @melmourelle y @javieromeromusic cantando \"Me curé\" y \"Mala suerte\" y nuestra música popular. Junto a mi hermosa banda tenemos algunas sorpresas que venimos trabajando. Hasta mientras, cuéntame ¿cuál es tu canción favorita de mi Ep Tinta Bohemia?" [ref=f127e397]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f127e400] [cursor=pointer]:
+                - /url: /iraizoviedocanta/p/DboIYmwkR7s/
+                - img "Photo by Iraíz Oviedo Canta on August 04, 2026. May be an image of accordion, guitar, tambourine, concert and text." [ref=f127e403]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f127e405]:
+        - generic [ref=f127e406]:
+          - generic [ref=f127e408]:
+            - link "Meta" [ref=f127e410] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f127e413] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f127e416] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f127e419] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f127e422] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f127e425] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f127e428] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f127e431] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f127e434] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f127e437] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f127e440] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f127e443] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f127e446] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f127e449] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f127e452] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f127e454]:
+            - generic [ref=f127e455] [cursor=pointer]:
+              - generic [ref=f127e456]:
+                - generic [ref=f127e457]: English
+                - img "Down chevron icon" [ref=f127e460]
+              - combobox "Switch Display Language" [ref=f127e462]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f127e463]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f127e466] [cursor=pointer]:
+              - generic "Messages" [ref=f127e467]:
+                - generic [ref=f127e468]:
+                  - img "Messages" [ref=f127e471]
+                  - generic [ref=f127e474]: Messages
+                - generic [ref=f127e475]:
+                  - button "User avatar Kenneth Vega" [ref=f127e477]:
+                    - img "User avatar" [ref=f127e480]
+                  - button "User avatar SAMAEL" [ref=f127e482]:
+                    - img "User avatar" [ref=f127e485]
+                  - button "User avatar Oldboy" [ref=f127e487]:
+                    - img "User avatar" [ref=f127e490]
+            - generic [ref=f127e536]:
+              - generic [ref=f127e538]:
+                - generic [ref=f127e539]:
+                  - button [ref=f127e541] [cursor=pointer]:
+                    - img "Go back" [ref=f127e543]
+                  - link "Open the profile page of iraizoviedocanta" [ref=f127e546] [cursor=pointer]:
+                    - /url: /iraizoviedocanta/
+                    - generic [ref=f127e547]:
+                      - img "user-profile-picture" [ref=f127e550]
+                      - heading "Iraíz Oviedo Canta" [level=2] [ref=f127e554]
+                  - generic [ref=f127e556]:
+                    - button [ref=f127e557] [cursor=pointer]:
+                      - img "Expand" [ref=f127e559]
+                    - button [ref=f127e561] [cursor=pointer]:
+                      - img "Close" [ref=f127e563]
+                - separator [ref=f127e566]
+              - generic "Iraíz Oviedo Canta" [ref=f127e567]:
+                - generic [ref=f127e569]:
+                  - generic [ref=f127e574]:
+                    - img "user-profile-picture" [ref=f127e578]
+                    - generic [ref=f127e579]:
+                      - heading "Iraíz Oviedo Canta" [level=2] [ref=f127e582]
+                      - generic [ref=f127e584]: iraizoviedocanta · Instagram
+                      - link "View profile" [ref=f127e587] [cursor=pointer]:
+                        - /url: /iraizoviedocanta/
+                  - generic [ref=f127e597]:
+                    - button [ref=f127e600] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f127e602]
+                    - generic [ref=f127e604]:
+                      - textbox [active] [ref=f127e605]:
+                        - paragraph [ref=f127e606]
+                      - generic: Message...
+                    - generic [ref=f127e607]:
+                      - button [ref=f127e608] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f127e610]
+                      - button [ref=f127e613] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f127e615]
+                      - button [ref=f127e620] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f127e622]

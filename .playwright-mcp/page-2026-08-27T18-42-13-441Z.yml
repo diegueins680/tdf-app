@@ -1,0 +1,295 @@
+- generic [active] [ref=f6e1]:
+  - link "Saltar al contenido principal" [ref=f6e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f6e3]:
+    - generic [ref=f6e14]:
+      - link "Saltar al contenido principal" [ref=f6e15] [cursor=pointer]:
+        - /url: "#main-content"
+      - navigation "Navegación de la aplicación" [ref=f6e16]:
+        - generic [ref=f6e17]:
+          - generic [ref=f6e18]: MENÚ
+          - generic [ref=f6e20]:
+            - textbox "Buscar sección" [ref=f6e24]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=f6e25]:
+          - listitem [ref=f6e26]:
+            - generic [ref=f6e27]: ATAJOS
+            - list [ref=f6e30]:
+              - link "Chat Reciente · GENTE" [ref=f6e31] [cursor=pointer]:
+                - /url: /chat
+                - generic [ref=f6e34]:
+                  - generic [ref=f6e35]: Chat
+                  - paragraph [ref=f6e36]: Reciente · GENTE
+              - link "Empresas Reciente · GENTE" [ref=f6e37] [cursor=pointer]:
+                - /url: /crm/empresas
+                - generic [ref=f6e40]:
+                  - generic [ref=f6e41]: Empresas
+                  - paragraph [ref=f6e42]: Reciente · GENTE
+          - listitem [ref=f6e43]:
+            - generic [ref=f6e44]:
+              - generic [ref=f6e45]: CREAR
+              - button "Mostrar CREAR" [ref=f6e50] [cursor=pointer]
+          - listitem [ref=f6e53]:
+            - generic [ref=f6e54]:
+              - generic [ref=f6e55]: GENTE
+              - button "Mostrar GENTE" [ref=f6e60] [cursor=pointer]
+          - listitem [ref=f6e63]:
+            - generic [ref=f6e64]:
+              - generic [ref=f6e65]: SELLO
+              - button "Mostrar SELLO" [ref=f6e70] [cursor=pointer]
+          - listitem [ref=f6e73]:
+            - generic [ref=f6e74]:
+              - generic [ref=f6e75]: OPERAR
+              - button "Mostrar OPERAR" [ref=f6e81] [cursor=pointer]
+          - listitem [ref=f6e84]:
+            - generic [ref=f6e85]:
+              - generic [ref=f6e86]: ADMIN
+              - button "Ocultar ADMIN" [expanded] [ref=f6e94] [cursor=pointer]
+            - list [ref=f6e100]:
+              - listitem [ref=f6e101]:
+                - link "Inscripciones de cursos" [ref=f6e102] [cursor=pointer]:
+                  - /url: /configuracion/inscripciones-curso
+              - listitem [ref=f6e107]:
+                - link "Cursos" [ref=f6e108] [cursor=pointer]:
+                  - /url: /configuracion/cursos
+              - listitem [ref=f6e113]:
+                - link "Actividad" [ref=f6e114] [cursor=pointer]:
+                  - /url: /configuracion/actividad
+              - listitem [ref=f6e119]:
+                - link "Logs" [ref=f6e120] [cursor=pointer]:
+                  - /url: /configuracion/logs
+              - listitem [ref=f6e125]:
+                - link "Estado sistema" [ref=f6e126] [cursor=pointer]:
+                  - /url: /configuracion/estado
+              - listitem [ref=f6e131]:
+                - link "Diagnósticos" [ref=f6e132] [cursor=pointer]:
+                  - /url: /admin/diagnosticos
+              - listitem [ref=f6e137]:
+                - link "Eventos de pago" [ref=f6e138] [cursor=pointer]:
+                  - /url: /admin/commerce/provider-events
+              - listitem [ref=f6e143]:
+                - link "Brain y RAG" [ref=f6e144] [cursor=pointer]:
+                  - /url: /configuracion/brain
+              - listitem [ref=f6e149]:
+                - link "Usuarios admin" [ref=f6e150] [cursor=pointer]:
+                  - /url: /configuracion/usuarios-admin
+              - listitem [ref=f6e155]:
+                - link "Catálogos" [ref=f6e156] [cursor=pointer]:
+                  - /url: /configuracion/catalogos
+              - listitem [ref=f6e161]:
+                - link "Roles y permisos" [ref=f6e162] [cursor=pointer]:
+                  - /url: /configuracion/roles-permisos
+              - listitem [ref=f6e167]:
+                - link "Calendario Google" [ref=f6e168] [cursor=pointer]:
+                  - /url: /configuracion/integraciones/calendario
+              - listitem [ref=f6e173]:
+                - link "CMS" [ref=f6e174] [cursor=pointer]:
+                  - /url: /configuracion/cms
+              - listitem [ref=f6e179]:
+                - link "Campañas automáticas" [ref=f6e180] [cursor=pointer]:
+                  - /url: /configuracion/campanas-automaticas
+              - listitem [ref=f6e185]:
+                - link "WhatsApp consentimiento" [ref=f6e186] [cursor=pointer]:
+                  - /url: /configuracion/whatsapp-consentimiento
+              - listitem [ref=f6e191]:
+                - link "Opciones UX" [ref=f6e192] [cursor=pointer]:
+                  - /url: /configuracion/opciones-ux
+              - listitem [ref=f6e197]:
+                - link "Preferencias" [ref=f6e198] [cursor=pointer]:
+                  - /url: /configuracion/preferencias
+          - listitem [ref=f6e203]:
+            - generic [ref=f6e204]:
+              - generic [ref=f6e205]: HERRAMIENTAS
+              - button "Mostrar HERRAMIENTAS" [ref=f6e210] [cursor=pointer]
+          - listitem [ref=f6e213]:
+            - generic [ref=f6e214]:
+              - generic [ref=f6e215]: AYUDA
+              - button "Mostrar AYUDA" [ref=f6e220] [cursor=pointer]
+      - generic [ref=f6e223]:
+        - banner [ref=f6e224]:
+          - generic [ref=f6e225]:
+            - button "Ocultar menú lateral" [ref=f6e226] [cursor=pointer]
+            - link "Ir al inicio" [ref=f6e229] [cursor=pointer]:
+              - /url: /inicio
+              - img "TDF Records logo"
+            - button "Buscar sección" [ref=f6e231] [cursor=pointer]:
+              - generic [ref=f6e236]: ⌘K
+            - generic [ref=f6e237]:
+              - button "Creación rápida" [ref=f6e238] [cursor=pointer]:
+                - generic [ref=f6e242]: Crear
+              - button "Notificaciones" [ref=f6e243] [cursor=pointer]:
+                - generic [ref=f6e244]: "0"
+              - button "Abrir menú de sesión" [ref=f6e247] [cursor=pointer]:
+                - generic [ref=f6e248]: D
+        - status [ref=f6e249]:
+          - progressbar "Cargando datos" [ref=f6e250]
+        - main [ref=f6e253]:
+          - generic [ref=f6e254]:
+            - navigation "Migas de pan" [ref=f6e255]:
+              - list [ref=f6e256]:
+                - listitem [ref=f6e257]:
+                  - link "CMS" [ref=f6e258] [cursor=pointer]:
+                    - /url: /configuracion/cms
+                - listitem [ref=f6e259]: /
+                - listitem [ref=f6e260]:
+                  - paragraph [ref=f6e261]: Campañas automáticas
+            - generic [ref=f6e262]:
+              - generic [ref=f6e264]:
+                - generic [ref=f6e265]:
+                  - heading "Campañas automáticas" [level=3] [ref=f6e266]
+                  - paragraph [ref=f6e267]: Secuencias de adquisición con consentimiento, plantillas aprobadas y detención automática.
+                - button [ref=f6e269] [cursor=pointer]
+              - generic [ref=f6e274]:
+                - alert [ref=f6e275]:
+                  - generic [ref=f6e279]: Crear o previsualizar una campaña no envía nada. Para activar envíos reales debes registrar consentimiento de WhatsApp, conseguir la aprobación de cada plantilla en Meta y confirmar la activación. La automatización se detiene al recibir una respuesta, al revocarse el consentimiento, al convertir el lead o al terminar la secuencia.
+                - generic [ref=f6e280]:
+                  - generic [ref=f6e282]:
+                    - generic [ref=f6e284]:
+                      - generic [ref=f6e285]:
+                        - generic [ref=f6e286]:
+                          - heading "TDF · Single listo para lanzar" [level=5] [ref=f6e287]
+                          - paragraph [ref=f6e288]: Vender paquetes de mezcla y mastering a artistas con material grabado.
+                        - generic [ref=f6e289]: Sin crear
+                      - alert [ref=f6e291]:
+                        - generic [ref=f6e292]:
+                          - heading "Oferta" [level=6] [ref=f6e293]
+                          - paragraph [ref=f6e294]: Mezcla + mastering, una revisión y entrega en siete días por USD 249.
+                      - generic [ref=f6e295]:
+                        - heading "Audiencia permitida" [level=6] [ref=f6e296]
+                        - paragraph [ref=f6e297]: Artistas y bandas con relación previa o consentimiento vigente.
+                      - separator [ref=f6e298]
+                      - heading "Secuencia automática · 3 mensajes" [level=6] [ref=f6e299]
+                      - list [ref=f6e300]:
+                        - listitem [ref=f6e301]:
+                          - generic [ref=f6e302]: Inicio
+                          - generic [ref=f6e304]:
+                            - paragraph [ref=f6e305]: tdf_music_services_intro_v1
+                            - generic [ref=f6e306]: "Hola {{name}}, abrimos tres cupos TDF para artistas que ya tengan una canción grabada."
+                        - listitem [ref=f6e307]:
+                          - generic [ref=f6e308]: +2 días
+                          - generic [ref=f6e310]:
+                            - paragraph [ref=f6e311]: tdf_music_services_fit_v1
+                            - generic [ref=f6e312]: "Hola {{name}}, para confirmar si tu canción está lista solo necesitamos escuchar un bounce y revisar los stems."
+                        - listitem [ref=f6e313]:
+                          - generic [ref=f6e314]: +3 días
+                          - generic [ref=f6e316]:
+                            - paragraph [ref=f6e317]: tdf_music_services_close_v1
+                            - generic [ref=f6e318]: "Hola {{name}}, cerramos esta ronda de cupos de mezcla y mastering."
+                    - button [ref=f6e320] [cursor=pointer]
+                  - generic [ref=f6e325]:
+                    - generic [ref=f6e327]:
+                      - generic [ref=f6e328]:
+                        - generic [ref=f6e329]:
+                          - heading "Domo del Pululahua · Reservas piloto" [level=5] [ref=f6e330]
+                          - paragraph [ref=f6e331]: Generar visitas y cotizaciones calificadas para usos de baja complejidad operativa.
+                        - generic [ref=f6e332]: Sin crear
+                      - alert [ref=f6e334]:
+                        - generic [ref=f6e335]:
+                          - heading "Oferta" [level=6] [ref=f6e336]
+                          - paragraph [ref=f6e337]: Sesiones audiovisuales, talleres diurnos y experiencias privadas cotizadas a medida.
+                      - generic [ref=f6e338]:
+                        - heading "Audiencia permitida" [level=6] [ref=f6e339]
+                        - paragraph [ref=f6e340]: Fotógrafos, productoras, facilitadores, planners y empresas con consentimiento.
+                      - separator [ref=f6e341]
+                      - heading "Secuencia automática · 3 mensajes" [level=6] [ref=f6e342]
+                      - list [ref=f6e343]:
+                        - listitem [ref=f6e344]:
+                          - generic [ref=f6e345]: Inicio
+                          - generic [ref=f6e347]:
+                            - paragraph [ref=f6e348]: tdf_domo_bookings_intro_v1
+                            - generic [ref=f6e349]: "Hola {{name}}, Domo del Pululahua está recibiendo solicitudes para sesiones audiovisuales, talleres diurnos y experiencias privadas."
+                        - listitem [ref=f6e350]:
+                          - generic [ref=f6e351]: +4 días
+                          - generic [ref=f6e353]:
+                            - paragraph [ref=f6e354]: tdf_domo_bookings_visit_v1
+                            - generic [ref=f6e355]: "Hola {{name}}, si estás planificando una producción o experiencia, podemos revisar aforo, horario, acceso y proveedores antes de cotizar."
+                        - listitem [ref=f6e356]:
+                          - generic [ref=f6e357]: +6 días
+                          - generic [ref=f6e359]:
+                            - paragraph [ref=f6e360]: tdf_domo_bookings_close_v1
+                            - generic [ref=f6e361]: "Hola {{name}}, este es el último seguimiento sobre Domo del Pululahua."
+                    - button [ref=f6e363] [cursor=pointer]
+                  - generic [ref=f6e368]:
+                    - generic [ref=f6e370]:
+                      - generic [ref=f6e371]:
+                        - generic [ref=f6e372]:
+                          - heading "TDF Ops · Implementación para estudios y venues" [level=5] [ref=f6e373]
+                          - paragraph [ref=f6e374]: Vender una implementación gestionada de CRM, reservas, pagos y seguimiento.
+                        - generic [ref=f6e375]: Sin crear
+                      - alert [ref=f6e377]:
+                        - generic [ref=f6e378]:
+                          - heading "Oferta" [level=6] [ref=f6e379]
+                          - paragraph [ref=f6e380]: Diagnóstico breve y configuración de un flujo operativo adaptado al negocio.
+                      - generic [ref=f6e381]:
+                        - heading "Audiencia permitida" [level=6] [ref=f6e382]
+                        - paragraph [ref=f6e383]: Estudios, academias, salas y venues con un contacto autorizado.
+                      - separator [ref=f6e384]
+                      - heading "Secuencia automática · 3 mensajes" [level=6] [ref=f6e385]
+                      - list [ref=f6e386]:
+                        - listitem [ref=f6e387]:
+                          - generic [ref=f6e388]: Inicio
+                          - generic [ref=f6e390]:
+                            - paragraph [ref=f6e391]: tdf_managed_ops_intro_v1
+                            - generic [ref=f6e392]: "Hola {{name}}, TDF está abriendo cupos para ayudar a estudios y venues a ordenar contactos, reservas, servicios y cobros en un solo flujo."
+                        - listitem [ref=f6e393]:
+                          - generic [ref=f6e394]: +4 días
+                          - generic [ref=f6e396]:
+                            - paragraph [ref=f6e397]: tdf_managed_ops_audit_v1
+                            - generic [ref=f6e398]: "Hola {{name}}, normalmente empezamos detectando dónde se pierden consultas, fechas o anticipos."
+                        - listitem [ref=f6e399]:
+                          - generic [ref=f6e400]: +5 días
+                          - generic [ref=f6e402]:
+                            - paragraph [ref=f6e403]: tdf_managed_ops_close_v1
+                            - generic [ref=f6e404]: "Hola {{name}}, cierro este seguimiento sobre la implementación operativa de TDF."
+                    - button [ref=f6e406] [cursor=pointer]
+                  - generic [ref=f6e411]:
+                    - generic [ref=f6e413]:
+                      - generic [ref=f6e414]:
+                        - generic [ref=f6e415]:
+                          - heading "TDF Marketplace · Validación de compradores y artistas" [level=5] [ref=f6e416]
+                          - paragraph [ref=f6e417]: Validar demanda real antes de ampliar funciones o invertir en pauta.
+                        - generic [ref=f6e418]: Sin crear
+                      - alert [ref=f6e420]:
+                        - generic [ref=f6e421]:
+                          - heading "Oferta" [level=6] [ref=f6e422]
+                          - paragraph [ref=f6e423]: Acceso a pruebas de productos, tickets, drops y experiencias de artistas TDF.
+                      - generic [ref=f6e424]:
+                        - heading "Audiencia permitida" [level=6] [ref=f6e425]
+                        - paragraph [ref=f6e426]: Fans, artistas y compradores con consentimiento vigente.
+                      - separator [ref=f6e427]
+                      - heading "Secuencia automática · 3 mensajes" [level=6] [ref=f6e428]
+                      - list [ref=f6e429]:
+                        - listitem [ref=f6e430]:
+                          - generic [ref=f6e431]: Inicio
+                          - generic [ref=f6e433]:
+                            - paragraph [ref=f6e434]: tdf_marketplace_validation_intro_v1
+                            - generic [ref=f6e435]: "Hola {{name}}, estamos validando qué debería vender primero el marketplace de TDF: merch, entradas, drops digitales o experiencias."
+                        - listitem [ref=f6e436]:
+                          - generic [ref=f6e437]: +3 días
+                          - generic [ref=f6e439]:
+                            - paragraph [ref=f6e440]: tdf_marketplace_validation_value_v1
+                            - generic [ref=f6e441]: "Hola {{name}}, una respuesta corta nos ayuda mucho: ¿qué comprarías primero a un artista local?"
+                        - listitem [ref=f6e442]:
+                          - generic [ref=f6e443]: +4 días
+                          - generic [ref=f6e445]:
+                            - paragraph [ref=f6e446]: tdf_marketplace_validation_close_v1
+                            - generic [ref=f6e447]: "Hola {{name}}, cerramos esta ronda de validación del marketplace."
+                    - button [ref=f6e449] [cursor=pointer]
+          - generic [ref=f6e454]:
+            - status [ref=f6e455]:
+              - generic [ref=f6e458]: "API: online"
+            - button "Abrir ChatKit" [ref=f6e459] [cursor=pointer]
+    - generic "Control de radio":
+      - generic [ref=f6e462]:
+        - button "Reproducir radio" [ref=f6e463] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=f6e466]:
+          - button "Saltar a la estación anterior" [ref=f6e467] [cursor=pointer]
+        - generic "Saltar al siguiente" [ref=f6e470]:
+          - button "Saltar a la siguiente estación" [ref=f6e471] [cursor=pointer]
+        - button "Silenciar radio" [ref=f6e474] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=f6e477] [cursor=pointer]
+        - button "Expandir radio" [ref=f6e480] [cursor=pointer]
+        - generic [ref=f6e483]:
+          - generic [ref=f6e484]: "En pausa: stream.rcast.net"
+          - text: Live

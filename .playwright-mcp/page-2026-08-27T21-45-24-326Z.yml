@@ -1,0 +1,267 @@
+- generic [ref=f95e4]:
+  - generic [ref=f95e18]:
+    - generic [ref=f95e21]:
+      - link [ref=f95e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f95e31]
+      - generic [ref=f95e34]:
+        - link [ref=f95e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f95e44]
+        - link [ref=f95e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f95e54]
+        - link [ref=f95e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f95e66]
+        - link [ref=f95e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f95e77]
+        - link [ref=f95e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f95e89]
+        - link [ref=f95e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f95e100]
+        - link [ref=f95e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f95e110]
+        - link [ref=f95e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f95e122]:
+            - img "tdf.records.label's profile picture" [ref=f95e123]
+      - generic [ref=f95e124]:
+        - link [ref=f95e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f95e132]
+        - link [ref=f95e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f95e140]
+    - generic [ref=f95e143]:
+      - main [ref=f95e144]:
+        - generic [ref=f95e146]:
+          - generic [ref=f95e147]:
+            - generic [ref=f95e148]:
+              - button [ref=f95e153] [cursor=pointer]:
+                - link [ref=f95e155]:
+                  - img "adr_escobar's profile picture" [ref=f95e156]
+              - generic [ref=f95e157]:
+                - generic [ref=f95e158]:
+                  - generic [ref=f95e159]:
+                    - link [ref=f95e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "adr_escobar" [level=2] [ref=f95e162]
+                    - button [ref=f95e164] [cursor=pointer]:
+                      - img "Options" [ref=f95e166]
+                  - generic [ref=f95e170]: Adrian Escobar
+                  - generic [ref=f95e172]:
+                    - generic [ref=f95e174]:
+                      - generic [ref=f95e175]: "59"
+                      - text: posts
+                    - link "180 followers" [ref=f95e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f95e178]:
+                        - generic "180" [ref=f95e179]
+                        - text: followers
+                    - link "271 following" [ref=f95e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f95e182]:
+                        - generic [ref=f95e183]: "271"
+                        - text: following
+                - button [ref=f95e187] [cursor=pointer]:
+                  - generic [ref=f95e188]: 🆄🅿🆂🦷🅾🅳🅾🅽🆃🅾- 𝑩𝒊𝒌𝒆𝒓 ✌︎- 𝑨𝒇𝒊𝒄𝒊𝒐𝒏𝒂𝒅𝒐 𝒂 𝒍𝒂 𝒇𝒐𝒕𝒐𝒈𝒓𝒂𝒇í𝒂
+            - generic [ref=f95e193]:
+              - button "Follow Back" [ref=f95e195] [cursor=pointer]
+              - button [ref=f95e199] [cursor=pointer]:
+                - img "Similar accounts" [ref=f95e201]
+            - menu [ref=f95e205]:
+              - generic [ref=f95e207]:
+                - list [ref=f95e209]:
+                  - listitem [ref=f95e210]
+                  - listitem [ref=f95e211]
+                  - listitem [ref=f95e212]:
+                    - link "View Me highlight" [ref=f95e215] [cursor=pointer]:
+                      - /url: /stories/highlights/17845594176633709/
+                      - button "adr_escobar's highlight story picture Me" [ref=f95e216]:
+                        - button [ref=f95e217]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e220]
+                        - generic [ref=f95e221]: Me
+                  - listitem [ref=f95e224]:
+                    - link "View Carrera highlight" [ref=f95e227] [cursor=pointer]:
+                      - /url: /stories/highlights/18296662270242423/
+                      - button "adr_escobar's highlight story picture Carrera" [ref=f95e228]:
+                        - button [ref=f95e229]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e232]
+                        - generic [ref=f95e233]: Carrera
+                  - listitem [ref=f95e236]:
+                    - link "View Fotografía highlight" [ref=f95e239] [cursor=pointer]:
+                      - /url: /stories/highlights/18067644065428187/
+                      - button "adr_escobar's highlight story picture Fotografía" [ref=f95e240]:
+                        - button [ref=f95e241]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e244]
+                        - generic [ref=f95e245]: Fotografía
+                  - listitem [ref=f95e248]:
+                    - link "View Mascotas highlight" [ref=f95e251] [cursor=pointer]:
+                      - /url: /stories/highlights/17847486474429106/
+                      - button "adr_escobar's highlight story picture Mascotas" [ref=f95e252]:
+                        - button [ref=f95e253]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e256]
+                        - generic [ref=f95e257]: Mascotas
+                  - listitem [ref=f95e260]:
+                    - link "View Viajes highlight" [ref=f95e263] [cursor=pointer]:
+                      - /url: /stories/highlights/17896953147225122/
+                      - button "adr_escobar's highlight story picture Viajes" [ref=f95e264]:
+                        - button [ref=f95e265]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e268]
+                        - generic [ref=f95e269]: Viajes
+                  - listitem [ref=f95e272]:
+                    - link "View Eventos highlight" [ref=f95e275] [cursor=pointer]:
+                      - /url: /stories/highlights/18390714538197061/
+                      - button "adr_escobar's highlight story picture Eventos" [ref=f95e276]:
+                        - button [ref=f95e277]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e280]
+                        - generic [ref=f95e281]: Eventos
+                  - listitem [ref=f95e284]:
+                    - link "View Lugares highlight" [ref=f95e287] [cursor=pointer]:
+                      - /url: /stories/highlights/18093286885902137/
+                      - button "adr_escobar's highlight story picture Lugares" [ref=f95e288]:
+                        - button [ref=f95e289]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e292]
+                        - generic [ref=f95e293]: Lugares
+                  - listitem [ref=f95e296]:
+                    - link "View Resúmen highlight" [ref=f95e299] [cursor=pointer]:
+                      - /url: /stories/highlights/17978171750953015/
+                      - button "adr_escobar's highlight story picture Resúmen" [ref=f95e300]:
+                        - button [ref=f95e301]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e304]
+                        - generic [ref=f95e305]: Resúmen
+                  - listitem [ref=f95e308]:
+                    - link "View Biker highlight" [ref=f95e311] [cursor=pointer]:
+                      - /url: /stories/highlights/18054644828127194/
+                      - button "adr_escobar's highlight story picture Biker" [ref=f95e312]:
+                        - button [ref=f95e313]:
+                          - img "adr_escobar's highlight story picture" [ref=f95e316]
+                        - generic [ref=f95e317]: Biker
+                - button "Next" [ref=f95e320] [cursor=pointer]
+          - generic [ref=f95e322]:
+            - tablist [ref=f95e323]:
+              - link [ref=f95e325] [cursor=pointer]:
+                - /url: /adr_escobar/
+                - img "Posts" [ref=f95e327]
+              - link [ref=f95e338] [cursor=pointer]:
+                - /url: /adr_escobar/reels/
+                - img "Reels" [ref=f95e340]
+              - link [ref=f95e343] [cursor=pointer]:
+                - /url: /adr_escobar/reposts/
+                - img "Reposts" [ref=f95e345]
+              - link [ref=f95e348] [cursor=pointer]:
+                - /url: /adr_escobar/tagged/
+                - img "Tagged" [ref=f95e350]
+            - tabpanel
+          - progressbar [ref=f95e354]:
+            - img "Loading..." [ref=f95e355]
+      - contentinfo [ref=f95e368]:
+        - generic [ref=f95e369]:
+          - generic [ref=f95e371]:
+            - link "Meta" [ref=f95e373] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f95e376] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f95e379] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f95e382] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f95e385] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f95e388] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f95e391] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f95e394] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f95e397] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f95e400] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f95e403] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f95e406] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f95e409] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f95e412] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f95e415] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f95e417]:
+            - generic [ref=f95e418] [cursor=pointer]:
+              - generic [ref=f95e419]:
+                - generic [ref=f95e420]: English
+                - img "Down chevron icon" [ref=f95e423]
+              - combobox "Switch Display Language" [ref=f95e425]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f95e426]: © 2026 Instagram from Meta
+  - button [ref=f95e429] [cursor=pointer]:
+    - generic "Messages" [ref=f95e430]:
+      - generic [ref=f95e431]:
+        - img "Messages" [ref=f95e434]
+        - generic [ref=f95e437]: Messages
+      - generic [ref=f95e438]:
+        - button "User avatar Kenneth Vega" [ref=f95e440]:
+          - img "User avatar" [ref=f95e443]
+        - button "User avatar SAMAEL" [ref=f95e445]:
+          - img "User avatar" [ref=f95e448]
+        - button "User avatar Oldboy" [ref=f95e450]:
+          - img "User avatar" [ref=f95e453]

@@ -1,0 +1,226 @@
+- generic [ref=f112e4]:
+  - generic [ref=f112e18]:
+    - generic [ref=f112e21]:
+      - link [ref=f112e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f112e31]
+      - generic [ref=f112e34]:
+        - link [ref=f112e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f112e44]
+        - link [ref=f112e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f112e54]
+        - link [ref=f112e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f112e66]
+        - link [ref=f112e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f112e77]
+        - link [ref=f112e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f112e89]
+        - link [ref=f112e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f112e100]
+        - link [ref=f112e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f112e110]
+        - link [ref=f112e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f112e122]:
+            - img "tdf.records.label's profile picture" [ref=f112e123]
+      - generic [ref=f112e124]:
+        - link [ref=f112e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f112e132]
+        - link [ref=f112e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f112e140]
+    - generic [ref=f112e143]:
+      - main [ref=f112e144]:
+        - generic [ref=f112e146]:
+          - generic [ref=f112e147]:
+            - generic [ref=f112e148]:
+              - link [ref=f112e154] [cursor=pointer]:
+                - /url: /nada_films_/
+                - img "nada_films_'s profile picture" [ref=f112e155]
+              - generic [ref=f112e156]:
+                - generic [ref=f112e157]:
+                  - generic [ref=f112e158]:
+                    - link [ref=f112e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "nada_films_" [level=2] [ref=f112e161]
+                    - button [ref=f112e163] [cursor=pointer]:
+                      - img "Options" [ref=f112e165]
+                  - generic [ref=f112e169]: Nada
+                  - generic [ref=f112e171]:
+                    - generic [ref=f112e173]:
+                      - generic [ref=f112e174]: "119"
+                      - text: posts
+                    - link "1,266 followers" [ref=f112e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f112e177]:
+                        - generic "1,266" [ref=f112e178]
+                        - text: followers
+                    - link "830 following" [ref=f112e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f112e181]:
+                        - generic [ref=f112e182]: "830"
+                        - text: following
+                - generic [ref=f112e183]:
+                  - generic [ref=f112e184]:
+                    - generic [ref=f112e185]: Art
+                    - generic [ref=f112e187]:
+                      - button [ref=f112e188] [cursor=pointer]:
+                        - generic [ref=f112e189]: Patricio CapeloMultidisciplinary ArtistEducatorB.A. on Cinema
+                      - generic [ref=f112e190]:
+                        - text: ...
+                        - button "more" [ref=f112e191] [cursor=pointer]
+                    - link "Threads nada_films_" [ref=f112e195] [cursor=pointer]:
+                      - /url: https://www.threads.com/@nada_films_?xmt=AQG08buP71NHjA9Pxn9fqUik68KLAdLUba1v4xO-TEgLt_g
+                      - img "Threads" [ref=f112e197]
+                      - generic [ref=f112e199]: nada_films_
+                  - link "Followed by mauricionoproa7, oximoron_tu_tentaculo + 4 more" [ref=f112e201] [cursor=pointer]:
+                    - /url: /nada_films_/followers/mutualOnly
+                    - generic [ref=f112e203]:
+                      - generic [ref=f112e205]:
+                        - button [ref=f112e206]:
+                          - link [ref=f112e207]
+                        - button [ref=f112e208]:
+                          - link [ref=f112e209]
+                        - button [ref=f112e210]:
+                          - link [ref=f112e211]
+                      - generic [ref=f112e212]: Followed by mauricionoproa7, oximoron_tu_tentaculo + 4 more
+            - generic [ref=f112e217]:
+              - button "Following Down chevron icon" [ref=f112e219] [cursor=pointer]:
+                - generic [ref=f112e220]:
+                  - generic [ref=f112e221]: Following
+                  - img "Down chevron icon" [ref=f112e224]
+              - button "Message" [ref=f112e227] [cursor=pointer]
+              - button [ref=f112e229] [cursor=pointer]:
+                - img "Similar accounts" [ref=f112e231]
+            - generic:
+              - menu
+          - generic [ref=f112e234]:
+            - tablist [ref=f112e235]:
+              - link [ref=f112e237] [cursor=pointer]:
+                - /url: /nada_films_/
+                - img "Posts" [ref=f112e239]
+              - link [ref=f112e250] [cursor=pointer]:
+                - /url: /nada_films_/reels/
+                - img "Reels" [ref=f112e252]
+              - link [ref=f112e255] [cursor=pointer]:
+                - /url: /nada_films_/reposts/
+                - img "Reposts" [ref=f112e257]
+              - link [ref=f112e260] [cursor=pointer]:
+                - /url: /nada_films_/tagged/
+                - img "Tagged" [ref=f112e262]
+            - tabpanel
+          - progressbar [ref=f112e266]:
+            - img "Loading..." [ref=f112e267]
+      - contentinfo [ref=f112e280]:
+        - generic [ref=f112e281]:
+          - generic [ref=f112e283]:
+            - link "Meta" [ref=f112e285] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f112e288] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f112e291] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f112e294] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f112e297] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f112e300] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f112e303] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f112e306] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f112e309] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f112e312] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f112e315] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f112e318] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f112e321] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f112e324] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f112e327] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f112e329]:
+            - generic [ref=f112e330] [cursor=pointer]:
+              - generic [ref=f112e331]:
+                - generic [ref=f112e332]: English
+                - img "Down chevron icon" [ref=f112e335]
+              - combobox "Switch Display Language" [ref=f112e337]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f112e338]: © 2026 Instagram from Meta
+  - button [ref=f112e341] [cursor=pointer]:
+    - generic "Messages" [ref=f112e342]:
+      - generic [ref=f112e343]:
+        - img "Messages" [ref=f112e346]
+        - generic [ref=f112e349]: Messages
+      - generic [ref=f112e350]:
+        - button "User avatar Kenneth Vega" [ref=f112e352]:
+          - img "User avatar" [ref=f112e355]
+        - button "User avatar SAMAEL" [ref=f112e357]:
+          - img "User avatar" [ref=f112e360]
+        - button "User avatar Oldboy" [ref=f112e362]:
+          - img "User avatar" [ref=f112e365]

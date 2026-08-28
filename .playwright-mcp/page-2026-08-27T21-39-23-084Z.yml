@@ -1,0 +1,374 @@
+- generic [ref=f54e4]:
+  - generic [ref=f54e18]:
+    - generic [ref=f54e21]:
+      - link [ref=f54e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f54e31]
+      - generic [ref=f54e34]:
+        - link [ref=f54e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f54e44]
+        - link [ref=f54e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f54e54]
+        - link [ref=f54e61] [cursor=pointer]:
+          - /url: /direct/t/102162591185901
+          - img "Messages" [ref=f54e66]
+        - link [ref=f54e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f54e77]
+        - link [ref=f54e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f54e89]
+        - link [ref=f54e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f54e100]
+        - link [ref=f54e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f54e110]
+        - link [ref=f54e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f54e122]:
+            - img "tdf.records.label's profile picture" [ref=f54e123]
+      - generic [ref=f54e124]:
+        - link [ref=f54e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f54e132]
+        - link [ref=f54e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f54e140]
+    - generic [ref=f54e143]:
+      - main [ref=f54e144]:
+        - generic [ref=f54e146]:
+          - generic [ref=f54e147]:
+            - generic [ref=f54e148]:
+              - button [ref=f54e153] [cursor=pointer]:
+                - link [ref=f54e155]:
+                  - img "klausrevolucion's profile picture" [ref=f54e156]
+              - generic [ref=f54e157]:
+                - generic [ref=f54e158]:
+                  - generic [ref=f54e159]:
+                    - link [ref=f54e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "klausrevolucion" [level=2] [ref=f54e162]
+                    - button [ref=f54e164] [cursor=pointer]:
+                      - img "Options" [ref=f54e166]
+                  - generic [ref=f54e170]: Klaus Revolución
+                  - generic [ref=f54e172]:
+                    - generic [ref=f54e174]:
+                      - generic [ref=f54e175]: "613"
+                      - text: posts
+                    - link "4,201 followers" [ref=f54e177] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f54e178]:
+                        - generic "4,201" [ref=f54e179]
+                        - text: followers
+                    - link "3,991 following" [ref=f54e181] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f54e182]:
+                        - generic [ref=f54e183]: 3,991
+                        - text: following
+                - generic [ref=f54e184]:
+                  - generic [ref=f54e185]:
+                    - generic [ref=f54e186]: Musician/band
+                    - generic [ref=f54e188]:
+                      - button [ref=f54e189] [cursor=pointer]:
+                        - generic [ref=f54e190]: "Error404 ..mgmt & booking:"
+                      - generic [ref=f54e191]:
+                        - text: ...
+                        - button "more" [ref=f54e192] [cursor=pointer]
+                  - link "Followed by nico_kamla, potter_mora + 45 more" [ref=f54e194] [cursor=pointer]:
+                    - /url: /klausrevolucion/followers/mutualOnly
+                    - generic [ref=f54e196]:
+                      - generic [ref=f54e198]:
+                        - button [ref=f54e199]:
+                          - link [ref=f54e200]
+                        - button [ref=f54e201]:
+                          - link [ref=f54e202]
+                        - button [ref=f54e203]:
+                          - link [ref=f54e204]
+                      - generic [ref=f54e205]: Followed by nico_kamla, potter_mora + 45 more
+            - generic [ref=f54e210]:
+              - button "Following Down chevron icon" [ref=f54e212] [cursor=pointer]:
+                - generic [ref=f54e213]:
+                  - generic [ref=f54e214]: Following
+                  - img "Down chevron icon" [ref=f54e217]
+              - button "Message" [ref=f54e220] [cursor=pointer]
+              - button [ref=f54e222] [cursor=pointer]:
+                - img "Similar accounts" [ref=f54e224]
+            - menu [ref=f54e228]:
+              - list [ref=f54e232]:
+                - listitem [ref=f54e233]
+                - listitem [ref=f54e234]
+                - listitem [ref=f54e235]:
+                  - link "View Cuervos 2022 🦅 highlight" [ref=f54e238] [cursor=pointer]:
+                    - /url: /stories/highlights/18022908157428421/
+                    - button "klausrevolucion's highlight story picture Cuervos 2022 🦅" [ref=f54e239]:
+                      - button [ref=f54e240]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e243]
+                      - generic [ref=f54e244]: Cuervos 2022 🦅
+                - listitem [ref=f54e247]:
+                  - 'link "View #NOALALETEO highlight" [ref=f54e250] [cursor=pointer]':
+                    - /url: /stories/highlights/17877776908737064/
+                    - 'button "klausrevolucion''s highlight story picture #NOALALETEO" [ref=f54e251]':
+                      - button [ref=f54e252]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e255]
+                      - generic [ref=f54e256]: "#NOALALETEO"
+                - listitem [ref=f54e259]:
+                  - link "View Cholo/BiblioArt highlight" [ref=f54e262] [cursor=pointer]:
+                    - /url: /stories/highlights/18089126527122497/
+                    - button "klausrevolucion's highlight story picture Cholo/BiblioArt" [ref=f54e263]:
+                      - button [ref=f54e264]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e267]
+                      - generic [ref=f54e268]: Cholo/BiblioArt
+                - listitem [ref=f54e271]:
+                  - link "View A2H/Lima highlight" [ref=f54e274] [cursor=pointer]:
+                    - /url: /stories/highlights/17864050225571549/
+                    - button "klausrevolucion's highlight story picture A2H/Lima" [ref=f54e275]:
+                      - button [ref=f54e276]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e279]
+                      - generic [ref=f54e280]: A2H/Lima
+                - listitem [ref=f54e283]:
+                  - link "View A2H/interactos highlight" [ref=f54e286] [cursor=pointer]:
+                    - /url: /stories/highlights/18094926583106388/
+                    - button "klausrevolucion's highlight story picture A2H/interactos" [ref=f54e287]:
+                      - button [ref=f54e288]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e291]
+                      - generic [ref=f54e292]: A2H/interactos
+                - listitem [ref=f54e295]:
+                  - 'link "View #primerodelaño highlight" [ref=f54e298] [cursor=pointer]':
+                    - /url: /stories/highlights/17940325141258407/
+                    - 'button "klausrevolucion''s highlight story picture #primerodelaño" [ref=f54e299]':
+                      - button [ref=f54e300]:
+                        - img "klausrevolucion's highlight story picture" [ref=f54e303]
+                      - generic [ref=f54e304]: "#primerodelaño"
+          - generic [ref=f54e307]:
+            - tablist [ref=f54e308]:
+              - link [ref=f54e310] [cursor=pointer]:
+                - /url: /klausrevolucion/
+                - img "Posts" [ref=f54e312]
+              - link [ref=f54e323] [cursor=pointer]:
+                - /url: /klausrevolucion/reels/
+                - img "Reels" [ref=f54e325]
+              - link [ref=f54e328] [cursor=pointer]:
+                - /url: /klausrevolucion/reposts/
+                - img "Reposts" [ref=f54e330]
+              - link [ref=f54e333] [cursor=pointer]:
+                - /url: /klausrevolucion/tagged/
+                - img "Tagged" [ref=f54e335]
+            - tabpanel
+          - generic [ref=f54e342]:
+            - generic [ref=f54e343]:
+              - link [ref=f54e345] [cursor=pointer]:
+                - /url: /klausrevolucion/p/DX9bVcpjbzt/
+                - img "Photo by Klaus Revolución on May 05, 2026." [ref=f54e348]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f54e351] [cursor=pointer]:
+                - /url: /klausrevolucion/p/DOEYlgZDdyK/
+                - img "Photo shared by Klaus Revolución on September 01, 2025 tagging @virgenesvioladoras, and @virgenesvioladorasec." [ref=f54e354]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f54e357] [cursor=pointer]:
+                - /url: /klausrevolucion/p/CxbAKGLrSzC/
+                - img "Photo by Klaus Revolución on September 20, 2023." [ref=f54e360]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f54e363] [cursor=pointer]:
+                - /url: /klausrevolucion/p/DcR0YP0uDHT/
+                - img "Photo by Klaus Revolución in Guayaquil, Ecuador with @fxcarrera. May be an image of text." [ref=f54e366]
+            - generic [ref=f54e368]:
+              - link [ref=f54e370] [cursor=pointer]:
+                - /url: /subversivalatam/reel/Db3AnFdOyfJ/
+                - img [ref=f54e373]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f54e376] [cursor=pointer]:
+                - /url: /subversivalatam/p/Da0EFKGDuS9/
+                - img "Photo shared by Subversiva 🥷🏻 on July 15, 2026 tagging @luisitocollagea, @klausrevolucion, @buenplantickets, @pao.gomezv, and @viajeroquito. May be an image of ‎poster and ‎text that says '‎SUBVERSIVA PRESENTA SUBVERSIVA PRO EDICIÓN ARTES ANALOGNS 02. AGOSTO. 2026 VIAJERO HOSTEL QUITO (ROCAFUERTEYVENEZUELA) ENTRADAS EN :p buenplan.com.e .com.ec ec .com. لم VIAJERO HOSTELS‎'‎‎." [ref=f54e379]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f54e382] [cursor=pointer]:
+                - /url: /klausrevolucion/reel/DaGbLUbu1Cf/
+                - img "¡NO PIERDAS TIEMPO! 🚫⏰ Escucha este gran consejo del inigualable y escamoso @hombrepezoficial 🐟 Hoy sábado 27, tienes que seguir paso a paso su gran consejo para que mañana domingo, amanezcas sin chuchaki! Haz caso oe y vuela a @69segundosofficial @la_bomb_ en @galeriaivancasanovagiler 🛫" [ref=f54e385]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f54e388] [cursor=pointer]:
+                - /url: /klausrevolucion/p/DZ0BckZO6As/
+                - img "Photo shared by Klaus Revolución on June 20, 2026 tagging @makiii_zf. May be an image of ‎one or more people, poster and ‎text that says '‎I Iniversidad isa ande ١ Iniversidad ande sa タ J Iniversidad Iniver IN f www.casagraii casagra www. sa..ande ande isa uih Ez8.d0 لینی‎'‎‎." [ref=f54e391]
+            - generic [ref=f54e393]:
+              - link [ref=f54e395] [cursor=pointer]:
+                - /url: /subversivalatam/p/DWWj-fhjj9B/
+                - img "Photo shared by Subversiva 🥷🏻 on March 26, 2026 tagging @klausrevolucion, and @pao.gomezv." [ref=f54e398]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f54e401] [cursor=pointer]:
+                - /url: /irvingderma/reel/DUZdnQ8EQW-/
+                - img "Otro filler, 2 sin sacar para @klausrevolucion" [ref=f54e404]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f54e407] [cursor=pointer]:
+                - /url: /irvingderma/reel/DUOdQQtkSq2/
+                - img "Proceso de uno de los fillers de @klausrevolucion" [ref=f54e410]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f54e413] [cursor=pointer]:
+                - /url: /subversivalatam/p/DTy02L6jobX/
+                - img "Photo shared by Subversiva 🥷🏻 on January 21, 2026 tagging @notadb93, @oleasdb, @mogonegratadb, @klausrevolucion, and @elsamplerec." [ref=f54e416]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f54e418]:
+        - generic [ref=f54e419]:
+          - generic [ref=f54e421]:
+            - link "Meta" [ref=f54e423] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f54e426] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f54e429] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f54e432] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f54e435] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f54e438] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f54e441] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f54e444] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f54e447] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f54e450] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f54e453] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f54e456] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f54e459] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f54e462] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f54e465] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f54e467]:
+            - generic [ref=f54e468] [cursor=pointer]:
+              - generic [ref=f54e469]:
+                - generic [ref=f54e470]: English
+                - img "Down chevron icon" [ref=f54e473]
+              - combobox "Switch Display Language" [ref=f54e475]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f54e476]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f54e479] [cursor=pointer]:
+              - generic "Messages" [ref=f54e480]:
+                - generic [ref=f54e481]:
+                  - img "Messages" [ref=f54e484]
+                  - generic [ref=f54e487]: Messages
+                - generic [ref=f54e488]:
+                  - button "User avatar Kenneth Vega" [ref=f54e490]:
+                    - img "User avatar" [ref=f54e493]
+                  - button "User avatar SAMAEL" [ref=f54e495]:
+                    - img "User avatar" [ref=f54e498]
+                  - button "User avatar Oldboy" [ref=f54e500]:
+                    - img "User avatar" [ref=f54e503]
+            - generic [ref=f54e504]:
+              - generic [ref=f54e505]:
+                - generic [ref=f54e506]:
+                  - generic [ref=f54e508]:
+                    - status "Loading..." [ref=f54e510]
+                    - status "Loading..." [ref=f54e512]
+                  - button [active] [ref=f54e514] [cursor=pointer]:
+                    - img "Close" [ref=f54e516]
+                - separator [ref=f54e519]
+              - generic [ref=f54e520]:
+                - generic [ref=f54e521]:
+                  - status "Loading..." [ref=f54e523]
+                  - status "Loading..." [ref=f54e525]
+                - status "Loading..." [ref=f54e528]
+                - generic [ref=f54e529]:
+                  - status "Loading..." [ref=f54e531]
+                  - status "Loading..." [ref=f54e533]
+                - generic [ref=f54e534]:
+                  - status "Loading..." [ref=f54e536]
+                  - status "Loading..." [ref=f54e538]
+                - status "Loading..." [ref=f54e541]
+                - generic [ref=f54e542]:
+                  - status "Loading..." [ref=f54e544]
+                  - status "Loading..." [ref=f54e546]
+                - status "Loading..." [ref=f54e548]

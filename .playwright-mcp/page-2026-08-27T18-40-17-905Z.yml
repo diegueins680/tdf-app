@@ -1,0 +1,276 @@
+- generic [ref=f7e7]:
+  - generic [ref=f7e9]:
+    - generic [ref=f7e12]:
+      - link [ref=f7e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f7e22]
+      - generic [ref=f7e25]:
+        - link "Home Home" [ref=f7e220] [cursor=pointer]:
+          - /url: /
+          - generic [ref=f7e31]:
+            - img "Home" [ref=f7e35]
+            - generic [ref=f7e221]: Home
+        - link "Reels Reels" [ref=f7e226] [cursor=pointer]:
+          - /url: /reels/
+          - generic [ref=f7e41]:
+            - img "Reels" [ref=f7e45]
+            - generic [ref=f7e227]: Reels
+        - link "Messages Messages" [ref=f7e232] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f7e53]:
+            - img "Messages" [ref=f7e57]
+            - generic [ref=f7e233]: Messages
+        - link "Search Search" [ref=f7e238] [cursor=pointer]:
+          - /url: /explore/
+          - generic [ref=f7e63]:
+            - img "Search" [ref=f7e67]
+            - generic [ref=f7e239]: Search
+        - link "Notifications Notifications" [ref=f7e245] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f7e246]:
+            - img "Notifications" [ref=f7e250]
+            - generic [ref=f7e254]: Notifications
+        - link "New post Create" [ref=f7e260] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f7e89]:
+            - img "New post" [ref=f7e93]
+            - generic [ref=f7e261]: Create
+        - link "Professional dashboard Dashboard" [ref=f7e266] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f7e99]:
+            - img "Professional dashboard" [ref=f7e103]
+            - generic [ref=f7e267]: Dashboard
+        - link "tdf.records.label's profile picture Profile" [ref=f7e272] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - generic [ref=f7e111]:
+            - link [ref=f7e115]:
+              - img "tdf.records.label's profile picture" [ref=f7e116]
+            - generic [ref=f7e273]: Profile
+      - generic [ref=f7e117]:
+        - link "Settings More" [ref=f7e278] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f7e121]:
+            - img "Settings" [ref=f7e125]
+            - generic [ref=f7e279]: More
+        - link "Also from Meta Also from Meta" [ref=f7e284] [cursor=pointer]:
+          - /url: "#"
+          - generic [ref=f7e129]:
+            - img "Also from Meta" [ref=f7e133]
+            - generic [ref=f7e285]: Also from Meta
+    - main [ref=f7e137]:
+      - generic [ref=f7e294]:
+        - navigation "Thread list" [ref=f7e295]:
+          - generic [ref=f7e296]:
+            - generic [ref=f7e297]:
+              - button [ref=f7e298] [cursor=pointer]:
+                - heading "tdf.records.label" [level=2] [ref=f7e300]
+                - img "Down chevron icon" [ref=f7e303]
+              - button [ref=f7e307] [cursor=pointer]:
+                - img "New message" [ref=f7e309]
+            - tablist [ref=f7e314]:
+              - tab "Primary" [selected] [ref=f7e315] [cursor=pointer]
+              - tab "General" [ref=f7e318] [cursor=pointer]
+              - tab "From ads" [ref=f7e321] [cursor=pointer]
+              - tab "Requests" [ref=f7e325] [cursor=pointer]
+            - generic [ref=f7e331]:
+              - img "Search" [ref=f7e333]
+              - textbox "Search" [ref=f7e336]
+            - generic [ref=f7e337]:
+              - generic [ref=f7e339]:
+                - list [ref=f7e341]:
+                  - listitem [ref=f7e342]
+                  - listitem [ref=f7e343]:
+                    - button "Your turn... Your note" [ref=f7e345] [cursor=pointer]:
+                      - generic [ref=f7e346]:
+                        - generic [ref=f7e347]: Your turn...
+                        - generic [ref=f7e353]:
+                          - link [ref=f7e355]
+                          - generic [ref=f7e356]: Your note
+                  - listitem [ref=f7e358]:
+                    - button "Vive la Revolution⛱️ oximoron_tu_tentaculo's profile picture Tentáculos" [ref=f7e361] [cursor=pointer]:
+                      - generic [ref=f7e362]:
+                        - generic [ref=f7e363]: Vive la Revolution⛱️
+                        - generic [ref=f7e370]:
+                          - link [ref=f7e372]:
+                            - img "oximoron_tu_tentaculo's profile picture" [ref=f7e373]
+                          - generic [ref=f7e374]: Tentáculos
+                  - listitem [ref=f7e377]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Jungla Insaciable Sarcoma joelduenasc's profile picture Joel Dueñas" [ref=f7e380] [cursor=pointer]:
+                      - generic [ref=f7e381]:
+                        - generic [ref=f7e387]:
+                          - generic [ref=f7e388]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e390]
+                            - generic [ref=f7e394]: Jungla Insaciable
+                          - generic [ref=f7e395]: Sarcoma
+                        - generic [ref=f7e396]:
+                          - link [ref=f7e398]:
+                            - img "joelduenasc's profile picture" [ref=f7e399]
+                          - generic [ref=f7e400]: Joel Dueñas
+                  - listitem [ref=f7e403]:
+                    - button "⚡ aurea.infinita's profile picture Áurea - Terapeuta Holística" [ref=f7e406] [cursor=pointer]:
+                      - generic [ref=f7e407]:
+                        - generic [ref=f7e408]: ⚡
+                        - generic [ref=f7e415]:
+                          - link [ref=f7e417]:
+                            - img "aurea.infinita's profile picture" [ref=f7e418]
+                          - generic [ref=f7e419]: Áurea - Terapeuta Holística
+                  - listitem [ref=f7e422]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Las cosas que no se tocan Intoxicados saraking30's profile picture Sara King" [ref=f7e425] [cursor=pointer]:
+                      - generic [ref=f7e426]:
+                        - generic [ref=f7e432]:
+                          - generic [ref=f7e433]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e435]
+                            - generic [ref=f7e439]: Las cosas que no se tocan
+                          - generic [ref=f7e440]: Intoxicados
+                        - generic [ref=f7e441]:
+                          - link [ref=f7e443]:
+                            - img "saraking30's profile picture" [ref=f7e444]
+                          - generic [ref=f7e445]: Sara King
+                  - listitem [ref=f7e448]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner 1537 Guardarraya litzi_vitzi's profile picture litzi" [ref=f7e451] [cursor=pointer]:
+                      - generic [ref=f7e452]:
+                        - generic [ref=f7e458]:
+                          - generic [ref=f7e459]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e461]
+                            - generic [ref=f7e465]: "1537"
+                          - generic [ref=f7e466]: Guardarraya
+                        - generic [ref=f7e467]:
+                          - link [ref=f7e469]:
+                            - img "litzi_vitzi's profile picture" [ref=f7e470]
+                          - generic [ref=f7e471]: litzi
+                  - listitem [ref=f7e474]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Can't Do Without You (Tale of Us & Mano Le Tough Remix) Caribou ✨✨✨✨ camymantillan's profile picture Cami Mantilla" [ref=f7e477] [cursor=pointer]:
+                      - generic [ref=f7e478]:
+                        - generic [ref=f7e484]:
+                          - generic [ref=f7e485]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e487]
+                            - generic [ref=f7e491]: Can't Do Without You (Tale of Us & Mano Le Tough Remix)
+                          - generic [ref=f7e492]: Caribou
+                          - generic [ref=f7e493]: ✨✨✨✨
+                        - generic [ref=f7e494]:
+                          - link [ref=f7e496]:
+                            - img "camymantillan's profile picture" [ref=f7e497]
+                          - generic [ref=f7e498]: Cami Mantilla
+                  - listitem [ref=f7e501]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Centro MIEL Spoiler hakanstagram_'s profile picture DanielCG / Productoraudiovisual 🇪🇨" [ref=f7e504] [cursor=pointer]:
+                      - generic [ref=f7e505]:
+                        - generic [ref=f7e511]:
+                          - generic [ref=f7e512]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e514]
+                            - generic [ref=f7e518]: Centro
+                          - generic [ref=f7e519]: MIEL
+                          - generic [ref=f7e520]: Spoiler
+                        - generic [ref=f7e521]:
+                          - link [ref=f7e523]:
+                            - img "hakanstagram_'s profile picture" [ref=f7e524]
+                          - generic [ref=f7e525]: DanielCG / Productoraudiovisual 🇪🇨
+                  - listitem [ref=f7e528]:
+                    - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Back to School (Mini Maggit) Explicit Deftones charlievh_music's profile picture Charlie Villagómez Hebel" [ref=f7e531] [cursor=pointer]:
+                      - generic [ref=f7e532]:
+                        - generic [ref=f7e538]:
+                          - generic [ref=f7e539]:
+                            - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f7e541]
+                            - generic [ref=f7e545]: Back to School (Mini Maggit)
+                            - img "Explicit" [ref=f7e547]
+                          - generic [ref=f7e549]: Deftones
+                        - generic [ref=f7e550]:
+                          - link [ref=f7e552]:
+                            - img "charlievh_music's profile picture" [ref=f7e553]
+                          - generic [ref=f7e554]: Charlie Villagómez Hebel
+                - button "Next" [ref=f7e557] [cursor=pointer]
+              - generic [ref=f7e562]:
+                - 'button "user-profile-picture Oldboy You: La hora de ensayo cuesta $15 3 minutes ago" [ref=f7e566] [cursor=pointer]':
+                  - generic [ref=f7e568]:
+                    - img "user-profile-picture" [ref=f7e572]
+                    - generic [ref=f7e575]:
+                      - generic [ref=f7e576]: Oldboy
+                      - generic [ref=f7e582]:
+                        - generic [ref=f7e583]: "You: La hora de ensayo cuesta $15"
+                        - generic [ref=f7e585]:
+                          - generic [ref=f7e586]: ·
+                          - generic "3 minutes ago" [ref=f7e591]: 3m
+                - button "user-profile-picture Belnie_Pro 8:30 tocan los chicos y ahí lá biela va a zumbar 3 hours ago" [ref=f7e595] [cursor=pointer]:
+                  - generic [ref=f7e597]:
+                    - img "user-profile-picture" [ref=f7e601]
+                    - generic [ref=f7e604]:
+                      - generic [ref=f7e605]: Belnie_Pro
+                      - generic [ref=f7e611]:
+                        - generic [ref=f7e612]: 8:30 tocan los chicos y ahí lá biela va a zumbar
+                        - generic [ref=f7e614]:
+                          - generic [ref=f7e615]: ·
+                          - generic "3 hours ago" [ref=f7e620]: 3h
+                - button "user-profile-picture LA RESERVA Reacted 🤘🏻 to your message 23 hours ago" [ref=f7e624] [cursor=pointer]:
+                  - generic [ref=f7e626]:
+                    - img "user-profile-picture" [ref=f7e630]
+                    - generic [ref=f7e633]:
+                      - generic [ref=f7e634]: LA RESERVA
+                      - generic [ref=f7e640]:
+                        - generic [ref=f7e641]: Reacted 🤘🏻 to your message
+                        - generic [ref=f7e643]:
+                          - generic [ref=f7e644]: ·
+                          - generic "23 hours ago" [ref=f7e649]: 23h
+                - 'button "user-profile-picture Nexus You: Hola, Nexus 👋 Vimos que son una plataforma de difusión y sello independiente de Quito, con trabajo reciente alrededor de bandas, conciertos y escenas alternativas. En TDF estamos construyendo una comunidad para conectar sellos, artistas, productores y públicos, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_nexusuio Si la prueban, nos gustaría saber qué herramientas les servirían para catálogo, difusión y conexiones entre artistas. — TDF Records a day ago" [ref=f7e653] [cursor=pointer]':
+                  - generic [ref=f7e655]:
+                    - img "user-profile-picture" [ref=f7e659]
+                    - generic [ref=f7e662]:
+                      - generic [ref=f7e663]: Nexus
+                      - generic [ref=f7e669]:
+                        - generic [ref=f7e670]: "You: Hola, Nexus 👋 Vimos que son una plataforma de difusión y sello independiente de Quito, con trabajo reciente alrededor de bandas, conciertos y escenas alternativas. En TDF estamos construyendo una comunidad para conectar sellos, artistas, productores y públicos, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_nexusuio Si la prueban, nos gustaría saber qué herramientas les servirían para catálogo, difusión y conexiones entre artistas. — TDF Records"
+                        - generic [ref=f7e672]:
+                          - generic [ref=f7e673]: ·
+                          - generic "a day ago" [ref=f7e678]: 1d
+                - button "user-profile-picture ☠︎ ɴɪɢʀᴇᴅᴏ ʜᴇx ☠︎ Liked a message a day ago" [ref=f7e682] [cursor=pointer]:
+                  - generic [ref=f7e684]:
+                    - img "user-profile-picture" [ref=f7e688]
+                    - generic [ref=f7e691]:
+                      - generic [ref=f7e692]: ☠︎ ɴɪɢʀᴇᴅᴏ ʜᴇx ☠︎
+                      - generic [ref=f7e698]:
+                        - generic [ref=f7e699]: Liked a message
+                        - generic [ref=f7e701]:
+                          - generic [ref=f7e702]: ·
+                          - generic "a day ago" [ref=f7e707]: 1d
+                - 'button "user-profile-picture Verano Radiactivo Festival You: Hola, Verano Radiactivo 👋 Vimos su primera edición en Nina Shunku, reuniendo hip hop, música independiente, feria y comunidad en Quito. En TDF estamos construyendo una comunidad para que festivales, artistas, productores y públicos puedan encontrarse, mostrar proyectos y activar colaboraciones. Pueden probarla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_veranoradioactivo Si entran, cuéntennos qué herramientas les servirían para convocar artistas, público y futuras ediciones. — TDF Records a day ago" [ref=f7e711] [cursor=pointer]':
+                  - generic [ref=f7e713]:
+                    - img "user-profile-picture" [ref=f7e717]
+                    - generic [ref=f7e720]:
+                      - generic [ref=f7e721]: Verano Radiactivo Festival
+                      - generic [ref=f7e727]:
+                        - generic [ref=f7e728]: "You: Hola, Verano Radiactivo 👋 Vimos su primera edición en Nina Shunku, reuniendo hip hop, música independiente, feria y comunidad en Quito. En TDF estamos construyendo una comunidad para que festivales, artistas, productores y públicos puedan encontrarse, mostrar proyectos y activar colaboraciones. Pueden probarla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_veranoradioactivo Si entran, cuéntennos qué herramientas les servirían para convocar artistas, público y futuras ediciones. — TDF Records"
+                        - generic [ref=f7e730]:
+                          - generic [ref=f7e731]: ·
+                          - generic "a day ago" [ref=f7e736]: 1d
+                - 'button "user-profile-picture Apu Wasi Gastro-Cultura You: Hola, Apu Wasi 👋 Vimos la programación que sostienen en La Mariscal y cómo reúnen música en vivo, talleres y encuentros culturales. En TDF estamos construyendo una comunidad para conectar espacios, artistas, productores y públicos de Quito, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_apuwasicultura Si la prueban, nos gustaría saber qué herramientas les servirían para mover agenda, artistas y alianzas. — TDF Records a day ago" [ref=f7e740] [cursor=pointer]':
+                  - generic [ref=f7e742]:
+                    - img "user-profile-picture" [ref=f7e746]
+                    - generic [ref=f7e749]:
+                      - generic [ref=f7e750]: Apu Wasi Gastro-Cultura
+                      - generic [ref=f7e756]:
+                        - generic [ref=f7e757]: "You: Hola, Apu Wasi 👋 Vimos la programación que sostienen en La Mariscal y cómo reúnen música en vivo, talleres y encuentros culturales. En TDF estamos construyendo una comunidad para conectar espacios, artistas, productores y públicos de Quito, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=a_apuwasicultura Si la prueban, nos gustaría saber qué herramientas les servirían para mover agenda, artistas y alianzas. — TDF Records"
+                        - generic [ref=f7e759]:
+                          - generic [ref=f7e760]: ·
+                          - generic "a day ago" [ref=f7e765]: 1d
+                - 'button "user-profile-picture San🌿Arte 🎧 ESTUDIA CON NOSOTROS 1 A 1 — 100% ONLINE Aprende tu track desde cero en 12 clases, enfocado en Hip Hop, House, Techno y sus derivados. Aprende: 🎼 Bases de producción musical 🎚️ Mezcla y mastering 🎹 Composición y estructura 🎙️ Grabación ✍️ Escritura y creación 📚 Historia de la música 🎧 Técnicas y herramientas de producción No dependas de nadie. Aprende a grabar, escribir, producir, mezclar y masterizar tu propia música. 🔥 12 clases | 1 a 1 | Totalmente online 📩 Inbox para más información. a day ago" [ref=f7e769] [cursor=pointer]':
+                  - generic [ref=f7e771]:
+                    - img "user-profile-picture" [ref=f7e775]
+                    - generic [ref=f7e778]:
+                      - generic [ref=f7e779]: San🌿Arte
+                      - generic [ref=f7e785]:
+                        - generic [ref=f7e786]: "🎧 ESTUDIA CON NOSOTROS 1 A 1 — 100% ONLINE Aprende tu track desde cero en 12 clases, enfocado en Hip Hop, House, Techno y sus derivados. Aprende: 🎼 Bases de producción musical 🎚️ Mezcla y mastering 🎹 Composición y estructura 🎙️ Grabación ✍️ Escritura y creación 📚 Historia de la música 🎧 Técnicas y herramientas de producción No dependas de nadie. Aprende a grabar, escribir, producir, mezclar y masterizar tu propia música. 🔥 12 clases | 1 a 1 | Totalmente online 📩 Inbox para más información."
+                        - generic [ref=f7e788]:
+                          - generic [ref=f7e789]: ·
+                          - generic "a day ago" [ref=f7e794]: 1d
+                - button [ref=f7e817] [cursor=pointer]:
+                  - generic [ref=f7e819]:
+                    - status "Loading..." [ref=f7e822]
+                    - generic [ref=f7e825]:
+                      - status "Loading..." [ref=f7e827]
+                      - status "Loading..." [ref=f7e829]
+        - generic [ref=f7e834]:
+          - heading "Your messages" [level=2] [ref=f7e841]
+          - generic [ref=f7e842]: Send a message to start a chat.
+          - button "Send message" [ref=f7e846] [cursor=pointer]
+  - button [ref=f7e848] [cursor=pointer]:
+    - tooltip "Relationships 1" [ref=f7e850]:
+      - generic [ref=f7e853]:
+        - generic "Relationships" [ref=f7e854]
+        - generic [ref=f7e855]: "1"
