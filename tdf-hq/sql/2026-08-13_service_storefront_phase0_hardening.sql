@@ -8,14 +8,18 @@ ALTER TABLE service_storefront_package
   ADD COLUMN IF NOT EXISTS max_song_count INT NOT NULL DEFAULT 1;
 
 UPDATE service_storefront_package
-SET min_song_count = 1,
-    max_song_count = CASE
+SET max_song_count = CASE
       WHEN service_kind = 'Mastering' AND tier = 'Pro' THEN 3
       WHEN service_kind = 'Mastering' AND tier = 'Premium' THEN 5
       WHEN service_kind = 'Bundle' AND tier = 'Pro' THEN 3
       WHEN service_kind = 'Bundle' AND tier = 'Premium' THEN 5
-      ELSE 1
-    END;
+    END
+WHERE (service_kind, tier) IN (
+  ('Mastering', 'Pro'),
+  ('Mastering', 'Premium'),
+  ('Bundle', 'Pro'),
+  ('Bundle', 'Premium')
+);
 
 ALTER TABLE service_storefront_package
   DROP CONSTRAINT IF EXISTS service_storefront_package_song_count_check,
