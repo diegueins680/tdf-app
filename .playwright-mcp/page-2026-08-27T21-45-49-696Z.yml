@@ -1,0 +1,256 @@
+- generic [ref=f98e4]:
+  - generic [ref=f98e18]:
+    - generic [ref=f98e21]:
+      - link [ref=f98e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f98e31]
+      - generic [ref=f98e34]:
+        - link [ref=f98e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f98e44]
+        - link [ref=f98e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f98e54]
+        - link [ref=f98e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f98e66]
+        - link [ref=f98e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f98e77]
+        - link [ref=f98e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f98e89]
+        - link [ref=f98e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f98e100]
+        - link [ref=f98e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f98e110]
+        - link [ref=f98e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f98e122]:
+            - img "tdf.records.label's profile picture" [ref=f98e123]
+      - generic [ref=f98e124]:
+        - link [ref=f98e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f98e132]
+        - link [ref=f98e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f98e140]
+    - generic [ref=f98e143]:
+      - main [ref=f98e144]:
+        - generic [ref=f98e146]:
+          - generic [ref=f98e147]:
+            - generic [ref=f98e148]:
+              - link [ref=f98e154] [cursor=pointer]:
+                - /url: /miller_pilataxi/
+                - img "miller_pilataxi's profile picture" [ref=f98e155]
+              - generic [ref=f98e156]:
+                - generic [ref=f98e157]:
+                  - generic [ref=f98e158]:
+                    - link [ref=f98e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "miller_pilataxi" [level=2] [ref=f98e161]
+                    - button [ref=f98e163] [cursor=pointer]:
+                      - img "Options" [ref=f98e165]
+                  - generic [ref=f98e169]: Miller Pilataxi
+                  - generic [ref=f98e171]:
+                    - generic [ref=f98e173]:
+                      - generic [ref=f98e174]: "298"
+                      - text: posts
+                    - link "439 followers" [ref=f98e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f98e177]:
+                        - generic "439" [ref=f98e178]
+                        - text: followers
+                    - link "5,703 following" [ref=f98e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f98e181]:
+                        - generic [ref=f98e182]: 5,703
+                        - text: following
+                - generic [ref=f98e184]:
+                  - generic [ref=f98e185]: Music Producer
+                  - button [ref=f98e188] [cursor=pointer]:
+                    - generic [ref=f98e189]: "Dios es bueno todo el tiempo 🙌🔥salm 73 : 26 ❤️"
+                  - generic [ref=f98e190]:
+                    - generic [ref=f98e191]:
+                      - img "Link icon" [ref=f98e193]
+                      - link "youtube.com/channel/UCoLH2xaJEt77TugjWce_mwg" [ref=f98e197] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fyoutube.com%2Fchannel%2FUCoLH2xaJEt77TugjWce_mwg%3Ffbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacjL-NrP9h2AX8ttq_9kW2pNDZ2WsfEdTe8i4vfu5MvtnxFNRe89_tzji6fIA_aem_tQqf44b6hc9pXsPAaRW1Lw&e=AUB-NOwcxtKT0g3LIqbWoT4rliBT8Ij_LDX3zDtP7UriXyC0XhBN7nboZlc6R4S1QdgvkcgH7bpFtzdl74myOwE2_mTYET0j8G1PNeIrWf-0OxRjaLmjbHgUsH0WMY0TRKMQg79lKTxX
+                    - link "Threads miller_pilataxi" [ref=f98e200] [cursor=pointer]:
+                      - /url: https://www.threads.com/@miller_pilataxi?xmt=AQG0acTz6tEO45_j6U4e2ia9LViC2qGsV7dkJvGDVL4zRz4
+                      - img "Threads" [ref=f98e202]
+                      - generic [ref=f98e204]: miller_pilataxi
+            - generic [ref=f98e210]:
+              - button "Follow Back" [ref=f98e212] [cursor=pointer]
+              - button "Message" [ref=f98e216] [cursor=pointer]
+              - button [ref=f98e218] [cursor=pointer]:
+                - img "Similar accounts" [ref=f98e220]
+            - menu [ref=f98e224]:
+              - list [ref=f98e228]:
+                - listitem [ref=f98e229]
+                - listitem [ref=f98e230]
+                - listitem [ref=f98e231]:
+                  - link "View Music ❤🎹🎻🎶 highlight" [ref=f98e234] [cursor=pointer]:
+                    - /url: /stories/highlights/17959718476908397/
+                    - button "miller_pilataxi's highlight story picture Music ❤🎹🎻🎶" [ref=f98e235]:
+                      - button [ref=f98e236]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e239]
+                      - generic [ref=f98e240]: Music ❤🎹🎻🎶
+                - listitem [ref=f98e243]:
+                  - link "View CLASES ONLINE 🎛📢 highlight" [ref=f98e246] [cursor=pointer]:
+                    - /url: /stories/highlights/17881224980324904/
+                    - button "miller_pilataxi's highlight story picture CLASES ONLINE 🎛📢" [ref=f98e247]:
+                      - button [ref=f98e248]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e251]
+                      - generic [ref=f98e252]: CLASES ONLINE 🎛📢
+                - listitem [ref=f98e255]:
+                  - link "View ♥️ highlight" [ref=f98e258] [cursor=pointer]:
+                    - /url: /stories/highlights/17855441181680121/
+                    - button "miller_pilataxi's highlight story picture ♥️" [ref=f98e259]:
+                      - button [ref=f98e260]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e263]
+                      - generic [ref=f98e264]: ♥️
+                - listitem [ref=f98e267]:
+                  - link "View Convención ✨❤️ highlight" [ref=f98e270] [cursor=pointer]:
+                    - /url: /stories/highlights/17942877155788153/
+                    - button "miller_pilataxi's highlight story picture Convención ✨❤️" [ref=f98e271]:
+                      - button [ref=f98e272]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e275]
+                      - generic [ref=f98e276]: Convención ✨❤️
+                - listitem [ref=f98e279]:
+                  - link "View 🎻❤ highlight" [ref=f98e282] [cursor=pointer]:
+                    - /url: /stories/highlights/18359278630055818/
+                    - button "miller_pilataxi's highlight story picture 🎻❤" [ref=f98e283]:
+                      - button [ref=f98e284]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e287]
+                      - generic [ref=f98e288]: 🎻❤
+                - listitem [ref=f98e291]:
+                  - link "View Destacada highlight" [ref=f98e294] [cursor=pointer]:
+                    - /url: /stories/highlights/17929594759701427/
+                    - button "miller_pilataxi's highlight story picture Destacada" [ref=f98e295]:
+                      - button [ref=f98e296]:
+                        - img "miller_pilataxi's highlight story picture" [ref=f98e299]
+                      - generic [ref=f98e300]: Destacada
+          - generic [ref=f98e303]:
+            - tablist [ref=f98e304]:
+              - link [ref=f98e306] [cursor=pointer]:
+                - /url: /miller_pilataxi/
+                - img "Posts" [ref=f98e308]
+              - link [ref=f98e319] [cursor=pointer]:
+                - /url: /miller_pilataxi/reels/
+                - img "Reels" [ref=f98e321]
+              - link [ref=f98e324] [cursor=pointer]:
+                - /url: /miller_pilataxi/reposts/
+                - img "Reposts" [ref=f98e326]
+              - link [ref=f98e329] [cursor=pointer]:
+                - /url: /miller_pilataxi/tagged/
+                - img "Tagged" [ref=f98e331]
+            - tabpanel
+          - progressbar [ref=f98e335]:
+            - img "Loading..." [ref=f98e336]
+      - contentinfo [ref=f98e349]:
+        - generic [ref=f98e350]:
+          - generic [ref=f98e352]:
+            - link "Meta" [ref=f98e354] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f98e357] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f98e360] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f98e363] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f98e366] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f98e369] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f98e372] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f98e375] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f98e378] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f98e381] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f98e384] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f98e387] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f98e390] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f98e393] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f98e396] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f98e398]:
+            - generic [ref=f98e399] [cursor=pointer]:
+              - generic [ref=f98e400]:
+                - generic [ref=f98e401]: English
+                - img "Down chevron icon" [ref=f98e404]
+              - combobox "Switch Display Language" [ref=f98e406]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f98e407]: © 2026 Instagram from Meta
+  - button [ref=f98e410] [cursor=pointer]:
+    - generic "Messages" [ref=f98e411]:
+      - generic [ref=f98e412]:
+        - img "Messages" [ref=f98e415]
+        - generic [ref=f98e418]: Messages
+      - generic [ref=f98e419]:
+        - button "User avatar Kenneth Vega" [ref=f98e421]:
+          - img "User avatar" [ref=f98e424]
+        - button "User avatar SAMAEL" [ref=f98e426]:
+          - img "User avatar" [ref=f98e429]
+        - button "User avatar Oldboy" [ref=f98e431]:
+          - img "User avatar" [ref=f98e434]

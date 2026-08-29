@@ -1,0 +1,312 @@
+- generic [ref=f124e4]:
+  - generic [ref=f124e18]:
+    - generic [ref=f124e21]:
+      - link [ref=f124e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f124e31]
+      - generic [ref=f124e34]:
+        - link [ref=f124e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f124e44]
+        - link [ref=f124e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f124e54]
+        - link [ref=f124e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f124e66]
+        - link [ref=f124e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f124e77]
+        - link [ref=f124e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f124e89]
+        - link [ref=f124e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f124e100]
+        - link [ref=f124e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f124e110]
+        - link [ref=f124e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f124e122]:
+            - img "tdf.records.label's profile picture" [ref=f124e123]
+      - generic [ref=f124e124]:
+        - link [ref=f124e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f124e132]
+        - link [ref=f124e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f124e140]
+    - generic [ref=f124e143]:
+      - main [ref=f124e144]:
+        - generic [ref=f124e146]:
+          - generic [ref=f124e147]:
+            - generic [ref=f124e148]:
+              - link [ref=f124e154] [cursor=pointer]:
+                - /url: /nada_films_/
+                - img "nada_films_'s profile picture" [ref=f124e155]
+              - generic [ref=f124e156]:
+                - generic [ref=f124e157]:
+                  - generic [ref=f124e158]:
+                    - link [ref=f124e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "nada_films_" [level=2] [ref=f124e161]
+                    - button [ref=f124e163] [cursor=pointer]:
+                      - img "Options" [ref=f124e165]
+                  - generic [ref=f124e169]: Nada
+                  - generic [ref=f124e171]:
+                    - generic [ref=f124e173]:
+                      - generic [ref=f124e174]: "119"
+                      - text: posts
+                    - link "1,266 followers" [ref=f124e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f124e177]:
+                        - generic "1,266" [ref=f124e178]
+                        - text: followers
+                    - link "830 following" [ref=f124e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f124e181]:
+                        - generic [ref=f124e182]: "830"
+                        - text: following
+                - generic [ref=f124e183]:
+                  - generic [ref=f124e184]:
+                    - generic [ref=f124e185]: Art
+                    - generic [ref=f124e187]:
+                      - button [ref=f124e188] [cursor=pointer]:
+                        - generic [ref=f124e189]: Patricio CapeloMultidisciplinary ArtistEducatorB.A. on Cinema
+                      - generic [ref=f124e190]:
+                        - text: ...
+                        - button "more" [ref=f124e191] [cursor=pointer]
+                    - link "Threads nada_films_" [ref=f124e195] [cursor=pointer]:
+                      - /url: https://www.threads.com/@nada_films_?xmt=AQG0Pmp1dEa040qiZ7Jvo6orAiOjcX4mZdn94MWvhpaXbEY
+                      - img "Threads" [ref=f124e197]
+                      - generic [ref=f124e199]: nada_films_
+                  - link "Followed by plonski.emil, rafa.alfaro + 4 more" [ref=f124e201] [cursor=pointer]:
+                    - /url: /nada_films_/followers/mutualOnly
+                    - generic [ref=f124e203]:
+                      - generic [ref=f124e205]:
+                        - button [ref=f124e366]:
+                          - link [ref=f124e367]
+                        - button [ref=f124e368]:
+                          - link [ref=f124e369]
+                        - button [ref=f124e210]:
+                          - link [ref=f124e211]
+                      - generic [ref=f124e212]: Followed by plonski.emil, rafa.alfaro + 4 more
+            - generic [ref=f124e217]:
+              - button "Following Down chevron icon" [ref=f124e219] [cursor=pointer]:
+                - generic [ref=f124e220]:
+                  - generic [ref=f124e221]: Following
+                  - img "Down chevron icon" [ref=f124e224]
+              - button "Message" [ref=f124e227] [cursor=pointer]
+              - button [ref=f124e229] [cursor=pointer]:
+                - img "Similar accounts" [ref=f124e231]
+            - generic:
+              - menu
+          - generic [ref=f124e234]:
+            - tablist [ref=f124e235]:
+              - link [ref=f124e237] [cursor=pointer]:
+                - /url: /nada_films_/
+                - img "Posts" [ref=f124e239]
+              - link [ref=f124e250] [cursor=pointer]:
+                - /url: /nada_films_/reels/
+                - img "Reels" [ref=f124e252]
+              - link [ref=f124e255] [cursor=pointer]:
+                - /url: /nada_films_/reposts/
+                - img "Reposts" [ref=f124e257]
+              - link [ref=f124e260] [cursor=pointer]:
+                - /url: /nada_films_/tagged/
+                - img "Tagged" [ref=f124e262]
+            - tabpanel
+          - generic [ref=f124e374]:
+            - generic [ref=f124e375]:
+              - link [ref=f124e377] [cursor=pointer]:
+                - /url: /nada_films_/reel/DT0BT-mjYNi/
+                - 'img "Hoy presentaré esta instalación en la sala inmersiva del IasLab en La Salle, Barcelona. Es una mezcla de artes performáticas, cine, sistemas de audio modulares, audio 360, luces LED audioreactivas y proyección holográfica diseñadas para crear una experiencia intensa Si están por BCN pásense. Muchas gracias a mis amigos y colaboradores por ayudarme a llevarla a la realidad: @miguelrodriguezrevelo @hadihopsasa @thegladscientist @sarabiotic @nancyelazzi Today I will present this installation in the immersive room at IasLab, La Salle, Barcelona. It is a blend of performing arts, cinema, modular audio systems, 360° audio, audio-reactive LED lighting, and holographic projection, designed to create an intense experience. If you’re in BCN, come by #digitalart #inmersiveexperience #inmersive #expandedcinema #modularsystem #eurorack #artstudio #theater #digitaltheatre" [ref=f124e380]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f124e383] [cursor=pointer]:
+                - /url: /nada_films_/reel/DGKH8alNmMI/
+                - 'img "Ep “Alucinación Colectiva” de Los Asintomáticos. ¡Pronto en plataformas de streaming! @a_synthomaticos @diego_asintomatico @animalpp . . . #punk #industrial #drumandbass #synth" [ref=f124e386]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f124e389] [cursor=pointer]:
+                - /url: /nada_films_/reel/DARnP5oP7J4/
+                - 'img "Próximamente!!! . . . #scifi #cienciaficción #cine #cinema #cineguerrilla #creatividad #creativity" [ref=f124e392]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f124e395] [cursor=pointer]:
+                - /url: /nada_films_/reel/DbZBQBNvrT9/
+                - 'img "Siempre me ha fascinado la capacidad de las nubes de materializar la impermanencia. Constantemente cambiantes y llenas de abstracción funcionan como un espejo en el que nos dejamos proyectar. Permítete un instante para contemplar. I have always been fascinated by the capacity of clouds to materialize impermanence. Constantly changing and full of abstraction, they function as a mirror in which we allow ourselves to be projected. Allow yourself a moment to contemplate. Sound and Video by: @nada_films_ #videoart #impermanence #art" [ref=f124e398]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f124e400]:
+              - link [ref=f124e402] [cursor=pointer]:
+                - /url: /nada_films_/reel/DY720DivbfC/
+                - 'img "Les presentamos el nuevo video musical del tema \"Atravesar el Velo\" de nuestro EP \"Alucinación Colectiva\". Para verlo completo pueden entrar al enlace pegado en la descripción de la página de Los Asintomáticos. Que lo disfruten. Pronto anunciaremos shows en vivo. Los asintomáticos son: @nada_films_ @diego_asintomatico @animalpp Video realizado por: @nada_films_ #synthpunk #punkrock #muertealsistema #cienciaficción #scifi" [ref=f124e405]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e408] [cursor=pointer]:
+                - /url: /nada_films_/reel/DXN9iqqjSNg/
+                - 'img "\"The Destroyer\" Música y Vídeo por @nada_films_ #digitalart #cyberpunk #electronicmusic #sacredart #cinema" [ref=f124e411]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e414] [cursor=pointer]:
+                - /url: /nada_films_/reel/DWLCL2UDZvd/
+                - 'img "Happy Equinox!!! Visuals and music by @nada_films_ Video made with @comfyui and @touchdesigner Music made with #eurorack and @ableton" [ref=f124e417]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e420] [cursor=pointer]:
+                - /url: /td_bcn/p/DUdYlFZjDJe/
+                - img "Tonight, we start at midnight with @nada_films_ 🌜 His performance, Altered States Triggers uses ancient shamanic elements of sound, image, light and performance to try to create a cathartic experience in the audience. Patricio Capelo, also known as @nada_films_ , is a multidisciplinary artist and educator with a background in cinema, particularly science fiction, as well as literature and music. He has experience across both documentary and fiction, while his authorial practice as a filmmaker centers on sci-fi. His practice nowadays focuses on the creation of experiences that use sound, visuals, light, and performative triggers to induce altered states of consciousness in audiences. 🖼️ @thegladscientist + @nancyelazzi" [ref=f124e423]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f124e425]:
+              - link [ref=f124e427] [cursor=pointer]:
+                - /url: /td_bcn/reel/DUIf6A9DBdW/
+                - img [ref=f124e430]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e433] [cursor=pointer]:
+                - /url: /td_bcn/reel/DTwB0ADjLo0/
+                - 'img "Next AV Session: Feb 7 🌱 @wat3rfl0wer joins us from Latvia along with @nada_films_ @pensamentsalvatge and some very special guests for a Llum weekend special! 💿🐉💿🐉💿 If you are a performer interested in participating in the future editions of these events, don’t be shy, we’re here to support the community 🫶🏼 🖼️: @thegladscientist #touchdesigner #audiovisual #tdbcn" [ref=f124e436]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e439] [cursor=pointer]:
+                - /url: /nada_films_/reel/DQbh1QbjbW9/
+                - 'img "Si están por Barcelona este 31 de octubre pasen por @esproncedabcn voy a estar haciendo un pequeño performance con mi nuevo proyecto de exploración audiovisual usando sintetizadores modulares y efectos visuales con @touchdesigner. También estarán por ahí los performances e instalaciones de @sarabiotic @ditherbit_ @ryan.dmt @70pwater @depthbuffer_studio @chicoe @terper.club parte de la comunidad @td_bcn. #videoart #touchdesigner #modular #eurorack #darkambient" [ref=f124e442]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f124e445] [cursor=pointer]:
+                - /url: /ditherbit_/reel/DQUxriqDb69/
+                - img "@td_bcn Halloween gonna ba a a ll! Pun deffo premeditaded 👹 This friday @esproncedabcn Sound ON!🔊 @ryan.dmt & I got this fun stuff (AV liveset) to show you guys 👻 See you then 💀" [ref=f124e448]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f124e280]:
+        - generic [ref=f124e281]:
+          - generic [ref=f124e283]:
+            - link "Meta" [ref=f124e285] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f124e288] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f124e291] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f124e294] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f124e297] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f124e300] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f124e303] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f124e306] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f124e309] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f124e312] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f124e315] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f124e318] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f124e321] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f124e324] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f124e327] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f124e329]:
+            - generic [ref=f124e330] [cursor=pointer]:
+              - generic [ref=f124e331]:
+                - generic [ref=f124e332]: English
+                - img "Down chevron icon" [ref=f124e335]
+              - combobox "Switch Display Language" [ref=f124e337]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f124e338]: © 2026 Instagram from Meta
+  - button [ref=f124e341] [cursor=pointer]:
+    - generic "Messages" [ref=f124e342]:
+      - generic [ref=f124e343]:
+        - img "Messages" [ref=f124e346]
+        - generic [ref=f124e349]: Messages
+      - generic [ref=f124e350]:
+        - button "User avatar Kenneth Vega" [ref=f124e352]:
+          - img "User avatar" [ref=f124e355]
+        - button "User avatar SAMAEL" [ref=f124e357]:
+          - img "User avatar" [ref=f124e360]
+        - button "User avatar Oldboy" [ref=f124e362]:
+          - img "User avatar" [ref=f124e365]

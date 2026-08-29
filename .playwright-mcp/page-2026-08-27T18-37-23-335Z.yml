@@ -1,0 +1,300 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e795] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e57]
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e67]
+      - link [ref=e798] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e803]
+      - link [ref=e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e93]
+      - link [ref=e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e103]
+      - link [ref=e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e115]:
+          - img "tdf.records.label's profile picture" [ref=e116]
+    - generic [ref=e117]:
+      - link [ref=e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e125]
+      - link [ref=e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e133]
+  - main [ref=e137]:
+    - generic [ref=e142]:
+      - navigation "Thread list" [ref=e143]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - button [ref=e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e148]
+              - img "Down chevron icon" [ref=e151]
+            - button [ref=e155] [cursor=pointer]:
+              - img "New message" [ref=e157]
+          - tablist [ref=e162]:
+            - tab "Primary" [ref=e163] [cursor=pointer]
+            - tab "General" [ref=e166] [cursor=pointer]
+            - tab "From ads" [active] [selected] [ref=e169] [cursor=pointer]
+            - tab "Requests" [ref=e173] [cursor=pointer]
+          - generic [ref=e179]:
+            - img "Search" [ref=e181]
+            - textbox "Search" [ref=e184]
+          - generic [ref=e185]:
+            - generic [ref=e279]:
+              - list [ref=e281]:
+                - listitem [ref=e282]
+                - listitem [ref=e283]:
+                  - button "Current obsession... Your note" [ref=e285] [cursor=pointer]:
+                    - generic [ref=e286]:
+                      - generic [ref=e287]: Current obsession...
+                      - generic [ref=e293]:
+                        - link [ref=e295]
+                        - generic [ref=e296]: Your note
+                - listitem [ref=e298]:
+                  - button "Vive la Revolution⛱️ oximoron_tu_tentaculo's profile picture Tentáculos" [ref=e301] [cursor=pointer]:
+                    - generic [ref=e302]:
+                      - generic [ref=e303]: Vive la Revolution⛱️
+                      - generic [ref=e310]:
+                        - link [ref=e312]:
+                          - img "oximoron_tu_tentaculo's profile picture" [ref=e313]
+                        - generic [ref=e314]: Tentáculos
+                - listitem [ref=e317]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Jungla Insaciable Sarcoma joelduenasc's profile picture Joel Dueñas" [ref=e320] [cursor=pointer]:
+                    - generic [ref=e321]:
+                      - generic [ref=e327]:
+                        - generic [ref=e328]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e330]
+                          - generic [ref=e334]: Jungla Insaciable
+                        - generic [ref=e335]: Sarcoma
+                      - generic [ref=e336]:
+                        - link [ref=e338]:
+                          - img "joelduenasc's profile picture" [ref=e339]
+                        - generic [ref=e340]: Joel Dueñas
+                - listitem [ref=e343]:
+                  - button "⚡ aurea.infinita's profile picture Áurea - Terapeuta Holística" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]:
+                      - generic [ref=e348]: ⚡
+                      - generic [ref=e355]:
+                        - link [ref=e357]:
+                          - img "aurea.infinita's profile picture" [ref=e358]
+                        - generic [ref=e359]: Áurea - Terapeuta Holística
+                - listitem [ref=e362]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Back to School (Mini Maggit) Explicit Deftones charlievh_music's profile picture Charlie Villagómez Hebel" [ref=e365] [cursor=pointer]:
+                    - generic [ref=e366]:
+                      - generic [ref=e372]:
+                        - generic [ref=e373]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e375]
+                          - generic [ref=e379]: Back to School (Mini Maggit)
+                          - img "Explicit" [ref=e381]
+                        - generic [ref=e383]: Deftones
+                      - generic [ref=e384]:
+                        - link [ref=e386]:
+                          - img "charlievh_music's profile picture" [ref=e387]
+                        - generic [ref=e388]: Charlie Villagómez Hebel
+                - listitem [ref=e391]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner 1537 Guardarraya litzi_vitzi's profile picture litzi" [ref=e394] [cursor=pointer]:
+                    - generic [ref=e395]:
+                      - generic [ref=e401]:
+                        - generic [ref=e402]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e404]
+                          - generic [ref=e408]: "1537"
+                        - generic [ref=e409]: Guardarraya
+                      - generic [ref=e410]:
+                        - link [ref=e412]:
+                          - img "litzi_vitzi's profile picture" [ref=e413]
+                        - generic [ref=e414]: litzi
+                - listitem [ref=e417]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Las cosas que no se tocan Intoxicados saraking30's profile picture Sara King" [ref=e420] [cursor=pointer]:
+                    - generic [ref=e421]:
+                      - generic [ref=e427]:
+                        - generic [ref=e428]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e430]
+                          - generic [ref=e434]: Las cosas que no se tocan
+                        - generic [ref=e435]: Intoxicados
+                      - generic [ref=e436]:
+                        - link [ref=e438]:
+                          - img "saraking30's profile picture" [ref=e439]
+                        - generic [ref=e440]: Sara King
+                - listitem [ref=e443]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Kandela Explicit Jasari jasarimusic's profile picture JASARI🇵🇷" [ref=e446] [cursor=pointer]:
+                    - generic [ref=e447]:
+                      - generic [ref=e453]:
+                        - generic [ref=e454]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e456]
+                          - generic [ref=e460]: Kandela
+                          - img "Explicit" [ref=e462]
+                        - generic [ref=e464]: Jasari
+                      - generic [ref=e465]:
+                        - link [ref=e467]:
+                          - img "jasarimusic's profile picture" [ref=e468]
+                        - generic [ref=e469]: JASARI🇵🇷
+                - listitem [ref=e472]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Centro MIEL Spoiler hakanstagram_'s profile picture DanielCG / Productoraudiovisual 🇪🇨" [ref=e475] [cursor=pointer]:
+                    - generic [ref=e476]:
+                      - generic [ref=e482]:
+                        - generic [ref=e483]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e485]
+                          - generic [ref=e489]: Centro
+                        - generic [ref=e490]: MIEL
+                        - generic [ref=e491]: Spoiler
+                      - generic [ref=e492]:
+                        - link [ref=e494]:
+                          - img "hakanstagram_'s profile picture" [ref=e495]
+                        - generic [ref=e496]: DanielCG / Productoraudiovisual 🇪🇨
+              - button "Next" [ref=e499] [cursor=pointer]
+            - generic [ref=e502]:
+              - 'button "user-profile-picture Fabro Alomìa Torres You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso. 6 days ago" [ref=e1463] [cursor=pointer]':
+                - generic [ref=e1465]:
+                  - img "user-profile-picture" [ref=e1469]
+                  - generic [ref=e1472]:
+                    - generic [ref=e1473]: Fabro Alomìa Torres
+                    - generic [ref=e1479]:
+                      - generic [ref=e1480]: "You: ¡Hola, Fabro! Gracias por compartir la captura 🙌 Parece que el registro está siendo bloqueado temporalmente por un límite de actividad asociado a ese correo. No nos envíes contraseñas ni códigos. Evita repetir muchos intentos seguidos y prueba nuevamente más tarde; si el aviso sigue apareciendo, cuéntanos si sale al crear la cuenta o al iniciar sesión y te ayudamos con el siguiente paso."
+                      - generic [ref=e1482]:
+                        - generic [ref=e1483]: ·
+                        - generic "6 days ago" [ref=e1488]: 6d
+              - button "user-profile-picture Diego Saa Diego sent an attachment. a week ago" [ref=e1492] [cursor=pointer]:
+                - generic [ref=e1494]:
+                  - img "user-profile-picture" [ref=e1498]
+                  - generic [ref=e1501]:
+                    - generic [ref=e1502]: Diego Saa
+                    - generic [ref=e1508]:
+                      - generic [ref=e1509]: Diego sent an attachment.
+                      - generic [ref=e1511]:
+                        - generic [ref=e1512]: ·
+                        - generic "a week ago" [ref=e1517]: 1w
+              - button "user-profile-picture Jossefina Gándara You sent an attachment. a week ago" [ref=e1521] [cursor=pointer]:
+                - generic [ref=e1523]:
+                  - img "user-profile-picture" [ref=e1527]
+                  - generic [ref=e1530]:
+                    - generic [ref=e1531]: Jossefina Gándara
+                    - generic [ref=e1537]:
+                      - generic [ref=e1538]: You sent an attachment.
+                      - generic [ref=e1540]:
+                        - generic [ref=e1541]: ·
+                        - generic "a week ago" [ref=e1546]: 1w
+              - button "user-profile-picture el Rovlex 🔥 a week ago" [ref=e1550] [cursor=pointer]:
+                - generic [ref=e1552]:
+                  - img "user-profile-picture" [ref=e1556]
+                  - generic [ref=e1559]:
+                    - generic [ref=e1560]: el Rovlex
+                    - generic [ref=e1566]:
+                      - generic [ref=e1567]: 🔥
+                      - generic [ref=e1569]:
+                        - generic [ref=e1570]: ·
+                        - generic "a week ago" [ref=e1575]: 1w
+              - 'button "user-profile-picture La T de Teez You: Hola, Teez 👋 Te escribimos una sola vez más por si no alcanzaste a revisar TDF. Puedes crear tu perfil de artista y reunir tu música y lanzamientos aquí: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si ya lo hiciste, cuéntanos únicamente con qué nombre aparece tu perfil; si no te interesa, no volvemos a escribir. — TDF Records a week ago" [ref=e1579] [cursor=pointer]':
+                - generic [ref=e1581]:
+                  - img "user-profile-picture" [ref=e1585]
+                  - generic [ref=e1588]:
+                    - generic [ref=e1589]: La T de Teez
+                    - generic [ref=e1595]:
+                      - generic [ref=e1596]: "You: Hola, Teez 👋 Te escribimos una sola vez más por si no alcanzaste a revisar TDF. Puedes crear tu perfil de artista y reunir tu música y lanzamientos aquí: https://tdf-app.pages.dev/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si ya lo hiciste, cuéntanos únicamente con qué nombre aparece tu perfil; si no te interesa, no volvemos a escribir. — TDF Records"
+                      - generic [ref=e1598]:
+                        - generic [ref=e1599]: ·
+                        - generic "a week ago" [ref=e1604]: 1w
+              - button "user-profile-picture George Molina Liked a message a week ago" [ref=e1608] [cursor=pointer]:
+                - generic [ref=e1610]:
+                  - img "user-profile-picture" [ref=e1614]
+                  - generic [ref=e1617]:
+                    - generic [ref=e1618]: George Molina
+                    - generic [ref=e1624]:
+                      - generic [ref=e1625]: Liked a message
+                      - generic [ref=e1627]:
+                        - generic [ref=e1628]: ·
+                        - generic "a week ago" [ref=e1633]: 1w
+              - 'button "user-profile-picture Sakaro.LGS You: ¡Hola, Sakaro! 👋 Claro, el anuncio corresponde a nuestro Curso Intensivo de Producción Musical, una formación presencial y principalmente práctica dentro de un estudio de grabación profesional. 🎛️ Duración: 16 horas 📅 Fechas: sábados 8, 15, 22 y 29 de agosto 🕗 Horario: de 08:00 a 12:00 💵 Valor total: $150 📍 Lugar: TDF Records, sector El Bosque–Pinar Bajo, Quito 👥 Cupos reducidos: máximo 10 participantes Durante el curso aprenderás a convertir una idea en una producción: creación de ritmos y arreglos, manejo de audio y MIDI, grabación, edición, instrumentos virtuales, efectos y fundamentos de mezcla. Puedes participar aunque empieces desde cero. Aquí puedes revisar todos los detalles e inscribirte: https://tdf-app.pages.dev/curso/produccion-musical ¿Ya has producido música antes o sería tu primera experiencia? 3 weeks ago" [ref=e1637] [cursor=pointer]':
+                - generic [ref=e1639]:
+                  - img "user-profile-picture" [ref=e1643]
+                  - generic [ref=e1646]:
+                    - generic [ref=e1647]: Sakaro.LGS
+                    - generic [ref=e1653]:
+                      - generic [ref=e1654]: "You: ¡Hola, Sakaro! 👋 Claro, el anuncio corresponde a nuestro Curso Intensivo de Producción Musical, una formación presencial y principalmente práctica dentro de un estudio de grabación profesional. 🎛️ Duración: 16 horas 📅 Fechas: sábados 8, 15, 22 y 29 de agosto 🕗 Horario: de 08:00 a 12:00 💵 Valor total: $150 📍 Lugar: TDF Records, sector El Bosque–Pinar Bajo, Quito 👥 Cupos reducidos: máximo 10 participantes Durante el curso aprenderás a convertir una idea en una producción: creación de ritmos y arreglos, manejo de audio y MIDI, grabación, edición, instrumentos virtuales, efectos y fundamentos de mezcla. Puedes participar aunque empieces desde cero. Aquí puedes revisar todos los detalles e inscribirte: https://tdf-app.pages.dev/curso/produccion-musical ¿Ya has producido música antes o sería tu primera experiencia?"
+                      - generic [ref=e1656]:
+                        - generic [ref=e1657]: ·
+                        - generic "3 weeks ago" [ref=e1662]: 3w
+              - button "user-profile-picture Jazz𓆪 Gracias por la información 3 weeks ago" [ref=e1666] [cursor=pointer]:
+                - generic [ref=e1668]:
+                  - img "user-profile-picture" [ref=e1672]
+                  - generic [ref=e1675]:
+                    - generic [ref=e1676]: Jazz𓆪
+                    - generic [ref=e1682]:
+                      - generic [ref=e1683]: Gracias por la información
+                      - generic [ref=e1685]:
+                        - generic [ref=e1686]: ·
+                        - generic "3 weeks ago" [ref=e1691]: 3w
+              - button [ref=e761] [cursor=pointer]:
+                - generic [ref=e763]:
+                  - status "Loading..." [ref=e766]
+                  - generic [ref=e769]:
+                    - status "Loading..." [ref=e771]
+                    - status "Loading..." [ref=e773]
+      - generic [ref=e1083]:
+        - generic [ref=e1087]:
+          - link "Open the profile page of lareservauio" [ref=e1088] [cursor=pointer]:
+            - /url: /lareservauio/
+            - generic [ref=e1089]:
+              - img "user-profile-picture" [ref=e1093]
+              - generic [ref=e1094]:
+                - heading "LA RESERVA" [level=2] [ref=e1096]
+                - generic [ref=e1098]: lareservauio
+          - generic [ref=e1102]:
+            - button [ref=e1103] [cursor=pointer]:
+              - img "Audio call" [ref=e1105]
+            - button [ref=e1107] [cursor=pointer]:
+              - img "Video call" [ref=e1109]
+            - button [ref=e1112] [cursor=pointer]:
+              - img "Conversation information" [ref=e1114]
+        - generic [ref=e1118]:
+          - generic [ref=e1122]:
+            - generic [ref=e1123]:
+              - img "user-profile-picture" [ref=e1127]
+              - generic [ref=e1128]:
+                - heading "LA RESERVA" [level=2] [ref=e1131]
+                - generic [ref=e1133]: lareservauio · Instagram
+                - link "View profile" [ref=e1136] [cursor=pointer]:
+                  - /url: /lareservauio/
+            - generic [ref=e1140]:
+              - generic [ref=e1141]: Wed 1:17 PM
+              - group [ref=e1144]:
+                - generic [ref=e1145]:
+                  - generic [ref=e1149]:
+                    - generic [ref=e1152]:
+                      - text: Hola, La Reserva
+                      - img "👋" [ref=e1154]
+                      - text: "Vimos cómo sostienen una agenda activa de música en vivo, electrónica y cultura desde sus espacios en Quito. En TDF estamos construyendo una comunidad para conectar espacios, artistas, productores y públicos, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio" [ref=e1156] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio
+                      - text: Si la prueban, nos gustaría saber qué herramientas les servirían para mover agenda, artistas y alianzas. — TDF Records
+                    - link "TDF Records" [ref=e1157] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio
+                  - button "🤘🏻" [ref=e1163] [cursor=pointer]
+          - generic [ref=e1175]:
+            - button [ref=e1178] [cursor=pointer]:
+              - img "Choose an emoji" [ref=e1180]
+            - generic [ref=e1182]:
+              - textbox [ref=e1183]:
+                - paragraph [ref=e1184]
+              - generic: Message...
+            - generic [ref=e1185]:
+              - button [ref=e1186] [cursor=pointer]:
+                - img "Voice Clip" [ref=e1188]
+              - button [ref=e1191] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=e1193]
+              - button [ref=e1198] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=e1200]

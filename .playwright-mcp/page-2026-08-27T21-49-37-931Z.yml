@@ -1,0 +1,268 @@
+- generic [ref=f134e4]:
+  - generic [ref=f134e1510]:
+    - generic [ref=f134e1513]:
+      - link [ref=f134e1518] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f134e1523]
+      - generic [ref=f134e1526]:
+        - link [ref=f134e1531] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f134e1536]
+        - link [ref=f134e1541] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f134e1546]
+        - link [ref=f134e1553] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f134e1558]
+        - link [ref=f134e1564] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f134e1569]
+        - link [ref=f134e1576] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f134e1581]
+        - link [ref=f134e1587] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f134e1592]
+        - link [ref=f134e1597] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f134e1602]
+        - link [ref=f134e1609] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f134e1614]:
+            - img "tdf.records.label's profile picture" [ref=f134e1615]
+      - generic [ref=f134e1616]:
+        - link [ref=f134e1619] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f134e1624]
+        - link [ref=f134e1627] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f134e1632]
+    - main [ref=f134e1636]:
+      - generic [ref=f134e1637]:
+        - generic [ref=f134e1640]:
+          - heading "Settings" [active] [level=3] [ref=f134e1642]
+          - generic [ref=f134e1643]:
+            - generic [ref=f134e1645]:
+              - img "Search" [ref=f134e1647]
+              - textbox "Search" [ref=f134e1650]
+            - generic [ref=f134e1651]:
+              - generic [ref=f134e1655]:
+                - heading "Your account" [level=4] [ref=f134e1659]
+                - img "Meta logo" [ref=f134e1662]
+              - link "Accounts Center Password, security, personal details, connected experiences, ad preferences" [ref=f134e1670] [cursor=pointer]:
+                - /url: https://accountscenter.instagram.com/?entry_point=app_settings
+                - generic [ref=f134e1680]:
+                  - generic [ref=f134e1681]: Accounts Center
+                  - generic [ref=f134e1682]: Password, security, personal details, connected experiences, ad preferences
+            - generic [ref=f134e1683]:
+              - heading "How you use Instagram" [level=4] [ref=f134e1691]
+              - link "Edit profile" [ref=f134e1694] [cursor=pointer]:
+                - /url: /accounts/edit/
+              - link "Notifications" [ref=f134e1708] [cursor=pointer]:
+                - /url: /accounts/notifications/
+            - generic [ref=f134e1720]:
+              - heading "For professionals" [level=4] [ref=f134e1728]
+              - link "Professional account" [ref=f134e1731] [cursor=pointer]:
+                - /url: /accounts/professional_account_settings/
+              - link "Business tools and controls" [ref=f134e1747] [cursor=pointer]:
+                - /url: /accounts/professional_account_tools/
+              - link "Ads payments" [ref=f134e1762] [cursor=pointer]:
+                - /url: /accounts/ad_payments/
+            - generic [ref=f134e1775]:
+              - heading "Who can see your content" [level=4] [ref=f134e1783]
+              - link "Account privacy" [ref=f134e1786] [cursor=pointer]:
+                - /url: /accounts/settings/v2/account_privacy/
+              - link "Close Friends" [ref=f134e1800] [cursor=pointer]:
+                - /url: /accounts/close_friends/
+              - link "Blocked" [ref=f134e1814] [cursor=pointer]:
+                - /url: /accounts/blocked_accounts/
+              - link "Story and location" [ref=f134e1828] [cursor=pointer]:
+                - /url: /accounts/hide_story_and_live/
+            - generic [ref=f134e1840]:
+              - heading "How others can interact with you" [level=4] [ref=f134e1848]
+              - link "Messages and story replies" [ref=f134e1851] [cursor=pointer]:
+                - /url: /accounts/messages_and_story_replies/
+              - link "Tags and mentions" [ref=f134e1866] [cursor=pointer]:
+                - /url: /accounts/settings/v2/tags_and_mentions/
+              - link "Comments" [ref=f134e1881] [cursor=pointer]:
+                - /url: /accounts/comments/
+              - link "Sharing and reuse" [ref=f134e1895] [cursor=pointer]:
+                - /url: /accounts/settings/v2/sharing_and_reuse/
+              - link "Restricted accounts" [ref=f134e1909] [cursor=pointer]:
+                - /url: /accounts/restricted_accounts/
+              - link "Hidden Words" [ref=f134e1925] [cursor=pointer]:
+                - /url: /accounts/settings/v2/hidden_words/
+            - generic [ref=f134e1937]:
+              - heading "What you see" [level=4] [ref=f134e1945]
+              - link "Muted accounts" [ref=f134e1948] [cursor=pointer]:
+                - /url: /accounts/muted_accounts/
+              - link "Content preferences" [ref=f134e1962] [cursor=pointer]:
+                - /url: /accounts/settings/v2/content_preferences/
+              - link "Like and share counts" [ref=f134e1976] [cursor=pointer]:
+                - /url: /accounts/settings/v2/hidden_feedback/
+              - link "Creator subscriptions" [ref=f134e1990] [cursor=pointer]:
+                - /url: /accounts/subscriptions/
+            - generic [ref=f134e2002]:
+              - heading "Your app and media" [level=4] [ref=f134e2010]
+              - link "Archiving and downloading" [ref=f134e2013] [cursor=pointer]:
+                - /url: /accounts/settings/v2/archiving_and_downloading/
+              - link "Accessibility" [ref=f134e2027] [cursor=pointer]:
+                - /url: /accounts/accessibility/
+              - link "Language" [ref=f134e2041] [cursor=pointer]:
+                - /url: /language/preferences/
+              - link "Website permissions" [ref=f134e2055] [cursor=pointer]:
+                - /url: /accounts/website_permissions/
+            - generic [ref=f134e2068]:
+              - heading "Family Center" [level=4] [ref=f134e2076]
+              - link "Supervision for Teen Accounts" [ref=f134e2079] [cursor=pointer]:
+                - /url: /accounts/supervision/?supervision_entrypoint=main_settings_screen
+            - generic [ref=f134e2091]:
+              - heading "More info and support" [level=4] [ref=f134e2099]
+              - link "Help" [ref=f134e2102] [cursor=pointer]:
+                - /url: /settings/help/
+              - link "Privacy Center" [ref=f134e2116] [cursor=pointer]:
+                - /url: https://privacycenter.instagram.com/?entry_point=instagram_settings_page
+              - link "Account Status" [ref=f134e2131] [cursor=pointer]:
+                - /url: /settings/help/account_status/
+        - generic [ref=f134e2145]:
+          - generic [ref=f134e2147]:
+            - heading "Account Status" [level=3] [ref=f134e2149]
+            - generic [ref=f134e2154]:
+              - img "tdf.records.label" [ref=f134e2158]
+              - generic [ref=f134e2161]:
+                - generic [ref=f134e2162]: tdf.records.label
+                - generic [ref=f134e2163]: TDF Records
+            - generic [ref=f134e2166]:
+              - text: See any actions Instagram has taken when your account or content don't follow our standards.
+              - link "Learn more about Account Status" [ref=f134e2167] [cursor=pointer]:
+                - /url: https://help.instagram.com/539126347315373
+            - generic [ref=f134e2168]:
+              - link "Photo icon. Removed content and messaging issues Checkmark filled icon Right chevron" [ref=f134e2169] [cursor=pointer]:
+                - /url: /settings/help/account_status/removed_content
+                - generic [ref=f134e2172]:
+                  - img "Photo icon." [ref=f134e2176]
+                  - generic [ref=f134e2180]: Removed content and messaging issues
+                  - generic [ref=f134e2187]:
+                    - img "Checkmark filled icon" [ref=f134e2190]
+                    - img "Right chevron" [ref=f134e2193]
+              - link "Search icon. Availability to people under 18 Checkmark filled icon Right chevron" [ref=f134e2195] [cursor=pointer]:
+                - /url: /settings/help/account_status/limits_to_your_reach/people_under_18
+                - generic [ref=f134e2198]:
+                  - img "Search icon." [ref=f134e2202]
+                  - generic [ref=f134e2205]: Availability to people under 18
+                  - generic [ref=f134e2212]:
+                    - img "Checkmark filled icon" [ref=f134e2215]
+                    - img "Right chevron" [ref=f134e2218]
+              - link "Comment icon. Features you can't use Checkmark filled icon Right chevron" [ref=f134e2220] [cursor=pointer]:
+                - /url: /settings/help/account_status/feature_limits
+                - generic [ref=f134e2223]:
+                  - img "Comment icon." [ref=f134e2227]
+                  - generic [ref=f134e2229]: Features you can't use
+                  - generic [ref=f134e2236]:
+                    - img "Checkmark filled icon" [ref=f134e2239]
+                    - img "Right chevron" [ref=f134e2242]
+          - contentinfo [ref=f134e2244]:
+            - generic [ref=f134e2245]:
+              - generic [ref=f134e2247]:
+                - link "Meta" [ref=f134e2249] [cursor=pointer]:
+                  - /url: https://about.meta.com/
+                - link "About" [ref=f134e2252] [cursor=pointer]:
+                  - /url: https://about.instagram.com/
+                - link "Blog" [ref=f134e2255] [cursor=pointer]:
+                  - /url: https://about.instagram.com/blog/
+                - link "Jobs" [ref=f134e2258] [cursor=pointer]:
+                  - /url: https://about.instagram.com/about-us/careers
+                - link "Help" [ref=f134e2261] [cursor=pointer]:
+                  - /url: https://help.instagram.com/
+                - link "API" [ref=f134e2264] [cursor=pointer]:
+                  - /url: https://developers.facebook.com/docs/instagram
+                - link "Privacy" [ref=f134e2267] [cursor=pointer]:
+                  - /url: /legal/privacy/
+                - link "Terms" [ref=f134e2270] [cursor=pointer]:
+                  - /url: /legal/terms/
+                - link "Locations" [ref=f134e2273] [cursor=pointer]:
+                  - /url: /explore/locations/
+                - link "Popular" [ref=f134e2276] [cursor=pointer]:
+                  - /url: /popular/
+                - link "Instagram Lite" [ref=f134e2279] [cursor=pointer]:
+                  - /url: /web/lite/
+                - link "Meta AI" [ref=f134e2282] [cursor=pointer]:
+                  - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                - link "Threads" [ref=f134e2285] [cursor=pointer]:
+                  - /url: https://www.threads.com/
+                - link "Contact Uploading & Non-Users" [ref=f134e2288] [cursor=pointer]:
+                  - /url: https://www.facebook.com/help/instagram/261704639352628
+                - link "Meta Verified" [ref=f134e2291] [cursor=pointer]:
+                  - /url: /accounts/meta_verified/?entrypoint=web_footer
+              - generic [ref=f134e2293]:
+                - generic [ref=f134e2294] [cursor=pointer]:
+                  - generic [ref=f134e2295]:
+                    - generic [ref=f134e2296]: English
+                    - img "Down chevron icon" [ref=f134e2299]
+                  - combobox "Switch Display Language" [ref=f134e2301]:
+                    - option "Afrikaans"
+                    - option "العربية"
+                    - option "Čeština"
+                    - option "Dansk"
+                    - option "Deutsch"
+                    - option "Ελληνικά"
+                    - option "English" [selected]
+                    - option "English (UK)"
+                    - option "Español (España)"
+                    - option "Español"
+                    - option "فارسی"
+                    - option "Suomi"
+                    - option "Français"
+                    - option "עברית"
+                    - option "Bahasa Indonesia"
+                    - option "Italiano"
+                    - option "日本語"
+                    - option "한국어"
+                    - option "Bahasa Melayu"
+                    - option "Norsk"
+                    - option "Nederlands"
+                    - option "Polski"
+                    - option "Português (Brasil)"
+                    - option "Português (Portugal)"
+                    - option "Русский"
+                    - option "Svenska"
+                    - option "ภาษาไทย"
+                    - option "Filipino"
+                    - option "Türkçe"
+                    - option "中文(简体)"
+                    - option "中文(台灣)"
+                    - option "বাংলা"
+                    - option "ગુજરાતી"
+                    - option "हिन्दी"
+                    - option "Hrvatski"
+                    - option "Magyar"
+                    - option "ಕನ್ನಡ"
+                    - option "മലയാളം"
+                    - option "मराठी"
+                    - option "नेपाली"
+                    - option "ਪੰਜਾਬੀ"
+                    - option "සිංහල"
+                    - option "Slovenčina"
+                    - option "தமிழ்"
+                    - option "తెలుగు"
+                    - option "اردو"
+                    - option "Tiếng Việt"
+                    - option "中文(香港)"
+                    - option "Български"
+                    - option "Français (Canada)"
+                    - option "Română"
+                    - option "Српски"
+                    - option "Українська"
+                - generic [ref=f134e2302]: © 2026 Instagram from Meta
+  - button [ref=f134e410] [cursor=pointer]:
+    - generic "Messages" [ref=f134e411]:
+      - generic [ref=f134e412]:
+        - img "Messages" [ref=f134e415]
+        - generic [ref=f134e418]: Messages
+      - generic [ref=f134e419]:
+        - button "User avatar Kenneth Vega" [ref=f134e421]:
+          - img "User avatar" [ref=f134e424]
+        - button "User avatar SAMAEL" [ref=f134e426]:
+          - img "User avatar" [ref=f134e429]
+        - button "User avatar Oldboy" [ref=f134e431]:
+          - img "User avatar" [ref=f134e434]

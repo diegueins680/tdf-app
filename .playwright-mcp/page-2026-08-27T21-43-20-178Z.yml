@@ -1,0 +1,306 @@
+- generic [ref=f75e4]:
+  - generic [ref=f75e18]:
+    - generic [ref=f75e21]:
+      - link [ref=f75e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f75e31]
+      - generic [ref=f75e34]:
+        - link [ref=f75e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f75e44]
+        - link [ref=f75e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f75e54]
+        - link [ref=f75e61] [cursor=pointer]:
+          - /url: /direct/t/17842232511570323
+          - img "Messages" [ref=f75e66]
+        - link [ref=f75e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f75e77]
+        - link [ref=f75e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f75e89]
+        - link [ref=f75e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f75e100]
+        - link [ref=f75e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f75e110]
+        - link [ref=f75e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f75e122]:
+            - img "tdf.records.label's profile picture" [ref=f75e123]
+      - generic [ref=f75e124]:
+        - link [ref=f75e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f75e132]
+        - link [ref=f75e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f75e140]
+    - generic [ref=f75e143]:
+      - main [ref=f75e144]:
+        - generic [ref=f75e146]:
+          - generic [ref=f75e147]:
+            - generic [ref=f75e148]:
+              - button [ref=f75e153] [cursor=pointer]:
+                - link [ref=f75e155]:
+                  - img "sinmotivorec's profile picture" [ref=f75e156]
+              - generic [ref=f75e157]:
+                - generic [ref=f75e158]:
+                  - generic [ref=f75e159]:
+                    - link [ref=f75e161] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "sinmotivorec" [level=2] [ref=f75e162]
+                    - button [ref=f75e164] [cursor=pointer]:
+                      - img "Options" [ref=f75e166]
+                  - generic [ref=f75e170]:
+                    - generic [ref=f75e172]:
+                      - generic [ref=f75e173]: "22"
+                      - text: posts
+                    - link "439 followers" [ref=f75e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f75e176]:
+                        - generic "439" [ref=f75e177]
+                        - text: followers
+                    - link "348 following" [ref=f75e179] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f75e180]:
+                        - generic [ref=f75e181]: "348"
+                        - text: following
+                - generic [ref=f75e182]:
+                  - generic [ref=f75e183]:
+                    - generic [ref=f75e184]: Record label
+                    - button [ref=f75e187] [cursor=pointer]:
+                      - generic [ref=f75e188]: Sello independiente desde la Mitad del Mundo¡Hardcore, punk y afines! Conciertos y discosQuito - Ecuador
+                    - heading [level=1]
+                  - link "Followed by cult_of_mariakatherina, jeanpaulgortaire + 6 more" [ref=f75e189] [cursor=pointer]:
+                    - /url: /sinmotivorec/followers/mutualOnly
+                    - generic [ref=f75e191]:
+                      - generic [ref=f75e193]:
+                        - button [ref=f75e194]:
+                          - link [ref=f75e195]
+                        - button [ref=f75e196]:
+                          - link [ref=f75e197]
+                        - button [ref=f75e198]:
+                          - link [ref=f75e199]
+                      - generic [ref=f75e200]: Followed by cult_of_mariakatherina, jeanpaulgortaire + 6 more
+            - generic [ref=f75e205]:
+              - button "Following Down chevron icon" [ref=f75e207] [cursor=pointer]:
+                - generic [ref=f75e208]:
+                  - generic [ref=f75e209]: Following
+                  - img "Down chevron icon" [ref=f75e212]
+              - button "Message" [ref=f75e215] [cursor=pointer]
+              - button [ref=f75e217] [cursor=pointer]:
+                - img "Similar accounts" [ref=f75e219]
+            - generic:
+              - menu
+          - generic [ref=f75e222]:
+            - tablist [ref=f75e223]:
+              - link [ref=f75e225] [cursor=pointer]:
+                - /url: /sinmotivorec/
+                - img "Posts" [ref=f75e227]
+              - link [ref=f75e238] [cursor=pointer]:
+                - /url: /sinmotivorec/reels/
+                - img "Reels" [ref=f75e240]
+              - link [ref=f75e243] [cursor=pointer]:
+                - /url: /sinmotivorec/reposts/
+                - img "Reposts" [ref=f75e245]
+              - link [ref=f75e248] [cursor=pointer]:
+                - /url: /sinmotivorec/tagged/
+                - img "Tagged" [ref=f75e250]
+            - tabpanel
+          - generic [ref=f75e257]:
+            - generic [ref=f75e258]:
+              - link [ref=f75e260] [cursor=pointer]:
+                - /url: /sinmotivorec/p/Db69VDZxdnc/
+                - img "Photo by @sinmotivorec in Quito Capital del Ecuador with @denixclaro, @undergrindrecs, @tu.pankrecords, @undershowsbr, @weirdo.distro, @punhoemristerecords, and @lucha_libre_discos. May be an image of record, stereo, poster and text." [ref=f75e263]
+              - link [ref=f75e266] [cursor=pointer]:
+                - /url: /sinmotivorec/p/Da3nhKsgaKR/
+                - img "Photo by @sinmotivorec on July 16, 2026. May be an image of poster, record and text." [ref=f75e269]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f75e272] [cursor=pointer]:
+                - /url: /chinaskibaruio/reel/DZoWvDJRz6Q/
+                - 'img "Seguimos con la tercera edición de este formato de eventos junto a @sinmotivorecords , post-punk + vinilos en una noche disruptiva. En esta ocasión invitamos a @ausenciaprogramada , un dúo quiteño que presenta su performance con un sonido synthpunk y visuales en tiempo real. Las tornas estarán a cargo de @diego_asintomatico y @psychobeats.djs , Nos vemos el sábado 27 de junio! 20:00 Aporte $5 #postpunk #postpunkecuador #vinylset" [ref=f75e275]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f75e418] [cursor=pointer]:
+                - /url: /sinmotivorec/p/DZbNOA5kZFy/
+                - img "Photo by @sinmotivorec on June 10, 2026. May be an image of poster." [ref=f75e419]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f75e282]:
+              - link [ref=f75e284] [cursor=pointer]:
+                - /url: /chinaskibaruio/p/DYLev4gEbKM/
+                - img "Photo by Chinaski in Chinaski with @soundbwoy_selektor, @t_a_u_r_a, and @sinmotivorec." [ref=f75e287]
+              - link [ref=f75e290] [cursor=pointer]:
+                - /url: /sinmotivorec/p/DYFxv2JkX7r/
+                - img "Photo by @sinmotivorec in Quito Capital del Ecuador with @nadaacambio.hc." [ref=f75e293]
+              - link [ref=f75e296] [cursor=pointer]:
+                - /url: /chinaskibaruio/p/DXne0igkTr3/
+                - img "Photo by Chinaski in Chinaski with @animalpp, @diego_asintomatico, and @sinmotivorec." [ref=f75e299]
+              - link [ref=f75e302] [cursor=pointer]:
+                - /url: /sinmotivorec/p/DXU5-z4ge4h/
+                - img "Photo shared by @sinmotivorec on April 19, 2026 tagging @7vidascrew, @chivorecs, and @lucha_libre_discos." [ref=f75e305]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f75e307]:
+              - link [ref=f75e309] [cursor=pointer]:
+                - /url: /sinmotivorec/reel/DXMx6CtEUqp/
+                - 'img "Muchas gracias @7vidascrew por toda disposición, fue un final de semana intenso y con mucha música! Gracias @chinaskibaruio por todo el soporte y gracias también a @fasimba_hi_fi y Manu (@lucha_libre_discos ) por compartir las tornas! Es un gusto ser parte de 7 Vidas Crew! #postpunk #darkwave" [ref=f75e312]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f75e315] [cursor=pointer]:
+                - /url: /chinaskibaruio/p/DWkhbRCkfUz/
+                - img "Photo by Chinaski in Chinaski with @7vidascrew, @lucha_libre_discos, @fasimba_hi_fi, and @sinmotivorec." [ref=f75e318]
+              - link [ref=f75e321] [cursor=pointer]:
+                - /url: /7vidascrew/p/DWfxD4JDTtq/
+                - img "Photo by 🐈‍⬛ Vll VIDAS 🐈‍⬛ in Ecuador with @therealpaulp, @lucha_libre_discos, and @sinmotivorec." [ref=f75e324]
+              - link [ref=f75e327] [cursor=pointer]:
+                - /url: /7vidascrew/p/DWfwH8UDXUe/
+                - img "Photo by 🐈‍⬛ Vll VIDAS 🐈‍⬛ in Ecuador with @therealpaulp, @amarillo.sucundun, @lucha_libre_discos, and @sinmotivorec." [ref=f75e330]
+      - contentinfo [ref=f75e332]:
+        - generic [ref=f75e333]:
+          - generic [ref=f75e335]:
+            - link "Meta" [ref=f75e337] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f75e340] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f75e343] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f75e346] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f75e349] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f75e352] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f75e355] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f75e358] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f75e361] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f75e364] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f75e367] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f75e370] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f75e373] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f75e376] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f75e379] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f75e381]:
+            - generic [ref=f75e382] [cursor=pointer]:
+              - generic [ref=f75e383]:
+                - generic [ref=f75e384]: English
+                - img "Down chevron icon" [ref=f75e387]
+              - combobox "Switch Display Language" [ref=f75e389]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f75e390]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f75e393] [cursor=pointer]:
+              - generic "Messages" [ref=f75e394]:
+                - generic [ref=f75e395]:
+                  - img "Messages" [ref=f75e398]
+                  - generic [ref=f75e401]: Messages
+                - generic [ref=f75e402]:
+                  - button "User avatar Kenneth Vega" [ref=f75e404]:
+                    - img "User avatar" [ref=f75e407]
+                  - button "User avatar SAMAEL" [ref=f75e409]:
+                    - img "User avatar" [ref=f75e412]
+                  - button "User avatar Oldboy" [ref=f75e414]:
+                    - img "User avatar" [ref=f75e417]
+            - generic [ref=f75e420]:
+              - generic [ref=f75e421]:
+                - generic [ref=f75e422]:
+                  - generic [ref=f75e424]:
+                    - status "Loading..." [ref=f75e426]
+                    - status "Loading..." [ref=f75e428]
+                  - button [active] [ref=f75e430] [cursor=pointer]:
+                    - img "Close" [ref=f75e432]
+                - separator [ref=f75e435]
+              - generic [ref=f75e436]:
+                - generic [ref=f75e437]:
+                  - status "Loading..." [ref=f75e439]
+                  - status "Loading..." [ref=f75e441]
+                - status "Loading..." [ref=f75e444]
+                - generic [ref=f75e445]:
+                  - status "Loading..." [ref=f75e447]
+                  - status "Loading..." [ref=f75e449]
+                - generic [ref=f75e450]:
+                  - status "Loading..." [ref=f75e452]
+                  - status "Loading..." [ref=f75e454]
+                - status "Loading..." [ref=f75e457]
+                - generic [ref=f75e458]:
+                  - status "Loading..." [ref=f75e460]
+                  - status "Loading..." [ref=f75e462]
+                - status "Loading..." [ref=f75e464]

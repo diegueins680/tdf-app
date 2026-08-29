@@ -1,0 +1,386 @@
+- generic [ref=e1]:
+  - link [ref=e3629] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Saltar al contenido principal
+  - generic [ref=e3]:
+    - generic [ref=e14]:
+      - link [ref=e3630] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=e3631]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: MENÚ
+          - generic [ref=e20]:
+            - textbox [ref=e3632]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=e25]:
+          - listitem [ref=e26]:
+            - generic [ref=e27]: ATAJOS
+            - list [ref=e30]:
+              - link [ref=e3633] [cursor=pointer]:
+                - /url: /chat
+                - generic [ref=e34]:
+                  - generic [ref=e35]: Chat
+                  - paragraph [ref=e36]: Reciente · GENTE
+              - link [ref=e3634] [cursor=pointer]:
+                - /url: /crm/empresas
+                - generic [ref=e40]:
+                  - generic [ref=e41]: Empresas
+                  - paragraph [ref=e42]: Reciente · GENTE
+          - listitem [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]: CREAR
+              - button [ref=e3635] [cursor=pointer]
+          - listitem [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: GENTE
+              - button [expanded] [ref=e3636] [cursor=pointer]
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link [ref=e3637] [cursor=pointer]:
+                  - /url: /fans
+                  - generic [ref=e71]: Comunidad
+              - listitem [ref=e73]:
+                - link [ref=e3638] [cursor=pointer]:
+                  - /url: /marketplace
+                  - generic [ref=e77]: Tienda
+              - listitem [ref=e79]:
+                - link [ref=e3639] [cursor=pointer]:
+                  - /url: /records
+                  - generic [ref=e83]: Lanzamientos públicos
+              - listitem [ref=e85]:
+                - link [ref=e3640] [cursor=pointer]:
+                  - /url: /reservar
+                  - generic [ref=e89]: Reservar estudio
+              - listitem [ref=e91]:
+                - link [ref=e3641] [cursor=pointer]:
+                  - /url: /trials
+                  - generic [ref=e95]: Agenda de pruebas
+              - listitem [ref=e97]:
+                - link [ref=e3642] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+                  - generic [ref=e101]: Registro live sessions
+              - listitem [ref=e103]:
+                - link [ref=e3643] [cursor=pointer]:
+                  - /url: /donar
+                  - generic [ref=e107]: Donaciones
+              - listitem [ref=e109]:
+                - link [ref=e3644] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+                  - generic [ref=e113]: Domo Pululahua
+              - listitem [ref=e115]:
+                - link [ref=e3645] [cursor=pointer]:
+                  - /url: /social
+                  - generic [ref=e119]: Conexiones
+              - listitem [ref=e121]:
+                - link [ref=e3646] [cursor=pointer]:
+                  - /url: /social/instagram
+                  - generic [ref=e125]: Instagram
+              - listitem [ref=e127]:
+                - link [ref=e3647] [cursor=pointer]:
+                  - /url: /chat
+                  - generic [ref=e131]: Chat
+              - listitem [ref=e133]:
+                - link [ref=e3648] [cursor=pointer]:
+                  - /url: /social/inbox
+                  - generic [ref=e137]: Inbox social
+              - listitem [ref=e139]:
+                - link [ref=e3649] [cursor=pointer]:
+                  - /url: /social/eventos
+                  - generic [ref=e143]: Eventos sociales
+              - listitem [ref=e145]:
+                - link [ref=e3650] [cursor=pointer]:
+                  - /url: /crm/contactos
+                  - generic [ref=e149]: Contactos
+              - listitem [ref=e151]:
+                - link [ref=e3651] [cursor=pointer]:
+                  - /url: /crm/empresas
+                  - generic [ref=e155]: Empresas
+              - listitem [ref=e157]:
+                - link [ref=e3652] [cursor=pointer]:
+                  - /url: /crm/leads
+                  - generic [ref=e161]: Leads
+          - listitem [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]: SELLO
+              - button [ref=e3653] [cursor=pointer]
+          - listitem [ref=e173]:
+            - generic [ref=e174]:
+              - generic [ref=e175]: OPERAR
+              - button [ref=e3654] [cursor=pointer]
+          - listitem [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e186]: ADMIN
+              - button [ref=e3655] [cursor=pointer]
+          - listitem [ref=e197]:
+            - generic [ref=e198]:
+              - generic [ref=e199]: HERRAMIENTAS
+              - button [ref=e3656] [cursor=pointer]
+          - listitem [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]: AYUDA
+              - button [ref=e3657] [cursor=pointer]
+      - generic [ref=e217]:
+        - banner [ref=e218]:
+          - generic [ref=e219]:
+            - button [ref=e3658] [cursor=pointer]
+            - link [ref=e3659] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=e3660] [cursor=pointer]:
+              - generic [ref=e229]: Buscar sección
+              - generic [ref=e230]: ⌘K
+            - generic [ref=e231]:
+              - button [ref=e3661] [cursor=pointer]:
+                - generic [ref=e236]: Crear
+              - button [ref=e3662] [cursor=pointer]
+              - button [ref=e3663] [cursor=pointer]:
+                - generic [ref=e243]: D
+        - status [ref=e244]
+        - main [ref=e247]:
+          - generic [ref=e249]:
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - heading [level=3] [ref=e3664]: Contactos
+                - paragraph [ref=e299]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=e3665] [cursor=pointer]: Nuevo contacto
+            - generic [ref=e263]:
+              - generic [ref=e302]:
+                - textbox [ref=e3667]:
+                  - /placeholder: Buscar por nombre, email o Instagram
+                - group
+              - generic [ref=e2433]: Haz clic en el nombre para ver relaciones. Contacto reúne correo e Instagram en una sola columna. Abre Acciones para editar el contacto o crear la cuenta cuando haga falta. Roles y accesos aparece solo cuando ese contacto ya tiene usuario.
+              - generic [ref=e2434]:
+                - table [ref=e2435]:
+                  - rowgroup [ref=e2436]:
+                    - row [ref=e3668]:
+                      - columnheader [ref=e3669]: Nombre
+                      - columnheader [ref=e3670]: Contacto
+                      - columnheader [ref=e3671]: Acciones
+                  - rowgroup [ref=e2441]:
+                    - row [ref=e3672]:
+                      - cell [ref=e3673]:
+                        - button [ref=e3674] [cursor=pointer]:
+                          - paragraph [ref=e2446]: Arkabuz
+                      - cell [ref=e3675]: arkabuz.galapagos
+                      - cell [ref=e3676]:
+                        - button [ref=e3677] [cursor=pointer]
+                    - row [ref=e3678]:
+                      - cell [ref=e3679]:
+                        - button [ref=e3680] [cursor=pointer]:
+                          - paragraph [ref=e2456]: El Bloque
+                      - cell [ref=e3681]: elbloque_oficial
+                      - cell [ref=e3682]:
+                        - button [ref=e3683] [cursor=pointer]
+                    - row [ref=e3684]:
+                      - cell [ref=e3685]:
+                        - button [ref=e3686] [cursor=pointer]:
+                          - paragraph [ref=e2466]: Skanka Fe
+                      - cell [ref=e3687]: Falta correo e Instagram
+                      - cell [ref=e3688]:
+                        - button [ref=e3689] [cursor=pointer]
+                    - row [ref=e3690]:
+                      - cell [ref=e3691]:
+                        - button [ref=e3692] [cursor=pointer]:
+                          - paragraph [ref=e2476]: Quimika Soul
+                      - cell [ref=e3693]: Falta correo e Instagram
+                      - cell [ref=e3694]:
+                        - button [ref=e3695] [cursor=pointer]
+                    - row [ref=e3696]:
+                      - cell [ref=e3697]:
+                        - button [ref=e3698] [cursor=pointer]:
+                          - paragraph [ref=e2486]: Juano Ledesma (duplicado)
+                      - cell [ref=e3699]: Falta correo e Instagram
+                      - cell [ref=e3700]:
+                        - button [ref=e3701] [cursor=pointer]
+                    - row [ref=e3702]:
+                      - cell [ref=e3703]:
+                        - button [ref=e3704] [cursor=pointer]:
+                          - paragraph [ref=e2496]: César Galarza
+                      - cell [ref=e3705]: Falta correo e Instagram
+                      - cell [ref=e3706]:
+                        - button [ref=e3707] [cursor=pointer]
+                    - row [ref=e3708]:
+                      - cell [ref=e3709]:
+                        - button [ref=e3710] [cursor=pointer]:
+                          - paragraph [ref=e2506]: Fabricio Alomía
+                      - cell [ref=e3711]: Falta correo e Instagram
+                      - cell [ref=e3712]:
+                        - button [ref=e3713] [cursor=pointer]
+                    - row [ref=e3714]:
+                      - cell [ref=e3715]:
+                        - generic [ref=e2514]:
+                          - button [ref=e3716] [cursor=pointer]:
+                            - paragraph [ref=e2516]: Juan Ledesma
+                          - generic [ref=e2517]: Usuario creado
+                      - cell [ref=e3717]: juan.ledesma@tdfrecords.com
+                      - cell [ref=e3718]:
+                        - button [ref=e3719] [cursor=pointer]
+                    - row [ref=e3720]:
+                      - cell [ref=e3721]:
+                        - generic [ref=e2526]:
+                          - button [ref=e3722] [cursor=pointer]:
+                            - paragraph [ref=e2528]: Diego Saa
+                          - generic [ref=e2529]: Usuario creado
+                      - cell [ref=e3723]: info@tdfrecords.net
+                      - cell [ref=e3724]:
+                        - button [ref=e3725] [cursor=pointer]
+                    - row [ref=e3726]:
+                      - cell [ref=e3727]:
+                        - generic [ref=e2538]:
+                          - button [ref=e3728] [cursor=pointer]:
+                            - paragraph [ref=e2540]: Front Desk Manager
+                          - generic [ref=e2541]: Usuario creado
+                      - cell [ref=e3729]: Falta correo e Instagram
+                      - cell [ref=e3730]:
+                        - button [ref=e3731] [cursor=pointer]
+                    - row [ref=e3732]:
+                      - cell [ref=e3733]:
+                        - generic [ref=e2550]:
+                          - button [ref=e3734] [cursor=pointer]:
+                            - paragraph [ref=e2552]: Reception
+                          - generic [ref=e2553]: Usuario creado
+                      - cell [ref=e3735]: Falta correo e Instagram
+                      - cell [ref=e3736]:
+                        - button [ref=e3737] [cursor=pointer]
+                    - row [ref=e3738]:
+                      - cell [ref=e3739]:
+                        - generic [ref=e2562]:
+                          - button [ref=e3740] [cursor=pointer]:
+                            - paragraph [ref=e2564]: Accounting
+                          - generic [ref=e2565]: Usuario creado
+                      - cell [ref=e3741]: Falta correo e Instagram
+                      - cell [ref=e3742]:
+                        - button [ref=e3743] [cursor=pointer]
+                    - row [ref=e3744]:
+                      - cell [ref=e3745]:
+                        - generic [ref=e2574]:
+                          - button [ref=e3746] [cursor=pointer]:
+                            - paragraph [ref=e2576]: Scheduling
+                          - generic [ref=e2577]: Usuario creado
+                      - cell [ref=e3747]: Falta correo e Instagram
+                      - cell [ref=e3748]:
+                        - button [ref=e3749] [cursor=pointer]
+                    - row [ref=e3750]:
+                      - cell [ref=e3751]:
+                        - generic [ref=e2586]:
+                          - button [ref=e3752] [cursor=pointer]:
+                            - paragraph [ref=e2588]: Packages
+                          - generic [ref=e2589]: Usuario creado
+                      - cell [ref=e3753]: Falta correo e Instagram
+                      - cell [ref=e3754]:
+                        - button [ref=e3755] [cursor=pointer]
+                    - row [ref=e3756]:
+                      - cell [ref=e3757]:
+                        - generic [ref=e2598]:
+                          - button [ref=e3758] [cursor=pointer]:
+                            - paragraph [ref=e2600]: Carlos De smedt
+                          - generic [ref=e2601]: Usuario creado
+                      - cell [ref=e3759]: wikicarlos@gmail.com
+                      - cell [ref=e3760]:
+                        - button [ref=e3761] [cursor=pointer]
+                    - row [ref=e3762]:
+                      - cell [ref=e3763]:
+                        - generic [ref=e2610]:
+                          - button [ref=e3764] [cursor=pointer]:
+                            - paragraph [ref=e2612]: Julián Saa
+                          - generic [ref=e2613]: Usuario creado
+                      - cell [ref=e3765]: diego.saa@fcaq.k12.ec
+                      - cell [ref=e3766]:
+                        - button [ref=e3767] [cursor=pointer]
+                    - row [ref=e3768]:
+                      - cell [ref=e3769]:
+                        - generic [ref=e2622]:
+                          - button [ref=e3770] [cursor=pointer]:
+                            - paragraph [ref=e2624]: Julián Saa
+                          - generic [ref=e2625]: Usuario creado
+                      - cell [ref=e3771]: diego.saa@tdf.com
+                      - cell [ref=e3772]:
+                        - button [ref=e3773] [cursor=pointer]
+                    - row [ref=e3774]:
+                      - cell [ref=e3775]:
+                        - generic [ref=e2634]:
+                          - button [ref=e3776] [cursor=pointer]:
+                            - paragraph [ref=e2636]: Diego Saa
+                          - generic [ref=e2637]: Usuario creado
+                      - cell [ref=e3777]: diego@tdfrecords.net
+                      - cell [ref=e3778]:
+                        - button [ref=e3779] [cursor=pointer]
+                    - row [ref=e3780]:
+                      - cell [ref=e3781]:
+                        - generic [ref=e2646]:
+                          - button [ref=e3782] [cursor=pointer]:
+                            - paragraph [ref=e2648]: Luis Alejandro Freire Díaz
+                          - generic [ref=e2649]: Usuario creado
+                      - cell [ref=e3783]: lfrocker94@gmail.com
+                      - cell [ref=e3784]:
+                        - button [ref=e3785] [cursor=pointer]
+                    - row [ref=e3786]:
+                      - cell [ref=e3787]:
+                        - generic [ref=e2658]:
+                          - button [ref=e3788] [cursor=pointer]:
+                            - paragraph [ref=e2660]: Otro man
+                          - generic [ref=e2661]: Usuario creado
+                      - cell [ref=e3789]: cuco.saa@gmail.com
+                      - cell [ref=e3790]:
+                        - button [ref=e3791] [cursor=pointer]
+                    - row [ref=e3792]:
+                      - cell [ref=e3793]:
+                        - button [ref=e3794] [cursor=pointer]:
+                          - paragraph [ref=e2672]: Federico Molinari
+                      - cell [ref=e3795]: federico__molinari_
+                      - cell [ref=e3796]:
+                        - button [ref=e3797] [cursor=pointer]
+                    - row [ref=e3798]:
+                      - cell [ref=e3799]:
+                        - button [ref=e3800] [cursor=pointer]:
+                          - paragraph [ref=e2682]: Categal
+                      - cell [ref=e3801]: Falta correo e Instagram
+                      - cell [ref=e3802]:
+                        - button [expanded] [ref=e3803] [cursor=pointer]
+                    - row [ref=e3804]:
+                      - cell [ref=e3805]:
+                        - button [ref=e3806] [cursor=pointer]:
+                          - paragraph [ref=e2692]: Los Morrison
+                      - cell [ref=e3807]: Falta correo e Instagram
+                      - cell [ref=e3808]:
+                        - button [ref=e3809] [cursor=pointer]
+                    - row [ref=e3810]:
+                      - cell [ref=e3811]:
+                        - button [ref=e3812] [cursor=pointer]:
+                          - paragraph [ref=e2702]: Barrelshots
+                      - cell [ref=e3813]: Falta correo e Instagram
+                      - cell [ref=e3814]:
+                        - button [ref=e3815] [cursor=pointer]
+                    - row [ref=e3816]:
+                      - cell [ref=e3817]:
+                        - button [ref=e3818] [cursor=pointer]:
+                          - paragraph [ref=e2712]: Machaka
+                      - cell [ref=e3819]: Falta correo e Instagram
+                      - cell [ref=e3820]:
+                        - button [ref=e3821] [cursor=pointer]
+                - generic [ref=e2720]:
+                  - paragraph [ref=e2721]: Por página
+                  - generic [ref=e2722]:
+                    - combobox [ref=e3822] [cursor=pointer]: "25"
+                    - textbox: "25"
+                  - paragraph [ref=e2724]: 1–25 de 184 contactos
+                  - generic [ref=e2725]:
+                    - button [disabled]
+                    - button [ref=e3823] [cursor=pointer]
+          - generic [ref=e270]:
+            - status [ref=e271]:
+              - generic [ref=e274]: "API: online"
+            - button [ref=e3824] [cursor=pointer]
+    - generic [ref=e278]:
+      - button [ref=e3825] [cursor=pointer]
+      - button [ref=e3827] [cursor=pointer]
+      - button [ref=e3829] [cursor=pointer]
+      - button [ref=e3830] [cursor=pointer]
+      - button [ref=e3831] [cursor=pointer]
+      - button [ref=e3832] [cursor=pointer]
+      - generic [ref=e293]:
+        - generic [ref=e294]: "En pausa: stream.rcast.net"
+        - text: Live
+  - menu [ref=e3835]:
+    - menuitem "Completar contacto" [active] [ref=e3836] [cursor=pointer]

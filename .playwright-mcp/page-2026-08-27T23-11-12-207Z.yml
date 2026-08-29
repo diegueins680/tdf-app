@@ -1,0 +1,165 @@
+- generic [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e4614] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - generic [ref=e14]:
+      - link "Saltar al contenido principal" [ref=e4615] [cursor=pointer]:
+        - /url: "#main-content"
+      - navigation "Navegación de la aplicación" [ref=e4616]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: MENÚ
+          - generic [ref=e20]:
+            - textbox "Buscar sección" [ref=e4617]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=e25]:
+          - listitem [ref=e26]:
+            - generic [ref=e27]: ATAJOS
+            - list [ref=e30]:
+              - link "Chat Reciente · GENTE" [ref=e4618] [cursor=pointer]:
+                - /url: /chat
+                - generic [ref=e34]:
+                  - generic [ref=e35]: Chat
+                  - paragraph [ref=e36]: Reciente · GENTE
+              - link "Empresas Reciente · GENTE" [ref=e4619] [cursor=pointer]:
+                - /url: /crm/empresas
+                - generic [ref=e40]:
+                  - generic [ref=e41]: Empresas
+                  - paragraph [ref=e42]: Reciente · GENTE
+          - listitem [ref=e43]:
+            - generic [ref=e44]:
+              - generic [ref=e45]: CREAR
+              - button "Mostrar CREAR" [ref=e4620] [cursor=pointer]
+          - listitem [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: GENTE
+              - button "Ocultar GENTE" [expanded] [ref=e4621] [cursor=pointer]
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link "Comunidad" [ref=e4622] [cursor=pointer]:
+                  - /url: /fans
+              - listitem [ref=e73]:
+                - link "Tienda" [ref=e4623] [cursor=pointer]:
+                  - /url: /marketplace
+              - listitem [ref=e79]:
+                - link "Lanzamientos públicos" [ref=e4624] [cursor=pointer]:
+                  - /url: /records
+              - listitem [ref=e85]:
+                - link "Reservar estudio" [ref=e4625] [cursor=pointer]:
+                  - /url: /reservar
+              - listitem [ref=e91]:
+                - link "Agenda de pruebas" [ref=e4626] [cursor=pointer]:
+                  - /url: /trials
+              - listitem [ref=e97]:
+                - link "Registro live sessions" [ref=e4627] [cursor=pointer]:
+                  - /url: /live-sessions/registro
+              - listitem [ref=e103]:
+                - link "Donaciones" [ref=e4628] [cursor=pointer]:
+                  - /url: /donar
+              - listitem [ref=e109]:
+                - link "Domo Pululahua" [ref=e4629] [cursor=pointer]:
+                  - /url: /domo-del-pululahua
+              - listitem [ref=e115]:
+                - link "Conexiones" [ref=e4630] [cursor=pointer]:
+                  - /url: /social
+              - listitem [ref=e121]:
+                - link "Instagram" [ref=e4631] [cursor=pointer]:
+                  - /url: /social/instagram
+              - listitem [ref=e127]:
+                - link "Chat" [ref=e4632] [cursor=pointer]:
+                  - /url: /chat
+              - listitem [ref=e133]:
+                - link "Inbox social" [ref=e4633] [cursor=pointer]:
+                  - /url: /social/inbox
+              - listitem [ref=e139]:
+                - link "Eventos sociales" [ref=e4634] [cursor=pointer]:
+                  - /url: /social/eventos
+              - listitem [ref=e145]:
+                - link "Contactos" [ref=e4635] [cursor=pointer]:
+                  - /url: /crm/contactos
+              - listitem [ref=e151]:
+                - link "Empresas" [ref=e4636] [cursor=pointer]:
+                  - /url: /crm/empresas
+              - listitem [ref=e157]:
+                - link "Leads" [ref=e4637] [cursor=pointer]:
+                  - /url: /crm/leads
+          - listitem [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]: SELLO
+              - button "Mostrar SELLO" [ref=e4638] [cursor=pointer]
+          - listitem [ref=e173]:
+            - generic [ref=e174]:
+              - generic [ref=e175]: OPERAR
+              - button "Mostrar OPERAR" [ref=e4639] [cursor=pointer]
+          - listitem [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e186]: ADMIN
+              - button "Mostrar ADMIN" [ref=e4640] [cursor=pointer]
+          - listitem [ref=e197]:
+            - generic [ref=e198]:
+              - generic [ref=e199]: HERRAMIENTAS
+              - button "Mostrar HERRAMIENTAS" [ref=e4641] [cursor=pointer]
+          - listitem [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e209]: AYUDA
+              - button "Mostrar AYUDA" [ref=e4642] [cursor=pointer]
+      - generic [ref=e217]:
+        - banner [ref=e218]:
+          - generic [ref=e219]:
+            - button "Ocultar menú lateral" [ref=e4643] [cursor=pointer]
+            - link "Ir al inicio" [ref=e4644] [cursor=pointer]:
+              - /url: /inicio
+              - img "TDF Records logo"
+            - button "Buscar sección" [ref=e4645] [cursor=pointer]:
+              - generic [ref=e230]: ⌘K
+            - generic [ref=e231]:
+              - button "Creación rápida" [ref=e4646] [cursor=pointer]:
+                - generic [ref=e236]: Crear
+              - button "Notificaciones" [ref=e4647] [cursor=pointer]:
+                - generic [ref=e238]: "0"
+              - button "Abrir menú de sesión" [ref=e4648] [cursor=pointer]:
+                - generic [ref=e243]: D
+        - status [ref=e244]:
+          - progressbar "Cargando datos" [ref=e4649]
+        - main [ref=e247]:
+          - generic [ref=e249]:
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - heading "Contactos" [level=3] [ref=e4652]
+                - paragraph [ref=e299]: Gestiona personas, empresas y roles en un solo lugar.
+              - button [ref=e4653] [cursor=pointer]
+            - generic [ref=e263]:
+              - generic "Buscar contactos" [ref=e4654]:
+                - generic [ref=e302]:
+                  - textbox "Buscar contactos" [ref=e4655]:
+                    - /placeholder: Buscar por nombre, email o Instagram
+                    - text: La Bestia Quiñonez
+                  - button "Limpiar búsqueda" [ref=e4656] [cursor=pointer]
+                  - group
+              - generic [ref=e4568]:
+                - generic [ref=e4569]:
+                  - heading "1 coincidencia para \"La Bestia Quiñonez\"" [level=6] [ref=e4657]
+                  - paragraph [ref=e4571]: La búsqueda dejó un solo contacto visible. Revísalo aquí; limpia o ajusta el buscador para volver a comparar contactos en la tabla.
+                - generic [ref=e4572]:
+                  - button [ref=e4658] [cursor=pointer]:
+                    - paragraph [ref=e4575]: La Bestia Quiñonez
+                  - paragraph [ref=e4576]: "Contacto: Falta correo e Instagram"
+                  - paragraph [ref=e4577]: Completa el correo desde Acciones antes de crear el usuario.
+                - button "Abrir acciones para La Bestia Quiñonez" [active] [ref=e4659] [cursor=pointer]: Completar contacto
+          - generic [ref=e270]:
+            - status [ref=e271]:
+              - generic [ref=e274]: "API: online"
+            - button "Abrir ChatKit" [ref=e4660] [cursor=pointer]
+    - generic "Control de radio":
+      - generic [ref=e278]:
+        - button "Reproducir radio" [ref=e4661] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=e4662]:
+          - button "Saltar a la estación anterior" [ref=e4663] [cursor=pointer]
+        - generic "Saltar al siguiente" [ref=e4664]:
+          - button "Saltar a la siguiente estación" [ref=e4665] [cursor=pointer]
+        - button "Silenciar radio" [ref=e4666] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=e4667] [cursor=pointer]
+        - button "Expandir radio" [ref=e4668] [cursor=pointer]
+        - generic [ref=e293]:
+          - generic [ref=e294]: "En pausa: stream.rcast.net"
+          - text: Live

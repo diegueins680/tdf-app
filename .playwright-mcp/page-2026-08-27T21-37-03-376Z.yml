@@ -1,0 +1,144 @@
+- generic [ref=f27e4]:
+  - generic [ref=f27e9]:
+    - generic [ref=f27e12]:
+      - link [ref=f27e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f27e22]
+      - generic [ref=f27e25]:
+        - link [ref=f27e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f27e35]
+        - link [ref=f27e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f27e45]
+        - link [ref=f27e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f27e57]
+        - link [ref=f27e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f27e68]
+        - link [ref=f27e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f27e80]
+        - link [ref=f27e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f27e91]
+        - link [ref=f27e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f27e101]
+        - link [ref=f27e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f27e113]:
+            - img "tdf.records.label's profile picture" [ref=f27e114]
+      - generic [ref=f27e115]:
+        - link [ref=f27e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f27e123]
+        - link [ref=f27e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f27e131]
+    - generic [ref=f27e134]:
+      - main [ref=f27e135]:
+        - generic [ref=f27e137]:
+          - generic [ref=f27e138]: Sorry, this page isn't available.
+          - generic [ref=f27e140]:
+            - text: The link you followed may be broken, or the page may have been removed.
+            - link "Go back to Instagram." [ref=f27e141] [cursor=pointer]:
+              - /url: /
+      - contentinfo [ref=f27e142]:
+        - generic [ref=f27e143]:
+          - generic [ref=f27e145]:
+            - link "Meta" [ref=f27e147] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f27e150] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f27e153] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f27e156] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f27e159] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f27e162] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f27e165] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f27e168] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f27e171] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f27e174] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f27e177] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f27e180] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f27e183] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f27e186] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f27e189] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f27e191]:
+            - generic [ref=f27e192] [cursor=pointer]:
+              - generic [ref=f27e193]:
+                - generic [ref=f27e194]: English
+                - img "Down chevron icon" [ref=f27e197]
+              - combobox "Switch Display Language" [ref=f27e199]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f27e200]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f27e203] [cursor=pointer]:
+    - generic [ref=f27e205]:
+      - img "Messages" [ref=f27e207]
+      - generic [ref=f27e210]: Messages

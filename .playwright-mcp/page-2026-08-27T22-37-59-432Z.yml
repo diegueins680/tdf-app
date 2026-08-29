@@ -1,0 +1,285 @@
+- generic [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=e18]:
+          - generic [ref=e21]:
+            - link [ref=e2771] [cursor=pointer]:
+              - /url: /
+            - generic [ref=e34]:
+              - link [ref=e2773] [cursor=pointer]:
+                - /url: /
+              - link [ref=e2775] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=e2777] [cursor=pointer]:
+                - /url: /direct/inbox/
+              - link [ref=e2779] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=e2781] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=e2783] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=e2785] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=e2787] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=e2788]
+            - generic [ref=e125]:
+              - link [ref=e2790] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=e2792] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=e144]:
+            - main [ref=e145]:
+              - generic [ref=e147]:
+                - generic [ref=e148]:
+                  - generic [ref=e149]:
+                    - generic [ref=e153]:
+                      - button [ref=e2794] [cursor=pointer]:
+                        - generic [ref=e155]: Note...
+                      - button [ref=e2795] [cursor=pointer]
+                    - generic [ref=e168]:
+                      - generic [ref=e169]:
+                        - generic [ref=e170]:
+                          - link [ref=e2797] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=e2798]:
+                              - generic [ref=e174]: tdf.records.label
+                          - button [ref=e2799] [cursor=pointer]
+                        - generic [ref=e180]: TDF Records
+                        - generic [ref=e182]:
+                          - generic [ref=e184]:
+                            - generic [ref=e185]: "338"
+                            - text: posts
+                          - link [ref=e2801] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=e188]:
+                              - generic [ref=e2802]: 4,076
+                              - text: followers
+                          - link [ref=e2803] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=e192]:
+                              - generic [ref=e193]: 1,932
+                              - text: following
+                      - generic [ref=e195]:
+                        - generic [ref=e196]: Entrepreneur
+                        - generic [ref=e198]:
+                          - button [ref=e2804] [cursor=pointer]:
+                            - generic [ref=e200]: ⏺️ Estudio de grabación 🎹 Renta de equipos 🎛️ Mezcla y mastering 🖥️ Edición 🎸
+                          - generic [ref=e201]:
+                            - text: ...
+                            - button [ref=e2805] [cursor=pointer]:
+                              - generic [ref=e203]: more
+                        - heading [level=1] [ref=e2806]: Félix Oralabal y calle C, Quito, Ecuador 170510
+                        - generic [ref=e205]:
+                          - link [ref=e2808] [cursor=pointer]:
+                            - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ftdfestudiodegrabacion%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacxhde9awX198byYnNd41FF--LfkhEwKcmrkBZnRovt4arwvgCgD__rWg1bGA_aem_91doeOlOmIa-RLa8qmrlZQ&e=AUA7vCCufmj6mz8TjlKdFOGl-GwJceKILDfrXqRpfM_lG2GS0GiCWm7O-qSj-DuQkCm9YZUUc6OeyIrJZTf9HczICUW3TAbv4N2MiACXEhHL8CzMqz2papeHbpBErc1xbp7B1BgL_EsK
+                            - generic [ref=e213]: linktr.ee/tdfestudiodegrabacion
+                          - link [ref=e2809] [cursor=pointer]:
+                            - /url: https://www.threads.com/@tdf.records.label?xmt=AQG0f8ZLKq9QfISAOQymL6bEHFm0Fcu6FeVNSOBFSArSow8
+                            - generic [ref=e219]: tdf.records.label
+                  - generic [ref=e225]:
+                    - link [ref=e2811] [cursor=pointer]:
+                      - /url: /accounts/edit/
+                      - text: Edit profile
+                    - link [ref=e2812] [cursor=pointer]:
+                      - /url: /archive/stories/
+                      - text: View archive
+                  - menu [ref=e231]:
+                    - list [ref=e235]:
+                      - listitem [ref=e236]
+                      - listitem [ref=e237]
+                      - listitem [ref=e238]:
+                        - link [ref=e2813] [cursor=pointer]:
+                          - /url: /stories/highlights/18020134514197304/
+                          - button [ref=e2814]:
+                            - button [ref=e2815]
+                            - generic [ref=e247]: Tour Colombia
+                      - listitem [ref=e250]:
+                        - link [ref=e2817] [cursor=pointer]:
+                          - /url: /stories/highlights/18029198257359774/
+                          - button [ref=e2818]:
+                            - button [ref=e2819]
+                            - generic [ref=e259]: G U E S T S
+                      - listitem [ref=e262]:
+                        - link [ref=e2821] [cursor=pointer]:
+                          - /url: /stories/highlights/18200542021155753/
+                          - button [ref=e2822]:
+                            - button [ref=e2823]
+                            - generic [ref=e271]: S Y N T H S
+                      - listitem [ref=e274]:
+                        - link [ref=e2825] [cursor=pointer]:
+                          - /url: /stories/highlights/17928456047228438/
+                          - button [ref=e2826]:
+                            - button [ref=e2827]
+                            - generic [ref=e283]: E S T U D I O
+                      - listitem [ref=e286]:
+                        - button [ref=e2829] [cursor=pointer]:
+                          - generic [ref=e295]: New
+                - tablist [ref=e299]:
+                  - link [ref=e2831] [cursor=pointer]:
+                    - /url: /tdf.records.label/
+                  - link [ref=e2833] [cursor=pointer]:
+                    - /url: /tdf.records.label/reels/
+                  - link [ref=e2835] [cursor=pointer]:
+                    - /url: /tdf.records.label/saved/
+                  - link [ref=e2837] [cursor=pointer]:
+                    - /url: /tdf.records.label/reposts/
+                  - link [ref=e2839] [cursor=pointer]:
+                    - /url: /tdf.records.label/tagged/
+                - generic [ref=e330]:
+                  - generic [ref=e331]:
+                    - link [ref=e2841] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRnkzyTjlVD/
+                    - link [ref=e2843] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRihKjAEVSV/
+                    - link [ref=e2845] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRdPZsqErwy/
+                    - link [ref=e2847] [cursor=pointer]:
+                      - /url: /juano_music/reel/DXPB2bjDn-E/
+                  - generic [ref=e356]:
+                    - link [ref=e2849] [cursor=pointer]:
+                      - /url: /blackpalacio_music/p/DV_V39QjlPa/
+                    - link [ref=e2851] [cursor=pointer]:
+                      - /url: /takijanaskaec/reel/DUqPOqfjqsS/
+                    - link [ref=e2853] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DRS8IbTErRQ/
+                    - link [ref=e2855] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DRNzpZQEWh6/
+                  - generic [ref=e381]:
+                    - link [ref=e2857] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRI0l18ET7U/
+                    - link [ref=e2859] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DQS1u8bkdTB/
+                    - link [ref=e2861] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DQMt-XpEelT/
+                    - link [ref=e2863] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DQIXj-YkV37/
+                  - generic [ref=e2170]:
+                    - link [ref=e2865] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DQApo7ikWYD/
+                    - link [ref=e2867] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DP48UT9Ee4F/
+                    - link [ref=e2869] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DP2S_fukXiE/
+                    - link [ref=e2871] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPunBwHEaWX/
+                  - generic [ref=e2195]:
+                    - link [ref=e2873] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPmnDt6Evbg/
+                    - link [ref=e2875] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPfFLzpErB4/
+                    - link [ref=e2877] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DPSamaeEeKY/
+                    - link [ref=e2879] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DPPle33kRVe/
+                  - generic [ref=e2220]:
+                    - link [ref=e2881] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPKYD5CEdg4/
+                    - link [ref=e2883] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPH_HlTkYbI/
+                    - link [ref=e2885] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DPCtZm3EXCH/
+                    - link [ref=e2887] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DO9kB-Ckaul/
+            - contentinfo [ref=e406]:
+              - generic [ref=e407]:
+                - generic [ref=e409]:
+                  - link [ref=e2889] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=e412]: Meta
+                  - link [ref=e2890] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=e415]: About
+                  - link [ref=e2891] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=e418]: Blog
+                  - link [ref=e2892] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=e421]: Jobs
+                  - link [ref=e2893] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=e424]: Help
+                  - link [ref=e2894] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=e427]: API
+                  - link [ref=e2895] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=e430]: Privacy
+                  - link [ref=e2896] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=e433]: Terms
+                  - link [ref=e2897] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=e436]: Locations
+                  - link [ref=e2898] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=e439]: Popular
+                  - link [ref=e2899] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=e442]: Instagram Lite
+                  - link [ref=e2900] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=e445]: Meta AI
+                  - link [ref=e2901] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=e448]: Threads
+                  - link [ref=e2902] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=e451]: Contact Uploading & Non-Users
+                  - link [ref=e2903] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=e454]: Meta Verified
+                - generic [ref=e455]:
+                  - generic [ref=e456] [cursor=pointer]:
+                    - generic [ref=e457]: English
+                    - combobox [ref=e2905]
+                  - generic [ref=e464]: © 2026 Instagram from Meta
+        - button [ref=e467] [cursor=pointer]:
+          - generic "Messages" [ref=e468]:
+            - generic [ref=e469]:
+              - img "Messages" [ref=e472]
+              - generic [ref=e475]: Messages
+            - generic [ref=e476]:
+              - button "User avatar Kenneth Vega" [ref=e478]:
+                - img "User avatar" [ref=e481]
+              - button "User avatar SAMAEL" [ref=e483]:
+                - img "User avatar" [ref=e486]
+              - button "User avatar Oldboy" [ref=e488]:
+                - img "User avatar" [ref=e491]
+  - dialog [ref=e2917]:
+    - generic [ref=e2921]:
+      - generic [ref=e2923]:
+        - heading "Followers" [level=1] [ref=e2926]
+        - button [ref=e2929] [cursor=pointer]:
+          - img "Close" [ref=e2931]
+      - generic [ref=e2935]:
+        - textbox "Search input" [active] [ref=e2936]:
+          - /placeholder: Search
+          - text: Double OG
+        - button "Clear the search box" [ref=e4668] [cursor=pointer]:
+          - img "Clear" [ref=e4669]
+      - generic [ref=e2939]:
+        - generic [ref=e4674]:
+          - button [disabled] [ref=e4680]:
+            - link [disabled] [ref=e4682] [cursor=pointer]:
+              - /url: /doubleog593/
+              - img "doubleog593's profile picture" [ref=e4683]
+          - generic [ref=e4686]:
+            - link "doubleog593" [ref=e4691] [cursor=pointer]:
+              - /url: /doubleog593/
+            - generic [ref=e4695]: 𝐃𝐨𝐮𝐛𝐥𝐞 𝐎𝐆
+          - button "Remove" [ref=e4699] [cursor=pointer]
+        - generic [ref=e4703]:
+          - button [disabled] [ref=e4709]:
+            - link [disabled] [ref=e4711] [cursor=pointer]:
+              - /url: /doubleog777/
+              - img "doubleog777's profile picture" [ref=e4712]
+          - generic [ref=e4715]:
+            - generic [ref=e4716]:
+              - link "doubleog777" [ref=e4720] [cursor=pointer]:
+                - /url: /doubleog777/
+              - generic [ref=e4724]: ·
+              - button "Follow" [ref=e4725] [cursor=pointer]
+            - generic [ref=e4728]: DOUBLE OG STUDIO
+          - button "Remove" [ref=e4732] [cursor=pointer]

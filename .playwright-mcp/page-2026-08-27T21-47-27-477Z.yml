@@ -1,0 +1,227 @@
+- generic [ref=f121e4]:
+  - generic [ref=f121e18]:
+    - generic [ref=f121e21]:
+      - link [ref=f121e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f121e31]
+      - generic [ref=f121e34]:
+        - link [ref=f121e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f121e44]
+        - link [ref=f121e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f121e54]
+        - link [ref=f121e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f121e66]
+        - link [ref=f121e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f121e77]
+        - link [ref=f121e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f121e89]
+        - link [ref=f121e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f121e100]
+        - link [ref=f121e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f121e110]
+        - link [ref=f121e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f121e122]:
+            - img "tdf.records.label's profile picture" [ref=f121e123]
+      - generic [ref=f121e124]:
+        - link [ref=f121e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f121e132]
+        - link [ref=f121e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f121e140]
+    - generic [ref=f121e143]:
+      - main [ref=f121e144]:
+        - generic [ref=f121e146]:
+          - generic [ref=f121e147]:
+            - generic [ref=f121e148]:
+              - link [ref=f121e154] [cursor=pointer]:
+                - /url: /calavery.inc/
+                - img "calavery.inc's profile picture" [ref=f121e155]
+              - generic [ref=f121e156]:
+                - generic [ref=f121e157]:
+                  - generic [ref=f121e158]:
+                    - link [ref=f121e160] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "calavery.inc" [level=2] [ref=f121e161]
+                    - button [ref=f121e163] [cursor=pointer]:
+                      - img "Options" [ref=f121e165]
+                  - generic [ref=f121e169]: Calavery Inc
+                  - generic [ref=f121e171]:
+                    - generic [ref=f121e173]:
+                      - generic [ref=f121e174]: "316"
+                      - text: posts
+                    - link "932 followers" [ref=f121e176] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f121e177]:
+                        - generic "932" [ref=f121e178]
+                        - text: followers
+                    - link "2,581 following" [ref=f121e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f121e181]:
+                        - generic [ref=f121e182]: 2,581
+                        - text: following
+                - generic [ref=f121e183]:
+                  - generic [ref=f121e184]:
+                    - generic [ref=f121e185]:
+                      - button [ref=f121e186] [cursor=pointer]:
+                        - generic [ref=f121e187]:
+                          - text: CALAVERY INCManagemet
+                          - link "@crystalpeakthrash" [ref=f121e188]:
+                            - /url: /crystalpeakthrash/
+                          - link "@cadaverous_banda.ec" [ref=f121e189]:
+                            - /url: /cadaverous_banda.ec/
+                      - generic [ref=f121e190]:
+                        - text: ...
+                        - button "more" [ref=f121e191] [cursor=pointer]
+                    - link "Threads calavery.inc" [ref=f121e195] [cursor=pointer]:
+                      - /url: https://www.threads.com/@calavery.inc?xmt=AQG0c3wCil_84rpemusgIDHJBxMo6owIJgcglxZwmLCH7BM
+                      - img "Threads" [ref=f121e197]
+                      - generic [ref=f121e199]: calavery.inc
+                  - link "Followed by rockingtheestate, categal_music + 8 more" [ref=f121e201] [cursor=pointer]:
+                    - /url: /calavery.inc/followers/mutualOnly
+                    - generic [ref=f121e203]:
+                      - generic [ref=f121e205]:
+                        - button [ref=f121e206]:
+                          - link [ref=f121e207]
+                        - button [ref=f121e208]:
+                          - link [ref=f121e209]
+                        - button [ref=f121e210]:
+                          - link [ref=f121e211]
+                      - generic [ref=f121e212]: Followed by rockingtheestate, categal_music + 8 more
+            - generic [ref=f121e217]:
+              - button "Follow Back" [ref=f121e219] [cursor=pointer]
+              - button "Message" [ref=f121e223] [cursor=pointer]
+              - button [ref=f121e225] [cursor=pointer]:
+                - img "Similar accounts" [ref=f121e227]
+            - generic:
+              - menu
+          - generic [ref=f121e230]:
+            - tablist [ref=f121e231]:
+              - link [ref=f121e233] [cursor=pointer]:
+                - /url: /calavery.inc/
+                - img "Posts" [ref=f121e235]
+              - link [ref=f121e246] [cursor=pointer]:
+                - /url: /calavery.inc/reels/
+                - img "Reels" [ref=f121e248]
+              - link [ref=f121e251] [cursor=pointer]:
+                - /url: /calavery.inc/reposts/
+                - img "Reposts" [ref=f121e253]
+              - link [ref=f121e256] [cursor=pointer]:
+                - /url: /calavery.inc/tagged/
+                - img "Tagged" [ref=f121e258]
+            - tabpanel
+          - progressbar [ref=f121e262]:
+            - img "Loading..." [ref=f121e263]
+      - contentinfo [ref=f121e276]:
+        - generic [ref=f121e277]:
+          - generic [ref=f121e279]:
+            - link "Meta" [ref=f121e281] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f121e284] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f121e287] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f121e290] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f121e293] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f121e296] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f121e299] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f121e302] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f121e305] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f121e308] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f121e311] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f121e314] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f121e317] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f121e320] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f121e323] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f121e325]:
+            - generic [ref=f121e326] [cursor=pointer]:
+              - generic [ref=f121e327]:
+                - generic [ref=f121e328]: English
+                - img "Down chevron icon" [ref=f121e331]
+              - combobox "Switch Display Language" [ref=f121e333]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f121e334]: © 2026 Instagram from Meta
+  - button [ref=f121e337] [cursor=pointer]:
+    - generic "Messages" [ref=f121e338]:
+      - generic [ref=f121e339]:
+        - img "Messages" [ref=f121e342]
+        - generic [ref=f121e345]: Messages
+      - generic [ref=f121e346]:
+        - button "User avatar Kenneth Vega" [ref=f121e348]:
+          - img "User avatar" [ref=f121e351]
+        - button "User avatar SAMAEL" [ref=f121e353]:
+          - img "User avatar" [ref=f121e356]
+        - button "User avatar Oldboy" [ref=f121e358]:
+          - img "User avatar" [ref=f121e361]

@@ -1,0 +1,246 @@
+- generic [ref=f110e4]:
+  - generic [ref=f110e18]:
+    - generic [ref=f110e21]:
+      - link [ref=f110e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f110e31]
+      - generic [ref=f110e34]:
+        - link [ref=f110e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f110e44]
+        - link [ref=f110e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f110e54]
+        - link [ref=f110e61] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f110e66]
+        - link [ref=f110e72] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f110e77]
+        - link [ref=f110e84] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f110e89]
+        - link [ref=f110e95] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f110e100]
+        - link [ref=f110e105] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f110e110]
+        - link [ref=f110e117] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f110e122]:
+            - img "tdf.records.label's profile picture" [ref=f110e123]
+      - generic [ref=f110e124]:
+        - link [ref=f110e127] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f110e132]
+        - link [ref=f110e135] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f110e140]
+    - generic [ref=f110e143]:
+      - main [ref=f110e144]:
+        - generic [ref=f110e146]:
+          - generic [ref=f110e147]:
+            - generic [ref=f110e148]:
+              - button [ref=f110e153] [cursor=pointer]:
+                - link [ref=f110e155]:
+                  - img "sophiesilvermusic's profile picture" [ref=f110e156]
+              - generic [ref=f110e157]:
+                - generic [ref=f110e158]:
+                  - generic [ref=f110e159]:
+                    - generic [ref=f110e160]:
+                      - link [ref=f110e161] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "sophiesilvermusic" [level=2] [ref=f110e162]
+                      - img "Verified" [ref=f110e165]
+                    - button [ref=f110e167] [cursor=pointer]:
+                      - img "Options" [ref=f110e169]
+                  - generic [ref=f110e173]: SOPHIE SILVER
+                  - generic [ref=f110e175]:
+                    - generic [ref=f110e177]:
+                      - generic [ref=f110e178]: "121"
+                      - text: posts
+                    - link "11.4K followers" [ref=f110e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f110e181]:
+                        - generic "11,428" [ref=f110e182]: 11.4K
+                        - text: followers
+                    - link "4,077 following" [ref=f110e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f110e185]:
+                        - generic [ref=f110e186]: 4,077
+                        - text: following
+                - generic [ref=f110e187]:
+                  - generic [ref=f110e188]:
+                    - generic [ref=f110e189]: Artist
+                    - generic [ref=f110e191]:
+                      - button [ref=f110e192] [cursor=pointer]:
+                        - generic [ref=f110e193]: DJ & ENTREPRNEUR ~ HØUSE IS HØME 🎧Multi Genre Fusion 🪩www.sophiesilvermusic.comINTERNATIONAL // ZURICH CITY🇨🇭
+                      - generic [ref=f110e194]:
+                        - text: ...
+                        - button "more" [ref=f110e195] [cursor=pointer]
+                    - generic [ref=f110e197]:
+                      - button "Link icon www.sophiesilvermusic.com and 4 more" [ref=f110e198] [cursor=pointer]:
+                        - generic [ref=f110e199]:
+                          - img "Link icon" [ref=f110e201]
+                          - generic [ref=f110e204]: www.sophiesilvermusic.com and 4 more
+                      - link "Threads sophiesilvermusic" [ref=f110e206] [cursor=pointer]:
+                        - /url: https://www.threads.com/@sophiesilvermusic?xmt=AQG0f-gExQKViEf1KCSBpryRNhdK-WBp_f-Ggj1KjPJx9tw
+                        - img "Threads" [ref=f110e208]
+                        - generic [ref=f110e210]: sophiesilvermusic
+                  - link "Followed by cali_raw.sess" [ref=f110e212] [cursor=pointer]:
+                    - /url: /sophiesilvermusic/followers/mutualOnly
+                    - generic [ref=f110e214]:
+                      - button [ref=f110e217]:
+                        - link [ref=f110e218]
+                      - generic [ref=f110e219]: Followed by cali_raw.sess
+            - generic [ref=f110e224]:
+              - button "Follow Back" [ref=f110e226] [cursor=pointer]
+              - button "Message" [ref=f110e230] [cursor=pointer]
+              - button [ref=f110e232] [cursor=pointer]:
+                - img "Similar accounts" [ref=f110e234]
+            - menu [ref=f110e238]:
+              - generic [ref=f110e240]:
+                - generic [ref=f110e242]:
+                  - status "Loading..." [ref=f110e244]
+                  - status "Loading..." [ref=f110e246]
+                - generic [ref=f110e248]:
+                  - status "Loading..." [ref=f110e250]
+                  - status "Loading..." [ref=f110e252]
+                - generic [ref=f110e254]:
+                  - status "Loading..." [ref=f110e256]
+                  - status "Loading..." [ref=f110e258]
+                - generic [ref=f110e260]:
+                  - status "Loading..." [ref=f110e262]
+                  - status "Loading..." [ref=f110e264]
+                - generic [ref=f110e266]:
+                  - status "Loading..." [ref=f110e268]
+                  - status "Loading..." [ref=f110e270]
+                - generic [ref=f110e272]:
+                  - status "Loading..." [ref=f110e274]
+                  - status "Loading..." [ref=f110e276]
+                - generic [ref=f110e278]:
+                  - status "Loading..." [ref=f110e280]
+                  - status "Loading..." [ref=f110e282]
+          - generic [ref=f110e283]:
+            - tablist [ref=f110e284]:
+              - link [ref=f110e286] [cursor=pointer]:
+                - /url: /sophiesilvermusic/
+                - img "Posts" [ref=f110e288]
+              - link [ref=f110e299] [cursor=pointer]:
+                - /url: /sophiesilvermusic/reels/
+                - img "Reels" [ref=f110e301]
+              - link [ref=f110e304] [cursor=pointer]:
+                - /url: /sophiesilvermusic/reposts/
+                - img "Reposts" [ref=f110e306]
+              - link [ref=f110e309] [cursor=pointer]:
+                - /url: /sophiesilvermusic/tagged/
+                - img "Tagged" [ref=f110e311]
+            - tabpanel
+          - progressbar [ref=f110e315]:
+            - img "Loading..." [ref=f110e316]
+      - contentinfo [ref=f110e329]:
+        - generic [ref=f110e330]:
+          - generic [ref=f110e332]:
+            - link "Meta" [ref=f110e334] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f110e337] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f110e340] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f110e343] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f110e346] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f110e349] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f110e352] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f110e355] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f110e358] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f110e361] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f110e364] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f110e367] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=f110e370] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f110e373] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f110e376] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f110e378]:
+            - generic [ref=f110e379] [cursor=pointer]:
+              - generic [ref=f110e380]:
+                - generic [ref=f110e381]: English
+                - img "Down chevron icon" [ref=f110e384]
+              - combobox "Switch Display Language" [ref=f110e386]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f110e387]: © 2026 Instagram from Meta
+  - button [ref=f110e390] [cursor=pointer]:
+    - generic "Messages" [ref=f110e391]:
+      - generic [ref=f110e392]:
+        - img "Messages" [ref=f110e395]
+        - generic [ref=f110e398]: Messages
+      - generic [ref=f110e399]:
+        - button "User avatar Kenneth Vega" [ref=f110e401]:
+          - img "User avatar" [ref=f110e404]
+        - button "User avatar SAMAEL" [ref=f110e406]:
+          - img "User avatar" [ref=f110e409]
+        - button "User avatar Oldboy" [ref=f110e411]:
+          - img "User avatar" [ref=f110e414]

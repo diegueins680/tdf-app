@@ -1,0 +1,300 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e795] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=e57]
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e67]
+      - link [ref=e798] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e803]
+      - link [ref=e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e93]
+      - link [ref=e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e103]
+      - link [ref=e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e115]:
+          - img "tdf.records.label's profile picture" [ref=e116]
+    - generic [ref=e117]:
+      - link [ref=e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e125]
+      - link [ref=e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e133]
+  - main [ref=e137]:
+    - generic [ref=e142]:
+      - navigation "Thread list" [ref=e143]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - button [ref=e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e148]
+              - img "Down chevron icon" [ref=e151]
+            - button [ref=e155] [cursor=pointer]:
+              - img "New message" [ref=e157]
+          - tablist [ref=e162]:
+            - tab "Primary" [ref=e163] [cursor=pointer]
+            - tab "General" [active] [selected] [ref=e166] [cursor=pointer]
+            - tab "From ads" [ref=e169] [cursor=pointer]
+            - tab "Requests" [ref=e173] [cursor=pointer]
+          - generic [ref=e179]:
+            - img "Search" [ref=e181]
+            - textbox "Search" [ref=e184]
+          - generic [ref=e185]:
+            - generic [ref=e279]:
+              - list [ref=e281]:
+                - listitem [ref=e282]
+                - listitem [ref=e283]:
+                  - button "Current obsession... Your note" [ref=e285] [cursor=pointer]:
+                    - generic [ref=e286]:
+                      - generic [ref=e287]: Current obsession...
+                      - generic [ref=e293]:
+                        - link [ref=e295]
+                        - generic [ref=e296]: Your note
+                - listitem [ref=e298]:
+                  - button "Vive la Revolution⛱️ oximoron_tu_tentaculo's profile picture Tentáculos" [ref=e301] [cursor=pointer]:
+                    - generic [ref=e302]:
+                      - generic [ref=e303]: Vive la Revolution⛱️
+                      - generic [ref=e310]:
+                        - link [ref=e312]:
+                          - img "oximoron_tu_tentaculo's profile picture" [ref=e313]
+                        - generic [ref=e314]: Tentáculos
+                - listitem [ref=e317]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Jungla Insaciable Sarcoma joelduenasc's profile picture Joel Dueñas" [ref=e320] [cursor=pointer]:
+                    - generic [ref=e321]:
+                      - generic [ref=e327]:
+                        - generic [ref=e328]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e330]
+                          - generic [ref=e334]: Jungla Insaciable
+                        - generic [ref=e335]: Sarcoma
+                      - generic [ref=e336]:
+                        - link [ref=e338]:
+                          - img "joelduenasc's profile picture" [ref=e339]
+                        - generic [ref=e340]: Joel Dueñas
+                - listitem [ref=e343]:
+                  - button "⚡ aurea.infinita's profile picture Áurea - Terapeuta Holística" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]:
+                      - generic [ref=e348]: ⚡
+                      - generic [ref=e355]:
+                        - link [ref=e357]:
+                          - img "aurea.infinita's profile picture" [ref=e358]
+                        - generic [ref=e359]: Áurea - Terapeuta Holística
+                - listitem [ref=e362]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Back to School (Mini Maggit) Explicit Deftones charlievh_music's profile picture Charlie Villagómez Hebel" [ref=e365] [cursor=pointer]:
+                    - generic [ref=e366]:
+                      - generic [ref=e372]:
+                        - generic [ref=e373]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e375]
+                          - generic [ref=e379]: Back to School (Mini Maggit)
+                          - img "Explicit" [ref=e381]
+                        - generic [ref=e383]: Deftones
+                      - generic [ref=e384]:
+                        - link [ref=e386]:
+                          - img "charlievh_music's profile picture" [ref=e387]
+                        - generic [ref=e388]: Charlie Villagómez Hebel
+                - listitem [ref=e391]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner 1537 Guardarraya litzi_vitzi's profile picture litzi" [ref=e394] [cursor=pointer]:
+                    - generic [ref=e395]:
+                      - generic [ref=e401]:
+                        - generic [ref=e402]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e404]
+                          - generic [ref=e408]: "1537"
+                        - generic [ref=e409]: Guardarraya
+                      - generic [ref=e410]:
+                        - link [ref=e412]:
+                          - img "litzi_vitzi's profile picture" [ref=e413]
+                        - generic [ref=e414]: litzi
+                - listitem [ref=e417]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Las cosas que no se tocan Intoxicados saraking30's profile picture Sara King" [ref=e420] [cursor=pointer]:
+                    - generic [ref=e421]:
+                      - generic [ref=e427]:
+                        - generic [ref=e428]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e430]
+                          - generic [ref=e434]: Las cosas que no se tocan
+                        - generic [ref=e435]: Intoxicados
+                      - generic [ref=e436]:
+                        - link [ref=e438]:
+                          - img "saraking30's profile picture" [ref=e439]
+                        - generic [ref=e440]: Sara King
+                - listitem [ref=e443]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Kandela Explicit Jasari jasarimusic's profile picture JASARI🇵🇷" [ref=e446] [cursor=pointer]:
+                    - generic [ref=e447]:
+                      - generic [ref=e453]:
+                        - generic [ref=e454]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e456]
+                          - generic [ref=e460]: Kandela
+                          - img "Explicit" [ref=e462]
+                        - generic [ref=e464]: Jasari
+                      - generic [ref=e465]:
+                        - link [ref=e467]:
+                          - img "jasarimusic's profile picture" [ref=e468]
+                        - generic [ref=e469]: JASARI🇵🇷
+                - listitem [ref=e472]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Centro MIEL Spoiler hakanstagram_'s profile picture DanielCG / Productoraudiovisual 🇪🇨" [ref=e475] [cursor=pointer]:
+                    - generic [ref=e476]:
+                      - generic [ref=e482]:
+                        - generic [ref=e483]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=e485]
+                          - generic [ref=e489]: Centro
+                        - generic [ref=e490]: MIEL
+                        - generic [ref=e491]: Spoiler
+                      - generic [ref=e492]:
+                        - link [ref=e494]:
+                          - img "hakanstagram_'s profile picture" [ref=e495]
+                        - generic [ref=e496]: DanielCG / Productoraudiovisual 🇪🇨
+              - button "Next" [ref=e499] [cursor=pointer]
+            - generic [ref=e502]:
+              - button "user-profile-picture Instagram User Liked a message a year ago" [ref=e1210] [cursor=pointer]:
+                - generic [ref=e1212]:
+                  - img "user-profile-picture" [ref=e1216]
+                  - generic [ref=e1219]:
+                    - generic [ref=e1220]: Instagram User
+                    - generic [ref=e1226]:
+                      - generic [ref=e1227]: Liked a message
+                      - generic [ref=e1229]:
+                        - generic [ref=e1230]: ·
+                        - generic "a year ago" [ref=e1235]: 1y
+              - button "user-profile-picture Jofiel.arch.music Liked a message a year ago" [ref=e1239] [cursor=pointer]:
+                - generic [ref=e1241]:
+                  - img "user-profile-picture" [ref=e1245]
+                  - generic [ref=e1248]:
+                    - generic [ref=e1249]: Jofiel.arch.music
+                    - generic [ref=e1255]:
+                      - generic [ref=e1256]: Liked a message
+                      - generic [ref=e1258]:
+                        - generic [ref=e1259]: ·
+                        - generic "a year ago" [ref=e1264]: 1y
+              - button "user-profile-picture Everaldho Everaldho sent an attachment. a year ago" [ref=e1268] [cursor=pointer]:
+                - generic [ref=e1270]:
+                  - img "user-profile-picture" [ref=e1274]
+                  - generic [ref=e1277]:
+                    - generic [ref=e1278]: Everaldho
+                    - generic [ref=e1284]:
+                      - generic [ref=e1285]: Everaldho sent an attachment.
+                      - generic [ref=e1287]:
+                        - generic [ref=e1288]: ·
+                        - generic "a year ago" [ref=e1293]: 1y
+              - 'button "user-profile-picture Renato Goyes García You: Primero empiezas con teoría obvio jeje a year ago" [ref=e1297] [cursor=pointer]':
+                - generic [ref=e1299]:
+                  - img "user-profile-picture" [ref=e1303]
+                  - generic [ref=e1306]:
+                    - generic [ref=e1307]: Renato Goyes García
+                    - generic [ref=e1313]:
+                      - generic [ref=e1314]: "You: Primero empiezas con teoría obvio jeje"
+                      - generic [ref=e1316]:
+                        - generic [ref=e1317]: ·
+                        - generic "a year ago" [ref=e1322]: 1y
+              - button "user-profile-picture Diego Jaramillo Diego sent an attachment. a year ago" [ref=e1326] [cursor=pointer]:
+                - generic [ref=e1328]:
+                  - img "user-profile-picture" [ref=e1332]
+                  - generic [ref=e1335]:
+                    - generic [ref=e1336]: Diego Jaramillo
+                    - generic [ref=e1342]:
+                      - generic [ref=e1343]: Diego sent an attachment.
+                      - generic [ref=e1345]:
+                        - generic [ref=e1346]: ·
+                        - generic "a year ago" [ref=e1351]: 1y
+              - button "user-profile-picture Julio DÍaz Julio sent an attachment. a year ago" [ref=e1355] [cursor=pointer]:
+                - generic [ref=e1357]:
+                  - img "user-profile-picture" [ref=e1361]
+                  - generic [ref=e1364]:
+                    - generic [ref=e1365]: Julio DÍaz
+                    - generic [ref=e1371]:
+                      - generic [ref=e1372]: Julio sent an attachment.
+                      - generic [ref=e1374]:
+                        - generic [ref=e1375]: ·
+                        - generic "a year ago" [ref=e1380]: 1y
+              - button "user-profile-picture WE ARE MOVING GATHERING WE sent an attachment. 2 years ago" [ref=e1384] [cursor=pointer]:
+                - generic [ref=e1386]:
+                  - img "user-profile-picture" [ref=e1390]
+                  - generic [ref=e1393]:
+                    - generic [ref=e1394]: WE ARE MOVING GATHERING
+                    - generic [ref=e1400]:
+                      - generic [ref=e1401]: WE sent an attachment.
+                      - generic [ref=e1403]:
+                        - generic [ref=e1404]: ·
+                        - generic "2 years ago" [ref=e1409]: 2y
+              - button "user-profile-picture Labii Labii sent an attachment. 2 years ago" [ref=e1413] [cursor=pointer]:
+                - generic [ref=e1415]:
+                  - img "user-profile-picture" [ref=e1419]
+                  - generic [ref=e1422]:
+                    - generic [ref=e1423]: Labii
+                    - generic [ref=e1429]:
+                      - generic [ref=e1430]: Labii sent an attachment.
+                      - generic [ref=e1432]:
+                        - generic [ref=e1433]: ·
+                        - generic "2 years ago" [ref=e1438]: 2y
+              - button [ref=e761] [cursor=pointer]:
+                - generic [ref=e763]:
+                  - status "Loading..." [ref=e766]
+                  - generic [ref=e769]:
+                    - status "Loading..." [ref=e771]
+                    - status "Loading..." [ref=e773]
+      - generic [ref=e1083]:
+        - generic [ref=e1087]:
+          - link "Open the profile page of lareservauio" [ref=e1088] [cursor=pointer]:
+            - /url: /lareservauio/
+            - generic [ref=e1089]:
+              - img "user-profile-picture" [ref=e1093]
+              - generic [ref=e1094]:
+                - heading "LA RESERVA" [level=2] [ref=e1096]
+                - generic [ref=e1098]: lareservauio
+          - generic [ref=e1102]:
+            - button [ref=e1103] [cursor=pointer]:
+              - img "Audio call" [ref=e1105]
+            - button [ref=e1107] [cursor=pointer]:
+              - img "Video call" [ref=e1109]
+            - button [ref=e1112] [cursor=pointer]:
+              - img "Conversation information" [ref=e1114]
+        - generic [ref=e1118]:
+          - generic [ref=e1122]:
+            - generic [ref=e1123]:
+              - img "user-profile-picture" [ref=e1127]
+              - generic [ref=e1128]:
+                - heading "LA RESERVA" [level=2] [ref=e1131]
+                - generic [ref=e1133]: lareservauio · Instagram
+                - link "View profile" [ref=e1136] [cursor=pointer]:
+                  - /url: /lareservauio/
+            - generic [ref=e1140]:
+              - generic [ref=e1141]: Wed 1:17 PM
+              - group [ref=e1144]:
+                - generic [ref=e1145]:
+                  - generic [ref=e1149]:
+                    - generic [ref=e1152]:
+                      - text: Hola, La Reserva
+                      - img "👋" [ref=e1154]
+                      - text: "Vimos cómo sostienen una agenda activa de música en vivo, electrónica y cultura desde sus espacios en Quito. En TDF estamos construyendo una comunidad para conectar espacios, artistas, productores y públicos, mostrar proyectos y activar colaboraciones. Pueden conocerla aquí:"
+                      - link "https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio" [ref=e1156] [cursor=pointer]:
+                        - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio
+                      - text: Si la prueban, nos gustaría saber qué herramientas les servirían para mover agenda, artistas y alianzas. — TDF Records
+                    - link "TDF Records" [ref=e1157] [cursor=pointer]:
+                      - /url: https://tdf-app.pages.dev/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto_quito&utm_content=b_lareservauio
+                  - button "🤘🏻" [ref=e1163] [cursor=pointer]
+          - generic [ref=e1175]:
+            - button [ref=e1178] [cursor=pointer]:
+              - img "Choose an emoji" [ref=e1180]
+            - generic [ref=e1182]:
+              - textbox [ref=e1183]:
+                - paragraph [ref=e1184]
+              - generic: Message...
+            - generic [ref=e1185]:
+              - button [ref=e1186] [cursor=pointer]:
+                - img "Voice Clip" [ref=e1188]
+              - button [ref=e1191] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=e1193]
+              - button [ref=e1198] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=e1200]

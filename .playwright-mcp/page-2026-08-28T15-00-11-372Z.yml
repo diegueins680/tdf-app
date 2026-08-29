@@ -1,0 +1,423 @@
+- generic [ref=e4]:
+  - generic [ref=e18]:
+    - generic [ref=e21]:
+      - link [ref=e5973] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=e5974]
+      - generic [ref=e34]:
+        - link [ref=e5975] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=e5976]
+        - link [ref=e5977] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=e5978]
+        - link [ref=e5979] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=e64]:
+            - img "Messages" [ref=e5980]
+            - generic "Direct messaging - 1 new notification link" [ref=e5981]: "1"
+        - link [ref=e5982] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=e5983]
+        - link [ref=e5985] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=e5990]
+        - link [ref=e5992] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=e5993]
+        - link [ref=e5994] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=e5995]
+        - link [ref=e5996] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=e5997]:
+            - img "tdf.records.label's profile picture" [ref=e5998]
+      - generic [ref=e125]:
+        - link [ref=e5999] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=e6000]
+        - link [ref=e6001] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=e6002]
+    - generic [ref=e144]:
+      - main [ref=e145]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - generic [ref=e149]:
+              - generic [ref=e153]:
+                - button "Note..." [ref=e6003] [cursor=pointer]
+                - button [ref=e6004] [cursor=pointer]:
+                  - img "Change profile photo" [ref=e6005]
+              - generic [ref=e168]:
+                - generic [ref=e169]:
+                  - generic [ref=e170]:
+                    - link [ref=e6006] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "tdf.records.label" [level=2] [ref=e6007]
+                    - button [ref=e6008] [cursor=pointer]:
+                      - img "Options" [ref=e6009]
+                  - generic [ref=e180]: TDF Records
+                  - generic [ref=e182]:
+                    - generic [ref=e184]:
+                      - generic [ref=e185]: "338"
+                      - text: posts
+                    - link "4,076 followers" [active] [ref=e6010] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e188]:
+                        - generic "4,076" [ref=e6011]
+                        - text: followers
+                    - link "1,932 following" [ref=e6012] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e192]:
+                        - generic [ref=e193]: 1,932
+                        - text: following
+                - generic [ref=e195]:
+                  - generic [ref=e196]: Entrepreneur
+                  - generic [ref=e198]:
+                    - button [ref=e6013] [cursor=pointer]:
+                      - generic [ref=e200]: ⏺️ Estudio de grabación🎹 Renta de equipos🎛️ Mezcla y mastering🖥️ Edición🎸
+                    - generic [ref=e201]:
+                      - text: ...
+                      - button "more" [ref=e6014] [cursor=pointer]
+                  - heading "Félix Oralabal y calle C, Quito, Ecuador 170510" [level=1] [ref=e6015]
+                  - generic [ref=e205]:
+                    - generic [ref=e206]:
+                      - img "Link icon" [ref=e6016]
+                      - link "linktr.ee/tdfestudiodegrabacion" [ref=e6017] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ftdfestudiodegrabacion%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAcGRvZgJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacxhde9awX198byYnNd41FF--LfkhEwKcmrkBZnRovt4arwvgCgD__rWg1bGA_aem_91doeOlOmIa-RLa8qmrlZQ&e=AUA7vCCufmj6mz8TjlKdFOGl-GwJceKILDfrXqRpfM_lG2GS0GiCWm7O-qSj-DuQkCm9YZUUc6OeyIrJZTf9HczICUW3TAbv4N2MiACXEhHL8CzMqz2papeHbpBErc1xbp7B1BgL_EsK
+                    - link "Threads tdf.records.label" [ref=e6018] [cursor=pointer]:
+                      - /url: https://www.threads.com/@tdf.records.label?xmt=AQG0f8ZLKq9QfISAOQymL6bEHFm0Fcu6FeVNSOBFSArSow8
+                      - img "Threads" [ref=e6019]
+                      - generic [ref=e219]: tdf.records.label
+            - generic [ref=e225]:
+              - link "Edit profile" [ref=e6020] [cursor=pointer]:
+                - /url: /accounts/edit/
+              - link "View archive" [ref=e6021] [cursor=pointer]:
+                - /url: /archive/stories/
+            - menu [ref=e231]:
+              - list [ref=e235]:
+                - listitem [ref=e236]
+                - listitem [ref=e237]
+                - listitem [ref=e238]:
+                  - link "View Tour Colombia highlight" [ref=e6022] [cursor=pointer]:
+                    - /url: /stories/highlights/18020134514197304/
+                    - button "tdf.records.label's highlight story picture Tour Colombia" [ref=e6023]:
+                      - button [ref=e6024]:
+                        - img "tdf.records.label's highlight story picture" [ref=e6025]
+                      - generic [ref=e247]: Tour Colombia
+                - listitem [ref=e250]:
+                  - link "View G U E S T S highlight" [ref=e6026] [cursor=pointer]:
+                    - /url: /stories/highlights/18029198257359774/
+                    - button "tdf.records.label's highlight story picture G U E S T S" [ref=e6027]:
+                      - button [ref=e6028]:
+                        - img "tdf.records.label's highlight story picture" [ref=e6029]
+                      - generic [ref=e259]: G U E S T S
+                - listitem [ref=e262]:
+                  - link "View S Y N T H S highlight" [ref=e6030] [cursor=pointer]:
+                    - /url: /stories/highlights/18200542021155753/
+                    - button "tdf.records.label's highlight story picture S Y N T H S" [ref=e6031]:
+                      - button [ref=e6032]:
+                        - img "tdf.records.label's highlight story picture" [ref=e6033]
+                      - generic [ref=e271]: S Y N T H S
+                - listitem [ref=e274]:
+                  - link "View E S T U D I O highlight" [ref=e6034] [cursor=pointer]:
+                    - /url: /stories/highlights/17928456047228438/
+                    - button "tdf.records.label's highlight story picture E S T U D I O" [ref=e6035]:
+                      - button [ref=e6036]:
+                        - img "tdf.records.label's highlight story picture" [ref=e6037]
+                      - generic [ref=e283]: E S T U D I O
+                - listitem [ref=e286]:
+                  - button "Plus icon New" [ref=e6038] [cursor=pointer]:
+                    - img "Plus icon" [ref=e6039]
+                    - generic [ref=e295]: New
+          - generic [ref=e298]:
+            - tablist [ref=e299]:
+              - link [ref=e6040] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - img "Posts" [ref=e6041]
+              - link [ref=e6042] [cursor=pointer]:
+                - /url: /tdf.records.label/reels/
+                - img "Reels" [ref=e6043]
+              - link [ref=e6044] [cursor=pointer]:
+                - /url: /tdf.records.label/saved/
+                - img "Saved" [ref=e6045]
+              - link [ref=e6046] [cursor=pointer]:
+                - /url: /tdf.records.label/reposts/
+                - img "Reposts" [ref=e6047]
+              - link [ref=e6048] [cursor=pointer]:
+                - /url: /tdf.records.label/tagged/
+                - img "Tagged" [ref=e6049]
+            - tabpanel
+          - generic [ref=e330]:
+            - generic [ref=e331]:
+              - link [ref=e6050] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DRnkzyTjlVD/
+                - img "Photo by TDF Records on November 28, 2025." [ref=e6051]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=e6052] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DRihKjAEVSV/
+                - img "Photo by TDF Records on November 26, 2025." [ref=e6053]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=e6054] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DRdPZsqErwy/
+                - img "Photo by TDF Records on November 24, 2025." [ref=e6055]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=e6056] [cursor=pointer]:
+                - /url: /juano_music/reel/DXPB2bjDn-E/
+                - 'img "🌙 LUNE VOCAL – Juan Ledesma & Diego Saa Una experiencia sonora que conecta lo emocional con la pista de baile. Lune Vocal es un viaje dentro del house, donde las atmósferas envolventes, vocales hipnóticas y grooves elegantes se fusionan para crear una vibra única y profunda. Perfecto para quienes sienten la música más allá del ritmo. Este lanzamiento representa la esencia del sonido moderno del house: minimalista, energético y con alma. 🎧 Disponible ya en todas las plataformas digitales 📀 Release oficial por TDF Records #LuneVocal #JuanLedesma #DiegoSaa #TDFRecords #HouseMusic DeepHouse TechHouse ElectronicMusic NewMusic NowPlaying MusicRelease UndergroundHouse HouseVibes DJLife ProducerLife ClubMusic DanceMusic SpotifyMusic AppleMusic Beatport SoundCloud ElectronicVibes MusicLovers GlobalHouse ReleaseDay" [ref=e6057]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=e356]:
+              - link [ref=e6058] [cursor=pointer]:
+                - /url: /blackpalacio_music/p/DV_V39QjlPa/
+                - img "Photo shared by BlackPalacio on March 17, 2026 tagging @kenihosik9, @juandiegoillescas, @gosh88c, @0iego.saa, @tdf.records.label, and @santi.agocobo." [ref=e6059]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6060] [cursor=pointer]:
+                - /url: /takijanaskaec/reel/DUqPOqfjqsS/
+                - img "🎙️✨ ¡De vuelta al estudio después de varios años! Para nosotros, como Takijana, es una felicidad enorme regresar a la escena con más fuerza, más pasión y con el amor por la música latiendo más fuerte que nunca. Esto recién comienza… 👀🔥 Atentos, que se vienen grandes noticias. 🎶🚀" [ref=e6061]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e6062] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DRS8IbTErRQ/
+                - 'img "¿Están listos? ☠️ Este domingo, 7PM estrenamos una edición especial de las TDF Sessions, con @holger.quinonez.banda 💥 https://www.youtube.com/watch?v=9387ent0ELc No digan que no les avisamos. #tdfsessions" [ref=e6063]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e6064] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DRNzpZQEWh6/
+                - 'img "Algo así fue grabar una sesión con @holger.quinonez.banda 😜 Ese domingo, 7pm sale la sesión completa. ¡Pilas ahí! Comparte 🔁 y pasa la voz 🗣️ #MakingOf #TdfSessions" [ref=e6065]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=e381]:
+              - link [ref=e6066] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DRI0l18ET7U/
+                - img "Photo by TDF Records on November 16, 2025." [ref=e6067]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6068] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DQS1u8bkdTB/
+                - img "Photo by TDF Records on October 26, 2025." [ref=e6069]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6070] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DQMt-XpEelT/
+                - img "Photo by TDF Records on October 24, 2025." [ref=e6071]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6072] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DQIXj-YkV37/
+                - img "Photo by TDF Records on October 22, 2025." [ref=e6073]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=e2170]:
+              - link [ref=e6074] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DQApo7ikWYD/
+                - img "Todo gran productor empezó con una idea… y el lugar correcto para hacerlo realidad. En TDF te ayudamos a transformar tus ideas en música con Ableton Live. 12 clases prácticas, personalizadas y llenas de flow. 🎵 Este es tu momento de sonar. 👉 Ven y toma tu clase de prueba gratuita." [ref=e6075]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e6076] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DP48UT9Ee4F/
+                - img "🎶 Este domingo prepárate para una nueva TDF Sessions junto a Categal. Una noche de pura energía y talento nacional 💥 No te la pierdas a las 7:00pm en nuestro canal de YouTube. 👉 Activa el recordatorio y vive la sesión completa." [ref=e6077]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e6078] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DP2S_fukXiE/
+                - img "Photo by TDF Records on October 15, 2025." [ref=e6079]
+              - link [ref=e6080] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPunBwHEaWX/
+                - img "Photo shared by TDF Records on October 12, 2025 tagging @losmorrison.band." [ref=e6081]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=e2195]:
+              - link [ref=e6082] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPmnDt6Evbg/
+                - img "Photo shared by TDF Records on October 09, 2025 tagging @losmorrison.band." [ref=e6083]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6084] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPfFLzpErB4/
+                - img "Photo shared by TDF Records on October 06, 2025 tagging @edi__sound, @natvmusique, @losmorrison.band, and @r3tal__." [ref=e6085]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6086] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DPSamaeEeKY/
+                - img "Este domingo estrenamos una nueva TDF Sessions 🎶🔥 Los invitados son nada menos que Los Morrison, trayendo toda su magia al estudio. 👉 Mira la sesión completa en nuestro canal de YouTube, link en bio." [ref=e6087]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e6088] [cursor=pointer]:
+                - /url: /tdf.records.label/reel/DPPle33kRVe/
+                - img "Se viene la tercera sesión. Este domingo 7pm en nuestro canal de YouTube. ¿Adivinas quiénes son? 👀🎶" [ref=e6089]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=e2220]:
+              - link [ref=e6090] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPKYD5CEdg4/
+                - img "Photo by TDF Records on September 28, 2025." [ref=e6091]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6092] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPH_HlTkYbI/
+                - img "Photo by TDF Records on September 27, 2025." [ref=e6093]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6094] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DPCtZm3EXCH/
+                - img "Photo by TDF Records on September 25, 2025." [ref=e6095]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e6096] [cursor=pointer]:
+                - /url: /tdf.records.label/p/DO9kB-Ckaul/
+                - img "Photo shared by TDF Records on September 23, 2025 tagging @rudie_by_design, @losbarrelshots, @maialuaespinosa, @carloscarrillotoro, and @quitoskasociety." [ref=e6097]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=e406]:
+        - generic [ref=e407]:
+          - generic [ref=e409]:
+            - link "Meta" [ref=e6098] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e6099] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e6100] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e6101] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e6102] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e6103] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e6104] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e6105] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e6106] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e6107] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e6108] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e6109] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Threads" [ref=e6110] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e6111] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e6112] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e455]:
+            - generic [ref=e456] [cursor=pointer]:
+              - generic [ref=e457]:
+                - generic [ref=e458]: English
+                - img "Down chevron icon" [ref=e6113]
+              - combobox "Switch Display Language" [ref=e6114]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e464]: © 2026 Instagram from Meta
+  - button [ref=e5968] [cursor=pointer]:
+    - generic "Messages - 1 new notification" [ref=e5969]:
+      - generic [ref=e469]:
+        - generic [ref=e471]:
+          - img "Messages" [ref=e472]
+          - generic "Direct messaging - 1 new notification link" [ref=e5970]: "1"
+        - generic [ref=e475]: Messages
+      - button "User avatar Oldboy" [ref=e488]:
+        - img "User avatar" [ref=e491]
