@@ -17,6 +17,7 @@ import Data.Aeson (ToJSON, Value(..), encode, object, (.=))
 import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.ByteString.Lazy as BL
 import Data.Char (isControl)
+import Data.Int (Int64)
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -48,7 +49,7 @@ jsonRows statement params = do
   pure [CMS.unAesonValue value | Single value <- rows]
 
 reviewsPublicServer :: ServerT ReviewsPublicAPI AppM
-reviewsPublicServer = listPublicReviews
+reviewsPublicServer = getPublicReputation :<|> listPublicReviews
 
 reviewsProtectedServer :: AuthedUser -> ServerT ReviewsProtectedAPI AppM
 reviewsProtectedServer user =
@@ -77,6 +78,28 @@ listPublicReviews rawTargetKind rawTargetId cursor requestedLimit = do
     , items = visible
     , nextCursor = next
     }
+
+-- Public projection intentionally contains aggregates only. It never joins
+-- evaluation, ranking or private interaction evidence.
+getPublicReputation :: Int64 -> AppM Value
+getPublicReputation partyId = do
+  exists <- jsonRows "SELECT to_jsonb(TRUE) FROM party WHERE id=?" [PersistInt64 partyId]
+  when (null exists) (throwError err404 {errBody = "profile not found"})
+  result <- jsonRows
+    ( "SELECT jsonb_build_object('partyId',?::bigint,'formulaVersion','public-bayes-roc-v1',"
+   <> "'status',CASE WHEN coalesce(sum(aggregate.verified_count),0)<3 THEN 'forming' ELSE 'published' END,"
+   <> "'verifiedInteractions',coalesce(sum(aggregate.verified_count),0),"
+   <> "'score',CASE WHEN coalesce(sum(aggregate.verified_count),0)<3 THEN NULL "
+   <> "ELSE round(sum(aggregate.score*aggregate.verified_count)/nullif(sum(aggregate.verified_count),0),2) END,"
+   <> "'confidence',coalesce(max(aggregate.confidence),'forming'),"
+   <> "'categories',coalesce(jsonb_agg(jsonb_build_object('slug',category.slug,'score',aggregate.score,"
+   <> "'lowerBound',aggregate.lower_bound,'upperBound',aggregate.upper_bound,'verifiedCount',aggregate.verified_count,"
+   <> "'confidence',aggregate.confidence) ORDER BY category.default_position) "
+   <> "FILTER (WHERE category.id IS NOT NULL),'[]'::jsonb)) "
+   <> "FROM reputation_public_aggregate aggregate JOIN reputation_category category ON category.id=aggregate.category_id "
+   <> "WHERE aggregate.subject_party_id=? AND aggregate.formula_version_id='public-bayes-roc-v1'" )
+    [PersistInt64 partyId, PersistInt64 partyId]
+  pure (fromMaybe (object ["partyId" .= partyId, "status" .= ("forming" :: Text), "categories" .= ([] :: [Value])]) (listToMaybe result))
 
 publicReviewPageSql :: Text
 publicReviewPageSql =

@@ -87,6 +87,7 @@ import TDF.API.WhatsApp
       validateLeadCompletionRequest,
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
+import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
@@ -786,6 +787,24 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "contextual reputation formula v1" $ do
+        it "uses deterministic ROC weights that total exactly 100" $ do
+            let weights = rankOrderCentroid 5
+            sum weights `shouldBe` 100
+            and (zipWith (>=) weights (drop 1 weights)) `shouldBe` True
+
+        it "normalizes advanced weights without breaking declared priority" $ do
+            normalizeManualWeights [4, 3, 2, 1] `shouldBe` Right [40, 30, 20, 10]
+            normalizeManualWeights [1, 2] `shouldBe` Left "weights must respect category priority"
+
+        it "shrinks sparse public evidence to the documented prior" $ do
+            publicScore 8 50 [] `shouldBe` 50
+            publicScore 8 50 [100] `shouldBe` (500 / 9)
+            confidenceFor 2 `shouldBe` Forming
+            confidenceFor 3 `shouldBe` Low
+            confidenceFor 8 `shouldBe` Moderate
+            confidenceFor 25 `shouldBe` High
+
     describe "public upcoming event pagination" $ do
         it "continues past filtered pages until the requested limit is filled" $ do
             let candidates = [1 .. 8 :: Int]

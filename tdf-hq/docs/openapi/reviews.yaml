@@ -1,6 +1,19 @@
 openapi: 3.0.0
 info: { title: TDF Verified Reviews API, version: 1.0.0 }
 paths:
+  /reputation/profiles/{partyId}:
+    get:
+      tags: [Contextual reputation]
+      operationId: getPublicReputation
+      summary: Get aggregated public reputation without evaluator identities
+      security: []
+      parameters:
+        - { name: partyId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Aggregate public reputation, or a formation state below the sample threshold
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicReputation' } } }
+        '404': { description: Profile not found }
   /reviews/{targetKind}/{targetId}:
     get:
       tags: [Verified reviews]
@@ -67,6 +80,30 @@ components:
       required: true
       schema: { type: string }
   schemas:
+    PublicReputation:
+      type: object
+      additionalProperties: false
+      required: [partyId, formulaVersion, status, verifiedInteractions, confidence, categories]
+      properties:
+        partyId: { type: integer, format: int64 }
+        formulaVersion: { type: string }
+        status: { type: string, enum: [forming, published] }
+        score: { type: number, minimum: 0, maximum: 100, nullable: true }
+        verifiedInteractions: { type: integer, minimum: 0 }
+        confidence: { type: string, enum: [forming, low, moderate, high] }
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [slug, score, lowerBound, upperBound, verifiedCount, confidence]
+            properties:
+              slug: { type: string }
+              score: { type: number, minimum: 0, maximum: 100 }
+              lowerBound: { type: number, minimum: 0, maximum: 100 }
+              upperBound: { type: number, minimum: 0, maximum: 100 }
+              verifiedCount: { type: integer, minimum: 0 }
+              confidence: { type: string, enum: [forming, low, moderate, high] }
     ExperienceReviewTargetKind:
       type: string
       enum: [event, marketplace_listing, service_offering, service_package]

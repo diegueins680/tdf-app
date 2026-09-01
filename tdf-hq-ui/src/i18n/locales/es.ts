@@ -8,6 +8,9 @@ const es = {
     saved: 'Preferencias guardadas.',
     error: 'Ocurrió un error.',
   },
+  contextualRanking: {
+    saveDraft: 'Guardar borrador',
+  },
   pipelines: {
     title: 'Pipelines',
     subtitle: 'Gestiona proyectos de {{workflow}}',

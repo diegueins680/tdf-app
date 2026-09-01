@@ -4889,6 +4889,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reputation/profiles/{partyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get aggregated public reputation without evaluator identities */
+        get: operations["getPublicReputation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/eligibility": {
         parameters: {
             query?: never;
@@ -10034,6 +10051,26 @@ export interface components {
             items: components["schemas"]["PublicExperienceReview"][];
             /** Format: uuid */
             nextCursor?: string | null;
+        };
+        PublicReputation: {
+            /** Format: int64 */
+            partyId: number;
+            formulaVersion: string;
+            /** @enum {string} */
+            status: "forming" | "published";
+            score?: number | null;
+            verifiedInteractions: number;
+            /** @enum {string} */
+            confidence: "forming" | "low" | "moderate" | "high";
+            categories: {
+                slug: string;
+                score: number;
+                lowerBound: number;
+                upperBound: number;
+                verifiedCount: number;
+                /** @enum {string} */
+                confidence: "forming" | "low" | "moderate" | "high";
+            }[];
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -19658,6 +19695,35 @@ export interface operations {
                 content?: never;
             };
             /** @description Review target not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getPublicReputation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                partyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Aggregate public reputation, or a formation state below the sample threshold */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicReputation"];
+                };
+            };
+            /** @description Profile not found */
             404: {
                 headers: {
                     [name: string]: unknown;
