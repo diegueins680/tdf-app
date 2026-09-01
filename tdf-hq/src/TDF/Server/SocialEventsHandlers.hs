@@ -8504,85 +8504,88 @@ loadEventArtistsByEvent [] = pure (Right Map.empty)
 loadEventArtistsByEvent eventKeys = do
     artistLinks <- selectList [EventArtistEventId <-. eventKeys] []
     let artistKeys = nub (map (eventArtistArtistId . entityVal) artistLinks)
-    artistRows <- selectList [ArtistProfileId <-. artistKeys] []
-    membershipRows <-
-        selectList
-            [ArtistGenreMembershipArtistId <-. artistKeys]
-            [Asc ArtistGenreMembershipSortOrder]
-    legacyGenreRows <- selectList [ArtistGenreArtistId <-. artistKeys] []
-    let membershipGenreIds =
-            nub (map (artistGenreMembershipGenreId . entityVal) membershipRows)
-    genreRows <-
-        if null membershipGenreIds
-            then pure []
-            else
+    if null artistKeys
+        then pure (Right Map.empty)
+        else do
+            artistRows <- selectList [ArtistProfileId <-. artistKeys] []
+            membershipRows <-
                 selectList
-                    [Catalog.GenreId <-. map Catalog.GenreKey membershipGenreIds]
-                    []
-    let artistsById =
-            Map.fromList
-                [ (artistKey, artistRow)
-                | Entity artistKey artistRow <- artistRows
-                ]
-        membershipsByArtist =
-            Map.fromListWith (flip (++))
-                [ (artistGenreMembershipArtistId membership, [membership])
-                | Entity _ membership <- membershipRows
-                ]
-        legacyGenresByArtist =
-            Map.fromListWith (flip (++))
-                [ (artistGenreArtistId legacyGenre, [legacyGenreEntity])
-                | legacyGenreEntity@(Entity _ legacyGenre) <- legacyGenreRows
-                ]
-        genresById =
-            Map.fromList
-                [ (genreId, genre)
-                | Entity (Catalog.GenreKey genreId) genre <- genreRows
-                ]
-        artistDTOResultById =
-            Map.fromList
-                [ (artistKey, artistDTOFor artistKey)
-                | artistKey <- artistKeys
-                ]
-        artistDTOFor artistKey =
-            case Map.lookup artistKey artistsById of
-                Nothing -> Right unknownArtistDTO
-                Just artist ->
-                    let memberships =
-                            Map.findWithDefault [] artistKey membershipsByArtist
-                        availableMemberships =
-                            mapMaybe
-                                ( \membership -> do
-                                    genre <-
-                                        Map.lookup
-                                            (artistGenreMembershipGenreId membership)
-                                            genresById
-                                    pure
-                                        ( artistGenreMembershipGenreId membership
-                                        , Catalog.genreNameEs genre
+                    [ArtistGenreMembershipArtistId <-. artistKeys]
+                    [Asc ArtistGenreMembershipSortOrder]
+            legacyGenreRows <- selectList [ArtistGenreArtistId <-. artistKeys] []
+            let membershipGenreIds =
+                    nub (map (artistGenreMembershipGenreId . entityVal) membershipRows)
+            genreRows <-
+                if null membershipGenreIds
+                    then pure []
+                    else
+                        selectList
+                            [Catalog.GenreId <-. map Catalog.GenreKey membershipGenreIds]
+                            []
+            let artistsById =
+                    Map.fromList
+                        [ (artistKey, artistRow)
+                        | Entity artistKey artistRow <- artistRows
+                        ]
+                membershipsByArtist =
+                    Map.fromListWith (flip (++))
+                        [ (artistGenreMembershipArtistId membership, [membership])
+                        | Entity _ membership <- membershipRows
+                        ]
+                legacyGenresByArtist =
+                    Map.fromListWith (flip (++))
+                        [ (artistGenreArtistId legacyGenre, [legacyGenreEntity])
+                        | legacyGenreEntity@(Entity _ legacyGenre) <- legacyGenreRows
+                        ]
+                genresById =
+                    Map.fromList
+                        [ (genreId, genre)
+                        | Entity (Catalog.GenreKey genreId) genre <- genreRows
+                        ]
+                artistDTOResultById =
+                    Map.fromList
+                        [ (artistKey, artistDTOFor artistKey)
+                        | artistKey <- artistKeys
+                        ]
+                artistDTOFor artistKey =
+                    case Map.lookup artistKey artistsById of
+                        Nothing -> Right unknownArtistDTO
+                        Just artist ->
+                            let memberships =
+                                    Map.findWithDefault [] artistKey membershipsByArtist
+                                availableMemberships =
+                                    mapMaybe
+                                        ( \membership -> do
+                                            genre <-
+                                                Map.lookup
+                                                    (artistGenreMembershipGenreId membership)
+                                                    genresById
+                                            pure
+                                                ( artistGenreMembershipGenreId membership
+                                                , Catalog.genreNameEs genre
+                                                )
                                         )
-                                )
-                                memberships
-                        (genreList, genreIds)
-                            | null memberships =
-                                ( artistGenresFromRowsAndFallback
-                                    (Map.findWithDefault [] artistKey legacyGenresByArtist)
-                                    (artistProfileGenres artist)
-                                , []
-                                )
-                            | otherwise =
-                                (map snd availableMemberships, map fst availableMemberships)
-                     in artistProfileToDTO artistKey artist genreList genreIds
-        linkedArtistResults =
-            [ fmap
-                (\artistDTO -> (eventArtistEventId link, [artistDTO]))
-                (Map.findWithDefault (Right unknownArtistDTO) (eventArtistArtistId link) artistDTOResultById)
-            | Entity _ link <- artistLinks
-            ]
-    pure $
-        fmap
-            (Map.fromListWith (flip (++)))
-            (sequence linkedArtistResults)
+                                        memberships
+                                (genreList, genreIds)
+                                    | null memberships =
+                                        ( artistGenresFromRowsAndFallback
+                                            (Map.findWithDefault [] artistKey legacyGenresByArtist)
+                                            (artistProfileGenres artist)
+                                        , []
+                                        )
+                                    | otherwise =
+                                        (map snd availableMemberships, map fst availableMemberships)
+                             in artistProfileToDTO artistKey artist genreList genreIds
+                linkedArtistResults =
+                    [ fmap
+                        (\artistDTO -> (eventArtistEventId link, [artistDTO]))
+                        (Map.findWithDefault (Right unknownArtistDTO) (eventArtistArtistId link) artistDTOResultById)
+                    | Entity _ link <- artistLinks
+                    ]
+            pure $
+                fmap
+                    (Map.fromListWith (flip (++)))
+                    (sequence linkedArtistResults)
   where
     unknownArtistDTO =
         ArtistDTO
@@ -8606,7 +8609,9 @@ loadExternalEventSourcesByEvent eventKeys = do
     refs <- selectList [ExternalEventRefEventId <-. eventKeys] []
     let providerKeys = nub (map (externalEventRefProvider . entityVal) refs)
     sourceRows <-
-        selectList [EventDiscoverySourceSourceKey <-. providerKeys] []
+        if null providerKeys
+            then pure []
+            else selectList [EventDiscoverySourceSourceKey <-. providerKeys] []
     let sourcesByKey =
             Map.fromList
                 [ ( eventDiscoverySourceSourceKey source

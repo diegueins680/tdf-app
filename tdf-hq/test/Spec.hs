@@ -2103,6 +2103,13 @@ main = hspec $ do
             migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
             migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
 
+    describe "catalog integrity migration" $
+        it "checks only invalid slug aliases without rewriting every alias" $ do
+            migration <- readFile "sql/2026-08-14_catalog_integrity.sql"
+            migration `shouldContain` "UPDATE catalog_slug_alias alias SET entity_id=alias.entity_id WHERE NOT"
+            migration `shouldContain` "alias.entity_kind='recording-session'"
+            migration `shouldNotContain` "UPDATE catalog_slug_alias SET entity_id=entity_id;"
+
     describe "operations control-center migrations" $ do
         it "limits rollback updates to rows whose enabled state changes" $ do
             rollback <- readFile "sql/2026-08-09_admin_operations_control_center_rollback.sql"
