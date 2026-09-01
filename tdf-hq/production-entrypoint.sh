@@ -35,11 +35,16 @@ if [ -n "${served_assets}" ]; then
   served_assets_canonical="$(CDPATH= cd "${served_assets}" && pwd -P)"
   if [ "${served_assets_canonical}" != "${packaged_assets_canonical}" ]; then
     # The persistent asset volume can contain files created by an earlier
-    # release under a different owner. Preserve those files and only seed
-    # assets that are absent, rather than making an otherwise healthy
-    # application startup fail while trying to overwrite them.
-    cp -R -n "${packaged_assets_canonical}/." "${served_assets_canonical}/"
-    echo "Packaged assets synchronized to the served asset directory"
+    # release under a different owner. Preserve those files rather than making
+    # an otherwise healthy application startup fail while syncing assets.
+    # A persistent volume may contain files owned by an earlier deployment.
+    # Those files are already safe to serve, so a failed best-effort seed must
+    # not prevent the API from starting.
+    if cp -R "${packaged_assets_canonical}/." "${served_assets_canonical}/"; then
+      echo "Packaged assets synchronized to the served asset directory"
+    else
+      echo "Could not synchronize some packaged assets; preserving the existing served assets" >&2
+    fi
   fi
 fi
 
