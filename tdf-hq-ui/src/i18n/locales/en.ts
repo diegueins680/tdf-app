@@ -8,6 +8,9 @@ const en = {
     saved: 'Preferences saved.',
     error: 'Something went wrong.',
   },
+  contextualRanking: {
+    saveDraft: 'Save draft',
+  },
   pipelines: {
     title: 'Pipelines',
     subtitle: 'Manage {{workflow}} projects',

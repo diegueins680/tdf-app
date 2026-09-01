@@ -1,5 +1,6 @@
 const fr = {
   common: { save: 'Enregistrer', saving: 'Enregistrement…', saved: 'Préférences enregistrées.', error: 'Une erreur est survenue.' },
+  contextualRanking: { saveDraft: 'Enregistrer le brouillon' },
   internships: { taskDetail: { instructions: 'Instructions' } },
   pagination: {
     items: 'éléments', rowsPerPage: 'Par page', loading: 'Chargement des résultats…', updating: 'Mise à jour des résultats…',

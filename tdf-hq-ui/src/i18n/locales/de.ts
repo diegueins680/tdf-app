@@ -1,5 +1,6 @@
 const de = {
   common: { save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Einstellungen gespeichert.', error: 'Ein Fehler ist aufgetreten.' },
+  contextualRanking: { saveDraft: 'Entwurf speichern' },
   internships: { taskDetail: { instructions: 'Anweisungen' } },
   pagination: {
     items: 'Einträge', rowsPerPage: 'Pro Seite', loading: 'Ergebnisse werden geladen…', updating: 'Ergebnisse werden aktualisiert…',
