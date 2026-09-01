@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
   Autocomplete,
+  Avatar,
   Box,
   Button,
   Card,
@@ -27,7 +28,7 @@ import SendIcon from '@mui/icons-material/Send';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
 import { Meta } from '../api/meta';
@@ -255,6 +256,13 @@ export default function ChatPage() {
     if (!selectedThreadId) return null;
     return threads.find((t) => t.ctThreadId === selectedThreadId) ?? null;
   }, [selectedThreadId, threads]);
+
+  const activeProfileQuery = useQuery({
+    queryKey: ['social-profile', selectedThread?.ctOtherPartyId],
+    queryFn: () => SocialAPI.getProfile(selectedThread!.ctOtherPartyId),
+    enabled: selectedThread !== null,
+    staleTime: 5 * 60_000,
+  });
 
   const messagesQuery = useQuery({
     queryKey: ['chat-messages', selectedThreadId],
@@ -532,13 +540,48 @@ export default function ChatPage() {
         <Card sx={{ flex: 1, minWidth: 0 }}>
           <CardContent sx={{ display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: 600 } }}>
             <Box sx={{ mb: 1 }}>
-              <Typography fontWeight={800} noWrap>
-                {selectedThread
-                  ? (selectedThread.ctOtherDisplayName.trim()
-                      ? selectedThread.ctOtherDisplayName
-                      : `Party #${selectedThread.ctOtherPartyId}`)
-                  : 'Selecciona una conversación'}
-              </Typography>
+              {selectedThread ? (() => {
+                const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
+                const displayName = threadDisplayName === '' ? `Party #${selectedThread.ctOtherPartyId}` : threadDisplayName;
+                const profile = activeProfileQuery.data;
+                const fetchedProfileName = profile?.sppDisplayName?.trim();
+                const profileName = fetchedProfileName === '' || fetchedProfileName === undefined
+                  ? displayName
+                  : fetchedProfileName;
+                const avatarUrl = profile?.sppAvatarUrl?.trim();
+
+                return (
+                  <Button
+                    component={RouterLink}
+                    to={`/perfil/${selectedThread.ctOtherPartyId}`}
+                    color="inherit"
+                    aria-label={`Abrir perfil de ${profileName}`}
+                    sx={{
+                      p: 0,
+                      minWidth: 0,
+                      textTransform: 'none',
+                      justifyContent: 'flex-start',
+                      borderRadius: 1,
+                      '&:hover': { bgcolor: 'action.hover' },
+                    }}
+                  >
+                    <Stack direction="row" spacing={1.25} alignItems="center">
+                      <Avatar
+                        src={avatarUrl === '' ? undefined : avatarUrl}
+                        alt={profileName}
+                        sx={{ width: 40, height: 40, bgcolor: 'primary.dark' }}
+                      >
+                        {profileName[0]?.toUpperCase() ?? '?'}
+                      </Avatar>
+                      <Typography fontWeight={800} noWrap>
+                        {profileName}
+                      </Typography>
+                    </Stack>
+                  </Button>
+                );
+              })() : (
+                <Typography fontWeight={800} noWrap>Selecciona una conversación</Typography>
+              )}
               {selectedThread && (
                 <Typography variant="caption" color="text.secondary">
                   Thread #{selectedThread.ctThreadId} · Party #{selectedThread.ctOtherPartyId}

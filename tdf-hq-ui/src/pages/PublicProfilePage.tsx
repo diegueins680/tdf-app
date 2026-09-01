@@ -137,6 +137,7 @@ export default function PublicProfilePage() {
   }
 
   const party = partyQuery.data;
+  const avatarUrl = party.sppAvatarUrl?.trim();
 
   return (
     <Box p={{ xs: 2, md: 4 }}>
@@ -144,7 +145,7 @@ export default function PublicProfilePage() {
         <CardContent>
           <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 72, height: 72, bgcolor: '#1d4ed8' }}>
+            <Avatar src={avatarUrl === '' ? undefined : avatarUrl} alt={party.sppDisplayName} sx={{ width: 72, height: 72, bgcolor: '#1d4ed8' }}>
               {party.sppDisplayName?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
             <Box flex={1}>
