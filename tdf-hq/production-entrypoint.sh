@@ -34,7 +34,11 @@ if [ -n "${served_assets}" ]; then
   packaged_assets_canonical="$(CDPATH= cd "${packaged_assets}" && pwd -P)"
   served_assets_canonical="$(CDPATH= cd "${served_assets}" && pwd -P)"
   if [ "${served_assets_canonical}" != "${packaged_assets_canonical}" ]; then
-    cp -R "${packaged_assets_canonical}/." "${served_assets_canonical}/"
+    # The persistent asset volume can contain files created by an earlier
+    # release under a different owner. Preserve those files and only seed
+    # assets that are absent, rather than making an otherwise healthy
+    # application startup fail while trying to overwrite them.
+    cp -R -n "${packaged_assets_canonical}/." "${served_assets_canonical}/"
     echo "Packaged assets synchronized to the served asset directory"
   fi
 fi
