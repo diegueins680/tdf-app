@@ -5,6 +5,7 @@
 module TDF.API.Reviews where
 
 import Data.Aeson (FromJSON, ToJSON, Value)
+import Data.Int (Int64)
 import Data.Text (Text)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
@@ -34,7 +35,8 @@ type RequiredReviewIdempotency =
   Header' '[Required, Strict] "Idempotency-Key" Text
 
 type ReviewsPublicAPI =
-  "reviews"
+       "reputation" :> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
+  :<|> "reviews"
     :> Capture "targetKind" Text
     :> Capture "targetId" Text
     :> QueryParam "cursor" UUID
