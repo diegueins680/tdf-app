@@ -94,7 +94,7 @@
     "music-studio"
   ],
   "engines": {
-    "node": ">=20.19.4"
+    "node": ">=22.0.0"
   },
   "overrides": {
     "@typescript-eslint/typescript-estree": {
