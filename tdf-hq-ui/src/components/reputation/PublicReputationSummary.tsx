@@ -12,9 +12,19 @@ export default function PublicReputationSummary({ partyId }: Props) {
     enabled: Number.isSafeInteger(partyId) && partyId > 0,
   });
 
-  if (query.isLoading) return <CircularProgress size={20} aria-label="Cargando reputación" />;
+  const loading = query.isLoading;
+  if (loading) {
+    return (
+      <Box role="status" aria-live="polite" aria-busy="true" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <CircularProgress size={20} aria-hidden="true" />
+        <Typography variant="body2" color="text.secondary">Cargando reputación…</Typography>
+      </Box>
+    );
+  }
+
   if (query.isError || !query.data) return null;
   const reputation = query.data;
+  const empty = reputation.categories.length === 0;
   if (reputation.status === 'forming') {
     return <Alert severity="info">Reputación en formación. Aún no hay suficientes interacciones verificadas para mostrar una puntuación pública.</Alert>;
   }
@@ -33,13 +43,22 @@ export default function PublicReputationSummary({ partyId }: Props) {
         <Chip size="small" variant="outlined" label={`Confianza ${reputation.confidence}`} />
       </Stack>
       <Stack spacing={1.25} sx={{ mt: 2 }}>
-        {reputation.categories.map((category) => (
+        {empty ? (
+          <Typography variant="body2" color="text.secondary">
+            Aún no hay categorías con suficientes interacciones verificadas.
+          </Typography>
+        ) : reputation.categories.map((category) => (
           <Box key={category.slug}>
             <Stack direction="row" justifyContent="space-between" gap={1}>
               <Typography variant="body2">{category.slug.replaceAll('-', ' ')}</Typography>
               <Typography variant="body2" fontWeight={700}>{Number(category.score).toFixed(0)}</Typography>
             </Stack>
-            <LinearProgress variant="determinate" value={Number(category.score)} aria-label={`${category.slug}: ${Number(category.score).toFixed(0)} de 100`} sx={{ mt: 0.5, height: 7, borderRadius: 5 }} />
+            <LinearProgress
+              variant="determinate"
+              value={Number(category.score)}
+              aria-label={`${category.slug}: ${Number(category.score).toFixed(0)} de 100`}
+              sx={{ mt: 0.5, height: 7, borderRadius: 5 }}
+            />
           </Box>
         ))}
       </Stack>
