@@ -342,6 +342,11 @@
       "introducedBy": "a8fa00463d60dbd5df9d02565a9694aaaba4c14e"
     },
     {
+      "id": "2026-09-01_contextual_reputation",
+      "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
+      "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c"
+    },
+    {
       "id": "2026-09-02_party_selector_search_indexes",
       "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
       "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
