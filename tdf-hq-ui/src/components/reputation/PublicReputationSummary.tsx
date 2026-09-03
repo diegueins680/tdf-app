@@ -2,7 +2,14 @@ import { Alert, Box, Chip, CircularProgress, LinearProgress, Stack, Typography }
 import { useQuery } from '@tanstack/react-query';
 import { Reputation } from '../../api/reputation';
 
-type Props = { partyId: number };
+interface Props {
+  partyId: number;
+}
+
+const LOADING_INDICATOR_SIZE_PX = 20;
+const REPUTATION_HEADING_FONT_WEIGHT = 800;
+const REPUTATION_SCORE_FONT_WEIGHT = 900;
+const CATEGORY_SCORE_FONT_WEIGHT = 700;
 
 /** Public-only presentation. It deliberately does not accept reviewer data. */
 export default function PublicReputationSummary({ partyId }: Props) {
@@ -16,7 +23,7 @@ export default function PublicReputationSummary({ partyId }: Props) {
   if (loading) {
     return (
       <Box role="status" aria-live="polite" aria-busy="true" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <CircularProgress size={20} aria-hidden="true" />
+        <CircularProgress size={LOADING_INDICATOR_SIZE_PX} aria-hidden="true" />
         <Typography variant="body2" color="text.secondary">Cargando reputación…</Typography>
       </Box>
     );
@@ -33,10 +40,10 @@ export default function PublicReputationSummary({ partyId }: Props) {
     <Box component="section" aria-labelledby="public-reputation-heading" sx={{ border: 1, borderColor: 'divider', borderRadius: 3, p: 2.5 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={2} flexWrap="wrap">
         <Box>
-          <Typography id="public-reputation-heading" variant="h6" fontWeight={800}>Reputación verificada</Typography>
+          <Typography id="public-reputation-heading" variant="h6" fontWeight={REPUTATION_HEADING_FONT_WEIGHT}>Reputación verificada</Typography>
           <Typography variant="body2" color="text.secondary">Agregada de interacciones verificadas; no refleja preferencias personales.</Typography>
         </Box>
-        <Typography variant="h4" fontWeight={900}>{Number(reputation.score).toFixed(0)}<Typography component="span" variant="body1">/100</Typography></Typography>
+        <Typography variant="h4" fontWeight={REPUTATION_SCORE_FONT_WEIGHT}>{Number(reputation.score).toFixed(0)}<Typography component="span" variant="body1">/100</Typography></Typography>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }} flexWrap="wrap" useFlexGap>
         <Chip size="small" label={`${reputation.verifiedInteractions} interacciones verificadas`} />
@@ -51,7 +58,7 @@ export default function PublicReputationSummary({ partyId }: Props) {
           <Box key={category.slug}>
             <Stack direction="row" justifyContent="space-between" gap={1}>
               <Typography variant="body2">{category.slug.replaceAll('-', ' ')}</Typography>
-              <Typography variant="body2" fontWeight={700}>{Number(category.score).toFixed(0)}</Typography>
+              <Typography variant="body2" fontWeight={CATEGORY_SCORE_FONT_WEIGHT}>{Number(category.score).toFixed(0)}</Typography>
             </Stack>
             <LinearProgress
               variant="determinate"
