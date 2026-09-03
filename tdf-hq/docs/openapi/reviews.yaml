@@ -1,6 +1,18 @@
 openapi: 3.0.0
 info: { title: TDF Verified Reviews API, version: 1.0.0 }
 paths:
+  /reputation/categories:
+    get:
+      tags: [Contextual reputation]
+      operationId: listReputationCategories
+      summary: List active official reputation categories
+      security: []
+      parameters:
+        - { name: locale, in: query, schema: { type: string, enum: [es, en], default: es } }
+      responses:
+        '200':
+          description: Active categories only; proposals and archived entries are excluded
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ReputationCategory' } } } }
   /reputation/profiles/{partyId}:
     get:
       tags: [Contextual reputation]
@@ -80,6 +92,18 @@ components:
       required: true
       schema: { type: string }
   schemas:
+    ReputationCategory:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, description, defaultPosition, institutionalWeight, version]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        defaultPosition: { type: integer, minimum: 1 }
+        institutionalWeight: { type: number, minimum: 0, maximum: 100 }
+        version: { type: integer, minimum: 1 }
     PublicReputation:
       type: object
       additionalProperties: false

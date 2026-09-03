@@ -49,7 +49,7 @@ jsonRows statement params = do
   pure [CMS.unAesonValue value | Single value <- rows]
 
 reviewsPublicServer :: ServerT ReviewsPublicAPI AppM
-reviewsPublicServer = getPublicReputation :<|> listPublicReviews
+reviewsPublicServer = listReputationCategories :<|> getPublicReputation :<|> listPublicReviews
 
 reviewsProtectedServer :: AuthedUser -> ServerT ReviewsProtectedAPI AppM
 reviewsProtectedServer user =
@@ -100,6 +100,18 @@ getPublicReputation partyId = do
    <> "WHERE aggregate.subject_party_id=? AND aggregate.formula_version_id='public-bayes-roc-v1'" )
     [PersistInt64 partyId, PersistInt64 partyId]
   pure (fromMaybe (object ["partyId" .= partyId, "status" .= ("forming" :: Text), "categories" .= ([] :: [Value])]) (listToMaybe result))
+
+-- Categories are database-owned rather than copied into clients. Archived,
+-- proposed and sensitive moderation candidates never enter this public list.
+listReputationCategories :: Maybe Text -> AppM [Value]
+listReputationCategories rawLocale = do
+  let locale = if fmap T.toLower rawLocale == Just "en" then "en" else "es"
+  jsonRows
+    ( "SELECT jsonb_build_object('id',id,'slug',slug,'name',CASE WHEN ?='en' THEN name_en ELSE name_es END,"
+   <> "'description',CASE WHEN ?='en' THEN description_en ELSE description_es END,"
+   <> "'defaultPosition',default_position,'institutionalWeight',institutional_weight,'version',version) "
+   <> "FROM reputation_category WHERE status='active' ORDER BY default_position,slug" )
+    [PersistText locale, PersistText locale]
 
 publicReviewPageSql :: Text
 publicReviewPageSql =
