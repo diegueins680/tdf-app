@@ -362,7 +362,7 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
-import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement)
+import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement, reputationCategoriesSql)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -835,6 +835,11 @@ main = hspec $ do
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "offering.active AND offering.deprecated_at IS NULL"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "WHERE package.active"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
+
+    describe "contextual reputation category visibility" $ do
+        it "lists only active database-owned categories" $ do
+            reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "FROM reputation_category WHERE status='active'"
+            reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "ORDER BY default_position,slug"
 
     describe "DDEX canonical write JSON contracts" $ do
         it "accepts export writes with only a canonical standard-version id" $ do
