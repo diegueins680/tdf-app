@@ -4906,6 +4906,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reputation/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active official reputation categories */
+        get: operations["listReputationCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/eligibility": {
         parameters: {
             query?: never;
@@ -10071,6 +10088,16 @@ export interface components {
                 /** @enum {string} */
                 confidence: "forming" | "low" | "moderate" | "high";
             }[];
+        };
+        ReputationCategory: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            description: string;
+            defaultPosition: number;
+            institutionalWeight: number;
+            version: number;
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -19729,6 +19756,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listReputationCategories: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active categories only; proposals and archived entries are excluded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReputationCategory"][];
+                };
             };
         };
     };

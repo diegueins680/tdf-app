@@ -35,7 +35,8 @@ type RequiredReviewIdempotency =
   Header' '[Required, Strict] "Idempotency-Key" Text
 
 type ReviewsPublicAPI =
-       "reputation" :> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
+       "reputation" :> "categories" :> QueryParam "locale" Text :> Get '[JSON] [Value]
+  :<|> "reputation" :> "profiles" :> Capture "partyId" Int64 :> Get '[JSON] Value
   :<|> "reviews"
     :> Capture "targetKind" Text
     :> Capture "targetId" Text
