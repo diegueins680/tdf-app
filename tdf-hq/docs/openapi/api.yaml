@@ -1727,6 +1727,30 @@ paths:
                 $ref: '#/components/schemas/Party'
         '404':
           description: Party not found
+  /parties/search:
+    get:
+      tags: [CRM]
+      summary: Search parties for a relationship selector
+      description: Minimal paginated selector data; no contact details are returned.
+      operationId: searchPartiesForSelector
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 120 } }
+        - { name: kind, in: query, schema: { type: string, enum: [any, person, organization], default: any } }
+        - { name: accountOnly, in: query, schema: { type: boolean, default: false } }
+        - { name: excludePartyId, in: query, style: form, explode: true, schema: { type: array, maxItems: 100, items: { type: integer, format: int64 } } }
+        - { name: cursor, in: query, schema: { type: integer, format: int64 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 20, default: 15 } }
+      responses:
+        '200':
+          description: Minimal party selector results
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartySelectorPage' }
+        '400': { description: Invalid selector query }
+        '401': { description: Authentication required }
+        '403': { description: CRM access required }
   /api/users:
     get:
       summary: List user accounts
@@ -9412,6 +9436,25 @@ components:
           type: object
           nullable: true
           description: Present when the party is linked to a band/project.
+    PartySelectorOption:
+      type: object
+      required: [partyId, partyType, displayName, accountStatus]
+      properties:
+        partyId: { type: integer, format: int64, description: Canonical Party identifier; persist this value only. }
+        partyType: { type: string, enum: [person, organization] }
+        displayName: { type: string }
+        username: { type: string, nullable: true }
+        avatarUrl: { type: string, format: uri, nullable: true }
+        secondaryLabel: { type: string, nullable: true }
+        accountStatus: { type: string, enum: [active, inactive, no-account] }
+    PartySelectorPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PartySelectorOption' }
+        nextCursor: { type: integer, format: int64, nullable: true }
     ChatThread:
       type: object
       properties:

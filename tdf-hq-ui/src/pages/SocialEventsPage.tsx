@@ -54,10 +54,12 @@ import {
   getSocialEventsOverviewUiState,
 } from './socialEventsPageState';
 import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
+import { UserSelector } from '../components/party-selector/PartySelector';
+import type { PartySelectorOption } from '../api/partySelector';
 import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 
 interface InvitationState {
-  partyId: string;
+  party: PartySelectorOption | null;
   message: string;
 }
 
@@ -665,16 +667,16 @@ export default function SocialEventsPage() {
   const inviteMutation = useMutation({
     mutationFn: ({ eventId }: { eventId: string }) => {
       if (!sessionPartyId) throw new Error('Inicia sesión para enviar invitaciones.');
-      const draft = invites[eventId] ?? { partyId: '', message: '' };
-      const toId = draft.partyId.trim();
-      if (!toId) throw new Error('Ingresa el ID de la persona a invitar.');
+      const draft = invites[eventId] ?? { party: null, message: '' };
+      const toId = draft.party?.partyId;
+      if (!toId) throw new Error('Selecciona una persona para invitar.');
       return SocialEventsAPI.sendInvitation(eventId, {
-        invitationToPartyId: toId,
+        invitationToPartyId: String(toId),
         invitationMessage: draft.message.trim() || null,
       });
     },
     onSuccess: (_resp, { eventId }) => {
-      setInvites((prev) => ({ ...prev, [eventId]: { partyId: '', message: '' } }));
+      setInvites((prev) => ({ ...prev, [eventId]: { party: null, message: '' } }));
       void qc.invalidateQueries({ queryKey: ['social-invitations', eventId] });
       setFeedback({ kind: 'success', message: 'Invitación enviada.' });
     },
@@ -1310,7 +1312,7 @@ export default function SocialEventsPage() {
             const financeSummaryUiState = financeSummary
               ? getSocialEventsFinanceSummaryUiState(financeSummary)
               : null;
-            const inviteDraft = invites[eventId] ?? { partyId: '', message: '' };
+            const inviteDraft = invites[eventId] ?? { party: null, message: '' };
             const availableTiers = tiers.filter(
               (tier) => Boolean(tier.ticketTierId) && tier.ticketTierActive && tierAvailability(tier) > 0,
             );
@@ -1547,13 +1549,14 @@ export default function SocialEventsPage() {
                         <Stack spacing={1}>
                           <Typography variant="subtitle2" fontWeight={700}>Invitar</Typography>
                           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                            <TextField
-                              label="Party ID"
-                              size="small"
-                              value={inviteDraft.partyId}
-                              onChange={(e) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, partyId: e.target.value } }))}
-                              sx={{ flex: 1 }}
-                            />
+                            <Box sx={{ flex: 1 }}>
+                              <UserSelector
+                                field={{ label: 'Persona a invitar', helperText: 'Busca por nombre o @username.' }}
+                                value={inviteDraft.party}
+                                onChange={(party) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, party } }))}
+                                search={{ excludedPartyIds: sessionPartyId ? [Number(sessionPartyId)] : [] }}
+                              />
+                            </Box>
                             <TextField
                               label="Mensaje (opcional)"
                               size="small"
@@ -1566,7 +1569,7 @@ export default function SocialEventsPage() {
                               size="small"
                               startIcon={<PersonAddAltIcon />}
                               onClick={() => eventId && inviteMutation.mutate({ eventId })}
-                              disabled={inviteMutation.isPending || !eventId}
+                              disabled={inviteMutation.isPending || !eventId || !inviteDraft.party}
                             >
                               Enviar
                             </Button>

@@ -340,6 +340,11 @@
       "id": "2026-08-26_music_directory_profile_media_reconciliation",
       "path": "tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql",
       "introducedBy": "a8fa00463d60dbd5df9d02565a9694aaaba4c14e"
+    },
+    {
+      "id": "2026-09-02_party_selector_search_indexes",
+      "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
+      "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
     }
   ]
 }

@@ -27,6 +27,8 @@ import RouteIcon from '@mui/icons-material/Route';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { UserSelector } from '../components/party-selector/PartySelector';
+import type { PartySelectorOption } from '../api/partySelector';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
@@ -179,6 +181,52 @@ const secondsLabel = (seconds?: number | null) => {
 const assignmentFilterKey = (assignment: EventLogisticsActivityDTO['eacAssignments'][number]) =>
   assignment.elaPartyId ? `party:${assignment.elaPartyId}` : `external:${assignment.elaExternalName ?? ''}`;
 
+function PlacesSection({
+  places,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  places: EventLogisticsPlaceDTO[];
+  canEdit: boolean;
+  onEdit: (place: EventLogisticsPlaceDTO) => void;
+  onDelete: (placeId: string) => void;
+}) {
+  return (
+    <Card variant="outlined">
+      <CardContent>
+        <Stack spacing={1.5}>
+          <Typography variant="h6">Lugares</Typography>
+          {places.length ? places.map((place) => (
+            <Stack
+              key={place.elpId}
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              justifyContent="space-between"
+              sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+            >
+              <Box>
+                <Typography fontWeight={700}>{place.elpLabel}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {place.elpAddress || `${place.elpLatitude}, ${place.elpLongitude}`}
+                </Typography>
+                {place.elpInstructions && <Typography variant="caption">{place.elpInstructions}</Typography>}
+              </Box>
+              <Stack className="no-print" direction="row">
+                <Button component={Link} href={`https://www.google.com/maps/search/?api=1&query=${place.elpLatitude},${place.elpLongitude}`} size="small" target="_blank">
+                  Mapa
+                </Button>
+                {canEdit && <Button size="small" onClick={() => onEdit(place)}>Editar</Button>}
+                {canEdit && <Button size="small" color="error" onClick={() => onDelete(String(place.elpId))}><DeleteOutlineIcon /></Button>}
+              </Stack>
+            </Stack>
+          )) : <Typography color="text.secondary">Aún no hay lugares georreferenciados.</Typography>}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
 function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (next: PlaceDraft) => void }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -263,8 +311,10 @@ export default function EventLogisticsPage() {
   const [editingPlaceId, setEditingPlaceId] = useState('');
   const [activityDraft, setActivityDraft] = useState<ActivityDraft>(() => emptyActivity());
   const [editingActivity, setEditingActivity] = useState<EventLogisticsActivityDTO | null>(null);
-  const [memberPartyId, setMemberPartyId] = useState('');
+  const [memberParty, setMemberParty] = useState<PartySelectorOption | null>(null);
   const [memberRole, setMemberRole] = useState<EventLogisticsMemberDTO['elmRole']>('editor');
+  const [memberNotice, setMemberNotice] = useState('');
+  const memberFeedbackRef = useRef<HTMLDivElement>(null);
   const [timezone, setTimezone] = useState(preferredTimezone);
   const [defaultMode, setDefaultMode] = useState<LogisticsTravelMode>('drive');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -293,8 +343,16 @@ export default function EventLogisticsPage() {
     onSuccess: refresh,
   });
   const memberMutation = useMutation({
-    mutationFn: () => SocialEventsAPI.createLogisticsMember(eventId, { elmPartyId: memberPartyId.trim(), elmRole: memberRole }),
-    onSuccess: () => { setMemberPartyId(''); void refresh(); },
+    mutationFn: () => {
+      if (!memberParty) throw new Error('Selecciona una persona para el equipo.');
+      return SocialEventsAPI.createLogisticsMember(eventId, { elmPartyId: String(memberParty.partyId), elmRole: memberRole });
+    },
+    onSuccess: () => {
+      setMemberParty(null);
+      setMemberNotice('La persona se añadió al equipo.');
+      window.requestAnimationFrame(() => memberFeedbackRef.current?.focus());
+      void refresh();
+    },
   });
   const deleteMemberMutation = useMutation({ mutationFn: (partyId: string) => SocialEventsAPI.deleteLogisticsMember(eventId, partyId), onSuccess: refresh });
   const placeMutation = useMutation({
@@ -450,11 +508,18 @@ export default function EventLogisticsPage() {
             <Button variant="outlined" onClick={() => settingsMutation.mutate()} disabled={settingsMutation.isPending}>Guardar</Button>
           </Stack>
           <Divider />
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-            <TextField label="ID de usuario TDF" value={memberPartyId} onChange={(event) => setMemberPartyId(event.target.value)} sx={{ flex: 1 }} />
+          <Stack
+            component="form"
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={1}
+            onSubmit={(event) => { event.preventDefault(); memberMutation.mutate(); }}
+            data-focus-return="team-members-status"
+          >
+            <Box sx={{ flex: 1 }}><UserSelector field={{ label: 'Persona del equipo', helperText: 'Busca por nombre o @username.' }} value={memberParty} onChange={setMemberParty} /></Box>
             <TextField select label="Permiso" value={memberRole} onChange={(event) => setMemberRole(event.target.value as EventLogisticsMemberDTO['elmRole'])} sx={{ minWidth: 150 }}><MenuItem value="editor">Editor</MenuItem><MenuItem value="viewer">Lector</MenuItem></TextField>
-            <Button variant="contained" startIcon={<GroupAddIcon />} onClick={() => memberMutation.mutate()} disabled={!memberPartyId.trim() || memberMutation.isPending}>Añadir</Button>
+            <Button type="submit" variant="contained" startIcon={<GroupAddIcon />} disabled={!memberParty || memberMutation.isPending}>Añadir</Button>
           </Stack>
+          {memberNotice && <Alert id="team-members-status" ref={memberFeedbackRef} severity="success" tabIndex={-1}>{memberNotice}</Alert>}
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {plan.elgMembers.map((member) => <Chip key={member.elmPartyId} label={`${member.elmDisplayName ?? `Usuario ${member.elmPartyId}`} · ${member.elmRole}`} onDelete={() => deleteMemberMutation.mutate(member.elmPartyId)} />)}
           </Stack>
@@ -486,13 +551,12 @@ export default function EventLogisticsPage() {
           <Stack direction="row" spacing={1}><Button variant="contained" startIcon={<AddLocationAltIcon />} onClick={() => placeMutation.mutate()} disabled={placeMutation.isPending}>{editingPlaceId ? 'Actualizar lugar' : 'Guardar lugar'}</Button>{editingPlaceId && <Button onClick={() => { setEditingPlaceId(''); setPlaceDraft(emptyPlace()); }}>Cancelar</Button>}</Stack>
         </Stack></CardContent></Card>}
 
-        <Card variant="outlined"><CardContent><Stack spacing={1.5}>
-          <Typography variant="h6">Lugares</Typography>
-          {plan?.elgPlaces.length ? plan.elgPlaces.map((place) => <Stack key={place.elpId} direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-            <Box><Typography fontWeight={700}>{place.elpLabel}</Typography><Typography variant="body2" color="text.secondary">{place.elpAddress || `${place.elpLatitude}, ${place.elpLongitude}`}</Typography>{place.elpInstructions && <Typography variant="caption">{place.elpInstructions}</Typography>}</Box>
-            <Stack className="no-print" direction="row"><Button size="small" component={Link} href={`https://www.google.com/maps/search/?api=1&query=${place.elpLatitude},${place.elpLongitude}`} target="_blank">Mapa</Button>{canEdit && <Button size="small" onClick={() => startEditingPlace(place)}>Editar</Button>}{canEdit && <Button size="small" color="error" onClick={() => deletePlaceMutation.mutate(String(place.elpId))}><DeleteOutlineIcon /></Button>}</Stack>
-          </Stack>) : <Typography color="text.secondary">Aún no hay lugares georreferenciados.</Typography>}
-        </Stack></CardContent></Card>
+        <PlacesSection
+          places={plan?.elgPlaces ?? []}
+          canEdit={canEdit}
+          onEdit={startEditingPlace}
+          onDelete={(placeId) => deletePlaceMutation.mutate(placeId)}
+        />
 
         {canEdit && <Card className="no-print" variant="outlined"><CardContent><Stack spacing={1.5}>
           <Typography variant="h6">{editingActivity ? 'Editar actividad' : 'Añadir actividad'}</Typography>

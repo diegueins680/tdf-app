@@ -131,6 +131,14 @@ type CmsAdminAPI =
 type PartyAPI =
        QueryParam "limit" Int :> QueryParam "offset" Int :> Get '[JSON] [PartyDTO]
   :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
+  :<|> "search" :>
+         QueryParam "q" Text :>
+         QueryParam "kind" Text :>
+         QueryParam "accountOnly" Bool :>
+         QueryParams "excludePartyId" Int64 :>
+         QueryParam "cursor" Int64 :>
+         QueryParam "limit" Int :>
+         Get '[JSON] PartySelectorPageDTO
       :<|> Capture "partyId" Int64 :> (
            Get '[JSON] PartyDTO
       :<|> ReqBody '[JSON] PartyUpdate :> Put '[JSON] PartyDTO

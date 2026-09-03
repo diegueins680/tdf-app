@@ -123,7 +123,11 @@ function countNestingDepth(source) {
       continue;
     }
 
-    if (ch === '<' && !/\s/.test(next) && next !== '/') {
+    // A generic such as Promise<void> or useRef<HTMLDivElement> is common in
+    // TSX. It is not an opening JSX tag, but the former character-by-character
+    // check counted it as one and inflated the nesting score for valid views.
+    const previous = source[i - 1] ?? '';
+    if (ch === '<' && /[A-Za-z]/.test(next) && !/[A-Za-z0-9_$]/.test(previous)) {
       currentDepth++;
       maxDepth = Math.max(maxDepth, currentDepth);
     }

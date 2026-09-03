@@ -1332,6 +1332,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/parties/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search parties for a relationship selector
+         * @description Minimal paginated selector data; no contact details are returned.
+         */
+        get: operations["searchPartiesForSelector"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users": {
         parameters: {
             query?: never;
@@ -7609,6 +7629,27 @@ export interface components {
             /** @description Present when the party is linked to a band/project. */
             band?: Record<string, never> | null;
         };
+        PartySelectorOption: {
+            /**
+             * Format: int64
+             * @description Canonical Party identifier; persist this value only.
+             */
+            partyId: number;
+            /** @enum {string} */
+            partyType: "person" | "organization";
+            displayName: string;
+            username?: string | null;
+            /** Format: uri */
+            avatarUrl?: string | null;
+            secondaryLabel?: string | null;
+            /** @enum {string} */
+            accountStatus: "active" | "inactive" | "no-account";
+        };
+        PartySelectorPage: {
+            items: components["schemas"]["PartySelectorOption"][];
+            /** Format: int64 */
+            nextCursor?: number | null;
+        };
         ChatThread: {
             /** Format: int64 */
             ctThreadId?: number;
@@ -12415,6 +12456,54 @@ export interface operations {
             };
             /** @description Party not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    searchPartiesForSelector: {
+        parameters: {
+            query: {
+                q: string;
+                kind?: "any" | "person" | "organization";
+                accountOnly?: boolean;
+                excludePartyId?: number[];
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Minimal party selector results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartySelectorPage"];
+                };
+            };
+            /** @description Invalid selector query */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description CRM access required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

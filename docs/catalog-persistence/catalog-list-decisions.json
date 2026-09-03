@@ -9182,6 +9182,106 @@
       "risk": "Geographic labels, identities and service-area semantics could diverge if synthetic capture data were reused as production authority.",
       "justification": "The two service areas reference opaque country and city IDs exposed by the mocked canonical taxonomy solely to verify multi-city round trips and primary-location semantics.",
       "reviewed": true
+    },
+    {
+      "id": "0ce2344d6fa713873775",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "These action names are an exhaustive local React reducer dispatch and are neither user-selectable nor a persisted business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "e6a869dc74c4c9c67fd7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_formula_version",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "3aa171da5f8efb55b615",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_category",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "b3b43b4c9963114e6b47",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_interaction",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "d86ab631b61ac79777d1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_evaluation",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; the direction values encode the two-party uniqueness constraint rather than an administrable catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "5c81ffa45dcd1076f988",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_evaluation",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "58a877d428e54130b839",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_evaluation_rank",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "937de3362cdc88b28541",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_private_ranking",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "f03c58c339050114e975",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_public_aggregate",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
+      "reviewed": true
+    },
+    {
+      "id": "a8ee38965d563177e6a1",
+      "classification": "dynamic-business-catalog",
+      "disposition": "persisted-registry-with-exhaustive-execution-mirror",
+      "specializedModel": "reputation_confidence_band, reputation_public_aggregate",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "Persisted reputation confidence-band rows own labels and presentation policy; code retains the closed values needed for deterministic aggregate calculation and rejects unknown persisted bands.",
+      "reviewed": true
     }
   ]
 }
