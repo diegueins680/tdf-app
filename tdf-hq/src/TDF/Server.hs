@@ -9073,7 +9073,7 @@ searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
   requireModule user ModuleCRM
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
   kind <- either throwError pure (validatePartySelectorKind rawKind)
-  cursor <- traverse (validatePositiveIdField "cursor") rawCursor
+  cursor <- either throwError pure (traverse (validatePositiveIdField "cursor") rawCursor)
   limit <- either throwError pure (validatePartySelectorLimit rawLimit)
   when (length excluded > 100 || any (<= 0) excluded) $
     throwError err400 { errBody = "excludePartyId must contain at most 100 positive ids" }
@@ -9113,7 +9113,7 @@ searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
               Just _ -> "inactive"
               Nothing -> "no-account"
             normalizedQuery = normalizePartySelectorText query
-            normalizedName = normalizePartySelectorText (partyDisplayName partyValue)
+            normalizedName = normalizePartySelectorText (M.partyDisplayName partyValue)
             normalizedLegal = normalizePartySelectorText (fromMaybe "" (partyLegalName partyValue))
             normalizedUsername = normalizePartySelectorText (fromMaybe "" rawUsername)
             score
@@ -9126,7 +9126,7 @@ searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
         in (score, fromSqlKey (entityKey party), PartySelectorOptionDTO
           { partyId = fromSqlKey (entityKey party)
           , partyType = if partyIsOrg partyValue then "organization" else "person"
-          , displayName = partyDisplayName partyValue
+          , displayName = M.partyDisplayName partyValue
           , username = rawUsername
           , avatarUrl = Nothing
           , secondaryLabel = secondary
