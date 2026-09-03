@@ -58,6 +58,27 @@ data PartyDTO = PartyDTO
 instance ToJSON PartyDTO
 instance FromJSON PartyDTO
 
+-- | A deliberately small, context-neutral projection for relationship pickers.
+-- Contact details remain on PartyDTO, which must never be used for discovery.
+data PartySelectorOptionDTO = PartySelectorOptionDTO
+  { partyId       :: Int64
+  , partyType     :: Text
+  , displayName   :: Text
+  , username      :: Maybe Text
+  , avatarUrl     :: Maybe Text
+  , secondaryLabel :: Maybe Text
+  , accountStatus :: Text
+  } deriving (Show, Generic)
+
+instance ToJSON PartySelectorOptionDTO
+
+data PartySelectorPageDTO = PartySelectorPageDTO
+  { items      :: [PartySelectorOptionDTO]
+  , nextCursor :: Maybe Int64
+  } deriving (Show, Generic)
+
+instance ToJSON PartySelectorPageDTO
+
 data SocialPartyProfileDTO = SocialPartyProfileDTO
   { sppPartyId     :: Int64
   , sppDisplayName :: Text

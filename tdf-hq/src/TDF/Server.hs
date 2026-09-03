@@ -9053,9 +9053,138 @@ seedTrigger rawToken = do
 
 -- Parties
 partyServer :: AuthedUser -> ServerT PartyAPI AppM
-partyServer user = listParties user :<|> createParty user :<|> partyById
+partyServer user = listParties user :<|> createParty user :<|> searchParties user :<|> partyById
   where
     partyById pid = getParty user pid :<|> updateParty user pid :<|> partyRelated user pid
+
+-- Selector search is intentionally separate from the CRM list endpoint.  Its
+-- payload excludes contact information and queries are bounded so it cannot be
+-- used as a directory-enumeration primitive.
+searchParties
+  :: AuthedUser
+  -> Maybe Text
+  -> Maybe Text
+  -> Maybe Bool
+  -> [Int64]
+  -> Maybe Int64
+  -> Maybe Int
+  -> AppM PartySelectorPageDTO
+searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
+  requireModule user ModuleCRM
+  query <- either throwError pure (validatePartySelectorQuery rawQuery)
+  kind <- either throwError pure (validatePartySelectorKind rawKind)
+  cursor <- traverse (validatePositiveIdField "cursor") rawCursor
+  limit <- either throwError pure (validatePartySelectorLimit rawLimit)
+  when (length excluded > 100 || any (<= 0) excluded) $
+    throwError err400 { errBody = "excludePartyId must contain at most 100 positive ids" }
+  Env pool _ <- ask
+  let databaseQuery = normalizePartySelectorDatabaseText query
+      patternText = "%" <> databaseQuery <> "%"
+      nameSql =
+        "SELECT ?? FROM party WHERE id > ? AND (translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? OR translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ?) LIMIT 401"
+      usernameSql =
+        "SELECT ?? FROM user_credential WHERE id > 0 AND lower(replace(username, '@', '')) LIKE ? AND active = TRUE LIMIT 401"
+  (parties, credentials) <- liftIO $ flip runSqlPool pool $ do
+    named <- rawSql nameSql [toPersistValue (fromMaybe 0 cursor), toPersistValue patternText, toPersistValue patternText]
+    matchedCredentials <- rawSql usernameSql [toPersistValue patternText]
+    credentialParties <- fmap catMaybes $ forM (matchedCredentials :: [Entity UserCredential]) $ \credential -> getEntity (userCredentialPartyId (entityVal credential))
+    let candidateMap = Map.fromList [(entityKey party, party) | party <- named ++ credentialParties]
+        candidateIds = Map.keys candidateMap
+    allCredentials <- if null candidateIds then pure [] else selectList [UserCredentialPartyId <-. candidateIds] []
+    pure (Map.elems candidateMap, allCredentials)
+  let credentialsByParty = Map.fromListWith chooseCredential
+        [ (userCredentialPartyId credential, credential) | Entity _ credential <- credentials ]
+      chooseCredential left _ = left
+      matchesKind party = case kind of
+        "person" -> not (partyIsOrg (entityVal party))
+        "organization" -> partyIsOrg (entityVal party)
+        _ -> True
+      hasAccount party = case Map.lookup (entityKey party) credentialsByParty of
+        Just credential -> userCredentialActive credential
+        Nothing -> False
+      isExcluded party = fromSqlKey (entityKey party) `elem` excluded
+      eligible party = matchesKind party && not (isExcluded party) && (not (fromMaybe False accountOnly) || hasAccount party)
+      option party =
+        let mCredential = Map.lookup (entityKey party) credentialsByParty
+            partyValue = entityVal party
+            rawUsername = userCredentialUsername <$> mCredential
+            accountState = case mCredential of
+              Just credential | userCredentialActive credential -> "active"
+              Just _ -> "inactive"
+              Nothing -> "no-account"
+            normalizedQuery = normalizePartySelectorText query
+            normalizedName = normalizePartySelectorText (partyDisplayName partyValue)
+            normalizedLegal = normalizePartySelectorText (fromMaybe "" (partyLegalName partyValue))
+            normalizedUsername = normalizePartySelectorText (fromMaybe "" rawUsername)
+            score
+              | normalizedUsername == normalizedQuery = 0 :: Int
+              | normalizedName == normalizedQuery = 1
+              | normalizedUsername `T.isPrefixOf` normalizedQuery || normalizedQuery `T.isPrefixOf` normalizedUsername = 2
+              | normalizedName `T.isPrefixOf` normalizedQuery || normalizedLegal `T.isPrefixOf` normalizedQuery = 3
+              | otherwise = 4
+            secondary = partyLegalName partyValue <|> (if partyIsOrg partyValue then Just "Organización" else Nothing)
+        in (score, fromSqlKey (entityKey party), PartySelectorOptionDTO
+          { partyId = fromSqlKey (entityKey party)
+          , partyType = if partyIsOrg partyValue then "organization" else "person"
+          , displayName = partyDisplayName partyValue
+          , username = rawUsername
+          , avatarUrl = Nothing
+          , secondaryLabel = secondary
+          , accountStatus = accountState
+          })
+      sorted = sortOn (\(score, partyKey, _) -> (score, partyKey)) (map option (filter eligible parties))
+      page = take (limit + 1) sorted
+      visible = take limit page
+      next = if length page > limit then Just (let (_, partyKey, _) = last visible in partyKey) else Nothing
+  pure PartySelectorPageDTO { items = map (\(_, _, value) -> value) visible, nextCursor = next }
+
+validatePartySelectorQuery :: Maybe Text -> Either ServerError Text
+validatePartySelectorQuery raw =
+  let clean = T.strip (fromMaybe "" raw)
+  in if T.length clean < 2
+       then Left err400 { errBody = "q must contain at least two characters" }
+       else if T.length clean > 120 || T.any isUnsafePartyDisplayNameChar clean
+         then Left err400 { errBody = "q is invalid" }
+         else Right clean
+
+validatePartySelectorKind :: Maybe Text -> Either ServerError Text
+validatePartySelectorKind raw =
+  case T.toLower (T.strip (fromMaybe "any" raw)) of
+    "any" -> Right "any"
+    "person" -> Right "person"
+    "organization" -> Right "organization"
+    _ -> Left err400 { errBody = "kind must be any, person, or organization" }
+
+validatePartySelectorLimit :: Maybe Int -> Either ServerError Int
+validatePartySelectorLimit raw =
+  let value = fromMaybe 15 raw
+  in if value >= 1 && value <= 20
+       then Right value
+       else Left err400 { errBody = "limit must be between 1 and 20" }
+
+normalizePartySelectorText :: Text -> Text
+normalizePartySelectorText = T.map replaceAccent . T.filter (not . isSpace) . T.toLower . T.filter (/= '@')
+  where
+    replaceAccent char = case char of
+      'á' -> 'a'; 'à' -> 'a'; 'ä' -> 'a'; 'â' -> 'a'
+      'é' -> 'e'; 'è' -> 'e'; 'ë' -> 'e'; 'ê' -> 'e'
+      'í' -> 'i'; 'ì' -> 'i'; 'ï' -> 'i'; 'î' -> 'i'
+      'ó' -> 'o'; 'ò' -> 'o'; 'ö' -> 'o'; 'ô' -> 'o'
+      'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
+      'ñ' -> 'n'
+      other -> other
+
+normalizePartySelectorDatabaseText :: Text -> Text
+normalizePartySelectorDatabaseText = T.map replaceAccent . T.toLower . T.filter (/= '@')
+  where
+    replaceAccent char = case char of
+      'á' -> 'a'; 'à' -> 'a'; 'ä' -> 'a'; 'â' -> 'a'
+      'é' -> 'e'; 'è' -> 'e'; 'ë' -> 'e'; 'ê' -> 'e'
+      'í' -> 'i'; 'ì' -> 'i'; 'ï' -> 'i'; 'î' -> 'i'
+      'ó' -> 'o'; 'ò' -> 'o'; 'ö' -> 'o'; 'ô' -> 'o'
+      'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
+      'ñ' -> 'n'
+      other -> other
 
 listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
 listParties user mLimit mOffset = do

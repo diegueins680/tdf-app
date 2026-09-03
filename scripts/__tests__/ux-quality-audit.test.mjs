@@ -25,6 +25,20 @@ test('ux audit does not treat TypeScript generics as JSX nesting in non-JSX file
   assert.equal(findings.some((finding) => finding.rule === 'missing-loading-state'), false);
 });
 
+test('ux audit does not treat TypeScript generics as JSX nesting in TSX files', () => {
+  const source = `
+    const ref = useRef<HTMLDivElement>(null);
+    const request = (): Promise<void> => Promise.resolve();
+    export function Panel() {
+      return <section><h1>Panel</h1></section>;
+    }
+  `;
+
+  const findings = auditUxSource(source, '/tmp/Panel.tsx');
+
+  assert.equal(findings.some((finding) => finding.rule === 'deep-jsx-nesting'), false);
+});
+
 test('ux audit still requires loading affordances in JSX files that fetch data', () => {
   const source = `
     export function ReportPanel() {
