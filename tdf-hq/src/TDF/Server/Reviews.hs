@@ -7,6 +7,7 @@ module TDF.Server.Reviews
   , reviewsProtectedServer
   , publicReviewTargetStatement
   , eligibilitySql
+  , reputationCategoriesSql
   ) where
 
 import Control.Monad (unless, when)
@@ -106,12 +107,15 @@ getPublicReputation partyId = do
 listReputationCategories :: Maybe Text -> AppM [Value]
 listReputationCategories rawLocale = do
   let locale = if fmap T.toLower rawLocale == Just "en" then "en" else "es"
-  jsonRows
-    ( "SELECT jsonb_build_object('id',id,'slug',slug,'name',CASE WHEN ?='en' THEN name_en ELSE name_es END,"
-   <> "'description',CASE WHEN ?='en' THEN description_en ELSE description_es END,"
-   <> "'defaultPosition',default_position,'institutionalWeight',institutional_weight,'version',version) "
-   <> "FROM reputation_category WHERE status='active' ORDER BY default_position,slug" )
+  jsonRows reputationCategoriesSql
     [PersistText locale, PersistText locale]
+
+reputationCategoriesSql :: Text
+reputationCategoriesSql =
+  "SELECT jsonb_build_object('id',id,'slug',slug,'name',CASE WHEN ?='en' THEN name_en ELSE name_es END,"
+  <> "'description',CASE WHEN ?='en' THEN description_en ELSE description_es END,"
+  <> "'defaultPosition',default_position,'institutionalWeight',institutional_weight,'version',version) "
+  <> "FROM reputation_category WHERE status='active' ORDER BY default_position,slug"
 
 publicReviewPageSql :: Text
 publicReviewPageSql =
