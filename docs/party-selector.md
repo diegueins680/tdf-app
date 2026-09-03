@@ -73,11 +73,11 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | --- | --- | --- | --- | --- |
 | `tdf-hq-ui/SocialEventsPage` | Invitación a evento | Texto `Party ID` | `UserSelector`; envía sólo el ID elegido | Migrado |
 | `tdf-hq-ui/EventLogisticsPage` | Añadir miembro | Texto `ID de usuario TDF` | `UserSelector`; envía sólo el ID elegido | Migrado |
-| `tdf-hq-ui/EventLogisticsPage` | Responsable de actividad | Texto ID + externo | Selector pendiente; el flujo externo es válido | Pendiente |
-| `tdf-mobile/eventDetail` | Invitar a amigo | Texto `Party ID` | Requiere selector nativo homólogo | Pendiente |
+| `tdf-hq-ui/EventLogisticsPage` | Responsable de actividad | Texto ID + externo | `UserSelector` y opción externa separada | Migrado |
+| `tdf-mobile/eventDetail` | Invitar a amigo | Texto `Party ID` | Selector nativo; transmite sólo el ID elegido | Migrado |
 | `tdf-mobile/userProfile` | Configurar identidad | Party ID manual | Debe hidratarse desde sesión autenticada | Pendiente |
-| `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | Selector interno/contextual | Pendiente |
-| `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Texto Party ID | Selector compacto | Pendiente |
+| `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
+| `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo | Selector contextual | Pendiente |
 | `tdf-hq-ui/CollaborativeEventCreator` | Colaboradores | Catálogo CRM completo | Selector múltiple | Pendiente |
 

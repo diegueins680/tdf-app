@@ -311,6 +311,7 @@ export default function EventLogisticsPage() {
   const [editingPlaceId, setEditingPlaceId] = useState('');
   const [activityDraft, setActivityDraft] = useState<ActivityDraft>(() => emptyActivity());
   const [editingActivity, setEditingActivity] = useState<EventLogisticsActivityDTO | null>(null);
+  const [activityAssignee, setActivityAssignee] = useState<PartySelectorOption | null>(null);
   const [memberParty, setMemberParty] = useState<PartySelectorOption | null>(null);
   const [memberRole, setMemberRole] = useState<EventLogisticsMemberDTO['elmRole']>('editor');
   const [memberNotice, setMemberNotice] = useState('');
@@ -399,7 +400,7 @@ export default function EventLogisticsPage() {
         ? SocialEventsAPI.updateLogisticsActivity(eventId, String(editingActivity.eacId), payload)
         : SocialEventsAPI.createLogisticsActivity(eventId, payload);
     },
-    onSuccess: () => { setEditingActivity(null); setActivityDraft(emptyActivity(eventQuery.data?.eventStart, eventQuery.data?.eventEnd, timezone, defaultMode)); void refresh(); },
+    onSuccess: () => { setEditingActivity(null); setActivityAssignee(null); setActivityDraft(emptyActivity(eventQuery.data?.eventStart, eventQuery.data?.eventEnd, timezone, defaultMode)); void refresh(); },
   });
   const updateActivityMutation = useMutation({
     mutationFn: ({ activity, status }: { activity: EventLogisticsActivityDTO; status: EventLogisticsActivityDTO['eacStatus'] }) =>
@@ -442,6 +443,13 @@ export default function EventLogisticsPage() {
   const startEditingActivity = (activity: EventLogisticsActivityDTO) => {
     const assignment = activity.eacAssignments[0];
     setEditingActivity(activity);
+    setActivityAssignee(assignment?.elaPartyId
+      ? {
+        partyId: Number(assignment.elaPartyId), partyType: 'person',
+        displayName: assignment.elaDisplayName ?? `Usuario ${assignment.elaPartyId}`,
+        username: null, avatarUrl: null, secondaryLabel: null, accountStatus: 'active',
+      }
+      : null);
     setActivityDraft({
       type: activity.eacType,
       title: activity.eacTitle,
@@ -575,8 +583,23 @@ export default function EventLogisticsPage() {
               <TextField select label="Modo" value={activityDraft.travelMode} onChange={(event) => setActivityDraft({ ...activityDraft, travelMode: event.target.value as LogisticsTravelMode })}><MenuItem value="drive">Vehículo</MenuItem><MenuItem value="walk">Caminata</MenuItem><MenuItem value="bicycle">Bicicleta</MenuItem><MenuItem value="two_wheeler">Motocicleta</MenuItem><MenuItem value="transit">Transporte público</MenuItem></TextField>
               <TextField label="Holgura manual (min, opcional)" type="number" value={activityDraft.bufferMinutes} onChange={(event) => setActivityDraft({ ...activityDraft, bufferMinutes: event.target.value })} />
             </> : <TextField select label="Lugar" value={activityDraft.placeId} onChange={(event) => setActivityDraft({ ...activityDraft, placeId: event.target.value })}><MenuItem value="">Sin lugar</MenuItem>{plan?.elgPlaces.map((place) => <MenuItem key={place.elpId} value={place.elpId ?? ''}>{place.elpLabel}</MenuItem>)}</TextField>}
-            <TextField label="ID responsable TDF" value={activityDraft.assigneePartyId} onChange={(event) => setActivityDraft({ ...activityDraft, assigneePartyId: event.target.value, externalName: event.target.value ? '' : activityDraft.externalName })} />
-            <TextField label="Responsable externo" value={activityDraft.externalName} onChange={(event) => setActivityDraft({ ...activityDraft, externalName: event.target.value, assigneePartyId: event.target.value ? '' : activityDraft.assigneePartyId })} />
+            <UserSelector
+              value={activityAssignee}
+              onChange={(party) => {
+                setActivityAssignee(party);
+                setActivityDraft({
+                  ...activityDraft,
+                  assigneePartyId: party ? String(party.partyId) : '',
+                  externalName: party ? '' : activityDraft.externalName,
+                });
+              }}
+              field={{ label: 'Responsable TDF', helperText: 'Busca y selecciona una cuenta TDF; nunca ingreses un ID manualmente.' }}
+            />
+            <TextField label="Responsable externo" value={activityDraft.externalName} onChange={(event) => {
+              const externalName = event.target.value;
+              setActivityAssignee(null);
+              setActivityDraft({ ...activityDraft, externalName, assigneePartyId: externalName ? '' : activityDraft.assigneePartyId });
+            }} />
             <TextField type="tel" label="Teléfono externo" value={activityDraft.externalPhone} onChange={(event) => setActivityDraft({ ...activityDraft, externalPhone: event.target.value })} />
             <TextField label="Email externo" value={activityDraft.externalEmail} onChange={(event) => setActivityDraft({ ...activityDraft, externalEmail: event.target.value })} />
             <TextField label="Dependencias (IDs separados por coma)" value={activityDraft.dependencyIds} onChange={(event) => setActivityDraft({ ...activityDraft, dependencyIds: event.target.value })} />
@@ -584,7 +607,7 @@ export default function EventLogisticsPage() {
           </Box>
           <Stack direction="row" spacing={1}>
             <Button variant="contained" onClick={() => activityMutation.mutate()} disabled={activityMutation.isPending}>{activityMutation.isPending ? <CircularProgress size={20} /> : editingActivity ? 'Actualizar actividad' : 'Añadir al cronograma'}</Button>
-            {editingActivity && <Button onClick={() => { setEditingActivity(null); setActivityDraft(emptyActivity(eventQuery.data?.eventStart, eventQuery.data?.eventEnd, timezone, defaultMode)); }}>Cancelar</Button>}
+            {editingActivity && <Button onClick={() => { setEditingActivity(null); setActivityAssignee(null); setActivityDraft(emptyActivity(eventQuery.data?.eventStart, eventQuery.data?.eventEnd, timezone, defaultMode)); }}>Cancelar</Button>}
           </Stack>
         </Stack></CardContent></Card>}
 

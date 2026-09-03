@@ -45,6 +45,8 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import PageShell, { EmptyState } from '../components/PageShell';
+import { PartySelector } from '../components/party-selector/PartySelector';
+import type { PartySelectorOption } from '../api/partySelector';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
   Operations,
@@ -180,6 +182,8 @@ export default function OperationsControlCenterPage() {
   const { locale, currency: preferredCurrency } = useLocalePreferences();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<OperationsFilters>(DEFAULT_FILTERS);
+  const [assigneeFilterParty, setAssigneeFilterParty] = useState<PartySelectorOption | null>(null);
+  const [customerFilterParty, setCustomerFilterParty] = useState<PartySelectorOption | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -576,8 +580,8 @@ export default function OperationsControlCenterPage() {
           <FormControl><InputLabel>{t('operations.statusLabel')}</InputLabel><Select label={t('operations.statusLabel')} value={filters.status ?? ''} onChange={(event) => setFilters((current) => ({ ...current, status: (event.target.value || undefined) as OperationsStatus | undefined }))}><MenuItem value="">{t('operations.all')}</MenuItem>{STATUS_ORDER.map((status) => <MenuItem key={status} value={status}>{statusLabel(t, status)}</MenuItem>)}</Select></FormControl>
           <FormControl><InputLabel>{t('operations.priorityLabel')}</InputLabel><Select label={t('operations.priorityLabel')} value={filters.priority ?? ''} onChange={(event) => setFilters((current) => ({ ...current, priority: (event.target.value || undefined) as OperationsPriority | undefined }))}><MenuItem value="">{t('operations.all')}</MenuItem>{PRIORITIES.map((priority) => <MenuItem key={priority} value={priority}>{priorityLabel(t, priority)}</MenuItem>)}</Select></FormControl>
           <FormControl><InputLabel>{t('operations.slaLabel')}</InputLabel><Select label={t('operations.slaLabel')} value={filters.slaState ?? ''} onChange={(event) => setFilters((current) => ({ ...current, slaState: (event.target.value || undefined) as OperationsFilters['slaState'] }))}><MenuItem value="">{t('operations.all')}</MenuItem>{['on_track', 'at_risk', 'due', 'breached', 'paused'].map((sla) => <MenuItem key={sla} value={sla}>{t(`operations.sla.${sla}`)}</MenuItem>)}</Select></FormControl>
-          <TextField label={t('operations.assigneeId')} value={filters.assigneePartyId ?? ''} onChange={(event) => setFilters((current) => ({ ...current, assigneePartyId: event.target.value ? Number(event.target.value) : undefined }))} />
-          <TextField label={t('operations.customerId')} value={filters.customerPartyId ?? ''} onChange={(event) => setFilters((current) => ({ ...current, customerPartyId: event.target.value ? Number(event.target.value) : undefined }))} />
+          <PartySelector value={assigneeFilterParty} onChange={(party) => { setAssigneeFilterParty(party); setFilters((current) => ({ ...current, assigneePartyId: party?.partyId })); }} field={{ label: 'Responsable' }} />
+          <PartySelector value={customerFilterParty} onChange={(party) => { setCustomerFilterParty(party); setFilters((current) => ({ ...current, customerPartyId: party?.partyId })); }} field={{ label: 'Cliente' }} search={{ kind: 'any', accountOnly: false }} />
           <TextField label={t('operations.paymentState')} value={filters.paymentState ?? ''} onChange={(event) => setFilters((current) => ({ ...current, paymentState: event.target.value || undefined }))} />
           <TextField type="date" label={t('operations.from')} value={filters.from?.slice(0, 10) ?? ''} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value ? new Date(`${event.target.value}T00:00:00`).toISOString() : undefined }))} InputLabelProps={{ shrink: true }} />
           <TextField type="date" label={t('operations.to')} value={filters.to?.slice(0, 10) ?? ''} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value ? new Date(`${event.target.value}T23:59:59`).toISOString() : undefined }))} InputLabelProps={{ shrink: true }} />
@@ -587,7 +591,7 @@ export default function OperationsControlCenterPage() {
           </Stack>
           <FormControl><InputLabel>{t('operations.seenLabel')}</InputLabel><Select label={t('operations.seenLabel')} value={filters.seen === undefined ? '' : String(filters.seen)} onChange={(event) => setFilters((current) => ({ ...current, seen: event.target.value === '' ? undefined : event.target.value === 'true' }))}><MenuItem value="">{t('operations.all')}</MenuItem><MenuItem value="false">{t('operations.unseen')}</MenuItem><MenuItem value="true">{t('operations.seen')}</MenuItem></Select></FormControl>
           <Stack direction="row" spacing={1}>
-            <Button onClick={() => setFilters(DEFAULT_FILTERS)}>{t('operations.clear')}</Button>
+            <Button onClick={() => { setFilters(DEFAULT_FILTERS); setAssigneeFilterParty(null); setCustomerFilterParty(null); }}>{t('operations.clear')}</Button>
             <Button variant="contained" onClick={() => setFilterDrawerOpen(false)}>{t('operations.applyFilters')}</Button>
           </Stack>
         </Stack>

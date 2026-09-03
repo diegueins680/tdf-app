@@ -29,6 +29,8 @@ import {
 } from '../api/internalFeedback';
 import type { InternalReportState, InternalReportType } from '../api/types';
 import PageShell, { EmptyState } from '../components/PageShell';
+import { UserSelector } from '../components/party-selector/PartySelector';
+import type { PartySelectorOption } from '../api/partySelector';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
 import {
@@ -240,6 +242,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [evidenceUrl, setEvidenceUrl] = useState('');
   const [adminUpdate, setAdminUpdate] = useState<InternalFeedbackUpdate>({});
+  const [assignee, setAssignee] = useState<PartySelectorOption | null>(null);
   const [reporterUpdate, setReporterUpdate] = useState<InternalFeedbackUpdate>({});
   const [retestResult, setRetestResult] = useState('passed');
   const [retestNotes, setRetestNotes] = useState('');
@@ -394,7 +397,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
             <Grid item xs={12}><TextField label="Resolución" value={adminUpdate.ifuResolution ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuResolution: event.target.value || null }))} fullWidth multiline /></Grid>
             <Grid item xs={12} md={6}><TextField label="Motivo de cierre" value={adminUpdate.ifuClosureReason ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuClosureReason: event.target.value || null }))} fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="ID de reporte canónico si es duplicado" value={adminUpdate.ifuDuplicateOf ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuDuplicateOf: event.target.value || null }))} fullWidth /></Grid>
-            <Grid item xs={12} md={6}><TextField label="Party ID responsable" type="number" value={adminUpdate.ifuAssignedTo ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuAssignedTo: event.target.value ? Number(event.target.value) : null }))} helperText={report.ifrAssignedTo ? `Actual: ${report.ifrAssignedTo}` : 'Usa un Party ID existente.'} fullWidth /></Grid>
+            <Grid item xs={12} md={6}><UserSelector value={assignee} onChange={(party) => { setAssignee(party); setAdminUpdate((current) => ({ ...current, ifuAssignedTo: party?.partyId ?? null })); }} field={{ label: 'Responsable', helperText: report.ifrAssignedTo && !assignee ? 'La asignación actual se conserva hasta elegir un reemplazo.' : 'Busca una persona por nombre o @username.' }} /></Grid>
             <Grid item xs={12} md={6}><TextField label="Issue de GitHub confirmado" value={adminUpdate.ifuGithubIssueUrl ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuGithubIssueUrl: event.target.value || null }))} helperText={report.ifrGithubIssueUrl || 'Sólo https://github.com/owner/repo/issues/número'} fullWidth /></Grid>
           </Grid>
           <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.update(reportId, adminUpdate))}>Guardar triage</Button>
