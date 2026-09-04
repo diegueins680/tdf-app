@@ -2,11 +2,10 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, RoomDTO } from '../api/types';
 
 const listAssetsMock = jest.fn<() => Promise<AssetDTO[] | { items: AssetDTO[] }>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
-const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
@@ -22,12 +21,6 @@ jest.unstable_mockModule('../api/inventory', () => ({
 jest.unstable_mockModule('../api/rooms', () => ({
   Rooms: {
     list: () => listRoomsMock(),
-  },
-}));
-
-jest.unstable_mockModule('../api/parties', () => ({
-  Parties: {
-    list: () => listPartiesMock(),
   },
 }));
 
@@ -197,12 +190,10 @@ describe('InventoryPage', () => {
   beforeEach(() => {
     listAssetsMock.mockReset();
     listRoomsMock.mockReset();
-    listPartiesMock.mockReset();
     historyMock.mockReset();
 
     listAssetsMock.mockResolvedValue([buildAsset()]);
     listRoomsMock.mockResolvedValue([]);
-    listPartiesMock.mockResolvedValue([]);
     historyMock.mockResolvedValue([]);
   });
 

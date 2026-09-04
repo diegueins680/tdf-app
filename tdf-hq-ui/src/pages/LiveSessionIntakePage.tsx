@@ -20,10 +20,11 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Parties } from '../api/parties';
 import type { PartyDTO, PartyUpdate } from '../api/types';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartySelector } from '../components/party-selector/PartySelector';
 import { Admin } from '../api/admin';
 import { submitLiveSessionIntake } from '../api/liveSessions';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
-import { getStoredSessionToken, useSession } from '../session/SessionContext';
 import { toLocalDateInputValue } from '../utils/dateOnly';
 import EnrollmentSuccessDialog from '../components/EnrollmentSuccessDialog';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -86,14 +87,7 @@ export interface LiveSessionIntakeFormProps {
 
 export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntakeFormProps) {
   const qc = useQueryClient();
-  const { session } = useSession();
   const { locale } = useLocalePreferences();
-  const hasToken = Boolean(session) || Boolean(getStoredSessionToken());
-  const { data: parties = [], isLoading: partiesLoading } = useQuery({
-    queryKey: ['parties'],
-    queryFn: () => Parties.list(),
-    enabled: hasToken,
-  });
   const { data: musicCatalogs, isLoading: musicCatalogsLoading } = useQuery({
     queryKey: ['catalogs', 'live-session-intake', locale],
     queryFn: () => Catalogs.listPublicBatch(
@@ -184,14 +178,6 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
     setlist,
   ]);
 
-  const partyOptions = useMemo(
-    () =>
-      parties.filter((p) => !p.isOrg).map((p) => ({
-        label: `${p.displayName}${p.primaryEmail ? ` · ${p.primaryEmail}` : ''}`,
-        party: p,
-      })),
-    [parties],
-  );
   const genreOptions = useMemo<CatalogItem[]>(
     () => musicCatalogs?.catalogs.find((page) => page.catalog.code === 'genres')?.items ?? [],
     [musicCatalogs?.catalogs],
@@ -305,7 +291,7 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
   const handleAddMusician = () => setMusicians((prev) => [...prev, emptyMusician()]);
   const handleRemoveMusician = (id: string) => setMusicians((prev) => prev.filter((m) => m.id !== id));
 
-  const handleSelectParty = async (id: string, party: PartyDTO | null) => {
+  const handleSelectParty = async (id: string, party: PartySelectorOption | null) => {
     const current = musicians.find((m) => m.id === id);
 
     if (!party) {
@@ -317,10 +303,10 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
       partyId: party.partyId,
       mode: 'existing',
       name: party.displayName ?? current?.name ?? '',
-      email: party.primaryEmail ?? current?.email ?? '',
-      phone: party.primaryPhone ?? party.whatsapp ?? current?.phone ?? '',
-      instagram: party.instagram ?? current?.instagram ?? '',
-      notes: party.notes ?? current?.notes ?? '',
+      email: current?.email ?? '',
+      phone: current?.phone ?? '',
+      instagram: current?.instagram ?? '',
+      notes: current?.notes ?? '',
     };
 
     handleMusicianChange(id, basePatch);
@@ -484,20 +470,14 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
 
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
-                    <Autocomplete
-                      options={partyOptions}
-                      loading={partiesLoading}
-                      onChange={(_, value) => {
-                        void handleSelectParty(musician.id, value?.party ?? null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField {...params} label="Seleccionar contacto existente" placeholder="Buscar por nombre o email" />
-                      )}
-                      value={
-                        musician.partyId
-                          ? partyOptions.find((opt) => opt.party.partyId === musician.partyId) ?? null
-                          : null
-                      }
+                    <PartySelector
+                      value={musician.partyId ? {
+                        partyId: musician.partyId, partyType: 'person', displayName: musician.name || `Contacto ${musician.partyId}`,
+                        username: null, avatarUrl: null, secondaryLabel: musician.email || null, accountStatus: 'no-account',
+                      } : null}
+                      onChange={(party) => { void handleSelectParty(musician.id, party); }}
+                      field={{ label: 'Seleccionar contacto existente', helperText: 'Busca por nombre, usuario o correo.' }}
+                      search={{ kind: 'person', accountOnly: false }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>

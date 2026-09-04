@@ -30,11 +30,10 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AssetDTO, AssetCheckoutDTO, PartyDTO, RoomDTO } from '../api/types';
+import type { AssetDTO, AssetCheckoutDTO, RoomDTO } from '../api/types';
 import { Inventory, type AssetCheckoutRequest, type AssetCheckinRequest, type AssetQrDTO } from '../api/inventory';
 import { CheckoutDialog, CheckinDialog } from '../components/AssetDialogs';
 import { Rooms } from '../api/rooms';
-import { Parties } from '../api/parties';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
@@ -532,11 +531,6 @@ export default function InventoryPage() {
     queryFn: Rooms.list,
     staleTime: 5 * 60 * 1000,
   });
-  const partiesQuery = useQuery({
-    queryKey: ['parties', 'all'],
-    queryFn: () => Parties.list(),
-    staleTime: 5 * 60 * 1000,
-  });
   const [selected, setSelected] = useState<AssetDTO | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrShareUrl, setQrShareUrl] = useState<string>('');
@@ -729,7 +723,6 @@ export default function InventoryPage() {
   const assets = useMemo(() => assetsQuery.data ?? [], [assetsQuery.data]);
   const roomOptions = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
   const roomMap = useMemo(() => new Map(roomOptions.map((room) => [room.roomId, room])), [roomOptions]);
-  const partyOptions = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const showInitialInventoryLoadingState = assetsQuery.isLoading && assets.length === 0;
   const showInitialInventoryErrorState = Boolean(assetsQuery.error) && assets.length === 0;
   const showInventorySearch = !showInitialInventoryLoadingState && !showInitialInventoryErrorState && assets.length > 1;
@@ -1117,9 +1110,7 @@ export default function InventoryPage() {
         onSubmit={() => selected && checkoutMutation.mutate({ assetId: selected.assetId, payload: form })}
         loading={checkoutMutation.isPending}
         roomOptions={roomOptions}
-        partyOptions={partyOptions}
         loadingRooms={roomsQuery.isLoading}
-        loadingParties={partiesQuery.isLoading}
         currentCheckout={currentCheckout}
         recentHistory={history}
         onCheckoutPhotoSelect={(file) => void uploadCheckoutPhoto(file)}

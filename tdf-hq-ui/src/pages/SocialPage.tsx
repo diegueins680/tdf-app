@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   Card,
@@ -32,6 +31,8 @@ import { EmptyState } from '../components/PageShell';
 import GroupIcon from '@mui/icons-material/Group';
 import { SocialAPI } from '../api/social';
 import type { PartyFollowDTO, SocialPartyProfileDTO } from '../api/types';
+import type { PartySelectorOption } from '../api/partySelector';
+import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
 import { buildVCardSharePayload, parseVCardPayload } from '../utils/vcard';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -56,7 +57,7 @@ export default function SocialPage() {
   const qc = useQueryClient();
   const { session } = useSession();
   const [activeTab, setActiveTab] = useState<TabKey>('friends');
-  const [addId, setAddId] = useState('');
+  const [friendCandidate, setFriendCandidate] = useState<PartySelectorOption | null>(null);
   const [shareName, setShareName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [sharePhone, setSharePhone] = useState('');
@@ -174,10 +175,6 @@ export default function SocialPage() {
     return map;
   }, [profilesQuery.data]);
 
-  const profileOptions = useMemo(
-    () => (profilesQuery.data ?? []).filter((profile) => profile.sppPartyId !== session?.partyId),
-    [profilesQuery.data, session?.partyId],
-  );
 
   useEffect(() => {
     const profileDisplayName = myProfileQuery.data?.fpDisplayName?.trim();
@@ -203,14 +200,14 @@ export default function SocialPage() {
     mutationFn: async (targetId) => {
       const numeric =
         (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
-        ?? parsePositivePartyId(addId);
-      if (numeric === null) throw new Error('Ingresa un ID válido.');
+        ?? null;
+      if (numeric === null) throw new Error('Selecciona una persona para conectar.');
       await SocialAPI.addFriend(numeric);
     },
     onMutate: async (targetId) => {
       const numeric =
         (typeof targetId === 'number' && Number.isSafeInteger(targetId) && targetId > 0 ? targetId : null)
-        ?? parsePositivePartyId(addId);
+        ?? null;
       if (numeric === null) return { previousFriends: undefined, previousFollowing: undefined, previousSuggestions: undefined };
       await qc.cancelQueries({ queryKey: ['social-friends'] });
       await qc.cancelQueries({ queryKey: ['social-following'] });
@@ -235,7 +232,7 @@ export default function SocialPage() {
       return { previousFriends, previousFollowing, previousSuggestions };
     },
     onSuccess: () => {
-      setAddId('');
+      setFriendCandidate(null);
       setFeedback({ kind: 'success', message: 'Listo, conexión agregada.' });
     },
     onError: (err, _targetId, context) => {
@@ -326,20 +323,9 @@ export default function SocialPage() {
       <Stack spacing={2} sx={{ mb: 2 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h4" fontWeight={800}>Conexiones</Typography>
-          <Chip label={session?.partyId ? `Tu ID: ${session.partyId}` : 'Sin sesión'} size="small" />
-          {session?.partyId && (
-            <Button
-              size="small"
-              variant="text"
-              startIcon={<ContentCopyIcon fontSize="small" />}
-              onClick={() => void handleCopy(String(session.partyId))}
-            >
-              Copiar ID
-            </Button>
-          )}
         </Stack>
         <Typography color="text.secondary">
-          Administra seguidores, seguidos y amigos mutuos. Usa el ID de perfil para agregar amigos.
+          Administra seguidores, seguidos y amigos mutuos. Busca una cuenta TDF para agregar amigos.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
@@ -355,34 +341,17 @@ export default function SocialPage() {
           </Button>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          <Autocomplete
-            sx={{ minWidth: 260 }}
-            size="small"
-            options={profileOptions}
-            loading={profilesQuery.isLoading}
-            getOptionLabel={(option) => option.sppDisplayName ?? `Perfil #${option.sppPartyId}`}
-            value={(() => {
-              const numeric = parsePositivePartyId(addId);
-              if (numeric === null) return null;
-              return profileOptions.find((profile) => profile.sppPartyId === numeric) ?? null;
-            })()}
-            onChange={(_, value) => setAddId(value ? String(value.sppPartyId) : '')}
-            inputValue={addId}
-            onInputChange={(_, value) => setAddId(value)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Agregar amigo por sugerencia o ID"
-                placeholder="Selecciona una sugerencia o ingresa un ID"
-              />
-            )}
-            noOptionsText={profilesQuery.isFetching ? 'Cargando perfiles…' : 'Sin coincidencias'}
-          />
+          <Box sx={{ minWidth: 260, flex: 1 }}><UserSelector
+            value={friendCandidate}
+            onChange={setFriendCandidate}
+            field={{ label: 'Agregar amigo', helperText: 'Busca y selecciona una cuenta TDF.' }}
+            search={{ excludedPartyIds: session?.partyId ? [session.partyId] : [] }}
+          /></Box>
           <Button
             variant="contained"
             startIcon={<PersonAddAltIcon />}
-            onClick={() => addMutation.mutate(undefined)}
-            disabled={addMutation.status === 'pending'}
+            onClick={() => addMutation.mutate(friendCandidate?.partyId)}
+            disabled={!friendCandidate || addMutation.status === 'pending'}
           >
             Agregar
           </Button>
@@ -438,21 +407,16 @@ export default function SocialPage() {
                   fullWidth
                 />
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  type="tel"
-                  label="Teléfono / WhatsApp"
-                  value={sharePhone}
-                  onChange={(e) => setSharePhone(e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="Party ID"
-                  value={session?.partyId ? String(session.partyId) : ''}
-                  disabled
-                  fullWidth
-                />
-              </Stack>
+              <TextField
+                type="tel"
+                label="Teléfono / WhatsApp"
+                value={sharePhone}
+                onChange={(e) => setSharePhone(e.target.value)}
+                fullWidth
+                helperText={session?.partyId
+                  ? 'Tu identidad TDF se incorpora automáticamente al QR.'
+                  : 'Inicia sesión para incorporar tu identidad TDF al QR.'}
+              />
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                 <Box
                   sx={{

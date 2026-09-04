@@ -35,6 +35,10 @@ interfaz.
   administrador recibido por URL; los usuarios normales ven “Mi artista”.
 - `PartnerManagementPage` usa “DDEX Party Identifier”, un identificador del
   estándar DDEX y no la clave canónica `partyId` de TDF.
+- El check-out de inventario conserva una referencia histórica libre de
+  persona/empresa porque el modelo `AssetCheckout.targetPartyRef` es texto y
+  no una relación con `Party`. La interfaz lo identifica como tal y no carga
+  el catálogo CRM para sugerir una relación inexistente.
 - Expedientes históricos sin nombre ni contacto pueden mostrar `Party #…`
   como referencia interna final. No permiten crear ni reasignar relaciones.
 
@@ -47,10 +51,10 @@ Usar `UserSelector` para relaciones de persona con cuenta activa:
 
 ```tsx
 <UserSelector
-  label="Persona a invitar"
   value={party}
   onChange={setParty}
-  excludedPartyIds={[currentPartyId]}
+  field={{ label: 'Persona a invitar' }}
+  search={{ excludedPartyIds: [currentPartyId] }}
 />
 ```
 
@@ -95,7 +99,13 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo y resolución por nombre | `PartySelector` remoto; conserva relaciones históricas y creación de contactos | Migrado |
 | `tdf-hq-ui/LabelArtistsPage` | Enlazar perfil de artista | Lista CRM con Party ID y correo | `PartySelector` mínimo; el ID queda oculto y canónico | Migrado |
-| `tdf-hq-ui/CollaborativeEventCreator` | Colaboradores | Catálogo CRM completo | Selector múltiple | Pendiente |
+| `tdf-hq-ui/CollaborativeEventCreatorPage` | Colaboradores | Catálogo CRM completo | `UserSelector` repetible con exclusión de seleccionados | Migrado |
+| `tdf-hq-ui/LiveSessionIntakePage` | Músico existente | Catálogo CRM completo | `PartySelector`; obtiene el detalle sólo después de seleccionar | Migrado |
+| `tdf-hq-ui/PaymentsPage` | Contacto, filtro y cliente facturable | Catálogo CRM completo | `PartySelector`; el DTO de pago incluye el nombre mínimo para historial | Migrado |
+| `tdf-hq-ui/ChatPage` | Nueva conversación | ID manual y catálogo CRM completo | Selector limitado a amistades mutuas; los enlaces técnicos siguen resolviendo un ID recibido por URL | Migrado |
+| `tdf-hq-ui/SocialPage` | Añadir amistad | ID manual | `UserSelector`; QR/vCard conserva el identificador de intercambio | Migrado |
+| `tdf-hq-ui/InventoryPage` | Responsable de check-out | Catálogo CRM sobre referencia libre | Campo de referencia textual explícito; no representa ni persiste una relación Party | Corregido |
 
-Los elementos pendientes se documentan deliberadamente: no deben interpretarse
-como migrados. La auditoría completa de rutas está en el cuerpo del PR.
+Los usos restantes de `GET /parties` pertenecen a vistas administrativas de
+directorio o a enriquecimiento de lectura, no a campos que crean o modifican
+relaciones. La auditoría de catálogos mantiene esas decisiones revisadas.

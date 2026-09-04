@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type { AssetCheckoutDTO, AssetDTO, PartyDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, RoomDTO } from '../api/types';
 import type { AssetCheckinRequest, AssetCheckoutRequest } from '../api/inventory';
 import {
   CHECKOUT_DISPOSITION_OPTIONS,
@@ -33,9 +33,7 @@ export function CheckoutDialog({
   onSubmit,
   loading,
   roomOptions,
-  partyOptions,
   loadingRooms,
-  loadingParties,
   currentCheckout,
   recentHistory,
   onCheckoutPhotoSelect,
@@ -49,9 +47,7 @@ export function CheckoutDialog({
   onSubmit: () => void;
   loading: boolean;
   roomOptions?: RoomDTO[];
-  partyOptions?: PartyDTO[];
   loadingRooms?: boolean;
-  loadingParties?: boolean;
   currentCheckout?: AssetCheckoutDTO | null;
   recentHistory?: AssetCheckoutDTO[];
   onCheckoutPhotoSelect?: (file: File) => void;
@@ -215,34 +211,12 @@ export function CheckoutDialog({
             />
           )}
           {targetKind === 'party' && (
-            <Autocomplete<PartyDTO, false, false, true>
-              freeSolo
-              options={partyOptions ?? []}
-              getOptionLabel={(option) => (typeof option === 'string' ? option : option.displayName)}
-              loading={loadingParties}
-              value={partyOptions?.find((p) => p.displayName === form.coTargetParty) ?? null}
-              inputValue={form.coTargetParty ?? ''}
-              onInputChange={(_, value) => onFormChange({ ...form, coTargetParty: value })}
-              onChange={(_, value) => {
-                if (!value) {
-                  onFormChange({ ...form, coTargetParty: '' });
-                  return;
-                }
-                if (typeof value === 'string') {
-                  onFormChange({ ...form, coTargetParty: value });
-                } else {
-                  onFormChange({ ...form, coTargetParty: value.displayName });
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Referencia (persona/empresa)"
-                  placeholder="Busca o escribe un nombre"
-                  helperText="Guardaremos el nombre seleccionado o escrito."
-                />
-              )}
-              noOptionsText={loadingParties ? 'Cargando contactos…' : 'Sin contactos disponibles'}
+            <TextField
+              label="Referencia (persona/empresa)"
+              value={form.coTargetParty ?? ''}
+              onChange={(event) => onFormChange({ ...form, coTargetParty: event.target.value })}
+              placeholder="Escribe el nombre del responsable"
+              helperText="Este registro histórico guarda una referencia de texto, no un Party ID."
             />
           )}
           <TextField

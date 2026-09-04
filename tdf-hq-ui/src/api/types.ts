@@ -804,6 +804,7 @@ export interface ArtistProfilePhotoUpdate {
 export interface PaymentDTO {
   payId: number;
   payPartyId: number;
+  payPartyDisplayName: string;
   payOrderId?: number | null;
   payInvoiceId?: number | null;
   payAmountCents: number;

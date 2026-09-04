@@ -24,11 +24,9 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
-import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaymentCreate, PaymentDTO, PartyDTO } from '../api/types';
+import type { PaymentCreate, PaymentDTO } from '../api/types';
 import { Payments } from '../api/payments';
-import { Parties } from '../api/parties';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { toLocalDateInputValue } from '../utils/dateOnly';
@@ -38,24 +36,12 @@ import { useCurrency } from '../contexts/CurrencyContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { EmptyState } from '../components/PageShell';
+import { PartySelector } from '../components/party-selector/PartySelector';
+import type { PartySelectorOption } from '../api/partySelector';
 
 const PAYMENT_METHODS = ['Produbanco', 'Bank', 'Cash', 'Card', 'Crypto', 'Other'] as const;
 const CONCEPT_PRESETS = ['Honorarios', 'Adelanto', 'Licencia', 'Reembolso', 'Otros'];
 const MONTH_CODES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] as const;
-
-const partyFilterOptions = createFilterOptions<PartyDTO>({
-  stringify: (option) =>
-    [
-      option.displayName,
-      option.primaryEmail,
-      option.primaryPhone,
-      option.instagram,
-      option.partyId,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase(),
-});
 
 const toPeriod = (isoDate: string) => {
   const raw = isoDate.trim();
@@ -88,21 +74,18 @@ const parseOptionalPositiveInt = (value: string): number | null | 'invalid' => {
 
 function PaymentForm({
   onCreated,
-  parties,
   defaultParty,
   payments,
 }: {
   onCreated: () => void;
-  parties: PartyDTO[];
-  defaultParty?: PartyDTO | null;
+  defaultParty?: PartySelectorOption | null;
   payments: PaymentDTO[];
 }) {
   const { currency: preferredCurrency, supportedCurrencies } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const [toast, setToast] = useState<string | null>(null);
   const qc = useQueryClient();
-  const [selectedParty, setSelectedParty] = useState<PartyDTO | null>(defaultParty ?? null);
-  const [partyInput, setPartyInput] = useState<string>('');
+  const [selectedParty, setSelectedParty] = useState<PartySelectorOption | null>(defaultParty ?? null);
   const [paidAt, setPaidAt] = useState<string>(() => toLocalDateInputValue());
   const [amount, setAmount] = useState<string>('');
   const [currency, setCurrency] = useState<string>(preferredCurrency);
@@ -229,28 +212,7 @@ function PaymentForm({
         </Stack>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <Autocomplete
-                options={parties}
-                value={selectedParty}
-                onChange={(_, value) => {
-                  setSelectedParty(value);
-                }}
-                inputValue={partyInput}
-                onInputChange={(_, value) => setPartyInput(value)}
-                filterOptions={partyFilterOptions}
-                getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
-                isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
-              noOptionsText="Sin coincidencias. Revisa Contactos."
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Contacto"
-                  required
-                  helperText={fieldHints.party ?? 'Busca por nombre, email o ID.'}
-                  error={Boolean(fieldHints.party)}
-                />
-              )}
-            />
+              <PartySelector value={selectedParty} onChange={setSelectedParty} field={{ label: 'Contacto', required: true, helperText: fieldHints.party ?? 'Busca por nombre, usuario o correo.' }} />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
@@ -447,8 +409,7 @@ function PaymentForm({
 export default function PaymentsPage() {
   useDocumentTitle('Finanzas / Pagos');
   const { formatMoney } = useCurrency();
-  const [partyFilter, setPartyFilter] = useState<PartyDTO | null>(null);
-  const [partyFilterInput, setPartyFilterInput] = useState<string>('');
+  const [partyFilter, setPartyFilter] = useState<PartySelectorOption | null>(null);
   const [fromFilter, setFromFilter] = useState<string>('');
   const [toFilter, setToFilter] = useState<string>('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -458,20 +419,7 @@ export default function PaymentsPage() {
     queryFn: () => Payments.list(partyFilter?.partyId),
   });
 
-  const partiesQuery = useQuery<PartyDTO[]>({
-    queryKey: ['parties', 'all'],
-    queryFn: () => Parties.list(),
-  });
-
-  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
-
-  const partyLookup = useMemo(() => {
-    const map = new Map<number, PartyDTO>();
-    parties.forEach((party) => map.set(party.partyId, party));
-    return map;
-  }, [parties]);
-
-  const payments = paymentsQuery.data ?? [];
+  const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data]);
   const filteredPayments = useMemo(
     () =>
       payments.filter((pay) => {
@@ -500,27 +448,7 @@ export default function PaymentsPage() {
           </Typography>
         </Box>
         <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
-          <Autocomplete
-            sx={{ minWidth: 280 }}
-            size="small"
-            options={parties}
-            loading={partiesQuery.isFetching}
-            value={partyFilter}
-            onChange={(_, value) => setPartyFilter(value)}
-            inputValue={partyFilterInput}
-            onInputChange={(_, value) => setPartyFilterInput(value)}
-            filterOptions={partyFilterOptions}
-            getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
-            isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
-            noOptionsText="Sin coincidencias"
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Filtrar por contacto"
-                placeholder="Nombre, correo o ID"
-              />
-            )}
-          />
+          <Box sx={{ minWidth: 280 }}><PartySelector value={partyFilter} onChange={setPartyFilter} field={{ label: 'Filtrar por contacto' }} /></Box>
           <TextField
             label="Desde"
             type="date"
@@ -555,7 +483,6 @@ export default function PaymentsPage() {
             variant="text"
             onClick={() => {
               setPartyFilter(null);
-              setPartyFilterInput('');
               setFromFilter('');
               setToFilter('');
               setMethodFilter('all');
@@ -583,11 +510,10 @@ export default function PaymentsPage() {
               onCreated={() => {
                 void paymentsQuery.refetch();
               }}
-              parties={parties}
               defaultParty={partyFilter}
               payments={payments}
             />
-            <SessionInvoiceGeneratorCard parties={parties} />
+            <SessionInvoiceGeneratorCard />
           </Stack>
         </Grid>
         <Grid item xs={12} lg={7}>
@@ -628,18 +554,12 @@ export default function PaymentsPage() {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {visiblePayments.map((pay) => {
-                        const contact = partyLookup.get(pay.payPartyId);
-                        return (
+                      {visiblePayments.map((pay) => (
                           <TableRow key={pay.payId} hover>
                             <TableCell>{pay.payId}</TableCell>
                             <TableCell>
                               <Typography variant="body2" fontWeight={600}>
-                                {contact?.displayName ?? 'Contacto desconocido'}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                ID {pay.payPartyId}
-                                {contact?.primaryEmail ? ` · ${contact.primaryEmail}` : ''}
+                                {pay.payPartyDisplayName}
                               </Typography>
                             </TableCell>
                             <TableCell>{pay.payPaidAt.split(' ')[0]}</TableCell>
@@ -666,8 +586,7 @@ export default function PaymentsPage() {
                               )}
                             </TableCell>
                           </TableRow>
-                        );
-                      })}
+                      ))}
                     </TableBody>
                   </Table>
                 )}
