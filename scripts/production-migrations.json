@@ -345,6 +345,11 @@
       "id": "2026-09-02_party_selector_search_indexes",
       "path": "tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql",
       "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_integrity",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql",
+      "introducedBy": "19d796de569449a09377ee15d9ae5078061b3763"
     }
   ]
 }
