@@ -471,7 +471,9 @@ buildSessionResponse cfg mResolvedUsername AuthedUser{..} = do
     , sessionPartyId = fromSqlKey auPartyId
     , sessionRoles = auRoles
     , sessionModules = map moduleName (Set.toList auModules)
-    , sessionFeatureFlags = ["EVENT_DISCOVERY_ENABLED" | eventDiscoveryEnabled cfg]
+    , sessionFeatureFlags =
+        [ "CONTEXTUAL_REPUTATION_ENABLED" | contextualReputationEnabled cfg ]
+          <> ["EVENT_DISCOVERY_ENABLED" | eventDiscoveryEnabled cfg]
     , sessionPreferences = preferences
     }
 
