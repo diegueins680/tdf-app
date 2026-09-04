@@ -39,4 +39,10 @@ describe('Party relationship picker migration', () => {
     expect(source).not.toMatch(/Parties\.list\s*\(?/);
     expect(source).not.toContain("from '../api/parties'");
   });
+
+  it('loads CRM notes only for visible label artists instead of downloading the Party directory', () => {
+    const source = readPage('LabelArtistsPage.tsx');
+    expect(source).toContain('Parties.getOne(artist.apArtistId)');
+    expect(source).not.toMatch(/Parties\.list\s*\(?/);
+  });
 });
