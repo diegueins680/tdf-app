@@ -49,6 +49,7 @@ export const reorderCategories = (
     || sourceIndex >= categories.length || destinationIndex >= categories.length) return categories;
   const next = [...categories];
   const [moved] = next.splice(sourceIndex, 1);
+  if (!moved) return categories;
   next.splice(destinationIndex, 0, moved);
   return next;
 };
@@ -118,7 +119,7 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     setOrder(orderCategoriesByPreference(categories.data, preference.data));
   }, [categories.data, contextualReputationEnabled, order.length, preference.data, preference.isLoading]);
   const weights = useMemo(() => rankOrderCentroid(order.length), [order.length]);
-  useEffect(() => onChange?.(order.map((category, index) => ({ categoryId: category.id, weight: weights[index] }))), [onChange, order, weights]);
+  useEffect(() => onChange?.(order.map((category, index) => ({ categoryId: category.id, weight: weights[index] ?? 0 }))), [onChange, order, weights]);
   useEffect(() => {
     if (preference.data && savedRevision === null) setSavedRevision(preference.data.revision);
   }, [preference.data, savedRevision]);
@@ -159,7 +160,8 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     setPrevious(order);
     const next = reorderCategories(order, index, nextIndex);
     setOrder(next);
-    setStatus(copy.priority(next[nextIndex].name, nextIndex + 1));
+    const moved = next[nextIndex];
+    if (moved) setStatus(copy.priority(moved.name, nextIndex + 1));
   };
 
   const onDragEnd = ({ source, destination }: DropResult) => {
@@ -215,7 +217,7 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
                           <DragIndicatorIcon aria-hidden="true" color="action" />
                         </Box>
                         <Box sx={{ flex: 1 }}><Typography fontWeight={700}>{category.name}</Typography><Typography variant="body2" color="text.secondary">{category.description}</Typography></Box>
-                        <Typography fontWeight={800}>{weights[index].toFixed(1)}%</Typography>
+                        <Typography fontWeight={800}>{(weights[index] ?? 0).toFixed(1)}%</Typography>
                         <IconButton aria-label={`${copy.moveUp} ${category.name}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</IconButton>
                         <IconButton aria-label={`${copy.moveDown} ${category.name}`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>↓</IconButton>
                       </Stack>

@@ -57,7 +57,7 @@ export default function PublicReputationSummary({ partyId }: Props) {
         ) : reputation.categories.map((category) => (
           <Box key={category.slug}>
             <Stack direction="row" justifyContent="space-between" gap={1}>
-              <Typography variant="body2">{category.slug.replace(/-/g, ' ')}</Typography>
+              <Typography variant="body2">{category.slug.split('-').join(' ')}</Typography>
               <Typography variant="body2" fontWeight={CATEGORY_SCORE_FONT_WEIGHT}>{Number(category.score).toFixed(0)}</Typography>
             </Stack>
             <LinearProgress
