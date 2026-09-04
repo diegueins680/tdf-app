@@ -80,6 +80,11 @@ pesos exactamente iguales a 100 y un orden monotónico. Los ítems de un ranking
 privado viven en una tabla diferente de los rankings verificados y no tienen
 ningún lector de agregación pública.
 
+El guardado de preferencias es una única transacción por usuario y contexto:
+usa revisión optimista, bloqueo transaccional acotado e idempotency key con
+respuesta conservada 24 horas. Reintentos iguales devuelven la misma respuesta;
+una clave reutilizada con un payload distinto se rechaza.
+
 ## Privacidad, equidad y abuso
 
 - Las posiciones y autorías individuales son privadas. La API pública sólo
