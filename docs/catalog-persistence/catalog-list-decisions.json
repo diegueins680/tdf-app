@@ -8594,16 +8594,6 @@
       "reviewed": true
     },
     {
-      "id": "40a41e9459795daa95b8",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "194e61862722dc6a1b0b",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
