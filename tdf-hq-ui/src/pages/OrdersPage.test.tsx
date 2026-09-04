@@ -3,22 +3,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { BookingDTO, PartyDTO } from '../api/types';
+import type { BookingDTO } from '../api/types';
 
 const listBookingsMock = jest.fn<() => Promise<BookingDTO[]>>();
-const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
 const updateBookingMock = jest.fn<(id: number, payload: unknown) => Promise<BookingDTO>>();
 
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: {
     list: () => listBookingsMock(),
     update: (id: number, payload: unknown) => updateBookingMock(id, payload),
-  },
-}));
-
-jest.unstable_mockModule('../api/parties', () => ({
-  Parties: {
-    list: () => listPartiesMock(),
   },
 }));
 
@@ -168,9 +161,7 @@ describe('OrdersPage', () => {
 
   beforeEach(() => {
     listBookingsMock.mockReset();
-    listPartiesMock.mockReset();
     updateBookingMock.mockReset();
-    listPartiesMock.mockResolvedValue([]);
     updateBookingMock.mockResolvedValue({} as BookingDTO);
   });
 

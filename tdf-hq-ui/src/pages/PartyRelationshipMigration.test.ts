@@ -25,4 +25,18 @@ describe('Party relationship picker migration', () => {
     expect(socialSource).not.toContain('parsePositivePartyId(addId)');
     expect(socialSource).not.toContain('label="Party ID"');
   });
+
+  it('uses the booking display name instead of downloading the Party directory for orders', () => {
+    const source = readPage('OrdersPage.tsx');
+    expect(source).toContain('booking.partyDisplayName');
+    expect(source).not.toMatch(/Parties\.list\s*\(?/);
+    expect(source).not.toContain("from '../api/parties'");
+  });
+
+  it('uses the dedicated teacher projection instead of filtering the Party directory', () => {
+    const source = readPage('TeachersPage.tsx');
+    expect(source).toContain('Trials.listTeachers');
+    expect(source).not.toMatch(/Parties\.list\s*\(?/);
+    expect(source).not.toContain("from '../api/parties'");
+  });
 });
