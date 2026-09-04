@@ -39,7 +39,8 @@ interacción completada/verificable
   -> cola idempotente de agregación
   -> reputation_public_aggregate (proyección pública agregada)
 
-ranking privado -> reputation_private_ranking -> sólo su propietario
+preferencias personales -> reputation_personal_preference -> sólo su propietario
+ranking privado -> reputation_private_ranking + items -> sólo su propietario
 ```
 
 Una evaluación se puede modificar antes de `edit_deadline`; las revisiones,
@@ -73,6 +74,11 @@ fingir precisión. Los rankings ordinales se agregan como comparaciones
 emparejadas con empates, y se combinan con el score absoluto sólo dentro del
 contexto comparable; el modelo seleccionado es un Bradley--Terry bayesiano con
 prior, no una conversión de posición a estrellas.
+
+Un perfil de preferencias sólo puede activarse con 3--10 categorías aplicables,
+pesos exactamente iguales a 100 y un orden monotónico. Los ítems de un ranking
+privado viven en una tabla diferente de los rankings verificados y no tienen
+ningún lector de agregación pública.
 
 ## Privacidad, equidad y abuso
 
