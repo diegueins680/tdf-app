@@ -9,6 +9,8 @@ from Persistent models.
 - `AUTO_APPLY_PRODUCTION_MIGRATIONS=true` enables the production entrypoint.
 - `RUN_MIGRATIONS=false` remains mandatory and prevents inferred Persistent
   DDL from becoming a second source of truth.
+- `CONTEXTUAL_REPUTATION_ENABLED` is staged as `false` until its additive
+  schema, backfill, consent copy, and controlled pilot are approved.
 - `EVENT_DISCOVERY_ENABLED` is staged as `false` during a backend rollout and
   is re-enabled only after the schema, fleet and discovery preflight pass.
 

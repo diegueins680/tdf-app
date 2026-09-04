@@ -37,6 +37,7 @@ primary_region = "gru"
   DEFAULT_LOCALE = "es"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
+  CONTEXTUAL_REPUTATION_ENABLED = "false"
   EVENT_DISCOVERY_ENABLED = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
@@ -542,6 +543,18 @@ test('validateFlyConfig fails closed when event discovery would start during the
   );
 });
 
+test('validateFlyConfig fails closed when contextual reputation would start during the initial release', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'CONTEXTUAL_REPUTATION_ENABLED = "false"',
+        'CONTEXTUAL_REPUTATION_ENABLED = "true"',
+      ),
+    ),
+    /CONTEXTUAL_REPUTATION_ENABLED|contextual reputation/i,
+  );
+});
+
 test('validateFlyConfig requires the persisted production default locale', () => {
   assert.throws(
     () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
@@ -868,6 +881,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, new RegExp(`--image ${releaseImage}`));
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
+  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 

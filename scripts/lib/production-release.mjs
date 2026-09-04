@@ -260,6 +260,9 @@ export function validateFlyConfig(toml) {
   const autoApplyProductionMigrations = String(
     env.get('AUTO_APPLY_PRODUCTION_MIGRATIONS') ?? '',
   ).trim().toLowerCase();
+  const contextualReputation = String(
+    env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
@@ -302,6 +305,9 @@ export function validateFlyConfig(toml) {
     throw new Error(
       'fly.toml must set AUTO_APPLY_PRODUCTION_MIGRATIONS="true" for reviewed SQL migrations.',
     );
+  }
+  if (contextualReputation !== 'false') {
+    throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
@@ -2110,6 +2116,7 @@ export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMa
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
+    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',

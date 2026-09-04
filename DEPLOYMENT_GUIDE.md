@@ -85,6 +85,7 @@ APP_PORT=8080
 RESET_DB=false
 SEED_DB=false
 RUN_MIGRATIONS=false
+CONTEXTUAL_REPUTATION_ENABLED=false
 EVENT_DISCOVERY_ENABLED=false
 
 # Web UI URL (for CORS)
@@ -188,7 +189,7 @@ server {
 
 Fly powers the production `tdf-hq` API. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
-Application startup never owns production schema changes. Both `RUN_MIGRATIONS` and `EVENT_DISCOVERY_ENABLED` remain `false` in `fly.toml` during a release. The release lane applies the reviewed, additive SQL migrations once before updating any API Machine, deploys an image pinned to the requested full git SHA, and verifies the running image digest, version payload, and healthy response.
+Application startup never owns production schema changes. `RUN_MIGRATIONS`, `CONTEXTUAL_REPUTATION_ENABLED`, and `EVENT_DISCOVERY_ENABLED` remain `false` in `fly.toml` during a release. The release lane applies the reviewed, additive SQL migrations once before updating any API Machine, deploys an image pinned to the requested full git SHA, and verifies the running image digest, version payload, and healthy response.
 
 ### Guarded release commands
 
@@ -216,7 +217,7 @@ For the ticket checkout and event-discovery release, the required order is:
 5. Roll out the pinned backend image with discovery still disabled.
 6. Verify each started API Machine, the public `/health` and `/version` endpoints, and logs before enabling any new background job.
 
-Before this release can execute, Fly must have `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set. The lane also requires every running Machine to have effective `RUN_MIGRATIONS=false` and `EVENT_DISCOVERY_ENABLED=false`. Disable any main-branch auto-deploy path before pushing this release work; schema application must happen only through the guarded lane.
+Before this release can execute, Fly must have `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` set. The lane also requires every running Machine to have effective `RUN_MIGRATIONS=false`, `CONTEXTUAL_REPUTATION_ENABLED=false`, and `EVENT_DISCOVERY_ENABLED=false`. Disable any main-branch auto-deploy path before pushing this release work; schema application must happen only through the guarded lane.
 
 These migrations are additive. If application rollback is required, restore the previous pinned image and leave the new nullable columns/tables in place.
 
