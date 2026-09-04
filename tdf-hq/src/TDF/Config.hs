@@ -89,6 +89,7 @@ data AppConfig = AppConfig
   , stripeSecretKey :: Maybe Text
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
+  , contextualReputationEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
   , eventDiscoveryAutoPublish :: Bool
   , eventDiscoveryPilotLimit :: Int
@@ -780,6 +781,7 @@ loadConfig = do
   stripeSecretKeyEnv <- lookupEnv "STRIPE_SECRET_KEY"
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
+  contextualReputationEnabledEnv <- lookupEnv "CONTEXTUAL_REPUTATION_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
   eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
   eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
@@ -843,6 +845,11 @@ loadConfig = do
   resetDbVal <- validateStartupBooleanFlag "RESET_DB" False rdbEnv
   seedDatabaseVal <- validateStartupBooleanFlag "SEED_DB" False sdbEnv
   runMigrationsVal <- validateStartupBooleanFlag "RUN_MIGRATIONS" True migEnv
+  contextualReputationEnabledVal <-
+    validateStartupBooleanFlag
+      "CONTEXTUAL_REPUTATION_ENABLED"
+      False
+      contextualReputationEnabledEnv
   eventDiscoveryEnabledVal <-
     validateStartupBooleanFlag
       "EVENT_DISCOVERY_ENABLED"
@@ -1045,6 +1052,7 @@ loadConfig = do
     , stripeSecretKey = fmap T.pack stripeSecretKeyEnv
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
+    , contextualReputationEnabled = contextualReputationEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal
     , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
     , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal

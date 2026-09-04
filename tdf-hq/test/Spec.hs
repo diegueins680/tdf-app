@@ -2965,6 +2965,20 @@ main = hspec $ do
                     DTO.ccaExchangeRate audit `shouldBe` 150
 
     describe "loadConfig" $ do
+        it "keeps contextual reputation dark by default and validates its rollout flag" $ do
+            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                contextualReputationEnabled cfg `shouldBe` False
+
+            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                contextualReputationEnabled cfg `shouldBe` True
+
+            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "CONTEXTUAL_REPUTATION_ENABLED must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
         it "loads and validates international defaults from the environment" $ do
             withEnvOverrides
                 [ ("DEFAULT_CURRENCY", Just "eur")

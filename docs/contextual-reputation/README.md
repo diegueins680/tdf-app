@@ -3,7 +3,9 @@
 ## Estado y alcance de esta entrega
 
 Esta entrega introduce el núcleo seguro y auditable para evolucionar las
-reseñas verificadas existentes. Está protegido por el flag `contextual_reputation_v1`;
+reseñas verificadas existentes. Está protegido por el flag de despliegue
+`CONTEXTUAL_REPUTATION_ENABLED` (expuesto a clientes autenticados como
+`CONTEXTUAL_REPUTATION_ENABLED`);
 no debe activarse hasta completar la aplicación de migración, el backfill y el
 piloto descritos abajo. No altera `experience_review`, `directory_review` ni
 convierte estrellas históricas en rankings que nunca sucedieron.
