@@ -67,8 +67,8 @@ SELECT
   jsonb_build_object(
     'migration', '2026-09-04_contextual_reputation_legacy_signals',
     'sourceRows', count(*),
-    'importedRows', count(*) FILTER (WHERE source_status = 'published'),
-    'nonPublishedRows', count(*) FILTER (WHERE source_status <> 'published'),
+    'importedRows', count(*) FILTER (WHERE status = 'published'),
+    'nonPublishedRows', count(*) FILTER (WHERE status <> 'published'),
     'aggregationEligible', false
   )
 FROM experience_review;
