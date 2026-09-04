@@ -2182,6 +2182,28 @@
       ]
     },
     {
+      "id": "reputation.preferences",
+      "parentId": "profile.self",
+      "webRoute": null,
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Prioridades de reputación", "en": "Reputation priorities" },
+      "synonyms": { "es": ["preferencias de reputación", "ordenar categorías"], "en": ["reputation preferences", "rank categories"] },
+      "keywords": ["reputation", "ratings", "priorities", "categories"],
+      "description": { "es": "Ordena categorías privadas para calcular compatibilidad personalizada sin cambiar la reputación pública.", "en": "Rank private categories to calculate personalized compatibility without changing public reputation." },
+      "navigationGroup": "people",
+      "icon": "format-list-numbered",
+      "breadcrumb": ["community", "profile.self"],
+      "permissions": { "discover": {}, "view": {}, "edit": { "recordScope": "self" } },
+      "featureFlag": "CONTEXTUAL_REPUTATION_ENABLED",
+      "maturity": "pilot",
+      "globalMenu": false,
+      "mobilePresentation": { "kind": "native", "destination": "/reputation/preferences", "documentedException": null },
+      "apiScopes": [
+        { "pathPrefix": "/reputation/preferences", "methods": { "GET": "view", "PUT": "edit" } }
+      ]
+    },
+    {
       "id": "social.venues",
       "parentId": "social.events",
       "webRoute": null,
