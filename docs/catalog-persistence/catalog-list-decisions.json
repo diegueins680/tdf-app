@@ -8514,13 +8514,13 @@
       "reviewed": true
     },
     {
-      "id": "b051b77753f7e8edf934",
+      "id": "b60705efb5b737e4860b",
       "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true
     },
     {
@@ -9291,6 +9291,66 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Persisted reputation confidence-band rows own labels and presentation policy; code retains the closed values needed for deterministic aggregate calculation and rejects unknown persisted bands.",
+      "reviewed": true
+    },
+    {
+      "id": "194e61862722dc6a1b0b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this closed client discriminator could break typed request construction or party-search dispatch.",
+      "justification": "The party selector kinds are a closed client transport discriminator for the backend query contract, not user-managed or reportable party data.",
+      "reviewed": true
+    },
+    {
+      "id": "ca20aefd0277f69a872f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a test fixture without an explicit review could conceal a mismatch with the persisted reputation-category contract.",
+      "justification": "This array is a focused component-test fixture that mirrors API category payloads; it is not production authority for available categories or their weights.",
+      "reviewed": true
+    },
+    {
+      "id": "0797a9dfa486e4f68022",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a test fixture without an explicit review could conceal ordering regressions against the persisted reputation-category contract.",
+      "justification": "This array is a focused component-test fixture that exercises reordered API category payloads; it is not production authority for categories or priorities.",
+      "reviewed": true
+    },
+    {
+      "id": "763ece98ed6a892c345a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_legacy_signal",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken moderation reports.",
+      "justification": "The legacy-signal visibility values are immutable migration evidence; runtime authority is confined to the reviewed database schema and future changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "1e5127ce88a2b3b611a7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_private_ranking",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken draft-retention behavior.",
+      "justification": "Private-ranking lifecycle values are immutable migration evidence; runtime state changes are constrained by the persisted schema and future policy changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "f48f4fb1ad9f058ea297",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_private_ranking_exclusion",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid exclusion semantics, ambiguous backfill, or leakage of unverified rankings into public reputation.",
+      "justification": "Private-ranking exclusion reasons are immutable migration evidence; the persisted private-ranking model isolates them from public reputation and future changes require a forward migration.",
       "reviewed": true
     }
   ]
