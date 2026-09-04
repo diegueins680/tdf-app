@@ -365,6 +365,11 @@
       "id": "2026-09-04_contextual_reputation_category_safety",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_category_safety.sql",
       "introducedBy": "165507fb07ec1b456d9c119c355ace5333afae7a"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_preference_save",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_preference_save.sql",
+      "introducedBy": "7747a60a8848290ed7f56d7292de29c9ffc12d3b"
     }
   ]
 }
