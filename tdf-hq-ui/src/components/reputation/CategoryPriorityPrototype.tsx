@@ -6,11 +6,11 @@ import { Reputation, type ReputationCategory, type ReputationPreference } from '
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '../../session/SessionContext';
 
-type Props = {
+interface Props {
   locale?: 'es' | 'en';
   contextKind?: string;
-  onChange?: (items: Array<{ categoryId: string; weight: number }>) => void;
-};
+  onChange?: (items: { categoryId: string; weight: number }[]) => void;
+}
 
 // Rank-order centroid: the mean cardinal allocation compatible with an
 // ordinal order. The final remainder makes the displayed total exactly 100.
