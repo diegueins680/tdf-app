@@ -14441,6 +14441,7 @@ marketplaceTestConfig seedFlag =
         , stripeSecretKey = Nothing
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
+        , contextualReputationEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20
