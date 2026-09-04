@@ -5,7 +5,7 @@ const source = readFileSync(new URL('./CampaignAutomationsPage.tsx', import.meta
 describe('Campaign automation Party relationship regression', () => {
   it('uses the reusable server-backed multiple selector', () => {
     expect(source).toContain('<PartyMultiSelector');
-    expect(source).toContain("search={{ kind: 'any', accountOnly: false }}");
+    expect(source).toContain("search={{ context: 'campaign_enrollment', kind: 'any', accountOnly: false }}");
     expect(source).toContain('selectedParties.map((party) => party.partyId)');
   });
 
