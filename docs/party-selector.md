@@ -79,6 +79,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
 | `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo y resolución por nombre | `PartySelector` remoto; conserva relaciones históricas y creación de contactos | Migrado |
+| `tdf-hq-ui/LabelArtistsPage` | Enlazar perfil de artista | Lista CRM con Party ID y correo | `PartySelector` mínimo; el ID queda oculto y canónico | Migrado |
 | `tdf-hq-ui/CollaborativeEventCreator` | Colaboradores | Catálogo CRM completo | Selector múltiple | Pendiente |
 
 Los elementos pendientes se documentan deliberadamente: no deben interpretarse

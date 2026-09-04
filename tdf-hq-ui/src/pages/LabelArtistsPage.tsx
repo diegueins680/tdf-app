@@ -40,6 +40,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartySelector } from '../components/party-selector/PartySelector';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
@@ -200,6 +202,7 @@ export default function LabelArtistsPage() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
+  const [selectedParty, setSelectedParty] = useState<PartySelectorOption | null>(null);
   const [form, setForm] = useState<ArtistFormState>(buildEmptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
@@ -349,11 +352,6 @@ export default function LabelArtistsPage() {
   const showArtistRefresh = hasArtistProfiles || Boolean(artistsQuery.error);
   const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
-
-  const selectedParty = useMemo(
-    () => parties.find((party) => party.partyId === form.partyId) ?? null,
-    [parties, form.partyId],
-  );
 
   const handleHeroImageFileChange = (file: File | null) => {
     if (!file) {
@@ -540,6 +538,7 @@ export default function LabelArtistsPage() {
 
   const handleOpenNew = () => {
     setSelectedArtist(null);
+    setSelectedParty(null);
     setForm(buildEmptyForm());
     setFormError(null);
     setDialogOpen(true);
@@ -549,6 +548,7 @@ export default function LabelArtistsPage() {
 
   const handleEdit = (artist: ArtistProfileDTO) => {
     setSelectedArtist(artist);
+    setSelectedParty({ partyId: artist.apArtistId, partyType: 'person', displayName: artist.apDisplayName, username: null, avatarUrl: artist.apHeroImageUrl ?? null, secondaryLabel: 'Perfil de artista existente', accountStatus: 'no-account' });
     setForm(formFromArtist(artist));
     setFormError(null);
     setDialogOpen(true);
@@ -559,6 +559,7 @@ export default function LabelArtistsPage() {
     if (upsertMutation.isPending) return;
     setDialogOpen(false);
     setSelectedArtist(null);
+    setSelectedParty(null);
     setForm(buildEmptyForm());
     setFormError(null);
   };
@@ -1185,27 +1186,18 @@ export default function LabelArtistsPage() {
         <DialogTitle>{selectedArtist ? 'Editar perfil de artista' : 'Nuevo perfil de artista'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            <Autocomplete
-              options={parties}
-              loading={partiesQuery.isLoading}
-              getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
-              isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
+            <PartySelector
               value={selectedParty}
-              onChange={(_, value) =>
+              onChange={(value) => {
+                setSelectedParty(value);
                 setForm((prev) => ({
                   ...prev,
                   partyId: value?.partyId ?? null,
                   displayName: value?.displayName ?? prev.displayName,
-                }))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Contacto (CRM)"
-                  required
-                  helperText="Los artistas se enlazan a contactos existentes. Si falta, créalo en CRM → Contactos."
-                />
-              )}
+                }));
+              }}
+              field={{ label: 'Contacto (CRM)', required: true, helperText: 'Busca por nombre o @username. Si falta, créalo en CRM → Contactos.' }}
+              search={{ kind: 'person', accountOnly: false }}
             />
             <TextField
               label="Nombre público (se guarda en el contacto)"
