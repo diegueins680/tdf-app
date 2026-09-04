@@ -26,6 +26,21 @@ bloqueo o estado de Party. Por eso esos filtros no se simulan en el selector:
 la siguiente extensión debe modelarlos en backend antes de exponerlos en la
 interfaz.
 
+## Excepciones de identificadores técnicos
+
+- `AdminTokenPage` puede mostrar el Party ID como referencia secundaria a
+  administradores que inspeccionan un token. No es editable ni sustituye el
+  nombre de una persona.
+- `LabelTracksPage` conserva `Party #…` únicamente en el alcance técnico de
+  administrador recibido por URL; los usuarios normales ven “Mi artista”.
+- `PartnerManagementPage` usa “DDEX Party Identifier”, un identificador del
+  estándar DDEX y no la clave canónica `partyId` de TDF.
+- Expedientes históricos sin nombre ni contacto pueden mostrar `Party #…`
+  como referencia interna final. No permiten crear ni reasignar relaciones.
+
+Estas excepciones no autorizan campos de texto de Party ID para usuarios
+normales. Cualquier flujo nuevo de asignación debe usar el selector.
+
 ## Web
 
 Usar `UserSelector` para relaciones de persona con cuenta activa:
