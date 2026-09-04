@@ -8514,7 +8514,7 @@
       "reviewed": true
     },
     {
-      "id": "b051b77753f7e8edf934",
+      "id": "9b2d5cc654d9e1fd8ccd",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
