@@ -88,7 +88,8 @@ ningún lector de agregación pública.
   auditoría. No se devuelven identidades de evaluadores por endpoints públicos.
 - No se permiten categorías sobre atributos sensibles ni contenido ofensivo;
   propuestas son privadas hasta deduplicación semántica, adopción mínima y
-  aprobación humana.
+  aprobación humana. La base de datos rechaza criterios sensibles, duplicados
+  exactos normalizados y creación de una propuesta directamente como pública.
 - Alertas de frecuencia, cuentas relacionadas, ciclos, brigading y volumen
   anómalo alimentan revisión humana; no aplican sanciones automáticas.
 - La visibilidad pública, badges y rankings geográficos requieren consentimiento
