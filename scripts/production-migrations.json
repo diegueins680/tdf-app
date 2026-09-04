@@ -350,6 +350,11 @@
       "id": "2026-09-04_contextual_reputation_integrity",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql",
       "introducedBy": "19d796de569449a09377ee15d9ae5078061b3763"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_legacy_signals",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_legacy_signals.sql",
+      "introducedBy": "0a020ba9e318088238f6fa7a8c0e36ba8c5635db"
     }
   ]
 }
