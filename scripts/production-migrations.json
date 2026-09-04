@@ -360,6 +360,11 @@
       "id": "2026-09-04_contextual_reputation_private_preferences",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_private_preferences.sql",
       "introducedBy": "b60319916b64ef2601805922bd0d4ad40d234ae9"
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_category_safety",
+      "path": "tdf-hq/sql/2026-09-04_contextual_reputation_category_safety.sql",
+      "introducedBy": "165507fb07ec1b456d9c119c355ace5333afae7a"
     }
   ]
 }
