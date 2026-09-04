@@ -4943,6 +4943,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reputation/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the authenticated viewer's private category preferences
+         * @description Returns only the caller's personal relevance preferences. It never returns private rankings or evaluator identities.
+         */
+        get: operations["getMyReputationPreferences"];
+        /**
+         * Save the authenticated viewer's private category preferences
+         * @description Idempotent, optimistic-concurrency save. Personal priorities never alter public reputation.
+         */
+        put: operations["saveMyReputationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/eligibility": {
         parameters: {
             query?: never;
@@ -10139,6 +10163,33 @@ export interface components {
             defaultPosition: number;
             institutionalWeight: number;
             version: number;
+        };
+        ReputationPreference: {
+            contextKind: string;
+            /** @enum {string} */
+            status: "draft" | "active" | "archived";
+            revision: number;
+            formulaVersion: string;
+            categories: {
+                /** Format: uuid */
+                categoryId: string;
+                slug: string;
+                position: number;
+                weight: number;
+                notApplicable: boolean;
+            }[];
+        };
+        ReputationPreferenceSave: {
+            contextKind: string;
+            expectedRevision: number;
+            activate: boolean;
+            categories: {
+                /** Format: uuid */
+                categoryId: string;
+                position: number;
+                weight: number;
+                notApplicable: boolean;
+            }[];
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -19867,6 +19918,96 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReputationCategory"][];
                 };
+            };
+        };
+    };
+    getMyReputationPreferences: {
+        parameters: {
+            query?: {
+                contextKind?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private saved preference profile, or an empty draft for the context */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReputationPreference"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contextual reputation is not enabled for this deployment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    saveMyReputationPreferences: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReputationPreferenceSave"];
+            };
+        };
+        responses: {
+            /** @description Saved private preference profile; identical retries return the original response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReputationPreference"];
+                };
+            };
+            /** @description Invalid category positions */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Contextual reputation is not enabled for this deployment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preference revision conflict or idempotency key conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -844,6 +844,12 @@ function main() {
         `Catalog list audit failed: ${unreviewed.length} unreviewed candidate(s), ` +
           `${staleDecisions.length} stale decision(s).\n`,
       );
+      if (unreviewed.length > 0) {
+        process.stderr.write(`Unreviewed candidate ids: ${unreviewed.map(({ id }) => id).join(', ')}\n`);
+      }
+      if (staleDecisions.length > 0) {
+        process.stderr.write(`Stale decision ids: ${staleDecisions.join(', ')}\n`);
+      }
       process.exitCode = 1;
     }
   }

@@ -62,6 +62,7 @@ const PartiesPage = lazy(() => import('../pages/PartiesPage'));
 const PaymentsPage = lazy(() => import('../pages/PaymentsPage'));
 const AppearanceModeCatalogPage = lazy(() => import('../pages/AppearanceModeCatalogPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
+const ReputationPreferencesPage = lazy(() => import('../pages/ReputationPreferencesPage'));
 const ReportsPage = lazy(() => import('../pages/ReportsPage'));
 const RadioAutoStopCatalogPage = lazy(() => import('../pages/RadioAutoStopCatalogPage'));
 const ReactionTypesCatalogPage = lazy(() => import('../pages/ReactionTypesCatalogPage'));
@@ -113,6 +114,7 @@ export function renderProtectedRoutes() {
         <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
+        <Route path="/reputation/preferences" element={<ReputationPreferencesPage />} />
         <Route path="/social" element={<SocialPageView />} />
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />

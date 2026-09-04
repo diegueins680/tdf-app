@@ -3,10 +3,13 @@
 ## Estado y alcance de esta entrega
 
 Esta entrega introduce el núcleo seguro y auditable para evolucionar las
-reseñas verificadas existentes. Está protegido por el flag `contextual_reputation_v1`;
-no debe activarse hasta completar la aplicación de migración, el backfill y el
-piloto descritos abajo. No altera `experience_review`, `directory_review` ni
-convierte estrellas históricas en rankings que nunca sucedieron.
+reseñas verificadas existentes. La experiencia interactiva se gobierna con el
+flag de despliegue `CONTEXTUAL_REPUTATION_ENABLED`, expuesto a clientes
+autenticados con el mismo nombre. Debe mantenerse apagado hasta completar la
+aplicación de migración, el backfill y el piloto descritos abajo. Las lecturas
+públicas ya publicadas siguen siendo compatibles durante la transición. No
+altera `experience_review`, `directory_review` ni convierte estrellas
+históricas en rankings que nunca sucedieron.
 
 ## Auditoría del estado anterior
 
@@ -36,7 +39,8 @@ interacción completada/verificable
   -> cola idempotente de agregación
   -> reputation_public_aggregate (proyección pública agregada)
 
-ranking privado -> reputation_private_ranking -> sólo su propietario
+preferencias personales -> reputation_personal_preference -> sólo su propietario
+ranking privado -> reputation_private_ranking + items -> sólo su propietario
 ```
 
 Una evaluación se puede modificar antes de `edit_deadline`; las revisiones,
@@ -71,6 +75,16 @@ emparejadas con empates, y se combinan con el score absoluto sólo dentro del
 contexto comparable; el modelo seleccionado es un Bradley--Terry bayesiano con
 prior, no una conversión de posición a estrellas.
 
+Un perfil de preferencias sólo puede activarse con 3--10 categorías aplicables,
+pesos exactamente iguales a 100 y un orden monotónico. Los ítems de un ranking
+privado viven en una tabla diferente de los rankings verificados y no tienen
+ningún lector de agregación pública.
+
+El guardado de preferencias es una única transacción por usuario y contexto:
+usa revisión optimista, bloqueo transaccional acotado e idempotency key con
+respuesta conservada 24 horas. Reintentos iguales devuelven la misma respuesta;
+una clave reutilizada con un payload distinto se rechaza.
+
 ## Privacidad, equidad y abuso
 
 - Las posiciones y autorías individuales son privadas. La API pública sólo
@@ -79,7 +93,8 @@ prior, no una conversión de posición a estrellas.
   auditoría. No se devuelven identidades de evaluadores por endpoints públicos.
 - No se permiten categorías sobre atributos sensibles ni contenido ofensivo;
   propuestas son privadas hasta deduplicación semántica, adopción mínima y
-  aprobación humana.
+  aprobación humana. La base de datos rechaza criterios sensibles, duplicados
+  exactos normalizados y creación de una propuesta directamente como pública.
 - Alertas de frecuencia, cuentas relacionadas, ciclos, brigading y volumen
   anómalo alimentan revisión humana; no aplican sanciones automáticas.
 - La visibilidad pública, badges y rankings geográficos requieren consentimiento
@@ -106,9 +121,11 @@ español e inglés y `prefers-reduced-motion`.
 
 1. Ejecutar `2026-09-01_contextual_reputation.sql` con el manifiesto de
    producción checksum-pinned, primero en staging.
-2. Ejecutar un backfill idempotente que cree sólo `reputation_interaction` para
-   evidencia verificable; conservar `experience_review` como señal heredada
-   diferenciada. Emitir reporte de omitidos/ambiguos.
+2. Ejecutar el backfill idempotente de `reputation_legacy_signal` para
+   conservar cada `experience_review` con procedencia y sin incorporarlo al
+   agregado público. Los adaptadores posteriores crearán
+   `reputation_interaction` únicamente cuando puedan probar ambas partes y una
+   dirección válida. Emitir reporte de omitidos/ambiguos.
 3. Activar solamente lectura interna, validar conteos, duplicados y que ningún
    agregado contiene ranking privado o señal no verificada.
 4. Piloto consentido y controlado; pausar ante >1% de errores de write, una
