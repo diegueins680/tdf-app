@@ -109,9 +109,11 @@ español e inglés y `prefers-reduced-motion`.
 
 1. Ejecutar `2026-09-01_contextual_reputation.sql` con el manifiesto de
    producción checksum-pinned, primero en staging.
-2. Ejecutar un backfill idempotente que cree sólo `reputation_interaction` para
-   evidencia verificable; conservar `experience_review` como señal heredada
-   diferenciada. Emitir reporte de omitidos/ambiguos.
+2. Ejecutar el backfill idempotente de `reputation_legacy_signal` para
+   conservar cada `experience_review` con procedencia y sin incorporarlo al
+   agregado público. Los adaptadores posteriores crearán
+   `reputation_interaction` únicamente cuando puedan probar ambas partes y una
+   dirección válida. Emitir reporte de omitidos/ambiguos.
 3. Activar solamente lectura interna, validar conteos, duplicados y que ningún
    agregado contiene ranking privado o señal no verificada.
 4. Piloto consentido y controlado; pausar ante >1% de errores de write, una
