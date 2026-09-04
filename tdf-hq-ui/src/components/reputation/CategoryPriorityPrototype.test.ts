@@ -1,4 +1,4 @@
-import { orderCategoriesByPreference, rankOrderCentroid } from './CategoryPriorityPrototype';
+import { orderCategoriesByPreference, rankOrderCentroid, reorderCategories } from './CategoryPriorityPrototype';
 
 describe('rankOrderCentroid', () => {
   it('returns no weights for no active categories', () => {
@@ -27,5 +27,19 @@ describe('rankOrderCentroid', () => {
     });
 
     expect(ordered.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('reorders categories deterministically without mutating the current order', () => {
+    const categories = [
+      { id: 'a', slug: 'quality', name: 'Quality', description: '', defaultPosition: 1, institutionalWeight: 20, version: 1 },
+      { id: 'b', slug: 'communication', name: 'Communication', description: '', defaultPosition: 2, institutionalWeight: 20, version: 1 },
+      { id: 'c', slug: 'punctuality', name: 'Punctuality', description: '', defaultPosition: 3, institutionalWeight: 20, version: 1 },
+    ];
+
+    const reordered = reorderCategories(categories, 2, 0);
+
+    expect(reordered.map(({ id }) => id)).toEqual(['c', 'a', 'b']);
+    expect(categories.map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+    expect(reorderCategories(categories, -1, 1)).toBe(categories);
   });
 });
