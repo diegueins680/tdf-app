@@ -587,7 +587,7 @@ export default function CampaignAutomationsPage() {
                 required: true,
                 helperText: 'Busca por nombre o username. Puedes conservar varias selecciones.',
               }}
-              search={{ kind: 'any', accountOnly: false }}
+              search={{ context: 'campaign_enrollment', kind: 'any', accountOnly: false }}
             />
             <Chip label={`${selectedParties.length} seleccionados`} sx={{ alignSelf: 'flex-start' }} />
           </Stack>

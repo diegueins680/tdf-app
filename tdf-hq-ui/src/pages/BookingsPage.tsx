@@ -1072,7 +1072,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                 setCustomerPartyId(party?.partyId ?? null);
               }}
               field={{ label: 'Cliente', required: true, helperText: 'Busca por nombre o @username. El texto escrito no se guarda como cliente.' }}
-              search={{ kind: 'any', accountOnly: false }}
+              search={{ context: 'booking', kind: 'any', accountOnly: false }}
             />
             <Button variant="outlined" size="small" onClick={openCreateContactDialog} sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}>
               Crear contacto nuevo
@@ -1216,7 +1216,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     setEngineerName(party?.displayName ?? '');
                   }}
                   field={{ label: engineerFieldState.label, helperText: engineerFieldState.helperText }}
-                  search={{ kind: 'person', accountOnly: false }}
+                  search={{ context: 'booking', kind: 'person', accountOnly: false }}
                 />
               ) : engineerFieldState.helperText ? (
                 <Alert severity="info" variant="outlined">

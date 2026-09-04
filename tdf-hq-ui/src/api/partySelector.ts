@@ -1,6 +1,10 @@
 import { get } from './client';
+import type { operations } from './generated/types';
 
 export type PartySelectorKind = 'any' | 'person' | 'organization';
+export type PartySelectorContext = NonNullable<
+  operations['searchPartiesForSelector']['parameters']['query']['context']
+>;
 
 export interface PartySelectorOption {
   partyId: number;
@@ -19,6 +23,7 @@ export interface PartySelectorPage {
 
 export interface PartySelectorSearchParams {
   query: string;
+  context?: PartySelectorContext;
   kind?: PartySelectorKind;
   accountOnly?: boolean;
   excludedPartyIds?: number[];
@@ -29,6 +34,7 @@ export interface PartySelectorSearchParams {
 
 export const searchPartiesForSelector = ({
   query,
+  context = 'crm_assignment',
   kind = 'any',
   accountOnly = false,
   excludedPartyIds = [],
@@ -36,7 +42,7 @@ export const searchPartiesForSelector = ({
   limit = 15,
   signal,
 }: PartySelectorSearchParams): Promise<PartySelectorPage> => {
-  const params = new URLSearchParams({ q: query, kind, accountOnly: String(accountOnly), limit: String(limit) });
+  const params = new URLSearchParams({ q: query, context, kind, accountOnly: String(accountOnly), limit: String(limit) });
   if (cursor) params.set('cursor', String(cursor));
   excludedPartyIds.forEach((id) => params.append('excludePartyId', String(id)));
   return get<PartySelectorPage>(`/parties/search?${params.toString()}`, { signal });

@@ -7,6 +7,7 @@
 module TDF.Server.Directory
   ( directoryPublicServer
   , directoryProtectedServer
+  , consumeRate
   ) where
 
 import Control.Applicative ((<|>))
@@ -1277,6 +1278,7 @@ requireJsonObject :: Text -> Value -> AppM ()
 requireJsonObject _ (Object _) = pure ()
 requireJsonObject field _ = throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 (field<>" must be an object"))}
 
+consumeRate :: AuthedUser -> Text -> Int64 -> AppM ()
 consumeRate user action maxCount = do
   rows <- jsonRows "WITH current AS (INSERT INTO directory_rate_limit(scope,subject_hash,window_started_at,count,updated_at) VALUES (?,encode(digest(?::text,'sha256'),'hex'),date_trunc('day',now()),1,now()) ON CONFLICT(scope,subject_hash,window_started_at) DO UPDATE SET count=directory_rate_limit.count+1,updated_at=now() RETURNING count) SELECT jsonb_build_object('allowed',count<=?) FROM current" [PersistText action,PersistText (T.pack (show (partyNumber user))),PersistInt64 maxCount]
   case listToMaybe rows of Just (Object values) | KeyMap.lookup "allowed" values==Just (Bool True) -> pure (); _ -> throwError err429 {errBody="rate limit exceeded"}

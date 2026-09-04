@@ -317,7 +317,7 @@ export default function ChatPage() {
     navigate('/chat', { replace: true });
     const numeric = parsePositiveInt(rawParty);
     if (numeric == null) {
-      setBannerError('El enlace de chat tiene un Party ID inválido.');
+      setBannerError('El enlace de chat no identifica un perfil disponible.');
       return;
     }
     createThreadMutation.mutate(numeric, {

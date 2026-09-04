@@ -518,7 +518,7 @@ export default function CollaborativeEventCreatorPage() {
                       if (party) addCollaborator(party);
                     }}
                     field={{ label: 'Añadir colaboradores', helperText: 'Selecciona una cuenta TDF; el ID se conserva internamente.' }}
-                    search={{ excludedPartyIds: [Number(sessionPartyId), ...draft.collaborators.map((collaborator) => Number(collaborator.partyId)).filter(Number.isInteger)] }}
+                    search={{ context: 'event_invitation', excludedPartyIds: [Number(sessionPartyId), ...draft.collaborators.map((collaborator) => Number(collaborator.partyId)).filter(Number.isInteger)] }}
                   />
                   {draft.collaborators.length > 0 && (
                     <Stack spacing={1}>

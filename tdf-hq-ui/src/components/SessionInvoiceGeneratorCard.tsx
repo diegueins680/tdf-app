@@ -309,7 +309,7 @@ export default function SessionInvoiceGeneratorCard() {
               value={selectedCustomer}
               onChange={setSelectedCustomer}
               field={{ label: 'Cliente facturable (opcional)', helperText: 'Si lo dejas vacío, se usará el cliente vinculado a la sesión.' }}
-              search={{ kind: 'any', accountOnly: false }}
+              search={{ context: 'billing_contact', kind: 'any', accountOnly: false }}
             />
           </Grid>
           <Grid item xs={12} md={3}>

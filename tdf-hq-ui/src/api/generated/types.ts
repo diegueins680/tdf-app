@@ -7698,7 +7698,10 @@ export interface components {
         };
         PartySelectorPage: {
             items: components["schemas"]["PartySelectorOption"][];
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Opaque cursor for the next relevance-ordered page.
+             */
             nextCursor?: number | null;
         };
         ChatThread: {
@@ -12572,9 +12575,12 @@ export interface operations {
         parameters: {
             query: {
                 q: string;
+                /** @description Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor. */
+                context?: "crm_assignment" | "booking" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "operations" | "internal_feedback" | "live_session";
                 kind?: "any" | "person" | "organization";
                 accountOnly?: boolean;
                 excludePartyId?: number[];
+                /** @description Opaque bounded cursor returned by the previous page. */
                 cursor?: number;
                 limit?: number;
             };
@@ -12607,8 +12613,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description CRM access required */
+            /** @description Required module access missing for the declared context */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated social discovery quota exceeded */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

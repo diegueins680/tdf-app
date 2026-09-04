@@ -133,6 +133,7 @@ type PartyAPI =
   :<|> ReqBody '[JSON] PartyCreate :> Post '[JSON] PartyDTO
   :<|> "search" :>
          QueryParam "q" Text :>
+         QueryParam "context" Text :>
          QueryParam "kind" Text :>
          QueryParam "accountOnly" Bool :>
          QueryParams "excludePartyId" Int64 :>

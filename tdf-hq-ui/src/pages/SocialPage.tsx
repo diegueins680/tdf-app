@@ -345,7 +345,7 @@ export default function SocialPage() {
             value={friendCandidate}
             onChange={setFriendCandidate}
             field={{ label: 'Agregar amigo', helperText: 'Busca y selecciona una cuenta TDF.' }}
-            search={{ excludedPartyIds: session?.partyId ? [session.partyId] : [] }}
+            search={{ context: 'social_connection', excludedPartyIds: session?.partyId ? [session.partyId] : [] }}
           /></Box>
           <Button
             variant="contained"

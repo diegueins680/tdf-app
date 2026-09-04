@@ -81,4 +81,19 @@ describe('Party relationship picker migration', () => {
       'pages/LabelTracksPage.tsx',
     ]);
   });
+
+  it('requires every production selector instance to declare an authorization context', () => {
+    const srcRoot = fileURLToPath(new URL('../', import.meta.url));
+    const selectorImplementation = `${srcRoot}/components/party-selector/PartySelector.tsx`;
+    const missingContext = collectTsxFiles(srcRoot)
+      .filter((file) => file !== selectorImplementation)
+      .flatMap((file) => {
+        const source = readFileSync(file, 'utf8');
+        const selectorCount = source.match(/<(?:PartySelector|UserSelector|PartyMultiSelector)\b/g)?.length ?? 0;
+        const contextCount = source.match(/search=\{\{\s*context:/g)?.length ?? 0;
+        return selectorCount === contextCount ? [] : [file.slice(srcRoot.length).replace(/^\//, '')];
+      });
+
+    expect(missingContext).toEqual([]);
+  });
 });

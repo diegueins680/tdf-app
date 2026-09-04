@@ -9076,38 +9076,67 @@ searchParties
   :: AuthedUser
   -> Maybe Text
   -> Maybe Text
+  -> Maybe Text
   -> Maybe Bool
   -> [Int64]
   -> Maybe Int64
   -> Maybe Int
   -> AppM PartySelectorPageDTO
-searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
-  requireModule user ModuleCRM
+searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor rawLimit = do
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
+  context <- either throwError pure (validatePartySelectorContext rawContext)
+  for_ (partySelectorContextModule context) (requireModule user)
+  when (context `elem` ["event_invitation", "social_connection"]) $
+    DirectoryServer.consumeRate user ("party_selector:" <> context) 300
   kind <- either throwError pure (validatePartySelectorKind rawKind)
-  cursor <- either throwError pure (traverse (validatePositiveIdField "cursor") rawCursor)
+  cursor <- either throwError pure (traverse validatePartySelectorCursor rawCursor)
   limit <- either throwError pure (validatePartySelectorLimit rawLimit)
   when (length excluded > 100 || any (<= 0) excluded) $
     throwError err400 { errBody = "excludePartyId must contain at most 100 positive ids" }
   Env pool _ <- ask
-  let databaseQuery = normalizePartySelectorDatabaseText query
-      patternText = "%" <> databaseQuery <> "%"
-      nameSql =
-        "SELECT ?? FROM party WHERE id > ? AND (translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? OR translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ?) LIMIT 401"
+  let publicDiscovery = isPublicPartySelectorContext context
+      databaseTerms = partySelectorTerms query
+      discoveryTerm = fromMaybe (normalizePartySelectorDatabaseText query)
+        (listToMaybe (sortOn (Down . T.length) databaseTerms))
+      -- Three characters let PostgreSQL use pg_trgm for normal searches. The
+      -- documented two-character minimum remains supported by the bounded
+      -- expression-index fallback.
+      discoveryPrefixLength = min 3 (T.length discoveryTerm)
+      patternText = "%" <> T.take discoveryPrefixLength discoveryTerm <> "%"
+      exactText = normalizePartySelectorDatabaseText query
+      nameSql
+        | publicDiscovery =
+            "SELECT ?? FROM party WHERE translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? ORDER BY CASE WHEN translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+        | otherwise =
+            "SELECT ?? FROM party WHERE (translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? OR translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ?) ORDER BY CASE WHEN translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 0 WHEN translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
       usernameSql =
-        "SELECT ?? FROM user_credential WHERE id > 0 AND lower(replace(username, '@', '')) LIKE ? AND active = TRUE LIMIT 401"
-  (parties, credentials) <- liftIO $ flip runSqlPool pool $ do
-    named <- rawSql nameSql [toPersistValue (fromMaybe 0 cursor), toPersistValue patternText, toPersistValue patternText]
-    matchedCredentials <- rawSql usernameSql [toPersistValue patternText]
-    credentialParties <- fmap catMaybes $ forM (matchedCredentials :: [Entity UserCredential]) $ \credential -> getEntity (userCredentialPartyId (entityVal credential))
+        "SELECT ?? FROM user_credential WHERE id > 0 AND lower(replace(username, '@', '')) LIKE ? AND active = TRUE ORDER BY CASE WHEN lower(replace(username, '@', '')) = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+  (parties, credentials, fanProfiles) <- liftIO $ flip runSqlPool pool $ do
+    named <- rawSql nameSql
+      (if publicDiscovery
+        then [toPersistValue patternText, toPersistValue exactText]
+        else [toPersistValue patternText, toPersistValue patternText, toPersistValue exactText, toPersistValue exactText])
+    matchedCredentials <- rawSql usernameSql [toPersistValue patternText, toPersistValue exactText]
+    let credentialPartyIds = nub
+          [ userCredentialPartyId credential
+          | Entity _ credential <- (matchedCredentials :: [Entity UserCredential])
+          ]
+    credentialParties <- if null credentialPartyIds
+      then pure []
+      else selectList [PartyId <-. credentialPartyIds] []
     let candidateMap = Map.fromList [(entityKey party, party) | party <- named ++ credentialParties]
         candidateIds = Map.keys candidateMap
     allCredentials <- if null candidateIds then pure [] else selectList [UserCredentialPartyId <-. candidateIds] []
-    pure (Map.elems candidateMap, allCredentials)
+    profiles <- if null candidateIds then pure [] else selectList [FanProfileFanPartyId <-. candidateIds] []
+    pure (Map.elems candidateMap, allCredentials, profiles)
   let credentialsByParty = Map.fromListWith chooseCredential
         [ (userCredentialPartyId credential, credential) | Entity _ credential <- credentials ]
+      profilesByParty = Map.fromList
+        [ (fanProfileFanPartyId profile, profile) | Entity _ profile <- fanProfiles ]
       chooseCredential left _ = left
-      matchesKind party = case kind of
+      effectiveKind = if publicDiscovery then "person" else kind
+      effectiveAccountOnly = publicDiscovery || fromMaybe False accountOnly
+      matchesKind party = case effectiveKind of
         "person" -> not (partyIsOrg (entityVal party))
         "organization" -> partyIsOrg (entityVal party)
         _ -> True
@@ -9115,39 +9144,43 @@ searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
         Just credential -> userCredentialActive credential
         Nothing -> False
       isExcluded party = fromSqlKey (entityKey party) `elem` excluded
-      eligible party = matchesKind party && not (isExcluded party) && (not (fromMaybe False accountOnly) || hasAccount party)
+        || (publicDiscovery && entityKey party == auPartyId user)
+      matchesQuery party =
+        let partyValue = entityVal party
+            rawUsername = userCredentialUsername <$> Map.lookup (entityKey party) credentialsByParty
+            visibleLegalName = partySelectorVisibleLegalName context (partyLegalName partyValue)
+        in partySelectorMatches query (M.partyDisplayName partyValue) visibleLegalName rawUsername
+      eligible party =
+        matchesKind party
+          && matchesQuery party
+          && not (isExcluded party)
+          && (not effectiveAccountOnly || hasAccount party)
       option party =
         let mCredential = Map.lookup (entityKey party) credentialsByParty
+            mProfile = Map.lookup (entityKey party) profilesByParty
             partyValue = entityVal party
             rawUsername = userCredentialUsername <$> mCredential
+            visibleLegalName = partySelectorVisibleLegalName context (partyLegalName partyValue)
             accountState = case mCredential of
               Just credential | userCredentialActive credential -> "active"
               Just _ -> "inactive"
               Nothing -> "no-account"
-            normalizedQuery = normalizePartySelectorText query
-            normalizedName = normalizePartySelectorText (M.partyDisplayName partyValue)
-            normalizedLegal = normalizePartySelectorText (fromMaybe "" (partyLegalName partyValue))
-            normalizedUsername = normalizePartySelectorText (fromMaybe "" rawUsername)
-            score
-              | normalizedUsername == normalizedQuery = 0 :: Int
-              | normalizedName == normalizedQuery = 1
-              | normalizedUsername `T.isPrefixOf` normalizedQuery || normalizedQuery `T.isPrefixOf` normalizedUsername = 2
-              | normalizedName `T.isPrefixOf` normalizedQuery || normalizedLegal `T.isPrefixOf` normalizedQuery = 3
-              | otherwise = 4
-            secondary = partyLegalName partyValue <|> (if partyIsOrg partyValue then Just "Organización" else Nothing)
+            score = partySelectorScore query (M.partyDisplayName partyValue) visibleLegalName rawUsername
+            secondary = visibleLegalName <|> (if partyIsOrg partyValue then Just "Organización" else Nothing)
         in (score, fromSqlKey (entityKey party), PartySelectorOptionDTO
           { partyId = fromSqlKey (entityKey party)
           , partyType = if partyIsOrg partyValue then "organization" else "person"
           , displayName = M.partyDisplayName partyValue
           , username = rawUsername
-          , avatarUrl = Nothing
+          , avatarUrl = mProfile >>= fanProfileAvatarUrl
           , secondaryLabel = secondary
           , accountStatus = accountState
           })
       sorted = sortOn (\(score, partyKey, _) -> (score, partyKey)) (map option (filter eligible parties))
-      page = take (limit + 1) sorted
+      cursorOffset = fromIntegral (fromMaybe 0 cursor)
+      page = take (limit + 1) (drop cursorOffset sorted)
       visible = take limit page
-      next = if length page > limit then Just (let (_, partyKey, _) = last visible in partyKey) else Nothing
+      next = if length page > limit then Just (fromIntegral (cursorOffset + limit)) else Nothing
   pure PartySelectorPageDTO { items = map (\(_, _, value) -> value) visible, nextCursor = next }
 
 validatePartySelectorQuery :: Maybe Text -> Either ServerError Text
@@ -9167,12 +9200,114 @@ validatePartySelectorKind raw =
     "organization" -> Right "organization"
     _ -> Left err400 { errBody = "kind must be any, person, or organization" }
 
+validatePartySelectorContext :: Maybe Text -> Either ServerError Text
+validatePartySelectorContext raw =
+  let context = T.toLower (T.strip (fromMaybe "crm_assignment" raw))
+      supported =
+        [ "crm_assignment", "booking", "billing_contact", "artist_link"
+        , "campaign_enrollment", "event_invitation", "social_connection"
+        , "operations", "internal_feedback", "live_session"
+        ]
+  in if context `elem` supported
+      then Right context
+      else Left err400 { errBody = "context is invalid" }
+
+isPublicPartySelectorContext :: Text -> Bool
+isPublicPartySelectorContext context = context `elem` ["event_invitation", "social_connection"]
+
+partySelectorContextModule :: Text -> Maybe ModuleAccess
+partySelectorContextModule context = case context of
+  "crm_assignment" -> Just ModuleCRM
+  "booking" -> Just ModuleScheduling
+  "billing_contact" -> Just ModuleInvoicing
+  "artist_link" -> Just ModuleCatalog
+  "campaign_enrollment" -> Just ModuleCRM
+  "operations" -> Just ModuleOps
+  "internal_feedback" -> Just ModuleInternships
+  "live_session" -> Just ModuleScheduling
+  "event_invitation" -> Nothing
+  "social_connection" -> Nothing
+  _ -> Just ModuleCRM
+
+partySelectorVisibleLegalName :: Text -> Maybe Text -> Maybe Text
+partySelectorVisibleLegalName context legalName
+  | isPublicPartySelectorContext context = Nothing
+  | otherwise = legalName
+
 validatePartySelectorLimit :: Maybe Int -> Either ServerError Int
 validatePartySelectorLimit raw =
   let value = fromMaybe 15 raw
   in if value >= 1 && value <= 20
        then Right value
        else Left err400 { errBody = "limit must be between 1 and 20" }
+
+validatePartySelectorCursor :: Int64 -> Either ServerError Int64
+validatePartySelectorCursor value
+  | value > 0 && value <= 800 = Right value
+  | otherwise = Left err400 { errBody = "cursor is invalid" }
+
+partySelectorTerms :: Text -> [Text]
+partySelectorTerms =
+  filter (not . T.null)
+    . T.words
+    . T.map (\char -> if isAlphaNum char || char `elem` ("-'_." :: String) then char else ' ')
+    . normalizePartySelectorDatabaseText
+
+partySelectorWithinOneEdit :: Text -> Text -> Bool
+partySelectorWithinOneEdit left right
+  | left == right = True
+  | abs (length leftChars - length rightChars) > 1 = False
+  | length leftChars == length rightChars =
+      length mismatches <= 1 || adjacentTransposition mismatches
+  | length leftChars + 1 == length rightChars = oneInsertion leftChars rightChars
+  | otherwise = oneInsertion rightChars leftChars
+  where
+    leftChars = T.unpack left
+    rightChars = T.unpack right
+    mismatches = [index | (index, (a, b)) <- zip [0 :: Int ..] (zip leftChars rightChars), a /= b]
+    adjacentTransposition [first, second] =
+      second == first + 1
+        && leftChars !! first == rightChars !! second
+        && leftChars !! second == rightChars !! first
+    adjacentTransposition _ = False
+    oneInsertion shorter longer = go shorter longer False
+      where
+        go [] _ _ = True
+        go _ [] _ = False
+        go short@(a:as) (b:bs) skipped
+          | a == b = go as bs skipped
+          | skipped = False
+          | otherwise = go short bs True
+
+partySelectorTermMatches :: Text -> Text -> Bool
+partySelectorTermMatches queryTerm candidateTerm =
+  queryTerm `T.isInfixOf` candidateTerm
+    || (T.length queryTerm >= 4 && partySelectorWithinOneEdit queryTerm candidateTerm)
+
+partySelectorMatches :: Text -> Text -> Maybe Text -> Maybe Text -> Bool
+partySelectorMatches query displayName legalName username =
+  let queryTerms = partySelectorTerms query
+      candidateTerms = partySelectorTerms
+        (T.intercalate " " [displayName, fromMaybe "" legalName, fromMaybe "" username])
+  in not (null queryTerms)
+      && all (\queryTerm -> any (partySelectorTermMatches queryTerm) candidateTerms) queryTerms
+
+partySelectorScore :: Text -> Text -> Maybe Text -> Maybe Text -> Int
+partySelectorScore query displayName legalName username
+  | normalizedUsername == normalizedQuery = 0
+  | normalizedName == normalizedQuery = 1
+  | normalizedQuery `T.isPrefixOf` normalizedUsername = 2
+  | any (\queryTerm -> any (queryTerm `T.isPrefixOf`) nameTerms) queryTerms = 3
+  | all (\queryTerm -> any (queryTerm `T.isPrefixOf`) allTerms) queryTerms = 4
+  | all (\queryTerm -> any (queryTerm `T.isInfixOf`) allTerms) queryTerms = 5
+  | otherwise = 6
+  where
+    normalizedQuery = normalizePartySelectorText query
+    normalizedName = normalizePartySelectorText displayName
+    normalizedUsername = normalizePartySelectorText (fromMaybe "" username)
+    queryTerms = partySelectorTerms query
+    nameTerms = partySelectorTerms (T.intercalate " " [displayName, fromMaybe "" legalName])
+    allTerms = nameTerms ++ partySelectorTerms (fromMaybe "" username)
 
 normalizePartySelectorText :: Text -> Text
 normalizePartySelectorText = T.map replaceAccent . T.filter (not . isSpace) . T.toLower . T.filter (/= '@')

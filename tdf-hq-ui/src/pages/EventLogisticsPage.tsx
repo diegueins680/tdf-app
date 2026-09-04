@@ -523,7 +523,7 @@ export default function EventLogisticsPage() {
             onSubmit={(event) => { event.preventDefault(); memberMutation.mutate(); }}
             data-focus-return="team-members-status"
           >
-            <Box sx={{ flex: 1 }}><UserSelector field={{ label: 'Persona del equipo', helperText: 'Busca por nombre o @username.' }} value={memberParty} onChange={setMemberParty} /></Box>
+            <Box sx={{ flex: 1 }}><UserSelector field={{ label: 'Persona del equipo', helperText: 'Busca por nombre o @username.' }} value={memberParty} onChange={setMemberParty} search={{ context: 'crm_assignment' }} /></Box>
             <TextField select label="Permiso" value={memberRole} onChange={(event) => setMemberRole(event.target.value as EventLogisticsMemberDTO['elmRole'])} sx={{ minWidth: 150 }}><MenuItem value="editor">Editor</MenuItem><MenuItem value="viewer">Lector</MenuItem></TextField>
             <Button type="submit" variant="contained" startIcon={<GroupAddIcon />} disabled={!memberParty || memberMutation.isPending}>Añadir</Button>
           </Stack>
@@ -594,6 +594,7 @@ export default function EventLogisticsPage() {
                 });
               }}
               field={{ label: 'Responsable TDF', helperText: 'Busca y selecciona una cuenta TDF; nunca ingreses un ID manualmente.' }}
+              search={{ context: 'crm_assignment' }}
             />
             <TextField label="Responsable externo" value={activityDraft.externalName} onChange={(event) => {
               const externalName = event.target.value;

@@ -22,7 +22,7 @@ describe('searchPartiesForSelector', () => {
     });
 
     expect(getMock).toHaveBeenCalledWith(
-      '/parties/search?q=%C3%81na&kind=person&accountOnly=true&limit=15&cursor=12&excludePartyId=7&excludePartyId=9',
+      '/parties/search?q=%C3%81na&context=crm_assignment&kind=person&accountOnly=true&limit=15&cursor=12&excludePartyId=7&excludePartyId=9',
       { signal },
     );
   });

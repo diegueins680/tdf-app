@@ -472,12 +472,12 @@ export function LiveSessionIntakeForm({ variant = 'internal' }: LiveSessionIntak
                   <Grid item xs={12} md={6}>
                     <PartySelector
                       value={musician.partyId ? {
-                        partyId: musician.partyId, partyType: 'person', displayName: musician.name || `Contacto ${musician.partyId}`,
-                        username: null, avatarUrl: null, secondaryLabel: musician.email || null, accountStatus: 'no-account',
+                        partyId: musician.partyId, partyType: 'person', displayName: musician.name || 'Contacto asignado',
+                        username: null, avatarUrl: null, secondaryLabel: 'Registro existente', accountStatus: 'no-account',
                       } : null}
                       onChange={(party) => { void handleSelectParty(musician.id, party); }}
-                      field={{ label: 'Seleccionar contacto existente', helperText: 'Busca por nombre, usuario o correo.' }}
-                      search={{ kind: 'person', accountOnly: false }}
+                      field={{ label: 'Seleccionar contacto existente', helperText: 'Busca por nombre o @username.' }}
+                      search={{ context: 'live_session', kind: 'person', accountOnly: false }}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>

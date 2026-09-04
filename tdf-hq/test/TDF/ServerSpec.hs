@@ -171,6 +171,13 @@ import TDF.Server
     , validatePartyDisplayName
     , validatePartyDisplayNameUpdate
     , validatePartyListPagination
+    , validatePartySelectorCursor
+    , validatePartySelectorContext
+    , partySelectorContextModule
+    , partySelectorVisibleLegalName
+    , partySelectorMatches
+    , partySelectorScore
+    , partySelectorWithinOneEdit
     , validatePartyPrimaryEmail
     , validatePartyPrimaryEmailUpdate
     , validatePublicBookingDurationMinutes
@@ -1092,6 +1099,55 @@ spec = describe "TDF.Server helpers" $ do
             assertLimitInvalid (validatePartyListPagination (Just 501) Nothing)
             assertOffsetInvalid (validatePartyListPagination Nothing (Just (-1)))
             assertDeepOffsetInvalid (validatePartyListPagination Nothing (Just 10001))
+
+    describe "Party selector relevance" $ do
+        it "matches accents, usernames, compound names, and terms in another order" $ do
+            partySelectorMatches "ruiz ana" "Ana María Ruiz" Nothing Nothing `shouldBe` True
+            partySelectorMatches "@anaruiz" "Otro nombre" Nothing (Just "anaruiz") `shouldBe` True
+            partySelectorMatches "anne marie" "Anne-Marie O'Neil" Nothing Nothing `shouldBe` True
+            partySelectorMatches "oneil" "Anne-Marie O'Neil" Nothing Nothing `shouldBe` True
+
+        it "allows only a small, bounded typo for terms of at least four characters" $ do
+            partySelectorWithinOneEdit "marai" "maria" `shouldBe` True
+            partySelectorMatches "Marai" "María Paredes" Nothing Nothing `shouldBe` True
+            partySelectorMatches "Mxrxz" "María Paredes" Nothing Nothing `shouldBe` False
+            partySelectorMatches "an" "Ana Ruiz" Nothing Nothing `shouldBe` True
+
+        it "prioritizes exact usernames and names before prefix or fuzzy matches" $ do
+            partySelectorScore "@anaruiz" "Ana María Ruiz" Nothing (Just "anaruiz") `shouldBe` 0
+            partySelectorScore "Ana María Ruiz" "Ana María Ruiz" Nothing (Just "otra") `shouldBe` 1
+            partySelectorScore "ana" "Beatriz" Nothing (Just "anaruiz") `shouldBe` 2
+            partySelectorScore "ruiz" "Ana María Ruiz" Nothing Nothing `shouldBe` 3
+            partySelectorScore "Marai" "María Paredes" Nothing Nothing `shouldBe` 6
+
+        it "accepts only server-issued bounded cursors" $ do
+            validatePartySelectorCursor 15 `shouldBe` Right 15
+            let assertInvalid result = case result of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right value -> expectationFailure ("Expected invalid selector cursor, got: " <> show value)
+            assertInvalid (validatePartySelectorCursor 0)
+            assertInvalid (validatePartySelectorCursor 801)
+
+        it "accepts only declared functional authorization contexts" $ do
+            validatePartySelectorContext Nothing `shouldBe` Right "crm_assignment"
+            validatePartySelectorContext (Just " EVENT_INVITATION ") `shouldBe` Right "event_invitation"
+            case validatePartySelectorContext (Just "enumerate_everyone") of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                Right value -> expectationFailure ("Expected invalid selector context, got: " <> show value)
+
+        it "maps internal contexts to their owning authorization modules" $ do
+            partySelectorContextModule "booking" `shouldBe` Just ModuleScheduling
+            partySelectorContextModule "billing_contact" `shouldBe` Just ModuleInvoicing
+            partySelectorContextModule "operations" `shouldBe` Just ModuleOps
+            partySelectorContextModule "internal_feedback" `shouldBe` Just ModuleInternships
+            partySelectorContextModule "event_invitation" `shouldBe` Nothing
+            partySelectorContextModule "social_connection" `shouldBe` Nothing
+
+        it "keeps legal names out of public discovery contexts" $ do
+            let legalName = Just "Nombre legal privado"
+            partySelectorVisibleLegalName "event_invitation" legalName `shouldBe` Nothing
+            partySelectorVisibleLegalName "social_connection" legalName `shouldBe` Nothing
+            partySelectorVisibleLegalName "crm_assignment" legalName `shouldBe` legalName
 
     describe "validateSessionInputLookup" $ do
         it "accepts exactly one public input-list session selector" $ do
