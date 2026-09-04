@@ -78,7 +78,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-mobile/userProfile` | Identidad propia | Party ID manual | Se deriva de sesión autenticada; compatibilidad local sólo como fallback no editable | Migrado |
 | `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
 | `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
-| `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo | Selector contextual | Pendiente |
+| `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo y resolución por nombre | `PartySelector` remoto; conserva relaciones históricas y creación de contactos | Migrado |
 | `tdf-hq-ui/CollaborativeEventCreator` | Colaboradores | Catálogo CRM completo | Selector múltiple | Pendiente |
 
 Los elementos pendientes se documentan deliberadamente: no deben interpretarse

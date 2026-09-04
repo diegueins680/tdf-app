@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { Bookings, type ServiceBookingCommerceDTO } from '../api/bookings';
-import type { BookingDTO, PartyCreate, PartyDTO, ServiceCatalogDTO } from '../api/types';
+import type { BookingDTO, PartyCreate, ServiceCatalogDTO } from '../api/types';
 import {
   Typography,
   Paper,
@@ -30,12 +30,13 @@ import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore'
 import { Rooms } from '../api/rooms';
 import type { RoomDTO } from '../api/types';
 import { Parties } from '../api/parties';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartySelector } from '../components/party-selector/PartySelector';
 import { Services } from '../api/services';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
-  getBookingCustomerFieldState,
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
   getBookingRoomsFieldState,
@@ -87,11 +88,6 @@ export default function BookingsPage() {
     queryFn: Rooms.list,
     staleTime: 5 * 60 * 1000,
   });
-  const partiesQuery = useQuery<PartyDTO[]>({
-    queryKey: ['parties', 'all'],
-    queryFn: () => Parties.list(),
-    staleTime: 5 * 60 * 1000,
-  });
   const serviceCatalogQuery = useQuery<ServiceCatalogDTO[]>({
     queryKey: ['service-catalog', 'internal'],
     queryFn: () => Services.list(),
@@ -100,7 +96,6 @@ export default function BookingsPage() {
   const qc = useQueryClient();
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
   const rooms = useMemo<RoomDTO[]>(() => roomsQuery.data ?? [], [roomsQuery.data]);
-  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const hasActiveBookingFilter = bookingIdFilter != null || partyIdFilter != null || engineerPartyIdFilter != null;
   const handleClearBookingFilters = useCallback(() => {
     navigate({ pathname: location.pathname, search: '' }, { replace: true });
@@ -213,8 +208,9 @@ export default function BookingsPage() {
   const [serviceOfferingId, setServiceOfferingId] = useState<string>('');
   const [engineerName, setEngineerName] = useState('');
   const [engineerPartyId, setEngineerPartyId] = useState<number | null>(null);
+  const [selectedEngineer, setSelectedEngineer] = useState<PartySelectorOption | null>(null);
   const [customerPartyId, setCustomerPartyId] = useState<number | null>(null);
-  const [customerName, setCustomerName] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<PartySelectorOption | null>(null);
   const [assignedRoomIds, setAssignedRoomIds] = useState<string[]>([]);
   const [status, setStatus] = useState<string>('Confirmed');
   const [calendarError, setCalendarError] = useState<string | null>(null);
@@ -318,22 +314,6 @@ export default function BookingsPage() {
     [rooms, assignedRoomIds],
   );
 
-  const engineerOptions = useMemo(
-    () =>
-      parties.filter((party) =>
-        (party.roles ?? []).some((role) => role.toLowerCase().includes('engineer')),
-      ),
-    [parties],
-  );
-  const customerOptions = parties;
-  const customerFieldState = useMemo(
-    () => getBookingCustomerFieldState({
-      customerCount: customerOptions.length,
-      customerCatalogLoading: partiesQuery.isLoading && partiesQuery.data == null,
-      selectedCustomerId: customerPartyId,
-    }),
-    [customerOptions.length, customerPartyId, partiesQuery.data, partiesQuery.isLoading],
-  );
   const serviceCatalogReady = !serviceCatalogQuery.isLoading;
   const serviceEntryGateState = useMemo(
     () => getBookingServiceEntryGateState({
@@ -362,12 +342,12 @@ export default function BookingsPage() {
     : serviceFieldState.helperText || 'Selecciona un servicio publicado.';
   const engineerFieldState = useMemo(
     () => getBookingEngineerFieldState({
-      engineerCount: engineerOptions.length,
+      engineerCount: 1,
       hasAssignedEngineer: engineerPartyId != null || engineerName.trim() !== '',
       hasSelectedService: selectedService != null,
       requiresEngineer: selectedService?.requiresEngineer ?? false,
     }),
-    [engineerName, engineerOptions.length, engineerPartyId, selectedService],
+    [engineerName, engineerPartyId, selectedService],
   );
   const roomsFieldState = useMemo(
     () => getBookingRoomsFieldState({
@@ -406,11 +386,10 @@ export default function BookingsPage() {
     mutationFn: (payload: PartyCreate) => Parties.create(payload),
     onSuccess: (party) => {
       setCustomerPartyId(party.partyId);
-      setCustomerName(party.displayName);
+      setSelectedCustomer({ partyId: party.partyId, partyType: party.isOrg ? 'organization' : 'person', displayName: party.displayName, username: null, avatarUrl: null, secondaryLabel: 'Contacto nuevo', accountStatus: 'no-account' });
       setCreateContactOpen(false);
       setCreateContactForm({ name: '', email: '', phone: '' });
       setCreateContactError(null);
-      void qc.invalidateQueries({ queryKey: ['parties'] });
     },
     onError: (err) => setCreateContactError(err instanceof Error ? err.message : 'No se pudo crear el contacto.'),
   });
@@ -444,11 +423,10 @@ useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? window.sessionStorage.getItem('booking-prefill') : null;
       if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<{ title?: string; startAt?: string; endAt?: string; customerName?: string; notes?: string; hint?: string }>;
+      const parsed = JSON.parse(raw) as Partial<{ title?: string; startAt?: string; endAt?: string; notes?: string; hint?: string }>;
       if (parsed.startAt) setStartInput(formatForInput(new Date(parsed.startAt)));
       if (parsed.endAt) setEndInput(formatForInput(new Date(parsed.endAt)));
       if (parsed.title) setTitle(parsed.title);
-      if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.notes) setNotes(parsed.notes);
       setStatus('Tentative');
       setServiceOfferingId(defaultService?.id ?? '');
@@ -484,8 +462,10 @@ const openDialogForRange = (start: Date, end: Date) => {
     setNotes('');
     setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
-    setCustomerName('');
+    setEngineerPartyId(null);
+    setSelectedEngineer(null);
     setCustomerPartyId(null);
+    setSelectedCustomer(null);
     const defaults = defaultRoomsForService(initialService?.id ?? '');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
@@ -501,8 +481,10 @@ const openDialogForRange = (start: Date, end: Date) => {
     setNotes('');
     setServiceOfferingId(initialService?.id ?? '');
     setEngineerName('');
-    setCustomerName('');
+    setEngineerPartyId(null);
+    setSelectedEngineer(null);
     setCustomerPartyId(null);
+    setSelectedCustomer(null);
     const defaults = defaultRoomsForService(initialService?.id ?? '');
     setAssignedRoomIds(defaults.map((room) => room.roomId));
     setStatus('Confirmed');
@@ -525,6 +507,7 @@ const openDialogForRange = (start: Date, end: Date) => {
     setAssignedRoomIds([]);
     setEngineerName('');
     setEngineerPartyId(null);
+    setSelectedEngineer(null);
     setPrefillNotice(false);
     setAutoAssignMessage('');
   };
@@ -594,8 +577,9 @@ const openDialogForRange = (start: Date, end: Date) => {
       setAssignedRoomIds([]);
       setEngineerName('');
       setEngineerPartyId(null);
-      setCustomerName('');
+      setSelectedEngineer(null);
       setCustomerPartyId(null);
+      setSelectedCustomer(null);
       setPrefillNotice(false);
       setAutoAssignMessage('');
       void qc.invalidateQueries({ queryKey: ['bookings'] });
@@ -688,18 +672,13 @@ const openDialogForRange = (start: Date, end: Date) => {
       const engineerIdFromBooking = booking.engineerPartyId ?? parsedNotes.engineerId;
       setNotes(parsedNotes.notesBody);
       setEngineerName(engineerFromBooking);
-      const matchedEngineerId =
-        engineerIdFromBooking ??
-        (engineerFromBooking
-          ? parties.find((p) => p.displayName.toLowerCase() === engineerFromBooking.toLowerCase())?.partyId ?? null
-          : null);
-      setEngineerPartyId(matchedEngineerId);
+      setEngineerPartyId(engineerIdFromBooking);
+      setSelectedEngineer(engineerIdFromBooking ? { partyId: engineerIdFromBooking, partyType: 'person', displayName: engineerFromBooking || 'Ingeniero asignado', username: null, avatarUrl: null, secondaryLabel: 'Asignación existente', accountStatus: 'no-account' } : null);
       setCustomerPartyId(booking.partyId ?? null);
-      const customerLabel = parties.find((party) => party.partyId === booking.partyId)?.displayName
-        ?? booking.customerName
+      const customerLabel = booking.customerName
         ?? booking.partyDisplayName
         ?? '';
-      setCustomerName(customerLabel);
+      setSelectedCustomer(booking.partyId ? { partyId: booking.partyId, partyType: 'person', displayName: customerLabel || 'Cliente asignado', username: null, avatarUrl: null, secondaryLabel: 'Reserva existente', accountStatus: 'no-account' } : null);
       setServiceOfferingId(booking.serviceOfferingId ?? '');
       setServiceLocked(Boolean(booking.courseSlug));
       setStatus(booking.status ?? 'Confirmed');
@@ -711,7 +690,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       setDuplicateStartInput(suggestedDuplicate.toFormat("yyyy-LL-dd'T'HH:mm"));
       setDialogOpen(true);
     },
-    [formatForInput, parties, zone],
+    [formatForInput, zone],
   );
 
   useEffect(() => {
@@ -1000,7 +979,7 @@ const openDialogForRange = (start: Date, end: Date) => {
       </Dialog>
 
       <Dialog open={createContactOpen} onClose={() => { if (!createPartyMutation.isPending) setCreateContactOpen(false); }} maxWidth="xs" fullWidth>
-        <DialogTitle>{customerFieldState.dialogTitle}</DialogTitle>
+        <DialogTitle>Nuevo contacto</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
@@ -1086,56 +1065,18 @@ const openDialogForRange = (start: Date, end: Date) => {
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
             />
-            {customerFieldState.showCustomerSelector ? (
-              <Autocomplete
-                options={customerOptions}
-                getOptionLabel={(option) => option.displayName}
-                loading={partiesQuery.isFetching}
-                value={customerOptions.find((opt) => opt.partyId === customerPartyId) ?? null}
-                onChange={(_, value) => {
-                  setCustomerPartyId(value?.partyId ?? null);
-                  setCustomerName(value?.displayName ?? '');
-                }}
-                inputValue={customerName}
-                onInputChange={(_, value, reason) => {
-                  if (reason === 'clear') {
-                    setCustomerPartyId(null);
-                    setCustomerName('');
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Cliente"
-                    required
-                    helperText={customerFieldState.helperText}
-                  />
-                )}
-                noOptionsText="Sin clientes en el catálogo"
-              />
-            ) : (
-              <Alert
-                severity="info"
-                variant="outlined"
-                action={customerFieldState.showQuickCreateAction && customerFieldState.showQuickCreateInsideAlert ? (
-                  <Button color="inherit" size="small" onClick={openCreateContactDialog}>
-                    {customerFieldState.quickCreateLabel}
-                  </Button>
-                ) : undefined}
-              >
-                {customerFieldState.helperText}
-              </Alert>
-            )}
-            {customerFieldState.showQuickCreateAction && !customerFieldState.showQuickCreateInsideAlert && (
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={openCreateContactDialog}
-                sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-              >
-                {customerFieldState.quickCreateLabel}
-              </Button>
-            )}
+            <PartySelector
+              value={selectedCustomer}
+              onChange={(party) => {
+                setSelectedCustomer(party);
+                setCustomerPartyId(party?.partyId ?? null);
+              }}
+              field={{ label: 'Cliente', required: true, helperText: 'Busca por nombre o @username. El texto escrito no se guarda como cliente.' }}
+              search={{ kind: 'any', accountOnly: false }}
+            />
+            <Button variant="outlined" size="small" onClick={openCreateContactDialog} sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}>
+              Crear contacto nuevo
+            </Button>
             <TextField
               label="Inicio"
               type="datetime-local"
@@ -1178,12 +1119,6 @@ const openDialogForRange = (start: Date, end: Date) => {
                           messageParts.push(`Salas sugeridas: ${defaults.map((r) => r.rName).join(' + ')}`);
                           setRoomsManuallyAdjusted(false);
                         }
-                      }
-                      if (service.requiresEngineer && !engineerName && engineerOptions.length > 0) {
-                        const eng = engineerOptions[0]!;
-                        setEngineerName(eng.displayName);
-                        setEngineerPartyId(eng.partyId);
-                        messageParts.push(`Ingeniero sugerido: ${eng.displayName}`);
                       }
                       setAutoAssignMessage(messageParts.join(' · '));
                     }}
@@ -1273,34 +1208,15 @@ const openDialogForRange = (start: Date, end: Date) => {
             )}
             {serviceEntryGateState.showDependentFields ? (
               engineerFieldState.showField ? (
-                <Autocomplete
-                  options={engineerOptions}
-                  getOptionLabel={(option) => option.displayName}
-                  loading={partiesQuery.isFetching}
-                  value={engineerOptions.find((opt) => opt.partyId === engineerPartyId) ?? null}
-                  onChange={(_, value) => {
-                    setEngineerPartyId(value?.partyId ?? null);
-                    setEngineerName(value?.displayName ?? '');
+                <PartySelector
+                  value={selectedEngineer}
+                  onChange={(party) => {
+                    setSelectedEngineer(party);
+                    setEngineerPartyId(party?.partyId ?? null);
+                    setEngineerName(party?.displayName ?? '');
                   }}
-                  inputValue={engineerName}
-                  onInputChange={(_, value, reason) => {
-                    if (reason === 'input') {
-                      setEngineerName(value);
-                      setEngineerPartyId(null);
-                    }
-                    if (reason === 'clear') {
-                      setEngineerName('');
-                      setEngineerPartyId(null);
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={engineerFieldState.label}
-                      helperText={engineerFieldState.helperText}
-                    />
-                  )}
-                  noOptionsText="Sin ingenieros en el catálogo"
+                  field={{ label: engineerFieldState.label, helperText: engineerFieldState.helperText }}
+                  search={{ kind: 'person', accountOnly: false }}
                 />
               ) : engineerFieldState.helperText ? (
                 <Alert severity="info" variant="outlined">
