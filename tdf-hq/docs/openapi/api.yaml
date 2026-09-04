@@ -5507,6 +5507,7 @@ paths:
   /reviews/{targetKind}/{targetId}: { $ref: './reviews.yaml#/paths/~1reviews~1{targetKind}~1{targetId}' }
   /reputation/profiles/{partyId}: { $ref: './reviews.yaml#/paths/~1reputation~1profiles~1{partyId}' }
   /reputation/categories: { $ref: './reviews.yaml#/paths/~1reputation~1categories' }
+  /reputation/preferences: { $ref: './reviews.yaml#/paths/~1reputation~1preferences' }
   /reviews/eligibility: { $ref: './reviews.yaml#/paths/~1reviews~1eligibility' }
   /reviews: { $ref: './reviews.yaml#/paths/~1reviews' }
 

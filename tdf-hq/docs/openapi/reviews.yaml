@@ -26,6 +26,21 @@ paths:
           description: Aggregate public reputation, or a formation state below the sample threshold
           content: { application/json: { schema: { $ref: '#/components/schemas/PublicReputation' } } }
         '404': { description: Profile not found }
+  /reputation/preferences:
+    get:
+      tags: [Contextual reputation]
+      operationId: getMyReputationPreferences
+      summary: Get the authenticated viewer's private category preferences
+      description: Returns only the caller's personal relevance preferences. It never returns private rankings or evaluator identities.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: contextKind, in: query, schema: { type: string, minLength: 1, maxLength: 80, default: general } }
+      responses:
+        '200':
+          description: Private saved preference profile, or an empty draft for the context
+          content: { application/json: { schema: { $ref: '#/components/schemas/ReputationPreference' } } }
+        '401': { description: Authentication required }
+        '404': { description: Contextual reputation is not enabled for this deployment }
   /reviews/{targetKind}/{targetId}:
     get:
       tags: [Verified reviews]
@@ -128,6 +143,27 @@ components:
               upperBound: { type: number, minimum: 0, maximum: 100 }
               verifiedCount: { type: integer, minimum: 0 }
               confidence: { type: string, enum: [forming, low, moderate, high] }
+    ReputationPreference:
+      type: object
+      additionalProperties: false
+      required: [contextKind, status, revision, formulaVersion, categories]
+      properties:
+        contextKind: { type: string }
+        status: { type: string, enum: [draft, active, archived] }
+        revision: { type: integer, minimum: 0 }
+        formulaVersion: { type: string }
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [categoryId, slug, position, weight, notApplicable]
+            properties:
+              categoryId: { type: string, format: uuid }
+              slug: { type: string }
+              position: { type: integer, minimum: 1 }
+              weight: { type: number, minimum: 0, maximum: 100 }
+              notApplicable: { type: boolean }
     ExperienceReviewTargetKind:
       type: string
       enum: [event, marketplace_listing, service_offering, service_package]
