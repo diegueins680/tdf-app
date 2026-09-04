@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
-import { Reputation, type ReputationCategory } from '../../api/reputation';
+import { Reputation, type ReputationCategory, type ReputationPreference } from '../../api/reputation';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from '../../session/SessionContext';
 
 type Props = {
   locale?: 'es' | 'en';
+  contextKind?: string;
   onChange?: (items: Array<{ categoryId: string; weight: number }>) => void;
 };
 
@@ -20,15 +22,41 @@ export const rankOrderCentroid = (count: number): number[] => {
   return [...values, 100 - values.reduce((sum, value) => sum + value, 0)];
 };
 
-export default function CategoryPriorityPrototype({ locale = 'es', onChange }: Props) {
+export const orderCategoriesByPreference = (
+  categories: ReputationCategory[],
+  preference?: ReputationPreference,
+): ReputationCategory[] => {
+  const saved = new Map(
+    (preference?.categories ?? []).map((item) => [item.categoryId, item.position]),
+  );
+  return [...categories].sort((left, right) => {
+    const leftPosition = saved.get(left.id);
+    const rightPosition = saved.get(right.id);
+    if (leftPosition !== undefined && rightPosition !== undefined) return leftPosition - rightPosition;
+    if (leftPosition !== undefined) return -1;
+    if (rightPosition !== undefined) return 1;
+    return left.defaultPosition - right.defaultPosition || left.slug.localeCompare(right.slug);
+  });
+};
+
+export default function CategoryPriorityPrototype({ locale = 'es', contextKind = 'general', onChange }: Props) {
+  const { session } = useSession();
+  const contextualReputationEnabled = session?.featureFlags?.includes('CONTEXTUAL_REPUTATION_ENABLED') ?? false;
   const categories = useQuery({ queryKey: ['reputation-categories', locale], queryFn: () => Reputation.categories(locale) });
+  const preference = useQuery({
+    queryKey: ['my-reputation-preference', contextKind],
+    queryFn: () => Reputation.getMyPreferences(contextKind),
+    enabled: contextualReputationEnabled,
+    retry: false,
+  });
   const [order, setOrder] = useState<ReputationCategory[]>([]);
   const [previous, setPrevious] = useState<ReputationCategory[] | null>(null);
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    if (categories.data && order.length === 0) setOrder(categories.data);
-  }, [categories.data, order.length]);
+    if (!categories.data || order.length > 0 || (contextualReputationEnabled && preference.isLoading)) return;
+    setOrder(orderCategoriesByPreference(categories.data, preference.data));
+  }, [categories.data, contextualReputationEnabled, order.length, preference.data, preference.isLoading]);
   const weights = useMemo(() => rankOrderCentroid(order.length), [order.length]);
   useEffect(() => onChange?.(order.map((category, index) => ({ categoryId: category.id, weight: weights[index] }))), [onChange, order, weights]);
 
