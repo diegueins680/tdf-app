@@ -2184,7 +2184,7 @@
     {
       "id": "reputation.preferences",
       "parentId": "profile.self",
-      "webRoute": null,
+      "webRoute": "/reputation/preferences",
       "routeType": "important-submodule",
       "classification": "important-submodule",
       "label": { "es": "Prioridades de reputación", "en": "Reputation priorities" },

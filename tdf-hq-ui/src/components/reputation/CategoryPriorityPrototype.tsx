@@ -55,6 +55,41 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
   const [status, setStatus] = useState('');
   const [savedRevision, setSavedRevision] = useState<number | null>(null);
   const pendingIdempotencyKey = useRef<string | null>(null);
+  const copy = locale === 'en'
+    ? {
+      loading: 'Loading categories',
+      loadError: 'Categories could not be loaded. Please try again.',
+      heading: 'What matters most to you?',
+      explanation: 'Your order creates a personal compatibility preference. It does not change anyone’s public reputation.',
+      method: 'Percentages are calculated automatically using a transparent method and add up to exactly 100%.',
+      saveError: 'The draft could not be saved. Try again; your order remains on this screen.',
+      saving: 'Saving preference draft…',
+      saved: 'Preference draft saved.',
+      retry: 'The draft could not be saved. You can retry without losing the order.',
+      restored: 'Previous order restored.',
+      undo: 'Undo',
+      save: 'Save draft',
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      priority: (name: string, position: number) => `${name} is now priority ${position}.`,
+    }
+    : {
+      loading: 'Cargando categorías',
+      loadError: 'No se pudieron cargar las categorías. Inténtalo nuevamente.',
+      heading: '¿Qué es más importante para ti?',
+      explanation: 'Tu orden crea una preferencia de compatibilidad personal. No cambia la reputación pública de nadie.',
+      method: 'Los porcentajes se calculan automáticamente con un método transparente y suman exactamente 100 %.',
+      saveError: 'No se pudo guardar el borrador. Reinténtalo; tu orden permanece en esta pantalla.',
+      saving: 'Guardando borrador de preferencias…',
+      saved: 'Borrador de preferencias guardado.',
+      retry: 'No se pudo guardar el borrador. Puedes reintentar sin perder el orden.',
+      restored: 'Orden anterior restaurado.',
+      undo: 'Deshacer',
+      save: 'Guardar borrador',
+      moveUp: 'Subir',
+      moveDown: 'Bajar',
+      priority: (name: string, position: number) => `${name} ahora tiene prioridad ${position}.`,
+    };
 
   useEffect(() => {
     if (!categories.data || order.length > 0 || (contextualReputationEnabled && preference.isLoading)) return;
@@ -83,16 +118,16 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
       }, idempotencyKey);
     },
     onMutate: () => {
-      setStatus('Guardando borrador de preferencias…');
+      setStatus(copy.saving);
     },
     onSuccess: (saved) => {
       pendingIdempotencyKey.current = null;
       setSavedRevision(saved.revision);
       queryClient.setQueryData(['my-reputation-preference', contextKind], saved);
-      setStatus('Borrador de preferencias guardado.');
+      setStatus(copy.saved);
     },
     onError: () => {
-      setStatus('No se pudo guardar el borrador. Puedes reintentar sin perder el orden.');
+      setStatus(copy.retry);
     },
   });
 
@@ -103,18 +138,18 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     const next = [...order];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
     setOrder(next);
-    setStatus(`${next[nextIndex].name} ahora tiene prioridad ${nextIndex + 1}.`);
+    setStatus(copy.priority(next[nextIndex].name, nextIndex + 1));
   };
 
-  if (categories.isLoading) return <CircularProgress size={24} aria-label="Cargando categorías" />;
-  if (categories.isError) return <Alert severity="error">No se pudieron cargar las categorías. Inténtalo nuevamente.</Alert>;
+  if (categories.isLoading) return <CircularProgress size={24} aria-label={copy.loading} />;
+  if (categories.isError) return <Alert severity="error">{copy.loadError}</Alert>;
 
   return (
     <Box component="section" aria-labelledby="category-priority-heading">
-      <Typography id="category-priority-heading" variant="h5" fontWeight={800}>¿Qué es más importante para ti?</Typography>
-      <Typography color="text.secondary" sx={{ mt: 0.5 }}>Tu orden crea una preferencia de compatibilidad personal. No cambia la reputación pública de nadie.</Typography>
-      <Alert severity="info" sx={{ mt: 2 }}>Los porcentajes se calculan automáticamente con un método transparente y suman exactamente 100 %.</Alert>
-      {saveDraft.isError && <Alert severity="error" sx={{ mt: 2 }}>No se pudo guardar el borrador. Reinténtalo; tu orden permanece en esta pantalla.</Alert>}
+      <Typography id="category-priority-heading" variant="h5" fontWeight={800}>{copy.heading}</Typography>
+      <Typography color="text.secondary" sx={{ mt: 0.5 }}>{copy.explanation}</Typography>
+      <Alert severity="info" sx={{ mt: 2 }}>{copy.method}</Alert>
+      {saveDraft.isError && <Alert severity="error" sx={{ mt: 2 }}>{copy.saveError}</Alert>}
       <Box role="status" aria-live="polite" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{status}</Box>
       <Stack component="ol" spacing={1} sx={{ listStyle: 'none', p: 0, mt: 2 }}>
         {order.map((category, index) => (
@@ -124,20 +159,20 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
               <DragIndicatorIcon aria-hidden="true" color="action" />
               <Box sx={{ flex: 1 }}><Typography fontWeight={700}>{category.name}</Typography><Typography variant="body2" color="text.secondary">{category.description}</Typography></Box>
               <Typography fontWeight={800}>{weights[index].toFixed(1)}%</Typography>
-              <IconButton aria-label={`Subir ${category.name}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</IconButton>
-              <IconButton aria-label={`Bajar ${category.name}`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>↓</IconButton>
+              <IconButton aria-label={`${copy.moveUp} ${category.name}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</IconButton>
+              <IconButton aria-label={`${copy.moveDown} ${category.name}`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>↓</IconButton>
             </Stack>
           </Box>
         ))}
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-        <Button disabled={!previous || saveDraft.isPending} onClick={() => { if (previous) { setOrder(previous); setPrevious(null); setStatus('Orden anterior restaurado.'); } }}>Deshacer</Button>
+        <Button disabled={!previous || saveDraft.isPending} onClick={() => { if (previous) { setOrder(previous); setPrevious(null); setStatus(copy.restored); } }}>{copy.undo}</Button>
         <Button
           variant="contained"
           disabled={!contextualReputationEnabled || order.length === 0 || saveDraft.isPending}
           onClick={() => saveDraft.mutate()}
         >
-          {saveDraft.isPending ? 'Guardando borrador…' : 'Guardar borrador'}
+          {saveDraft.isPending ? copy.saving : copy.save}
         </Button>
       </Stack>
     </Box>
