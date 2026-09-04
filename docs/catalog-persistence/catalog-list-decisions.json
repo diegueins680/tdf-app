@@ -8584,13 +8584,23 @@
       "reviewed": true
     },
     {
-      "id": "ee5b8ae1db2034789099",
+      "id": "40a41e9459795daa95b8",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "194e61862722dc6a1b0b",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the selector kind union could break API query serialization or client-side validation.",
+      "justification": "Selector kinds are a closed transport and implementation union; Party records remain the governed source of selectable business entities.",
       "reviewed": true
     },
     {
