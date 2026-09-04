@@ -34,6 +34,7 @@ import Text.Read (readMaybe)
 import TDF.API.Reviews
 import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
+import TDF.Config (contextualReputationEnabled)
 import TDF.DB (Env(..))
 import TDF.Server.SocialEventsHandlers (postgresVisibleImportedMetadataClause)
 
@@ -54,8 +55,10 @@ reviewsPublicServer = listReputationCategories :<|> getPublicReputation :<|> lis
 
 reviewsProtectedServer :: AuthedUser -> ServerT ReviewsProtectedAPI AppM
 reviewsProtectedServer user =
-       listReviewEligibility user
-  :<|> createReview user
+       ( listReviewEligibility user
+    :<|> createReview user
+       )
+  :<|> getPersonalReputationPreference user
 
 listPublicReviews :: Text -> Text -> Maybe UUID -> Maybe Int -> AppM ExperienceReviewPage
 listPublicReviews rawTargetKind rawTargetId cursor requestedLimit = do
@@ -109,6 +112,47 @@ listReputationCategories rawLocale = do
   let locale = if fmap T.toLower rawLocale == Just "en" then "en" else "es"
   jsonRows reputationCategoriesSql
     [PersistText locale, PersistText locale]
+
+-- This is deliberately self-only. It returns a viewer's private category
+-- priorities, never rankings, evaluator identities, or another user's data.
+-- The feature flag keeps the new surface dark through schema/backfill rollout.
+getPersonalReputationPreference :: AuthedUser -> Maybe Text -> AppM Value
+getPersonalReputationPreference user rawContextKind = do
+  cfg <- asks envConfig
+  unless (contextualReputationEnabled cfg) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  contextKind <- validatePreferenceContextKind rawContextKind
+  result <- jsonRows personalPreferenceSql
+    [PersistInt64 (fromSqlKey (auPartyId user)), PersistText contextKind]
+  pure $ fromMaybe
+    (object
+      [ "contextKind" .= contextKind
+      , "status" .= ("draft" :: Text)
+      , "revision" .= (0 :: Int)
+      , "formulaVersion" .= ("public-bayes-roc-v1" :: Text)
+      , "categories" .= ([] :: [Value])
+      ])
+    (listToMaybe result)
+
+validatePreferenceContextKind :: Maybe Text -> AppM Text
+validatePreferenceContextKind rawContextKind =
+  let value = T.strip (fromMaybe "general" rawContextKind)
+  in if T.null value || T.length value > 80 || T.any isControl value
+       then throwError err400 { errBody = "Invalid preference context" }
+       else pure value
+
+personalPreferenceSql :: Text
+personalPreferenceSql =
+  "SELECT jsonb_build_object('contextKind',preference.context_kind,'status',preference.status,"
+  <> "'revision',preference.revision,'formulaVersion',preference.preference_formula_version_id,"
+  <> "'categories',coalesce(jsonb_agg(jsonb_build_object('categoryId',category.id,'slug',category.slug,"
+  <> "'position',item.position,'weight',item.weight,'notApplicable',item.not_applicable) "
+  <> "ORDER BY item.position) FILTER (WHERE item.category_id IS NOT NULL),'[]'::jsonb)) "
+  <> "FROM reputation_personal_preference preference "
+  <> "LEFT JOIN reputation_personal_preference_category item ON item.preference_id=preference.id "
+  <> "LEFT JOIN reputation_category category ON category.id=item.category_id "
+  <> "WHERE preference.owner_party_id=? AND preference.context_kind=? "
+  <> "GROUP BY preference.id"
 
 reputationCategoriesSql :: Text
 reputationCategoriesSql =

@@ -44,12 +44,16 @@ type ReviewsPublicAPI =
     :> QueryParam "limit" Int
     :> Get '[JSON] ExperienceReviewPage
 
-type ReviewsProtectedAPI = "reviews" :>
-       ( "eligibility"
-           :> QueryParam "targetKind" Text
-           :> QueryParam "targetId" Text
-           :> Get '[JSON] [Value]
-    :<|> RequiredReviewIdempotency
-           :> ReqBody '[JSON] ExperienceReviewCreateRequest
-           :> PostCreated '[JSON] Value
-       )
+type ReviewsProtectedAPI =
+       "reviews" :>
+         ( "eligibility"
+             :> QueryParam "targetKind" Text
+             :> QueryParam "targetId" Text
+             :> Get '[JSON] [Value]
+      :<|> RequiredReviewIdempotency
+             :> ReqBody '[JSON] ExperienceReviewCreateRequest
+             :> PostCreated '[JSON] Value
+         )
+  :<|> "reputation" :> "preferences"
+         :> QueryParam "contextKind" Text
+         :> Get '[JSON] Value
