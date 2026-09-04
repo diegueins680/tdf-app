@@ -489,6 +489,7 @@ import TDF.Config
       assetsRootDir,
       chatKitApiBase,
       chatKitWorkflowId,
+      contextualReputationEnabled,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
