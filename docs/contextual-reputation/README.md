@@ -3,12 +3,13 @@
 ## Estado y alcance de esta entrega
 
 Esta entrega introduce el núcleo seguro y auditable para evolucionar las
-reseñas verificadas existentes. Está protegido por el flag de despliegue
-`CONTEXTUAL_REPUTATION_ENABLED` (expuesto a clientes autenticados como
-`CONTEXTUAL_REPUTATION_ENABLED`);
-no debe activarse hasta completar la aplicación de migración, el backfill y el
-piloto descritos abajo. No altera `experience_review`, `directory_review` ni
-convierte estrellas históricas en rankings que nunca sucedieron.
+reseñas verificadas existentes. La experiencia interactiva se gobierna con el
+flag de despliegue `CONTEXTUAL_REPUTATION_ENABLED`, expuesto a clientes
+autenticados con el mismo nombre. Debe mantenerse apagado hasta completar la
+aplicación de migración, el backfill y el piloto descritos abajo. Las lecturas
+públicas ya publicadas siguen siendo compatibles durante la transición. No
+altera `experience_review`, `directory_review` ni convierte estrellas
+históricas en rankings que nunca sucedieron.
 
 ## Auditoría del estado anterior
 
