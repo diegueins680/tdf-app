@@ -9304,16 +9304,6 @@
       "reviewed": true
     },
     {
-      "id": "194e61862722dc6a1b0b",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing this closed client discriminator could break typed request construction or party-search dispatch.",
-      "justification": "The party selector kinds are a closed client transport discriminator for the backend query contract, not user-managed or reportable party data.",
-      "reviewed": true
-    },
-    {
       "id": "ca20aefd0277f69a872f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
