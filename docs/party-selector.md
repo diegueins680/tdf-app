@@ -109,7 +109,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-mobile/eventDetail` | Invitar a amigo | Texto `Party ID` | Selector nativo; transmite sólo el ID elegido | Migrado |
 | `tdf-mobile/userProfile` | Identidad propia | Party ID manual | Se deriva de sesión autenticada; compatibilidad local sólo como fallback no editable | Migrado |
 | `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
-| `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
+| `tdf-hq-ui/OperationsControlCenterPage` | Filtros y asignación | Textos Party ID de responsable/cliente | Selectores compactos; asignación persiste sólo la opción elegida | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo y resolución por nombre | `PartySelector` remoto; conserva relaciones históricas y creación de contactos | Migrado |
 | `tdf-hq-ui/LabelArtistsPage` | Enlazar perfil de artista | Lista CRM con Party ID y correo | `PartySelector` mínimo; el ID queda oculto y canónico | Migrado |
 | `tdf-hq-ui/CollaborativeEventCreatorPage` | Colaboradores | Catálogo CRM completo | `UserSelector` repetible con exclusión de seleccionados | Migrado |

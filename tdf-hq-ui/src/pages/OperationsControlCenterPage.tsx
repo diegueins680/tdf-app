@@ -193,7 +193,7 @@ export default function OperationsControlCenterPage() {
   const [transitionReason, setTransitionReason] = useState('');
   const [waitingExternal, setWaitingExternal] = useState(false);
   const [resumeAt, setResumeAt] = useState('');
-  const [assigneeInput, setAssigneeInput] = useState('');
+  const [assignmentParty, setAssignmentParty] = useState<PartySelectorOption | null>(null);
   const [teamInput, setTeamInput] = useState('');
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [viewName, setViewName] = useState('');
@@ -271,7 +271,7 @@ export default function OperationsControlCenterPage() {
   const assignmentMutation = useMutation({
     mutationFn: (item: OperationsWorkItem) => Operations.assign(
       item,
-      assigneeInput.trim() ? Number(assigneeInput) : null,
+      assignmentParty?.partyId ?? null,
       teamInput.trim() || null,
       transitionReason.trim() || t('operations.assignmentReason'),
     ),
@@ -544,7 +544,16 @@ export default function OperationsControlCenterPage() {
             <Divider />
             <Typography variant="h6">{t('operations.assignment')}</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <TextField label={t('operations.assigneeId')} value={assigneeInput} onChange={(event) => setAssigneeInput(event.target.value.replace(/\D/g, ''))} />
+              <Box sx={{ flex: 1 }}>
+                <PartySelector
+                  value={assignmentParty}
+                  onChange={setAssignmentParty}
+                  field={{
+                    label: 'Responsable',
+                    helperText: 'Busca por nombre o username. Déjalo vacío para retirar la asignación.',
+                  }}
+                />
+              </Box>
               <TextField label={t('operations.team')} value={teamInput} onChange={(event) => setTeamInput(event.target.value)} />
             </Stack>
             <Button startIcon={<AssignmentIndOutlinedIcon />} onClick={() => assignmentMutation.mutate(selected)} disabled={assignmentMutation.isPending}>
