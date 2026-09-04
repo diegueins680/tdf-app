@@ -529,7 +529,7 @@ export default function EventLogisticsPage() {
           </Stack>
           {memberNotice && <Alert id="team-members-status" ref={memberFeedbackRef} severity="success" tabIndex={-1}>{memberNotice}</Alert>}
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {plan.elgMembers.map((member) => <Chip key={member.elmPartyId} label={`${member.elmDisplayName ?? `Usuario ${member.elmPartyId}`} · ${member.elmRole}`} onDelete={() => deleteMemberMutation.mutate(member.elmPartyId)} />)}
+            {plan.elgMembers.map((member) => <Chip key={member.elmPartyId} label={`${member.elmDisplayName ?? 'Usuario no disponible'} · ${member.elmRole}`} onDelete={() => deleteMemberMutation.mutate(member.elmPartyId)} />)}
           </Stack>
         </Stack></CardContent></Card>}
 

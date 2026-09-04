@@ -1,6 +1,14 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const readPage = (name: string) => readFileSync(new URL(`./${name}`, import.meta.url), 'utf8');
+
+const collectTsxFiles = (directory: string): string[] => readdirSync(directory, { withFileTypes: true })
+  .flatMap((entry) => {
+    const path = `${directory}/${entry.name}`;
+    if (entry.isDirectory()) return entry.name === 'generated' ? [] : collectTsxFiles(path);
+    return entry.isFile() && entry.name.endsWith('.tsx') && !entry.name.includes('.test.') ? [path] : [];
+  });
 
 describe('Party relationship picker migration', () => {
   it('uses a remote account selector for event collaborators', () => {
@@ -44,5 +52,33 @@ describe('Party relationship picker migration', () => {
     const source = readPage('LabelArtistsPage.tsx');
     expect(source).toContain('Parties.getOne(artist.apArtistId)');
     expect(source).not.toMatch(/Parties\.list\s*\(?/);
+  });
+
+  it('does not expose an assignee Party ID in the operations inbox', () => {
+    const source = readPage('OperationsControlCenterPage.tsx');
+    expect(source).not.toContain('#${item.assigneePartyId}');
+    expect(source).toContain("'Responsable asignado'");
+  });
+
+  it('uses privacy-safe fallbacks when a related Party cannot be resolved', () => {
+    expect(readPage('ChatPage.tsx')).not.toMatch(/(?:Party|Perfil)\s*#\$\{/);
+    expect(readPage('SocialPage.tsx')).not.toContain('Perfil #${partyId}');
+    expect(readPage('EventLogisticsPage.tsx')).not.toContain('Usuario ${member.elmPartyId}');
+    expect(readPage('FanClubMemberProfilePage.tsx')).not.toContain('@miembro-${profile.fcmpPartyId}');
+  });
+
+  it('keeps visible Party-number references on a closed administrative allowlist', () => {
+    const srcRoot = fileURLToPath(new URL('../', import.meta.url));
+    const visibleTechnicalIdFiles = collectTsxFiles(srcRoot)
+      .filter((file) => /(?:Party|Perfil)\s*#\$\{/.test(readFileSync(file, 'utf8')))
+      .map((file) => file.slice(srcRoot.length).replace(/^\//, ''))
+      .sort();
+
+    expect(visibleTechnicalIdFiles).toEqual([
+      'pages/AdminTokenPage.tsx',
+      'pages/AdminUsersPage.tsx',
+      'pages/CourseRegistrationsAdminPage.tsx',
+      'pages/LabelTracksPage.tsx',
+    ]);
   });
 });

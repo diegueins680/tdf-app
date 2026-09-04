@@ -41,8 +41,8 @@ type TabKey = 'friends' | 'following' | 'followers';
 
 function formatParty(byId: Map<number, SocialPartyProfileDTO>, partyId: number) {
   const party = byId.get(partyId);
-  if (!party) return `Perfil #${partyId}`;
-  return party.sppDisplayName ?? `Perfil #${partyId}`;
+  if (!party) return 'Perfil no disponible';
+  return party.sppDisplayName;
 }
 
 const parsePositivePartyId = (value: string): number | null => {

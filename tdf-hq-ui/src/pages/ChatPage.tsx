@@ -108,7 +108,7 @@ interface ThreadListItemProps {
 }
 
 function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemProps) {
-  const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : `Party #${thread.ctOtherPartyId}`;
+  const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : 'Perfil no disponible';
 
   return (
     <ListItemButton
@@ -239,7 +239,7 @@ export default function ChatPage() {
     return Array.from(ids)
       .map((partyId) => {
         const profile = profilesById.get(partyId);
-        const label = profile?.sppDisplayName ?? `Perfil #${partyId}`;
+        const label = profile?.sppDisplayName ?? 'Perfil no disponible';
         return { partyId, label, subtitle: 'Amigo mutuo' };
       })
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -542,7 +542,7 @@ export default function ChatPage() {
             <Box sx={{ mb: 1 }}>
               {selectedThread ? (() => {
                 const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
-                const displayName = threadDisplayName === '' ? `Party #${selectedThread.ctOtherPartyId}` : threadDisplayName;
+                const displayName = threadDisplayName === '' ? 'Perfil no disponible' : threadDisplayName;
                 const profile = activeProfileQuery.data;
                 const fetchedProfileName = profile?.sppDisplayName?.trim();
                 const profileName = fetchedProfileName === '' || fetchedProfileName === undefined
@@ -584,7 +584,7 @@ export default function ChatPage() {
               )}
               {selectedThread && (
                 <Typography variant="caption" color="text.secondary">
-                  Thread #{selectedThread.ctThreadId} · Party #{selectedThread.ctOtherPartyId}
+                  Conversación activa
                 </Typography>
               )}
             </Box>

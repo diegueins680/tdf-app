@@ -486,7 +486,7 @@ export default function OperationsControlCenterPage() {
                 <ListItemButton selected={item.id === selectedId} onClick={() => setSelectedId(item.id)} sx={{ pr: 12 }}>
                   <ListItemText
                     primary={localizedTitle(item)}
-                    secondary={`${statusLabel(t, item.status)} · ${item.entityType} · ${item.sourceChannel}${item.assigneePartyId ? ` · #${item.assigneePartyId}` : ''}`}
+                    secondary={`${statusLabel(t, item.status)} · ${item.entityType} · ${item.sourceChannel}${item.assigneePartyId ? ` · ${item.responsibleTeam?.trim().length ? item.responsibleTeam.trim() : 'Responsable asignado'}` : ''}`}
                   />
                 </ListItemButton>
               </ListItem>
