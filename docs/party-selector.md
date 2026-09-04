@@ -75,7 +75,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-hq-ui/EventLogisticsPage` | Añadir miembro | Texto `ID de usuario TDF` | `UserSelector`; envía sólo el ID elegido | Migrado |
 | `tdf-hq-ui/EventLogisticsPage` | Responsable de actividad | Texto ID + externo | `UserSelector` y opción externa separada | Migrado |
 | `tdf-mobile/eventDetail` | Invitar a amigo | Texto `Party ID` | Selector nativo; transmite sólo el ID elegido | Migrado |
-| `tdf-mobile/userProfile` | Configurar identidad | Party ID manual | Debe hidratarse desde sesión autenticada | Pendiente |
+| `tdf-mobile/userProfile` | Identidad propia | Party ID manual | Se deriva de sesión autenticada; compatibilidad local sólo como fallback no editable | Migrado |
 | `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
 | `tdf-hq-ui/OperationsControlCenterPage` | Filtros | Dos textos Party ID | Selectores compactos de responsable/cliente | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo | Selector contextual | Pendiente |
