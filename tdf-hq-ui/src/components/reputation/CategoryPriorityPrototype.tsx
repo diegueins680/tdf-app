@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DragDropContext, Draggable, Droppable, type DropResult } from '@hello-pangea/dnd';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import { Reputation, type ReputationCategory, type ReputationPreference } from '../../api/reputation';
@@ -39,11 +40,28 @@ export const orderCategoriesByPreference = (
   });
 };
 
+export const reorderCategories = (
+  categories: ReputationCategory[],
+  sourceIndex: number,
+  destinationIndex: number,
+): ReputationCategory[] => {
+  if (sourceIndex === destinationIndex || sourceIndex < 0 || destinationIndex < 0
+    || sourceIndex >= categories.length || destinationIndex >= categories.length) return categories;
+  const next = [...categories];
+  const [moved] = next.splice(sourceIndex, 1);
+  next.splice(destinationIndex, 0, moved);
+  return next;
+};
+
 export default function CategoryPriorityPrototype({ locale = 'es', contextKind = 'general', onChange }: Props) {
   const { session } = useSession();
   const queryClient = useQueryClient();
   const contextualReputationEnabled = session?.featureFlags?.includes('CONTEXTUAL_REPUTATION_ENABLED') ?? false;
-  const categories = useQuery({ queryKey: ['reputation-categories', locale], queryFn: () => Reputation.categories(locale) });
+  const categories = useQuery({
+    queryKey: ['reputation-categories', locale],
+    queryFn: () => Reputation.categories(locale),
+    enabled: contextualReputationEnabled,
+  });
   const preference = useQuery({
     queryKey: ['my-reputation-preference', contextKind],
     queryFn: () => Reputation.getMyPreferences(contextKind),
@@ -71,6 +89,8 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
       save: 'Save draft',
       moveUp: 'Move up',
       moveDown: 'Move down',
+      unavailable: 'Contextual reputation is not enabled for this account yet.',
+      reorderHelp: 'Drag a category or use the move buttons to set its priority.',
       priority: (name: string, position: number) => `${name} is now priority ${position}.`,
     }
     : {
@@ -88,6 +108,8 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
       save: 'Guardar borrador',
       moveUp: 'Subir',
       moveDown: 'Bajar',
+      unavailable: 'La reputación contextual todavía no está habilitada para esta cuenta.',
+      reorderHelp: 'Arrastra una categoría o usa los botones para definir su prioridad.',
       priority: (name: string, position: number) => `${name} ahora tiene prioridad ${position}.`,
     };
 
@@ -135,12 +157,21 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     const nextIndex = index + delta;
     if (nextIndex < 0 || nextIndex >= order.length) return;
     setPrevious(order);
-    const next = [...order];
-    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+    const next = reorderCategories(order, index, nextIndex);
     setOrder(next);
     setStatus(copy.priority(next[nextIndex].name, nextIndex + 1));
   };
 
+  const onDragEnd = ({ source, destination }: DropResult) => {
+    if (!destination || source.index === destination.index) return;
+    const next = reorderCategories(order, source.index, destination.index);
+    setPrevious(order);
+    setOrder(next);
+    const moved = next[destination.index];
+    if (moved) setStatus(copy.priority(moved.name, destination.index + 1));
+  };
+
+  if (!contextualReputationEnabled) return <Alert severity="info">{copy.unavailable}</Alert>;
   if (categories.isLoading) return <CircularProgress size={24} aria-label={copy.loading} />;
   if (categories.isError) return <Alert severity="error">{copy.loadError}</Alert>;
 
@@ -151,20 +182,52 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
       <Alert severity="info" sx={{ mt: 2 }}>{copy.method}</Alert>
       {saveDraft.isError && <Alert severity="error" sx={{ mt: 2 }}>{copy.saveError}</Alert>}
       <Box role="status" aria-live="polite" sx={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>{status}</Box>
-      <Stack component="ol" spacing={1} sx={{ listStyle: 'none', p: 0, mt: 2 }}>
-        {order.map((category, index) => (
-          <Box component="li" key={category.id} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.25 }}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography fontWeight={800} sx={{ minWidth: 24 }}>{index + 1}</Typography>
-              <DragIndicatorIcon aria-hidden="true" color="action" />
-              <Box sx={{ flex: 1 }}><Typography fontWeight={700}>{category.name}</Typography><Typography variant="body2" color="text.secondary">{category.description}</Typography></Box>
-              <Typography fontWeight={800}>{weights[index].toFixed(1)}%</Typography>
-              <IconButton aria-label={`${copy.moveUp} ${category.name}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</IconButton>
-              <IconButton aria-label={`${copy.moveDown} ${category.name}`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>↓</IconButton>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>{copy.reorderHelp}</Typography>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="category-priority">
+          {(provided) => (
+            <Stack
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              component="ol"
+              spacing={1}
+              sx={{ listStyle: 'none', p: 0, mt: 1 }}
+            >
+              {order.map((category, index) => (
+                <Draggable draggableId={category.id} index={index} key={category.id}>
+                  {(dragProvided, snapshot) => (
+                    <Box
+                      ref={dragProvided.innerRef}
+                      {...dragProvided.draggableProps}
+                      component="li"
+                      sx={{
+                        border: 1,
+                        borderColor: snapshot.isDragging ? 'primary.main' : 'divider',
+                        borderRadius: 2,
+                        p: 1.25,
+                        bgcolor: 'background.paper',
+                        boxShadow: snapshot.isDragging ? 3 : 0,
+                      }}
+                    >
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography fontWeight={800} sx={{ minWidth: 24 }}>{index + 1}</Typography>
+                        <Box {...dragProvided.dragHandleProps} aria-label={`${copy.reorderHelp} ${category.name}`} sx={{ display: 'inline-flex', cursor: 'grab' }}>
+                          <DragIndicatorIcon aria-hidden="true" color="action" />
+                        </Box>
+                        <Box sx={{ flex: 1 }}><Typography fontWeight={700}>{category.name}</Typography><Typography variant="body2" color="text.secondary">{category.description}</Typography></Box>
+                        <Typography fontWeight={800}>{weights[index].toFixed(1)}%</Typography>
+                        <IconButton aria-label={`${copy.moveUp} ${category.name}`} disabled={index === 0} onClick={() => move(index, -1)}>↑</IconButton>
+                        <IconButton aria-label={`${copy.moveDown} ${category.name}`} disabled={index === order.length - 1} onClick={() => move(index, 1)}>↓</IconButton>
+                      </Stack>
+                    </Box>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
             </Stack>
-          </Box>
-        ))}
-      </Stack>
+          )}
+        </Droppable>
+      </DragDropContext>
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
         <Button disabled={!previous || saveDraft.isPending} onClick={() => { if (previous) { setOrder(previous); setPrevious(null); setStatus(copy.restored); } }}>{copy.undo}</Button>
         <Button
