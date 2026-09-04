@@ -62,6 +62,19 @@ El estado del formulario guarda el objeto mínimo sólo para presentarlo, pero
 el envío transforma únicamente `party.partyId` al campo de relación del API.
 El texto escrito no es una selección válida.
 
+Usar `PartyMultiSelector` cuando el dominio acepte varias relaciones. El
+componente conserva las selecciones durante búsquedas posteriores, elimina
+duplicados por `partyId` y permite retirar cada chip con teclado:
+
+```tsx
+<PartyMultiSelector
+  value={parties}
+  onChange={setParties}
+  field={{ label: 'Contactos', required: true }}
+  search={{ kind: 'any', accountOnly: false }}
+/>
+```
+
 No usar estos anti-patrones:
 
 - `TextField label="Party ID"` para una relación de usuario.
@@ -105,6 +118,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-hq-ui/ChatPage` | Nueva conversación | ID manual y catálogo CRM completo | Selector limitado a amistades mutuas; los enlaces técnicos siguen resolviendo un ID recibido por URL | Migrado |
 | `tdf-hq-ui/SocialPage` | Añadir amistad | ID manual | `UserSelector`; QR/vCard conserva el identificador de intercambio | Migrado |
 | `tdf-hq-ui/InventoryPage` | Responsable de check-out | Catálogo CRM sobre referencia libre | Campo de referencia textual explícito; no representa ni persiste una relación Party | Corregido |
+| `tdf-hq-ui/CampaignAutomationsPage` | Inscribir contactos | Catálogo CRM completo filtrado por teléfono/correo en el cliente | `PartyMultiSelector` remoto sin PII; backend valida canal, consentimiento y duplicados | Migrado |
 
 Los usos restantes de `GET /parties` pertenecen a vistas administrativas de
 directorio o a enriquecimiento de lectura, no a campos que crean o modifican
