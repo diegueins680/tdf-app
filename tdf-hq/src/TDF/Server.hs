@@ -8417,14 +8417,14 @@ socialListFollowers user = do
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $ do
     rows <- selectList [PartyFollowFollowingPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
-    pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialListFollowing :: AuthedUser -> AppM [PartyFollowDTO]
 socialListFollowing user = do
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $ do
     rows <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
-    pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialListFriends :: AuthedUser -> AppM [PartyFollowDTO]
 socialListFriends user = do
@@ -8440,7 +8440,7 @@ socialListFriends user = do
              ] []
     let mutualIds = Set.fromList (map (partyFollowFollowerPartyId . entityVal) reverseRows)
         mutual = filter (\(Entity _ pf) -> partyFollowFollowingPartyId pf `Set.member` mutualIds) following
-    pure (map partyFollowEntityToDTO mutual)
+    partyFollowEntitiesToDTO mutual
 
 -- Suggest friends-of-friends that are not already connected to the user.
 socialListSuggestedFriends :: AuthedUser -> AppM [SuggestedFriendDTO]
@@ -8479,7 +8479,7 @@ socialAddFriend user targetId = do
   when (followerKey == targetKey) $
     throwBadRequest "No puedes agregarte como amigo"
   now <- liftIO getCurrentTime
-  rows <- runDB $ do
+  runDB $ do
     _ <- upsert PartyFollow
       { partyFollowFollowerPartyId  = followerKey
       , partyFollowFollowingPartyId = targetKey
@@ -8494,11 +8494,11 @@ socialAddFriend user targetId = do
       , partyFollowCreatedAt        = now
       }
       [ PartyFollowViaNfc =. False ]
-    selectList
+    rows <- selectList
       [ PartyFollowFollowerPartyId ==. followerKey
       , PartyFollowFollowingPartyId ==. targetKey
       ] []
-  pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
 socialRemoveFriend user targetId = do
@@ -8520,7 +8520,7 @@ vcardExchange user VCardExchangeRequest{..} = do
   when (followerKey == targetKey) $
     throwBadRequest "No puedes compartir tu vCard contigo mismo"
   now <- liftIO getCurrentTime
-  (rowsAB, rowsBA) <- runDB $ do
+  runDB $ do
     -- Create mutual follows; mark as NFC-sourced.
     _ <- upsert PartyFollow
       { partyFollowFollowerPartyId  = followerKey
@@ -8544,8 +8544,7 @@ vcardExchange user VCardExchangeRequest{..} = do
       [ PartyFollowFollowerPartyId ==. targetKey
       , PartyFollowFollowingPartyId ==. followerKey
       ] [Desc PartyFollowCreatedAt]
-    pure (rowsAB, rowsBA)
-  pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+    partyFollowEntitiesToDTO (rowsAB ++ rowsBA)
 
 resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveSocialTargetPartyId rawPartyId =
@@ -8817,11 +8816,24 @@ toSocialPartyProfileDTO mProfile (Entity partyId party) =
     , sppCity = mProfile >>= fanProfileCity
     }
 
-partyFollowEntityToDTO :: Entity PartyFollow -> PartyFollowDTO
-partyFollowEntityToDTO (Entity _ pf) =
+partyFollowEntitiesToDTO :: [Entity PartyFollow] -> SqlPersistT IO [PartyFollowDTO]
+partyFollowEntitiesToDTO rows = do
+  let partyIds = Set.toList . Set.fromList $ concatMap (\(Entity _ follow) ->
+        [partyFollowFollowerPartyId follow, partyFollowFollowingPartyId follow]) rows
+  parties <- if null partyIds then pure [] else selectList [PartyId <-. partyIds] []
+  let names = Map.fromList
+        [ (partyId, M.partyDisplayName party)
+        | Entity partyId party <- parties
+        ]
+  pure (map (partyFollowEntityToDTO names) rows)
+
+partyFollowEntityToDTO :: Map.Map PartyId Text -> Entity PartyFollow -> PartyFollowDTO
+partyFollowEntityToDTO names (Entity _ pf) =
   PartyFollowDTO
     { pfFollowerId  = fromSqlKey (partyFollowFollowerPartyId pf)
     , pfFollowingId = fromSqlKey (partyFollowFollowingPartyId pf)
+    , pfFollowerName = Map.lookup (partyFollowFollowerPartyId pf) names
+    , pfFollowingName = Map.lookup (partyFollowFollowingPartyId pf) names
     , pfViaNfc      = partyFollowViaNfc pf
     , pfStartedAt   = utctDay (partyFollowCreatedAt pf)
     }

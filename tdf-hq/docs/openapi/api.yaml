@@ -9,6 +9,40 @@ servers:
     description: Development server
 
 paths:
+  /social/followers:
+    get:
+      tags: [Social]
+      summary: List parties following the authenticated party
+      description: Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+      operationId: listSocialFollowers
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Visible follower relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyFollow' }
+        '401': { description: Authentication required }
+  /social/following:
+    get:
+      tags: [Social]
+      summary: List parties followed by the authenticated party
+      description: Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+      operationId: listSocialFollowing
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Visible following relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyFollow' }
+        '401': { description: Authentication required }
   /social-events/events:
     get:
       tags: [Social events]
@@ -9436,6 +9470,16 @@ components:
           type: object
           nullable: true
           description: Present when the party is linked to a band/project.
+    PartyFollow:
+      type: object
+      required: [pfFollowerId, pfFollowingId, pfViaNfc, pfStartedAt]
+      properties:
+        pfFollowerId: { type: integer, format: int64 }
+        pfFollowingId: { type: integer, format: int64 }
+        pfFollowerName: { type: string, nullable: true }
+        pfFollowingName: { type: string, nullable: true }
+        pfViaNfc: { type: boolean }
+        pfStartedAt: { type: string, format: date }
     PartySelectorOption:
       type: object
       required: [partyId, partyType, displayName, accountStatus]

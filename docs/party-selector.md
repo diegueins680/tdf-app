@@ -20,6 +20,9 @@ autenticación, acceso CRM y una consulta de dos caracteres como mínimo.
   otorgan descubribilidad adicional.
 - `GET /parties` se conserva para el CRM administrativo existente y no debe
   usarse para completar campos de relación.
+- Las listas sociales autenticadas incluyen los nombres mínimos de las Parties
+  ya relacionadas. Esto evita que mobile descargue todo CRM sólo para resolver
+  IDs, sin añadir correo, teléfono ni otra PII al contrato.
 
 La implementación actual no tiene un modelo canónico de tenant, visibilidad,
 bloqueo o estado de Party. Por eso esos filtros no se simulan en el selector:
@@ -108,6 +111,7 @@ consumidores administrativos restantes estén migrados a listados paginados.
 | `tdf-hq-ui/EventLogisticsPage` | Responsable de actividad | Texto ID + externo | `UserSelector` y opción externa separada | Migrado |
 | `tdf-mobile/eventDetail` | Invitar a amigo | Texto `Party ID` | Selector nativo; transmite sólo el ID elegido | Migrado |
 | `tdf-mobile/userProfile` | Identidad propia | Party ID manual | Se deriva de sesión autenticada; compatibilidad local sólo como fallback no editable | Migrado |
+| `tdf-mobile/social` | Seguidores y seguidos | Descarga de todo CRM para resolver nombres; IDs visibles | Nombres mínimos incluidos por el API social en una consulta por lote; sin ID visible | Migrado |
 | `tdf-hq-ui/InternalFeedbackPage` | Asignación | Texto Party ID | `UserSelector` interno | Migrado |
 | `tdf-hq-ui/OperationsControlCenterPage` | Filtros y asignación | Textos Party ID de responsable/cliente | Selectores compactos; asignación persiste sólo la opción elegida | Migrado |
 | `tdf-hq-ui/BookingsPage` | Cliente/ingeniero | Catálogo CRM completo y resolución por nombre | `PartySelector` remoto; conserva relaciones históricas y creación de contactos | Migrado |

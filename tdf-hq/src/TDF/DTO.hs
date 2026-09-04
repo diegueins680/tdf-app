@@ -270,6 +270,8 @@ instance ToJSON ArtistFansResponse where
 data PartyFollowDTO = PartyFollowDTO
   { pfFollowerId   :: Int64
   , pfFollowingId  :: Int64
+  , pfFollowerName :: Maybe Text
+  , pfFollowingName :: Maybe Text
   , pfViaNfc       :: Bool
   , pfStartedAt    :: Day
   } deriving (Show, Generic)
