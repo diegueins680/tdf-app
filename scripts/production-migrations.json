@@ -354,27 +354,27 @@
     {
       "id": "2026-09-04_contextual_reputation_integrity",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql",
-      "introducedBy": "19d796de569449a09377ee15d9ae5078061b3763"
+      "introducedBy": "e17cc72f92c39977251197cf1611fb3c33b33735"
     },
     {
       "id": "2026-09-04_contextual_reputation_legacy_signals",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_legacy_signals.sql",
-      "introducedBy": "0a020ba9e318088238f6fa7a8c0e36ba8c5635db"
+      "introducedBy": "e83930c959b74aaad21414b6b83c7a2889a0668b"
     },
     {
       "id": "2026-09-04_contextual_reputation_private_preferences",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_private_preferences.sql",
-      "introducedBy": "b60319916b64ef2601805922bd0d4ad40d234ae9"
+      "introducedBy": "4acced6bf433966ceafb929ffa7ccff8ac668351"
     },
     {
       "id": "2026-09-04_contextual_reputation_category_safety",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_category_safety.sql",
-      "introducedBy": "165507fb07ec1b456d9c119c355ace5333afae7a"
+      "introducedBy": "c9d1688b44c16deea4cd4e44104275bb02d19057"
     },
     {
       "id": "2026-09-04_contextual_reputation_preference_save",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_preference_save.sql",
-      "introducedBy": "7747a60a8848290ed7f56d7292de29c9ffc12d3b"
+      "introducedBy": "65968b300d5f5af3e3989be539bea5d4de5535ba"
     },
     {
       "id": "2026-09-04_party_selector_trigram_indexes",
