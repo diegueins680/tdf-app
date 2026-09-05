@@ -48,10 +48,11 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | `correlation_id` | Une request, outbox, worker y auditoría |
 
 La clave de idempotencia recomendada es `event_id + algorithm_version`. El
-worker registra recepción y resultado antes de publicar la proyección. Si el
-mismo evento llega dos veces devuelve el resultado almacenado; si ya existe una
-versión más nueva de la fuente, descarta el evento obsoleto o recalcula desde la
-fuente canónica.
+worker debe confirmar resultado, estado de publicación y proyección en una sola
+transacción, o usar un outbox de publicación durable que permanezca pendiente
+hasta su confirmación. Un duplicado nunca puede devolver “éxito” si la
+proyección no llegó a estar comprometida. Si ya existe una versión más nueva de
+la fuente, descarta el evento obsoleto o recalcula desde la fuente canónica.
 
 ## 4. Reglas de procesamiento
 
@@ -61,8 +62,10 @@ fuente canónica.
    evaluador y decaimiento temporal aprobados.
 4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
    fórmula, parámetros y hora de cálculo.
-5. Publicar solo con el umbral de evidencia configurado. Antes guardar estado
-   `forming`, no un score engañoso.
+5. Publicar solo con el umbral de evidencia configurado. Un estado `forming`
+   no expone score global, score por categoría, intervalo, conteo ni tendencia
+   en la proyección o API pública; esos datos permanecen internos hasta superar
+   el umbral.
 6. Auditar entradas, exclusiones, resultado y error sin almacenar PII extra.
 
 Rankings privados y preferencias son explícitamente inelegibles. El worker debe
@@ -71,15 +74,20 @@ rechazar eventos sin interacción verificable o marcados privados/no verificados
 ## 5. Concurrencia, reintentos y recuperación
 
 - Bloquear de forma acotada por `subject_id + context_key + category_id`, o usar
-  versión optimista de proyección; nunca bloquear una cola completa.
+  versión optimista de proyección; nunca bloquear una cola completa. Un
+  recálculo global (`category_id = null`) adquiere todas las llaves de categoría
+  afectadas en orden estable o una barrera compartida de sujeto/contexto; nunca
+  puede sobrescribir con un snapshot anterior un update de categoría.
 - Reintentar transitorios con backoff exponencial y jitter, conservando
   `event_id`.
 - Enviar a DLQ al superar el máximo aprobado. Cada ítem requiere alerta y
   resolución humana antes de descartarse.
 - Reprocesar desde la fuente canónica ante cambio de algoritmo, apelación o
   reparación de datos.
-- Backfill y simulación usan `run_id` y son idempotentes; una segunda ejecución
-  no duplica proyecciones ni auditorías semánticas.
+- Backfill y simulación usan `run_id` persistente y una clave única de auditoría
+  por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
+  auditorías semánticas. No usar el insert histórico no versionado como entrada
+  replay-safe hasta que tenga esa garantía y prueba explícita.
 
 ## 6. Métricas, trazas y alertas
 
