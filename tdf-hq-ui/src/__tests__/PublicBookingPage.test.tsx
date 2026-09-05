@@ -336,6 +336,7 @@ describe('PublicBookingPage', () => {
     listPublicRoomsMock.mockReset();
     listPublicRoomsMock.mockResolvedValue(defaultPublicRooms);
     window.localStorage.clear();
+    window.sessionStorage.clear();
     globalThis.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
@@ -426,6 +427,9 @@ describe('PublicBookingPage', () => {
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+    expect(container.textContent).toContain('Reserva enviada');
+    expect(container.textContent).not.toContain('Ver mi reserva');
+    expect(container.querySelector('a[href*="/estudio/calendario"]')).toBeNull();
 
     await cleanup();
     document.body.removeChild(container);
@@ -511,6 +515,8 @@ describe('PublicBookingPage', () => {
     expect(container.textContent).toContain('Orden creada · depósito pendiente');
     expect(container.textContent).toContain('todavía no está pagado ni confirmado');
     expect(container.textContent).not.toContain('Pago confirmado');
+    expect(container.textContent).toContain('Seguir esta orden');
+    expect(container.querySelector('a[href="/reservas/orden/456"]')).not.toBeNull();
 
     await cleanup();
     document.body.removeChild(container);
@@ -704,6 +710,8 @@ describe('PublicBookingPage', () => {
 
     const fullNameInput = getInputByLabel(container, 'Nombre completo');
     expect(fullNameInput.value).toBe('Nombre Guardado');
+    expect(window.localStorage.getItem('tdf-public-booking-profile')).toBeNull();
+    expect(window.sessionStorage.getItem('tdf-public-booking-profile')).not.toBeNull();
 
     await act(async () => {
       setInputValue(fullNameInput, 'Nombre Editado');

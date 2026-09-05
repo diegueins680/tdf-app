@@ -14,10 +14,22 @@ describe('Reviews API', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('encodes public review targets and cursors', async () => {
-    mockGet.mockResolvedValue({});
+    mockGet.mockResolvedValue({
+      summary: { targetKind: 'marketplace_listing', targetId: 'listing / uno', average: null, count: 0 },
+      items: [],
+      nextCursor: null,
+    });
     await Reviews.list('marketplace_listing', 'listing / uno', '11111111-1111-4111-8111-111111111111', 10);
     expect(mockGet).toHaveBeenCalledWith(
       '/reviews/marketplace_listing/listing%20%2F%20uno?limit=10&cursor=11111111-1111-4111-8111-111111111111',
+    );
+  });
+
+  it('rejects malformed public review responses instead of passing them to the UI', async () => {
+    mockGet.mockResolvedValue('<!doctype html>');
+
+    await expect(Reviews.list('event', '42')).rejects.toThrow(
+      'La respuesta de reseñas no tiene el formato esperado.',
     );
   });
 

@@ -59,6 +59,28 @@ const publicTicketCheckout = {
   paymentMethods: [],
   tickets: [],
 };
+const publicBookingService = {
+  scId: '77777777-7777-4777-8777-777777777777',
+  scCode: 'synthetic-studio-session',
+  scName: 'Sesión sintética de estudio',
+  scNameEs: 'Sesión sintética de estudio',
+  scNameEn: 'Synthetic studio session',
+  scCategoryId: '88888888-8888-4888-8888-888888888888',
+  scKind: 'recording',
+  scPricingModelId: '99999999-9999-4999-8999-999999999999',
+  scPricingModel: 'manual_quote',
+  scRateCents: null,
+  scCurrency: 'USD',
+  scCurrencyId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  scBillingUnit: null,
+  scTaxRateCode: null,
+  scTaxRateId: null,
+  scDefaultDurationMinutes: 60,
+  scRequiresEngineer: false,
+  scDefaultResources: [],
+  scSortOrder: 10,
+  scActive: true,
+};
 
 async function mockIsolatedPublicApi(page) {
   await page.route('**/health', (route) => route.fulfill({ json: { status: 'ok' } }));
@@ -78,6 +100,23 @@ async function mockIsolatedPublicApi(page) {
       location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
     },
   }));
+  await page.route('**/reviews/**', (route) => {
+    if (!['fetch', 'xhr'].includes(route.request().resourceType())) return route.fallback();
+    const match = new URL(route.request().url()).pathname.match(/\/reviews\/([^/]+)\/([^/]+)/);
+    if (!match) return route.fulfill({ json: [] });
+    return route.fulfill({
+      json: {
+        items: [],
+        nextCursor: null,
+        summary: {
+          targetKind: decodeURIComponent(match[1]),
+          targetId: decodeURIComponent(match[2]),
+          average: null,
+          count: 0,
+        },
+      },
+    });
+  });
   // A malformed 200 response reproduces a common proxy/provider failure and verifies that
   // catalog-dependent shell preferences fall back without blanking the application.
   await page.route('**/catalogs/batch?*', (route) => route.fulfill({ json: {} }));
@@ -266,4 +305,99 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   });
   expect(idempotencyKey).toMatch(/^event-ticket-checkout-/);
   await expectNoSeriousAxeViolations(page, testInfo);
+});
+
+test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions', async ({ page }, testInfo) => {
+  await page.route('**/services/catalog/public*', (route) => route.fulfill({
+    json: {
+      sceSchemaVersion: 1,
+      sceRevision: 1,
+      sceLocale: 'es',
+      sceItems: [publicBookingService],
+    },
+  }));
+  await page.route('**/engineers', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rooms/public', (route) => route.fulfill({ json: [] }));
+  await page.route('**/bookings/public/availability?*', (route) => route.fulfill({
+    json: {
+      available: true,
+      serviceOfferingId: publicBookingService.scId,
+      startsAt: '2030-01-01T17:00:00Z',
+      endsAt: '2030-01-01T18:00:00Z',
+      resourceIds: [],
+      resourceNames: [],
+      quote: null,
+    },
+  }));
+  await page.route('**/bookings/public', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    await route.fulfill({
+      json: {
+        bookingId: 123,
+        title: publicBookingService.scName,
+        startsAt: '2030-01-01T17:00:00Z',
+        endsAt: '2030-01-01T18:00:00Z',
+        status: 'Tentative',
+        serviceOfferingId: publicBookingService.scId,
+        serviceType: publicBookingService.scName,
+        resources: [],
+      },
+    });
+  });
+
+  const catalogReady = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/services/catalog/public',
+  );
+  const engineersReady = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/engineers',
+  );
+  await page.goto('/reservar');
+  await Promise.all([catalogReady, engineersReady]);
+  const fullNameInput = page.getByLabel('Nombre completo');
+  await expect(fullNameInput).toBeVisible();
+  await fullNameInput.fill('Elena Paredes');
+  await page.getByLabel('Correo').fill('per-01.elena@persona.test');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByLabel('Fecha y hora').fill('2030-01-01T12:00');
+  await page.getByRole('button', { name: 'Revisar reserva' }).click();
+  await page.getByRole('button', { name: 'Confirmar reserva' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible();
+  await expect(page.getByText('Reserva creada')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ver mi reserva' })).toHaveCount(0);
+  await expect(page.locator('a[href*="/estudio/calendario"]')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Agregar a Google Calendar' })).toBeVisible();
+  await expectNoSeriousAxeViolations(page, testInfo);
+  await page.locator('main#main-content').focus();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: testInfo.outputPath('booking-customer-safe.png'), fullPage: true });
+});
+
+test('PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data', async ({ page }, testInfo) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      'tdf-marketplace-buyer',
+      JSON.stringify({ name: 'Elena Paredes', email: 'per-01.elena@persona.test', pref: 'email' }),
+    );
+  });
+  await page.route('**/marketplace', (route) => {
+    if (route.request().resourceType() === 'document') return route.fallback();
+    return route.fulfill({ json: [] });
+  });
+
+  await page.goto('/marketplace');
+  await expect(page.getByText('No encontramos resultados con estos filtros.')).toBeVisible();
+  await expect(page.getByText('¿Te avisamos cuando vuelva a estar disponible?')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Guardar contacto' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Explorar servicios de TDF' })).toBeVisible();
+  const storage = await page.evaluate(() => ({
+    persistent: window.localStorage.getItem('tdf-marketplace-buyer'),
+    currentTab: window.sessionStorage.getItem('tdf-marketplace-buyer'),
+  }));
+  expect(storage.persistent).toBeNull();
+  expect(storage.currentTab).toContain('per-01.elena@persona.test');
+  await expectNoSeriousAxeViolations(page, testInfo);
+  await page.locator('main#main-content').focus();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: testInfo.outputPath('marketplace-truthful-empty-state.png'), fullPage: true });
 });
