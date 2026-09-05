@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "809925f64e0e76795535",
+      "id": "ba4a3b6381d75e61166a",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9291,6 +9291,96 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Persisted reputation confidence-band rows own labels and presentation policy; code retains the closed values needed for deterministic aggregate calculation and rejects unknown persisted bands.",
+      "reviewed": true
+    },
+    {
+      "id": "ca20aefd0277f69a872f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a test fixture without an explicit review could conceal a mismatch with the persisted reputation-category contract.",
+      "justification": "This array is a focused component-test fixture that mirrors API category payloads; it is not production authority for available categories or their weights.",
+      "reviewed": true
+    },
+    {
+      "id": "0797a9dfa486e4f68022",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a test fixture without an explicit review could conceal ordering regressions against the persisted reputation-category contract.",
+      "justification": "This array is a focused component-test fixture that exercises reordered API category payloads; it is not production authority for categories or priorities.",
+      "reviewed": true
+    },
+    {
+      "id": "763ece98ed6a892c345a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_legacy_signal",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken moderation reports.",
+      "justification": "The legacy-signal visibility values are immutable migration evidence; runtime authority is confined to the reviewed database schema and future changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "1e5127ce88a2b3b611a7",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_private_ranking",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken draft-retention behavior.",
+      "justification": "Private-ranking lifecycle values are immutable migration evidence; runtime state changes are constrained by the persisted schema and future policy changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "f48f4fb1ad9f058ea297",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_private_ranking_exclusion",
+      "priority": "P2-schema-history",
+      "risk": "Cross-client divergence, invalid exclusion semantics, ambiguous backfill, or leakage of unverified rankings into public reputation.",
+      "justification": "Private-ranking exclusion reasons are immutable migration evidence; the persisted private-ranking model isolates them from public reputation and future changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "71f6f4165991889d477e",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "telemetry_event_dimension",
+      "priority": "P3-retain",
+      "risk": "Changing platform dimensions without review could fragment selector dashboards or make latency comparisons misleading.",
+      "justification": "The platform union is a closed analytics transport dimension, not Party data or a governed business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "5e49881613150cafd0cb",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "telemetry_event_dimension",
+      "priority": "P3-retain",
+      "risk": "Changing pagination dimensions without review could combine initial and incremental request latency incorrectly.",
+      "justification": "Initial versus load-more is a closed request-mechanics dimension used only to aggregate selector telemetry.",
+      "reviewed": true
+    },
+    {
+      "id": "0851d2d952bd2d9684d9",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "telemetry_event_dimension",
+      "priority": "P3-retain",
+      "risk": "Changing selection-action dimensions without review could break web telemetry aggregation or conceal duplicate prevention regressions.",
+      "justification": "Selection actions describe closed component mechanics; canonical Party IDs remain the only relationship authority and are never sent in these events.",
+      "reviewed": true
+    },
+    {
+      "id": "b203a438879cc8cb41ad",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "telemetry_event_dimension",
+      "priority": "P3-retain",
+      "risk": "Changing selection-action dimensions without review could break mobile telemetry aggregation or conceal duplicate prevention regressions.",
+      "justification": "The mobile action union mirrors closed selector mechanics and emits no Party identity or user-provided content.",
       "reviewed": true
     }
   ]

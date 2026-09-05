@@ -26,6 +26,40 @@ paths:
           description: Aggregate public reputation, or a formation state below the sample threshold
           content: { application/json: { schema: { $ref: '#/components/schemas/PublicReputation' } } }
         '404': { description: Profile not found }
+  /reputation/preferences:
+    get:
+      tags: [Contextual reputation]
+      operationId: getMyReputationPreferences
+      summary: Get the authenticated viewer's private category preferences
+      description: Returns only the caller's personal relevance preferences. It never returns private rankings or evaluator identities.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: contextKind, in: query, schema: { type: string, minLength: 1, maxLength: 80, default: general } }
+      responses:
+        '200':
+          description: Private saved preference profile, or an empty draft for the context
+          content: { application/json: { schema: { $ref: '#/components/schemas/ReputationPreference' } } }
+        '401': { description: Authentication required }
+        '404': { description: Contextual reputation is not enabled for this deployment }
+    put:
+      tags: [Contextual reputation]
+      operationId: saveMyReputationPreferences
+      summary: Save the authenticated viewer's private category preferences
+      description: Idempotent, optimistic-concurrency save. Personal priorities never alter public reputation.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 160 } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ReputationPreferenceSave' } } }
+      responses:
+        '200':
+          description: Saved private preference profile; identical retries return the original response
+          content: { application/json: { schema: { $ref: '#/components/schemas/ReputationPreference' } } }
+        '400': { description: Invalid category positions, weights, or activation invariants }
+        '401': { description: Authentication required }
+        '404': { description: Contextual reputation is not enabled for this deployment }
+        '409': { description: Preference revision conflict or idempotency key conflict }
   /reviews/{targetKind}/{targetId}:
     get:
       tags: [Verified reviews]
@@ -128,6 +162,47 @@ components:
               upperBound: { type: number, minimum: 0, maximum: 100 }
               verifiedCount: { type: integer, minimum: 0 }
               confidence: { type: string, enum: [forming, low, moderate, high] }
+    ReputationPreference:
+      type: object
+      additionalProperties: false
+      required: [contextKind, status, revision, formulaVersion, categories]
+      properties:
+        contextKind: { type: string }
+        status: { type: string, enum: [draft, active, archived] }
+        revision: { type: integer, minimum: 0 }
+        formulaVersion: { type: string }
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [categoryId, slug, position, weight, notApplicable]
+            properties:
+              categoryId: { type: string, format: uuid }
+              slug: { type: string }
+              position: { type: integer, minimum: 1 }
+              weight: { type: number, minimum: 0, maximum: 100 }
+              notApplicable: { type: boolean }
+    ReputationPreferenceSave:
+      type: object
+      additionalProperties: false
+      required: [contextKind, expectedRevision, activate, categories]
+      properties:
+        contextKind: { type: string, minLength: 1, maxLength: 80 }
+        expectedRevision: { type: integer, minimum: 0 }
+        activate: { type: boolean }
+        categories:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required: [categoryId, position, weight, notApplicable]
+            properties:
+              categoryId: { type: string, format: uuid }
+              position: { type: integer, minimum: 1 }
+              weight: { type: number, minimum: 0, maximum: 100 }
+              notApplicable: { type: boolean }
     ExperienceReviewTargetKind:
       type: string
       enum: [event, marketplace_listing, service_offering, service_package]

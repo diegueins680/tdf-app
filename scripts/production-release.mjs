@@ -46,14 +46,16 @@ const productionProfile = Object.freeze({
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+  CONTEXTUAL_REPUTATION_ENABLED: 'false',
   EVENT_DISCOVERY_ENABLED: 'false',
   DEFAULT_LOCALE: 'es',
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
   '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
+  '"${CONTEXTUAL_REPUTATION_ENABLED-__UNSET__}" ',
   '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
   '"${DEFAULT_LOCALE-__UNSET__}"',
   "'",

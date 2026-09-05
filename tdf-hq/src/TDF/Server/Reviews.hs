@@ -10,15 +10,18 @@ module TDF.Server.Reviews
   , reputationCategoriesSql
   ) where
 
+import Control.Exception (SomeException, fromException, throwIO, try)
 import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (ToJSON, Value(..), encode, object, (.=))
+import Data.Aeson (ToJSON, Value(..), encode, object, toJSON, (.=))
 import qualified Data.Aeson.KeyMap as KeyMap
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
 import Data.Char (isControl)
 import Data.Int (Int64)
+import Data.List (nub)
 import Data.Maybe (fromMaybe, listToMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -28,12 +31,14 @@ import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql
   (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+import Database.PostgreSQL.Simple (SqlError(..))
 import Servant
 import Text.Read (readMaybe)
 
 import TDF.API.Reviews
 import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
+import TDF.Config (contextualReputationEnabled)
 import TDF.DB (Env(..))
 import TDF.Server.SocialEventsHandlers (postgresVisibleImportedMetadataClause)
 
@@ -54,8 +59,11 @@ reviewsPublicServer = listReputationCategories :<|> getPublicReputation :<|> lis
 
 reviewsProtectedServer :: AuthedUser -> ServerT ReviewsProtectedAPI AppM
 reviewsProtectedServer user =
-       listReviewEligibility user
-  :<|> createReview user
+       ( listReviewEligibility user
+    :<|> createReview user
+       )
+  :<|> getPersonalReputationPreference user
+  :<|> savePersonalReputationPreference user
 
 listPublicReviews :: Text -> Text -> Maybe UUID -> Maybe Int -> AppM ExperienceReviewPage
 listPublicReviews rawTargetKind rawTargetId cursor requestedLimit = do
@@ -109,6 +117,98 @@ listReputationCategories rawLocale = do
   let locale = if fmap T.toLower rawLocale == Just "en" then "en" else "es"
   jsonRows reputationCategoriesSql
     [PersistText locale, PersistText locale]
+
+-- This is deliberately self-only. It returns a viewer's private category
+-- priorities, never rankings, evaluator identities, or another user's data.
+-- The feature flag keeps the new surface dark through schema/backfill rollout.
+getPersonalReputationPreference :: AuthedUser -> Maybe Text -> AppM Value
+getPersonalReputationPreference user rawContextKind = do
+  cfg <- asks envConfig
+  unless (contextualReputationEnabled cfg) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  contextKind <- validatePreferenceContextKind rawContextKind
+  result <- jsonRows personalPreferenceSql
+    [PersistInt64 (fromSqlKey (auPartyId user)), PersistText contextKind]
+  pure $ fromMaybe
+    (object
+      [ "contextKind" .= contextKind
+      , "status" .= ("draft" :: Text)
+      , "revision" .= (0 :: Int)
+      , "formulaVersion" .= ("public-bayes-roc-v1" :: Text)
+      , "categories" .= ([] :: [Value])
+      ])
+    (listToMaybe result)
+
+validatePreferenceContextKind :: Maybe Text -> AppM Text
+validatePreferenceContextKind rawContextKind =
+  let value = T.strip (fromMaybe "general" rawContextKind)
+  in if T.null value || T.length value > 80 || T.any isControl value
+       then throwError err400 { errBody = "Invalid preference context" }
+       else pure value
+
+personalPreferenceSql :: Text
+personalPreferenceSql =
+  "SELECT jsonb_build_object('contextKind',preference.context_kind,'status',preference.status,"
+  <> "'revision',preference.revision,'formulaVersion',preference.preference_formula_version_id,"
+  <> "'categories',coalesce(jsonb_agg(jsonb_build_object('categoryId',category.id,'slug',category.slug,"
+  <> "'position',item.position,'weight',item.weight,'notApplicable',item.not_applicable) "
+  <> "ORDER BY item.position) FILTER (WHERE item.category_id IS NOT NULL),'[]'::jsonb)) "
+  <> "FROM reputation_personal_preference preference "
+  <> "LEFT JOIN reputation_personal_preference_category item ON item.preference_id=preference.id "
+  <> "LEFT JOIN reputation_category category ON category.id=item.category_id "
+  <> "WHERE preference.owner_party_id=? AND preference.context_kind=? "
+  <> "GROUP BY preference.id"
+
+savePersonalReputationPreference
+  :: AuthedUser
+  -> Text
+  -> ReputationPreferenceSaveRequest
+  -> AppM Value
+savePersonalReputationPreference user idempotencyKey request = do
+  cfg <- asks envConfig
+  unless (contextualReputationEnabled cfg) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  contextKind <- validatePreferenceContextKind (Just (contextKind request))
+  validatePreferenceSaveRequest idempotencyKey request
+  pool <- asks envPool
+  let categoriesPayload = CMS.AesonValue (toJSON (categories request))
+      action = rawSql
+        "SELECT reputation_save_personal_preference(?,?,?,?,?::jsonb,?,?)"
+        [ toPersistValue (auPartyId user)
+        , PersistText contextKind
+        , PersistInt64 (fromIntegral (expectedRevision request))
+        , PersistBool (activate request)
+        , toPersistValue categoriesPayload
+        , PersistText (T.strip idempotencyKey)
+        , PersistText (requestFingerprint request)
+        ] :: SqlPersistT IO [Single CMS.AesonValue]
+  result <- liftIO (try (runSqlPool action pool) :: IO (Either SomeException [Single CMS.AesonValue]))
+  case result of
+    Right [Single response] -> pure (CMS.unAesonValue response)
+    Right _ -> throwError err500
+    Left exception ->
+      case fromException exception :: Maybe SqlError of
+        Just sqlError
+          | sqlState sqlError == BS8.pack "40001" ->
+              throwError err409 { errBody = "Preference changed elsewhere; reload before saving" }
+          | sqlState sqlError == BS8.pack "23505" ->
+              throwError err409 { errBody = "Idempotency-Key was already used with a different request" }
+          | sqlState sqlError == BS8.pack "23514" ->
+              throwError err400 { errBody = "Invalid preference categories or weights" }
+        _ -> liftIO (throwIO exception)
+
+validatePreferenceSaveRequest :: Text -> ReputationPreferenceSaveRequest -> AppM ()
+validatePreferenceSaveRequest idempotencyKey ReputationPreferenceSaveRequest{expectedRevision, categories} = do
+  when (T.length (T.strip idempotencyKey) < 8 || T.length (T.strip idempotencyKey) > 160 || T.any isControl idempotencyKey) $
+    throwError err400 { errBody = "Idempotency-Key must contain 8-160 safe characters" }
+  when (expectedRevision < 0 || length categories > 10) $
+    throwError err400 { errBody = "Invalid preference revision or category count" }
+  let positions = map position categories
+      categoryIds = map categoryId categories
+      invalidItem ReputationPreferenceCategoryInput{position, weight} =
+        position < 1 || isNaN weight || isInfinite weight || weight < 0 || weight > 100
+  when (length positions /= length (nub positions) || length categoryIds /= length (nub categoryIds) || any invalidItem categories) $
+    throwError err400 { errBody = "Preference categories require unique positions, unique categories, and weights between 0 and 100" }
 
 reputationCategoriesSql :: Text
 reputationCategoriesSql =

@@ -12,6 +12,9 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   # Apply only checksum-pinned SQL from production-migrations.json at startup.
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
+  # Keep contextual reputation dark until the staged schema, backfill, consent,
+  # and controlled pilot have been reviewed.
+  CONTEXTUAL_REPUTATION_ENABLED = "false"
   # Enable only after the discovery schema and release have been verified.
   EVENT_DISCOVERY_ENABLED = "false"
   # Daily full-platform artist discovery. External research/media is scheduled
