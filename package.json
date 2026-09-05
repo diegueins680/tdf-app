@@ -68,6 +68,7 @@
     "audit:features": "node scripts/audit-feature-registry.mjs",
     "generate:feature-audit-reports": "node scripts/generate-feature-audit-reports.mjs",
     "test:feature-migrations": "sh scripts/test-feature-migrations.sh",
+    "test:access-request-notification-migration": "sh scripts/test-access-request-notification-migration.sh",
     "test:service-checkout-migration": "sh scripts/test-service-storefront-checkout-runtime-migration.sh",
     "test:checkout-event-refund-migration": "sh scripts/test-checkout-event-refund-runtime-migration.sh",
     "test:provider-event-operations-migration": "sh scripts/test-provider-event-operations-migration.sh",
