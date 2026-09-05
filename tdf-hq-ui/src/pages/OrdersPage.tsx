@@ -35,8 +35,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DateTime } from 'luxon';
 import { useNavigate } from 'react-router-dom';
 import { Bookings, type BookingUpdatePayload } from '../api/bookings';
-import { Parties } from '../api/parties';
-import type { BookingDTO, BookingResourceDTO, PartyDTO } from '../api/types';
+import type { BookingDTO, BookingResourceDTO } from '../api/types';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import PageShell, { SkeletonCards } from '../components/PageShell';
 
@@ -223,14 +222,12 @@ function getDistinctSessionTitle(title: string | null | undefined, service: stri
 function buildBookingPrimary({
   customerName,
   partyDisplayName,
-  partyName,
   serviceOrderId,
   serviceOrderTitle,
   sessionTitle,
 }: {
   customerName?: string | null;
   partyDisplayName?: string | null;
-  partyName?: string | null;
   serviceOrderId?: number | null;
   serviceOrderTitle?: string | null;
   sessionTitle: string;
@@ -239,7 +236,6 @@ function buildBookingPrimary({
     serviceOrderTitle,
     customerName,
     partyDisplayName,
-    partyName,
     sessionTitle,
   ]
     .map((value) => value?.trim() ?? '')
@@ -308,18 +304,7 @@ export default function OrdersPage() {
     queryKey: ['bookings'],
     queryFn: () => Bookings.list(),
   });
-  const partiesQuery: UseQueryResult<PartyDTO[], Error> = useQuery<PartyDTO[], Error>({
-    queryKey: ['parties'],
-    queryFn: Parties.list,
-  });
   const bookings = useMemo<BookingDTO[]>(() => bookingsQuery.data ?? [], [bookingsQuery.data]);
-  const parties = useMemo<PartyDTO[]>(() => partiesQuery.data ?? [], [partiesQuery.data]);
-
-  const partyLookup = useMemo(() => {
-    const map = new Map<number, PartyDTO>();
-    parties.forEach((party) => map.set(party.partyId, party));
-    return map;
-  }, [parties]);
 
   const selectedBooking = useMemo(
     () => bookings.find((booking) => booking.bookingId === selectedBookingId) ?? null,
@@ -330,15 +315,13 @@ export default function OrdersPage() {
     return bookings.map((booking) => {
       const engineers = filterResources(booking.resources, (role) => role.includes('engineer') || role.includes('ing'));
       const rooms = filterResources(booking.resources, (role) => role.includes('room') || role.includes('sala'));
-      const party = booking.partyId ? partyLookup.get(booking.partyId) : undefined;
-      const partyNames = dedupeStrings([booking.customerName, booking.partyDisplayName, party?.displayName]);
+      const partyNames = dedupeStrings([booking.customerName, booking.partyDisplayName]);
       const serviceTitle = booking.serviceType ?? booking.title ?? '—';
       const sessionTitle = getDistinctSessionTitle(booking.title, serviceTitle);
       const isRecording = serviceTitle.toLowerCase().includes('grab');
       const bookingPrimary = buildBookingPrimary({
         customerName: booking.customerName,
         partyDisplayName: booking.partyDisplayName,
-        partyName: party?.displayName,
         serviceOrderId: booking.serviceOrderId,
         serviceOrderTitle: booking.serviceOrderTitle,
         sessionTitle,
@@ -362,7 +345,7 @@ export default function OrdersPage() {
         status: booking.status,
       };
     });
-  }, [bookings, locale, partyLookup, timezone]);
+  }, [bookings, locale, timezone]);
 
   const totalRows = rows.length;
   const maxPage = Math.max(0, Math.ceil(totalRows / rowsPerPage) - 1);

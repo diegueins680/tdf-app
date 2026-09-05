@@ -3,7 +3,7 @@
 
 module TDF.APITypesSpec (spec) where
 
-import Data.Aeson (eitherDecode, object, (.=))
+import Data.Aeson (eitherDecode, object, toJSON, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Maybe (isJust)
@@ -64,6 +64,25 @@ import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
+    describe "PartyFollowDTO selector-safe identity" $ do
+        it "serializes canonical ids with only the two minimal display names" $ do
+            let payload = DTO.PartyFollowDTO
+                    { DTO.pfFollowerId = 17
+                    , DTO.pfFollowingId = 23
+                    , DTO.pfFollowerName = Just "Ana María"
+                    , DTO.pfFollowingName = Just "Beatriz O'Connor"
+                    , DTO.pfViaNfc = False
+                    , DTO.pfStartedAt = fromGregorian 2026 9 4
+                    }
+            toJSON payload `shouldBe` object
+                [ "pfFollowerId" .= (17 :: Int)
+                , "pfFollowingId" .= (23 :: Int)
+                , "pfFollowerName" .= (Just "Ana María" :: Maybe T.Text)
+                , "pfFollowingName" .= (Just "Beatriz O'Connor" :: Maybe T.Text)
+                , "pfViaNfc" .= False
+                , "pfStartedAt" .= ("2026-09-04" :: T.Text)
+                ]
+
     describe "Intern audit update FromJSON" $ do
         it "distinguishes omitted plan justification from an explicit clear" $ do
             case eitherDecode "{}" :: Either String InternAudit.InternAuditPlanUpdate of

@@ -32,7 +32,6 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../components/PageShell';
 import { ChatAPI } from '../api/chat';
 import { Meta } from '../api/meta';
-import { Parties } from '../api/parties';
 import { SocialAPI } from '../api/social';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ChatMessageDTO, ChatThreadDTO } from '../api/types';
@@ -109,7 +108,7 @@ interface ThreadListItemProps {
 }
 
 function ThreadListItem({ thread, selected, unread, onSelect }: ThreadListItemProps) {
-  const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : `Party #${thread.ctOtherPartyId}`;
+  const displayName = thread.ctOtherDisplayName.trim() ? thread.ctOtherDisplayName : 'Perfil no disponible';
 
   return (
     <ListItemButton
@@ -214,9 +213,10 @@ export default function ChatPage() {
     staleTime: 15_000,
   });
 
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: Parties.list,
+  const friendProfilesQuery = useQuery({
+    queryKey: ['social-friend-profiles', friendsQuery.data?.map((row) => row.pfFollowingId).sort((a, b) => a - b).join(',')],
+    queryFn: () => SocialAPI.listProfiles((friendsQuery.data ?? []).map((row) => row.pfFollowingId)),
+    enabled: Boolean(friendsQuery.data?.length),
     staleTime: 5 * 60_000,
   });
 
@@ -234,16 +234,16 @@ export default function ChatPage() {
   const unreadCount = useMemo(() => countUnreadThreads(threads, readMap), [readMap, threads]);
 
   const friendOptions: FriendOption[] = useMemo(() => {
-    const partiesById = new Map((partiesQuery.data ?? []).map((p) => [p.partyId, p]));
+    const profilesById = new Map((friendProfilesQuery.data ?? []).map((profile) => [profile.sppPartyId, profile]));
     const ids = new Set((friendsQuery.data ?? []).map((row) => row.pfFollowingId));
     return Array.from(ids)
       .map((partyId) => {
-        const party = partiesById.get(partyId);
-        const label = party?.displayName ?? party?.legalName ?? `Party #${partyId}`;
-        return { partyId, label, subtitle: `ID #${partyId}` };
+        const profile = profilesById.get(partyId);
+        const label = profile?.sppDisplayName ?? 'Perfil no disponible';
+        return { partyId, label, subtitle: 'Amigo mutuo' };
       })
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [friendsQuery.data, partiesQuery.data]);
+  }, [friendProfilesQuery.data, friendsQuery.data]);
 
   useEffect(() => {
     const first = threads[0];
@@ -317,7 +317,7 @@ export default function ChatPage() {
     navigate('/chat', { replace: true });
     const numeric = parsePositiveInt(rawParty);
     if (numeric == null) {
-      setBannerError('El enlace de chat tiene un Party ID inválido.');
+      setBannerError('El enlace de chat no identifica un perfil disponible.');
       return;
     }
     createThreadMutation.mutate(numeric, {
@@ -361,9 +361,9 @@ export default function ChatPage() {
   };
 
   const handleCreateChat = () => {
-    const numeric = newChatSelection?.partyId ?? parsePositiveInt(newChatInput);
+    const numeric = newChatSelection?.partyId;
     if (numeric == null) {
-      setNewChatError('Selecciona un contacto o ingresa un ID válido.');
+      setNewChatError('Selecciona un amigo mutuo.');
       return;
     }
     createThreadMutation.mutate(numeric);
@@ -542,7 +542,7 @@ export default function ChatPage() {
             <Box sx={{ mb: 1 }}>
               {selectedThread ? (() => {
                 const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
-                const displayName = threadDisplayName === '' ? `Party #${selectedThread.ctOtherPartyId}` : threadDisplayName;
+                const displayName = threadDisplayName === '' ? 'Perfil no disponible' : threadDisplayName;
                 const profile = activeProfileQuery.data;
                 const fetchedProfileName = profile?.sppDisplayName?.trim();
                 const profileName = fetchedProfileName === '' || fetchedProfileName === undefined
@@ -584,7 +584,7 @@ export default function ChatPage() {
               )}
               {selectedThread && (
                 <Typography variant="caption" color="text.secondary">
-                  Thread #{selectedThread.ctThreadId} · Party #{selectedThread.ctOtherPartyId}
+                  Conversación activa
                 </Typography>
               )}
             </Box>
@@ -707,7 +707,7 @@ export default function ChatPage() {
                 />
               )}
               noOptionsText={friendsQuery.isLoading ? 'Cargando amigos…' : 'No tienes amigos mutuos aún.'}
-              loading={friendsQuery.isLoading || partiesQuery.isLoading}
+              loading={friendsQuery.isLoading || friendProfilesQuery.isLoading}
             />
             {friendOptions.length === 0 && !friendsQuery.isLoading && (
               <Alert

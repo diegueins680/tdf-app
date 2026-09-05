@@ -29,7 +29,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -52,8 +51,8 @@ import {
   type CampaignEnrollmentResult,
   type CampaignPreview,
 } from '../api/campaignAutomations';
-import { Parties } from '../api/parties';
-import type { PartyDTO } from '../api/types';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartyMultiSelector } from '../components/party-selector/PartySelector';
 import PageShell from '../components/PageShell';
 import { formatDateTimeForUser, formatNumberForUser, resolveRuntimeFormatOptions } from '../utils/formatters';
 
@@ -91,12 +90,6 @@ const formatDateTime = (value?: string | null) => {
   if (!value) return '—';
   return formatDateTimeForUser(value);
 };
-
-const hasWhatsAppCandidate = (party: PartyDTO) =>
-  Boolean(party.whatsapp?.trim() || party.primaryPhone?.trim());
-
-const normalizeSearchText = (value?: string | null) =>
-  value?.trim().toLocaleLowerCase(resolveRuntimeFormatOptions().locale) ?? '';
 
 const templateForAutomation = (
   templates: CampaignAutomationTemplate[],
@@ -306,8 +299,7 @@ export default function CampaignAutomationsPage() {
   const queryClient = useQueryClient();
   const [notice, setNotice] = useState<Notice | null>(null);
   const [enrollAutomation, setEnrollAutomation] = useState<CampaignAutomation | null>(null);
-  const [selectedPartyIds, setSelectedPartyIds] = useState<number[]>([]);
-  const [partySearch, setPartySearch] = useState('');
+  const [selectedParties, setSelectedParties] = useState<PartySelectorOption[]>([]);
   const [activationAutomation, setActivationAutomation] = useState<CampaignAutomation | null>(null);
   const [activationConfirmed, setActivationConfirmed] = useState(false);
   const [previewAutomation, setPreviewAutomation] = useState<CampaignAutomation | null>(null);
@@ -323,10 +315,6 @@ export default function CampaignAutomationsPage() {
     queryKey: ['campaign-automations'],
     queryFn: CampaignAutomations.list,
   });
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: Parties.list,
-  });
   const recipientsQuery = useQuery({
     queryKey: ['campaign-enrollments', recipientsAutomation?.id],
     queryFn: () => CampaignAutomations.enrollments(recipientsAutomation!.id),
@@ -335,25 +323,10 @@ export default function CampaignAutomationsPage() {
 
   const templates = templatesQuery.data ?? [];
   const automations = automationsQuery.data ?? [];
-  const parties = partiesQuery.data ?? [];
   const automationByTemplate = useMemo(
     () => new Map(automations.map((automation) => [automation.templateKey, automation])),
     [automations],
   );
-  const candidateParties = useMemo(() => {
-    const search = normalizeSearchText(partySearch);
-    return parties
-      .filter(hasWhatsAppCandidate)
-      .filter((party) => {
-        if (!search) return true;
-        return [
-          party.displayName,
-          party.whatsapp,
-          party.primaryPhone,
-          party.primaryEmail,
-        ].some((value) => normalizeSearchText(value).includes(search));
-      });
-  }, [parties, partySearch]);
 
   const refreshCampaignData = async (automationId?: number) => {
     await queryClient.invalidateQueries({ queryKey: ['campaign-automations'] });
@@ -389,7 +362,7 @@ export default function CampaignAutomationsPage() {
     onSuccess: async (result, variables) => {
       await refreshCampaignData(variables.automationId);
       setEnrollAutomation(null);
-      setSelectedPartyIds([]);
+      setSelectedParties([]);
       const accepted = result.acceptedPartyIds.length;
       const rejected = result.rejected.length;
       setNotice({
@@ -458,30 +431,8 @@ export default function CampaignAutomationsPage() {
   });
 
   const openEnrollDialog = (automation: CampaignAutomation) => {
-    setPartySearch('');
-    setSelectedPartyIds([]);
+    setSelectedParties([]);
     setEnrollAutomation(automation);
-  };
-
-  const toggleParty = (partyId: number) => {
-    setSelectedPartyIds((current) =>
-      current.includes(partyId)
-        ? current.filter((value) => value !== partyId)
-        : [...current, partyId],
-    );
-  };
-
-  const toggleVisibleParties = () => {
-    const visibleIds = candidateParties.map((party) => party.partyId);
-    const allSelected =
-      visibleIds.length > 0
-      && visibleIds.every((partyId) => selectedPartyIds.includes(partyId));
-    setSelectedPartyIds((current) => {
-      if (allSelected) {
-        return current.filter((partyId) => !visibleIds.includes(partyId));
-      }
-      return Array.from(new Set([...current, ...visibleIds]));
-    });
   };
 
   const openPreview = async (automation: CampaignAutomation) => {
@@ -628,62 +579,17 @@ export default function CampaignAutomationsPage() {
               Puedes seleccionar contactos con teléfono, pero el backend solo inscribirá aquellos
               con consentimiento de WhatsApp activo y no revocado.
             </Alert>
-            <TextField
-              label="Buscar contacto"
-              value={partySearch}
-              onChange={(event) => setPartySearch(event.target.value)}
-              placeholder="Nombre, teléfono o correo"
-              fullWidth
+            <PartyMultiSelector
+              value={selectedParties}
+              onChange={setSelectedParties}
+              field={{
+                label: 'Buscar contactos',
+                required: true,
+                helperText: 'Busca por nombre o username. Puedes conservar varias selecciones.',
+              }}
+              search={{ context: 'campaign_enrollment', kind: 'any', accountOnly: false }}
             />
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Button onClick={toggleVisibleParties}>
-                Seleccionar o quitar visibles
-              </Button>
-              <Chip label={`${selectedPartyIds.length} seleccionados`} />
-            </Stack>
-            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 420 }}>
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox" />
-                    <TableCell>Contacto</TableCell>
-                    <TableCell>WhatsApp / teléfono</TableCell>
-                    <TableCell>Tipo</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {candidateParties.map((party) => (
-                    <TableRow
-                      key={party.partyId}
-                      hover
-                      selected={selectedPartyIds.includes(party.partyId)}
-                      onClick={() => toggleParty(party.partyId)}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={selectedPartyIds.includes(party.partyId)}
-                          onChange={() => toggleParty(party.partyId)}
-                          onClick={(event) => event.stopPropagation()}
-                        />
-                      </TableCell>
-                      <TableCell>{party.displayName}</TableCell>
-                      <TableCell>{party.whatsapp || party.primaryPhone}</TableCell>
-                      <TableCell>{party.isOrg ? 'Empresa' : 'Persona'}</TableCell>
-                    </TableRow>
-                  ))}
-                  {candidateParties.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <Typography color="text.secondary">
-                          No hay contactos con teléfono que coincidan.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <Chip label={`${selectedParties.length} seleccionados`} sx={{ alignSelf: 'flex-start' }} />
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -694,14 +600,14 @@ export default function CampaignAutomationsPage() {
             variant="contained"
             disabled={
               enrollMutation.isPending
-              || selectedPartyIds.length === 0
+              || selectedParties.length === 0
               || enrollAutomation == null
             }
             onClick={() => {
               if (!enrollAutomation) return;
               enrollMutation.mutate({
                 automationId: enrollAutomation.id,
-                partyIds: selectedPartyIds,
+                partyIds: selectedParties.map((party) => party.partyId),
               });
             }}
           >
@@ -945,7 +851,5 @@ export default function CampaignAutomationsPage() {
 }
 
 export {
-  hasWhatsAppCandidate,
-  normalizeSearchText,
   templateForAutomation,
 };

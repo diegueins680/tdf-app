@@ -34,14 +34,14 @@ import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import { DateTime } from 'luxon';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { Parties } from '../api/parties';
 import { Catalogs } from '../api/catalogs';
 import {
   SocialEventsAPI,
   type SocialVenueDTO,
 } from '../api/socialEvents';
-import type { PartyDTO } from '../api/types';
+import type { PartySelectorOption } from '../api/partySelector';
 import PageShell from '../components/PageShell';
+import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
@@ -97,9 +97,6 @@ const loadDraft = (): CollaborativeEventDraft => {
   }
 };
 
-const partyLabel = (party: PartyDTO) =>
-  `${party.displayName}${party.primaryEmail ? ` · ${party.primaryEmail}` : ''}`;
-
 const eventDateLabel = (draft: CollaborativeEventDraft) => {
   const start = DateTime.fromFormat(draft.startAt, LOCAL_DATE_TIME_FORMAT);
   if (!start.isValid) return 'Fecha por definir';
@@ -120,6 +117,7 @@ export default function CollaborativeEventCreatorPage() {
   const [draft, setDraft] = useState<CollaborativeEventDraft>(loadDraft);
   const [creationResult, setCreationResult] =
     useState<CollaborativeEventCreationResult | null>(null);
+  const [collaboratorCandidate, setCollaboratorCandidate] = useState<PartySelectorOption | null>(null);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : '';
 
   const venuesQuery = useQuery({
@@ -131,25 +129,6 @@ export default function CollaborativeEventCreatorPage() {
     queryFn: () => Catalogs.listPublicBatch(['event-types'], { locale, page: 1, pageSize: 200 }),
     staleTime: 5 * 60 * 1000,
   });
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: () => Parties.list(),
-    enabled: Boolean(sessionPartyId),
-  });
-
-  const collaboratorOptions = useMemo(
-    () => (partiesQuery.data ?? []).filter(
-      (party) =>
-        !party.isOrg
-        && String(party.partyId) !== sessionPartyId
-        && party.hasUserAccount !== false,
-    ),
-    [partiesQuery.data, sessionPartyId],
-  );
-  const selectedCollaboratorParties = useMemo(() => {
-    const selectedIds = new Set(draft.collaborators.map(({ partyId }) => partyId));
-    return collaboratorOptions.filter((party) => selectedIds.has(String(party.partyId)));
-  }, [collaboratorOptions, draft.collaborators]);
   const selectedVenue = useMemo(
     () => (venuesQuery.data ?? []).find(
       (venue) => String(venue.venueId ?? '') === draft.venueId,
@@ -249,25 +228,28 @@ export default function CollaborativeEventCreatorPage() {
     value: CollaborativeEventDraft[Key],
   ) => setDraft((current) => ({ ...current, [key]: value }));
 
-  const updateCollaborators = (parties: PartyDTO[]) => {
+  const addCollaborator = (party: PartySelectorOption) => {
     setDraft((current) => {
-      const existingById = new Map(
-        current.collaborators.map((collaborator) => [collaborator.partyId, collaborator]),
-      );
+      if (String(party.partyId) === sessionPartyId || current.collaborators.some((item) => item.partyId === String(party.partyId))) return current;
       return {
         ...current,
-        collaborators: parties.map((party) => {
-          const partyId = String(party.partyId);
-          return existingById.get(partyId) ?? {
-            partyId,
+        collaborators: [
+          ...current.collaborators,
+          {
+            partyId: String(party.partyId),
             displayName: party.displayName,
-            email: party.primaryEmail,
             role: 'editor',
-          };
-        }),
+          },
+        ],
       };
     });
+    setCollaboratorCandidate(null);
   };
+
+  const removeCollaborator = (partyId: string) => setDraft((current) => ({
+    ...current,
+    collaborators: current.collaborators.filter((collaborator) => collaborator.partyId !== partyId),
+  }));
 
   const updateCollaboratorRole = (
     partyId: string,
@@ -525,35 +507,19 @@ export default function CollaborativeEventCreatorPage() {
                       ¿Quién lo va a construir contigo?
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Busca por nombre o correo. Los editores podrán trabajar en la
+                      Busca por nombre o usuario. Los editores podrán trabajar en la
                       planificación desde el primer momento.
                     </Typography>
                   </Box>
-                  <Autocomplete<PartyDTO, true, false, false>
-                    multiple
-                    options={collaboratorOptions}
-                    loading={partiesQuery.isLoading}
-                    value={selectedCollaboratorParties}
-                    onChange={(_, parties) => updateCollaborators(parties)}
-                    getOptionLabel={partyLabel}
-                    isOptionEqualToValue={(option, value) =>
-                      option.partyId === value.partyId
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Añadir colaboradores"
-                        placeholder={draft.collaborators.length ? '' : 'Busca a alguien'}
-                      />
-                    )}
-                    noOptionsText="No encontramos más usuarios con acceso"
+                  <UserSelector
+                    value={collaboratorCandidate}
+                    onChange={(party) => {
+                      setCollaboratorCandidate(party);
+                      if (party) addCollaborator(party);
+                    }}
+                    field={{ label: 'Añadir colaboradores', helperText: 'Selecciona una cuenta TDF; el ID se conserva internamente.' }}
+                    search={{ context: 'event_invitation', excludedPartyIds: [Number(sessionPartyId), ...draft.collaborators.map((collaborator) => Number(collaborator.partyId)).filter(Number.isInteger)] }}
                   />
-                  {partiesQuery.isError && (
-                    <Alert severity="warning">
-                      No pudimos cargar el directorio. Puedes crear el evento sin
-                      colaboradores y añadirlos después.
-                    </Alert>
-                  )}
                   {draft.collaborators.length > 0 && (
                     <Stack spacing={1}>
                       {draft.collaborators.map((collaborator) => (
@@ -601,6 +567,7 @@ export default function CollaborativeEventCreatorPage() {
                             <MenuItem value="editor">Puede editar</MenuItem>
                             <MenuItem value="viewer">Solo lectura</MenuItem>
                           </TextField>
+                          <Button color="inherit" onClick={() => removeCollaborator(collaborator.partyId)}>Quitar</Button>
                         </Stack>
                       ))}
                     </Stack>

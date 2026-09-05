@@ -40,6 +40,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import { Admin } from '../api/admin';
 import { Parties } from '../api/parties';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartySelector } from '../components/party-selector/PartySelector';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
@@ -194,18 +196,104 @@ function formFromArtist(artist: ArtistProfileDTO): ArtistFormState {
   };
 }
 
+interface ArtistQuickNoteEditorProps {
+  artist: ArtistProfileDTO;
+  onBanner: (banner: BannerState) => void;
+}
+
+function ArtistQuickNoteEditor({ artist, onBanner }: ArtistQuickNoteEditorProps) {
+  const qc = useQueryClient();
+  const [noteDraft, setNoteDraft] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
+  const partyQuery = useQuery({
+    queryKey: ['party', artist.apArtistId],
+    queryFn: () => Parties.getOne(artist.apArtistId),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!isDirty && partyQuery.data) {
+      setNoteDraft(partyQuery.data.notes ?? '');
+    }
+  }, [isDirty, partyQuery.data]);
+
+  const noteMutation = useMutation({
+    mutationFn: (note: string) => Parties.update(artist.apArtistId, { uNotes: note.trim() }),
+    onSuccess: (party) => {
+      qc.setQueryData(['party', artist.apArtistId], party);
+      setNoteDraft(party.notes ?? '');
+      setIsDirty(false);
+      onBanner({ severity: 'success', message: 'Nota guardada.' });
+    },
+    onError: (err: unknown) => {
+      onBanner({
+        severity: 'error',
+        message: err instanceof Error ? err.message : 'No se pudo guardar la nota.',
+      });
+    },
+  });
+
+  const partyLoadFailed = Boolean(partyQuery.error);
+
+  return (
+    <Box
+      sx={{
+        border: '1px solid rgba(148,163,184,0.35)',
+        borderRadius: 2,
+        p: 1.5,
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: 1,
+        alignItems: { xs: 'stretch', sm: 'center' },
+      }}
+    >
+      <Box sx={{ minWidth: 220 }}>
+        <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {artist.apCity ?? 'Sin ciudad'}
+        </Typography>
+      </Box>
+      <TextField
+        value={noteDraft}
+        onChange={(event) => {
+          setNoteDraft(event.target.value);
+          setIsDirty(true);
+        }}
+        inputProps={{ 'aria-label': `Nota o pendiente para ${artist.apDisplayName}` }}
+        placeholder={partyQuery.isLoading ? 'Cargando nota…' : 'Agregar nota o pendiente'}
+        error={partyLoadFailed}
+        helperText={partyLoadFailed ? 'No pudimos cargar la nota del contacto.' : undefined}
+        disabled={partyQuery.isLoading || partyLoadFailed || noteMutation.isPending}
+        fullWidth
+        size="small"
+        multiline
+        minRows={1}
+      />
+      <Button
+        variant="contained"
+        aria-label={`Guardar nota para ${artist.apDisplayName}`}
+        onClick={() => noteMutation.mutate(noteDraft)}
+        disabled={partyQuery.isLoading || partyLoadFailed || noteMutation.isPending}
+        sx={{ minWidth: 140 }}
+      >
+        {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
+      </Button>
+    </Box>
+  );
+}
+
 export default function LabelArtistsPage() {
   const qc = useQueryClient();
   const { locale, timezone } = useLocalePreferences();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArtist, setSelectedArtist] = useState<ArtistProfileDTO | null>(null);
+  const [selectedParty, setSelectedParty] = useState<PartySelectorOption | null>(null);
   const [form, setForm] = useState<ArtistFormState>(buildEmptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [heroImageFileName, setHeroImageFileName] = useState('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
-  const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
   const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
@@ -215,10 +303,6 @@ export default function LabelArtistsPage() {
   const artistsQuery = useQuery({
     queryKey: ['admin', 'artists'],
     queryFn: () => Admin.listArtistProfiles(),
-  });
-  const partiesQuery = useQuery({
-    queryKey: ['parties'],
-    queryFn: () => Parties.list(),
   });
   const genresCatalogQuery = useQuery({
     queryKey: ['catalog', 'genres', locale],
@@ -236,7 +320,6 @@ export default function LabelArtistsPage() {
   });
 
   const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
-  const parties = useMemo(() => partiesQuery.data ?? [], [partiesQuery.data]);
   const genreOptions = useMemo<CatalogItem[]>(
     () => (genresCatalogQuery.data?.items ?? [])
       .filter((genre) => genre.active && genre.workflowState === 'published')
@@ -247,7 +330,6 @@ export default function LabelArtistsPage() {
     () => form.genreIds.filter((genreId) => !genreOptions.some((genre) => genre.id === genreId)),
     [form.genreIds, genreOptions],
   );
-  const partyMap = useMemo(() => new Map(parties.map((p) => [p.partyId, p])), [parties]);
   const selectedPromotionArtist = useMemo(
     () => artists.find((artist) => artist.apArtistId === promotionArtistId) ?? null,
     [artists, promotionArtistId],
@@ -311,17 +393,6 @@ export default function LabelArtistsPage() {
   }, [form.heroImageUrl, heroImageFileName]);
 
   useEffect(() => {
-    const draftMap: Record<number, string> = {};
-    artists.forEach((artist) => {
-      const party = partyMap.get(artist.apArtistId);
-      if (party?.notes) {
-        draftMap[artist.apArtistId] = party.notes;
-      }
-    });
-    setNoteDrafts((prev) => ({ ...draftMap, ...prev }));
-  }, [artists, partyMap]);
-
-  useEffect(() => {
     setPromotionForm(buildEmptyPromotionForm());
     setPromotionFormError(null);
     setEditingPromotionId(null);
@@ -350,11 +421,6 @@ export default function LabelArtistsPage() {
   const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
-  const selectedParty = useMemo(
-    () => parties.find((party) => party.partyId === form.partyId) ?? null,
-    [parties, form.partyId],
-  );
-
   const handleHeroImageFileChange = (file: File | null) => {
     if (!file) {
       setForm((prev) => ({ ...prev, heroImageUrl: '' }));
@@ -381,21 +447,6 @@ export default function LabelArtistsPage() {
     reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
     reader.readAsDataURL(file);
   };
-
-  const noteMutation = useMutation({
-    mutationFn: async ({ partyId, note }: { partyId: number; note: string }) => {
-      await Parties.update(partyId, { uNotes: note.trim() ? note.trim() : null });
-      return partyId;
-    },
-    onSuccess: async () => {
-      setBanner({ severity: 'success', message: 'Nota guardada.' });
-      await qc.invalidateQueries({ queryKey: ['parties'] });
-      setNoteDrafts((prev) => prev);
-    },
-    onError: (err: unknown) => {
-      setBanner({ severity: 'error', message: err instanceof Error ? err.message : 'No se pudo guardar la nota.' });
-    },
-  });
 
   const upsertMutation = useMutation({
     mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string }) => {
@@ -540,6 +591,7 @@ export default function LabelArtistsPage() {
 
   const handleOpenNew = () => {
     setSelectedArtist(null);
+    setSelectedParty(null);
     setForm(buildEmptyForm());
     setFormError(null);
     setDialogOpen(true);
@@ -549,6 +601,7 @@ export default function LabelArtistsPage() {
 
   const handleEdit = (artist: ArtistProfileDTO) => {
     setSelectedArtist(artist);
+    setSelectedParty({ partyId: artist.apArtistId, partyType: 'person', displayName: artist.apDisplayName, username: null, avatarUrl: artist.apHeroImageUrl ?? null, secondaryLabel: 'Perfil de artista existente', accountStatus: 'no-account' });
     setForm(formFromArtist(artist));
     setFormError(null);
     setDialogOpen(true);
@@ -559,6 +612,7 @@ export default function LabelArtistsPage() {
     if (upsertMutation.isPending) return;
     setDialogOpen(false);
     setSelectedArtist(null);
+    setSelectedParty(null);
     setForm(buildEmptyForm());
     setFormError(null);
   };
@@ -725,51 +779,13 @@ export default function LabelArtistsPage() {
                   pagination={{ itemLabel: 'artistas', initialRowsPerPage: 10, resetKey: search.trim() }}
                   renderItems={(visibleArtists) => (
                     <Stack spacing={1.5}>
-                      {visibleArtists.map((artist) => {
-                        const party = partyMap.get(artist.apArtistId);
-                        const noteValue = noteDrafts[artist.apArtistId] ?? party?.notes ?? '';
-                        return (
-                          <Box
-                            key={artist.apArtistId}
-                            sx={{
-                              border: '1px solid rgba(148,163,184,0.35)',
-                              borderRadius: 2,
-                              p: 1.5,
-                              display: 'flex',
-                              flexDirection: { xs: 'column', sm: 'row' },
-                              gap: 1,
-                              alignItems: { xs: 'stretch', sm: 'center' },
-                            }}
-                          >
-                            <Box sx={{ minWidth: 220 }}>
-                              <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {artist.apCity ?? 'Sin ciudad'}
-                              </Typography>
-                            </Box>
-                            <TextField
-                              value={noteValue}
-                              onChange={(e) =>
-                                setNoteDrafts((prev) => ({ ...prev, [artist.apArtistId]: e.target.value }))
-                              }
-                              aria-label={`Nota o pendiente para ${artist.apDisplayName}`}
-                              placeholder="Agregar nota o pendiente"
-                              fullWidth
-                              size="small"
-                              multiline
-                              minRows={1}
-                            />
-                            <Button
-                              variant="contained"
-                              onClick={() => noteMutation.mutate({ partyId: artist.apArtistId, note: noteValue })}
-                              disabled={noteMutation.isPending}
-                              sx={{ minWidth: 140 }}
-                            >
-                              {noteMutation.isPending ? 'Guardando…' : 'Guardar'}
-                            </Button>
-                          </Box>
-                        );
-                      })}
+                      {visibleArtists.map((artist) => (
+                        <ArtistQuickNoteEditor
+                          key={artist.apArtistId}
+                          artist={artist}
+                          onBanner={setBanner}
+                        />
+                      ))}
                     </Stack>
                   )}
                 />
@@ -1185,27 +1201,18 @@ export default function LabelArtistsPage() {
         <DialogTitle>{selectedArtist ? 'Editar perfil de artista' : 'Nuevo perfil de artista'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            <Autocomplete
-              options={parties}
-              loading={partiesQuery.isLoading}
-              getOptionLabel={(option) => `${option.displayName} · ID ${option.partyId}${option.primaryEmail ? ` · ${option.primaryEmail}` : ''}`}
-              isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
+            <PartySelector
               value={selectedParty}
-              onChange={(_, value) =>
+              onChange={(value) => {
+                setSelectedParty(value);
                 setForm((prev) => ({
                   ...prev,
                   partyId: value?.partyId ?? null,
                   displayName: value?.displayName ?? prev.displayName,
-                }))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Contacto (CRM)"
-                  required
-                  helperText="Los artistas se enlazan a contactos existentes. Si falta, créalo en CRM → Contactos."
-                />
-              )}
+                }));
+              }}
+              field={{ label: 'Contacto (CRM)', required: true, helperText: 'Busca por nombre o @username. Si falta, créalo en CRM → Contactos.' }}
+              search={{ context: 'artist_link', kind: 'person', accountOnly: false }}
             />
             <TextField
               label="Nombre público (se guarda en el contacto)"

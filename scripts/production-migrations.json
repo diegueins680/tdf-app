@@ -375,6 +375,16 @@
       "id": "2026-09-04_contextual_reputation_preference_save",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_preference_save.sql",
       "introducedBy": "65968b300d5f5af3e3989be539bea5d4de5535ba"
+    },
+    {
+      "id": "2026-09-04_party_selector_trigram_indexes",
+      "path": "tdf-hq/sql/2026-09-04_party_selector_trigram_indexes.sql",
+      "introducedBy": "2c204d475b1943346acd94327f2ad5ab61c27cc6"
+    },
+    {
+      "id": "2026-09-04_party_selector_punctuation_indexes",
+      "path": "tdf-hq/sql/2026-09-04_party_selector_punctuation_indexes.sql",
+      "introducedBy": "2b61953659cb43d711046639ae49f9806049cdf3"
     }
   ]
 }

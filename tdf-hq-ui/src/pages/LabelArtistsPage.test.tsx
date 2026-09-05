@@ -12,8 +12,8 @@ const updateArtistPromoSlotMock = jest.fn<(artistId: number, promotionId: number
 const deleteArtistPromoSlotMock = jest.fn<(artistId: number, promotionId: number) => Promise<void>>();
 const getArtistPromoDayReportMock = jest.fn<(artistId: number, day: string) => Promise<ArtistPromoDayReportDTO>>();
 const getArtistPromoPdfBlobMock = jest.fn<(artistId: number, day: string) => Promise<Blob>>();
-const listPartiesMock = jest.fn<() => Promise<PartyDTO[]>>();
-const updatePartyMock = jest.fn<(partyId: number, payload: unknown) => Promise<PartyDTO | null>>();
+const getPartyMock = jest.fn<(partyId: number) => Promise<PartyDTO>>();
+const updatePartyMock = jest.fn<(partyId: number, payload: unknown) => Promise<PartyDTO>>();
 const listCatalogItemsMock = jest.fn<() => Promise<{
   items: Record<string, unknown>[];
   page: number;
@@ -40,7 +40,7 @@ jest.unstable_mockModule('../api/admin', () => ({
 
 jest.unstable_mockModule('../api/parties', () => ({
   Parties: {
-    list: () => listPartiesMock(),
+    getOne: (partyId: number) => getPartyMock(partyId),
     update: (partyId: number, payload: unknown) => updatePartyMock(partyId, payload),
   },
 }));
@@ -183,6 +183,16 @@ const getButtonsByText = (root: ParentNode, labelText: string) =>
 const hasTableHeader = (root: ParentNode, labelText: string) =>
   Array.from(root.querySelectorAll('th')).some((cell) => buttonText(cell) === labelText);
 
+const changeTextArea = async (element: HTMLTextAreaElement, value: string) => {
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
+  if (!valueSetter) throw new Error('Textarea value setter not found');
+  await act(async () => {
+    valueSetter.call(element, value);
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+  });
+};
+
 describe('LabelArtistsPage', () => {
   beforeAll(() => {
     (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -212,11 +222,11 @@ describe('LabelArtistsPage', () => {
     deleteArtistPromoSlotMock.mockReset();
     getArtistPromoDayReportMock.mockReset();
     getArtistPromoPdfBlobMock.mockReset();
-    listPartiesMock.mockReset();
+    getPartyMock.mockReset();
     updatePartyMock.mockReset();
     listCatalogItemsMock.mockReset();
     listArtistProfilesMock.mockResolvedValue([]);
-    listPartiesMock.mockResolvedValue([]);
+    getPartyMock.mockResolvedValue(buildParty());
     upsertArtistProfileMock.mockResolvedValue(null);
     listArtistPromoSlotsMock.mockResolvedValue([]);
     createArtistPromoSlotMock.mockResolvedValue(null);
@@ -224,7 +234,7 @@ describe('LabelArtistsPage', () => {
     deleteArtistPromoSlotMock.mockResolvedValue(undefined);
     getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport({ apdEntries: [] }));
     getArtistPromoPdfBlobMock.mockResolvedValue(new Blob(['pdf']));
-    updatePartyMock.mockResolvedValue(null);
+    updatePartyMock.mockResolvedValue(buildParty());
     listCatalogItemsMock.mockResolvedValue({
       catalog: {},
       items: [{
@@ -277,7 +287,6 @@ describe('LabelArtistsPage', () => {
 
   it('restores search, refresh, quick notes, and the comparison table once an artist exists', async () => {
     listArtistProfilesMock.mockResolvedValue([buildArtist()]);
-    listPartiesMock.mockResolvedValue([buildParty()]);
     listArtistPromoSlotsMock.mockResolvedValue([buildPromoSlot()]);
     getArtistPromoDayReportMock.mockResolvedValue(buildPromoReport());
 
@@ -298,6 +307,10 @@ describe('LabelArtistsPage', () => {
         expect(hasTableHeader(container, 'Artista')).toBe(true);
         expect(hasTableHeader(container, 'Acciones')).toBe(true);
         expect(container.textContent).not.toContain('Todavía no hay perfiles de artista.');
+        expect(getPartyMock).toHaveBeenCalledWith(101);
+        expect(
+          container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Nota o pendiente para La Ruta"]')?.value,
+        ).toBe('Pendiente bio');
       });
     } finally {
       await cleanup();
@@ -312,7 +325,6 @@ describe('LabelArtistsPage', () => {
     listArtistProfilesMock
       .mockResolvedValueOnce([buildArtist()])
       .mockImplementationOnce(() => refreshPromise);
-    listPartiesMock.mockResolvedValue([buildParty()]);
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -357,7 +369,6 @@ describe('LabelArtistsPage', () => {
 
   it('blocks profile writes when the canonical genre catalog cannot be loaded', async () => {
     listArtistProfilesMock.mockResolvedValue([buildArtist()]);
-    listPartiesMock.mockResolvedValue([buildParty()]);
     listCatalogItemsMock.mockRejectedValue(
       Object.assign(new Error('catalog unavailable'), { status: 403 }),
     );
@@ -391,6 +402,45 @@ describe('LabelArtistsPage', () => {
         expect(saveButton?.disabled).toBe(true);
       });
       expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('loads only the visible artist Party and can clear its CRM note', async () => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist()]);
+    updatePartyMock.mockResolvedValue(buildParty({ notes: '' }));
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      let noteField: HTMLTextAreaElement | null = null;
+      await waitForExpectation(() => {
+        noteField = container.querySelector<HTMLTextAreaElement>(
+          'textarea[aria-label="Nota o pendiente para La Ruta"]',
+        );
+        expect(noteField?.value).toBe('Pendiente bio');
+      });
+      if (!noteField) throw new Error('Artist note field not found');
+
+      await changeTextArea(noteField, '   ');
+      const saveButton = container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Guardar nota para La Ruta"]',
+      );
+      expect(saveButton).not.toBeNull();
+
+      await act(async () => {
+        saveButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+
+      await waitForExpectation(() => {
+        expect(updatePartyMock).toHaveBeenCalledWith(101, { uNotes: '' });
+        expect(container.textContent).toContain('Nota guardada.');
+        expect(noteField?.value).toBe('');
+      });
     } finally {
       await cleanup();
     }
