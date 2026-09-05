@@ -329,6 +329,9 @@ jobs:
       - name: Test the production release contract
         run: npm run test:production-release
 
+      - name: Rehearse access-request notification compatibility migration
+        run: npm run test:access-request-notification-migration
+
       - name: Rehearse the studio internship audit migration and rollback
         run: sh scripts/test-studio-internship-audit-migration.sh
 

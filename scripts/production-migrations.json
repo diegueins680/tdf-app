@@ -387,6 +387,11 @@
       "introducedBy": "2b61953659cb43d711046639ae49f9806049cdf3"
     },
     {
+      "id": "2026-09-04_access_request_notification_types",
+      "path": "tdf-hq/sql/2026-09-04_access_request_notification_types.sql",
+      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
+    },
+    {
       "id": "2026-09-05_party_selector_username_diacritic_indexes",
       "path": "tdf-hq/sql/2026-09-05_party_selector_username_diacritic_indexes.sql",
       "introducedBy": "85b89f5a9795d6ecc51cb4faaed36e450e5fac1a"
