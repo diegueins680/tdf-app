@@ -19,6 +19,23 @@ La administración de categorías, apelaciones, fraude y evidencia individual se
 detalla en el [playbook de Moderación y Administración](03-moderation-admin-playbook.md).
 Es un borrador y no concede permisos ni habilita el piloto.
 
+## Documentos de control de rollout
+
+La activación requiere completar y aprobar los siguientes artefactos, además de
+las garantías técnicas descritas en esta guía. Los enlaces se publican junto
+con sus documentos dependientes; ninguno habilita por sí mismo el feature flag.
+
+- [Política de Producto y Legal](01-product-legal-policy.md): consentimiento,
+  privacidad, retención, menores y solicitudes de valoración.
+- [Runbook de Operaciones y Observabilidad](02-operations-observability-runbook.md):
+  publicación atómica, recálculo, alertas y rollback.
+- [Playbook de Moderación y Administración](03-moderation-admin-playbook.md):
+  RBAC, evidencia, fraude, apelaciones y auditoría.
+- [Protocolo de staging, accesibilidad y piloto](04-staging-accessibility-pilot.md):
+  cohortes aisladas, validación WCAG y criterios de pausa/expansión.
+- [Tracker transversal de aprobaciones](00-rollout-approval-tracker.md):
+  responsables, evidencia y puertas de despliegue.
+
 ## Auditoría del estado anterior
 
 - `tdf-hq` ya tenía `experience_review` para eventos, marketplace, reservas y
