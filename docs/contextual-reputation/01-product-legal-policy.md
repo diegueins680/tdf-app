@@ -56,10 +56,18 @@ Se requiere una acción afirmativa separada para:
   notificaciones no lo cubra ya de forma válida.
 
 El consentimiento para visibilidad pública no es requisito para contratar,
-reservar, usar el directorio ni emitir una evaluación verificable. Retirarlo
-oculta resultados futuros de las superficies públicas sin borrar por defecto la
-evidencia cuya conservación sea necesaria para seguridad, fraude, auditoría o
-cumplimiento, conforme a la sección 6.
+reservar, usar el directorio ni emitir una evaluación verificable. Al retirarlo,
+el sistema debe retirar inmediatamente score, categorías, badges, tendencia y
+posiciones existentes de toda superficie pública, impedir nuevas publicaciones y
+recalcular/invalidar proyecciones afectadas. Puede conservar evidencia interna
+solo cuando sea necesaria para seguridad, fraude, auditoría o cumplimiento,
+conforme a la sección 6.
+
+El retiro del consentimiento de piloto detiene inmediatamente nuevas solicitudes
+de valoración sobre ese sujeto, aceptación de nuevas señales contextuales y
+agregación/publicación futura. La evidencia ya retenida solo permanece bajo la
+política aprobada de la sección 6 y nunca se reutiliza para reactivar el piloto
+sin un nuevo consentimiento versionado.
 
 ### 3.2 Texto de interfaz propuesto
 
@@ -76,10 +84,18 @@ perfil mostrará ‘Reputación en formación’ hasta contar con evidencia sufi
   perfil público.
 - `[ ]` Permito ser considerado para rankings públicos cuando exista muestra
   suficiente.
+- `[ ]` Acepto solicitudes y recordatorios de valoración; puedo desactivarlos
+  en cualquier momento. Esta casilla solo se muestra cuando la preferencia de
+  notificaciones existente no cubre válidamente esa finalidad.
 
 Enlace obligatorio: “Cómo se calcula, cómo apelar y cómo ejercer mis derechos”.
 El flujo debe guardar versión del texto, idioma, fecha, actor y estado de cada
 consentimiento; no se permite una casilla preseleccionada.
+
+Las cuentas en estados `minor_restricted` o `guardian_pending` no pueden aceptar
+piloto, visibilidad pública, rankings ni recordatorios de reputación. Solo una
+cuenta `guardian_approved`, conforme a la política jurisdiccional aprobada,
+puede continuar y debe registrar la versión y prueba de dicha autorización.
 
 ## 4. Datos, finalidad y acceso
 
