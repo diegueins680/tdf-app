@@ -19,7 +19,9 @@ separadas:
 
 No se publicará una puntuación como objetiva si procede de preferencias,
 comparaciones privadas o muestra insuficiente. Antes de tres señales verificadas
-válidas, se mostrará **“Reputación en formación”** en vez de un número 0--100.
+válidas de **evaluadores elegibles distintos**, se mostrará **“Reputación en
+formación”** en vez de un número 0--100. El umbral de señales no sustituye ese
+mínimo de personas distintas ni los topes de influencia por evaluador.
 
 ## 2. Reglas de producto obligatorias
 
@@ -69,6 +71,17 @@ agregación/publicación futura. La evidencia ya retenida solo permanece bajo la
 política aprobada de la sección 6 y nunca se reutiliza para reactivar el piloto
 sin un nuevo consentimiento versionado.
 
+El retiro del consentimiento de rankings públicos suprime inmediatamente las
+posiciones existentes y bloquea su inclusión en nuevos rankings, incluso si la
+visibilidad de la reputación agregada permanece activa. Debe invalidar o
+recalcular las proyecciones afectadas sin alterar la evidencia interna que se
+conserve legítimamente.
+
+El retiro de consentimiento para solicitudes o recordatorios debe comprobarse
+también **en el momento de cada entrega**: cualquier mensaje encolado, en
+reintento o programado se cancela o suprime antes de enviarse. No basta con
+dejar de programar mensajes nuevos.
+
 ### 3.2 Texto de interfaz propuesto
 
 **Título:** “Comparte tu reputación contextual”
@@ -80,8 +93,8 @@ perfil mostrará ‘Reputación en formación’ hasta contar con evidencia sufi
 **Controles independientes:**
 
 - `[ ]` Acepto participar en el piloto de reputación contextual.
-- `[ ]` Permito mostrar mi reputación agregada y badges verificables en mi
-  perfil público.
+- `[ ]` Permito mostrar mi reputación agregada, badges verificables y tendencia
+  estadísticamente válida en mi perfil público.
 - `[ ]` Permito ser considerado para rankings públicos cuando exista muestra
   suficiente.
 - `[ ]` Acepto solicitudes y recordatorios de valoración; puedo desactivarlos
@@ -107,9 +120,10 @@ puede continuar y debe registrar la versión y prueba de dicha autorización.
 | Agregado público | Decisión contextual y descubrimiento | Según consentimiento y umbral de muestra |
 | Auditoría de moderación | Investigación, apelación y seguridad | RBAC estricto |
 
-Los administradores solo pueden acceder a señales individuales para fraude o
-disputa. Cada acceso exige permiso, motivo seleccionable o escrito, objetivo y
-registro inmutable de auditoría. Las consultas públicas y de perfil no deben
+Los administradores solo pueden acceder a señales individuales para fraude,
+disputa, incidente de seguridad o obligación legal documentada. Cada acceso
+exige permiso, caso y motivo seleccionable o escrito, objetivo, proporcionalidad
+y registro inmutable de auditoría. Las consultas públicas y de perfil no deben
 revelar `source_id`, identidad del evaluador, grupos pequeños, ni inferencias
 sobre atributos sensibles.
 
@@ -136,7 +150,8 @@ activar el flag. Hasta entonces no se activa el piloto público.
 
 Propuesta operativa para revisar:
 
-- Borradores y rankings privados: eliminar al solicitarlos, salvo bloqueo legal
+- Borradores, preferencias personales en cualquier estado (activa, archivada o
+  borrador) y rankings privados: eliminar al solicitarlos, salvo bloqueo legal
   documentado.
 - Consentimientos y auditorías de acceso: conservar durante el plazo legal de
   defensa y cumplimiento aplicable.
@@ -211,4 +226,8 @@ El pendiente de Producto y Legal se considera cerrado cuando:
 - **Próxima revisión:** antes de habilitar staging con participantes reales
 - **Cambios materiales:** consentimiento, retención, visibilidad pública,
   categorías sensibles, apelaciones o consecuencias automatizadas requieren
-  nueva aprobación y versión.
+  nueva aprobación y versión. Antes de aplicar una versión materialmente
+  incompatible a participantes existentes, se exige nuevo consentimiento
+  afirmativo; alternativamente, Legal/Privacidad debe documentar una decisión
+  de compatibilidad que conserve los términos anteriores hasta que la persona
+  opte por la nueva versión.
