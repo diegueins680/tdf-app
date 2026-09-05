@@ -17,6 +17,13 @@ pública permanece oculta hasta superar las fases y umbrales de este protocolo.
 - Migraciones checksum-pinned disponibles, snapshot/backup verificable y
   rollback ensayado.
 - Worker, cola, dashboards, DLQ y on-call disponibles en staging.
+- Para una fase con cuentas no piloto, allowlist de participantes aplicada en el
+  servidor y verificada en cada write/read contextual; en su ausencia, usar un
+  ambiente aislado exclusivamente para el piloto.
+- Gate separado para proyecciones públicas aplicado en escritura y lectura. El
+  flag general no basta para impedir que un agregado existente sea público.
+- Consentimiento de visibilidad del sujeto persistente, versionado y aplicado
+  tanto al agregar como al leer resultados públicos.
 - Datos sintéticos diversos: cuentas nuevas/antiguas, roles, ciudades, muestras
   pequeñas/grandes, empates, exclusiones, antigüedad y fraude simulado.
 
@@ -67,13 +74,16 @@ conteos, muestra mínima y ausencia de señales privadas en agregados.
 ### Fase B — piloto consentido sin publicación amplia
 
 Incluir un grupo pequeño que haya aceptado explícitamente. Habilitar creación de
-evaluaciones y preferencias; mantener rankings públicos y posiciones exactas
-deshabilitados. Soporte y Moderación deben tener turnos y ruta de escalamiento.
+evaluaciones y preferencias solo a través de la allowlist del servidor o en el
+ambiente aislado; mantener la proyección pública, rankings y posiciones exactas
+deshabilitados por un gate independiente. Soporte y Moderación deben tener
+turnos y ruta de escalamiento.
 
 ### Fase C — visibilidad limitada
 
-Tras dos semanas estables, mostrar agregados consentidos donde exista muestra
-suficiente. Tratar la reputación como una señal entre relevancia, ubicación,
+Tras dos semanas estables, mostrar solo agregados de sujetos con consentimiento
+durable vigente, muestra suficiente y gate público activo. Tratar la reputación
+como una señal entre relevancia, ubicación,
 disponibilidad y contexto; nunca como orden único.
 
 ## 6. Métricas y criterios cuantitativos
