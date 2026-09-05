@@ -2046,10 +2046,10 @@ main = hspec $ do
         it "never includes a credential or reset token" $ do
             let (subject, preheader, greeting, bodyLines) =
                     accountCreatedEmailContent "Ana"
-                content = T.toCaseFold (T.unlines (subject : preheader : greeting : bodyLines))
-            content `shouldSatisfy` (not . T.isInfixOf "contraseña temporal")
-            content `shouldSatisfy` (not . T.isInfixOf "token")
-            content `shouldSatisfy` (not . T.isInfixOf "ana@example.com")
+                content = Data.Text.toCaseFold (Data.Text.unlines (subject : preheader : greeting : bodyLines))
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "contraseña temporal")
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "token")
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "ana@example.com")
 
     describe "seededCredentialSeedingAllowed" $ do
         it "allows seeded demo credentials in local development by default" $
