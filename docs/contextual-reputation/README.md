@@ -11,6 +11,10 @@ públicas ya publicadas siguen siendo compatibles durante la transición. No
 altera `experience_review`, `directory_review` ni convierte estrellas
 históricas en rankings que nunca sucedieron.
 
+El estado transversal de aprobaciones y evidencias se controla con el [tracker
+de rollout](00-rollout-approval-tracker.md). Es una plantilla operativa y no
+autoriza por sí sola ningún cambio de ambiente.
+
 ## Auditoría del estado anterior
 
 - `tdf-hq` ya tenía `experience_review` para eventos, marketplace, reservas y
