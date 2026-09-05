@@ -14,14 +14,20 @@ const idempotencyHeaders = (key?: string) => ({
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const reviewTargetKinds = new Set(['event', 'marketplace_listing', 'service_offering', 'service_package']);
-const reviewSourceKinds = new Set([
-  'event_ticket_order',
-  'marketplace_order',
-  'service_booking',
-  'service_storefront_order',
-]);
-const reviewStatuses = new Set(['published', 'hidden', 'removed']);
+const isReviewTargetKind = (value: unknown): value is ExperienceReviewTargetKind =>
+  value === 'event'
+  || value === 'marketplace_listing'
+  || value === 'service_offering'
+  || value === 'service_package';
+
+const isReviewSourceKind = (value: unknown): boolean =>
+  value === 'event_ticket_order'
+  || value === 'marketplace_order'
+  || value === 'service_booking'
+  || value === 'service_storefront_order';
+
+const isReviewStatus = (value: unknown): boolean =>
+  value === 'published' || value === 'hidden' || value === 'removed';
 
 const isReviewPage = (value: unknown): value is ExperienceReviewPage => {
   if (!isRecord(value)) return false;
@@ -30,8 +36,7 @@ const isReviewPage = (value: unknown): value is ExperienceReviewPage => {
   const nextCursor = value['nextCursor'];
   if (!Array.isArray(items) || !isRecord(summary)) return false;
   if (
-    typeof summary['targetKind'] !== 'string'
-    || !reviewTargetKinds.has(summary['targetKind'])
+    !isReviewTargetKind(summary['targetKind'])
     || typeof summary['targetId'] !== 'string'
     || typeof summary['count'] !== 'number'
     || !Number.isFinite(summary['count'])
@@ -44,18 +49,15 @@ const isReviewPage = (value: unknown): value is ExperienceReviewPage => {
   return items.every((review) => (
     isRecord(review)
     && typeof review['id'] === 'string'
-    && typeof review['targetKind'] === 'string'
-    && reviewTargetKinds.has(review['targetKind'])
+    && isReviewTargetKind(review['targetKind'])
     && typeof review['targetId'] === 'string'
     && typeof review['rating'] === 'number'
     && Number.isFinite(review['rating'])
     && (review['body'] == null || typeof review['body'] === 'string')
-    && typeof review['status'] === 'string'
-    && reviewStatuses.has(review['status'])
+    && isReviewStatus(review['status'])
     && typeof review['createdAt'] === 'string'
     && review['verified'] === true
-    && typeof review['sourceKind'] === 'string'
-    && reviewSourceKinds.has(review['sourceKind'])
+    && isReviewSourceKind(review['sourceKind'])
     && isRecord(review['author'])
     && typeof review['author']['name'] === 'string'
     && (review['author']['avatarUrl'] == null || typeof review['author']['avatarUrl'] === 'string')
