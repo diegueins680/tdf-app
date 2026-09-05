@@ -1,4 +1,5 @@
 import {
+  createBookingPrefill,
   getBookingCalendarStatusState,
   getBookingConflictAlertText,
   getBookingCustomerFieldState,
@@ -7,9 +8,39 @@ import {
   getBookingRoomsFieldState,
   getBookingServiceEntryGateState,
   getBookingServiceFieldState,
+  parseBookingPrefill,
 } from './bookingsPageLogic';
 
 describe('bookingsPageLogic', () => {
+  it('round-trips the canonical student Party through booking prefill', () => {
+    const prefill = createBookingPrefill({
+      title: 'Trial - Piano',
+      startAt: '2026-09-05T10:00:00Z',
+      endAt: '2026-09-05T11:00:00Z',
+      customerPartyId: 42,
+      customerName: 'Élise Núñez',
+      notes: 'Primera clase',
+      hint: 'Trial lessons',
+    });
+
+    expect(parseBookingPrefill(JSON.stringify(prefill))).toEqual(prefill);
+  });
+
+  it('rejects malformed customer identity without discarding safe prefill fields', () => {
+    expect(parseBookingPrefill(JSON.stringify({
+      title: 'Trial - Piano',
+      customer: { partyId: 0, displayName: 'Alumno' },
+    }))).toEqual({
+      title: 'Trial - Piano',
+      startAt: undefined,
+      endAt: undefined,
+      notes: undefined,
+      hint: undefined,
+      customer: undefined,
+    });
+    expect(parseBookingPrefill('{')).toBeNull();
+  });
+
   it('uses first-contact copy when the customer catalog is still empty', () => {
     expect(getBookingCustomerFieldState({
       customerCount: 0,

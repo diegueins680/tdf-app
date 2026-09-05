@@ -9114,7 +9114,7 @@ searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded r
       exactText = normalizePartySelectorLookupText query
       normalizedDisplayName = "regexp_replace(translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
       normalizedLegalName = "regexp_replace(translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
-      normalizedUsername = "regexp_replace(lower(username), '[@''’‘_.[:space:]-]+', '', 'g')"
+      normalizedUsername = partySelectorNormalizedUsernameSql
       nameSql
         | publicDiscovery =
             "SELECT ?? FROM party WHERE " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
@@ -9206,6 +9206,13 @@ choosePartySelectorCredential left right
   where
     credentialRank credential =
       (Down (userCredentialActive credential), normalizePartySelectorLookupText (userCredentialUsername credential))
+
+-- Keep this expression byte-for-byte aligned with the active username indexes.
+-- Candidate discovery must fold the same supported diacritics as the in-memory
+-- matcher or valid username hits can be discarded before relevance ranking.
+partySelectorNormalizedUsernameSql :: Text
+partySelectorNormalizedUsernameSql =
+  "regexp_replace(translate(lower(username), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
 
 canSearchEventLogisticsParties :: MonadIO m => PartyId -> Social.SocialEventId -> SqlPersistT m Bool
 canSearchEventLogisticsParties actorPartyId eventId = do
