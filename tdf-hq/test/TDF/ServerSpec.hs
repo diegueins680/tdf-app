@@ -179,6 +179,7 @@ import TDF.Server
     , partySelectorContextModule
     , partySelectorVisibleLegalName
     , partySelectorMatches
+    , partySelectorNormalizedUsernameSql
     , partySelectorScore
     , partySelectorWithinOneEdit
     , choosePartySelectorCredential
@@ -1109,8 +1110,13 @@ spec = describe "TDF.Server helpers" $ do
         it "matches accents, usernames, compound names, and terms in another order" $ do
             partySelectorMatches "ruiz ana" "Ana María Ruiz" Nothing Nothing `shouldBe` True
             partySelectorMatches "@anaruiz" "Otro nombre" Nothing (Just "anaruiz") `shouldBe` True
+            partySelectorMatches "elise" "Nombre artístico" Nothing (Just "élise") `shouldBe` True
             partySelectorMatches "anne marie" "Anne-Marie O'Neil" Nothing Nothing `shouldBe` True
             partySelectorMatches "oneil" "Anne-Marie O'Neil" Nothing Nothing `shouldBe` True
+
+        it "folds username diacritics in SQL before candidate ranking" $ do
+            "translate(lower(username)" `T.isInfixOf` partySelectorNormalizedUsernameSql `shouldBe` True
+            "áàäâéèëêíìïîóòöôúùüûñ" `T.isInfixOf` partySelectorNormalizedUsernameSql `shouldBe` True
 
         it "allows only a small, bounded typo for terms of at least four characters" $ do
             partySelectorWithinOneEdit "marai" "maria" `shouldBe` True
