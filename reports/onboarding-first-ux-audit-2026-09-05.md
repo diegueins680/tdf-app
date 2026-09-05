@@ -37,10 +37,10 @@ Checks were performed before product edits. Secret values were not printed; only
 | Synthetic accounts/fixtures | Available | Browser tests use clearly fictional `@persona.test` identities and synthetic catalog/event data. | Public/auth task testing avoids real customer data and communications. |
 | Analytics access | Partial | PostHog integration and event taxonomy were inspectable in source; no live dashboard or representative field dataset was available. | Event semantics/privacy were audited in code; signup/conversion baselines and p75 Web Vitals are “not yet measured.” |
 | GitHub authentication | Available at handoff | The mandatory preflight initially found an invalid `gh` token. A final recheck succeeded; root/mobile branches were pushed and draft PRs #238/#39 were created. | Commit publication and draft handoff completed; no merge or deployment was attempted. |
-| Push/deploy safety | Available | Root workflows were inspected: feature pushes do not deploy; image/release paths are default-branch, scheduled, or manual. Mobile feature pushes likewise do not run a deployment workflow. | Feature-branch publication is safe; nothing was merged or deployed. |
+| Push/deploy safety | Available for non-production handoff | Repository workflows were inspected: feature pushes do not deploy to production; image/release paths are default-branch, scheduled, or manual. Creating root PR #238 did start external Cloudflare Pages and Vercel preview checks not declared in the inspected repository workflows. | No production merge/deploy was triggered. Preview builds are external review artifacts and are not counted as staging or production validation. |
 | Documented preflight | Available with warnings | `npm run ai:doctor` completed with 16 OK and 2 warnings: dirty original checkout and invalid GitHub CLI authentication. | The warnings are explicitly preserved rather than treated as a clean preflight. |
 
-No production data was changed, no real payment or customer communication was sent, and no unattended loop, supervisor, deployment, merge, or default-branch push was launched.
+No production data was changed, no real payment or customer communication was sent, and no unattended loop, supervisor, production deployment, merge, or default-branch push was launched.
 
 ## 2. Architecture, authorization, and baseline
 
@@ -313,6 +313,6 @@ No participant was contacted and no session, quote, completion rate, or usabilit
 - Root branch: `feature/onboarding-first-ux-20260904`; implementation commits `aba01d1f8` (email/log security), `8d62611de` (web onboarding/privacy), and `86e234045` (published mobile pointer). Draft PR: [tdf-app #238](https://github.com/diegueins680/tdf-app/pull/238).
 - Mobile branch: `feature/onboarding-first-ux-20260905`; commits `3c132ff` and `10d5dc9`; remote commit `10d5dc9e2a733c9c61b5b5f288d6cdfc28a2e623` is published. Draft PR: [TDF-mobile #39](https://github.com/diegueins680/TDF-mobile/pull/39).
 - PR text is preserved in `reports/onboarding-first-ux-pr-description-2026-09-05.md` and `reports/onboarding-first-ux-mobile-pr-description-2026-09-05.md`.
-- No PR was merged and no deployment occurred.
+- No PR was merged and no production deployment occurred. Root PR creation automatically started Cloudflare Pages and Vercel preview checks; their result is not presented as production validation.
 
 `origin/main` advanced from the captured baseline to `ca64c3cde` (16 commits) after implementation and validation. The feature branch was deliberately not rebased after the evidence run: the new upstream changes do not overlap this batch's implementation files, but rebasing would make the recorded build/test commit graph inaccurate without another full regression pass. The draft-PR reviewer should update the branch and rerun CI before merge.
