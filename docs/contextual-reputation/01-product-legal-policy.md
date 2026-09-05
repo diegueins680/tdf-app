@@ -153,6 +153,11 @@ Propuesta operativa para revisar:
 - Borradores, preferencias personales en cualquier estado (activa, archivada o
   borrador) y rankings privados: eliminar al solicitarlos, salvo bloqueo legal
   documentado.
+- Evaluaciones enviadas y su historial de revisiones: conservar solo durante el
+  plazo aprobado para reputación verificable, apelaciones y defensa de derechos;
+  al vencerlo, eliminar o anonimizar de forma auditable las revisiones y datos
+  identificables que ya no sean necesarios, respetando cualquier bloqueo legal
+  documentado.
 - Consentimientos y auditorías de acceso: conservar durante el plazo legal de
   defensa y cumplimiento aplicable.
 - Evidencia de interacción, apelaciones y señales de fraude: retención limitada
@@ -170,7 +175,9 @@ alcance aprobado, recalcular agregados cuando proceda y comunicar el resultado.
 
 Cualquier persona puede reportar una señal, categoría, badge o agregado. El
 flujo debe permitir motivo, evidencia opcional y estado: `recibida`, `en
-revisión`, `información requerida`, `resuelta` y `cerrada`.
+revisión`, `información requerida`, `medida provisional`, `resuelta` y
+`cerrada`. Este es el conjunto compartido con el playbook de Moderación; una
+medida provisional no equivale a una decisión final.
 
 Durante una apelación creíble, Moderación puede excluir provisionalmente la
 señal discutida de nuevos agregados y ocultar resultados derivados cuando sea
