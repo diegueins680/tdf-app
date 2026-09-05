@@ -3,6 +3,7 @@ module TDF.Email.Service
   ( EmailService(..)
   , mkEmailService
   , sendWelcome
+  , sendAccountCreated
   , sendPasswordReset
   , sendCourseRegistration
   , sendCoursePaymentReminder
@@ -34,6 +35,14 @@ sendWelcome svc name email username password =
     email
     username
     password
+    (esAppBase svc)
+
+sendAccountCreated :: EmailService -> Text -> Text -> IO ()
+sendAccountCreated svc name email =
+  Email.sendAccountCreatedEmail
+    (esConfig svc)
+    name
+    email
     (esAppBase svc)
 
 sendPasswordReset :: EmailService -> Text -> Text -> Text -> IO ()

@@ -3,6 +3,8 @@
 module TDF.Email
   ( generateTempPassword
   , sendWelcomeEmail
+  , sendAccountCreatedEmail
+  , accountCreatedEmailContent
   , sendPasswordResetEmail
   , sendCourseRegistrationEmail
   , sendCoursePaymentReminderEmail
@@ -63,10 +65,8 @@ sendWelcomeEmail
   -> Text   -- ^ password
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendWelcomeEmail Nothing name email username password _ = do
-  putStrLn $ "SMTP configuration missing; skipped welcome email for "
-    <> T.unpack name <> " <" <> T.unpack email <> ">."
-  putStrLn $ "Temporary password for " <> T.unpack username <> ": " <> T.unpack password
+sendWelcomeEmail Nothing _ _ _ _ _ =
+  putStrLn "[Email] SMTP not configured; skipped temporary-access email."
 sendWelcomeEmail (Just cfg) name email username password mAppUrl = do
   let subject   = "Tu acceso a TDF Records HQ"
       preheader = "Accede al panel con tu usuario y contraseña temporal."
@@ -82,6 +82,34 @@ sendWelcomeEmail (Just cfg) name email username password mAppUrl = do
       mail = buildMail cfg toAddr subject preheader greeting bodyLines urlLine
   sendMailWithLogging cfg toAddr subject mail
 
+-- | Copy for accounts created with a password the customer already knows.
+-- Keeping credentials out of this function's arguments makes it harder to
+-- accidentally include them in customer email or fallback logs.
+accountCreatedEmailContent :: Text -> (Text, Text, Text, [Text])
+accountCreatedEmailContent name =
+  ( "Tu cuenta de TDF Records está lista"
+  , "Ya puedes ingresar y continuar donde te quedaste."
+  , if T.null name then "Hola," else "Hola " <> name <> ","
+  , [ "Tu cuenta de TDF Records se creó correctamente."
+    , "Ingresa con el correo y la contraseña que elegiste."
+    , "Por seguridad, TDF nunca enviará ni mostrará tu contraseña."
+    ]
+  )
+
+sendAccountCreatedEmail
+  :: Maybe EmailConfig
+  -> Text   -- ^ recipient name
+  -> Text   -- ^ recipient email
+  -> Maybe Text -- ^ optional app URL
+  -> IO ()
+sendAccountCreatedEmail Nothing _ _ _ =
+  putStrLn "[Email] SMTP not configured; skipped account-created email."
+sendAccountCreatedEmail (Just cfg) name email mAppUrl = do
+  let (subject, preheader, greeting, bodyLines) = accountCreatedEmailContent name
+      toAddr = Address (Just name) email
+      mail = buildMail cfg toAddr subject preheader greeting bodyLines mAppUrl
+  sendMailWithLogging cfg toAddr subject mail
+
 sendPasswordResetEmail
   :: Maybe EmailConfig
   -> Text   -- ^ recipient name
@@ -89,11 +117,8 @@ sendPasswordResetEmail
   -> Text   -- ^ reset token
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendPasswordResetEmail Nothing name email token mAppUrl = do
-  putStrLn $ "SMTP configuration missing; skipped password reset email for "
-    <> T.unpack name <> " <" <> T.unpack email <> ">."
-  putStrLn $ "Reset token: " <> T.unpack token
-  maybe (pure ()) (\url -> putStrLn $ "Use base URL: " <> T.unpack url) mAppUrl
+sendPasswordResetEmail Nothing _ _ _ _ =
+  putStrLn "[Email] SMTP not configured; skipped password-reset email."
 sendPasswordResetEmail (Just cfg) name email token mAppUrl = do
   let subject   = "Restablecer tu contraseña de TDF Records"
       greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
