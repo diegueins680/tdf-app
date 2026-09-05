@@ -15,6 +15,10 @@ El estado transversal de aprobaciones y evidencias se controla con el [tracker
 de rollout](00-rollout-approval-tracker.md). Es una plantilla operativa y no
 autoriza por sí sola ningún cambio de ambiente.
 
+La administración de categorías, apelaciones, fraude y evidencia individual se
+detalla en el [playbook de Moderación y Administración](03-moderation-admin-playbook.md).
+Es un borrador y no concede permisos ni habilita el piloto.
+
 ## Auditoría del estado anterior
 
 - `tdf-hq` ya tenía `experience_review` para eventos, marketplace, reservas y
