@@ -38,10 +38,10 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.created`, `evaluation.edited`, `signal.moderated`, `appeal.resolved` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `signal.moderated`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
-| `context_key` | Rol, interacción/servicio y segmento comparable |
+| `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
 | `category_id` | Categoría versionada o `null` para recálculo global acotado |
 | `source_version` | Revisión de la evaluación o señal fuente |
 | `algorithm_version` | Fórmula que debe calcularse |
@@ -54,15 +54,30 @@ hasta su confirmación. Un duplicado nunca puede devolver “éxito” si la
 proyección no llegó a estar comprometida. Si ya existe una versión más nueva de
 la fuente, descarta el evento obsoleto o recalcula desde la fuente canónica.
 
+`context_key` debe mapearse de forma uno-a-uno al selector de contexto de la
+API pública. Cada respuesta de reputación selecciona una única clave comparable
+y nunca suma ni lista categorías de contextos distintos; sin selector válido se
+devuelve una respuesta contextual no publicada, no un agregado combinado.
+
+Las mutaciones que quitan elegibilidad (`eligible -> disputed|void|expired`),
+archivan/fusionan categorías o cambian sus roles/contextos aplicables deben
+escribir el evento de invalidación correspondiente en el mismo outbox
+transaccional. Así se recalcula o retira la proyección existente aunque no haya
+una evaluación posterior.
+
 ## 4. Reglas de procesamiento
 
-1. Cargar solo señales verificadas, vigentes y no excluidas provisionalmente.
+1. Cargar solo señales verificadas, vigentes, `submitted` y no excluidas
+   provisionalmente. Borradores, autosaves y evaluaciones privadas nunca
+   publican un evento de agregación ni satisfacen este predicado.
 2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto.
 3. Calcular con fórmula y parámetros versionados, prior bayesiano, límite por
    evaluador y decaimiento temporal aprobados.
 4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
    fórmula, parámetros y hora de cálculo.
-5. Publicar solo con el umbral de evidencia configurado. Un estado `forming`
+5. Publicar solo con el umbral de evidencia configurado, medido por
+   interacciones verificadas distintas y por evaluadores elegibles distintos;
+   no se suman conteos de filas por categoría de una misma interacción. Un estado `forming`
    no expone score global, score por categoría, intervalo, conteo ni tendencia
    en la proyección o API pública; esos datos permanecen internos hasta superar
    el umbral.
@@ -84,6 +99,11 @@ rechazar eventos sin interacción verificable o marcados privados/no verificados
   resolución humana antes de descartarse.
 - Reprocesar desde la fuente canónica ante cambio de algoritmo, apelación o
   reparación de datos.
+- Ejecutar un recálculo periódico, o un mecanismo equivalente de vencimiento de
+  proyección, para cada `context_key` publicado. La cadencia aprobada debe ser
+  como máximo la necesaria para reflejar la semivida de 365 días y registrar su
+  última actualización; la ausencia de nuevas mutaciones no congela score ni
+  confianza indefinidamente.
 - Backfill y simulación usan `run_id` persistente y una clave única de auditoría
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
   auditorías semánticas. No usar el insert histórico no versionado como entrada
@@ -99,6 +119,7 @@ rechazar eventos sin interacción verificable o marcados privados/no verificados
 | Duración de cálculo | versión, tamaño de muestra | p95 excede presupuesto acordado |
 | Duplicados idempotentes | productor, tipo | Aumento repentino o ratio anómalo |
 | Proyecciones `forming`/publicadas | rol, contexto no identificable | Desviación relevante tras rollout |
+| Frescura de proyección | versión, contexto no identificable | Más antigua que la cadencia de decaimiento aprobada |
 | Apelaciones/exclusiones provisionales | categoría/contexto agregado | Pico que requiera revisión humana |
 
 Registrar solo agregados mínimos necesarios: cobertura verificable, abandono por
@@ -137,10 +158,13 @@ Pausar el flag y la entrada de nuevas evaluaciones contextuales ante error de
 write >1%, fuga de identidad, variación no explicada >10 puntos, DLQ no
 atendida, fraude sin revisión humana o incumplimiento de privacidad.
 
-Para rollback: apagar `CONTEXTUAL_REPUTATION_ENABLED`, detener consumidores y
-escritores nuevos, preservar evidencia/auditoría, congelar la versión de fórmula
-afectada y ocultar proyecciones afectadas o volver a la última válida. No borrar
-reseñas heredadas ni aplicar rollback SQL destructivo como primera respuesta.
+Para rollback: **primero desactivar y verificar el gate independiente de lectura
+de proyección pública** (no solo `CONTEXTUAL_REPUTATION_ENABLED`) para retirar
+agregados existentes de perfiles, búsqueda y rankings; luego apagar el flag,
+detener consumidores y escritores nuevos, preservar evidencia/auditoría y
+congelar la versión de fórmula afectada. El ensayo debe probar que la API no
+sirve proyecciones antiguas una vez cerrado el gate. No borrar reseñas heredadas
+ni aplicar rollback SQL destructivo como primera respuesta.
 
 ## 10. Criterios de salida para el pendiente 2
 
