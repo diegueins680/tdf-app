@@ -1554,7 +1554,7 @@ export default function SocialEventsPage() {
                                 field={{ label: 'Persona a invitar', helperText: 'Busca por nombre o @username.' }}
                                 value={inviteDraft.party}
                                 onChange={(party) => setInvites((prev) => ({ ...prev, [eventId]: { ...inviteDraft, party } }))}
-                                search={{ excludedPartyIds: sessionPartyId ? [Number(sessionPartyId)] : [] }}
+                                search={{ context: 'event_invitation', excludedPartyIds: sessionPartyId ? [Number(sessionPartyId)] : [] }}
                               />
                             </Box>
                             <TextField

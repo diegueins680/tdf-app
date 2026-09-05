@@ -9,6 +9,40 @@ servers:
     description: Development server
 
 paths:
+  /social/followers:
+    get:
+      tags: [Social]
+      summary: List parties following the authenticated party
+      description: Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+      operationId: listSocialFollowers
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Visible follower relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyFollow' }
+        '401': { description: Authentication required }
+  /social/following:
+    get:
+      tags: [Social]
+      summary: List parties followed by the authenticated party
+      description: Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+      operationId: listSocialFollowing
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Visible following relationships
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PartyFollow' }
+        '401': { description: Authentication required }
   /social-events/events:
     get:
       tags: [Social events]
@@ -1737,10 +1771,12 @@ paths:
         - bearerAuth: [ ]
       parameters:
         - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 120 } }
+        - { name: context, in: query, description: Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor., schema: { type: string, enum: [crm_assignment, booking, booking_engineer, billing_contact, artist_link, campaign_enrollment, event_invitation, social_connection, operations, internal_feedback, live_session, event_logistics], default: crm_assignment } }
+        - { name: scopeId, in: query, description: Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID., schema: { type: string } }
         - { name: kind, in: query, schema: { type: string, enum: [any, person, organization], default: any } }
         - { name: accountOnly, in: query, schema: { type: boolean, default: false } }
         - { name: excludePartyId, in: query, style: form, explode: true, schema: { type: array, maxItems: 100, items: { type: integer, format: int64 } } }
-        - { name: cursor, in: query, schema: { type: integer, format: int64 } }
+        - { name: cursor, in: query, description: Opaque bounded cursor returned by the previous page., schema: { type: integer, format: int64, minimum: 1, maximum: 800 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 20, default: 15 } }
       responses:
         '200':
@@ -1750,7 +1786,8 @@ paths:
               schema: { $ref: '#/components/schemas/PartySelectorPage' }
         '400': { description: Invalid selector query }
         '401': { description: Authentication required }
-        '403': { description: CRM access required }
+        '403': { description: Required module or resource-scope access missing for the declared context }
+        '429': { description: Authenticated social discovery quota exceeded }
   /api/users:
     get:
       summary: List user accounts
@@ -9437,6 +9474,16 @@ components:
           type: object
           nullable: true
           description: Present when the party is linked to a band/project.
+    PartyFollow:
+      type: object
+      required: [pfFollowerId, pfFollowingId, pfViaNfc, pfStartedAt]
+      properties:
+        pfFollowerId: { type: integer, format: int64 }
+        pfFollowingId: { type: integer, format: int64 }
+        pfFollowerName: { type: string, nullable: true }
+        pfFollowingName: { type: string, nullable: true }
+        pfViaNfc: { type: boolean }
+        pfStartedAt: { type: string, format: date }
     PartySelectorOption:
       type: object
       required: [partyId, partyType, displayName, accountStatus]
@@ -9455,7 +9502,7 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/PartySelectorOption' }
-        nextCursor: { type: integer, format: int64, nullable: true }
+        nextCursor: { type: integer, format: int64, nullable: true, description: Opaque cursor for the next relevance-ordered page. }
     ChatThread:
       type: object
       properties:

@@ -3405,8 +3405,12 @@ paymentsServer user =
       ensureModule ModuleAdmin user
       partyIdFilter <- either throwError pure =<< withPool (validatePaymentPartyFilter mPartyId)
       let filt = maybe [] (\pid -> [M.PaymentPartyId ==. toSqlKey pid]) partyIdFilter
-      recs <- withPool $ selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
-      pure (map toPaymentDTO recs)
+      (recs, partyMap) <- withPool $ do
+        payments <- selectList filt [Desc M.PaymentReceivedAt, LimitTo 200]
+        let partyIds = Set.toList (Set.fromList (map (paymentPartyId . entityVal) payments))
+        parties <- if null partyIds then pure [] else selectList [M.PartyId <-. partyIds] []
+        pure (payments, Map.fromList [(entityKey party, entityVal party) | party <- parties])
+      pure (map (toPaymentDTO partyMap) recs)
 
     createPaymentH PaymentCreate{..} = do
       ensureModule ModuleAdmin user
@@ -3428,7 +3432,7 @@ paymentsServer user =
           mOrderKey  = toSqlKey <$> orderId
           mInvoiceKey= toSqlKey <$> invoiceId
       either throwError pure =<< withPool (validatePaymentReferences partyKey mOrderKey mInvoiceKey)
-      ent <- withPool $ do
+      (ent, party) <- withPool $ do
         payId <- insert Payment
           { paymentInvoiceId   = mInvoiceKey
           , paymentOrderId     = mOrderKey
@@ -3444,28 +3448,45 @@ paymentsServer user =
           , paymentCreatedBy   = Just (auPartyId user)
           , paymentCreatedAt   = Just now
           }
-        getJustEntity payId
-      pure (toPaymentDTO ent)
+        payment <- getJustEntity payId
+        party <- getJust partyKey
+        pure (payment, party)
+      pure (toPaymentDTO (Map.singleton partyKey party) ent)
 
     getPaymentH pid = do
       ensureModule ModuleAdmin user
       paymentId <- either throwError pure (validatePositivePaymentReferenceId "paymentId" pid)
-      mEnt <- withPool $ getEntity (toSqlKey paymentId :: Key Payment)
-      maybe (throwError err404) (pure . toPaymentDTO) mEnt
+      result <- withPool $ do
+        mEnt <- getEntity (toSqlKey paymentId :: Key Payment)
+        forM mEnt $ \ent -> do
+          party <- getJust (paymentPartyId (entityVal ent))
+          pure (ent, party)
+      maybe
+        (throwError err404)
+        (\(ent, party) ->
+          pure
+            (toPaymentDTO (Map.singleton (paymentPartyId (entityVal ent)) party) ent)
+        )
+        result
 
-    toPaymentDTO (Entity key p) = PaymentDTO
-      { payId          = fromSqlKey key
-      , payPartyId     = fromSqlKey (paymentPartyId p)
-      , payOrderId     = fmap fromSqlKey (paymentOrderId p)
-      , payInvoiceId   = fmap fromSqlKey (paymentInvoiceId p)
-      , payAmountCents = M.paymentAmountCents p
-      , payCurrency    = M.paymentCurrency p
-      , payMethod      = T.pack (show (paymentMethod p))
-      , payReference   = M.paymentReference p
-      , payPaidAt      = T.pack (show (paymentReceivedAt p))
-      , payConcept     = fromMaybe "" (paymentConcept p)
-      , payPeriod      = paymentPeriod p
-      , payAttachment  = paymentAttachment p
+    toPaymentDTO partyMap (Entity key p) = PaymentDTO
+      { payId               = fromSqlKey key
+      , payPartyId          = fromSqlKey (paymentPartyId p)
+      , payPartyDisplayName =
+          maybe
+            "Contacto desconocido"
+            partyDisplayName
+            (Map.lookup (paymentPartyId p) partyMap)
+      , payOrderId           = fmap fromSqlKey (paymentOrderId p)
+      , payInvoiceId         = fmap fromSqlKey (paymentInvoiceId p)
+      , payAmountCents       = M.paymentAmountCents p
+      , payCurrency          = M.paymentCurrency p
+      , payMethod            = T.pack (show (paymentMethod p))
+      , payReference         = M.paymentReference p
+      , payPaidAt            = T.pack (show (paymentReceivedAt p))
+      , payConcept           = fromMaybe "" (paymentConcept p)
+      , payPeriod            = paymentPeriod p
+      , payAttachment        = paymentAttachment p
       }
 
 validatePaymentAmountCents :: Int -> Either ServerError Int
