@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `signal.moderated`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.withdrawn` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -60,10 +60,17 @@ y nunca suma ni lista categorías de contextos distintos; sin selector válido s
 devuelve una respuesta contextual no publicada, no un agregado combinado.
 
 Las mutaciones que quitan elegibilidad (`eligible -> disputed|void|expired`),
-archivan/fusionan categorías o cambian sus roles/contextos aplicables deben
-escribir el evento de invalidación correspondiente en el mismo outbox
-transaccional. Así se recalcula o retira la proyección existente aunque no haya
-una evaluación posterior.
+cambian una evaluación de `submitted` a `under_review|void`, abren una apelación
+con exclusión provisional, archivan/fusionan categorías o cambian sus
+roles/contextos aplicables deben escribir el evento de invalidación
+correspondiente en el mismo outbox transaccional. Así se recalcula o retira la
+proyección existente aunque no haya una evaluación posterior.
+
+Retirar consentimiento de visibilidad pública o rankings debe persistir
+`public_consent.withdrawn` en la misma transacción, invalidar las proyecciones
+afectadas y cerrar de inmediato el gate de lectura para esa persona/superficie.
+La API verifica el consentimiento vigente en cada lectura: el evento asíncrono
+repara la proyección, pero no es la barrera que contiene una exposición.
 
 ## 4. Reglas de procesamiento
 
@@ -75,12 +82,13 @@ una evaluación posterior.
    evaluador y decaimiento temporal aprobados.
 4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
    fórmula, parámetros y hora de cálculo.
-5. Publicar solo con el umbral de evidencia configurado, medido por
-   interacciones verificadas distintas y por evaluadores elegibles distintos;
-   no se suman conteos de filas por categoría de una misma interacción. Un estado `forming`
-   no expone score global, score por categoría, intervalo, conteo ni tendencia
-   en la proyección o API pública; esos datos permanecen internos hasta superar
-   el umbral.
+5. Publicar solo con consentimiento vigente para la superficie/contexto, gate
+   independiente de lectura pública abierto y el umbral de evidencia
+   configurado, medido por interacciones verificadas distintas y por
+   evaluadores elegibles distintos; no se suman conteos de filas por categoría
+   de una misma interacción. Un estado `forming` no expone score global, score
+   por categoría, intervalo, conteo ni tendencia en la proyección o API pública;
+   esos datos permanecen internos hasta superar el umbral.
 6. Auditar entradas, exclusiones, resultado y error sin almacenar PII extra.
 
 Rankings privados y preferencias son explícitamente inelegibles. El worker debe
@@ -108,6 +116,13 @@ rechazar eventos sin interacción verificable o marcados privados/no verificados
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
   auditorías semánticas. No usar el insert histórico no versionado como entrada
   replay-safe hasta que tenga esa garantía y prueba explícita.
+- La versión activa de fórmula debe residir en configuración persistida y ser
+  consultada por el lector; no se codifica de forma fija en la API. Un cambio de
+  algoritmo calcula primero un conjunto completo de proyecciones inactivas para
+  la nueva `formula_version_id`, valida cobertura, fixtures de referencia y
+  métricas, y solo entonces cambia atómicamente el selector activo. Ninguna
+  lectura mezcla versiones. El rollback vuelve a seleccionar atómicamente la
+  versión anterior, sin borrar sus filas, mientras la nueva se investiga.
 
 ## 6. Métricas, trazas y alertas
 
