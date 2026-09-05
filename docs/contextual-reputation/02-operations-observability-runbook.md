@@ -1,0 +1,153 @@
+# Runbook de operaciones y observabilidad — Reputación contextual v1
+
+> **Estado:** borrador para Infraestructura y Operaciones. No habilita el
+> feature flag ni autoriza ejecutar migraciones en producción.
+
+## 1. Objetivo y límites
+
+Este runbook define cómo operar el cálculo asíncrono de reputación pública sin
+mezclarlo con rankings privados o preferencias personales. La API puede ofrecer
+una vista previa inmediata, pero la proyección pública consolidada debe ser
+procesada por un worker idempotente. No se ejecutan recálculos pesados dentro de
+un request web.
+
+Quedan fuera la aprobación legal, la taxonomía de Moderación y la activación de
+participantes reales. Este documento no autoriza el piloto.
+
+## 2. Arquitectura operativa mínima
+
+```text
+write de evaluación verificada
+  -> transacción: evaluación + outbox de reputación
+  -> cola durable
+  -> worker idempotente por sujeto/categoría/contexto
+  -> reputación pública agregada versionada
+  -> métricas, trazas y auditoría
+
+rankings privados / preferencias personales
+  -> almacenamiento privado separado
+  -> nunca publican eventos de agregación
+```
+
+El productor escribe el evento en la misma transacción que la evaluación o
+señal moderada. El relay publica desde outbox y puede reintentarse. El
+consumidor tolera eventos duplicados, fuera de orden y reentregas.
+
+## 3. Contrato de evento e idempotencia
+
+| Campo | Regla |
+| --- | --- |
+| `event_id` | UUID estable, único y trazable |
+| `event_type` | `evaluation.created`, `evaluation.edited`, `signal.moderated`, `appeal.resolved` o `recalculation.requested` |
+| `occurred_at` | Hora UTC de la mutación fuente |
+| `subject_id` | Usuario cuya proyección puede cambiar |
+| `context_key` | Rol, interacción/servicio y segmento comparable |
+| `category_id` | Categoría versionada o `null` para recálculo global acotado |
+| `source_version` | Revisión de la evaluación o señal fuente |
+| `algorithm_version` | Fórmula que debe calcularse |
+| `correlation_id` | Une request, outbox, worker y auditoría |
+
+La clave de idempotencia recomendada es `event_id + algorithm_version`. El
+worker registra recepción y resultado antes de publicar la proyección. Si el
+mismo evento llega dos veces devuelve el resultado almacenado; si ya existe una
+versión más nueva de la fuente, descarta el evento obsoleto o recalcula desde la
+fuente canónica.
+
+## 4. Reglas de procesamiento
+
+1. Cargar solo señales verificadas, vigentes y no excluidas provisionalmente.
+2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto.
+3. Calcular con fórmula y parámetros versionados, prior bayesiano, límite por
+   evaluador y decaimiento temporal aprobados.
+4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
+   fórmula, parámetros y hora de cálculo.
+5. Publicar solo con el umbral de evidencia configurado. Antes guardar estado
+   `forming`, no un score engañoso.
+6. Auditar entradas, exclusiones, resultado y error sin almacenar PII extra.
+
+Rankings privados y preferencias son explícitamente inelegibles. El worker debe
+rechazar eventos sin interacción verificable o marcados privados/no verificados.
+
+## 5. Concurrencia, reintentos y recuperación
+
+- Bloquear de forma acotada por `subject_id + context_key + category_id`, o usar
+  versión optimista de proyección; nunca bloquear una cola completa.
+- Reintentar transitorios con backoff exponencial y jitter, conservando
+  `event_id`.
+- Enviar a DLQ al superar el máximo aprobado. Cada ítem requiere alerta y
+  resolución humana antes de descartarse.
+- Reprocesar desde la fuente canónica ante cambio de algoritmo, apelación o
+  reparación de datos.
+- Backfill y simulación usan `run_id` y son idempotentes; una segunda ejecución
+  no duplica proyecciones ni auditorías semánticas.
+
+## 6. Métricas, trazas y alertas
+
+| Métrica | Segmentación mínima | Alerta propuesta |
+| --- | --- | --- |
+| Eventos recibidos/procesados/fallidos | tipo, versión, contexto | Error sostenido >1% en 15 min |
+| Edad y profundidad de cola | cola, prioridad | Edad por encima del SLO aprobado |
+| Reintentos y DLQ | tipo de error, versión | Cualquier crecimiento no atendido de DLQ |
+| Duración de cálculo | versión, tamaño de muestra | p95 excede presupuesto acordado |
+| Duplicados idempotentes | productor, tipo | Aumento repentino o ratio anómalo |
+| Proyecciones `forming`/publicadas | rol, contexto no identificable | Desviación relevante tras rollout |
+| Apelaciones/exclusiones provisionales | categoría/contexto agregado | Pico que requiera revisión humana |
+
+Registrar solo agregados mínimos necesarios: cobertura verificable, abandono por
+paso, categorías no aplicables, estabilidad del score, confianza y errores de
+accesibilidad. No usar atributos sensibles ni contenido individual como
+dimensiones de analítica. Todas las trazas incluyen `correlation_id`; logs
+redactan identificadores y nunca incluyen autores, texto libre, tokens o
+evidencia adjunta.
+
+## 7. Dashboards y responsables
+
+Antes de staging, Operaciones debe publicar dashboards de salud de cola,
+calidad de cálculo, seguridad/fraude y producto sin PII. Definir un on-call para
+cola/worker, un responsable de datos para recalcular y un responsable de
+Moderación para señales disputadas. Los dashboards no sustituyen auditoría de
+accesos administrativos.
+
+## 8. Validación en staging
+
+1. Aplicar el manifiesto checksum-pinned en una base aislada.
+2. Cargar datos sintéticos con roles, ciudades, empates, exclusiones, muestras
+   pequeñas/grandes y señales antiguas.
+3. Ejecutar backfill de señales heredadas y verificar omitidos/ambiguos; estas
+   señales no pueden alimentar el agregado público.
+4. Repetir e invertir eventos y provocar fallo transitorio. Confirmar una única
+   proyección final y auditoría coherente.
+5. Ejecutar simulación de fórmula sin publicar y comparar versión propuesta con
+   vigente.
+6. Resolver una apelación sintética; confirmar exclusión, recálculo acotado y
+   ausencia de identidad en API pública.
+7. Medir latencia, cola y error antes de abrir el piloto.
+
+## 9. Criterios de pausa y rollback
+
+Pausar el flag y la entrada de nuevas evaluaciones contextuales ante error de
+write >1%, fuga de identidad, variación no explicada >10 puntos, DLQ no
+atendida, fraude sin revisión humana o incumplimiento de privacidad.
+
+Para rollback: apagar `CONTEXTUAL_REPUTATION_ENABLED`, detener consumidores y
+escritores nuevos, preservar evidencia/auditoría, congelar la versión de fórmula
+afectada y ocultar proyecciones afectadas o volver a la última válida. No borrar
+reseñas heredadas ni aplicar rollback SQL destructivo como primera respuesta.
+
+## 10. Criterios de salida para el pendiente 2
+
+1. Cola durable, outbox y worker idempotente provisionados en staging.
+2. Dashboards, alertas, DLQ y on-call aprobados.
+3. La batería de staging pasa con evidencia reproducible.
+4. Recalculo histórico/simulación usa `run_id`, versión de fórmula y reporte
+   auditable.
+5. Se ensaya rollback de flag y recuperación sin pérdida de evidencia.
+6. Producto, Seguridad y Moderación aprueban umbrales de alerta y pausa.
+
+## 11. Control de versión
+
+- **Versión:** 0.1 (borrador)
+- **Propietario:** Infraestructura + Operaciones
+- **Próxima revisión:** antes de provisionar staging con datos de piloto
+- **Cambios materiales:** algoritmo, reintentos, umbrales, retención de
+  auditoría o alcance de recálculo requieren revisión cruzada.
