@@ -545,7 +545,7 @@ export default function FanClubMemberProfilePage() {
   return (
     <PageShell
       title={profile.fcmpDisplayName}
-      subtitle={profile.fcmpHandle ?? `@miembro-${profile.fcmpPartyId}`}
+      subtitle={profile.fcmpHandle ?? 'Miembro del club'}
       loading={false}
     >
       <Stack spacing={3}>

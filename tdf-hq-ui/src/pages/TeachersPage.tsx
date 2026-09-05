@@ -26,7 +26,6 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { TrialSlot, TrialSubject, TeacherDTO, ClassSessionDTO } from '../api/trials';
 import { Trials } from '../api/trials';
-import { Parties } from '../api/parties';
 import { resolveTeacherClasses } from './teachersPageLogic';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { formatDateForUser } from '../utils/formatters';
@@ -140,24 +139,6 @@ const buildTeachersFromDTO = (teachers: TeacherDTO[]): TeacherProfile[] => {
   }));
 };
 
-const buildTeachersFromParties = (parties: { partyId: number; displayName: string; roles?: string[] }[]): TeacherProfile[] => {
-  if (!parties.length) return [];
-  const palette = ['#2563eb', '#0ea5e9', '#22c55e', '#f59e0b', '#8b5cf6', '#14b8a6'];
-  const isTeacher = (roles?: string[]) =>
-    (roles ?? []).some((r) => r.toLowerCase() === 'teacher');
-
-  return parties
-    .filter((p) => isTeacher(p.roles))
-    .map((p, idx) => ({
-      id: p.partyId,
-      name: p.displayName,
-      subjects: [],
-      headline: 'Profesor',
-      focus: 'Rol Teacher asignado',
-      color: palette[idx % palette.length],
-    }));
-};
-
 const buildClassesFromSlots = (slots: TrialSlot[], subjectMap: Map<number, string>): ClassRow[] => {
   if (!slots.length) return [];
   const statuses: ClassStatus[] = ['por-confirmar', 'programada', 'programada', 'realizada', 'cancelada'];
@@ -216,11 +197,6 @@ export default function TeachersPage() {
     queryKey: ['trial-teachers'],
     queryFn: Trials.listTeachers,
   });
-  const teacherPartiesQuery = useQuery({
-    queryKey: ['party-teachers'],
-    queryFn: Parties.list,
-    enabled: !teachersQuery.isLoading && ((teachersQuery.data ?? []).length === 0),
-  });
   const slotsQuery = useQuery({
     queryKey: ['trial-slots-teachers'],
     queryFn: () => Trials.listSlots(),
@@ -233,17 +209,12 @@ export default function TeachersPage() {
   const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.subjectId, s.name])), [subjects]);
 
   const teachersFromDTO = useMemo(() => buildTeachersFromDTO(teachersQuery.data ?? []), [teachersQuery.data]);
-  const teachersFromParties = useMemo(
-    () => buildTeachersFromParties(teacherPartiesQuery.data ?? []),
-    [teacherPartiesQuery.data],
-  );
   const teachersFromSlots = useMemo(() => buildTeachersFromSlots(slotsQuery.data ?? []), [slotsQuery.data]);
 
   const teachers: TeacherProfile[] = useMemo(() => {
     if (teachersFromDTO.length) return teachersFromDTO;
-    if (teachersFromParties.length) return teachersFromParties;
     return teachersFromSlots;
-  }, [teachersFromDTO, teachersFromParties, teachersFromSlots]);
+  }, [teachersFromDTO, teachersFromSlots]);
   const usingDemoTeachers = teachers.length === 0;
 
   const classesFromSlots = useMemo(() => buildClassesFromSlots(slotsQuery.data ?? [], subjectMap), [slotsQuery.data, subjectMap]);
@@ -324,7 +295,6 @@ export default function TeachersPage() {
     subjectsQuery.isLoading ||
     slotsQuery.isLoading ||
     teachersQuery.isLoading ||
-    teacherPartiesQuery.isFetching ||
     teacherClassesQuery.isFetching;
   const canEditSubjects = Boolean(selectedTeacherId) && !usingDemoTeachers;
 

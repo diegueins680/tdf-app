@@ -16,7 +16,7 @@ import           Control.Exception (SomeAsyncException, SomeException, displayEx
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
-import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
@@ -128,6 +128,7 @@ import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
+import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.FeatureRegistry
   ( RegistryFeature(..)
   , findRegistryFeature
@@ -8417,14 +8418,14 @@ socialListFollowers user = do
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $ do
     rows <- selectList [PartyFollowFollowingPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
-    pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialListFollowing :: AuthedUser -> AppM [PartyFollowDTO]
 socialListFollowing user = do
   Env pool _ <- ask
   liftIO $ flip runSqlPool pool $ do
     rows <- selectList [PartyFollowFollowerPartyId ==. auPartyId user] [Desc PartyFollowCreatedAt]
-    pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialListFriends :: AuthedUser -> AppM [PartyFollowDTO]
 socialListFriends user = do
@@ -8440,7 +8441,7 @@ socialListFriends user = do
              ] []
     let mutualIds = Set.fromList (map (partyFollowFollowerPartyId . entityVal) reverseRows)
         mutual = filter (\(Entity _ pf) -> partyFollowFollowingPartyId pf `Set.member` mutualIds) following
-    pure (map partyFollowEntityToDTO mutual)
+    partyFollowEntitiesToDTO mutual
 
 -- Suggest friends-of-friends that are not already connected to the user.
 socialListSuggestedFriends :: AuthedUser -> AppM [SuggestedFriendDTO]
@@ -8479,7 +8480,7 @@ socialAddFriend user targetId = do
   when (followerKey == targetKey) $
     throwBadRequest "No puedes agregarte como amigo"
   now <- liftIO getCurrentTime
-  rows <- runDB $ do
+  runDB $ do
     _ <- upsert PartyFollow
       { partyFollowFollowerPartyId  = followerKey
       , partyFollowFollowingPartyId = targetKey
@@ -8494,11 +8495,11 @@ socialAddFriend user targetId = do
       , partyFollowCreatedAt        = now
       }
       [ PartyFollowViaNfc =. False ]
-    selectList
+    rows <- selectList
       [ PartyFollowFollowerPartyId ==. followerKey
       , PartyFollowFollowingPartyId ==. targetKey
       ] []
-  pure (map partyFollowEntityToDTO rows)
+    partyFollowEntitiesToDTO rows
 
 socialRemoveFriend :: AuthedUser -> Int64 -> AppM NoContent
 socialRemoveFriend user targetId = do
@@ -8520,7 +8521,7 @@ vcardExchange user VCardExchangeRequest{..} = do
   when (followerKey == targetKey) $
     throwBadRequest "No puedes compartir tu vCard contigo mismo"
   now <- liftIO getCurrentTime
-  (rowsAB, rowsBA) <- runDB $ do
+  runDB $ do
     -- Create mutual follows; mark as NFC-sourced.
     _ <- upsert PartyFollow
       { partyFollowFollowerPartyId  = followerKey
@@ -8544,8 +8545,7 @@ vcardExchange user VCardExchangeRequest{..} = do
       [ PartyFollowFollowerPartyId ==. targetKey
       , PartyFollowFollowingPartyId ==. followerKey
       ] [Desc PartyFollowCreatedAt]
-    pure (rowsAB, rowsBA)
-  pure (map partyFollowEntityToDTO (rowsAB ++ rowsBA))
+    partyFollowEntitiesToDTO (rowsAB ++ rowsBA)
 
 resolveSocialTargetPartyId :: Int64 -> SqlPersistT IO (Either ServerError PartyId)
 resolveSocialTargetPartyId rawPartyId =
@@ -8817,11 +8817,24 @@ toSocialPartyProfileDTO mProfile (Entity partyId party) =
     , sppCity = mProfile >>= fanProfileCity
     }
 
-partyFollowEntityToDTO :: Entity PartyFollow -> PartyFollowDTO
-partyFollowEntityToDTO (Entity _ pf) =
+partyFollowEntitiesToDTO :: [Entity PartyFollow] -> SqlPersistT IO [PartyFollowDTO]
+partyFollowEntitiesToDTO rows = do
+  let partyIds = Set.toList . Set.fromList $ concatMap (\(Entity _ follow) ->
+        [partyFollowFollowerPartyId follow, partyFollowFollowingPartyId follow]) rows
+  parties <- if null partyIds then pure [] else selectList [PartyId <-. partyIds] []
+  let names = Map.fromList
+        [ (partyId, M.partyDisplayName party)
+        | Entity partyId party <- parties
+        ]
+  pure (map (partyFollowEntityToDTO names) rows)
+
+partyFollowEntityToDTO :: Map.Map PartyId Text -> Entity PartyFollow -> PartyFollowDTO
+partyFollowEntityToDTO names (Entity _ pf) =
   PartyFollowDTO
     { pfFollowerId  = fromSqlKey (partyFollowFollowerPartyId pf)
     , pfFollowingId = fromSqlKey (partyFollowFollowingPartyId pf)
+    , pfFollowerName = Map.lookup (partyFollowFollowerPartyId pf) names
+    , pfFollowingName = Map.lookup (partyFollowFollowingPartyId pf) names
     , pfViaNfc      = partyFollowViaNfc pf
     , pfStartedAt   = utctDay (partyFollowCreatedAt pf)
     }
@@ -9064,38 +9077,81 @@ searchParties
   :: AuthedUser
   -> Maybe Text
   -> Maybe Text
+  -> Maybe Text
+  -> Maybe Text
   -> Maybe Bool
   -> [Int64]
   -> Maybe Int64
   -> Maybe Int
   -> AppM PartySelectorPageDTO
-searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
-  requireModule user ModuleCRM
+searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
+  context <- either throwError pure (validatePartySelectorContext rawContext)
+  for_ (partySelectorContextModule context) (requireModule user)
+  when (context `elem` ["event_invitation", "social_connection"]) $
+    DirectoryServer.consumeRate user ("party_selector:" <> context) 300
   kind <- either throwError pure (validatePartySelectorKind rawKind)
-  cursor <- either throwError pure (traverse (validatePositiveIdField "cursor") rawCursor)
+  cursor <- either throwError pure (traverse validatePartySelectorCursor rawCursor)
   limit <- either throwError pure (validatePartySelectorLimit rawLimit)
   when (length excluded > 100 || any (<= 0) excluded) $
     throwError err400 { errBody = "excludePartyId must contain at most 100 positive ids" }
   Env pool _ <- ask
-  let databaseQuery = normalizePartySelectorDatabaseText query
-      patternText = "%" <> databaseQuery <> "%"
-      nameSql =
-        "SELECT ?? FROM party WHERE id > ? AND (translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? OR translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ?) LIMIT 401"
+  scopeId <- either throwError pure (validatePartySelectorScopeId context rawScopeId)
+  for_ scopeId $ \eventId -> when (context == "event_logistics") $ do
+    allowed <- liftIO $ flip runSqlPool pool $
+      canSearchEventLogisticsParties (auPartyId user) (toSqlKey eventId)
+    unless allowed $
+      throwError err403 { errBody = "Event logistics selector access denied" }
+  let publicDiscovery = isPublicPartySelectorContext context
+      databaseTerms = partySelectorTerms query
+      discoveryTerm = normalizePartySelectorLookupText $ fromMaybe query
+        (listToMaybe (sortOn (Down . T.length) databaseTerms))
+      -- Three characters let PostgreSQL use pg_trgm for normal searches. The
+      -- documented two-character minimum remains supported by the bounded
+      -- expression-index fallback.
+      discoveryPrefixLength = min 3 (T.length discoveryTerm)
+      patternText = "%" <> T.take discoveryPrefixLength discoveryTerm <> "%"
+      exactText = normalizePartySelectorLookupText query
+      normalizedDisplayName = "regexp_replace(translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
+      normalizedLegalName = "regexp_replace(translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
+      normalizedUsername = "regexp_replace(lower(username), '[@''’‘_.[:space:]-]+', '', 'g')"
+      nameSql
+        | publicDiscovery =
+            "SELECT ?? FROM party WHERE " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+        | otherwise =
+            "SELECT ?? FROM party WHERE (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
       usernameSql =
-        "SELECT ?? FROM user_credential WHERE id > 0 AND lower(replace(username, '@', '')) LIKE ? AND active = TRUE LIMIT 401"
-  (parties, credentials) <- liftIO $ flip runSqlPool pool $ do
-    named <- rawSql nameSql [toPersistValue (fromMaybe 0 cursor), toPersistValue patternText, toPersistValue patternText]
-    matchedCredentials <- rawSql usernameSql [toPersistValue patternText]
-    credentialParties <- fmap catMaybes $ forM (matchedCredentials :: [Entity UserCredential]) $ \credential -> getEntity (userCredentialPartyId (entityVal credential))
+        "SELECT ?? FROM user_credential WHERE id > 0 AND " <> normalizedUsername <> " LIKE ? AND active = TRUE ORDER BY CASE WHEN " <> normalizedUsername <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+  (parties, credentials, fanProfiles, engineerPartyIds) <- liftIO $ flip runSqlPool pool $ do
+    named <- rawSql nameSql
+      (if publicDiscovery
+        then [toPersistValue patternText, toPersistValue exactText]
+        else [toPersistValue patternText, toPersistValue patternText, toPersistValue exactText, toPersistValue exactText])
+    matchedCredentials <- rawSql usernameSql [toPersistValue patternText, toPersistValue exactText]
+    let credentialPartyIds = nub
+          [ userCredentialPartyId credential
+          | Entity _ credential <- (matchedCredentials :: [Entity UserCredential])
+          ]
+    credentialParties <- if null credentialPartyIds
+      then pure []
+      else selectList [PartyId <-. credentialPartyIds] []
     let candidateMap = Map.fromList [(entityKey party, party) | party <- named ++ credentialParties]
         candidateIds = Map.keys candidateMap
     allCredentials <- if null candidateIds then pure [] else selectList [UserCredentialPartyId <-. candidateIds] []
-    pure (Map.elems candidateMap, allCredentials)
-  let credentialsByParty = Map.fromListWith chooseCredential
+    profiles <- if null candidateIds then pure [] else selectList [FanProfileFanPartyId <-. candidateIds] []
+    eligibleEngineers <- if context == "booking_engineer"
+      then Set.fromList <$> selectCanonicalPartyIdsByRole Engineer
+      else pure Set.empty
+    pure (Map.elems candidateMap, allCredentials, profiles, eligibleEngineers)
+  let credentialsByParty = Map.fromListWith choosePartySelectorCredential
         [ (userCredentialPartyId credential, credential) | Entity _ credential <- credentials ]
-      chooseCredential left _ = left
-      matchesKind party = case kind of
+      profilesByParty = Map.fromList
+        [ (fanProfileFanPartyId profile, profile) | Entity _ profile <- fanProfiles ]
+      effectiveKind
+        | publicDiscovery || context == "booking_engineer" = "person"
+        | otherwise = kind
+      effectiveAccountOnly = publicDiscovery || fromMaybe False accountOnly
+      matchesKind party = case effectiveKind of
         "person" -> not (partyIsOrg (entityVal party))
         "organization" -> partyIsOrg (entityVal party)
         _ -> True
@@ -9103,45 +9159,74 @@ searchParties user rawQuery rawKind accountOnly excluded rawCursor rawLimit = do
         Just credential -> userCredentialActive credential
         Nothing -> False
       isExcluded party = fromSqlKey (entityKey party) `elem` excluded
-      eligible party = matchesKind party && not (isExcluded party) && (not (fromMaybe False accountOnly) || hasAccount party)
+        || (publicDiscovery && entityKey party == auPartyId user)
+      matchesQuery party =
+        let partyValue = entityVal party
+            rawUsername = userCredentialUsername <$> Map.lookup (entityKey party) credentialsByParty
+            visibleLegalName = partySelectorVisibleLegalName context (partyLegalName partyValue)
+        in partySelectorMatches query (M.partyDisplayName partyValue) visibleLegalName rawUsername
+      eligible party =
+        matchesKind party
+          && matchesQuery party
+          && not (isExcluded party)
+          && (not effectiveAccountOnly || hasAccount party)
+          && (context /= "booking_engineer" || Set.member (entityKey party) engineerPartyIds)
       option party =
         let mCredential = Map.lookup (entityKey party) credentialsByParty
+            mProfile = Map.lookup (entityKey party) profilesByParty
             partyValue = entityVal party
             rawUsername = userCredentialUsername <$> mCredential
+            visibleLegalName = partySelectorVisibleLegalName context (partyLegalName partyValue)
             accountState = case mCredential of
               Just credential | userCredentialActive credential -> "active"
               Just _ -> "inactive"
               Nothing -> "no-account"
-            normalizedQuery = normalizePartySelectorText query
-            normalizedName = normalizePartySelectorText (M.partyDisplayName partyValue)
-            normalizedLegal = normalizePartySelectorText (fromMaybe "" (partyLegalName partyValue))
-            normalizedUsername = normalizePartySelectorText (fromMaybe "" rawUsername)
-            score
-              | normalizedUsername == normalizedQuery = 0 :: Int
-              | normalizedName == normalizedQuery = 1
-              | normalizedUsername `T.isPrefixOf` normalizedQuery || normalizedQuery `T.isPrefixOf` normalizedUsername = 2
-              | normalizedName `T.isPrefixOf` normalizedQuery || normalizedLegal `T.isPrefixOf` normalizedQuery = 3
-              | otherwise = 4
-            secondary = partyLegalName partyValue <|> (if partyIsOrg partyValue then Just "Organización" else Nothing)
+            score = partySelectorScore query (M.partyDisplayName partyValue) visibleLegalName rawUsername
+            secondary = visibleLegalName <|> (if partyIsOrg partyValue then Just "Organización" else Nothing)
         in (score, fromSqlKey (entityKey party), PartySelectorOptionDTO
           { partyId = fromSqlKey (entityKey party)
           , partyType = if partyIsOrg partyValue then "organization" else "person"
           , displayName = M.partyDisplayName partyValue
           , username = rawUsername
-          , avatarUrl = Nothing
+          , avatarUrl = mProfile >>= fanProfileAvatarUrl
           , secondaryLabel = secondary
           , accountStatus = accountState
           })
       sorted = sortOn (\(score, partyKey, _) -> (score, partyKey)) (map option (filter eligible parties))
-      page = take (limit + 1) sorted
+      cursorOffset = fromIntegral (fromMaybe 0 cursor)
+      page = take (limit + 1) (drop cursorOffset sorted)
       visible = take limit page
-      next = if length page > limit then Just (let (_, partyKey, _) = last visible in partyKey) else Nothing
+      next = if length page > limit then Just (fromIntegral (cursorOffset + limit)) else Nothing
   pure PartySelectorPageDTO { items = map (\(_, _, value) -> value) visible, nextCursor = next }
+
+choosePartySelectorCredential :: UserCredential -> UserCredential -> UserCredential
+choosePartySelectorCredential left right
+  | credentialRank left <= credentialRank right = left
+  | otherwise = right
+  where
+    credentialRank credential =
+      (Down (userCredentialActive credential), normalizePartySelectorLookupText (userCredentialUsername credential))
+
+canSearchEventLogisticsParties :: MonadIO m => PartyId -> Social.SocialEventId -> SqlPersistT m Bool
+canSearchEventLogisticsParties actorPartyId eventId = do
+  mEvent <- get eventId
+  case mEvent of
+    Nothing -> pure False
+    Just event -> do
+      let actorText = T.pack (show (fromSqlKey actorPartyId))
+      if Social.socialEventOrganizerPartyId event == Just actorText
+        then pure True
+        else do
+          mMember <- getBy (Social.UniqueEventLogisticsMember eventId actorText)
+          pure $ case mMember of
+            Just (Entity _ member) -> Social.eventLogisticsMemberMemberRole member == "editor"
+            Nothing -> False
 
 validatePartySelectorQuery :: Maybe Text -> Either ServerError Text
 validatePartySelectorQuery raw =
   let clean = T.strip (fromMaybe "" raw)
-  in if T.length clean < 2
+      searchableCharacters = T.length (T.filter isAlphaNum clean)
+  in if T.length clean < 2 || searchableCharacters < 2
        then Left err400 { errBody = "q must contain at least two characters" }
        else if T.length clean > 120 || T.any isUnsafePartyDisplayNameChar clean
          then Left err400 { errBody = "q is invalid" }
@@ -9155,6 +9240,54 @@ validatePartySelectorKind raw =
     "organization" -> Right "organization"
     _ -> Left err400 { errBody = "kind must be any, person, or organization" }
 
+validatePartySelectorContext :: Maybe Text -> Either ServerError Text
+validatePartySelectorContext raw =
+  let context = T.toLower (T.strip (fromMaybe "crm_assignment" raw))
+      supported =
+        [ "crm_assignment", "booking", "booking_engineer", "billing_contact", "artist_link"
+        , "campaign_enrollment", "event_invitation", "social_connection"
+        , "operations", "internal_feedback", "live_session", "event_logistics"
+        ]
+  in if context `elem` supported
+      then Right context
+      else Left err400 { errBody = "context is invalid" }
+
+isPublicPartySelectorContext :: Text -> Bool
+isPublicPartySelectorContext context = context `elem` ["event_invitation", "social_connection"]
+
+partySelectorContextModule :: Text -> Maybe ModuleAccess
+partySelectorContextModule context = case context of
+  "crm_assignment" -> Just ModuleCRM
+  "booking" -> Just ModuleScheduling
+  "booking_engineer" -> Just ModuleScheduling
+  "billing_contact" -> Just ModuleInvoicing
+  "artist_link" -> Just ModuleCatalog
+  "campaign_enrollment" -> Just ModuleCRM
+  "operations" -> Just ModuleOps
+  "internal_feedback" -> Just ModuleInternships
+  "live_session" -> Just ModuleScheduling
+  "event_invitation" -> Nothing
+  "social_connection" -> Nothing
+  "event_logistics" -> Nothing
+  _ -> Just ModuleCRM
+
+validatePartySelectorScopeId :: Text -> Maybe Text -> Either ServerError (Maybe Int64)
+validatePartySelectorScopeId context rawScopeId =
+  case (context, T.strip <$> rawScopeId) of
+    ("event_logistics", Just rawId)
+      | Just eventId <- readMaybe (T.unpack rawId), eventId > 0 -> Right (Just eventId)
+      | otherwise -> invalid "scopeId must be a positive event id for event_logistics"
+    ("event_logistics", Nothing) -> invalid "scopeId is required for event_logistics"
+    (_, Just rawId) | not (T.null rawId) -> invalid "scopeId is not supported for this context"
+    _ -> Right Nothing
+  where
+    invalid message = Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+partySelectorVisibleLegalName :: Text -> Maybe Text -> Maybe Text
+partySelectorVisibleLegalName context legalName
+  | isPublicPartySelectorContext context = Nothing
+  | otherwise = legalName
+
 validatePartySelectorLimit :: Maybe Int -> Either ServerError Int
 validatePartySelectorLimit raw =
   let value = fromMaybe 15 raw
@@ -9162,17 +9295,76 @@ validatePartySelectorLimit raw =
        then Right value
        else Left err400 { errBody = "limit must be between 1 and 20" }
 
-normalizePartySelectorText :: Text -> Text
-normalizePartySelectorText = T.map replaceAccent . T.filter (not . isSpace) . T.toLower . T.filter (/= '@')
+validatePartySelectorCursor :: Int64 -> Either ServerError Int64
+validatePartySelectorCursor value
+  | value > 0 && value <= 800 = Right value
+  | otherwise = Left err400 { errBody = "cursor is invalid" }
+
+partySelectorTerms :: Text -> [Text]
+partySelectorTerms =
+  filter (not . T.null)
+    . T.words
+    . T.map (\char -> if isAlphaNum char || char `elem` ("-'_." :: String) then char else ' ')
+    . normalizePartySelectorDatabaseText
+
+partySelectorWithinOneEdit :: Text -> Text -> Bool
+partySelectorWithinOneEdit left right
+  | left == right = True
+  | abs (length leftChars - length rightChars) > 1 = False
+  | length leftChars == length rightChars =
+      length mismatches <= 1 || adjacentTransposition mismatches
+  | length leftChars + 1 == length rightChars = oneInsertion leftChars rightChars
+  | otherwise = oneInsertion rightChars leftChars
   where
-    replaceAccent char = case char of
-      'á' -> 'a'; 'à' -> 'a'; 'ä' -> 'a'; 'â' -> 'a'
-      'é' -> 'e'; 'è' -> 'e'; 'ë' -> 'e'; 'ê' -> 'e'
-      'í' -> 'i'; 'ì' -> 'i'; 'ï' -> 'i'; 'î' -> 'i'
-      'ó' -> 'o'; 'ò' -> 'o'; 'ö' -> 'o'; 'ô' -> 'o'
-      'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
-      'ñ' -> 'n'
-      other -> other
+    leftChars = T.unpack left
+    rightChars = T.unpack right
+    mismatches = [index | (index, (a, b)) <- zip [0 :: Int ..] (zip leftChars rightChars), a /= b]
+    adjacentTransposition [first, second] =
+      second == first + 1
+        && leftChars !! first == rightChars !! second
+        && leftChars !! second == rightChars !! first
+    adjacentTransposition _ = False
+    oneInsertion shorter longer = go shorter longer False
+      where
+        go [] _ _ = True
+        go _ [] _ = False
+        go short@(a:as) (b:bs) skipped
+          | a == b = go as bs skipped
+          | skipped = False
+          | otherwise = go short bs True
+
+partySelectorTermMatches :: Text -> Text -> Bool
+partySelectorTermMatches queryTerm candidateTerm =
+  queryTerm `T.isInfixOf` candidateTerm
+    || (T.length queryTerm >= 4 && partySelectorWithinOneEdit queryTerm candidateTerm)
+
+partySelectorMatches :: Text -> Text -> Maybe Text -> Maybe Text -> Bool
+partySelectorMatches query displayName legalName username =
+  let queryTerms = partySelectorTerms query
+      candidateTerms = partySelectorTerms
+        (T.intercalate " " [displayName, fromMaybe "" legalName, fromMaybe "" username])
+  in not (null queryTerms)
+      && all (\queryTerm -> any (partySelectorTermMatches queryTerm) candidateTerms) queryTerms
+
+partySelectorScore :: Text -> Text -> Maybe Text -> Maybe Text -> Int
+partySelectorScore query displayName legalName username
+  | normalizedUsername == normalizedQuery = 0
+  | normalizedName == normalizedQuery = 1
+  | normalizedQuery `T.isPrefixOf` normalizedUsername = 2
+  | any (\queryTerm -> any (queryTerm `T.isPrefixOf`) nameTerms) queryTerms = 3
+  | all (\queryTerm -> any (queryTerm `T.isPrefixOf`) allTerms) queryTerms = 4
+  | all (\queryTerm -> any (queryTerm `T.isInfixOf`) allTerms) queryTerms = 5
+  | otherwise = 6
+  where
+    normalizedQuery = normalizePartySelectorText query
+    normalizedName = normalizePartySelectorText displayName
+    normalizedUsername = normalizePartySelectorText (fromMaybe "" username)
+    queryTerms = partySelectorTerms query
+    nameTerms = partySelectorTerms (T.intercalate " " [displayName, fromMaybe "" legalName])
+    allTerms = nameTerms ++ partySelectorTerms (fromMaybe "" username)
+
+normalizePartySelectorText :: Text -> Text
+normalizePartySelectorText = normalizePartySelectorLookupText
 
 normalizePartySelectorDatabaseText :: Text -> Text
 normalizePartySelectorDatabaseText = T.map replaceAccent . T.toLower . T.filter (/= '@')
@@ -9185,6 +9377,9 @@ normalizePartySelectorDatabaseText = T.map replaceAccent . T.toLower . T.filter 
       'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
       'ñ' -> 'n'
       other -> other
+
+normalizePartySelectorLookupText :: Text -> Text
+normalizePartySelectorLookupText = T.filter isAlphaNum . normalizePartySelectorDatabaseText
 
 listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
 listParties user mLimit mOffset = do

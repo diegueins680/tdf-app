@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/social/followers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List parties following the authenticated party
+         * @description Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+         */
+        get: operations["listSocialFollowers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social/following": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List parties followed by the authenticated party
+         * @description Returns only relationships visible to the authenticated party, enriched with minimal display names so clients do not download the Party directory.
+         */
+        get: operations["listSocialFollowing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events": {
         parameters: {
             query?: never;
@@ -7653,6 +7693,17 @@ export interface components {
             /** @description Present when the party is linked to a band/project. */
             band?: Record<string, never> | null;
         };
+        PartyFollow: {
+            /** Format: int64 */
+            pfFollowerId: number;
+            /** Format: int64 */
+            pfFollowingId: number;
+            pfFollowerName?: string | null;
+            pfFollowingName?: string | null;
+            pfViaNfc: boolean;
+            /** Format: date */
+            pfStartedAt: string;
+        };
         PartySelectorOption: {
             /**
              * Format: int64
@@ -7671,7 +7722,10 @@ export interface components {
         };
         PartySelectorPage: {
             items: components["schemas"]["PartySelectorOption"][];
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description Opaque cursor for the next relevance-ordered page.
+             */
             nextCursor?: number | null;
         };
         ChatThread: {
@@ -10282,6 +10336,60 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listSocialFollowers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Visible follower relationships */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartyFollow"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSocialFollowing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Visible following relationships */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartyFollow"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listSocialEvents: {
         parameters: {
             query?: {
@@ -12518,9 +12626,14 @@ export interface operations {
         parameters: {
             query: {
                 q: string;
+                /** @description Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor. */
+                context?: "crm_assignment" | "booking" | "booking_engineer" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "operations" | "internal_feedback" | "live_session" | "event_logistics";
+                /** @description Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID. */
+                scopeId?: string;
                 kind?: "any" | "person" | "organization";
                 accountOnly?: boolean;
                 excludePartyId?: number[];
+                /** @description Opaque bounded cursor returned by the previous page. */
                 cursor?: number;
                 limit?: number;
             };
@@ -12553,8 +12666,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description CRM access required */
+            /** @description Required module or resource-scope access missing for the declared context */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated social discovery quota exceeded */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -313,18 +313,19 @@ instance MimeUnrender LooseJSON PaymentCreate where
   mimeUnrender _ = eitherDecode
 
 data PaymentDTO = PaymentDTO
-  { payId         :: Int64
-  , payPartyId    :: Int64
-  , payOrderId    :: Maybe Int64
-  , payInvoiceId  :: Maybe Int64
-  , payAmountCents:: Int
-  , payCurrency   :: Text
-  , payMethod     :: Text
-  , payReference  :: Maybe Text
-  , payPaidAt     :: Text
-  , payConcept    :: Text
-  , payPeriod     :: Maybe Text
-  , payAttachment :: Maybe Text
+  { payId               :: Int64
+  , payPartyId          :: Int64
+  , payPartyDisplayName :: Text
+  , payOrderId           :: Maybe Int64
+  , payInvoiceId         :: Maybe Int64
+  , payAmountCents       :: Int
+  , payCurrency          :: Text
+  , payMethod            :: Text
+  , payReference         :: Maybe Text
+  , payPaidAt            :: Text
+  , payConcept           :: Text
+  , payPeriod            :: Maybe Text
+  , payAttachment        :: Maybe Text
   } deriving (Show, Generic)
 
 instance ToJSON PaymentDTO

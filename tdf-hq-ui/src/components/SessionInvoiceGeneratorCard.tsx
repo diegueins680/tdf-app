@@ -29,15 +29,12 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Invoices, type GenerateSessionInvoiceInput, type GenerateSessionInvoiceResponse, type InvoiceDTO } from '../api/invoices';
 import { Sessions, type SessionDTO } from '../api/sessions';
-import type { PartyDTO } from '../api/types';
+import type { PartySelectorOption } from '../api/partySelector';
+import { PartySelector } from './party-selector/PartySelector';
 import LazyPaginatedList from './LazyPaginatedList';
 import { useCurrency } from '../contexts/CurrencyContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatDateTime } from '../utils/formatters';
-
-interface SessionInvoiceGeneratorCardProps {
-  parties: PartyDTO[];
-}
 
 interface InvoiceLineDraft {
   id: string;
@@ -72,21 +69,6 @@ const sessionFilterOptions = createFilterOptions<SessionDTO>({
       .toLowerCase(),
 });
 
-const partyFilterOptions = createFilterOptions<PartyDTO>({
-  stringify: (option) =>
-    [
-      option.displayName,
-      option.primaryEmail,
-      option.primaryPhone,
-      option.instagram,
-      option.partyId,
-      option.taxId,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase(),
-});
-
 const makeLineDraft = (description = ''): InvoiceLineDraft => ({
   id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   description,
@@ -106,10 +88,8 @@ const parsePositiveInteger = (raw: string | null | undefined): number | null => 
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 };
 
-const sessionLabel = (session: SessionDTO, partyMap: Map<number, PartyDTO>, locale: string, timezone: string) => {
-  const partyId = parsePositiveInteger(session.sClientPartyRef);
-  const partyName = partyId != null ? partyMap.get(partyId)?.displayName : null;
-  const customer = partyName ?? session.sClientPartyRef ?? 'Sin cliente';
+const sessionLabel = (session: SessionDTO, locale: string, timezone: string) => {
+  const customer = session.sClientPartyRef ? 'Cliente vinculado' : 'Sin cliente';
   return `${formatDateTime(session.sStartAt, { locale, timeZone: timezone })} · ${session.sService} · ${customer}`;
 };
 
@@ -150,14 +130,13 @@ const normalizeLineDraft = (line: InvoiceLineDraft): GenerateSessionInvoiceInput
 const isSriError = (value: GenerateSessionInvoiceResponse['sri']): value is { ok: false; error: string } =>
   typeof value === 'object' && value != null && 'error' in value;
 
-export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceGeneratorCardProps) {
+export default function SessionInvoiceGeneratorCard() {
   const { currency: preferredCurrency, locale, timezone } = useLocalePreferences();
   const { formatMoney } = useCurrency();
   const qc = useQueryClient();
   const [sessionInput, setSessionInput] = useState('');
   const [selectedSession, setSelectedSession] = useState<SessionDTO | null>(null);
-  const [customerInput, setCustomerInput] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<PartyDTO | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<PartySelectorOption | null>(null);
   const [currency, setCurrency] = useState(preferredCurrency);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
@@ -179,17 +158,6 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
     queryFn: () => Invoices.listBySession(selectedSession?.sessionId ?? ''),
     enabled: Boolean(selectedSession?.sessionId),
   });
-
-  const partyMap = useMemo(() => {
-    const next = new Map<number, PartyDTO>();
-    parties.forEach((party) => next.set(party.partyId, party));
-    return next;
-  }, [parties]);
-
-  const resolvedSessionCustomer = useMemo(() => {
-    const partyId = parsePositiveInteger(selectedSession?.sClientPartyRef);
-    return partyId != null ? partyMap.get(partyId) ?? null : null;
-  }, [partyMap, selectedSession?.sClientPartyRef]);
 
   useEffect(() => {
     if (!selectedSession) return;
@@ -307,7 +275,7 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
               inputValue={sessionInput}
               onInputChange={(_, value) => setSessionInput(value)}
               filterOptions={sessionFilterOptions}
-              getOptionLabel={(option) => sessionLabel(option, partyMap, locale, timezone)}
+              getOptionLabel={(option) => sessionLabel(option, locale, timezone)}
               isOptionEqualToValue={(option, value) => option.sessionId === value.sessionId}
               renderInput={(params) => (
                 <TextField
@@ -327,14 +295,8 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
                 <Chip label={selectedSession.sStatus} color="info" variant="outlined" />
                 <Chip label={selectedSession.sService} variant="outlined" />
                 <Chip label={`Inicio ${formatDateTime(selectedSession.sStartAt, { locale, timeZone: timezone })}`} variant="outlined" />
-                {resolvedSessionCustomer ? (
-                  <Chip
-                    label={`Cliente sesión: ${resolvedSessionCustomer.displayName} · ID ${resolvedSessionCustomer.partyId}`}
-                    color="success"
-                    variant="outlined"
-                  />
-                ) : selectedSession.sClientPartyRef ? (
-                  <Chip label={`clientPartyRef: ${selectedSession.sClientPartyRef}`} variant="outlined" />
+                {selectedSession.sClientPartyRef ? (
+                  <Chip label="Cliente vinculado a la sesión" color="success" variant="outlined" />
                 ) : (
                   <Chip label="Sin cliente en sesión" color="warning" variant="outlined" />
                 )}
@@ -343,24 +305,11 @@ export default function SessionInvoiceGeneratorCard({ parties }: SessionInvoiceG
           )}
 
           <Grid item xs={12} md={6}>
-            <Autocomplete
-              options={parties}
+            <PartySelector
               value={selectedCustomer}
-              onChange={(_, value) => setSelectedCustomer(value)}
-              inputValue={customerInput}
-              onInputChange={(_, value) => setCustomerInput(value)}
-              filterOptions={partyFilterOptions}
-              getOptionLabel={(option) =>
-                `${option.displayName} · ID ${option.partyId}${option.taxId ? ` · ${option.taxId}` : ''}`
-              }
-              isOptionEqualToValue={(option, value) => option.partyId === value.partyId}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Cliente facturable (opcional)"
-                  helperText="Si lo dejas vacío, se usará el clientPartyRef de la sesión."
-                />
-              )}
+              onChange={setSelectedCustomer}
+              field={{ label: 'Cliente facturable (opcional)', helperText: 'Si lo dejas vacío, se usará el cliente vinculado a la sesión.' }}
+              search={{ context: 'billing_contact', kind: 'any', accountOnly: false }}
             />
           </Grid>
           <Grid item xs={12} md={3}>
