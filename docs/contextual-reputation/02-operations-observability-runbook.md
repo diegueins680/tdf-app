@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.withdrawn` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -54,6 +54,15 @@ hasta su confirmación. Un duplicado nunca puede devolver “éxito” si la
 proyección no llegó a estar comprometida. Si ya existe una versión más nueva de
 la fuente, descarta el evento obsoleto o recalcula desde la fuente canónica.
 
+Una evaluación ordinal puede afectar a varios perfiles. Al crearla o editarla,
+el productor debe comparar la versión anterior con la nueva y escribir, en la
+misma transacción, un evento por cada `subject_id` de la unión de sujetos
+anteriores y actuales. Esto incluye perfiles retirados de
+`reputation_evaluation_rank.compared_party_id`, que necesitan invalidación para
+no conservar un agregado obsoleto. Como alternativa, un evento versionado puede
+contener esa unión completa si el consumidor garantiza el mismo fan-out
+idempotente antes de confirmar el mensaje.
+
 `context_key` debe mapearse de forma uno-a-uno al selector de contexto de la
 API pública. Cada respuesta de reputación selecciona una única clave comparable
 y nunca suma ni lista categorías de contextos distintos; sin selector válido se
@@ -66,11 +75,14 @@ roles/contextos aplicables deben escribir el evento de invalidación
 correspondiente en el mismo outbox transaccional. Así se recalcula o retira la
 proyección existente aunque no haya una evaluación posterior.
 
-Retirar consentimiento de visibilidad pública o rankings debe persistir
-`public_consent.withdrawn` en la misma transacción, invalidar las proyecciones
-afectadas y cerrar de inmediato el gate de lectura para esa persona/superficie.
-La API verifica el consentimiento vigente en cada lectura: el evento asíncrono
-repara la proyección, pero no es la barrera que contiene una exposición.
+Cada retiro o nueva concesión de consentimiento de visibilidad pública o
+rankings debe persistir `public_consent.changed` en la misma transacción. El
+retiro invalida las proyecciones afectadas y cierra de inmediato el gate de
+lectura para esa persona/superficie. Una nueva concesión mantiene ese gate
+cerrado, programa el recálculo determinista y solo lo abre cuando la proyección
+vigente está confirmada y supera sus demás umbrales. La API verifica el
+consentimiento y el gate en cada lectura: el evento asíncrono repara la
+proyección, pero no es la barrera que contiene una exposición.
 
 ## 4. Reglas de procesamiento
 
@@ -92,7 +104,11 @@ repara la proyección, pero no es la barrera que contiene una exposición.
 6. Auditar entradas, exclusiones, resultado y error sin almacenar PII extra.
 
 Rankings privados y preferencias son explícitamente inelegibles. El worker debe
-rechazar eventos sin interacción verificable o marcados privados/no verificados.
+exigir interacción verificable solo a eventos que aportan una evaluación o
+señal al cálculo, y rechazar esas contribuciones si son privadas/no verificadas.
+Eventos administrativos de invalidación, consentimiento, categoría o recálculo
+no requieren una interacción propia: disparan un cálculo desde la fuente
+canónica, que vuelve a filtrar exclusivamente evidencia elegible.
 
 ## 5. Concurrencia, reintentos y recuperación
 
