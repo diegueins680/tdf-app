@@ -385,6 +385,11 @@
       "id": "2026-09-04_party_selector_punctuation_indexes",
       "path": "tdf-hq/sql/2026-09-04_party_selector_punctuation_indexes.sql",
       "introducedBy": "2b61953659cb43d711046639ae49f9806049cdf3"
+    },
+    {
+      "id": "2026-09-05_contextual_reputation_preference_rounding",
+      "path": "tdf-hq/sql/2026-09-05_contextual_reputation_preference_rounding.sql",
+      "introducedBy": "000ef9f0c9be11250eebfbe13e35c373c767512e"
     }
   ]
 }
