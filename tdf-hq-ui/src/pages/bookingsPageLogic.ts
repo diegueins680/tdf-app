@@ -46,6 +46,79 @@ interface BookingOptionalDetailsState {
   toggleLabel: string;
 }
 
+export interface BookingPrefill {
+  title?: string;
+  startAt?: string;
+  endAt?: string;
+  notes?: string;
+  hint?: string;
+  customer?: {
+    partyId: number;
+    displayName: string;
+  };
+}
+
+const optionalString = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() ? value : undefined;
+
+export const createBookingPrefill = ({
+  title,
+  startAt,
+  endAt,
+  notes,
+  hint,
+  customerPartyId,
+  customerName,
+}: {
+  title: string;
+  startAt: string;
+  endAt: string;
+  notes?: string | null;
+  hint: string;
+  customerPartyId: number;
+  customerName: string;
+}): BookingPrefill => ({
+  title,
+  startAt,
+  endAt,
+  notes: notes ?? undefined,
+  hint,
+  customer: {
+    partyId: customerPartyId,
+    displayName: customerName,
+  },
+});
+
+export const parseBookingPrefill = (raw: string): BookingPrefill | null => {
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const candidate = value as Record<string, unknown>;
+    const rawCustomer = candidate['customer'];
+    const customer = rawCustomer && typeof rawCustomer === 'object' && !Array.isArray(rawCustomer)
+      ? rawCustomer as Record<string, unknown>
+      : null;
+    const partyId = customer?.['partyId'];
+    const displayName = optionalString(customer?.['displayName']);
+    const parsed: BookingPrefill = {
+      title: optionalString(candidate['title']),
+      startAt: optionalString(candidate['startAt']),
+      endAt: optionalString(candidate['endAt']),
+      notes: optionalString(candidate['notes']),
+      hint: optionalString(candidate['hint']),
+      customer: typeof partyId === 'number'
+        && Number.isSafeInteger(partyId)
+        && partyId > 0
+        && displayName
+        ? { partyId, displayName }
+        : undefined,
+    };
+    return Object.values(parsed).some((entry) => entry !== undefined) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 export const getBookingCustomerFieldState = ({
   customerCount,
   customerCatalogLoading,

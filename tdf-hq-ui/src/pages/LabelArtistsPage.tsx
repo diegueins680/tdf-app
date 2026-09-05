@@ -1212,7 +1212,7 @@ export default function LabelArtistsPage() {
                 }));
               }}
               field={{ label: 'Contacto (CRM)', required: true, helperText: 'Busca por nombre o @username. Si falta, créalo en CRM → Contactos.' }}
-              search={{ context: 'artist_link', kind: 'person', accountOnly: false }}
+              search={{ context: 'artist_link', kind: 'any', accountOnly: false }}
             />
             <TextField
               label="Nombre público (se guarda en el contacto)"

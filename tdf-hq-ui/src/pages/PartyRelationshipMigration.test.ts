@@ -51,6 +51,7 @@ describe('Party relationship picker migration', () => {
   it('loads CRM notes only for visible label artists instead of downloading the Party directory', () => {
     const source = readPage('LabelArtistsPage.tsx');
     expect(source).toContain('Parties.getOne(artist.apArtistId)');
+    expect(source).toContain("search={{ context: 'artist_link', kind: 'any', accountOnly: false }}");
     expect(source).not.toMatch(/Parties\.list\s*\(?/);
   });
 
