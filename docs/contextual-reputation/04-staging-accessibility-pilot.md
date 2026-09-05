@@ -106,19 +106,31 @@ DLQ sin dueño o bloqueador WCAG 2.2 AA.
 
 ## 7. Rollback y comunicación
 
-1. Apagar `CONTEXTUAL_REPUTATION_ENABLED` para el grupo/ambiente afectado.
-2. Detener nuevos consumidores/escritores, preservar evidencia y registrar
+1. **Desactivar y verificar primero el gate independiente de lectura pública**
+   para retirar agregados, categorías, badges, tendencia y rankings existentes
+   de toda superficie pública. No basta con apagar
+   `CONTEXTUAL_REPUTATION_ENABLED`.
+2. Apagar `CONTEXTUAL_REPUTATION_ENABLED` para el grupo/ambiente afectado y
+   detener nuevos consumidores/escritores; preservar evidencia y registrar
    incidente; no borrar reseñas heredadas ni auditorías.
-3. Ocultar proyecciones afectadas o restaurar la última versión válida.
+3. Restaurar la última versión válida solo después de verificar consentimiento,
+   umbral y gate de lectura; de lo contrario, mantener la proyección oculta.
 4. Informar a participantes de manera proporcional, sin revelar datos de otros.
 5. Corregir y reproducir en staging con un nuevo `run_id` antes de reabrir.
 
 ## 8. Cierre del pendiente 4
 
-El pendiente se cierra al adjuntar evidencia de todas las pruebas de staging,
-sesiones con lector de pantalla y dispositivo físico, ensayo de rollback, dos
-semanas de piloto estable y aprobaciones de Producto, Seguridad, Moderación y
-Operaciones para la siguiente fase.
+Para **G0 (staging interno)**, el pendiente se considera listo cuando se adjunta
+evidencia de las precondiciones, todas las pruebas funcionales de staging,
+sesiones con lector de pantalla y dispositivo físico, ensayo de rollback y las
+aprobaciones necesarias para staging. Esto no exige aún participantes reales ni
+dos semanas de piloto.
+
+La evidencia de un piloto consentido estable durante dos semanas, junto con las
+aprobaciones de Producto, Seguridad, Moderación y Operaciones para visibilidad
+limitada, es un requisito posterior de **G2/Fase C**. Debe registrarse en el
+tracker de rollout antes de abrir esa fase, sin bloquear circularmente G0 o la
+Fase B.
 
 ## 9. Control de versión
 
