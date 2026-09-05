@@ -36,7 +36,7 @@ Checks were performed before product edits. Secret values were not printed; only
 | Local/staging configuration | Partial | `.env.example` and `tdf-hq/.env.lo` exist; no controlled staging environment was proven. | Validation is local; no staging or production claim is made. |
 | Synthetic accounts/fixtures | Available | Browser tests use clearly fictional `@persona.test` identities and synthetic catalog/event data. | Public/auth task testing avoids real customer data and communications. |
 | Analytics access | Partial | PostHog integration and event taxonomy were inspectable in source; no live dashboard or representative field dataset was available. | Event semantics/privacy were audited in code; signup/conversion baselines and p75 Web Vitals are “not yet measured.” |
-| GitHub authentication | Partial | Git SSH/HTTPS remote operations work; `gh auth status` reports an invalid token. | Feature branches can be pushed. Draft PR creation/check inspection through `gh` is unavailable in this run. |
+| GitHub authentication | Available at handoff | The mandatory preflight initially found an invalid `gh` token. A final recheck succeeded; root/mobile branches were pushed and draft PRs #238/#39 were created. | Commit publication and draft handoff completed; no merge or deployment was attempted. |
 | Push/deploy safety | Available | Root workflows were inspected: feature pushes do not deploy; image/release paths are default-branch, scheduled, or manual. Mobile feature pushes likewise do not run a deployment workflow. | Feature-branch publication is safe; nothing was merged or deployed. |
 | Documented preflight | Available with warnings | `npm run ai:doctor` completed with 16 OK and 2 warnings: dirty original checkout and invalid GitHub CLI authentication. | The warnings are explicitly preserved rather than treated as a clean preflight. |
 
@@ -310,9 +310,9 @@ No participant was contacted and no session, quote, completion rate, or usabilit
 
 ## 16. Branch, publication, and pull-request handoff
 
-- Root branch: `feature/onboarding-first-ux-20260904`; implementation commits `aba01d1f8` (email/log security), `8d62611de` (web onboarding/privacy), and `86e234045` (published mobile pointer). The report/artifact commit and remote link are recorded in the final handoff.
-- Mobile branch: `feature/onboarding-first-ux-20260905`; commits `3c132ff` and `10d5dc9`; remote commit `10d5dc9e2a733c9c61b5b5f288d6cdfc28a2e623` is published.
-- No PR was created because GitHub CLI authentication is invalid. No merge or deployment occurred.
-- Ready-to-use PR text is in `reports/onboarding-first-ux-pr-description-2026-09-05.md`.
+- Root branch: `feature/onboarding-first-ux-20260904`; implementation commits `aba01d1f8` (email/log security), `8d62611de` (web onboarding/privacy), and `86e234045` (published mobile pointer). Draft PR: [tdf-app #238](https://github.com/diegueins680/tdf-app/pull/238).
+- Mobile branch: `feature/onboarding-first-ux-20260905`; commits `3c132ff` and `10d5dc9`; remote commit `10d5dc9e2a733c9c61b5b5f288d6cdfc28a2e623` is published. Draft PR: [TDF-mobile #39](https://github.com/diegueins680/TDF-mobile/pull/39).
+- PR text is preserved in `reports/onboarding-first-ux-pr-description-2026-09-05.md` and `reports/onboarding-first-ux-mobile-pr-description-2026-09-05.md`.
+- No PR was merged and no deployment occurred.
 
 `origin/main` advanced from the captured baseline to `ca64c3cde` (16 commits) after implementation and validation. The feature branch was deliberately not rebased after the evidence run: the new upstream changes do not overlap this batch's implementation files, but rebasing would make the recorded build/test commit graph inaccurate without another full regression pass. The draft-PR reviewer should update the branch and rerun CI before merge.

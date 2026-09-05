@@ -30,6 +30,7 @@ TDF onboarding contained security/privacy risks and task dead ends: self-signup 
 - General signup no longer asks for optional marketing choice or unrelated favorite artists; backend payload remains compatible (`marketingOptIn:false`).
 - Analytics is intentionally less identifying; dashboards depending on username/display name/roles or DOM autocapture must use privacy-safe aggregate dimensions instead.
 - Parent mobile pointer references a feature-branch commit already published on the mobile remote.
+- Mobile review is tracked separately in [TDF-mobile draft PR #39](https://github.com/diegueins680/TDF-mobile/pull/39).
 
 ## Rollback
 
