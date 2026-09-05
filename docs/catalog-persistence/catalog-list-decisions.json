@@ -8524,7 +8524,7 @@
       "reviewed": true
     },
     {
-      "id": "b60705efb5b737e4860b",
+      "id": "21d2516c42638598f1ba",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9341,6 +9341,26 @@
       "priority": "P2-schema-history",
       "risk": "Cross-client divergence, invalid exclusion semantics, ambiguous backfill, or leakage of unverified rankings into public reputation.",
       "justification": "Private-ranking exclusion reasons are immutable migration evidence; the persisted private-ranking model isolates them from public reputation and future changes require a forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "0de4724d3151cf593d53",
+      "classification": "security-system-registry",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "notification_type_constraint",
+      "priority": "P2-schema-history",
+      "risk": "Changing the rollback allowlist could reject stored notifications or restore an incompatible writer contract during recovery.",
+      "justification": "This rollback-only list preserves the original notification constraint as recovery evidence; the expanded forward constraint remains runtime authority and any later change requires another reviewed migration.",
+      "reviewed": true
+    },
+    {
+      "id": "63abe035c039e18ad2c3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "notification_type_constraint",
+      "priority": "P1-cross-platform",
+      "risk": "A missing type rolls back user workflows, while an unsupported type can bypass the closed notification dispatch contract.",
+      "justification": "Notification event identifiers form a closed protocol shared by application writers, the database constraint, and readers; changes require a coordinated reviewed migration rather than a user-editable business catalog.",
       "reviewed": true
     }
   ]
