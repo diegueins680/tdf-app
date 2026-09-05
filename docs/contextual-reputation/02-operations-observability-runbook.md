@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -62,6 +62,14 @@ anteriores y actuales. Esto incluye perfiles retirados de
 no conservar un agregado obsoleto. Como alternativa, un evento versionado puede
 contener esa unión completa si el consumidor garantiza el mismo fan-out
 idempotente antes de confirmar el mensaje.
+
+La misma regla de fan-out aplica a **todo** evento de control: invalidar o
+apelar una evaluación ordinal debe abarcar todos sus perfiles; archivar, fusionar
+o cambiar una categoría debe abarcar cada tupla afectada de sujeto/contexto/categoría;
+y una eliminación o anonimización aprobada de evidencia agregada debe escribir el
+evento correspondiente, en la misma transacción del caso, para cada contribución
+afectada. El relay/worker no confirma el control hasta completar ese fan-out
+idempotente desde la fuente canónica.
 
 `context_key` debe mapearse de forma uno-a-uno al selector de contexto de la
 API pública. Cada respuesta de reputación selecciona una única clave comparable
@@ -133,12 +141,17 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   auditorías semánticas. No usar el insert histórico no versionado como entrada
   replay-safe hasta que tenga esa garantía y prueba explícita.
 - La versión activa de fórmula debe residir en configuración persistida y ser
-  consultada por el lector; no se codifica de forma fija en la API. Un cambio de
-  algoritmo calcula primero un conjunto completo de proyecciones inactivas para
-  la nueva `formula_version_id`, valida cobertura, fixtures de referencia y
-  métricas, y solo entonces cambia atómicamente el selector activo. Ninguna
-  lectura mezcla versiones. El rollback vuelve a seleccionar atómicamente la
-  versión anterior, sin borrar sus filas, mientras la nueva se investiga.
+  consultada por el lector; no se codifica de forma fija en la API. Una versión
+  activada es inmutable: todo cambio de fórmula, umbral o parámetro crea un
+  nuevo `formula_version_id` y se rechaza cualquier actualización en sitio. Un
+  cambio de algoritmo calcula primero un conjunto completo de proyecciones
+  inactivas para la nueva versión, valida cobertura, fixtures de referencia y
+  métricas, y solo entonces cambia atómicamente el selector activo. Debe además
+  congelar writers, duplicar los writes en ambas versiones, o reprocesar desde
+  un high-water mark capturado hasta que no queden eventos pendientes antes del
+  cambio; ninguna lectura mezcla versiones ni omite writes concurrentes. El
+  rollback vuelve a seleccionar atómicamente la versión anterior, sin borrar
+  sus filas, mientras la nueva se investiga.
 
 ## 6. Métricas, trazas y alertas
 
