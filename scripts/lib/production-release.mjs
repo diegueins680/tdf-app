@@ -643,6 +643,27 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF to_regclass('public.notification') IS NULL THEN
+    RAISE EXCEPTION 'The notification relation is missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.notification'::regclass
+      AND conname = 'notification_notif_type_check'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%reaction_received%'
+      AND pg_get_constraintdef(oid) ILIKE '%post_trending%'
+      AND pg_get_constraintdef(oid) ILIKE '%weekly_top%'
+      AND pg_get_constraintdef(oid) ILIKE '%artist_liked%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_submitted%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_review%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_decided%'
+  ) THEN
+    RAISE EXCEPTION 'The notification type constraint is missing access-request events';
+  END IF;
+
   FOREACH catalog_table IN ARRAY ARRAY[
     'workflow_definition',
     'workflow_state',
