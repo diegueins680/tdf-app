@@ -195,7 +195,7 @@ Five fresh Pixel 7-profile runs per exact-baseline/current production build used
 | DOMContentLoaded | 2,744 ms | 2,761 ms | Effectively unchanged |
 | Load | 5,013 ms | 5,000 ms | Effectively unchanged |
 
-This is laboratory evidence, not representative field p75 data. INP was not measured because the script did not perform a representative interaction. No conversion or performance uplift is claimed. Final production build passed its bundle guard with 5 preloads and 411,529 gzip bytes of initial JavaScript, while Vite still warns that the MUI chunk is over 500 kB minified. Highest-value performance work is route-shell/critical CSS and vendor/chunk analysis using a controlled profile, followed by field measurement when consented RUM is available.
+This is laboratory evidence, not representative field p75 data. INP was not measured because the script did not perform a representative interaction. No conversion or performance uplift is claimed. Final production build passed its bundle guard with 5 preloads and 411,523 gzip bytes of initial JavaScript, while Vite still warns that the MUI chunk is over 500 kB minified. Highest-value performance work is route-shell/critical CSS and vendor/chunk analysis using a controlled profile, followed by field measurement when consented RUM is available.
 
 Analytics events remain semantically distinct: signup start/failure/completion, login, intent selection, and first actions are not conflated. The batch removes personal identity properties and credential-bearing query values; it does not invent baseline conversion rates or launch an experiment.
 
@@ -269,9 +269,10 @@ The baseline Pixel 7 dialog required users to process optional marketing and unr
 | `npm run typecheck:ui` | Passed | Current web TypeScript contract compiles. |
 | `npm run lint:ui` | Completed with zero errors and 102 existing warnings | No lint error; warnings are not hidden. |
 | Focused ESLint for all follow-up TypeScript/TSX files | Passed with zero errors and zero warnings | The changed follow-up files satisfy current lint rules; this does not erase warnings elsewhere. |
-| `npm run build:ui` | Passed; 5 preloads / 411,529 gzip bytes initial JS | Current production bundle builds and passes repository guard; not a deployed build. |
+| `npm run build:ui` | Passed; 5 preloads / 411,523 gzip bytes initial JS | Current production bundle builds and passes repository guard; not a deployed build. |
 | `npm run audit:ui:static` | Zero findings | Current heuristic finds no missing icon/image/text-field names; it is not a manual or screen-reader conformance result. |
 | Static-audit helper regression | 5/5 Node tests passed | Scanner recognizes JSX and `inputProps` object labels without regressing comment/string filtering. |
+| `REQUIRE_MOBILE_WORKSPACE=1 npm run audit:catalog-lists` | Passed after initializing the parent worktree's exact `10d5dc9…` mobile pointer | No unreviewed or stale static-list decisions. The first remote follow-up run caught a review-status array as a new catalog candidate; commit `173f99622` replaced it with typed predicates without weakening validation. |
 | Mobile focused Jest | 2 suites / 31 tests passed | Revoked-session and anonymous-checkout cases pass with mocks. |
 | `REQUIRE_MOBILE_WORKSPACE=1 npm run test:mobile` | 64 suites / 316 tests passed | Full accessible native Jest workspace ran; not a simulator/device or live backend. |
 | `REQUIRE_MOBILE_WORKSPACE=1 npm run typecheck:mobile` | Passed | Mobile TypeScript compiles. |
@@ -326,7 +327,7 @@ No participant was contacted and no session, quote, completion rate, or usabilit
 
 ## 16. Branch, publication, and pull-request handoff
 
-- Root branch: `feature/onboarding-first-ux-20260904`; focused implementation commits are `aba01d1f8` (email/log security), `8d62611de` (web onboarding/privacy), `86e234045` (published mobile pointer), `5832cfff1` (credential-test compilation), `80ff055ea` (public commerce/state), and `4f877d11f` (campaign accessibility). Audit/handoff commits are `2ceda96b1`, `1c758a833`, and `d3b1cef37`, plus the current report update. Draft PR: [tdf-app #238](https://github.com/diegueins680/tdf-app/pull/238).
+- Root branch: `feature/onboarding-first-ux-20260904`; focused implementation commits are `aba01d1f8` (email/log security), `8d62611de` (web onboarding/privacy), `86e234045` (published mobile pointer), `5832cfff1` (credential-test compilation), `80ff055ea` (public commerce/state), `4f877d11f` (campaign accessibility), and `173f99622` (catalog-audit-compatible review guard). Audit/handoff commits are `2ceda96b1`, `1c758a833`, `d3b1cef37`, and `c9e4fc6b8`, plus the current report update. Draft PR: [tdf-app #238](https://github.com/diegueins680/tdf-app/pull/238).
 - Mobile branch: `feature/onboarding-first-ux-20260905`; commits `3c132ff` and `10d5dc9`; remote commit `10d5dc9e2a733c9c61b5b5f288d6cdfc28a2e623` is published. Draft PR: [TDF-mobile #39](https://github.com/diegueins680/TDF-mobile/pull/39).
 - PR text is preserved in `reports/onboarding-first-ux-pr-description-2026-09-05.md` and `reports/onboarding-first-ux-mobile-pr-description-2026-09-05.md`.
 - No PR was merged and no production deployment occurred. Root PR creation automatically started Cloudflare Pages and Vercel preview checks; their result is not presented as production validation.

@@ -23,8 +23,9 @@ TDF onboarding and first-purchase journeys contained security/privacy risks and 
 - Screenshots/performance: `artifacts/ux-audit-2026-09-05/`
 - Initial web focused tests: 5 suites / 18 tests passed; follow-up commerce/privacy/reviews tests: 6 suites / 30 tests passed (with retained pre-existing React `act(...)` warnings in marketplace tests).
 - Full current public-persona browser regression: 16 passed / 2 intentional duplicate-device skips; focused commerce evidence also passed 4/4 on desktop and Pixel 7 with axe serious/critical checks and screenshots.
-- Web typecheck/build passed; final bundle guard reports 5 preloads / 411,529 gzip bytes initial JS. Focused follow-up lint and the static UI audit are clean; full lint retains 102 existing warnings.
+- Web typecheck/build passed; final bundle guard reports 5 preloads / 411,523 gzip bytes initial JS. Focused follow-up lint and the static UI audit are clean; full lint retains 102 existing warnings.
 - Static-audit parser regressions: 5/5 passed; current UI source has zero static findings.
+- Mobile-required catalog-list audit passed after CI identified and the branch replaced one unreviewed review-status array with typed contract predicates.
 - Mobile full Jest: 64 suites / 316 tests passed; typecheck and lint passed.
 - Backend/application and the 184-module test executable compiled/linked; the matched credential-content Hspec test ran 1 example with 0 failures. Existing compiler warnings remain visible; SMTP delivery is not claimed.
 - Lab LCP remains about 4.3 seconds in both variants; no performance uplift is claimed.
