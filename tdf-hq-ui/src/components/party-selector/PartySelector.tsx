@@ -13,6 +13,13 @@ import {
 } from '@mui/material';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { searchPartiesForSelector, type PartySelectorContext, type PartySelectorKind, type PartySelectorOption } from '../../api/partySelector';
+import { getAnalyticsClient } from '../../analytics/posthog';
+import {
+  observePartySelectorSearch,
+  recordPartySelectorAvatarFailure,
+  recordPartySelectorSelection,
+  recordPartySelectorSelectionFailure,
+} from '../../analytics/partySelectorTelemetry';
 import { getActiveSession } from '../../session/SessionContext';
 
 export interface PartySelectorProps {
@@ -41,9 +48,19 @@ export interface PartyMultiSelectorProps {
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || '?';
 
-const OptionIdentity = ({ option }: { option: PartySelectorOption }) => (
+const OptionIdentity = ({ option, context }: { option: PartySelectorOption; context: PartySelectorContext }) => (
   <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-    <Avatar src={option.avatarUrl ?? undefined} alt="" imgProps={{ loading: 'lazy' }} sx={{ width: 32, height: 32 }}>
+    <Avatar
+      src={option.avatarUrl ?? undefined}
+      alt=""
+      imgProps={{
+        loading: 'lazy',
+        onError: () => recordPartySelectorAvatarFailure(getAnalyticsClient(), {
+          platform: 'web', context, partyType: option.partyType,
+        }),
+      }}
+      sx={{ width: 32, height: 32 }}
+    >
       {initials(option.displayName)}
     </Avatar>
     <Box sx={{ minWidth: 0 }}>
@@ -119,16 +136,23 @@ const usePartySelectorOptions = ({
     ...(session?.roles ?? []),
     ...(session?.modules ?? []),
   ].join(':');
+  const analytics = getAnalyticsClient();
   const query = useInfiniteQuery({
     queryKey: ['party-selector', sessionScope, activeQuery, context, kind, accountOnly, excludedKey],
-    queryFn: ({ pageParam, signal }) => searchPartiesForSelector({
-      query: activeQuery,
+    queryFn: ({ pageParam, signal }) => observePartySelectorSearch({
+      analytics,
+      platform: 'web',
       context,
-      kind,
-      accountOnly,
-      excludedPartyIds,
-      cursor: pageParam,
-      signal,
+      pageKind: pageParam == null ? 'initial' : 'load_more',
+      request: () => searchPartiesForSelector({
+        query: activeQuery,
+        context,
+        kind,
+        accountOnly,
+        excludedPartyIds,
+        cursor: pageParam,
+        signal,
+      }),
     }),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
@@ -219,7 +243,19 @@ export function PartySelector(props: PartySelectorProps) {
       getOptionLabel={(option) => option.displayName}
       isOptionEqualToValue={(option, selected) => option.partyId === selected.partyId}
       onChange={(_, next) => {
-        onChange(next);
+        const analytics = getAnalyticsClient();
+        try {
+          onChange(next);
+          recordPartySelectorSelection(analytics, {
+            platform: 'web',
+            context,
+            mode: 'single',
+            action: next == null ? 'removed' : value == null ? 'selected' : 'replaced',
+          });
+        } catch (error) {
+          recordPartySelectorSelectionFailure(analytics, { platform: 'web', context, mode: 'single' });
+          throw error;
+        }
         setInputValue(next?.displayName ?? '');
       }}
       inputValue={inputValue}
@@ -227,7 +263,7 @@ export function PartySelector(props: PartySelectorProps) {
         if (reason === 'input' || reason === 'clear') setInputValue(next);
       }}
       noOptionsText={inputValue.trim().length < 2 ? 'Escribe al menos dos caracteres.' : error ? 'Error al buscar.' : 'No encontramos coincidencias.'}
-      renderOption={(props, option) => <li {...props} key={option.partyId}><OptionIdentity option={option} /></li>}
+      renderOption={(props, option) => <li {...props} key={option.partyId}><OptionIdentity option={option} context={context} /></li>}
       PaperComponent={(paperProps) => (
         <SelectorPaper {...paperProps} hasMore={hasMore} loadingMore={loadingMore} onLoadMore={loadMore} />
       )}
@@ -290,7 +326,19 @@ export function PartyMultiSelector(props: PartyMultiSelectorProps) {
       getOptionLabel={(option) => option.displayName}
       isOptionEqualToValue={(option, selected) => option.partyId === selected.partyId}
       onChange={(_, next) => {
-        onChange(mergeSelectedOptions([], next));
+        const analytics = getAnalyticsClient();
+        try {
+          onChange(mergeSelectedOptions([], next));
+          recordPartySelectorSelection(analytics, {
+            platform: 'web',
+            context,
+            mode: 'multiple',
+            action: next.length < value.length ? 'removed' : 'selected',
+          });
+        } catch (error) {
+          recordPartySelectorSelectionFailure(analytics, { platform: 'web', context, mode: 'multiple' });
+          throw error;
+        }
         setInputValue('');
       }}
       inputValue={inputValue}
@@ -298,7 +346,7 @@ export function PartyMultiSelector(props: PartyMultiSelectorProps) {
         if (reason === 'input' || reason === 'clear') setInputValue(next);
       }}
       noOptionsText={inputValue.trim().length < 2 ? 'Escribe al menos dos caracteres.' : error ? 'Error al buscar.' : 'No encontramos coincidencias.'}
-      renderOption={(optionProps, option) => <li {...optionProps} key={option.partyId}><OptionIdentity option={option} /></li>}
+      renderOption={(optionProps, option) => <li {...optionProps} key={option.partyId}><OptionIdentity option={option} context={context} /></li>}
       PaperComponent={(paperProps) => (
         <SelectorPaper {...paperProps} hasMore={hasMore} loadingMore={loadingMore} onLoadMore={loadMore} />
       )}
@@ -308,7 +356,20 @@ export function PartyMultiSelector(props: PartyMultiSelectorProps) {
           <Chip
             {...tagProps}
             key={option.partyId}
-            avatar={<Avatar src={option.avatarUrl ?? undefined} alt="">{initials(option.displayName)}</Avatar>}
+            avatar={(
+              <Avatar
+                src={option.avatarUrl ?? undefined}
+                alt=""
+                imgProps={{
+                  loading: 'lazy',
+                  onError: () => recordPartySelectorAvatarFailure(getAnalyticsClient(), {
+                    platform: 'web', context, partyType: option.partyType,
+                  }),
+                }}
+              >
+                {initials(option.displayName)}
+              </Avatar>
+            )}
             label={option.username ? `${option.displayName} · @${option.username}` : option.displayName}
           />
         );

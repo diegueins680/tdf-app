@@ -8,9 +8,19 @@ import type { PartySelectorOption, PartySelectorPage } from '../../api/partySele
 const searchPartiesForSelector = jest.fn<
   (params: { query: string; cursor?: number; signal?: AbortSignal }) => Promise<PartySelectorPage>
 >();
+const capture = jest.fn();
 
 jest.unstable_mockModule('../../api/partySelector', () => ({
   searchPartiesForSelector,
+}));
+jest.unstable_mockModule('../../analytics/posthog', () => ({
+  getAnalyticsClient: () => ({
+    ready: true,
+    capture,
+    identify: jest.fn(),
+    reset: jest.fn(),
+    page: jest.fn(),
+  }),
 }));
 
 const { PartyMultiSelector, PartySelector } = await import('./PartySelector');
@@ -80,6 +90,9 @@ describe('PartyMultiSelector', () => {
       kind: 'any',
       accountOnly: false,
     }));
+    expect(capture).toHaveBeenCalledWith('party_selector_selection_changed', {
+      platform: 'web', context: 'crm_assignment', mode: 'multiple', action: 'selected',
+    });
   });
 
   it('shows an initial single selection without searching for its display label', () => {

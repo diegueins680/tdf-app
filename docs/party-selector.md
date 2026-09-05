@@ -152,6 +152,29 @@ ms (bitmap GIN), y la de username de 17,7 ms/42.625 filas descartadas a 2,3 ms
 con el índice GIN y orden exacto-estable. Son mediciones locales de plan, no un
 p95 de staging; el gate de staging continúa siendo menor de 500 ms.
 
+## Observabilidad sin datos de búsqueda
+
+Web y mobile emiten el mismo contrato de eventos mediante el cliente PostHog
+existente, que se convierte en no-op cuando el entorno no tiene una clave:
+
+- `party_selector_search_completed`: plataforma, contexto, página
+  inicial/incremental, latencia, cantidad devuelta y existencia de cursor;
+- `party_selector_search_no_results`: plataforma y contexto;
+- `party_selector_search_failed`: plataforma, contexto, página, latencia y una
+  clase acotada (`timeout`, `authorization`, `request`, `server` o `network`);
+- `party_selector_search_cancelled`: cancelaciones esperadas por una consulta
+  posterior, separadas de los errores;
+- `party_selector_avatar_failed`: plataforma, contexto y tipo de Party;
+- `party_selector_selection_changed` y `party_selector_selection_failed`:
+  plataforma, contexto, modo simple/múltiple y acción cuando corresponde.
+
+Ninguno de estos eventos contiene el término buscado, Party ID, nombre,
+username, correo, URL de avatar ni el mensaje devuelto por el servidor. Esto
+permite agregar p50/p95, errores, timeouts, búsquedas vacías y fallos de imagen
+sin convertir la telemetría en un directorio lateral. La cancelación no se
+contabiliza como error y una consulta idéntica deduplicada emite una sola
+medición de red.
+
 ## Migración y rollback
 
 La ruta es aditiva: los endpoints existentes continúan recibiendo `partyId`.
