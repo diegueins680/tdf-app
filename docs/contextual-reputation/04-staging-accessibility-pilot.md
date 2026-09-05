@@ -38,13 +38,21 @@ Ejecutar y guardar evidencia de:
    avanzado normalizado.
 4. Comparaciones de 3--10 perfiles comparables, empates, exclusiones y casos de
    uno/dos participantes como evaluación individual no comparativa.
-5. Separación estricta: ranking privado/preferencias/señales no verificadas no
+5. Aislamiento de contexto con un sujeto y una categoría presentes en al menos
+   dos `context_key`: consultar cada contexto por separado y comprobar que la
+   API no mezcla conteos/scores ni duplica categorías; sin selector válido debe
+   devolver resultado contextual no publicado.
+6. Fixtures dorados por cada `formula_version_id`, con score agregado e
+   intervalo/confianza esperados. Deben detectar desviaciones en prior
+   bayesiano, decaimiento temporal, tope por evaluador, umbral de personas
+   distintas y exclusión de señales disputadas o provisionales.
+7. Separación estricta: ranking privado/preferencias/señales no verificadas no
    cambian agregado, badge, búsqueda ni API pública.
-6. Idempotencia, concurrencia, reintentos, eventos fuera de orden y recuperación
+8. Idempotencia, concurrencia, reintentos, eventos fuera de orden y recuperación
    de DLQ.
-7. Apelación sintética, exclusión provisional, recalculo acotado y auditoría de
+9. Apelación sintética, exclusión provisional, recalculo acotado y auditoría de
    acceso administrativo con motivo.
-8. Exportación/eliminación sintética según política aprobada, sin identidad de
+10. Exportación/eliminación sintética según política aprobada, sin identidad de
    terceros.
 
 ## 4. Accesibilidad y usabilidad
@@ -81,9 +89,11 @@ turnos y ruta de escalamiento.
 
 ### Fase C — visibilidad limitada
 
-Tras dos semanas estables, mostrar solo agregados de sujetos con consentimiento
-durable vigente, muestra suficiente y gate público activo. Tratar la reputación
-como una señal entre relevancia, ubicación,
+Tras dos semanas estables y solo si los fixtures dorados y de aislamiento de
+contexto pasan para la `formula_version_id` activa, mostrar agregados de sujetos
+con consentimiento durable vigente, muestra suficiente y gate público activo.
+Cualquier diferencia entre valores esperados y publicados bloquea esta fase.
+Tratar la reputación como una señal entre relevancia, ubicación,
 disponibilidad y contexto; nunca como orden único.
 
 ## 6. Métricas y criterios cuantitativos
