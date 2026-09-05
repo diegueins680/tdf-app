@@ -141,7 +141,7 @@ describe('TdfPlatformPage', () => {
 
     expect(screen.getByRole('heading', { name: 'TDF Records' })).not.toBeNull();
     expect(screen.getAllByRole('link', { name: 'Crear cuenta' })[0]?.getAttribute('href')).toBe(
-      '/login?signup=1&intent=follow_artists&redirect=/fans',
+      '/login?signup=1',
     );
     expect(screen.getByRole('link', { name: 'Perfil fan' }).getAttribute('href')).toBe(
       '/login?signup=1&intent=follow_artists&redirect=/fans',

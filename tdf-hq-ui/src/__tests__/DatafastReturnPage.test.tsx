@@ -71,6 +71,7 @@ describe('DatafastReturnPage', () => {
     lookupTokenMock.mockReset();
     lookupTokenMock.mockReturnValue('secure-lookup-token');
     window.localStorage.clear();
+    window.sessionStorage.clear();
     window.history.pushState({}, '', '/marketplace/pago-datafast?orderId=order-1&resourcePath=resource-1');
   });
 
@@ -89,7 +90,8 @@ describe('DatafastReturnPage', () => {
     expect(container.textContent).not.toContain('Pago confirmado. ¡Gracias por tu compra!');
     expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBe('cart-1');
     expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBe('{"items":1}');
-    expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBe('{"name":"Test User"}');
+    expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBe('{"name":"Test User"}');
 
     await cleanup();
     document.body.removeChild(container);
@@ -109,6 +111,7 @@ describe('DatafastReturnPage', () => {
     expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBeNull();
     expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBeNull();
     expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBeNull();
 
     await cleanup();
     document.body.removeChild(container);

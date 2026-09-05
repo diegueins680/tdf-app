@@ -8,8 +8,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { confirmPasswordReset } = await import('./auth');
-const { loginRequest } = await import('./auth');
+const { confirmPasswordReset, loginRequest, signupRequest } = await import('./auth');
 
 const createHeaders = (contentType?: string, extra: Record<string, string | null> = {}) => ({
   get: jest.fn((name: string) => {
@@ -56,6 +55,7 @@ describe('auth api', () => {
         token: 'reset-token',
         newPassword: 'Password123',
       }),
+      signal: expect.any(AbortSignal),
     });
     expect(result).toEqual({
       token: 'session-token',
@@ -161,6 +161,7 @@ describe('auth api', () => {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(loginPayload),
+          signal: expect.any(AbortSignal),
         },
       ]),
     );
@@ -204,5 +205,29 @@ describe('auth api', () => {
 
     await rejection;
     expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('aborts a hanging signup request with a stable timeout message', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation((_input, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('Aborted', 'AbortError'));
+      });
+    }));
+
+    const pending = signupRequest({
+      firstName: 'Elena',
+      lastName: 'Paredes',
+      email: 'elena@persona.test',
+      password: 'fictional-password',
+      termsAccepted: true,
+      termsVersion: 'test-terms',
+    });
+    const rejection = expect(pending).rejects.toThrow(
+      'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.',
+    );
+
+    await jest.advanceTimersByTimeAsync(30_000);
+    await rejection;
   });
 });

@@ -254,6 +254,7 @@ describe('MarketplacePage', () => {
     upsertItemMock.mockResolvedValue(buildCart());
     checkoutMock.mockResolvedValue(buildOrder());
     window.localStorage.clear();
+    window.sessionStorage.clear();
     window.history.pushState({}, '', '/marketplace');
   });
 
@@ -316,6 +317,24 @@ describe('MarketplacePage', () => {
         JSON.stringify({ search: '', category: 'all', sort: 'relevance', purpose: 'all', condition: 'all' }),
       );
     });
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
+  it('does not promise an availability notification that has no server request', async () => {
+    listMock.mockResolvedValue([]);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    await waitForExpectation(() => {
+      expect(container.textContent).toContain('No encontramos resultados con estos filtros.');
+    });
+    expect(container.textContent).not.toContain('¿Te avisamos cuando vuelva a estar disponible?');
+    expect(container.textContent).not.toContain('Guardar contacto');
+    expect(container.querySelector('a[href="/servicios"]')?.textContent).toContain('Explorar servicios de TDF');
 
     await cleanup();
     document.body.removeChild(container);
@@ -489,6 +508,8 @@ describe('MarketplacePage', () => {
       expect(container.textContent).toContain('Usar datos guardados');
       expect(container.textContent).toContain('Limpiar datos');
     });
+    expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).not.toBeNull();
 
     const nameInput = getInputByLabel(container, 'Nombre completo');
     const emailInput = getInputByLabel(container, 'Email');
@@ -515,6 +536,7 @@ describe('MarketplacePage', () => {
     expect(getInputByLabel(container, 'Nombre completo').value).toBe('');
     expect(getInputByLabel(container, 'Email').value).toBe('');
     expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBeNull();
 
     await cleanup();
     document.body.removeChild(container);

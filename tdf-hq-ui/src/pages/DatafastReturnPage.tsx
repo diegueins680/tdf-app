@@ -4,6 +4,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Marketplace, loadMarketplaceLookupToken } from '../api/marketplace';
 import type { MarketplaceOrderDTO } from '../api/types';
 import { getOrderStatusMeta, isPaidOrderStatus } from '../utils/marketplace';
+import { clearSessionPersonalData, readSessionPersonalData } from '../utils/sessionPersonalData';
+
+const MARKETPLACE_BUYER_INFO_KEY = 'tdf-marketplace-buyer';
 
 function getQueryParam(name: string): string | null {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -30,6 +33,7 @@ export default function DatafastReturnPage() {
 
   useEffect(() => {
     const run = async () => {
+      readSessionPersonalData(MARKETPLACE_BUYER_INFO_KEY);
       if (!orderId || !resourcePath) {
         setStatus('error');
         setMessage('Faltan datos de la transacción.');
@@ -49,7 +53,7 @@ export default function DatafastReturnPage() {
           // Limpia el carrito local para evitar dobles compras tras un pago exitoso.
           localStorage.removeItem('tdf-marketplace-cart-id');
           localStorage.removeItem('tdf-marketplace-cart-meta');
-          localStorage.removeItem('tdf-marketplace-buyer');
+          clearSessionPersonalData(MARKETPLACE_BUYER_INFO_KEY);
           setMessage('Pago confirmado. ¡Gracias por tu compra!');
           return;
         }

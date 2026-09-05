@@ -32,6 +32,41 @@ export interface AnalyticsClient {
 
 let cachedClient: AnalyticsClient | null = null;
 
+const SENSITIVE_QUERY_PARAMETER = /(^|[_-])(token|code|state|password|secret|key)($|[_-])/i;
+const REDACTED_QUERY_VALUE = '[REDACTED]';
+
+export function redactSensitiveQueryValues(value: string): string {
+  if (!value.includes('?')) return value;
+
+  try {
+    const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
+    const parsed = new URL(value, 'https://analytics.invalid');
+    let changed = false;
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (!SENSITIVE_QUERY_PARAMETER.test(key)) continue;
+      parsed.searchParams.set(key, REDACTED_QUERY_VALUE);
+      changed = true;
+    }
+    if (!changed) return value;
+    return isAbsolute
+      ? parsed.toString()
+      : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return value;
+  }
+}
+
+export function sanitizeAnalyticsProperties<T extends Record<string, unknown>>(
+  properties: T,
+): T {
+  return Object.fromEntries(
+    Object.entries(properties).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? redactSensitiveQueryValues(value) : value,
+    ]),
+  ) as T;
+}
+
 function logAnalyticsFailure(operation: string, error: unknown): void {
   logger.warn(`[analytics] ${operation} failed`, { error });
 }
@@ -63,10 +98,17 @@ export function getAnalyticsClient(): AnalyticsClient {
 
   posthog.init(key, {
     api_host: host,
+    autocapture: false,
     capture_pageview: true,
     capture_pageleave: true,
     disable_session_recording: true,
     persistence: 'localStorage+cookie',
+    mask_personal_data_properties: true,
+    before_send: (event) => {
+      if (event === null) return null;
+      event.properties = sanitizeAnalyticsProperties(event.properties);
+      return event;
+    },
   });
 
   cachedClient = {

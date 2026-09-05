@@ -72,6 +72,11 @@ import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
 import { formatCurrencyForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import {
+  clearSessionPersonalData,
+  readSessionPersonalData,
+  writeSessionPersonalData,
+} from '../utils/sessionPersonalData';
 
 const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
@@ -456,7 +461,7 @@ export default function MarketplacePage() {
   });
   const [initialBuyerSnapshot] = useState<SavedBuyer>(() => {
     if (typeof window === 'undefined') return normalizeSavedBuyer(null);
-    return normalizeSavedBuyer(parseSavedBuyer(localStorage.getItem(BUYER_INFO_KEY)));
+    return normalizeSavedBuyer(parseSavedBuyer(readSessionPersonalData(BUYER_INFO_KEY)));
   });
   const [initialListingId] = useState<string | null>(initialViewState.listingId);
   const [search, setSearch] = useState(initialViewState.search);
@@ -1131,10 +1136,10 @@ export default function MarketplacePage() {
     try {
       const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
       if (hasBuyerInfo(payload)) {
-        localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
+        writeSessionPersonalData(BUYER_INFO_KEY, JSON.stringify(payload));
         return;
       }
-      localStorage.removeItem(BUYER_INFO_KEY);
+      clearSessionPersonalData(BUYER_INFO_KEY);
     } catch {
       // ignore storage errors
     }
@@ -1472,7 +1477,7 @@ export default function MarketplacePage() {
     setBuyerPhone('');
     setContactPref('email');
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(BUYER_INFO_KEY);
+      clearSessionPersonalData(BUYER_INFO_KEY);
     }
     setSavedBuyerSnapshot(null);
   };
@@ -1861,44 +1866,9 @@ export default function MarketplacePage() {
                       >
                         No encontramos resultados con estos filtros.
                       </Alert>
-                      <Card variant="outlined" sx={{ mt: 1 }}>
-                        <CardContent>
-                          <Stack spacing={1.5}>
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              ¿Te avisamos cuando vuelva a estar disponible?
-                            </Typography>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                              <TextField
-                                label="Nombre"
-                                value={buyerName}
-                                onChange={(e) => setBuyerName(e.target.value)}
-                                size="small"
-                              />
-                              <TextField
-                                label="Correo"
-                                value={buyerEmail}
-                                onChange={(e) => setBuyerEmail(e.target.value)}
-                                size="small"
-                              />
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => {
-                                  const payload = { name: buyerName, email: buyerEmail, phone: buyerPhone, pref: contactPref };
-                                  localStorage.setItem(BUYER_INFO_KEY, JSON.stringify(payload));
-                                  setSavedBuyerSnapshot(payload);
-                                  setToast('Guardamos tu contacto; te avisaremos.');
-                                }}
-                              >
-                                Guardar contacto
-                              </Button>
-                            </Stack>
-                            <Typography variant="caption" color="text.secondary">
-                              Usaremos tu contacto solo para notificar disponibilidad.
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                      <Button component={RouterLink} to="/servicios" variant="outlined" sx={{ mt: 1 }}>
+                        Explorar servicios de TDF
+                      </Button>
                     </Grid>
                   )}
                   {visibleListings.map((item) => (

@@ -30,7 +30,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
@@ -43,7 +42,6 @@ import { googleLoginRequest, loginRequest, requestPasswordReset, signupRequest }
 import { Meta } from '../api/meta';
 import { loadSessionSnapshot } from '../api/session';
 import { Fans } from '../api/fans';
-import type { ArtistProfileDTO } from '../api/types';
 import { buildSignupPayload, deriveEffectiveRoles } from '../utils/roles';
 import { parsePositiveSafeInt } from '../utils/ids';
 import { parseGoogleIdToken } from '../utils/googleIdToken';
@@ -55,13 +53,10 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { captureFirstValueOnce, markWebSignupCompleted } from '../analytics/onboardingProgress';
+import { markWebSignupCompleted } from '../analytics/onboardingProgress';
+import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
-// Mirrors the server's rejected Unicode categories: Control, Format,
-// LineSeparator, and ParagraphSeparator.
-// eslint-disable-next-line no-control-regex
-const hasUnsafePasswordCharacter = (value: string) => /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(value);
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
   events: 'descubrir eventos',
   follow_artists: 'seguir artistas',
@@ -69,24 +64,6 @@ const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
   internships: 'postular a prácticas',
   learning: 'aprender o enseñar',
   professional_tools: 'explorar herramientas profesionales',
-};
-
-const LANDING_LABELS: Record<string, string> = {
-  '/configuracion/roles-permisos': 'Roles y permisos',
-  '/mi-artista': 'Mi artista',
-  '/mi-profesor': 'Mi profesor',
-  '/fans': 'Comunidad',
-  '/estudio/calendario': 'Calendario',
-  '/crm/contactos': 'CRM',
-  '/escuela/clases': 'Escuela',
-  '/label/artistas': 'Sello / Artistas',
-  '/operacion/inventario': 'Inventario',
-  '/finanzas/pagos': 'Finanzas',
-  '/finanzas/creador-reporte-cuenta': 'Finanzas / Creador de reportes',
-  '/finanzas/reporte-esteban-munoz': 'Finanzas / Reporte Esteban',
-  '/finanzas/reporte-david-celaya': 'Finanzas / Reporte David',
-  '/practicas': 'Prácticas',
-  '/inicio': 'Inicio',
 };
 
 declare global {
@@ -187,21 +164,20 @@ export default function LoginPage() {
   });
   const [signupIntent, setSignupIntent] = useState<OnboardingIntent | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
-  const [favoriteArtistIds, setFavoriteArtistIds] = useState<number[]>([]);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
   const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
   const analytics = useAnalytics();
-  const passwordHint = 'Usa al menos 8 caracteres y como máximo 72 bytes UTF-8, sin caracteres de control ni formato oculto.';
+  const passwordHint = AUTH_PASSWORD_REQUIREMENTS_ES;
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
   const signupNameInputRef = useRef<HTMLInputElement | null>(null);
   const signupEmailInputRef = useRef<HTMLInputElement | null>(null);
+  const signupPasswordInputRef = useRef<HTMLInputElement | null>(null);
   const googleInitRef = useRef(false);
   const googleCredentialHandlerRef = useRef<(response: { credential?: string }) => void | Promise<void>>(
     () => undefined,
@@ -257,7 +233,12 @@ export default function LoginPage() {
     () => ({
       '& .MuiInputLabel-root': {
         color: 'rgba(15,23,42,0.72)',
-        '&.Mui-focused': { color: '#2563eb' },
+        '&.MuiInputLabel-shrink': {
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          px: 0.5,
+        },
+        '&.Mui-focused': { color: 'primary.main' },
       },
       '& .MuiOutlinedInput-root': {
         bgcolor: '#ffffff',
@@ -269,7 +250,7 @@ export default function LoginPage() {
           boxShadow: '0 0 0 1px rgba(37,99,235,0.35)',
         },
       },
-      '& .MuiFormHelperText-root': { color: 'rgba(15,23,42,0.6)' },
+      '& .MuiFormHelperText-root': { color: 'rgba(226,232,240,0.84)' },
       '& .MuiInputBase-input::placeholder': { color: 'rgba(15,23,42,0.45)', opacity: 1 },
     }),
     [],
@@ -338,11 +319,9 @@ export default function LoginPage() {
       phone: '',
       password: '',
     });
-    setFavoriteArtistIds([]);
     setClaimArtistId(signupPreset.claimArtistId);
     setSignupIntent(signupPreset.intent);
     setTermsAccepted(false);
-    setMarketingOptIn(false);
     captureGrowthEvent(analytics, 'signup_started', {
       route: '/login',
       entry: 'campaign_link',
@@ -365,7 +344,7 @@ export default function LoginPage() {
   const fanArtistsQuery = useQuery({
     queryKey: ['signup', 'artists'],
     queryFn: Fans.listArtists,
-    enabled: signupDialogOpen,
+    enabled: signupDialogOpen && (signupIntent === 'artist_profile' || claimArtistId !== null),
     staleTime: 5 * 60 * 1000,
   });
   const fanArtists = useMemo(() => fanArtistsQuery.data ?? [], [fanArtistsQuery.data]);
@@ -377,44 +356,6 @@ export default function LoginPage() {
     () => claimableArtists.find((artist) => artist.apArtistId === claimArtistId) ?? null,
     [claimArtistId, claimableArtists],
   );
-  const signupGuide = useMemo(() => {
-    const steps: string[] = [];
-    let title = 'Primeros pasos sugeridos';
-    const note = 'Los roles adicionales se solicitan y revisan después de crear la cuenta.';
-
-    if (claimArtistId) {
-      title = 'Reclamo verificado de artista';
-      steps.push('El backend comprobará que el correo coincida con el perfil disponible.');
-      steps.push('La política persistida de reclamo asignará el acceso si la comprobación es concluyente.');
-    } else if (favoriteArtistIds.length > 0) {
-      title = 'Tus artistas favoritos';
-      steps.push('Guardaremos estas relaciones sin convertirlas en permisos.');
-      steps.push('Podrás continuar a la comunidad con tu cuenta Customer.');
-    } else if (signupIntent === 'artist_profile') {
-      title = 'Perfil de artista';
-      steps.push('Crearemos tu cuenta Customer sin autoasignar permisos.');
-      steps.push('Después podrás reclamar un perfil verificable o enviar una solicitud revisada.');
-    } else if (signupIntent === 'internships') {
-      title = 'Postulación a prácticas';
-      steps.push('Crearemos tu cuenta base para identificar la solicitud.');
-      steps.push('Después abrirás la solicitud de acceso a Prácticas para revisión.');
-    } else if (signupIntent === 'follow_artists') {
-      title = 'Comunidad de fans';
-      steps.push('Crearemos tu cuenta Customer y abriremos la comunidad.');
-      steps.push('Podrás seguir artistas y guardar contenido inmediatamente.');
-    } else {
-      steps.push('Crearemos la cuenta con la política base persistida.');
-      steps.push('Las asignaciones adicionales requieren el flujo de revisión correspondiente.');
-    }
-
-    const landingPath = resolvePostAuthPath(signupIntent, ['Customer'], [], redirectPath);
-    const landingLabel = landingPath.startsWith('/solicitudes-acceso/nueva')
-      ? 'Solicitud de acceso revisada'
-      : LANDING_LABELS[landingPath] ?? landingPath;
-
-    return { title, steps, landingLabel, note };
-  }, [claimArtistId, favoriteArtistIds.length, redirectPath, signupIntent]);
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
@@ -496,7 +437,7 @@ export default function LoginPage() {
         const response = await googleLoginMutation.mutateAsync({
           idToken: credential,
           ...(signupDialogOpen ? {
-            marketingOptIn,
+            marketingOptIn: false,
             termsAccepted: true,
             termsVersion: ACCOUNT_TERMS_VERSION,
           } : {}),
@@ -539,7 +480,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, googleLoginMutation, login, marketingOptIn, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
+    [analytics, buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
 
   useEffect(() => {
@@ -670,17 +611,31 @@ export default function LoginPage() {
     setResetFeedback(null);
     try {
       await resetMutation.mutateAsync(emailValue);
-    } catch (err) {
-      logger.warn('Password reset request failed (silently returning success)', err);
-    } finally {
       setResetFeedback({
         type: 'success',
         message: 'Si el correo existe en TDF Records, te enviaremos un enlace para restablecer la contraseña.',
+      });
+    } catch (err) {
+      logger.warn('Password reset request failed', err);
+      setResetFeedback({
+        type: 'error',
+        message: 'No pudimos solicitar el enlace. Revisa tu conexión e inténtalo de nuevo.',
       });
     }
   };
 
   const openSignupDialog = (intent: OnboardingIntent | null = requestedIntent) => {
+    const signupParams = new URLSearchParams(window.location.search);
+    signupParams.set('signup', '1');
+    if (intent) signupParams.set('intent', intent);
+    else signupParams.delete('intent');
+    signupParams.delete('claimArtistId');
+    signupParams.delete('claim');
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}?${signupParams.toString()}${window.location.hash}`,
+    );
     setSignupDialogOpen(true);
     setSignupFeedback(null);
     setShowSignupPassword(false);
@@ -691,11 +646,9 @@ export default function LoginPage() {
       phone: '',
       password: '',
     });
-    setFavoriteArtistIds([]);
     setClaimArtistId(null);
     setSignupIntent(intent);
     setTermsAccepted(false);
-    setMarketingOptIn(false);
     captureGrowthEvent(analytics, 'signup_started', {
       route: '/login',
       entry: 'quick_route',
@@ -706,14 +659,23 @@ export default function LoginPage() {
   };
 
   const closeSignupDialog = () => {
+    const signupParams = new URLSearchParams(window.location.search);
+    signupParams.delete('signup');
+    signupParams.delete('intent');
+    signupParams.delete('claimArtistId');
+    signupParams.delete('claim');
+    const query = signupParams.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
     setSignupDialogOpen(false);
     setSignupFeedback(null);
     setShowSignupPassword(false);
-    setFavoriteArtistIds([]);
     setClaimArtistId(null);
     setSignupIntent(null);
     setTermsAccepted(false);
-    setMarketingOptIn(false);
     signupMutation.reset();
   };
 
@@ -731,8 +693,8 @@ export default function LoginPage() {
     }
 
     const payload = {
-      ...buildSignupPayload(signupForm, favoriteArtistIds, claimArtistId ?? undefined),
-      marketingOptIn,
+      ...buildSignupPayload(signupForm, [], claimArtistId ?? undefined),
+      marketingOptIn: false,
       termsAccepted: true as const,
       termsVersion: ACCOUNT_TERMS_VERSION,
     };
@@ -740,13 +702,14 @@ export default function LoginPage() {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: 'Completa nombre, correo y una contraseña segura (8+ caracteres).' });
       if (!payload.firstName && !payload.lastName) signupNameInputRef.current?.focus();
-      else signupEmailInputRef.current?.focus();
+      else if (!payload.email) signupEmailInputRef.current?.focus();
+      else signupPasswordInputRef.current?.focus();
       return;
     }
-    const passwordBytes = new TextEncoder().encode(payload.password.trim()).length;
-    if (Array.from(payload.password.trim()).length < 8 || passwordBytes > 72 || hasUnsafePasswordCharacter(payload.password)) {
+    if (!isValidAuthPassword(payload.password)) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'invalid_password', intent: signupIntent ?? 'general' });
       setSignupFeedback({ type: 'error', message: passwordHint });
+      signupPasswordInputRef.current?.focus();
       return;
     }
     if (!termsAccepted) {
@@ -758,8 +721,6 @@ export default function LoginPage() {
     try {
       const response = await signupMutation.mutateAsync(payload);
       const effectiveRoles = deriveEffectiveRoles(response.roles);
-      const shouldFollowArtists = favoriteArtistIds.length > 0;
-      const selectedFanArtistIds = favoriteArtistIds;
       const nextSession = await buildResolvedSession({
         username: payload.email,
         displayName: `${payload.firstName} ${payload.lastName}`.trim() || payload.email,
@@ -777,21 +738,6 @@ export default function LoginPage() {
         intent: signupIntent ?? 'general',
         destination: targetPath.split('?')[0],
       });
-      if (shouldFollowArtists) {
-        void Promise.all(
-          selectedFanArtistIds.map(async (artistId) => {
-            try {
-              await Fans.follow(artistId);
-              return true;
-            } catch (followErr) {
-              logger.warn('No se pudo seguir al artista después del registro', followErr);
-              return false;
-            }
-          }),
-        ).then((results) => {
-          if (results.some(Boolean)) captureFirstValueOnce(analytics, nextSession.partyId, 'artist_followed');
-        });
-      }
       navigate(targetPath, { replace: true });
     } catch (err) {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
@@ -1290,11 +1236,22 @@ export default function LoginPage() {
         aria-labelledby="login-reset-dialog-title"
       >
         <DialogTitle id="login-reset-dialog-title">{t('login.resetDialog.title')}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
+        <Box
+          component="form"
+          noValidate
+          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            void handleResetSubmit();
+          }}
+        >
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
               label="Correo asociado a tu cuenta"
               type="email"
+              name="email"
+              autoComplete="email"
+              required
               value={resetEmail}
               onChange={(event) => setResetEmail(event.target.value)}
               fullWidth
@@ -1309,14 +1266,15 @@ export default function LoginPage() {
             <Typography variant="body2" color="text.secondary">
               Te enviaremos un enlace temporal para que puedas definir una nueva contraseña.
             </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeResetDialog}>Cerrar</Button>
-          <Button onClick={() => { void handleResetSubmit(); }} disabled={resetMutation.isPending || servicePreparing}>
-            {resetMutation.isPending ? 'Enviando…' : servicePreparing ? 'Preparando servicio…' : 'Enviar enlace'}
-          </Button>
-        </DialogActions>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button type="button" onClick={closeResetDialog}>Cerrar</Button>
+            <Button type="submit" disabled={resetMutation.isPending || servicePreparing}>
+              {resetMutation.isPending ? 'Enviando…' : servicePreparing ? 'Preparando servicio…' : 'Enviar enlace'}
+            </Button>
+          </DialogActions>
+        </Box>
       </Dialog>
       <Dialog
         open={signupDialogOpen}
@@ -1326,65 +1284,28 @@ export default function LoginPage() {
         aria-labelledby="login-signup-dialog-title"
       >
         <DialogTitle id="login-signup-dialog-title">{t('login.signupDialog.title')}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
+        <Box
+          component="form"
+          noValidate
+          onSubmit={(event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            void handleSignupSubmit();
+          }}
+        >
+          <DialogContent>
+            <Stack spacing={2} sx={{ pt: 1 }}>
             {signupIntent && (
               <Alert severity="info">
-                Personalizaremos el siguiente paso para “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Esta elección no asigna permisos.
+                Al terminar, continuarás con “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Si la tarea requiere acceso especial, podrás solicitarlo para revisión.
               </Alert>
-            )}
-            <FormControlLabel
-              control={(
-                <Checkbox
-                  checked={termsAccepted}
-                  onChange={(event) => setTermsAccepted(event.target.checked)}
-                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
-                />
-              )}
-              label={(
-                <Typography variant="body2">
-                  Acepto los{' '}
-                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
-                  {' '}y la{' '}
-                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
-                </Typography>
-              )}
-            />
-            <FormControlLabel
-              control={(
-                <Checkbox
-                  checked={marketingOptIn}
-                  onChange={(event) => setMarketingOptIn(event.target.checked)}
-                  inputProps={{ 'aria-label': 'Quiero recibir novedades de TDF' }}
-                />
-              )}
-              label="Quiero recibir novedades de TDF (opcional)."
-            />
-            {googleClientId && termsAccepted && (
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  Crear e ingresar con Google
-                </Typography>
-                <Box
-                  ref={googleSignupButtonRef}
-                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
-                />
-                {googleStatus && (
-                  <Typography variant="caption" color="text.secondary">
-                    {googleStatus}
-                  </Typography>
-                )}
-                {googleError && (
-                  <Alert severity="warning" sx={{ width: '100%' }}>
-                    {googleError}
-                  </Alert>
-                )}
-              </Stack>
             )}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Nombre"
                 inputRef={signupNameInputRef}
+                name="givenName"
+                autoComplete="given-name"
+                required
                 value={signupForm.firstName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, firstName: event.target.value }))}
                 fullWidth
@@ -1392,6 +1313,8 @@ export default function LoginPage() {
               />
               <TextField
                 label="Apellido"
+                name="familyName"
+                autoComplete="family-name"
                 value={signupForm.lastName}
                 onChange={(event) => setSignupForm((prev) => ({ ...prev, lastName: event.target.value }))}
                 fullWidth
@@ -1399,19 +1322,19 @@ export default function LoginPage() {
               />
             </Stack>
             <TextField
-              label="Correo *"
+              label="Correo"
               inputRef={signupEmailInputRef}
               type="email"
+              name="email"
+              autoComplete="email"
+              required
               value={signupForm.email}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, email: event.target.value }))}
               fullWidth
               placeholder="tu.correo@tdf.com"
               sx={dialogFieldSx}
             />
-            <Alert severity="info">
-              Crearemos una cuenta Customer. Cualquier acceso adicional requiere una solicitud revisada o una comprobación de perfil existente.
-            </Alert>
-            {(claimableArtists.length > 0 || claimArtistId) && (
+            {(signupIntent === 'artist_profile' || claimArtistId !== null) && (
               <Stack spacing={1}>
                 <Typography variant="subtitle2">¿Tu perfil de artista ya existe en TDF?</Typography>
                 <Autocomplete
@@ -1444,44 +1367,13 @@ export default function LoginPage() {
                 )}
               </Stack>
             )}
-            <Stack spacing={1}>
-                <Typography variant="subtitle2">¿De qué artistas o bandas eres fan?</Typography>
-                <Autocomplete<ArtistProfileDTO, true, false, false>
-                  multiple
-                  options={fanArtists}
-                  getOptionLabel={(option) => option.apDisplayName}
-                  value={fanArtists.filter((artist) => favoriteArtistIds.includes(artist.apArtistId))}
-                  loading={fanArtistsQuery.isFetching}
-                  onChange={(_, selected) => {
-                    setFavoriteArtistIds(selected.map((item) => item.apArtistId));
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Artistas o bandas"
-                      placeholder={fanArtistsQuery.isFetching ? 'Cargando artistas...' : 'Buscar y seleccionar'}
-                      sx={dialogFieldSx}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {fanArtistsQuery.isFetching ? <CircularProgress color="inherit" size={16} /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-                {fanArtistsQuery.isError && (
-                  <Alert severity="warning">
-                    No pudimos cargar la lista de artistas en este momento. Puedes seguirlos después desde la comunidad.
-                  </Alert>
-                )}
-            </Stack>
             <TextField
-              label="Contraseña *"
+              label="Contraseña"
+              inputRef={signupPasswordInputRef}
               type={showSignupPassword ? 'text' : 'password'}
+              name="newPassword"
+              autoComplete="new-password"
+              required
               value={signupForm.password}
               onChange={(event) => setSignupForm((prev) => ({ ...prev, password: event.target.value }))}
               fullWidth
@@ -1503,55 +1395,58 @@ export default function LoginPage() {
               }}
               sx={dialogFieldSx}
             />
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
+                />
+              )}
+              label={(
+                <Typography variant="body2">
+                  Acepto los{' '}
+                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
+                  {' '}y la{' '}
+                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
+                </Typography>
+              )}
+            />
+            {googleClientId && termsAccepted && (
+              <Stack spacing={1} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  O crea tu cuenta con Google
+                </Typography>
+                <Box
+                  ref={googleSignupButtonRef}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
+                />
+                {googleStatus && (
+                  <Typography variant="caption" color="text.secondary">
+                    {googleStatus}
+                  </Typography>
+                )}
+                {googleError && (
+                  <Alert severity="warning" sx={{ width: '100%' }}>
+                    {googleError}
+                  </Alert>
+                )}
+              </Stack>
+            )}
             {signupFeedback && (
               <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
                 {signupFeedback.message}
               </Alert>
             )}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                borderColor: 'rgba(37,99,235,0.28)',
-                bgcolor: 'rgba(239,246,255,0.75)',
-              }}
-            >
-              <Stack spacing={1}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <AutoAwesomeIcon color="primary" fontSize="small" />
-                  <Typography variant="subtitle2" color="text.primary">
-                    {signupGuide.title}
-                  </Typography>
-                </Stack>
-                <Stack spacing={0.5}>
-                  {signupGuide.steps.map((step) => (
-                    <Typography key={step} variant="body2" color="text.secondary">
-                      - {step}
-                    </Typography>
-                  ))}
-                </Stack>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
-                  <Chip
-                    label={`Destino: ${signupGuide.landingLabel}`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                  {signupGuide.note && (
-                    <Chip label={signupGuide.note} size="small" variant="outlined" />
-                  )}
-                </Stack>
-              </Stack>
-            </Paper>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeSignupDialog}>Cancelar</Button>
-          <Button onClick={() => { void handleSignupSubmit(); }} disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
-            {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
-          </Button>
-        </DialogActions>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button type="button" onClick={closeSignupDialog}>Cancelar</Button>
+            <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
+              {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
+            </Button>
+          </DialogActions>
+        </Box>
       </Dialog>
 
     </Box>
