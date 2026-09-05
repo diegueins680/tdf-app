@@ -117,16 +117,48 @@ BEGIN
 
   DELETE FROM reputation_personal_preference_category WHERE preference_id=preference_uuid;
 
+  WITH parsed_categories AS (
+    SELECT
+      (item.value->>'categoryId')::uuid AS category_id,
+      (item.value->>'position')::smallint AS position,
+      (item.value->>'weight')::numeric AS raw_weight,
+      round((item.value->>'weight')::numeric, 4) AS rounded_weight,
+      coalesce((item.value->>'notApplicable')::boolean, false) AS not_applicable
+    FROM jsonb_array_elements(requested_categories) AS item(value)
+  ), category_totals AS (
+    SELECT
+      parsed_categories.*,
+      sum(raw_weight) FILTER (WHERE NOT not_applicable) OVER () AS raw_total,
+      sum(rounded_weight) FILTER (WHERE NOT not_applicable) OVER () AS rounded_total,
+      min(position) FILTER (WHERE NOT not_applicable) OVER () AS first_applicable_position,
+      max(position) FILTER (WHERE NOT not_applicable AND rounded_weight > 0) OVER () AS last_positive_position
+    FROM parsed_categories
+  )
   INSERT INTO reputation_personal_preference_category(
     preference_id, category_id, position, weight, not_applicable
   )
   SELECT
     preference_uuid,
-    (item.value->>'categoryId')::uuid,
-    (item.value->>'position')::smallint,
-    round((item.value->>'weight')::numeric, 4),
-    coalesce((item.value->>'notApplicable')::boolean, false)
-  FROM jsonb_array_elements(requested_categories) AS item(value);
+    category_id,
+    position,
+    CASE
+      WHEN requested_active
+        AND abs(raw_total - 100.0000) <= 0.0005
+        AND abs(rounded_total - 100.0000) <= 0.0005
+        AND rounded_total < 100.0000
+        AND position = first_applicable_position
+        THEN rounded_weight + (100.0000 - rounded_total)
+      WHEN requested_active
+        AND abs(raw_total - 100.0000) <= 0.0005
+        AND abs(rounded_total - 100.0000) <= 0.0005
+        AND rounded_total > 100.0000
+        AND position = last_positive_position
+        AND rounded_weight >= rounded_total - 100.0000
+        THEN rounded_weight - (rounded_total - 100.0000)
+      ELSE rounded_weight
+    END,
+    not_applicable
+  FROM category_totals;
 
   UPDATE reputation_personal_preference
   SET revision=CASE WHEN created_profile THEN current_revision ELSE current_revision + 1 END,

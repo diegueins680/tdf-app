@@ -78,6 +78,8 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     ? {
       loading: 'Loading categories',
       loadError: 'Categories could not be loaded. Please try again.',
+      preferenceLoadError: 'Your saved preference could not be loaded. Try again before editing.',
+      tryAgain: 'Try again',
       heading: 'What matters most to you?',
       explanation: 'Your order creates a personal compatibility preference. It does not change anyone’s public reputation.',
       method: 'Percentages are calculated automatically using a transparent method and add up to exactly 100%.',
@@ -97,6 +99,8 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     : {
       loading: 'Cargando categorías',
       loadError: 'No se pudieron cargar las categorías. Inténtalo nuevamente.',
+      preferenceLoadError: 'No se pudo cargar tu preferencia guardada. Reinténtalo antes de editar.',
+      tryAgain: 'Reintentar',
       heading: '¿Qué es más importante para ti?',
       explanation: 'Tu orden crea una preferencia de compatibilidad personal. No cambia la reputación pública de nadie.',
       method: 'Los porcentajes se calculan automáticamente con un método transparente y suman exactamente 100 %.',
@@ -115,9 +119,9 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
     };
 
   useEffect(() => {
-    if (!categories.data || order.length > 0 || (contextualReputationEnabled && preference.isLoading)) return;
+    if (!categories.data || !preference.isSuccess || order.length > 0) return;
     setOrder(orderCategoriesByPreference(categories.data, preference.data));
-  }, [categories.data, contextualReputationEnabled, order.length, preference.data, preference.isLoading]);
+  }, [categories.data, order.length, preference.data, preference.isSuccess]);
   const weights = useMemo(() => rankOrderCentroid(order.length), [order.length]);
   useEffect(() => onChange?.(order.map((category, index) => ({ categoryId: category.id, weight: weights[index] ?? 0 }))), [onChange, order, weights]);
   useEffect(() => {
@@ -126,11 +130,13 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
 
   const saveDraft = useMutation({
     mutationFn: async () => {
+      const loadedPreference = preference.data;
+      if (!loadedPreference) throw new Error('Private preference must be loaded before saving');
       const idempotencyKey = pendingIdempotencyKey.current ?? crypto.randomUUID();
       pendingIdempotencyKey.current = idempotencyKey;
       return Reputation.saveMyPreferences({
         contextKind,
-        expectedRevision: savedRevision ?? preference.data?.revision ?? 0,
+        expectedRevision: savedRevision ?? loadedPreference.revision,
         activate: false,
         categories: order.map((category, index) => ({
           categoryId: category.id,
@@ -174,8 +180,22 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
   };
 
   if (!contextualReputationEnabled) return <Alert severity="info">{copy.unavailable}</Alert>;
-  if (categories.isLoading) return <CircularProgress size={24} aria-label={copy.loading} />;
+  if (categories.isLoading || preference.isLoading) return <CircularProgress size={24} aria-label={copy.loading} />;
   if (categories.isError) return <Alert severity="error">{copy.loadError}</Alert>;
+  if (preference.isError) {
+    return (
+      <Alert
+        severity="error"
+        action={(
+          <Button color="inherit" size="small" disabled={preference.isFetching} onClick={() => void preference.refetch()}>
+            {copy.tryAgain}
+          </Button>
+        )}
+      >
+        {copy.preferenceLoadError}
+      </Alert>
+    );
+  }
 
   return (
     <Box component="section" aria-labelledby="category-priority-heading">
@@ -234,7 +254,7 @@ export default function CategoryPriorityPrototype({ locale = 'es', contextKind =
         <Button disabled={!previous || saveDraft.isPending} onClick={() => { if (previous) { setOrder(previous); setPrevious(null); setStatus(copy.restored); } }}>{copy.undo}</Button>
         <Button
           variant="contained"
-          disabled={!contextualReputationEnabled || order.length === 0 || saveDraft.isPending}
+          disabled={!contextualReputationEnabled || !preference.isSuccess || order.length === 0 || saveDraft.isPending}
           onClick={() => saveDraft.mutate()}
         >
           {saveDraft.isPending ? copy.saving : copy.save}

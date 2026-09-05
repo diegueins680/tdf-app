@@ -9304,16 +9304,6 @@
       "reviewed": true
     },
     {
-      "id": "0797a9dfa486e4f68022",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing a test fixture without an explicit review could conceal ordering regressions against the persisted reputation-category contract.",
-      "justification": "This array is a focused component-test fixture that exercises reordered API category payloads; it is not production authority for categories or priorities.",
-      "reviewed": true
-    },
-    {
       "id": "763ece98ed6a892c345a",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
