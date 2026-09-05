@@ -14,4 +14,8 @@ describe('BookingsPage party relationships', () => {
     expect(source).toContain('setEngineerPartyId(party?.partyId ?? null)');
     expect(source).toContain('El texto escrito no se guarda como cliente.');
   });
+
+  it('uses the server-enforced engineer eligibility context', () => {
+    expect(source).toContain("context: 'booking_engineer', kind: 'person'");
+  });
 });

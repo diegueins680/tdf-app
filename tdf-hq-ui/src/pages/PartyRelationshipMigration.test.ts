@@ -67,6 +67,12 @@ describe('Party relationship picker migration', () => {
     expect(readPage('FanClubMemberProfilePage.tsx')).not.toContain('@miembro-${profile.fcmpPartyId}');
   });
 
+  it('scopes logistics discovery to the event authorization boundary', () => {
+    const source = readPage('EventLogisticsPage.tsx');
+    expect(source.match(/context: 'event_logistics', scopeId: eventId/g)).toHaveLength(2);
+    expect(source).not.toContain("context: 'crm_assignment'");
+  });
+
   it('keeps visible Party-number references on a closed administrative allowlist', () => {
     const srcRoot = fileURLToPath(new URL('../', import.meta.url));
     const visibleTechnicalIdFiles = collectTsxFiles(srcRoot)

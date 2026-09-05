@@ -8,16 +8,20 @@ no deben escribir ese identificador para encontrar a otra persona.
 `GET /parties/search` es la única API para construir selectores de Party. A
 diferencia de `GET /parties`, devuelve una proyección mínima sin correo,
 teléfono, notas, identificación fiscal ni contactos de emergencia. Requiere
-autenticación y una consulta de dos caracteres como mínimo. Cada contexto
+autenticación y una consulta con dos caracteres alfanuméricos como mínimo. Cada contexto
 interno exige en backend el módulo propietario (`CRM`, `Scheduling`,
 `Invoicing`, `Catalog`, `Ops` o `Internships`); `event_invitation` y
 `social_connection` permiten a una cuenta autenticada buscar exclusivamente
 personas con cuenta activa y excluyen siempre al propio actor.
+`booking_engineer` aplica además en servidor la misma elegibilidad del write:
+sólo Parties persona con asignación canónica `Engineer` activa.
+`event_logistics` exige `scopeId=<eventId>` y autoriza únicamente al organizador
+o a un miembro editor del equipo logístico de ese evento.
 
 ## Contrato y privacidad
 
-- Parámetros: `q`, `context`, `kind`, `accountOnly`, `excludePartyId`, `cursor`,
-  `limit`.
+- Parámetros: `q`, `context`, `scopeId` cuando el contexto lo exige, `kind`,
+  `accountOnly`, `excludePartyId`, `cursor`, `limit`.
 - Máximo 20 resultados y 100 exclusiones por solicitud. El cursor es opaco,
   acotado y sólo debe reutilizarse con la misma consulta y filtros.
 - Sólo devuelve nombre, username si existe, estado de cuenta, tipo, etiqueta
@@ -106,6 +110,18 @@ duplicados por `partyId` y permite retirar cada chip con teclado:
 />
 ```
 
+Los contextos ligados a un recurso deben enviar su alcance explícito; la API
+rechaza tanto omitirlo como utilizarlo en un contexto que no lo soporte:
+
+```tsx
+<UserSelector
+  value={assignee}
+  onChange={setAssignee}
+  field={{ label: 'Responsable TDF' }}
+  search={{ context: 'event_logistics', scopeId: eventId }}
+/>
+```
+
 No usar estos anti-patrones:
 
 - `TextField label="Party ID"` para una relación de usuario.
@@ -128,7 +144,7 @@ caché, cuya clave incluye identidad, roles y módulos de la sesión activa.
 ## Relevancia y rendimiento
 
 La comparación preserva el texto original, pero normaliza mayúsculas, `@`,
-tildes y espacios para buscar. Acepta términos en distinto orden, nombres
+tildes, espacios, apóstrofes, guiones y separadores de username para buscar. Acepta términos en distinto orden, nombres
 compuestos, apóstrofes y guiones, y una sola edición o transposición después de
 los tres primeros caracteres en términos de cuatro o más caracteres. El orden
 prioriza username exacto, nombre exacto,
@@ -141,7 +157,10 @@ lotes: no ejecuta lecturas por resultado. Los índices aditivos de nombre legal,
 nombre visible y username normalizados viven en
 `tdf-hq/sql/2026-09-02_party_selector_search_indexes.sql` y, cuando la
 instalación ya dispone de `pg_trgm`, los índices GIN aditivos de
-`2026-09-04_party_selector_trigram_indexes.sql`. El objetivo operativo
+`2026-09-04_party_selector_trigram_indexes.sql`. La expresión compacta usada
+por el prefiltrado SQL y sus índices está en
+`2026-09-04_party_selector_punctuation_indexes.sql`; así `oneil` no excluye
+`O'Neil` antes del ranking tolerante. El objetivo operativo
 sigue siendo p95 menor de 500 ms; debe verificarse con cardinalidad y red de
 staging, porque una medición local sin datos representativos no se presenta
 como evidencia de producción.
@@ -182,6 +201,8 @@ No hay migración de datos porque este cambio no cambia claves ni columnas. Para
 rollback funcional, retirar los consumidores del selector y la ruta nueva; los
 registros existentes permanecen intactos. Los índices trigram pueden retirarse
 con `2026-09-04_party_selector_trigram_indexes_rollback.sql` sin tocar datos.
+Los índices compactos pueden retirarse independientemente con
+`2026-09-04_party_selector_punctuation_indexes_rollback.sql`.
 No eliminar `GET /parties` hasta que los consumidores administrativos restantes
 estén migrados a listados paginados.
 
@@ -190,7 +211,7 @@ estén migrados a listados paginados.
 | Aplicación | Archivo o componente | Flujo | Comportamiento anterior | Riesgo detectado | Solución aplicada | Prueba | Estado |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Web | `SocialEventsPage` | Invitación a evento | Texto `Party ID` | Error de identidad y exposición técnica | `UserSelector`; envía sólo el ID elegido | `PartyRelationshipMigration.test.ts` | Migrado |
-| Web | `EventLogisticsPage` | Miembros y responsables | Texto `ID de usuario TDF` y fallback con ID | Relación inválida y datos técnicos visibles | `UserSelector`, opción externa separada y fallback sin ID | `EventLogisticsPage.test.tsx`; regresión arquitectónica | Migrado |
+| Web | `EventLogisticsPage` | Miembros y responsables | Texto `ID de usuario TDF` y fallback con ID | Relación inválida, datos técnicos visibles y autorización CRM ajena al flujo | `UserSelector` con contexto y alcance de evento autorizados en backend, opción externa separada y fallback sin ID | `PartyRelationshipMigration.test.ts`; prueba backend de propietario/editor | Migrado |
 | Mobile | `app/eventDetail.tsx` | Invitar a amigo | Texto `Party ID` | El usuario debía conocer una clave interna | Selector nativo; transmite sólo el ID elegido | `PartyIdentityCopy.test.ts`; pruebas de EventDetail | Migrado |
 | Mobile | `app/userProfile.tsx` | Identidad propia | Party ID manual | Suplantación o identidad inconsistente | Se deriva de la sesión; fallback local no editable | `PartyIdentityCopy.test.ts`; `AuthProvider.test.tsx` | Migrado |
 | Mobile | `app/(tabs)/social.tsx` | Seguidores y seguidos | Descarga del CRM e IDs visibles | Enumeración y PII excesiva | DTO social mínimo resuelto en lote, sin ID visible | `SocialScreen.test.tsx` | Migrado |
@@ -199,12 +220,12 @@ estén migrados a listados paginados.
 | Mobile | `app/(tabs)/vcard.tsx` | Intercambio de contacto por QR | Mostraba el Party ID recibido | Exposición técnica innecesaria | El ID queda sólo en el payload y la mutación; la tarjeta muestra identidad humana | `PartyIdentityCopy.test.ts`; `VCardScreen.test.tsx` | Migrado |
 | Web | `InternalFeedbackPage` | Asignación | Texto Party ID | Asignación a entidad equivocada | `UserSelector` interno | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `OperationsControlCenterPage` | Filtros, asignación y bandeja | Textos y etiquetas con Party ID | IDs visibles y entradas inválidas | Selectores remotos; resumen humano sin ID | `OperationsControlCenterPage.test.tsx`; regresión arquitectónica | Migrado |
-| Web | `BookingsPage` | Cliente e ingeniero | Catálogo CRM completo y resolución por nombre | PII excesiva y homónimos | `PartySelector`; detalle posterior a selección | `BookingsPage.test.tsx`; regresión arquitectónica | Migrado |
+| Web | `BookingsPage` | Cliente e ingeniero | Catálogo CRM completo y resolución por nombre | PII excesiva, homónimos e ingenieros inelegibles | `PartySelector`; contexto de ingeniero filtra el rol canónico activo en servidor | `BookingsPage.partySelector.test.ts`; pruebas backend de rol | Migrado |
 | Web | `LabelArtistsPage` | Enlazar perfil de artista | Lista CRM con Party ID y correo | Enumeración y vínculo ambiguo | `PartySelector` mínimo con ID canónico oculto | `LabelArtistsPage.test.tsx` | Migrado |
 | Web | `LabelArtistsPage` | Notas rápidas | Descarga completa para filas paginadas | Transferencia innecesaria de PII | Detalle sólo para artistas visibles, con caché corta | `LabelArtistsPage.test.tsx`; regresión arquitectónica | Migrado |
 | Web | `CollaborativeEventCreatorPage` | Colaboradores | Catálogo CRM completo | Descarga total y duplicados | `UserSelector` repetible con exclusiones | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `LiveSessionIntakePage` | Músico existente | Catálogo CRM completo | PII y vínculo por texto | Selector remoto; detalle tras selección | `PartyRelationshipMigration.test.ts` | Migrado |
-| Web | `PaymentsPage` | Contacto, filtro y cliente | Catálogo CRM completo | Exposición financiera/PII y homónimos | Selector mínimo; DTO conserva nombre de lectura | `PartyRelationshipMigration.test.ts` | Migrado |
+| Web | `PaymentsPage` | Contacto, filtro y cliente | Catálogo CRM completo | Exposición financiera/PII, homónimos y exclusión accidental de organizaciones | Selector mínimo para personas u organizaciones; DTO conserva nombre de lectura | `PaymentsPage.partySelector.test.ts` | Migrado |
 | Web | `ChatPage` | Nueva conversación y cabecera | ID manual, catálogo y fallbacks `Party #…` | Enumeración e ID técnico visible | Opciones limitadas a amistades; fallback privado | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `SocialPage` | Añadir amistad | ID manual y fallback `Perfil #…` | Enumeración e identidad ilegible | `UserSelector`; QR/vCard mantiene ID sólo en payload | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `InventoryPage` | Responsable de check-out | Catálogo CRM sobre referencia libre | Apariencia falsa de relación canónica | Campo de referencia histórica explícito | `PartyRelationshipMigration.test.ts` | Excepción corregida |

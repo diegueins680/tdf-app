@@ -20,4 +20,8 @@ describe('payment Party relationships', () => {
     expect(paymentsSource).toContain('pay.payPartyDisplayName');
     expect(paymentsSource).not.toContain('ID {pay.payPartyId}');
   });
+
+  it('allows both people and organizations as billing contacts', () => {
+    expect(paymentsSource.match(/context: 'billing_contact', kind: 'any', accountOnly: false/g)).toHaveLength(2);
+  });
 });

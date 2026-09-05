@@ -1216,7 +1216,7 @@ const openDialogForRange = (start: Date, end: Date) => {
                     setEngineerName(party?.displayName ?? '');
                   }}
                   field={{ label: engineerFieldState.label, helperText: engineerFieldState.helperText }}
-                  search={{ context: 'booking', kind: 'person', accountOnly: false }}
+                  search={{ context: 'booking_engineer', kind: 'person', accountOnly: false }}
                 />
               ) : engineerFieldState.helperText ? (
                 <Alert severity="info" variant="outlined">

@@ -352,6 +352,11 @@
       "introducedBy": "2c204d475b1943346acd94327f2ad5ab61c27cc6"
     },
     {
+      "id": "2026-09-04_party_selector_punctuation_indexes",
+      "path": "tdf-hq/sql/2026-09-04_party_selector_punctuation_indexes.sql",
+      "introducedBy": "2b61953659cb43d711046639ae49f9806049cdf3"
+    },
+    {
       "id": "2026-09-01_contextual_reputation",
       "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
       "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c"

@@ -122,6 +122,7 @@ import TDF.Models
     )
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
+import qualified TDF.Models.SocialEventsModels as Social
 import TDF.DTO
     ( AdCreativeUpsert (..)
     , AdsAssistRequest (..)
@@ -173,11 +174,15 @@ import TDF.Server
     , validatePartyListPagination
     , validatePartySelectorCursor
     , validatePartySelectorContext
+    , validatePartySelectorQuery
+    , validatePartySelectorScopeId
     , partySelectorContextModule
     , partySelectorVisibleLegalName
     , partySelectorMatches
     , partySelectorScore
     , partySelectorWithinOneEdit
+    , choosePartySelectorCredential
+    , canSearchEventLogisticsParties
     , validatePartyPrimaryEmail
     , validatePartyPrimaryEmailUpdate
     , validatePublicBookingDurationMinutes
@@ -1116,6 +1121,7 @@ spec = describe "TDF.Server helpers" $ do
         it "prioritizes exact usernames and names before prefix or fuzzy matches" $ do
             partySelectorScore "@anaruiz" "Ana María Ruiz" Nothing (Just "anaruiz") `shouldBe` 0
             partySelectorScore "Ana María Ruiz" "Ana María Ruiz" Nothing (Just "otra") `shouldBe` 1
+            partySelectorScore "AnneMarieONeil" "Anne-Marie O'Neil" Nothing Nothing `shouldBe` 1
             partySelectorScore "ana" "Beatriz" Nothing (Just "anaruiz") `shouldBe` 2
             partySelectorScore "ruiz" "Ana María Ruiz" Nothing Nothing `shouldBe` 3
             partySelectorScore "Marai" "María Paredes" Nothing Nothing `shouldBe` 6
@@ -1128,6 +1134,14 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validatePartySelectorCursor 0)
             assertInvalid (validatePartySelectorCursor 801)
 
+        it "requires two searchable characters and rejects punctuation-only enumeration" $ do
+            validatePartySelectorQuery (Just " O'Neil ") `shouldBe` Right "O'Neil"
+            let assertInvalid result = case result of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right value -> expectationFailure ("Expected invalid selector query, got: " <> show value)
+            assertInvalid (validatePartySelectorQuery (Just "@@"))
+            assertInvalid (validatePartySelectorQuery (Just "-._"))
+
         it "accepts only declared functional authorization contexts" $ do
             validatePartySelectorContext Nothing `shouldBe` Right "crm_assignment"
             validatePartySelectorContext (Just " EVENT_INVITATION ") `shouldBe` Right "event_invitation"
@@ -1135,13 +1149,88 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr -> errHTTPCode serverErr `shouldBe` 400
                 Right value -> expectationFailure ("Expected invalid selector context, got: " <> show value)
 
+        it "requires a positive resource scope only for event logistics" $ do
+            validatePartySelectorScopeId "event_logistics" (Just "42") `shouldBe` Right (Just 42)
+            validatePartySelectorScopeId "booking" Nothing `shouldBe` Right Nothing
+            let assertInvalid result = case result of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right value -> expectationFailure ("Expected invalid selector scope, got: " <> show value)
+            assertInvalid (validatePartySelectorScopeId "event_logistics" Nothing)
+            assertInvalid (validatePartySelectorScopeId "event_logistics" (Just "0"))
+            assertInvalid (validatePartySelectorScopeId "booking" (Just "42"))
+
         it "maps internal contexts to their owning authorization modules" $ do
             partySelectorContextModule "booking" `shouldBe` Just ModuleScheduling
+            partySelectorContextModule "booking_engineer" `shouldBe` Just ModuleScheduling
             partySelectorContextModule "billing_contact" `shouldBe` Just ModuleInvoicing
             partySelectorContextModule "operations" `shouldBe` Just ModuleOps
             partySelectorContextModule "internal_feedback" `shouldBe` Just ModuleInternships
             partySelectorContextModule "event_invitation" `shouldBe` Nothing
             partySelectorContextModule "social_connection" `shouldBe` Nothing
+            partySelectorContextModule "event_logistics" `shouldBe` Nothing
+
+        it "prefers an active credential deterministically for selector identity" $ do
+            let credential usernameVal activeVal = UserCredential
+                    { userCredentialPartyId = toSqlKey 1
+                    , userCredentialUsername = usernameVal
+                    , userCredentialPasswordHash = "hash"
+                    , userCredentialActive = activeVal
+                    }
+                inactive = credential "old-handle" False
+                active = credential "new-handle" True
+                laterActive = credential "z-handle" True
+            userCredentialUsername (choosePartySelectorCredential inactive active) `shouldBe` "new-handle"
+            userCredentialUsername (choosePartySelectorCredential active inactive) `shouldBe` "new-handle"
+            userCredentialUsername (choosePartySelectorCredential laterActive active) `shouldBe` "new-handle"
+
+        it "authorizes logistics discovery only for the event owner or an editor" $ do
+            (ownerAllowed, editorAllowed, viewerAllowed, outsiderAllowed) <- runSqlite ":memory:" $ do
+                rawExecute
+                    "CREATE TABLE social_event (id INTEGER PRIMARY KEY, organizer_party_id VARCHAR NULL, title VARCHAR NOT NULL, description VARCHAR NULL, venue_id INTEGER NULL, event_type_id VARCHAR NULL, workflow_state_id VARCHAR NULL, timezone VARCHAR NULL, start_time TIMESTAMP NOT NULL, end_time TIMESTAMP NULL, price_cents INTEGER NULL, currency_id VARCHAR NULL, capacity INTEGER NULL, metadata VARCHAR NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+                    []
+                rawExecute
+                    "CREATE TABLE event_logistics_member (id INTEGER PRIMARY KEY, event_id INTEGER NOT NULL, party_id VARCHAR NOT NULL, member_role VARCHAR NOT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, UNIQUE(event_id, party_id))"
+                    []
+                now <- liftIO getCurrentTime
+                eventId <- insert Social.SocialEvent
+                    { Social.socialEventOrganizerPartyId = Just "11"
+                    , Social.socialEventTitle = "Scoped event"
+                    , Social.socialEventDescription = Nothing
+                    , Social.socialEventVenueId = Nothing
+                    , Social.socialEventEventTypeId = Nothing
+                    , Social.socialEventWorkflowStateId = Nothing
+                    , Social.socialEventTimezone = Just "America/Guayaquil"
+                    , Social.socialEventStartTime = now
+                    , Social.socialEventEndTime = Nothing
+                    , Social.socialEventPriceCents = Nothing
+                    , Social.socialEventCurrencyId = Nothing
+                    , Social.socialEventCapacity = Nothing
+                    , Social.socialEventMetadata = Nothing
+                    , Social.socialEventCreatedAt = now
+                    , Social.socialEventUpdatedAt = now
+                    }
+                insert_ Social.EventLogisticsMember
+                    { Social.eventLogisticsMemberEventId = eventId
+                    , Social.eventLogisticsMemberPartyId = "12"
+                    , Social.eventLogisticsMemberMemberRole = "editor"
+                    , Social.eventLogisticsMemberCreatedAt = now
+                    , Social.eventLogisticsMemberUpdatedAt = now
+                    }
+                insert_ Social.EventLogisticsMember
+                    { Social.eventLogisticsMemberEventId = eventId
+                    , Social.eventLogisticsMemberPartyId = "13"
+                    , Social.eventLogisticsMemberMemberRole = "viewer"
+                    , Social.eventLogisticsMemberCreatedAt = now
+                    , Social.eventLogisticsMemberUpdatedAt = now
+                    }
+                (,,,) <$> canSearchEventLogisticsParties (toSqlKey 11) eventId
+                      <*> canSearchEventLogisticsParties (toSqlKey 12) eventId
+                      <*> canSearchEventLogisticsParties (toSqlKey 13) eventId
+                      <*> canSearchEventLogisticsParties (toSqlKey 14) eventId
+            ownerAllowed `shouldBe` True
+            editorAllowed `shouldBe` True
+            viewerAllowed `shouldBe` False
+            outsiderAllowed `shouldBe` False
 
         it "keeps legal names out of public discovery contexts" $ do
             let legalName = Just "Nombre legal privado"

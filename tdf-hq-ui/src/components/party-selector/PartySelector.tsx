@@ -33,6 +33,7 @@ export interface PartySelectorProps {
   };
   search?: {
     context?: PartySelectorContext;
+    scopeId?: string;
     kind?: PartySelectorKind;
     accountOnly?: boolean;
     excludedPartyIds?: number[];
@@ -101,6 +102,7 @@ const usePartySelectorOptions = ({
   inputValue,
   kind,
   context,
+  scopeId,
   accountOnly,
   excludedPartyIds,
 }: {
@@ -108,6 +110,7 @@ const usePartySelectorOptions = ({
   inputValue: string;
   kind: PartySelectorKind;
   context: PartySelectorContext;
+  scopeId?: string;
   accountOnly: boolean;
   excludedPartyIds: number[];
 }) => {
@@ -138,7 +141,7 @@ const usePartySelectorOptions = ({
   ].join(':');
   const analytics = getAnalyticsClient();
   const query = useInfiniteQuery({
-    queryKey: ['party-selector', sessionScope, activeQuery, context, kind, accountOnly, excludedKey],
+    queryKey: ['party-selector', sessionScope, activeQuery, context, scopeId ?? '', kind, accountOnly, excludedKey],
     queryFn: ({ pageParam, signal }) => observePartySelectorSearch({
       analytics,
       platform: 'web',
@@ -147,6 +150,7 @@ const usePartySelectorOptions = ({
       request: () => searchPartiesForSelector({
         query: activeQuery,
         context,
+        scopeId,
         kind,
         accountOnly,
         excludedPartyIds,
@@ -213,7 +217,7 @@ const SelectorPaper = ({ hasMore, loadingMore, onLoadMore, children, ...paperPro
 export function PartySelector(props: PartySelectorProps) {
   const { value, onChange, field, search = {} } = props;
   const { label, required = false, disabled = false, helperText } = field;
-  const { context = 'crm_assignment', kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
+  const { context = 'crm_assignment', scopeId, kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
   const inputId = useId();
   const [inputValue, setInputValue] = useState(value?.displayName ?? '');
 
@@ -226,6 +230,7 @@ export function PartySelector(props: PartySelectorProps) {
     selected: value ? [value] : [],
     inputValue: searchInput,
     context,
+    scopeId,
     kind,
     accountOnly,
     excludedPartyIds,
@@ -300,13 +305,14 @@ export function PartySelector(props: PartySelectorProps) {
 export function PartyMultiSelector(props: PartyMultiSelectorProps) {
   const { value, onChange, field, search = {} } = props;
   const { label, required = false, disabled = false, helperText } = field;
-  const { context = 'crm_assignment', kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
+  const { context = 'crm_assignment', scopeId, kind = 'person', accountOnly = false, excludedPartyIds = [] } = search;
   const inputId = useId();
   const [inputValue, setInputValue] = useState('');
   const { options, loading, loadingMore, error, hasMore, loadMore, retry, resultCount } = usePartySelectorOptions({
     selected: value,
     inputValue,
     context,
+    scopeId,
     kind,
     accountOnly,
     excludedPartyIds,

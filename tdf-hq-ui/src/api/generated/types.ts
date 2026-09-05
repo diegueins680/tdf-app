@@ -12627,7 +12627,9 @@ export interface operations {
             query: {
                 q: string;
                 /** @description Functional authorization context; public discovery contexts are forced to active person accounts and exclude the actor. */
-                context?: "crm_assignment" | "booking" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "operations" | "internal_feedback" | "live_session";
+                context?: "crm_assignment" | "booking" | "booking_engineer" | "billing_contact" | "artist_link" | "campaign_enrollment" | "event_invitation" | "social_connection" | "operations" | "internal_feedback" | "live_session" | "event_logistics";
+                /** @description Required domain scope for contexts that authorize against a concrete resource. For event_logistics this is the event ID. */
+                scopeId?: string;
                 kind?: "any" | "person" | "organization";
                 accountOnly?: boolean;
                 excludePartyId?: number[];
@@ -12664,7 +12666,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Required module access missing for the declared context */
+            /** @description Required module or resource-scope access missing for the declared context */
             403: {
                 headers: {
                     [name: string]: unknown;

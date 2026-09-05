@@ -212,7 +212,7 @@ function PaymentForm({
         </Stack>
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <PartySelector value={selectedParty} onChange={setSelectedParty} field={{ label: 'Contacto', required: true, helperText: fieldHints.party ?? 'Busca por nombre o @username.' }} search={{ context: 'billing_contact' }} />
+              <PartySelector value={selectedParty} onChange={setSelectedParty} field={{ label: 'Contacto', required: true, helperText: fieldHints.party ?? 'Busca por nombre o @username.' }} search={{ context: 'billing_contact', kind: 'any', accountOnly: false }} />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
@@ -448,7 +448,7 @@ export default function PaymentsPage() {
           </Typography>
         </Box>
         <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
-          <Box sx={{ minWidth: 280 }}><PartySelector value={partyFilter} onChange={setPartyFilter} field={{ label: 'Filtrar por contacto' }} search={{ context: 'billing_contact' }} /></Box>
+          <Box sx={{ minWidth: 280 }}><PartySelector value={partyFilter} onChange={setPartyFilter} field={{ label: 'Filtrar por contacto' }} search={{ context: 'billing_contact', kind: 'any', accountOnly: false }} /></Box>
           <TextField
             label="Desde"
             type="date"

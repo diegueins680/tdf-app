@@ -134,6 +134,7 @@ type PartyAPI =
   :<|> "search" :>
          QueryParam "q" Text :>
          QueryParam "context" Text :>
+         QueryParam "scopeId" Text :>
          QueryParam "kind" Text :>
          QueryParam "accountOnly" Bool :>
          QueryParams "excludePartyId" Int64 :>

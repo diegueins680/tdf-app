@@ -24,6 +24,7 @@ export interface PartySelectorPage {
 export interface PartySelectorSearchParams {
   query: string;
   context?: PartySelectorContext;
+  scopeId?: string;
   kind?: PartySelectorKind;
   accountOnly?: boolean;
   excludedPartyIds?: number[];
@@ -35,6 +36,7 @@ export interface PartySelectorSearchParams {
 export const searchPartiesForSelector = ({
   query,
   context = 'crm_assignment',
+  scopeId,
   kind = 'any',
   accountOnly = false,
   excludedPartyIds = [],
@@ -43,6 +45,7 @@ export const searchPartiesForSelector = ({
   signal,
 }: PartySelectorSearchParams): Promise<PartySelectorPage> => {
   const params = new URLSearchParams({ q: query, context, kind, accountOnly: String(accountOnly), limit: String(limit) });
+  if (scopeId) params.set('scopeId', scopeId);
   if (cursor) params.set('cursor', String(cursor));
   excludedPartyIds.forEach((id) => params.append('excludePartyId', String(id)));
   return get<PartySelectorPage>(`/parties/search?${params.toString()}`, { signal });

@@ -16,7 +16,7 @@ import           Control.Exception (SomeAsyncException, SomeException, displayEx
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
-import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import           Control.Monad.Trans.Class (lift)
 import           Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy)
@@ -128,6 +128,7 @@ import qualified TDF.Invoice.SRI as Sri
 import           TDF.Models
 import qualified TDF.Models as M
 import qualified TDF.ModelsExtra as ME
+import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.FeatureRegistry
   ( RegistryFeature(..)
   , findRegistryFeature
@@ -9077,12 +9078,13 @@ searchParties
   -> Maybe Text
   -> Maybe Text
   -> Maybe Text
+  -> Maybe Text
   -> Maybe Bool
   -> [Int64]
   -> Maybe Int64
   -> Maybe Int
   -> AppM PartySelectorPageDTO
-searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor rawLimit = do
+searchParties user rawQuery rawContext rawScopeId rawKind accountOnly excluded rawCursor rawLimit = do
   query <- either throwError pure (validatePartySelectorQuery rawQuery)
   context <- either throwError pure (validatePartySelectorContext rawContext)
   for_ (partySelectorContextModule context) (requireModule user)
@@ -9094,24 +9096,33 @@ searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor ra
   when (length excluded > 100 || any (<= 0) excluded) $
     throwError err400 { errBody = "excludePartyId must contain at most 100 positive ids" }
   Env pool _ <- ask
+  scopeId <- either throwError pure (validatePartySelectorScopeId context rawScopeId)
+  for_ scopeId $ \eventId -> when (context == "event_logistics") $ do
+    allowed <- liftIO $ flip runSqlPool pool $
+      canSearchEventLogisticsParties (auPartyId user) (toSqlKey eventId)
+    unless allowed $
+      throwError err403 { errBody = "Event logistics selector access denied" }
   let publicDiscovery = isPublicPartySelectorContext context
       databaseTerms = partySelectorTerms query
-      discoveryTerm = fromMaybe (normalizePartySelectorDatabaseText query)
+      discoveryTerm = normalizePartySelectorLookupText $ fromMaybe query
         (listToMaybe (sortOn (Down . T.length) databaseTerms))
       -- Three characters let PostgreSQL use pg_trgm for normal searches. The
       -- documented two-character minimum remains supported by the bounded
       -- expression-index fallback.
       discoveryPrefixLength = min 3 (T.length discoveryTerm)
       patternText = "%" <> T.take discoveryPrefixLength discoveryTerm <> "%"
-      exactText = normalizePartySelectorDatabaseText query
+      exactText = normalizePartySelectorLookupText query
+      normalizedDisplayName = "regexp_replace(translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
+      normalizedLegalName = "regexp_replace(translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun'), '[@''’‘_.[:space:]-]+', '', 'g')"
+      normalizedUsername = "regexp_replace(lower(username), '[@''’‘_.[:space:]-]+', '', 'g')"
       nameSql
         | publicDiscovery =
-            "SELECT ?? FROM party WHERE translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? ORDER BY CASE WHEN translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE " <> normalizedDisplayName <> " LIKE ? ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
         | otherwise =
-            "SELECT ?? FROM party WHERE (translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ? OR translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') LIKE ?) ORDER BY CASE WHEN translate(lower(display_name), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 0 WHEN translate(lower(COALESCE(legal_name, '')), 'áàäâéèëêíìïîóòöôúùüûñ', 'aaaaeeeeiiiioooouuuun') = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
+            "SELECT ?? FROM party WHERE (" <> normalizedDisplayName <> " LIKE ? OR " <> normalizedLegalName <> " LIKE ?) ORDER BY CASE WHEN " <> normalizedDisplayName <> " = ? THEN 0 WHEN " <> normalizedLegalName <> " = ? THEN 1 ELSE 2 END, id ASC LIMIT 401"
       usernameSql =
-        "SELECT ?? FROM user_credential WHERE id > 0 AND lower(replace(username, '@', '')) LIKE ? AND active = TRUE ORDER BY CASE WHEN lower(replace(username, '@', '')) = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
-  (parties, credentials, fanProfiles) <- liftIO $ flip runSqlPool pool $ do
+        "SELECT ?? FROM user_credential WHERE id > 0 AND " <> normalizedUsername <> " LIKE ? AND active = TRUE ORDER BY CASE WHEN " <> normalizedUsername <> " = ? THEN 0 ELSE 1 END, id ASC LIMIT 401"
+  (parties, credentials, fanProfiles, engineerPartyIds) <- liftIO $ flip runSqlPool pool $ do
     named <- rawSql nameSql
       (if publicDiscovery
         then [toPersistValue patternText, toPersistValue exactText]
@@ -9128,13 +9139,17 @@ searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor ra
         candidateIds = Map.keys candidateMap
     allCredentials <- if null candidateIds then pure [] else selectList [UserCredentialPartyId <-. candidateIds] []
     profiles <- if null candidateIds then pure [] else selectList [FanProfileFanPartyId <-. candidateIds] []
-    pure (Map.elems candidateMap, allCredentials, profiles)
-  let credentialsByParty = Map.fromListWith chooseCredential
+    eligibleEngineers <- if context == "booking_engineer"
+      then Set.fromList <$> selectCanonicalPartyIdsByRole Engineer
+      else pure Set.empty
+    pure (Map.elems candidateMap, allCredentials, profiles, eligibleEngineers)
+  let credentialsByParty = Map.fromListWith choosePartySelectorCredential
         [ (userCredentialPartyId credential, credential) | Entity _ credential <- credentials ]
       profilesByParty = Map.fromList
         [ (fanProfileFanPartyId profile, profile) | Entity _ profile <- fanProfiles ]
-      chooseCredential left _ = left
-      effectiveKind = if publicDiscovery then "person" else kind
+      effectiveKind
+        | publicDiscovery || context == "booking_engineer" = "person"
+        | otherwise = kind
       effectiveAccountOnly = publicDiscovery || fromMaybe False accountOnly
       matchesKind party = case effectiveKind of
         "person" -> not (partyIsOrg (entityVal party))
@@ -9155,6 +9170,7 @@ searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor ra
           && matchesQuery party
           && not (isExcluded party)
           && (not effectiveAccountOnly || hasAccount party)
+          && (context /= "booking_engineer" || Set.member (entityKey party) engineerPartyIds)
       option party =
         let mCredential = Map.lookup (entityKey party) credentialsByParty
             mProfile = Map.lookup (entityKey party) profilesByParty
@@ -9183,10 +9199,34 @@ searchParties user rawQuery rawContext rawKind accountOnly excluded rawCursor ra
       next = if length page > limit then Just (fromIntegral (cursorOffset + limit)) else Nothing
   pure PartySelectorPageDTO { items = map (\(_, _, value) -> value) visible, nextCursor = next }
 
+choosePartySelectorCredential :: UserCredential -> UserCredential -> UserCredential
+choosePartySelectorCredential left right
+  | credentialRank left <= credentialRank right = left
+  | otherwise = right
+  where
+    credentialRank credential =
+      (Down (userCredentialActive credential), normalizePartySelectorLookupText (userCredentialUsername credential))
+
+canSearchEventLogisticsParties :: MonadIO m => PartyId -> Social.SocialEventId -> SqlPersistT m Bool
+canSearchEventLogisticsParties actorPartyId eventId = do
+  mEvent <- get eventId
+  case mEvent of
+    Nothing -> pure False
+    Just event -> do
+      let actorText = T.pack (show (fromSqlKey actorPartyId))
+      if Social.socialEventOrganizerPartyId event == Just actorText
+        then pure True
+        else do
+          mMember <- getBy (Social.UniqueEventLogisticsMember eventId actorText)
+          pure $ case mMember of
+            Just (Entity _ member) -> Social.eventLogisticsMemberMemberRole member == "editor"
+            Nothing -> False
+
 validatePartySelectorQuery :: Maybe Text -> Either ServerError Text
 validatePartySelectorQuery raw =
   let clean = T.strip (fromMaybe "" raw)
-  in if T.length clean < 2
+      searchableCharacters = T.length (T.filter isAlphaNum clean)
+  in if T.length clean < 2 || searchableCharacters < 2
        then Left err400 { errBody = "q must contain at least two characters" }
        else if T.length clean > 120 || T.any isUnsafePartyDisplayNameChar clean
          then Left err400 { errBody = "q is invalid" }
@@ -9204,9 +9244,9 @@ validatePartySelectorContext :: Maybe Text -> Either ServerError Text
 validatePartySelectorContext raw =
   let context = T.toLower (T.strip (fromMaybe "crm_assignment" raw))
       supported =
-        [ "crm_assignment", "booking", "billing_contact", "artist_link"
+        [ "crm_assignment", "booking", "booking_engineer", "billing_contact", "artist_link"
         , "campaign_enrollment", "event_invitation", "social_connection"
-        , "operations", "internal_feedback", "live_session"
+        , "operations", "internal_feedback", "live_session", "event_logistics"
         ]
   in if context `elem` supported
       then Right context
@@ -9219,6 +9259,7 @@ partySelectorContextModule :: Text -> Maybe ModuleAccess
 partySelectorContextModule context = case context of
   "crm_assignment" -> Just ModuleCRM
   "booking" -> Just ModuleScheduling
+  "booking_engineer" -> Just ModuleScheduling
   "billing_contact" -> Just ModuleInvoicing
   "artist_link" -> Just ModuleCatalog
   "campaign_enrollment" -> Just ModuleCRM
@@ -9227,7 +9268,20 @@ partySelectorContextModule context = case context of
   "live_session" -> Just ModuleScheduling
   "event_invitation" -> Nothing
   "social_connection" -> Nothing
+  "event_logistics" -> Nothing
   _ -> Just ModuleCRM
+
+validatePartySelectorScopeId :: Text -> Maybe Text -> Either ServerError (Maybe Int64)
+validatePartySelectorScopeId context rawScopeId =
+  case (context, T.strip <$> rawScopeId) of
+    ("event_logistics", Just rawId)
+      | Just eventId <- readMaybe (T.unpack rawId), eventId > 0 -> Right (Just eventId)
+      | otherwise -> invalid "scopeId must be a positive event id for event_logistics"
+    ("event_logistics", Nothing) -> invalid "scopeId is required for event_logistics"
+    (_, Just rawId) | not (T.null rawId) -> invalid "scopeId is not supported for this context"
+    _ -> Right Nothing
+  where
+    invalid message = Left err400 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 
 partySelectorVisibleLegalName :: Text -> Maybe Text -> Maybe Text
 partySelectorVisibleLegalName context legalName
@@ -9310,16 +9364,7 @@ partySelectorScore query displayName legalName username
     allTerms = nameTerms ++ partySelectorTerms (fromMaybe "" username)
 
 normalizePartySelectorText :: Text -> Text
-normalizePartySelectorText = T.map replaceAccent . T.filter (not . isSpace) . T.toLower . T.filter (/= '@')
-  where
-    replaceAccent char = case char of
-      'á' -> 'a'; 'à' -> 'a'; 'ä' -> 'a'; 'â' -> 'a'
-      'é' -> 'e'; 'è' -> 'e'; 'ë' -> 'e'; 'ê' -> 'e'
-      'í' -> 'i'; 'ì' -> 'i'; 'ï' -> 'i'; 'î' -> 'i'
-      'ó' -> 'o'; 'ò' -> 'o'; 'ö' -> 'o'; 'ô' -> 'o'
-      'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
-      'ñ' -> 'n'
-      other -> other
+normalizePartySelectorText = normalizePartySelectorLookupText
 
 normalizePartySelectorDatabaseText :: Text -> Text
 normalizePartySelectorDatabaseText = T.map replaceAccent . T.toLower . T.filter (/= '@')
@@ -9332,6 +9377,9 @@ normalizePartySelectorDatabaseText = T.map replaceAccent . T.toLower . T.filter 
       'ú' -> 'u'; 'ù' -> 'u'; 'ü' -> 'u'; 'û' -> 'u'
       'ñ' -> 'n'
       other -> other
+
+normalizePartySelectorLookupText :: Text -> Text
+normalizePartySelectorLookupText = T.filter isAlphaNum . normalizePartySelectorDatabaseText
 
 listParties :: AuthedUser -> Maybe Int -> Maybe Int -> AppM [PartyDTO]
 listParties user mLimit mOffset = do

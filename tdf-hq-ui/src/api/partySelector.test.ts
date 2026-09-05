@@ -26,4 +26,19 @@ describe('searchPartiesForSelector', () => {
       { signal },
     );
   });
+
+  it('forwards the authorized resource scope for contextual discovery', async () => {
+    getMock.mockResolvedValueOnce({ items: [], nextCursor: null });
+
+    await searchPartiesForSelector({
+      query: 'Ana',
+      context: 'event_logistics',
+      scopeId: '42',
+    });
+
+    expect(getMock).toHaveBeenCalledWith(
+      '/parties/search?q=Ana&context=event_logistics&kind=any&accountOnly=false&limit=15&scopeId=42',
+      { signal: undefined },
+    );
+  });
 });
