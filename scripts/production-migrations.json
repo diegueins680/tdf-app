@@ -395,6 +395,11 @@
       "id": "2026-09-05_party_selector_username_diacritic_indexes",
       "path": "tdf-hq/sql/2026-09-05_party_selector_username_diacritic_indexes.sql",
       "introducedBy": "85b89f5a9795d6ecc51cb4faaed36e450e5fac1a"
+    },
+    {
+      "id": "2026-09-05_contextual_reputation_preference_rounding",
+      "path": "tdf-hq/sql/2026-09-05_contextual_reputation_preference_rounding.sql",
+      "introducedBy": "000ef9f0c9be11250eebfbe13e35c373c767512e"
     }
   ]
 }
