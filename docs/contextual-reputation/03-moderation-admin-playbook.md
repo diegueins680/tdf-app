@@ -13,8 +13,9 @@ Reglas no negociables:
 
 - Rankings privados, preferencias y señales no verificadas no afectan búsquedas,
   badges, recomendaciones ni reputación pública.
-- La evidencia individual se consulta solo para fraude o disputas, con permiso,
-  motivo y auditoría.
+- La evidencia individual se consulta solo para fraude, disputas, incidentes de
+  seguridad u obligaciones legales documentadas, siempre con permiso, motivo,
+  necesidad proporcional y auditoría.
 - Una alerta no es un veredicto: ninguna sanción se aplica automáticamente.
 - Se rechazan categorías y decisiones basadas en atributos sensibles o
   protegidos.
@@ -90,7 +91,10 @@ proceden de reglas publicadas y verificables; nunca son comprables.
 | Consultar evidencia | Caso y motivo obligatorio | actor, objetivo y consultas |
 | Cambiar flag | Operaciones y rollout aprobado | ambiente, motivo y rollback |
 
-Nunca borrar auditorías. Simular cambios de fórmula antes de publicarlos.
+Nunca borrar auditorías. Un rollback debe retener o archivar `reputation_audit_log`
+y verificar el conteo/exportación antes de cualquier cambio destructivo; si esa
+preservación no está garantizada, el rollback de schema no está autorizado.
+Simular cambios de fórmula antes de publicarlos.
 
 ## Incidentes y criterio de salida
 
