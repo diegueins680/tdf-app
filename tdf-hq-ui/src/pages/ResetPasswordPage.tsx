@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
   Alert,
   Box,
@@ -19,9 +19,8 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { confirmPasswordReset, type LoginResponseDTO } from '../api/auth';
 import { loadSessionSnapshot } from '../api/session';
 import { useSession, type SessionUser } from '../session/SessionContext';
-import { pickLandingPath, readSafeRedirectPath } from '../utils/loginRouting';
-
-const MIN_PASSWORD_LENGTH = 8;
+import { readSafeRedirectPath, resolvePostAuthPath } from '../utils/loginRouting';
+import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
 
 const normalizeRoles = (roles: readonly string[] | undefined): string[] =>
   Array.from(new Set((roles ?? []).map((role) => role.toLowerCase())));
@@ -30,11 +29,23 @@ export default function ResetPasswordPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { login } = useSession();
-  const token = useMemo(() => {
+  const [token] = useState(() => {
     const params = new URLSearchParams(location.search);
     return (params.get('token') ?? '').trim();
-  }, [location.search]);
+  });
   const redirectPath = useMemo(() => readSafeRedirectPath(location.search), [location.search]);
+
+  useEffect(() => {
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    params.delete('token');
+    const query = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
+  }, [token]);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -81,7 +92,7 @@ export default function ResetPasswordPage() {
       const snapshot = await loadSessionSnapshot();
       if (!snapshot) {
         login(fallbackSession);
-        navigate(redirectPath ?? pickLandingPath(fallbackSession.roles, fallbackSession.modules), {
+        navigate(resolvePostAuthPath(null, fallbackSession.roles, fallbackSession.modules, redirectPath), {
           replace: true,
         });
         return;
@@ -97,12 +108,12 @@ export default function ResetPasswordPage() {
       };
 
       login(resolvedSession);
-      navigate(redirectPath ?? pickLandingPath(resolvedSession.roles, resolvedSession.modules), {
+      navigate(resolvePostAuthPath(null, resolvedSession.roles, resolvedSession.modules, redirectPath), {
         replace: true,
       });
     } catch {
       login(fallbackSession);
-      navigate(redirectPath ?? pickLandingPath(fallbackSession.roles, fallbackSession.modules), {
+      navigate(resolvePostAuthPath(null, fallbackSession.roles, fallbackSession.modules, redirectPath), {
         replace: true,
       });
     }
@@ -117,10 +128,10 @@ export default function ResetPasswordPage() {
     }
 
     const trimmedPassword = newPassword.trim();
-    if (trimmedPassword.length < MIN_PASSWORD_LENGTH) {
+    if (!isValidAuthPassword(trimmedPassword)) {
       setFeedback({
         type: 'error',
-        message: `La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+        message: AUTH_PASSWORD_REQUIREMENTS_ES,
       });
       return;
     }

@@ -151,7 +151,7 @@ test('@critical PW-PER-01-AUTH redirects protected URLs and explains rejected lo
   expect(runtime.consoleErrors).toEqual([]);
 });
 
-test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }) => {
+test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }, testInfo) => {
   let signupPayload;
   await page.route('**/signup', async (route) => {
     signupPayload = route.request().postDataJSON();
@@ -162,19 +162,48 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
 
   await page.goto('/login');
   await page.getByRole('button', { name: 'Crear cuenta general' }).click();
-  await expect(page.getByRole('dialog', { name: /crear cuenta/i })).toBeVisible();
-  await page.getByLabel('Nombre').fill('Elena');
-  await page.getByLabel('Apellido').fill('Paredes');
-  await page.getByRole('textbox', { name: 'Correo *', exact: true }).fill('per-01.elena@persona.test');
-  await page.getByLabel('Contraseña *').last().fill('fictional-password-not-a-secret');
+  const signupDialog = page.getByRole('dialog', { name: /crear cuenta/i });
+  await expect(signupDialog).toBeVisible();
+  await signupDialog.getByLabel('Nombre').fill('Elena');
+  await signupDialog.getByLabel('Apellido').fill('Paredes');
+  const signupEmail = signupDialog.locator('input[name="email"]');
+  const signupPassword = signupDialog.locator('input[name="newPassword"]');
+  await expect(signupEmail).toHaveAttribute('autocomplete', 'email');
+  await expect(signupPassword).toHaveAttribute('autocomplete', 'new-password');
+  await expectNoSeriousAxeViolations(page, testInfo);
+  await signupEmail.fill('per-01.elena@persona.test');
+  await signupPassword.fill('fictional-password-not-a-secret');
   await page.getByLabel('Acepto los términos y la política de privacidad').check();
-  await page.getByRole('button', { name: 'Crear e ingresar' }).click();
+  await signupPassword.press('Enter');
 
   await expect(page).toHaveURL(/\/fans$/);
   expect(signupPayload).toMatchObject({
     firstName: 'Elena', lastName: 'Paredes', email: 'per-01.elena@persona.test',
     password: 'fictional-password-not-a-secret',
+    marketingOptIn: false,
   });
+  expect(signupPayload.fanArtistIds).toBeUndefined();
+});
+
+test('PW-PER-01-AUTH keeps signup labels readable in light theme', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'One desktop theme check is sufficient.');
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Cambiar tema' }).click();
+  await page.getByRole('button', { name: 'Crear cuenta general' }).click();
+  await expect(page.getByRole('dialog', { name: /crear cuenta/i })).toBeVisible();
+  await expectNoSeriousAxeViolations(page, testInfo);
+});
+
+test('PW-PER-01-AUTH reports a reset transport failure instead of false success', async ({ page }) => {
+  await page.route('**/v1/password-reset', (route) => route.abort('failed'));
+  await page.goto('/login');
+  await page.getByRole('button', { name: /recuperar acceso/i }).click();
+  const recoveryEmail = page.getByLabel('Correo asociado a tu cuenta');
+  await expect(recoveryEmail).toHaveAttribute('autocomplete', 'email');
+  await recoveryEmail.fill('per-01.elena@persona.test');
+  await recoveryEmail.press('Enter');
+  await expect(page.getByRole('alert')).toContainText('No pudimos solicitar el enlace');
+  await expect(page.getByRole('alert')).not.toContainText('te enviaremos un enlace');
 });
 
 test('PW-PER-01-DISCOVERY completes public city discovery and preserves search state', async ({ page }, testInfo) => {

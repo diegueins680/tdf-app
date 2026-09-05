@@ -31,7 +31,12 @@ jest.unstable_mockModule('../utils/logger', () => ({
   },
 }));
 
-const { __resetAnalyticsForTests, getAnalyticsClient } = await import('../analytics/posthog');
+const {
+  __resetAnalyticsForTests,
+  getAnalyticsClient,
+  redactSensitiveQueryValues,
+  sanitizeAnalyticsProperties,
+} = await import('../analytics/posthog');
 
 type AnalyticsFixtureIds = Readonly<{
   noKeyEventId: string;
@@ -109,6 +114,33 @@ describe('analytics/posthog (web)', () => {
     expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
     expect(captureMock).toHaveBeenCalledWith('$pageview', { name: 'Home' });
     expect(resetMock).toHaveBeenCalled();
+  });
+
+  test('redacts credential-bearing query values before PostHog receives an event', () => {
+    const secret = 'reset-secret-sentinel';
+    const source = `https://tdf.test/reset?token=${secret}&redirect=%2Ffans`;
+    const sanitizedUrl = redactSensitiveQueryValues(source);
+    const sanitizedProperties = sanitizeAnalyticsProperties({
+      $current_url: source,
+      $referrer: `https://tdf.test/oauth?code=${secret}&state=${secret}`,
+      route: '/reset',
+    });
+
+    expect(sanitizedUrl).not.toContain(secret);
+    expect(JSON.stringify(sanitizedProperties)).not.toContain(secret);
+    expect(sanitizedProperties).toMatchObject({ route: '/reset' });
+
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    getAnalyticsClient();
+    const initOptions = initMock.mock.calls[0]?.[1] as {
+      autocapture?: boolean;
+      before_send?: (event: { properties: Record<string, unknown> }) => {
+        properties: Record<string, unknown>;
+      };
+    };
+    expect(initOptions.autocapture).toBe(false);
+    const outgoing = initOptions.before_send?.({ properties: { $current_url: source } });
+    expect(JSON.stringify(outgoing)).not.toContain(secret);
   });
 
   test('logs PostHog failures through the app logger', () => {

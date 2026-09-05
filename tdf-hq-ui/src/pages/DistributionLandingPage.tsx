@@ -70,7 +70,7 @@ export default function DistributionLandingPage() {
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 850 }}>{text.subtitle}</Typography>
           <Alert severity="warning" sx={{ maxWidth: 900 }}>{text.gate}</Alert>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <Button component={RouterLink} to="/login?next=/label/ddex" variant="contained" size="large">{text.start}</Button>
+            <Button component={RouterLink} to="/login?redirect=%2Flabel%2Fddex" variant="contained" size="large">{text.start}</Button>
             <Button component={RouterLink} to="/records" variant="outlined" size="large">{text.catalog}</Button>
           </Stack>
         </Stack>

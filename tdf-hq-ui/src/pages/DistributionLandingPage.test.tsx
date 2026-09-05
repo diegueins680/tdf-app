@@ -21,6 +21,13 @@ describe('DistributionLandingPage', () => {
     expect(screen.getByText(/simulated response never means completed distribution/)).toBeTruthy();
   });
 
+  it('uses the canonical safe return parameter for authorized distribution users', () => {
+    render(<MemoryRouter><DistributionLandingPage /></MemoryRouter>);
+
+    expect(screen.getByRole('link', { name: /ingresar al piloto/i }).getAttribute('href'))
+      .toBe('/login?redirect=%2Flabel%2Fddex');
+  });
+
   it('has no serious automated accessibility violations', async () => {
     const { container } = render(<MemoryRouter><DistributionLandingPage /></MemoryRouter>);
     await expectNoSeriousAccessibilityViolations(container);

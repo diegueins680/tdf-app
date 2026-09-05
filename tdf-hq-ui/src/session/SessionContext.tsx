@@ -319,11 +319,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     const analytics = getAnalyticsClient();
     if (!analytics.ready) return;
     if (session?.partyId != null) {
-      analytics.identify(String(session.partyId), {
-        username: session.username,
-        displayName: session.displayName,
-        roles: session.roles,
-      });
+      analytics.identify(String(session.partyId));
     } else {
       analytics.reset();
     }
