@@ -15,6 +15,18 @@ copy ES/EN, visibilidad pública y rankings, retención, exportación,
 eliminación/anominización, apelaciones, medidas provisionales, categorías
 prohibidas y jurisdicciones aplicables.
 
+## Jurisdicciones declaradas para el piloto
+
+- Ecuador
+- Colombia
+- Perú
+- México
+- Estados Unidos
+
+La inclusión de estas jurisdicciones documenta el alcance declarado. Antes de
+cerrar la primera casilla de Producto/Legal, Legal/Privacidad debe registrar la
+base de tratamiento y cualquier requisito específico aplicable a cada una.
+
 ## Límites de la evidencia
 
 Esta acta es el registro interno de la decisión declarada por el responsable del
