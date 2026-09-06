@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "fbd50354102abc80339c",
+      "id": "86a7589b0a477889b616",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9301,16 +9301,6 @@
       "priority": "P3-retain",
       "risk": "Changing a test fixture without an explicit review could conceal a mismatch with the persisted reputation-category contract.",
       "justification": "This array is a focused component-test fixture that mirrors API category payloads; it is not production authority for available categories or their weights.",
-      "reviewed": true
-    },
-    {
-      "id": "0797a9dfa486e4f68022",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing a test fixture without an explicit review could conceal ordering regressions against the persisted reputation-category contract.",
-      "justification": "This array is a focused component-test fixture that exercises reordered API category payloads; it is not production authority for categories or priorities.",
       "reviewed": true
     },
     {

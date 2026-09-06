@@ -79,6 +79,8 @@ start_and_verify
 expected_migrations="$(node -p "require('${repo_root}/scripts/production-migrations.json').migrations.length")"
 applied_migrations="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.tdf_schema_migration;')"
 test "${applied_migrations}" = "${expected_migrations}"
+psql "${database_url}" -X -v ON_ERROR_STOP=1 \
+  -f "${repo_root}/tdf-hq/test/integration/contextual_reputation_preference_save_postgres.sql" >/dev/null
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
