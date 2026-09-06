@@ -25,7 +25,7 @@ sin enlace a evidencia no cuenta como aprobación.
 
 ### Producto, Legal y Privacidad
 
-- [ ] Jurisdicciones y base de tratamiento definidas.
+- [x] Jurisdicciones y base de tratamiento definidas. Ver [acta interna](rollout-evidence/2026-09-06-product-legal-approval.md).
 - [ ] Consentimiento granular, retiro y copy ES/EN aprobados.
 - [ ] Retención, exportación, eliminación/anominización y excepciones de
   seguridad aprobadas.

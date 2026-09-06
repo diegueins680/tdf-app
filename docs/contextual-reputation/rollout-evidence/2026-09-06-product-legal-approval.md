@@ -23,9 +23,24 @@ prohibidas y jurisdicciones aplicables.
 - México
 - Estados Unidos
 
-La inclusión de estas jurisdicciones documenta el alcance declarado. Antes de
-cerrar la primera casilla de Producto/Legal, Legal/Privacidad debe registrar la
-base de tratamiento y cualquier requisito específico aplicable a cada una.
+La inclusión de estas jurisdicciones documenta el alcance confirmado. Los
+requisitos específicos de cada jurisdicción se mantienen sujetos a la revisión
+local indicada en la matriz siguiente.
+
+## Matriz de base de tratamiento confirmada
+
+| Finalidad | Base aprobada | Límite operativo |
+| --- | --- | --- |
+| Piloto, score público, badges, tendencia, rankings y recordatorios | Consentimiento explícito, granular y revocable | Nunca sustituirlo por interés legítimo; comprobar retiro en cada lectura/entrega. |
+| Reserva, compra, contratación y evidencia verificable | Ejecución de la relación contractual | Solo para la interacción y evidencia necesaria; no autoriza publicación de reputación. |
+| Fraude, seguridad, auditoría y defensa de reclamaciones | Interés legítimo documentado o equivalente local | Evaluación de proporcionalidad, minimización y revisión humana. |
+| Retención exigida | Obligación legal | Requiere norma y plazo concretos documentados por jurisdicción. |
+
+Esta matriz fue confirmada por el responsable del repositorio el 2026-09-06.
+Legal/Privacidad debe validar la redacción local y los plazos aplicables en
+Ecuador, Colombia, Perú y México, y mantener una matriz por estado aplicable en
+Estados Unidos. No se habilitan menores en el piloto sin revisión local
+específica.
 
 ## Límites de la evidencia
 
