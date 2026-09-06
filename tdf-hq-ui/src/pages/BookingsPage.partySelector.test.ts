@@ -18,4 +18,9 @@ describe('BookingsPage party relationships', () => {
   it('uses the server-enforced engineer eligibility context', () => {
     expect(source).toContain("context: 'booking_engineer', kind: 'person'");
   });
+
+  it('restores the canonical Trial Lessons student from booking prefill', () => {
+    expect(source).toContain('setCustomerPartyId(parsed.customer.partyId)');
+    expect(source).toContain("secondaryLabel: 'Alumno de Trial Lessons'");
+  });
 });

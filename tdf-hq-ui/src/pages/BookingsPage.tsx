@@ -39,6 +39,7 @@ import {
   getBookingConflictAlertText,
   getBookingEngineerFieldState,
   getBookingOptionalDetailsState,
+  parseBookingPrefill,
   getBookingRoomsFieldState,
   getBookingServiceEntryGateState,
   getBookingServiceFieldState,
@@ -423,19 +424,30 @@ useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? window.sessionStorage.getItem('booking-prefill') : null;
       if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<{ title?: string; startAt?: string; endAt?: string; notes?: string; hint?: string }>;
+      window.sessionStorage.removeItem('booking-prefill');
+      const parsed = parseBookingPrefill(raw);
+      if (!parsed) return;
       if (parsed.startAt) setStartInput(formatForInput(new Date(parsed.startAt)));
       if (parsed.endAt) setEndInput(formatForInput(new Date(parsed.endAt)));
       if (parsed.title) setTitle(parsed.title);
       if (parsed.notes) setNotes(parsed.notes);
+      if (parsed.customer) {
+        setCustomerPartyId(parsed.customer.partyId);
+        setSelectedCustomer({
+          partyId: parsed.customer.partyId,
+          partyType: 'person',
+          displayName: parsed.customer.displayName,
+          username: null,
+          avatarUrl: null,
+          secondaryLabel: 'Alumno de Trial Lessons',
+          accountStatus: 'no-account',
+        });
+      }
       setStatus('Tentative');
       setServiceOfferingId(defaultService?.id ?? '');
       setDialogOpen(true);
       setAutoAssignMessage('Datos precargados desde la última acción.');
       setPrefillNotice(true);
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.removeItem('booking-prefill');
-      }
     } catch {
       // ignore malformed prefill
     } finally {
@@ -508,6 +520,8 @@ const openDialogForRange = (start: Date, end: Date) => {
     setEngineerName('');
     setEngineerPartyId(null);
     setSelectedEngineer(null);
+    setCustomerPartyId(null);
+    setSelectedCustomer(null);
     setPrefillNotice(false);
     setAutoAssignMessage('');
   };

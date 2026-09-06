@@ -62,6 +62,11 @@ The PostgreSQL integration test restores the production-shaped fixture, starts
 the real entrypoint, verifies the complete ledger and schema, starts it again,
 and requires an identical schema fingerprint after the second run.
 
+The access-request notification compatibility migration only widens the
+existing notification type constraint. Its rollback refuses to proceed once
+any access-request notification exists; retain the compatible constraint or
+restore a database snapshot instead of deleting notification history.
+
 The 2026-08-25 commerce and distribution row-binding compatibility migrations
 are the forward repair for trigger definitions that had previously been edited
 inside applied 2026-08-13 files. Their rollback files restore the historical

@@ -160,7 +160,10 @@ instalación ya dispone de `pg_trgm`, los índices GIN aditivos de
 `2026-09-04_party_selector_trigram_indexes.sql`. La expresión compacta usada
 por el prefiltrado SQL y sus índices está en
 `2026-09-04_party_selector_punctuation_indexes.sql`; así `oneil` no excluye
-`O'Neil` antes del ranking tolerante. El objetivo operativo
+`O'Neil` antes del ranking tolerante. La migración aditiva
+`2026-09-05_party_selector_username_diacritic_indexes.sql` aplica la misma
+normalización a usernames, por lo que `elise` descubre `élise` aunque el nombre
+visible sea distinto. El objetivo operativo
 sigue siendo p95 menor de 500 ms; debe verificarse con cardinalidad y red de
 staging, porque una medición local sin datos representativos no se presenta
 como evidencia de producción.
@@ -202,7 +205,10 @@ rollback funcional, retirar los consumidores del selector y la ruta nueva; los
 registros existentes permanecen intactos. Los índices trigram pueden retirarse
 con `2026-09-04_party_selector_trigram_indexes_rollback.sql` sin tocar datos.
 Los índices compactos pueden retirarse independientemente con
-`2026-09-04_party_selector_punctuation_indexes_rollback.sql`.
+`2026-09-04_party_selector_punctuation_indexes_rollback.sql`. Si se revierte
+solo el fold de usernames, ejecutar antes
+`2026-09-05_party_selector_username_diacritic_indexes_rollback.sql`, que
+restaura la expresión compacta anterior sin modificar datos.
 No eliminar `GET /parties` hasta que los consumidores administrativos restantes
 estén migrados a listados paginados.
 
@@ -221,7 +227,8 @@ estén migrados a listados paginados.
 | Web | `InternalFeedbackPage` | Asignación | Texto Party ID | Asignación a entidad equivocada | `UserSelector` interno | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `OperationsControlCenterPage` | Filtros, asignación y bandeja | Textos y etiquetas con Party ID | IDs visibles y entradas inválidas | Selectores remotos; resumen humano sin ID | `OperationsControlCenterPage.test.tsx`; regresión arquitectónica | Migrado |
 | Web | `BookingsPage` | Cliente e ingeniero | Catálogo CRM completo y resolución por nombre | PII excesiva, homónimos e ingenieros inelegibles | `PartySelector`; contexto de ingeniero filtra el rol canónico activo en servidor | `BookingsPage.partySelector.test.ts`; pruebas backend de rol | Migrado |
-| Web | `LabelArtistsPage` | Enlazar perfil de artista | Lista CRM con Party ID y correo | Enumeración y vínculo ambiguo | `PartySelector` mínimo con ID canónico oculto | `LabelArtistsPage.test.tsx` | Migrado |
+| Web | `TrialLessonsPage` → `BookingsPage` | Precargar alumno al crear reserva | Sólo se transfería el nombre y el selector requerido quedaba vacío | Pérdida de contexto y reasignación manual propensa a homónimos | Contrato tipado transfiere Party ID + nombre; Bookings reconstruye el chip y guarda el ID canónico | `bookingsPageLogic.test.ts`; `BookingsPage.partySelector.test.ts` | Migrado |
+| Web | `LabelArtistsPage` | Enlazar perfil de artista o banda | Lista CRM con Party ID y correo | Enumeración y vínculo ambiguo | `PartySelector` mínimo para personas u organizaciones, con ID canónico oculto | `LabelArtistsPage.test.tsx`; `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `LabelArtistsPage` | Notas rápidas | Descarga completa para filas paginadas | Transferencia innecesaria de PII | Detalle sólo para artistas visibles, con caché corta | `LabelArtistsPage.test.tsx`; regresión arquitectónica | Migrado |
 | Web | `CollaborativeEventCreatorPage` | Colaboradores | Catálogo CRM completo | Descarga total y duplicados | `UserSelector` repetible con exclusiones | `PartyRelationshipMigration.test.ts` | Migrado |
 | Web | `LiveSessionIntakePage` | Músico existente | Catálogo CRM completo | PII y vínculo por texto | Selector remoto; detalle tras selección | `PartyRelationshipMigration.test.ts` | Migrado |
