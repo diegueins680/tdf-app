@@ -63,6 +63,13 @@ no conservar un agregado obsoleto. Como alternativa, un evento versionado puede
 contener esa unión completa si el consumidor garantiza el mismo fan-out
 idempotente antes de confirmar el mensaje.
 
+Para el modelo Bradley--Terry bayesiano, esa unión es solo el punto de partida:
+el worker debe expandirla al componente conexo de comparaciones dentro del mismo
+`context_key` y alcance de categoría, o recalcular un alcance independiente que
+lo contenga. Publica ese componente/alcance completo de forma atómica; nunca
+actualiza solo los perfiles presentes en la evaluación editada si sus posteriors
+dependen de perfiles conectados.
+
 La misma regla de fan-out aplica a **todo** evento de control: invalidar o
 apelar una evaluación ordinal debe abarcar todos sus perfiles; archivar, fusionar
 o cambiar una categoría debe abarcar cada tupla afectada de sujeto/contexto/categoría;
