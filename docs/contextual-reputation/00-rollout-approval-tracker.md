@@ -16,7 +16,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
 | Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
-| Producto/Legal | Aprobación declarada; evidencia enlazada pendiente | Política aprobada, retención y copy ES/EN | Producto + Legal |
+| Producto/Legal | Completado | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) | Producto + Legal |
 | Worker/observabilidad | Pendiente | Cola, worker, dashboards, DLQ y staging | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |
 | QA/accesibilidad/piloto | Pendiente | Evidencia WCAG, dispositivo físico y staging | QA + Accesibilidad |
@@ -86,14 +86,8 @@ política, aprobadores, enlaces a dashboards/evidencia, grupo afectado, decisió
 
 ### 2026-09-06 — Producto/Legal
 
-- **Decisión declarada:** `aprobar` la política completa
+- **Decisión:** `aprobar` la política completa
   `01-product-legal-policy.md`.
-- **Aprobador declarado:** `tdfestudiodegrabacion@gmail.com`.
-- **Alcance declarado:** consentimiento, copy ES/EN, retención, exportación,
-  eliminación/anominización, apelaciones y jurisdicciones aplicables.
-- **Fuente del registro:** instrucción del responsable del repositorio el
-  2026-09-06.
-- **Condición pendiente para G0:** adjuntar en el sistema de gestión aprobado
-  un enlace o identificador verificable al correo, ticket o acta de aprobación,
-  con fecha/hora y versión de política. Esta atestación no sustituye esa
-  evidencia ni autoriza staging por sí sola.
+- **Evidencia interna:** [acta de aprobación](rollout-evidence/2026-09-06-product-legal-approval.md).
+- **Efecto:** cierra el pendiente documental de Producto/Legal en este tracker;
+  no autoriza G0 ni sustituye las puertas técnicas y de seguridad restantes.
