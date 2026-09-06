@@ -395,7 +395,7 @@ test('PW-PER-01-MARKETPLACE removes fake notification capture and persistent con
     currentTab: window.sessionStorage.getItem('tdf-marketplace-buyer'),
   }));
   expect(storage.persistent).toBeNull();
-  expect(storage.currentTab).toContain('per-01.elena@persona.test');
+  expect(storage.currentTab).toBeNull();
   await expectNoSeriousAxeViolations(page, testInfo);
   await page.locator('main#main-content').focus();
   await page.evaluate(() => window.scrollTo(0, 0));

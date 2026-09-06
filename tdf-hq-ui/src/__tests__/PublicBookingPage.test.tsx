@@ -694,7 +694,7 @@ describe('PublicBookingPage', () => {
         resolveServices = resolve;
       }),
     );
-    window.localStorage.setItem(
+    window.sessionStorage.setItem(
       'tdf-public-booking-profile',
       JSON.stringify({
         fullName: 'Nombre Guardado',

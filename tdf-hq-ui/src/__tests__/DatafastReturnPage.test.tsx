@@ -91,7 +91,7 @@ describe('DatafastReturnPage', () => {
     expect(window.localStorage.getItem('tdf-marketplace-cart-id')).toBe('cart-1');
     expect(window.localStorage.getItem('tdf-marketplace-cart-meta')).toBe('{"items":1}');
     expect(window.localStorage.getItem('tdf-marketplace-buyer')).toBeNull();
-    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBe('{"name":"Test User"}');
+    expect(window.sessionStorage.getItem('tdf-marketplace-buyer')).toBeNull();
 
     await cleanup();
     document.body.removeChild(container);
