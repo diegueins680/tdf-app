@@ -25,7 +25,9 @@ la evidencia externa correspondiente en el sistema de gestión aprobado.
 
 ## Efecto en el rollout
 
-Este registro satisface la evidencia documental interna de Producto/Legal para
-el tracker. No autoriza por sí mismo G0, staging, migraciones, piloto ni la
-activación de `CONTEXTUAL_REPUTATION_ENABLED`; siguen siendo obligatorias las
-puertas de Infraestructura/Operaciones, Moderación/RBAC y QA/Accesibilidad.
+Este registro documenta la decisión declarada para el tracker, pero no satisface
+por sí solo los criterios de salida de Producto/Legal: se deben completar los
+plazos por jurisdicción, copy publicado y pruebas auditadas de derechos. No
+autoriza G0, staging, migraciones, piloto ni la activación de
+`CONTEXTUAL_REPUTATION_ENABLED`; siguen siendo obligatorias todas las puertas de
+Infraestructura/Operaciones, Moderación/RBAC y QA/Accesibilidad.

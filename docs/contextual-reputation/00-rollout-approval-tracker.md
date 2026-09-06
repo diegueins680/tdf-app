@@ -16,7 +16,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
 | Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
-| Producto/Legal | Completado | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) | Producto + Legal |
+| Producto/Legal | Aprobación registrada; cierre pendiente | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) + checklist completo | Producto + Legal |
 | Worker/observabilidad | Pendiente | Cola, worker, dashboards, DLQ y staging | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |
 | QA/accesibilidad/piloto | Pendiente | Evidencia WCAG, dispositivo físico y staging | QA + Accesibilidad |
@@ -89,5 +89,7 @@ política, aprobadores, enlaces a dashboards/evidencia, grupo afectado, decisió
 - **Decisión:** `aprobar` la política completa
   `01-product-legal-policy.md`.
 - **Evidencia interna:** [acta de aprobación](rollout-evidence/2026-09-06-product-legal-approval.md).
-- **Efecto:** cierra el pendiente documental de Producto/Legal en este tracker;
-  no autoriza G0 ni sustituye las puertas técnicas y de seguridad restantes.
+- **Efecto:** documenta la aprobación declarada, pero no cierra Producto/Legal
+  para G0. Siguen obligatorios los plazos por jurisdicción, copy publicado,
+  pruebas auditadas de derechos y el resto del checklist; tampoco sustituye las
+  puertas técnicas y de seguridad restantes.
