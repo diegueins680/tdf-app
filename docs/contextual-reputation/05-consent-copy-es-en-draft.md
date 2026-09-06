@@ -1,6 +1,6 @@
 # Copy de consentimiento ES/EN — Reputación contextual v1
 
-> **Estado:** borrador de Producto/Legal; no publicado ni habilitante.
+> **Estado:** aprobado por Producto/Legal el 2026-09-06; pendiente de publicación en los canales finales.
 > **Versión:** `reputation-consent-v0.1`.
 
 ## Reglas
@@ -35,6 +35,6 @@
 
 **Rights and appeals:** Request access, export, correction, deletion, or review through [privacy link]. Report or appeal a signal, category, badge, or aggregated result through [appeals link]. We do not reveal other evaluators’ identities.
 
-## Approval required
+## Publication required
 
-Legal/Producto must approve final links, privacy contact, approved retention alignment, and local review for each pilot jurisdiction before publication.
+Antes de publicar, configurar enlaces finales, contacto de privacidad, alineación con plazos aprobados y revisión local por jurisdicción. Esta aprobación no habilita el feature flag.
