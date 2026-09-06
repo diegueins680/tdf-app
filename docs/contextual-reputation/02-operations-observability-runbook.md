@@ -100,10 +100,12 @@ el worker debe excluirlas al leer la fuente canónica mientras ese gate esté
 cerrado.
 
 El lector público consulta sincrónicamente el estado de age assurance además de
-consentimiento y gate: `minor_restricted` y `guardian_pending` nunca publican.
-Toda transición de ese estado escribe `age_assurance.changed` en el outbox e
-invalida las tuplas afectadas; el evento repara proyecciones, pero la lectura
-sincrónica evita exposición durante la cola.
+consentimiento y gate, y falla cerrado: solo `adult_attested`,
+`adult_verified` o `guardian_approved` son publicables; `unknown`, una fila
+ausente, `minor_restricted` y `guardian_pending` nunca publican. Toda
+transición de ese estado escribe `age_assurance.changed` en el outbox e invalida
+las tuplas afectadas; el evento repara proyecciones, pero la lectura sincrónica
+evita exposición durante la cola.
 
 ## 4. Reglas de procesamiento
 
@@ -165,9 +167,12 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   versión del productor, el límite de replay y el cambio del selector ocurren
   en la misma transición atómica, o se mantiene el dual-write hasta confirmar
   que no existen eventos previos o concurrentes sin aplicar. Un drenaje no
-  delimitado no es equivalente. Ninguna lectura mezcla versiones ni omite writes concurrentes. El
-  rollback vuelve a seleccionar atómicamente la versión anterior, sin borrar
-  sus filas, mientras la nueva se investiga.
+  delimitado no es equivalente. Ninguna lectura mezcla versiones ni omite writes
+  concurrentes. Durante la ventana de rollback se mantiene dual-processing de
+  la versión anterior, o antes de reabrirla se la reprocesa hasta un high-water
+  mark protegido por el mismo fence de productores; solo entonces el rollback
+  vuelve a seleccionar atómicamente esa versión, sin borrar sus filas, mientras
+  la nueva se investiga.
 
 ## 6. Métricas, trazas y alertas
 
