@@ -16,7 +16,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
 | Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
-| Producto/Legal | Pendiente | Política aprobada, retención y copy ES/EN | Producto + Legal |
+| Producto/Legal | Aprobación declarada; evidencia enlazada pendiente | Política aprobada, retención y copy ES/EN | Producto + Legal |
 | Worker/observabilidad | Pendiente | Cola, worker, dashboards, DLQ y staging | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |
 | QA/accesibilidad/piloto | Pendiente | Evidencia WCAG, dispositivo físico y staging | QA + Accesibilidad |
@@ -83,3 +83,17 @@ afectadas y abrir incidente antes de reiniciar.
 Para cada puerta: fecha/hora UTC, ambiente, versión de fórmula, versión de
 política, aprobadores, enlaces a dashboards/evidencia, grupo afectado, decisión
 (`aprobar`, `pausar`, `rechazar`) y condición de rollback.
+
+### 2026-09-06 — Producto/Legal
+
+- **Decisión declarada:** `aprobar` la política completa
+  `01-product-legal-policy.md`.
+- **Aprobador declarado:** `tdfestudiodegrabacion@gmail.com`.
+- **Alcance declarado:** consentimiento, copy ES/EN, retención, exportación,
+  eliminación/anominización, apelaciones y jurisdicciones aplicables.
+- **Fuente del registro:** instrucción del responsable del repositorio el
+  2026-09-06.
+- **Condición pendiente para G0:** adjuntar en el sistema de gestión aprobado
+  un enlace o identificador verificable al correo, ticket o acta de aprobación,
+  con fecha/hora y versión de política. Esta atestación no sustituye esa
+  evidencia ni autoriza staging por sí sola.
