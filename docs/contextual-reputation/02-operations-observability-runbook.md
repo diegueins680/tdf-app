@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -91,6 +91,19 @@ cerrado, programa el recálculo determinista y solo lo abre cuando la proyecció
 vigente está confirmada y supera sus demás umbrales. La API verifica el
 consentimiento y el gate en cada lectura: el evento asíncrono repara la
 proyección, pero no es la barrera que contiene una exposición.
+
+El consentimiento de piloto es distinto: su retiro se persiste como
+`pilot_consent.changed`, cierra inmediatamente el gate de contribución para el
+sujeto, suprime solicitudes pendientes e invalida agregados futuros aunque la
+visibilidad pública siga concedida. Productores deben rechazar nuevas señales y
+el worker debe excluirlas al leer la fuente canónica mientras ese gate esté
+cerrado.
+
+El lector público consulta sincrónicamente el estado de age assurance además de
+consentimiento y gate: `minor_restricted` y `guardian_pending` nunca publican.
+Toda transición de ese estado escribe `age_assurance.changed` en el outbox e
+invalida las tuplas afectadas; el evento repara proyecciones, pero la lectura
+sincrónica evita exposición durante la cola.
 
 ## 4. Reglas de procesamiento
 
@@ -148,8 +161,11 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   inactivas para la nueva versión, valida cobertura, fixtures de referencia y
   métricas, y solo entonces cambia atómicamente el selector activo. Debe además
   congelar writers, duplicar los writes en ambas versiones, o reprocesar desde
-  un high-water mark capturado hasta que no queden eventos pendientes antes del
-  cambio; ninguna lectura mezcla versiones ni omite writes concurrentes. El
+  un high-water mark capturado con un fence de productores: la selección de
+  versión del productor, el límite de replay y el cambio del selector ocurren
+  en la misma transición atómica, o se mantiene el dual-write hasta confirmar
+  que no existen eventos previos o concurrentes sin aplicar. Un drenaje no
+  delimitado no es equivalente. Ninguna lectura mezcla versiones ni omite writes concurrentes. El
   rollback vuelve a seleccionar atómicamente la versión anterior, sin borrar
   sus filas, mientras la nueva se investiga.
 
