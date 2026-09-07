@@ -72,7 +72,9 @@ executable tdf-hq-exe
     TDF.Cron
     TDF.Cors
     TDF.DB
+    TDF.DB.ReputationConsent
     TDF.DTO
+    TDF.DTO.ReputationConsent
     TDF.DTO.SocialEventsDTO
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
@@ -300,7 +302,9 @@ test-suite tdf-hq-test
     TDF.Cron
     TDF.Courses.Production
     TDF.DB
+    TDF.DB.ReputationConsent
     TDF.DTO
+    TDF.DTO.ReputationConsent
     TDF.DTO.SocialEventsDTO
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
