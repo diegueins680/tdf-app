@@ -102,6 +102,7 @@ fi
 
 draft_formula_id="draft-run-freeze-test-v1"
 draft_run_id="c5100000-0000-4000-8000-000000000001"
+future_run_id="c5100000-0000-4000-8000-000000000002"
 psql_exec -c "
   INSERT INTO reputation_formula_version(
     id, public_parameters, preference_parameters, status
@@ -118,9 +119,20 @@ psql_exec -c "
     id, environment, run_kind, formula_version_id, high_water_mark
   ) VALUES (
     '$draft_run_id', 'staging', 'simulation', '$draft_formula_id',
-    '2030-09-01T00:00:00Z'
+    now()
   );
 " >/dev/null
+if psql_exec -c "
+  INSERT INTO reputation_aggregation_run(
+    id, environment, run_kind, formula_version_id, high_water_mark
+  ) VALUES (
+    '$future_run_id', 'staging', 'simulation', '$draft_formula_id',
+    transaction_timestamp() + interval '1 second'
+  );
+" >/dev/null 2>&1; then
+  echo "Reputation aggregation run accepted a future high-water mark" >&2
+  exit 1
+fi
 if psql_exec -c "
   UPDATE reputation_formula_version
   SET public_parameters=public_parameters || '{\"priorMean\":52}'::jsonb
@@ -130,13 +142,25 @@ if psql_exec -c "
   exit 1
 fi
 
+category_id=$(psql_exec -Atc "SELECT id FROM reputation_category WHERE slug='quality';")
+suppressed_source_event_id="c5110000-0000-4000-8000-000000000001"
+psql_exec -c "SELECT reputation_enqueue_aggregation_event(
+  '$suppressed_source_event_id', 'evaluation.submitted', 101,
+  'service:disabled-producer-001', '$category_id', 1,
+  'public-bayes-roc-v1', 'c5110000-0000-4000-8000-000000000002',
+  NULL, now()
+);" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE id='$suppressed_source_event_id';")" \
+  "0" \
+  "Disabled-environment source producer suppression"
+
 psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='staging';" >/dev/null
 if psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='test';" >/dev/null 2>&1; then
   echo "More than one reputation worker environment could be enabled" >&2
   exit 1
 fi
 
-category_id=$(psql_exec -Atc "SELECT id FROM reputation_category WHERE slug='quality';")
 role_category_id="c5200000-0000-4000-8000-000000000003"
 psql_exec -c "
   INSERT INTO reputation_category(
@@ -666,6 +690,88 @@ while :; do
     "Evaluator-cap follow-up event processing"
 done
 
+extreme_cap_formula_id="extreme-cap-test-v1"
+extreme_cap_interaction_old="c5300000-0000-4000-8000-000000000001"
+extreme_cap_evaluation_old="c5300000-0000-4000-8000-000000000002"
+extreme_cap_interaction_new="c5300000-0000-4000-8000-000000000003"
+extreme_cap_evaluation_new="c5300000-0000-4000-8000-000000000004"
+psql_exec -c "
+  INSERT INTO reputation_formula_version(
+    id, public_parameters, preference_parameters, status
+  ) VALUES (
+    '$extreme_cap_formula_id',
+    '{\"priorStrength\":8,\"priorMean\":50,\"minimumVerifiedRatings\":3,\"halfLifeDays\":1,\"perEvaluatorCap\":0.99}',
+    '{\"method\":\"rank-order-centroid\",\"scale\":100}',
+    'draft'
+  );
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES
+    (
+      '$extreme_cap_interaction_old', 'service', 'cap-extreme-001', 101, 103,
+      '2030-08-12T12:01:50Z', '2030-08-12T12:01:50Z',
+      'eligible', 'test_fixture', 'cap-extreme-old'
+    ),
+    (
+      '$extreme_cap_interaction_new', 'service', 'cap-extreme-001', 107, 103,
+      '2030-09-01T12:01:50Z', '2030-09-01T12:01:50Z',
+      'eligible', 'test_fixture', 'cap-extreme-new'
+    );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES
+    (
+      '$extreme_cap_evaluation_old', '$extreme_cap_interaction_old',
+      101, 103, 'a_to_b', 'draft', '$extreme_cap_formula_id', 1,
+      '2030-10-01T00:00:00Z'
+    ),
+    (
+      '$extreme_cap_evaluation_new', '$extreme_cap_interaction_new',
+      107, 103, 'a_to_b', 'draft', '$extreme_cap_formula_id', 1,
+      '2030-10-01T00:00:00Z'
+    );
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES
+    ('$extreme_cap_evaluation_old', '$category_id', 1, 100),
+    ('$extreme_cap_evaluation_new', '$category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group,
+    absolute_score
+  ) VALUES
+    ('$extreme_cap_evaluation_old', '$category_id', 103, 1, 0),
+    ('$extreme_cap_evaluation_new', '$category_id', 103, 1, 100);
+  UPDATE reputation_evaluation
+  SET status='submitted', submitted_at=CASE
+    WHEN id='$extreme_cap_evaluation_old' THEN '2030-08-12T12:01:50Z'::timestamptz
+    ELSE '2030-09-01T12:01:50Z'::timestamptz
+  END
+  WHERE id IN ('$extreme_cap_evaluation_old', '$extreme_cap_evaluation_new');
+" >/dev/null
+extreme_cap_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-extreme-cap-0001', 1, '2030-09-01T12:01:51Z');")
+extreme_cap_event_id=$(printf '%s' "$extreme_cap_claim" | cut -d '|' -f 1)
+extreme_cap_token=$(printf '%s' "$extreme_cap_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$extreme_cap_event_id', '$extreme_cap_token', '2030-09-01T12:01:52Z');")" \
+  "processed" \
+  "Exact extreme evaluator-cap processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT (metadata->>'maxEvaluatorShare')::numeric FROM reputation_aggregation_event_action WHERE event_id='$extreme_cap_event_id' AND action='processed';")" \
+  "0.990000" \
+  "Exact extreme evaluator contribution share"
+while :; do
+  extreme_cap_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-extreme-cap-0001', 1, '2030-09-01T12:01:53Z');")
+  [ -n "$extreme_cap_claim" ] || break
+  extreme_cap_event_id=$(printf '%s' "$extreme_cap_claim" | cut -d '|' -f 1)
+  extreme_cap_token=$(printf '%s' "$extreme_cap_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$extreme_cap_event_id', '$extreme_cap_token', '2030-09-01T12:01:54Z');")" \
+    "processed" \
+    "Extreme evaluator-cap follow-up processing"
+done
+
 ordinal_interaction_a="c6100000-0000-4000-8000-000000000001"
 ordinal_evaluation_a="c6100000-0000-4000-8000-000000000002"
 ordinal_interaction_b="c6100000-0000-4000-8000-000000000003"
@@ -887,7 +993,7 @@ psql_exec -c "
     id, environment, run_kind, formula_version_id, high_water_mark
   ) VALUES (
     '$run_id', 'staging', 'simulation', 'public-bayes-roc-v1',
-    '2027-09-01T12:05:00Z'
+    now()
   );
 " >/dev/null
 if psql_exec -c "UPDATE reputation_aggregation_run SET high_water_mark='2031-09-01T12:05:00Z' WHERE id='$run_id';" >/dev/null 2>&1; then
@@ -987,7 +1093,7 @@ psql_exec -c "
     started_at
   ) VALUES (
     '$cancelled_run_id', 'staging', 'simulation', 'public-bayes-roc-v1',
-    'running', '2030-09-01T12:04:04Z', '2030-09-01T12:04:04Z'
+    'running', now(), '2030-09-01T12:04:04Z'
   );
   SELECT reputation_enqueue_aggregation_event(
     '$cancelled_event_id', 'recalculation.requested', 103,
@@ -1104,21 +1210,30 @@ psql_exec -c "
     '$category_id', 1, 'public-bayes-roc-v1', '$fence_correlation_id',
     '$fence_run_id', '2026-09-06T00:00:00Z'
   );
-  UPDATE reputation_evaluation_rank
-  SET absolute_score=90
-  WHERE evaluation_id='$fence_evaluation_id'
-    AND category_id='$category_id'
-    AND compared_party_id=102;
   UPDATE reputation_worker_control SET max_attempts=1 WHERE environment='staging';
 " >/dev/null
 fence_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-fence-0001', 1, '2030-09-01T12:04:10Z');")
 fence_claim_event_id=$(printf '%s' "$fence_claim" | cut -d '|' -f 1)
 fence_claim_token=$(printf '%s' "$fence_claim" | cut -d '|' -f 2)
 assert_equal "$fence_claim_event_id" "$fence_event_id" "High-water fenced run claim"
+psql_exec -c "
+  BEGIN;
+  UPDATE reputation_evaluation_rank
+  SET absolute_score=90
+  WHERE evaluation_id='$fence_evaluation_id'
+    AND category_id='$category_id'
+    AND compared_party_id=102;
+  SELECT pg_sleep(2);
+  COMMIT;
+" >/dev/null &
+fence_writer_pid=$!
+sleep 1
 if psql_exec -c "SELECT reputation_complete_aggregation_event('$fence_claim_event_id', '$fence_claim_token', '2030-09-01T12:04:11Z');" >/dev/null 2>&1; then
-  echo "Bounded run accepted a post-cutoff evidence edit" >&2
+  wait "$fence_writer_pid"
+  echo "Bounded run accepted a concurrent post-cutoff evidence edit" >&2
   exit 1
 fi
+wait "$fence_writer_pid"
 assert_equal \
   "$(psql_exec -Atc "SELECT reputation_fail_aggregation_event('staging', '$fence_claim_event_id', '$fence_claim_token', 'source_fence_violated', '2030-09-01T12:04:12Z');")" \
   "dead_letter" \
@@ -1326,6 +1441,30 @@ assert_equal \
   "$health_queue_before" \
   "Unclaimable planned-run health exclusion"
 
+health_retry_event_id="c6510000-0000-4000-8000-000000000003"
+health_retry_correlation_id="c6510000-0000-4000-8000-000000000004"
+psql_exec -c "SELECT reputation_enqueue_aggregation_event(
+  '$health_retry_event_id', 'recalculation.requested', 103,
+  'service:retry-health-001', '$category_id', 1, '$draft_formula_id',
+  '$health_retry_correlation_id', NULL, now()
+);" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT queue_depth FROM reputation_worker_health WHERE environment='staging';")" \
+  "$((health_queue_before + 1))" \
+  "Immediately claimable health depth"
+health_retry_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-health-retry-0001', 1, now() + interval '1 second');")
+health_retry_claim_event_id=$(printf '%s' "$health_retry_claim" | cut -d '|' -f 1)
+health_retry_claim_token=$(printf '%s' "$health_retry_claim" | cut -d '|' -f 2)
+assert_equal "$health_retry_claim_event_id" "$health_retry_event_id" "Health retry event claim"
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_fail_aggregation_event('staging', '$health_retry_claim_event_id', '$health_retry_claim_token', 'synthetic_health_retry', now() + interval '2 seconds');")" \
+  "retry" \
+  "Health retry scheduling"
+assert_equal \
+  "$(psql_exec -Atc "SELECT queue_depth FROM reputation_worker_health WHERE environment='staging';")" \
+  "$health_queue_before" \
+  "Future retry health exclusion"
+
 if psql_exec -c "UPDATE reputation_aggregation_event_action SET action='processed' WHERE event_id='$retry_event_id';" >/dev/null 2>&1; then
   echo "Reputation event action audit allowed mutation" >&2
   exit 1
@@ -1344,6 +1483,54 @@ psql_exec -c "
 after_removed_rank=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE subject_party_id=103 AND category_id='$category_id';")
 assert_equal "$((after_removed_rank - before_removed_rank))" "2" "Removed ordinal subject fan-out"
 
+category_draft_interaction_id="c6520000-0000-4000-8000-000000000001"
+category_draft_evaluation_id="c6520000-0000-4000-8000-000000000002"
+category_retired_formula_id="category-retired-test-v1"
+category_retired_context_key="service:category-retired-001"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES (
+    '$category_draft_interaction_id', 'service', 'category-draft-001',
+    101, 107, now(), now(), 'eligible', 'test_fixture', 'category-draft-001'
+  );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES (
+    '$category_draft_evaluation_id', '$category_draft_interaction_id',
+    101, 107, 'a_to_b', 'draft', 'public-bayes-roc-v1', 1,
+    '2030-10-01T00:00:00Z'
+  );
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$category_draft_evaluation_id', '$category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group,
+    absolute_score
+  ) VALUES (
+    '$category_draft_evaluation_id', '$category_id', 107, 1, 90
+  );
+  INSERT INTO reputation_formula_version(
+    id, public_parameters, preference_parameters, status
+  ) VALUES (
+    '$category_retired_formula_id',
+    '{\"priorStrength\":8,\"priorMean\":50,\"minimumVerifiedRatings\":3,\"halfLifeDays\":365,\"perEvaluatorCap\":0.25}',
+    '{\"method\":\"rank-order-centroid\",\"scale\":100}',
+    'retired'
+  );
+  INSERT INTO reputation_aggregate_candidate(
+    subject_party_id, category_id, context_key, formula_version_id,
+    score, lower_bound, upper_bound, verified_interaction_count,
+    distinct_evaluator_count, observation_count, confidence,
+    publication_state, source_event_id, calculated_at
+  ) VALUES (
+    107, '$category_id', '$category_retired_context_key',
+    '$category_retired_formula_id', 50, 25, 75, 0, 0, 0, 'forming',
+    'simulation', '$stable_event_id', now()
+  );
+" >/dev/null
 category_control_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id';")
 category_control_targets=$(psql_exec -Atc "
   SELECT count(*)
@@ -1351,6 +1538,9 @@ category_control_targets=$(psql_exec -Atc "
     SELECT DISTINCT candidate.subject_party_id, candidate.context_key,
            candidate.formula_version_id
     FROM reputation_aggregate_candidate candidate
+    JOIN reputation_formula_version formula
+      ON formula.id=candidate.formula_version_id
+     AND formula.status IN ('active', 'draft')
     WHERE candidate.category_id='$category_id'
     UNION
     SELECT DISTINCT rank.compared_party_id,
@@ -1359,7 +1549,19 @@ category_control_targets=$(psql_exec -Atc "
     FROM reputation_evaluation_rank rank
     JOIN reputation_evaluation evaluation ON evaluation.id=rank.evaluation_id
     JOIN reputation_interaction interaction ON interaction.id=evaluation.interaction_id
+    JOIN reputation_formula_version formula
+      ON formula.id=evaluation.formula_version_id
+     AND formula.status IN ('active', 'draft')
     WHERE rank.category_id='$category_id'
+      AND rank.excluded_reason IS NULL
+      AND (rank.position_group IS NOT NULL OR rank.absolute_score IS NOT NULL)
+      AND evaluation.status='submitted'
+      AND evaluation.submitted_at IS NOT NULL
+      AND interaction.status='eligible'
+      AND lower(interaction.context_kind)='service'
+      AND reputation_subject_has_applicable_role(
+        rank.compared_party_id, ARRAY[]::text[]
+      )
   ) affected;
 ")
 psql_exec -c "
@@ -1369,6 +1571,14 @@ psql_exec -c "
 " >/dev/null
 category_control_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id';")
 assert_equal "$((category_control_after - category_control_before))" "$category_control_targets" "Category applicability control event"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id' AND context_key='service:category-draft-001';")" \
+  "0" \
+  "Draft category-rank fan-out suppression"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id' AND algorithm_version='$category_retired_formula_id';")" \
+  "0" \
+  "Retired category-candidate fan-out suppression"
 
 assert_equal \
   "$(psql_exec -Atc "SELECT enabled::text || ':' || simulation_only::text || ':' || dead_letter_count FROM reputation_worker_health WHERE environment='staging';")" \
@@ -1466,4 +1676,4 @@ assert_equal \
   "50.0000:0:$run_event_a" \
   "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, immutable and run-frozen formula parameters, late-submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction tuple-move invalidation, leasing and expired-lease limits, simulation isolation, role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed disabled-environment producer gating, production gating, immutable and run-frozen formula parameters, non-future high-water marks, serialized late-submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."

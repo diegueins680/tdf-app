@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   started_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (high_water_mark <= created_at),
   CHECK ((status = 'planned') = (started_at IS NULL)),
   CHECK ((status IN ('succeeded', 'failed', 'cancelled')) = (completed_at IS NOT NULL)),
   CHECK (completed_at IS NULL OR completed_at >= started_at)
@@ -107,6 +108,11 @@ AS $$
 DECLARE
   formula_status TEXT;
 BEGIN
+  IF NEW.high_water_mark > transaction_timestamp()
+     OR NEW.created_at > transaction_timestamp() THEN
+    RAISE EXCEPTION 'Reputation aggregation runs cannot use future snapshot times';
+  END IF;
+
   SELECT formula.status
     INTO formula_status
   FROM reputation_formula_version formula
@@ -403,6 +409,40 @@ AS $$
 DECLARE
   existing reputation_aggregation_outbox%ROWTYPE;
 BEGIN
+  IF p_run_id IS NULL AND p_event_type IN (
+    'evaluation.submitted',
+    'evaluation.edited',
+    'evaluation.invalidated',
+    'evaluation.erased_or_anonymized',
+    'signal.moderated',
+    'appeal.provisional_opened',
+    'appeal.resolved',
+    'interaction.invalidated',
+    'interaction.restored',
+    'category.applicability_changed',
+    'subject.role_changed',
+    'public_consent.changed',
+    'pilot_consent.changed',
+    'age_assurance.changed'
+  ) THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM reputation_worker_control control
+      WHERE control.environment IN ('test', 'staging')
+        AND control.enabled
+        AND control.simulation_only
+    ) THEN
+      RETURN p_event_id;
+    END IF;
+
+    -- Source transactions and bounded completions share this transaction-level
+    -- fence. Whichever side acquires it first commits or completes before the
+    -- other can inspect canonical evidence.
+    PERFORM pg_advisory_xact_lock(hashtextextended(
+      'reputation-aggregation-source-fence', 0
+    ));
+  END IF;
+
   INSERT INTO reputation_aggregation_outbox(
     id, event_type, subject_party_id, context_key, category_id,
     source_version, algorithm_version, correlation_id, run_id, occurred_at,
@@ -824,6 +864,9 @@ BEGIN
     SELECT DISTINCT candidate.subject_party_id, candidate.context_key,
            candidate.formula_version_id
     FROM reputation_aggregate_candidate candidate
+    JOIN reputation_formula_version formula
+      ON formula.id = candidate.formula_version_id
+     AND formula.status IN ('active', 'draft')
     WHERE candidate.category_id = NEW.id
     UNION
     SELECT DISTINCT rank.compared_party_id,
@@ -832,7 +875,33 @@ BEGIN
     FROM reputation_evaluation_rank rank
     JOIN reputation_evaluation evaluation ON evaluation.id = rank.evaluation_id
     JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
+    JOIN reputation_formula_version formula
+      ON formula.id = evaluation.formula_version_id
+     AND formula.status IN ('active', 'draft')
     WHERE rank.category_id = NEW.id
+      AND NEW.status = 'active'
+      AND rank.excluded_reason IS NULL
+      AND (rank.position_group IS NOT NULL OR rank.absolute_score IS NOT NULL)
+      AND evaluation.status = 'submitted'
+      AND evaluation.submitted_at IS NOT NULL
+      AND interaction.status = 'eligible'
+      AND (
+        cardinality(NEW.applicable_contexts) = 0
+        OR lower(interaction.context_kind) = ANY(NEW.applicable_contexts)
+      )
+      AND (
+        cardinality(NEW.applicable_roles) = 0
+        OR EXISTS (
+          SELECT 1
+          FROM party_security_role assignment
+          JOIN security_role role
+            ON role.id = assignment.role_id
+           AND role.active
+          WHERE assignment.party_id = rank.compared_party_id
+            AND assignment.active
+            AND role.code = ANY(NEW.applicable_roles)
+        )
+      )
   LOOP
     PERFORM reputation_enqueue_aggregation_event(
       gen_random_uuid(), 'category.applicability_changed', target.subject_party_id,
@@ -1162,8 +1231,8 @@ DECLARE
   run_high_water_mark TIMESTAMPTZ;
   evidence_reference_time TIMESTAMPTZ;
   iteration_index INTEGER;
-  cap_iteration_index INTEGER;
   evaluator_total_count INTEGER := 0;
+  evaluator_cap_weight NUMERIC;
   effective_evidence_weight NUMERIC := 0;
   max_evaluator_share NUMERIC := 0;
   component_count INTEGER := 0;
@@ -1186,6 +1255,10 @@ BEGIN
   END IF;
 
   IF event_row.run_id IS NOT NULL THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(
+      'reputation-aggregation-source-fence', 0
+    ));
+
     SELECT run.high_water_mark
       INTO run_high_water_mark
     FROM reputation_aggregation_run run
@@ -1538,18 +1611,50 @@ BEGIN
 
   IF evaluator_total_count > 0
      AND evaluator_total_count * evaluator_cap >= 1 THEN
-    -- Water-fill against the effective total. Repeatedly capping against the
-    -- previous adjusted total converges to sum(min(raw_i, cap * total)).
-    FOR cap_iteration_index IN 1..64 LOOP
-      SELECT COALESCE(sum(adjusted_weight), 0)
-        INTO effective_evidence_weight
-      FROM pg_temp.reputation_bt_evaluator_weight_work;
-      UPDATE pg_temp.reputation_bt_evaluator_weight_work evaluator
-      SET adjusted_weight = LEAST(
-        evaluator.raw_weight,
-        effective_evidence_weight * evaluator_cap
-      );
-    END LOOP;
+    -- Solve t = cap * sum(min(raw_i, t)) exactly. For each possible count of
+    -- uncapped evaluators, the equation is linear; the consistent interval is
+    -- the unique water-fill threshold.
+    WITH ordered AS (
+      SELECT evaluator_party_id, raw_weight,
+             row_number() OVER (
+               ORDER BY raw_weight, evaluator_party_id
+             ) AS evaluator_rank,
+             sum(raw_weight) OVER (
+               ORDER BY raw_weight, evaluator_party_id
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+             ) AS uncapped_weight,
+             lead(raw_weight) OVER (
+               ORDER BY raw_weight, evaluator_party_id
+             ) AS next_raw_weight
+      FROM pg_temp.reputation_bt_evaluator_weight_work
+    ), thresholds AS (
+      SELECT ordered.*,
+             evaluator_cap * ordered.uncapped_weight /
+               (1 - evaluator_cap * (
+                 evaluator_total_count - ordered.evaluator_rank
+               )) AS cap_weight
+      FROM ordered
+      WHERE 1 - evaluator_cap * (
+        evaluator_total_count - ordered.evaluator_rank
+      ) > 0
+    )
+    SELECT threshold.cap_weight
+      INTO evaluator_cap_weight
+    FROM thresholds threshold
+    WHERE threshold.cap_weight >= threshold.raw_weight
+      AND (
+        threshold.next_raw_weight IS NULL
+        OR threshold.cap_weight <= threshold.next_raw_weight
+      )
+    ORDER BY threshold.evaluator_rank
+    LIMIT 1;
+
+    IF evaluator_cap_weight IS NULL THEN
+      RAISE EXCEPTION 'Reputation evaluator cap water-fill has no solution';
+    END IF;
+
+    UPDATE pg_temp.reputation_bt_evaluator_weight_work evaluator
+    SET adjusted_weight = LEAST(evaluator.raw_weight, evaluator_cap_weight);
   ELSE
     -- With fewer evaluators than 1/cap, a positive evidence total cannot
     -- satisfy the fractional cap. Retain the conservative one-pass shrinkage
@@ -1956,7 +2061,10 @@ SELECT
   control.environment,
   control.enabled,
   control.simulation_only,
-  count(*) FILTER (WHERE event.processing_status IN ('pending', 'retry'))::bigint
+  count(*) FILTER (
+    WHERE event.processing_status IN ('pending', 'retry')
+      AND event.available_at <= now()
+  )::bigint
     AS queue_depth,
   count(*) FILTER (WHERE event.processing_status = 'processing')::bigint
     AS processing_count,
@@ -1965,7 +2073,10 @@ SELECT
   COALESCE(
     extract(epoch FROM (
       now() - (min(event.occurred_at)
-        FILTER (WHERE event.processing_status IN ('pending', 'retry')))
+        FILTER (
+          WHERE event.processing_status IN ('pending', 'retry')
+            AND event.available_at <= now()
+        ))
     )),
     0
   )::bigint AS oldest_due_age_seconds,
