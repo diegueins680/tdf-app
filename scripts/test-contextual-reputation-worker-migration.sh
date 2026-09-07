@@ -50,7 +50,7 @@ assert_equal() {
 
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 psql_exec -c 'CREATE TABLE party (id BIGINT PRIMARY KEY);' >/dev/null
-psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103), (104), (105), (106), (107);' >/dev/null
+psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103), (104), (105), (106), (107), (108);' >/dev/null
 psql_exec -c "
   CREATE TABLE security_role (
     id UUID PRIMARY KEY,
@@ -224,6 +224,38 @@ psql_exec -c "
     ARRAY['vendor'], ARRAY['service'], 9
   );
 " >/dev/null
+role_draft_interaction_id="c5200000-0000-4000-8000-000000000004"
+role_draft_evaluation_id="c5200000-0000-4000-8000-000000000005"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES (
+    '$role_draft_interaction_id', 'service', 'role-draft-001', 101, 108,
+    now(), now(), 'eligible', 'test_fixture', 'role-draft-001'
+  );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES (
+    '$role_draft_evaluation_id', '$role_draft_interaction_id', 101, 108,
+    'a_to_b', 'draft', 'public-bayes-roc-v1', 1,
+    '2030-10-01T00:00:00Z'
+  );
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$role_draft_evaluation_id', '$role_category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group,
+    absolute_score
+  ) VALUES ('$role_draft_evaluation_id', '$role_category_id', 108, 1, 90);
+  INSERT INTO party_security_role(party_id, role_id)
+  VALUES (108, 'c5000000-0000-4000-8000-000000000002');
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='subject.role_changed' AND subject_party_id=108 AND context_key='service:role-draft-001';")" \
+  "0" \
+  "Draft-only role-change fan-out suppression"
 role_interaction_id="c5200000-0000-4000-8000-000000000001"
 role_evaluation_id="c5200000-0000-4000-8000-000000000002"
 psql_exec -c "
@@ -1721,6 +1753,10 @@ assert_equal \
   "$(psql_exec -Atc "SELECT queue_depth FROM reputation_worker_health WHERE environment='staging';")" \
   "$health_queue_before" \
   "Future retry health exclusion"
+assert_equal \
+  "$(psql_exec -Atc "SELECT oldest_due_age_seconds FROM reputation_worker_queue_metrics WHERE processing_status='retry';")" \
+  "0" \
+  "Future retry queue-metric due-age exclusion"
 
 if psql_exec -c "UPDATE reputation_aggregation_event_action SET action='processed' WHERE event_id='$retry_event_id';" >/dev/null 2>&1; then
   echo "Reputation event action audit allowed mutation" >&2
@@ -1986,4 +2022,4 @@ assert_equal \
   "50.0000:0:$run_event_a" \
   "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed disabled-environment producer gating with complete-coverage watermarks and open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future and coverage-safe high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation, complete-event success, terminal enqueue rejection, and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed disabled-environment producer gating with complete-coverage watermarks and open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future and coverage-safe high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation, complete-event success, terminal enqueue rejection, and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, processable role-change comparison-component fan-out with draft suppression, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health and queue metrics, retry-cycle-separated non-identifying metrics, and rerun checks."

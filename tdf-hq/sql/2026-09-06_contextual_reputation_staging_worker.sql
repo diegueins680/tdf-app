@@ -1075,9 +1075,10 @@ AS $$
   )
 $$;
 
-CREATE OR REPLACE FUNCTION reputation_emit_subject_role_change_events(
+CREATE OR REPLACE FUNCTION reputation_emit_subject_role_change_events_for_roles(
   p_subject_party_id BIGINT,
-  p_occurred_at TIMESTAMPTZ
+  p_occurred_at TIMESTAMPTZ,
+  p_former_role_codes TEXT[]
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -1092,7 +1093,18 @@ BEGIN
       SELECT candidate.category_id, candidate.context_key,
              candidate.formula_version_id
       FROM reputation_aggregate_candidate candidate
+      JOIN reputation_formula_version formula
+        ON formula.id = candidate.formula_version_id
+       AND formula.status IN ('active', 'draft')
+      JOIN reputation_category category
+        ON category.id = candidate.category_id
+       AND category.status = 'active'
       WHERE candidate.subject_party_id = p_subject_party_id
+        AND (
+          cardinality(category.applicable_contexts) = 0
+          OR split_part(candidate.context_key, ':', 1) =
+             ANY(category.applicable_contexts)
+        )
       UNION
       SELECT rank.category_id,
              lower(interaction.context_kind) || ':' || interaction.context_id,
@@ -1102,7 +1114,31 @@ BEGIN
         ON evaluation.id = rank.evaluation_id
       JOIN reputation_interaction interaction
         ON interaction.id = evaluation.interaction_id
+      JOIN reputation_formula_version formula
+        ON formula.id = evaluation.formula_version_id
+       AND formula.status IN ('active', 'draft')
+      JOIN reputation_category category
+        ON category.id = rank.category_id
+       AND category.status = 'active'
       WHERE rank.compared_party_id = p_subject_party_id
+        AND rank.excluded_reason IS NULL
+        AND (rank.position_group IS NOT NULL OR rank.absolute_score IS NOT NULL)
+        AND evaluation.status = 'submitted'
+        AND evaluation.submitted_at IS NOT NULL
+        AND interaction.status = 'eligible'
+        AND (
+          cardinality(category.applicable_contexts) = 0
+          OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+        )
+        AND (
+          reputation_subject_has_applicable_role(
+            p_subject_party_id, category.applicable_roles
+          )
+          OR (
+            cardinality(p_former_role_codes) > 0
+            AND category.applicable_roles && p_former_role_codes
+          )
+        )
     ), eligible_rank AS (
       SELECT DISTINCT affected.category_id, affected.context_key,
              affected.formula_version_id, rank.evaluation_id,
@@ -1128,6 +1164,12 @@ BEGIN
        AND (
          cardinality(category.applicable_contexts) = 0
          OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+       )
+       AND (
+         rank.compared_party_id = p_subject_party_id
+         OR reputation_subject_has_applicable_role(
+           rank.compared_party_id, category.applicable_roles
+         )
        )
     ), pair_edge AS (
       SELECT rank_left.category_id, rank_left.context_key,
@@ -1180,16 +1222,43 @@ BEGIN
   RETURN emitted;
 END $$;
 
+CREATE OR REPLACE FUNCTION reputation_emit_subject_role_change_events(
+  p_subject_party_id BIGINT,
+  p_occurred_at TIMESTAMPTZ
+)
+RETURNS INTEGER
+LANGUAGE sql
+AS $$
+  SELECT reputation_emit_subject_role_change_events_for_roles(
+    p_subject_party_id, p_occurred_at, ARRAY[]::TEXT[]
+  )
+$$;
+
 CREATE OR REPLACE FUNCTION reputation_party_security_role_outbox_trigger()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
+DECLARE
+  former_role_codes TEXT[] := ARRAY[]::TEXT[];
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    PERFORM reputation_emit_subject_role_change_events(NEW.party_id, now());
+    IF NEW.active THEN
+      PERFORM reputation_emit_subject_role_change_events_for_roles(
+        NEW.party_id, now(), former_role_codes
+      );
+    END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    PERFORM reputation_emit_subject_role_change_events(OLD.party_id, now());
+    IF OLD.active THEN
+      SELECT COALESCE(array_agg(role.code), ARRAY[]::TEXT[])
+        INTO former_role_codes
+      FROM security_role role
+      WHERE role.id = OLD.role_id
+        AND role.active;
+      PERFORM reputation_emit_subject_role_change_events_for_roles(
+        OLD.party_id, now(), former_role_codes
+      );
+    END IF;
     RETURN OLD;
   END IF;
 
@@ -1199,9 +1268,35 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  PERFORM reputation_emit_subject_role_change_events(OLD.party_id, now());
-  IF OLD.party_id IS DISTINCT FROM NEW.party_id THEN
-    PERFORM reputation_emit_subject_role_change_events(NEW.party_id, now());
+  IF OLD.active AND (
+    OLD.party_id IS DISTINCT FROM NEW.party_id
+    OR OLD.role_id IS DISTINCT FROM NEW.role_id
+    OR NOT NEW.active
+  ) THEN
+    SELECT COALESCE(array_agg(role.code), ARRAY[]::TEXT[])
+      INTO former_role_codes
+    FROM security_role role
+    WHERE role.id = OLD.role_id
+      AND role.active;
+  END IF;
+
+  IF OLD.party_id IS NOT DISTINCT FROM NEW.party_id THEN
+    IF OLD.active OR NEW.active THEN
+      PERFORM reputation_emit_subject_role_change_events_for_roles(
+        OLD.party_id, now(), former_role_codes
+      );
+    END IF;
+  ELSE
+    IF OLD.active THEN
+      PERFORM reputation_emit_subject_role_change_events_for_roles(
+        OLD.party_id, now(), former_role_codes
+      );
+    END IF;
+    IF NEW.active THEN
+      PERFORM reputation_emit_subject_role_change_events_for_roles(
+        NEW.party_id, now(), ARRAY[]::TEXT[]
+      );
+    END IF;
   END IF;
   RETURN NEW;
 END $$;
@@ -1219,20 +1314,29 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   affected_party_id BIGINT;
+  former_role_codes TEXT[] := ARRAY[]::TEXT[];
 BEGIN
   IF OLD.code IS NOT DISTINCT FROM NEW.code
      AND OLD.active IS NOT DISTINCT FROM NEW.active THEN
     RETURN NEW;
   END IF;
 
+  IF OLD.active AND (
+    OLD.code IS DISTINCT FROM NEW.code
+    OR NOT NEW.active
+  ) THEN
+    former_role_codes := ARRAY[OLD.code];
+  END IF;
+
   FOR affected_party_id IN
     SELECT DISTINCT assignment.party_id
     FROM party_security_role assignment
     WHERE assignment.role_id IN (OLD.id, NEW.id)
+      AND assignment.active
     ORDER BY assignment.party_id
   LOOP
-    PERFORM reputation_emit_subject_role_change_events(
-      affected_party_id, now()
+    PERFORM reputation_emit_subject_role_change_events_for_roles(
+      affected_party_id, now(), former_role_codes
     );
   END LOOP;
   RETURN NEW;
@@ -2118,19 +2222,30 @@ END $$;
 
 CREATE OR REPLACE VIEW reputation_worker_queue_metrics AS
 SELECT
-  processing_status,
+  event.processing_status,
   count(*)::bigint AS event_count,
-  min(occurred_at) AS oldest_event_at,
-  max(updated_at) AS latest_transition_at,
+  min(event.occurred_at) AS oldest_event_at,
+  max(event.updated_at) AS latest_transition_at,
   COALESCE(
     extract(epoch FROM (
-      now() - (min(occurred_at)
-        FILTER (WHERE processing_status IN ('pending', 'retry')))
+      now() - (min(event.occurred_at) FILTER (
+        WHERE event.processing_status IN ('pending', 'retry')
+          AND event.available_at <= now()
+          AND (
+            event.run_id IS NULL
+            OR EXISTS (
+              SELECT 1
+              FROM reputation_aggregation_run run
+              WHERE run.id = event.run_id
+                AND run.status = 'running'
+            )
+          )
+      ))
     )),
     0
   )::bigint AS oldest_due_age_seconds
-FROM reputation_aggregation_outbox
-GROUP BY processing_status;
+FROM reputation_aggregation_outbox event
+GROUP BY event.processing_status;
 
 CREATE OR REPLACE VIEW reputation_worker_event_metrics AS
 SELECT
