@@ -54,6 +54,16 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Activated reputation formula versions are immutable';
   END IF;
+  IF (
+    OLD.public_parameters IS DISTINCT FROM NEW.public_parameters
+    OR OLD.preference_parameters IS DISTINCT FROM NEW.preference_parameters
+  ) AND EXISTS (
+    SELECT 1
+    FROM reputation_aggregation_run run
+    WHERE run.formula_version_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION 'Reputation formula versions referenced by runs are immutable';
+  END IF;
   IF OLD.status = 'active' AND NEW.status = 'draft' THEN
     RAISE EXCEPTION 'Activated reputation formula versions cannot return to draft';
   END IF;
@@ -89,6 +99,30 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   CHECK ((status IN ('succeeded', 'failed', 'cancelled')) = (completed_at IS NOT NULL)),
   CHECK (completed_at IS NULL OR completed_at >= started_at)
 );
+
+CREATE OR REPLACE FUNCTION reputation_aggregation_run_formula_lock()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  formula_status TEXT;
+BEGIN
+  SELECT formula.status
+    INTO formula_status
+  FROM reputation_formula_version formula
+  WHERE formula.id = NEW.formula_version_id
+  FOR SHARE;
+  IF NOT FOUND OR formula_status NOT IN ('active', 'draft') THEN
+    RAISE EXCEPTION 'Reputation aggregation runs require an active or draft formula';
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_aggregation_run_formula_lock
+  ON reputation_aggregation_run;
+CREATE TRIGGER trg_reputation_aggregation_run_formula_lock
+  BEFORE INSERT ON reputation_aggregation_run
+  FOR EACH ROW EXECUTE FUNCTION reputation_aggregation_run_formula_lock();
 
 CREATE OR REPLACE FUNCTION reputation_aggregation_run_guard()
 RETURNS trigger
@@ -390,6 +424,9 @@ BEGIN
     JOIN reputation_formula_version formula
       ON formula.id = candidate.formula_version_id
      AND formula.status IN ('active', 'draft')
+    JOIN reputation_category category
+      ON category.id = candidate.category_id
+     AND category.status = 'active'
     WHERE candidate.publication_state = 'simulation'
       AND candidate.calculated_at < schedule_bucket
       AND NOT EXISTS (
@@ -673,6 +710,26 @@ CREATE TRIGGER trg_reputation_category_outbox
   ON reputation_category
   FOR EACH ROW EXECUTE FUNCTION reputation_category_outbox_trigger();
 
+CREATE OR REPLACE FUNCTION reputation_subject_has_applicable_role(
+  p_subject_party_id BIGINT,
+  p_applicable_roles TEXT[]
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT cardinality(p_applicable_roles) = 0 OR EXISTS (
+    SELECT 1
+    FROM party_security_role assignment
+    JOIN security_role role
+      ON role.id = assignment.role_id
+     AND role.active
+    WHERE assignment.party_id = p_subject_party_id
+      AND assignment.active
+      AND role.code = ANY(p_applicable_roles)
+  )
+$$;
+
 CREATE OR REPLACE FUNCTION reputation_claim_aggregation_events(
   p_environment TEXT,
   p_worker_id TEXT,
@@ -826,6 +883,14 @@ BEGIN
     FROM reputation_aggregation_run run
     WHERE run.id = event_row.run_id
       AND run.formula_version_id = event_row.algorithm_version
+      AND run.status = 'running'
+      AND EXISTS (
+        SELECT 1
+        FROM reputation_worker_control control
+        WHERE control.environment = run.environment
+          AND control.enabled
+          AND control.simulation_only
+      )
     FOR SHARE;
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Reputation aggregation run is unavailable or uses another formula';
@@ -974,6 +1039,10 @@ BEGIN
         cardinality(category.applicable_contexts) = 0
         OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
       )
+      AND reputation_subject_has_applicable_role(
+        rank.compared_party_id,
+        category.applicable_roles
+      )
       AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key
   ), pair_edge AS (
     SELECT rank_left.compared_party_id AS left_party_id,
@@ -1043,6 +1112,10 @@ BEGIN
       cardinality(category.applicable_contexts) = 0
       OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
     )
+    AND reputation_subject_has_applicable_role(
+      rank.compared_party_id,
+      category.applicable_roles
+    )
     AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key;
 
   -- Every ordinal evaluation contributes pairwise wins, losses, or ties; no
@@ -1097,6 +1170,14 @@ BEGIN
     AND (
       cardinality(category.applicable_contexts) = 0
       OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+    )
+    AND reputation_subject_has_applicable_role(
+      rank_left.compared_party_id,
+      category.applicable_roles
+    )
+    AND reputation_subject_has_applicable_role(
+      rank_right.compared_party_id,
+      category.applicable_roles
     )
     AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key;
 

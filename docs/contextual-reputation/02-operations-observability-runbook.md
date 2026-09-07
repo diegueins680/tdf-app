@@ -119,7 +119,10 @@ evita exposición durante la cola.
 1. Cargar solo señales verificadas, vigentes, `submitted` y no excluidas
    provisionalmente. Borradores, autosaves y evaluaciones privadas nunca
    publican un evento de agregación ni satisfacen este predicado.
-2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto.
+2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto. Si
+   `applicable_roles` no está vacío, cada sujeto observado debe tener una
+   asignación activa a uno de esos roles en el registro canónico; el rol del
+   evaluador no sustituye el rol del sujeto.
 3. Calcular con fórmula y parámetros versionados, prior bayesiano, límite por
    evaluador y decaimiento temporal aprobados. El límite se mide contra el
    total efectivo después del ajuste: el worker redistribuye iterativamente el
@@ -166,13 +169,16 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   día UTC un `recalculation.requested` determinista por candidato vencido; su
   UUID incorpora ambiente, sujeto, categoría, contexto, fórmula y día UTC, por
   lo que ticks repetidos son idempotentes. Solo agenda fórmulas `active` o
-  `draft`; una fórmula `retired` no vuelve a crear trabajo periódico.
+  `draft` y categorías `active`; una fórmula retirada o categoría inactiva no
+  vuelve a crear trabajo periódico.
 - Backfill y simulación usan `run_id` persistente y una clave única de auditoría
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
   auditorías semánticas. El worker reclama sus eventos únicamente mientras el
   run está `running`; estados `planned`, `succeeded`, `failed` o `cancelled`
-  permanecen sin reclamar. No usar el insert histórico no versionado como
-  entrada replay-safe hasta que tenga esa garantía y prueba explícita.
+  permanecen sin reclamar. El mismo estado y ambiente se vuelven a verificar
+  al completar para que una cancelación también cerque trabajo ya reclamado.
+  No usar el insert histórico no versionado como entrada replay-safe hasta que
+  tenga esa garantía y prueba explícita.
 - La versión activa de fórmula debe residir en configuración persistida y ser
   consultada por el lector; no se codifica de forma fija en la API. Una versión
   activada es inmutable: todo cambio de fórmula, umbral o parámetro crea un
@@ -196,6 +202,10 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   `high_water_mark` dentro del contexto/categoría. Operaciones debe crear un run
   nuevo con un corte posterior; nunca forzar la confirmación del snapshot
   mutable anterior.
+  Una fórmula `draft` puede editarse solo antes de que cualquier run la
+  referencie. La creación del run bloquea la fila de fórmula y desde entonces
+  sus parámetros quedan congelados incluso si el run sigue `planned` o termina;
+  esto evita que un mismo `run_id` mezcle matemáticas distintas.
 
 ## 6. Métricas, trazas y alertas
 
