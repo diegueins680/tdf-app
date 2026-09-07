@@ -340,48 +340,48 @@ JOIN record_external_resource resource
 ON CONFLICT DO NOTHING;
 
 DO $order_preflight$
+DECLARE
+    membership_count BIGINT;
 BEGIN
-    IF EXISTS (
-        SELECT 1
-        FROM collection_recording membership
-        JOIN editorial_collection collection ON collection.id = membership.collection_id
-        JOIN recording ON recording.id = membership.recording_id
-        LEFT JOIN records_youtube_source source
-          ON recording.code = 'youtube-recording-' || source.youtube_id
-        WHERE collection.code = 'tdf-records-recordings'
-          AND source.youtube_id IS NULL
-          AND membership.sort_order BETWEEN 1 AND 33
-    ) THEN
-        RAISE EXCEPTION 'An unrelated recording occupies a required TDF YouTube channel order';
+    SELECT count(*)
+    INTO membership_count
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    WHERE collection.code = 'tdf-records-recordings';
+
+    IF membership_count >= 1000000 THEN
+        RAISE EXCEPTION 'The TDF Records recording collection is too large to reorder safely';
     END IF;
 
     IF EXISTS (
         SELECT 1
         FROM collection_recording membership
         JOIN editorial_collection collection ON collection.id = membership.collection_id
-        JOIN recording ON recording.id = membership.recording_id
-        LEFT JOIN records_youtube_source source
-          ON recording.code = 'youtube-recording-' || source.youtube_id
         WHERE collection.code = 'tdf-records-recordings'
-          AND membership.sort_order BETWEEN 1000001 AND 1000033
-          AND source.youtube_id IS NULL
+          AND membership.sort_order BETWEEN -9000000000000000000 AND -8999999999999000001
     ) THEN
-        RAISE EXCEPTION 'The temporary TDF YouTube ordering range is occupied';
+        RAISE EXCEPTION 'The temporary TDF Records ordering range is occupied';
     END IF;
 END
 $order_preflight$;
 
--- Move current source memberships out of the unique ordering range before the
--- new reverse-publication order is applied. This also makes replays safe.
+-- Vacate the collection's ordering range before the new reverse-publication
+-- order is applied. Non-channel recordings are retained and later placed after
+-- the 33 channel uploads in their existing relative order.
+WITH ranked_membership AS (
+    SELECT
+        membership.id,
+        row_number() OVER (
+            ORDER BY membership.sort_order, membership.id
+        ) AS temporary_order
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    WHERE collection.code = 'tdf-records-recordings'
+)
 UPDATE collection_recording membership
-SET sort_order = 1000000 + source.sort_order
-FROM editorial_collection collection,
-     recording,
-     records_youtube_source source
-WHERE membership.collection_id = collection.id
-  AND membership.recording_id = recording.id
-  AND collection.code = 'tdf-records-recordings'
-  AND recording.code = 'youtube-recording-' || source.youtube_id;
+SET sort_order = -9000000000000000000 + ranked_membership.temporary_order
+FROM ranked_membership
+WHERE membership.id = ranked_membership.id;
 
 INSERT INTO collection_recording (
     id, collection_id, recording_id, sort_order, featured
@@ -397,6 +397,25 @@ JOIN recording ON recording.code = 'youtube-recording-' || source.youtube_id
 JOIN editorial_collection collection ON collection.code = 'tdf-records-recordings'
 ON CONFLICT (collection_id, recording_id) DO UPDATE
 SET sort_order = EXCLUDED.sort_order;
+
+WITH unrelated_membership AS (
+    SELECT
+        membership.id,
+        row_number() OVER (
+            ORDER BY membership.sort_order, membership.id
+        ) AS retained_order
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    JOIN recording ON recording.id = membership.recording_id
+    LEFT JOIN records_youtube_source source
+      ON recording.code = 'youtube-recording-' || source.youtube_id
+    WHERE collection.code = 'tdf-records-recordings'
+      AND source.youtube_id IS NULL
+)
+UPDATE collection_recording membership
+SET sort_order = 33 + unrelated_membership.retained_order
+FROM unrelated_membership
+WHERE membership.id = unrelated_membership.id;
 
 INSERT INTO catalog_migration_mapping (
     id, run_id, source_table, source_column, source_record_id, original_value,
@@ -510,6 +529,20 @@ BEGIN
          AND membership.sort_order = source.sort_order
     ) <> 33 THEN
         RAISE EXCEPTION 'The TDF Records recording collection is incomplete or out of channel order';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM collection_recording membership
+        JOIN editorial_collection collection ON collection.id = membership.collection_id
+        JOIN recording ON recording.id = membership.recording_id
+        LEFT JOIN records_youtube_source source
+          ON recording.code = 'youtube-recording-' || source.youtube_id
+        WHERE collection.code = 'tdf-records-recordings'
+          AND source.youtube_id IS NULL
+          AND membership.sort_order <= 33
+    ) THEN
+        RAISE EXCEPTION 'A non-channel recording precedes the complete TDF YouTube snapshot';
     END IF;
 
     IF (

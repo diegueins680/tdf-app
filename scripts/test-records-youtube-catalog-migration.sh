@@ -279,17 +279,37 @@ SELECT gen_random_uuid(), recording.id, resource.id, 'primary-media', 0, TRUE
 FROM recording
 JOIN record_external_resource resource
   ON recording.code = 'youtube-recording-' || resource.external_code;
+
+WITH unrelated AS (
+  INSERT INTO recording (
+    id, catalog_id, code, recording_type_id, title_es, title_en,
+    description_es, description_en, duration_ms, current_slug, sort_order,
+    active, workflow_state_id, created_at, updated_at, published_revision,
+    usage_count, version
+  ) VALUES (
+    gen_random_uuid(), '10000000-0000-4000-8000-000000000014',
+    'legacy-recording-fixture', '7977bab9-0e03-4999-8183-414aab322585',
+    'Grabación canónica', 'Grabación canónica', NULL, NULL, 180000,
+    'legacy-recording-fixture', 7, TRUE,
+    '00000000-0000-4000-8000-000000000205', now(), now(), 1, 0, 1
+  )
+  RETURNING id
+)
+INSERT INTO collection_recording (id, collection_id, recording_id, sort_order, featured)
+SELECT gen_random_uuid(), '00000000-0000-4000-8000-000000000501', id, 7, FALSE
+FROM unrelated;
 SQL
 
-test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "6"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "7"
 
 apply_file "$up_migration"
 
 test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active AND code LIKE 'youtube-recording-%';")" = "33"
-test "$(psql_exec -Atc "SELECT count(*) FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id JOIN recording ON recording.id=membership.recording_id WHERE collection.code='tdf-records-recordings' AND recording.active;")" = "33"
+test "$(psql_exec -Atc "SELECT count(*) FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id JOIN recording ON recording.id=membership.recording_id WHERE collection.code='tdf-records-recordings' AND recording.active;")" = "34"
 test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active AND code IN ('youtube-recording-9387ent0ELc','youtube-recording-5SpnEELSNqw','youtube-recording-97PnHRn8IGs','youtube-recording-e24-id_Ix8s','youtube-recording-z7RpdrL4P4A');")" = "0"
 test "$(psql_exec -Atc "SELECT recording.title_es FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' ORDER BY membership.sort_order LIMIT 1;")" = "Llama Este Pez @ Sereno Moreno Live Set Pt 1"
-test "$(psql_exec -Atc "SELECT recording.title_es FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' ORDER BY membership.sort_order DESC LIMIT 1;")" = "Diego Saá @ TDF ESTUDIO"
+test "$(psql_exec -Atc "SELECT recording.title_es FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND membership.sort_order=33;")" = "Diego Saá @ TDF ESTUDIO"
+test "$(psql_exec -Atc "SELECT membership.sort_order FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE recording.code='legacy-recording-fixture';")" = "34"
 test "$(psql_exec -Atc "SELECT duration_ms FROM recording WHERE code='youtube-recording-Re3lL-myniY';")" = "9062000"
 test "$(psql_exec -Atc "SELECT count(*) FROM catalog_migration_mapping WHERE status='mapped';")" = "33"
 test "$(psql_exec -Atc "SELECT status || ':' || scanned_rows || ':' || mapped_rows FROM catalog_backfill_run WHERE run_code='records-youtube-catalog-2026-09-06';")" = "complete:33:33"
@@ -300,17 +320,17 @@ resource_version_before_replay=$(psql_exec -Atc "SELECT sum(version) FROM record
 apply_file "$up_migration"
 test "$(psql_exec -Atc "SELECT sum(version) FROM recording;")" = "$version_before_replay"
 test "$(psql_exec -Atc "SELECT sum(version) FROM record_external_resource;")" = "$resource_version_before_replay"
-test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "33"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "34"
 test "$(psql_exec -Atc "SELECT count(*) FROM catalog_migration_mapping;")" = "33"
 
 apply_file "$down_migration"
-test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "6"
-test "$(psql_exec -Atc "SELECT string_agg(recording.code || ':' || membership.sort_order, ',' ORDER BY membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "youtube-recording-f2BabxM1Pjc:1,youtube-recording-rRkAeNB0R14:2,youtube-recording-wZQAlIqllQY:3,youtube-recording-YDODXZ4lyRk:4,youtube-recording-1hKWOram3aw:5,youtube-recording-xqeey8SrH8M:6"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "7"
+test "$(psql_exec -Atc "SELECT string_agg(recording.code || ':' || membership.sort_order, ',' ORDER BY membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "youtube-recording-f2BabxM1Pjc:1,youtube-recording-rRkAeNB0R14:2,youtube-recording-wZQAlIqllQY:3,youtube-recording-YDODXZ4lyRk:4,youtube-recording-1hKWOram3aw:5,youtube-recording-xqeey8SrH8M:6,legacy-recording-fixture:34"
 test "$(psql_exec -Atc "SELECT duration_ms FROM recording WHERE code='youtube-recording-f2BabxM1Pjc';")" = "2654000"
 test "$(psql_exec -Atc "SELECT status FROM catalog_backfill_run WHERE run_code='records-youtube-catalog-2026-09-06';")" = "rolled-back"
 
 apply_file "$up_migration"
-test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "33"
-test "$(psql_exec -Atc "SELECT count(DISTINCT membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "33"
+test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "34"
+test "$(psql_exec -Atc "SELECT count(DISTINCT membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "34"
 
 echo "Records YouTube catalog migration passed 27-video ingestion, exact ordering, evidence, replay, rollback, and reapply checks."
