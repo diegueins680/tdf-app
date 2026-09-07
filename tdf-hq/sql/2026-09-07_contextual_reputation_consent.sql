@@ -19,7 +19,10 @@ CREATE TABLE IF NOT EXISTS reputation_consent_event (
   granted BOOLEAN NOT NULL,
   version INTEGER NOT NULL CHECK (version > 0),
   source TEXT NOT NULL CHECK (source IN ('self_service','admin','migration')),
+  consent_copy_version TEXT,
+  consent_locale TEXT CHECK (consent_locale IS NULL OR consent_locale IN ('es','en')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (NOT granted OR (consent_copy_version IS NOT NULL AND consent_locale IS NOT NULL)),
   UNIQUE (party_id, consent_kind, version)
 );
 

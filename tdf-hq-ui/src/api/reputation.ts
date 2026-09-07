@@ -5,8 +5,9 @@ export type PublicReputation = components['schemas']['PublicReputation'];
 export type ReputationCategory = components['schemas']['ReputationCategory'];
 export type ReputationPreference = components['schemas']['ReputationPreference'];
 export type ReputationPreferenceSave = components['schemas']['ReputationPreferenceSave'];
-export type ReputationConsentKind = 'pilot_participation' | 'public_visibility' | 'public_rankings' | 'rating_reminders';
-export interface ReputationConsent { consentKind: ReputationConsentKind; granted: boolean; version: number; updatedAt?: string | null; }
+export type ReputationConsent = components['schemas']['ReputationConsent'];
+export type ReputationConsentUpdate = components['schemas']['ReputationConsentUpdate'];
+export type ReputationConsentKind = ReputationConsent['consentKind'];
 
 /** Public aggregate only: never use it to expose individual rankings. */
 export const Reputation = {
@@ -21,5 +22,5 @@ export const Reputation = {
     { headers: { 'Idempotency-Key': idempotencyKey } },
   ),
   getMyConsents: () => get<ReputationConsent[]>('/reputation/consents'),
-  updateMyConsents: (input: Pick<ReputationConsent, 'consentKind' | 'granted'>[]) => put<ReputationConsent[]>('/reputation/consents', input),
+  updateMyConsents: (input: ReputationConsentUpdate[]) => put<ReputationConsent[]>('/reputation/consents', input),
 };

@@ -10266,10 +10266,25 @@ export interface components {
                 notApplicable: boolean;
             }[];
         };
+        ReputationConsent: {
+            /** @enum {string} */
+            consentKind: "pilot_participation" | "public_visibility" | "public_rankings" | "rating_reminders";
+            granted: boolean;
+            version: number;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
         ReputationConsentUpdate: {
             /** @enum {string} */
             consentKind: "pilot_participation" | "public_visibility" | "public_rankings" | "rating_reminders";
             granted: boolean;
+            /** @description Required for grants; identifies the disclosure accepted. */
+            consentCopyVersion?: string | null;
+            /**
+             * @description Required for grants; language of the disclosure accepted.
+             * @enum {string|null}
+             */
+            consentLocale?: "es" | "en" | null;
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -20166,12 +20181,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current consent state */
+            /** @description Current consent state, including revoked consents, without evaluator data */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReputationConsent"][];
+                };
             };
             /** @description Authentication required */
             401: {
@@ -20200,7 +20217,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ReputationConsent"][];
+                };
             };
             /** @description Invalid or duplicate consent kind */
             400: {

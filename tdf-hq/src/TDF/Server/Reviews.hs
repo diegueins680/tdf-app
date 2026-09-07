@@ -216,15 +216,32 @@ updateReputationConsents user updates = do
   cfg <- asks envConfig
   when (any granted updates && not (contextualReputationEnabled cfg)) $
     throwError err404 { errBody = "Contextual reputation is unavailable" }
+  when (any granted updates) $ do
+    requireReputationConsentGrantEligibility user
+    unless (all hasCurrentConsentDisclosure (filter granted updates)) $
+      throwError err400 { errBody = "Current consent disclosure version and locale are required" }
   let partyId = fromSqlKey (auPartyId user)
   runDB $ mapM_ (persistConsent partyId) updates
   getReputationConsents user
   where
-    persistConsent partyId ReputationConsentUpdate{consentKind, granted} = do
+    hasCurrentConsentDisclosure ReputationConsentUpdate{consentCopyVersion, consentLocale} =
+      consentCopyVersion == Just "reputation-consent-v0.1" && consentLocale `elem` [Just "es", Just "en"]
+    persistConsent partyId ReputationConsentUpdate{consentKind, granted, consentCopyVersion, consentLocale} = do
       rows <- rawSql "INSERT INTO reputation_consent_state(party_id,consent_kind,granted,version,updated_at) VALUES (?,?,?,1,now()) ON CONFLICT(party_id,consent_kind) DO UPDATE SET granted=EXCLUDED.granted,version=reputation_consent_state.version+1,updated_at=now() WHERE reputation_consent_state.granted IS DISTINCT FROM EXCLUDED.granted RETURNING version" [PersistInt64 partyId, PersistText consentKind, PersistBool granted] :: SqlPersistT IO [Single Int]
       case rows of
-        [Single version] -> rawExecute "INSERT INTO reputation_consent_event(party_id,consent_kind,granted,version,source) VALUES (?,?,?,?, 'self_service')" [PersistInt64 partyId, PersistText consentKind, PersistBool granted, PersistInt64 (fromIntegral version)]
+        [Single version] -> rawExecute "INSERT INTO reputation_consent_event(party_id,consent_kind,granted,version,source,consent_copy_version,consent_locale) VALUES (?,?,?,?, 'self_service',?,?)" [PersistInt64 partyId, PersistText consentKind, PersistBool granted, PersistInt64 (fromIntegral version), maybe PersistNull PersistText consentCopyVersion, maybe PersistNull PersistText consentLocale]
         _ -> pure ()
+
+requireReputationConsentGrantEligibility :: AuthedUser -> AppM ()
+requireReputationConsentGrantEligibility user = do
+  rows <- jsonRows
+    "SELECT to_jsonb(assurance_status) FROM directory_age_assurance WHERE account_party_id=?"
+    [PersistInt64 (fromSqlKey (auPartyId user))]
+  let status = case listToMaybe rows of
+        Just (String value) -> value
+        _ -> "unknown"
+  unless (status `elem` ["adult_attested", "adult_verified", "guardian_approved"]) $
+    throwError err403 { errBody = "Age assurance or approved guardian consent is required" }
 
 validatePreferenceSaveRequest :: Text -> ReputationPreferenceSaveRequest -> AppM ()
 validatePreferenceSaveRequest idempotencyKey ReputationPreferenceSaveRequest{expectedRevision, categories} = do

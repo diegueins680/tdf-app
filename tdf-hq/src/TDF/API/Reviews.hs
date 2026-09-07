@@ -54,6 +54,8 @@ instance ToJSON ReputationPreferenceSaveRequest
 data ReputationConsentUpdate = ReputationConsentUpdate
   { consentKind :: Text
   , granted :: Bool
+  , consentCopyVersion :: Maybe Text
+  , consentLocale :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON ReputationConsentUpdate
