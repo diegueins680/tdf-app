@@ -67,6 +67,15 @@ if psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environ
   exit 1
 fi
 
+assert_equal \
+  "$(psql_exec -Atc "SELECT (activated_at IS NOT NULL)::text FROM reputation_formula_version WHERE id='public-bayes-roc-v1';")" \
+  "true" \
+  "Active formula activation timestamp"
+if psql_exec -c "UPDATE reputation_formula_version SET public_parameters=public_parameters || '{\"priorMean\":60}'::jsonb WHERE id='public-bayes-roc-v1';" >/dev/null 2>&1; then
+  echo "Active reputation formula parameters allowed in-place mutation" >&2
+  exit 1
+fi
+
 psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='staging';" >/dev/null
 if psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='test';" >/dev/null 2>&1; then
   echo "More than one reputation worker environment could be enabled" >&2

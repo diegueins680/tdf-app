@@ -29,6 +29,46 @@ CREATE UNIQUE INDEX IF NOT EXISTS reputation_worker_control_single_enabled_idx
   ON reputation_worker_control((enabled))
   WHERE enabled;
 
+UPDATE reputation_formula_version
+SET activated_at = COALESCE(activated_at, created_at)
+WHERE status = 'active' AND activated_at IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS reputation_formula_version_single_active_idx
+  ON reputation_formula_version((status))
+  WHERE status = 'active';
+
+CREATE OR REPLACE FUNCTION reputation_formula_version_guard()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.id IS DISTINCT FROM NEW.id
+     OR OLD.created_at IS DISTINCT FROM NEW.created_at
+     OR OLD.created_by_party_id IS DISTINCT FROM NEW.created_by_party_id THEN
+    RAISE EXCEPTION 'Reputation formula identity and authorship are immutable';
+  END IF;
+  IF OLD.status <> 'draft' AND (
+    OLD.public_parameters IS DISTINCT FROM NEW.public_parameters
+    OR OLD.preference_parameters IS DISTINCT FROM NEW.preference_parameters
+    OR OLD.activated_at IS DISTINCT FROM NEW.activated_at
+  ) THEN
+    RAISE EXCEPTION 'Activated reputation formula versions are immutable';
+  END IF;
+  IF OLD.status = 'retired' AND NEW.status <> 'retired' THEN
+    RAISE EXCEPTION 'Retired reputation formula versions cannot be reactivated';
+  END IF;
+  IF NEW.status = 'active' AND NEW.activated_at IS NULL THEN
+    NEW.activated_at := now();
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_formula_version_guard
+  ON reputation_formula_version;
+CREATE TRIGGER trg_reputation_formula_version_guard
+  BEFORE UPDATE ON reputation_formula_version
+  FOR EACH ROW EXECUTE FUNCTION reputation_formula_version_guard();
+
 CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   environment TEXT NOT NULL CHECK (environment IN ('test', 'staging')),
