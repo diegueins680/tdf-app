@@ -116,7 +116,7 @@ describe('analytics/posthog (web)', () => {
     expect(resetMock).toHaveBeenCalled();
   });
 
-  test('redacts credential-bearing query values before PostHog receives an event', () => {
+  test('redacts credentials while preserving PostHog\'s required project token', () => {
     const secret = 'reset-secret-sentinel';
     const source = `https://tdf.test/reset?token=${secret}&redirect=%2Ffans`;
     const sanitizedUrl = redactSensitiveQueryValues(source);
@@ -143,11 +143,23 @@ describe('analytics/posthog (web)', () => {
       autocapture?: boolean;
       before_send?: (event: { properties: Record<string, unknown> }) => {
         properties: Record<string, unknown>;
-      };
+      } | null;
     };
     expect(initOptions.autocapture).toBe(false);
-    const outgoing = initOptions.before_send?.({ properties: { $current_url: source } });
+    const outgoing = initOptions.before_send?.({
+      properties: {
+        $current_url: source,
+        token: 'phc_unit_test',
+        nested: { token: secret },
+      },
+    });
     expect(JSON.stringify(outgoing)).not.toContain(secret);
+    expect(outgoing?.properties.token).toBe('phc_unit_test');
+
+    const outgoingWithApplicationToken = initOptions.before_send?.({
+      properties: { token: secret },
+    });
+    expect(outgoingWithApplicationToken?.properties).not.toHaveProperty('token');
   });
 
   test('logs PostHog failures through the app logger', () => {
