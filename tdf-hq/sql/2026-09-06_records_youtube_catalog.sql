@@ -162,7 +162,28 @@ INSERT INTO catalog_backfill_run (
     0,
     now(),
     NULL,
-    NULL,
+    (
+        SELECT jsonb_build_object(
+            'retainedCollectionOrder',
+            coalesce(
+                jsonb_agg(
+                    jsonb_build_object(
+                        'recordingId', recording.id,
+                        'sortOrder', membership.sort_order
+                    )
+                    ORDER BY membership.sort_order, membership.id
+                ),
+                '[]'::jsonb
+            )
+        )::text
+        FROM collection_recording membership
+        JOIN editorial_collection collection ON collection.id = membership.collection_id
+        JOIN recording ON recording.id = membership.recording_id
+        LEFT JOIN records_youtube_source source
+          ON recording.code = 'youtube-recording-' || source.youtube_id
+        WHERE collection.code = 'tdf-records-recordings'
+          AND source.youtube_id IS NULL
+    ),
     'records-youtube-catalog:UCx9Jpaw_XDrMtIdzWYlU51g:2026-09-06'
 )
 ON CONFLICT (run_code, candidate_revision, dry_run) DO UPDATE
@@ -173,7 +194,7 @@ SET status = 'mapping',
     rejected_rows = 0,
     started_at = now(),
     completed_at = NULL,
-    report = NULL;
+    report = coalesce(catalog_backfill_run.report, EXCLUDED.report);
 
 INSERT INTO record_contributor (
     id, catalog_id, code, contributor_kind, name_es, name_en, sort_order,
@@ -581,13 +602,16 @@ BEGIN
         ambiguous_rows = 0,
         rejected_rows = 0,
         completed_at = now(),
-        report = jsonb_build_object(
-            'channelId', 'UCx9Jpaw_XDrMtIdzWYlU51g',
-            'channelVideos', 38,
-            'recordings', 33,
-            'numberedLiveSessions', 5,
-            'newProductionRecordings', 27,
-            'sourceObservedOn', '2026-09-06'
+        report = (
+            coalesce(report, '{}')::jsonb
+            || jsonb_build_object(
+                'channelId', 'UCx9Jpaw_XDrMtIdzWYlU51g',
+                'channelVideos', 38,
+                'recordings', 33,
+                'numberedLiveSessions', 5,
+                'newProductionRecordings', 27,
+                'sourceObservedOn', '2026-09-06'
+            )
         )::text
     WHERE id = ingestion_run_id;
 END

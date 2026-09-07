@@ -56,9 +56,72 @@ INSERT INTO records_youtube_rollback_source (
     ('msDxB2NU3c4', 32, NULL, NULL, NULL, NULL),
     ('8Cv0RGQdJA4', 33, NULL, NULL, NULL, NULL);
 
--- Vacate both the old and recovery ordering ranges before restoring them.
+CREATE TEMP TABLE records_youtube_retained_order (
+    recording_id UUID PRIMARY KEY,
+    prior_order BIGINT UNIQUE NOT NULL
+) ON COMMIT DROP;
+
+INSERT INTO records_youtube_retained_order (recording_id, prior_order)
+SELECT
+    (entry.value ->> 'recordingId')::UUID,
+    (entry.value ->> 'sortOrder')::BIGINT
+FROM catalog_backfill_run run
+CROSS JOIN LATERAL jsonb_array_elements(
+    coalesce(run.report, '{}')::jsonb -> 'retainedCollectionOrder'
+) entry
+WHERE run.run_code = 'records-youtube-catalog-2026-09-06'
+  AND run.candidate_revision = 'youtube-channel-UCx9Jpaw_XDrMtIdzWYlU51g-videos-2026-09-06'
+  AND NOT run.dry_run;
+
+DO $order_preflight$
+DECLARE
+    membership_count BIGINT;
+BEGIN
+    SELECT count(*)
+    INTO membership_count
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    WHERE collection.code = 'tdf-records-recordings';
+
+    IF membership_count >= 1000000 THEN
+        RAISE EXCEPTION 'The TDF Records recording collection is too large to roll back safely';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM collection_recording membership
+        JOIN editorial_collection collection ON collection.id = membership.collection_id
+        WHERE collection.code = 'tdf-records-recordings'
+          AND membership.sort_order BETWEEN -9000000000000000000 AND -8999999999999000001
+    ) THEN
+        RAISE EXCEPTION 'The temporary TDF Records rollback ordering range is occupied';
+    END IF;
+END
+$order_preflight$;
+
+-- Vacate every current position, then restore the six prior channel rows and
+-- every unrelated membership captured by the forward migration. Channel rows
+-- introduced by the migration remain retained at a high inactive-only range.
+WITH ranked_membership AS (
+    SELECT
+        membership.id,
+        row_number() OVER (
+            ORDER BY membership.sort_order, membership.id
+        ) AS temporary_order
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    WHERE collection.code = 'tdf-records-recordings'
+)
 UPDATE collection_recording membership
-SET sort_order = 2000000 + source.snapshot_order
+SET sort_order = -9000000000000000000 + ranked_membership.temporary_order
+FROM ranked_membership
+WHERE membership.id = ranked_membership.id;
+
+UPDATE collection_recording membership
+SET sort_order = CASE
+        WHEN source.prior_order IS NOT NULL THEN source.prior_order
+        ELSE 9000000000000000000 + source.snapshot_order
+    END
 FROM editorial_collection collection,
      recording,
      records_youtube_rollback_source source
@@ -68,17 +131,28 @@ WHERE membership.collection_id = collection.id
   AND recording.code = 'youtube-recording-' || source.youtube_id;
 
 UPDATE collection_recording membership
-SET sort_order = CASE
-        WHEN source.prior_order IS NOT NULL THEN source.prior_order
-        ELSE 1000 + source.snapshot_order
-    END
+SET sort_order = retained.prior_order
 FROM editorial_collection collection,
-     recording,
-     records_youtube_rollback_source source
+     records_youtube_retained_order retained
 WHERE membership.collection_id = collection.id
-  AND membership.recording_id = recording.id
-  AND collection.code = 'tdf-records-recordings'
-  AND recording.code = 'youtube-recording-' || source.youtube_id;
+  AND membership.recording_id = retained.recording_id
+  AND collection.code = 'tdf-records-recordings';
+
+WITH post_migration_membership AS (
+    SELECT
+        membership.id,
+        row_number() OVER (
+            ORDER BY membership.sort_order, membership.id
+        ) AS retained_order
+    FROM collection_recording membership
+    JOIN editorial_collection collection ON collection.id = membership.collection_id
+    WHERE collection.code = 'tdf-records-recordings'
+      AND membership.sort_order < 0
+)
+UPDATE collection_recording membership
+SET sort_order = 8000000000000000000 + post_migration_membership.retained_order
+FROM post_migration_membership
+WHERE membership.id = post_migration_membership.id;
 
 UPDATE recording
 SET active = FALSE,
@@ -183,6 +257,20 @@ BEGIN
           AND recording.active
     ) THEN
         RAISE EXCEPTION 'A recording introduced by the YouTube ingestion remains active';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM records_youtube_retained_order retained
+        LEFT JOIN editorial_collection collection
+          ON collection.code = 'tdf-records-recordings'
+        LEFT JOIN collection_recording membership
+          ON membership.collection_id = collection.id
+         AND membership.recording_id = retained.recording_id
+         AND membership.sort_order = retained.prior_order
+        WHERE membership.id IS NULL
+    ) THEN
+        RAISE EXCEPTION 'A retained non-channel recording did not regain its original order';
     END IF;
 END
 $validation$;

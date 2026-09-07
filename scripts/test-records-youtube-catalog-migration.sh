@@ -325,7 +325,7 @@ test "$(psql_exec -Atc "SELECT count(*) FROM catalog_migration_mapping;")" = "33
 
 apply_file "$down_migration"
 test "$(psql_exec -Atc "SELECT count(*) FROM recording WHERE active;")" = "7"
-test "$(psql_exec -Atc "SELECT string_agg(recording.code || ':' || membership.sort_order, ',' ORDER BY membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "youtube-recording-f2BabxM1Pjc:1,youtube-recording-rRkAeNB0R14:2,youtube-recording-wZQAlIqllQY:3,youtube-recording-YDODXZ4lyRk:4,youtube-recording-1hKWOram3aw:5,youtube-recording-xqeey8SrH8M:6,legacy-recording-fixture:34"
+test "$(psql_exec -Atc "SELECT string_agg(recording.code || ':' || membership.sort_order, ',' ORDER BY membership.sort_order) FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE membership.collection_id='00000000-0000-4000-8000-000000000501' AND recording.active;")" = "youtube-recording-f2BabxM1Pjc:1,youtube-recording-rRkAeNB0R14:2,youtube-recording-wZQAlIqllQY:3,youtube-recording-YDODXZ4lyRk:4,youtube-recording-1hKWOram3aw:5,youtube-recording-xqeey8SrH8M:6,legacy-recording-fixture:7"
 test "$(psql_exec -Atc "SELECT duration_ms FROM recording WHERE code='youtube-recording-f2BabxM1Pjc';")" = "2654000"
 test "$(psql_exec -Atc "SELECT status FROM catalog_backfill_run WHERE run_code='records-youtube-catalog-2026-09-06';")" = "rolled-back"
 
