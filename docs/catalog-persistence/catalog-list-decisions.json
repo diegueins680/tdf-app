@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "86a7589b0a477889b616",
+      "id": "83253977466f29982400",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9391,6 +9391,96 @@
       "priority": "P3-retain",
       "risk": "Changing selection-action dimensions without review could break mobile telemetry aggregation or conceal duplicate prevention regressions.",
       "justification": "The mobile action union mirrors closed selector mechanics and emits no Party identity or user-provided content.",
+      "reviewed": true
+    },
+    {
+      "id": "9051251d4c1c25de6864",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_worker_control",
+      "priority": "P1-cross-platform",
+      "risk": "An unreviewed environment value could bypass the staging-only worker boundary or make production safety checks ambiguous.",
+      "justification": "Worker environments are a closed deployment safety protocol enforced by process configuration, release validation, and database constraints; they are not user-editable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "7cce7e3a3e4e7d66d5f4",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P1-cross-platform",
+      "risk": "Allowing production run records could make staging simulation evidence appear authorized for a production calculation.",
+      "justification": "Run environments deliberately exclude production and form a closed staging/test audit boundary rather than a configurable domain catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "313580681fd31f59e568",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P2-domain",
+      "risk": "Unknown run kinds could evade replay uniqueness, simulation isolation, or the required backfill audit trail.",
+      "justification": "Run kinds are closed worker execution modes with different audit semantics; changes require a reviewed migration and worker update.",
+      "reviewed": true
+    },
+    {
+      "id": "5eaffb26c021fec61715",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P2-domain",
+      "risk": "Lifecycle drift could mark incomplete calculations successful or leave completed runs eligible for further mutation.",
+      "justification": "Aggregation run states form a closed operational state machine constrained by the database; they are not labels or workflows editable by end users.",
+      "reviewed": true
+    },
+    {
+      "id": "6d575d3e3eeab1b5737e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the terminal-state subset could permit missing completion timestamps or attach them to unfinished runs.",
+      "justification": "This subset exists only to enforce timestamp consistency within the closed aggregation-run state machine.",
+      "reviewed": true
+    },
+    {
+      "id": "58922ecaa72bea52a09d",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_outbox",
+      "priority": "P1-cross-platform",
+      "risk": "An unsupported control event could skip required invalidation fan-out or introduce an unaudited path into reputation calculation.",
+      "justification": "Event types are the versioned producer/consumer protocol approved by the operations runbook and enforced by the durable outbox schema.",
+      "reviewed": true
+    },
+    {
+      "id": "e39ba88f270dce3388a3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_outbox",
+      "priority": "P1-cross-platform",
+      "risk": "Status drift could bypass lease fencing, retry limits, immutable completion evidence, or human-controlled DLQ recovery.",
+      "justification": "Outbox statuses form a closed database-enforced worker state machine; making them editable would weaken concurrency and recovery guarantees.",
+      "reviewed": true
+    },
+    {
+      "id": "f4f997d65f89ce981199",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_aggregate_candidate",
+      "priority": "P2-schema-history",
+      "risk": "Confidence-band drift could make simulation results incomparable with the versioned public reputation contract.",
+      "justification": "The candidate table mirrors the existing immutable confidence-band migration evidence; future policy changes require a new formula version and forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "8721db553b0c98670a89",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_event_action",
+      "priority": "P1-cross-platform",
+      "risk": "Unknown audit actions could conceal event transitions or make DLQ recovery and incident reconstruction incomplete.",
+      "justification": "Event actions are immutable audit protocol identifiers emitted only by fenced database functions; changes require coordinated code and schema review.",
       "reviewed": true
     }
   ]
