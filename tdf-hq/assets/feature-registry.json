@@ -2204,6 +2204,27 @@
       ]
     },
     {
+      "id": "reputation.consents",
+      "parentId": "profile.self",
+      "webRoute": "/reputation/consents",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Consentimientos de reputación", "en": "Reputation consents" },
+      "synonyms": { "es": ["retirar consentimiento", "privacidad de reputación"], "en": ["withdraw consent", "reputation privacy"] },
+      "keywords": ["reputation", "consent", "privacy", "withdrawal"],
+      "description": { "es": "Consulta o retira consentimientos independientes de reputación. Los retiros permanecen disponibles aunque el piloto esté desactivado.", "en": "Review or withdraw independent reputation consents. Withdrawals remain available while the pilot is disabled." },
+      "navigationGroup": "people",
+      "icon": "privacy-tip",
+      "breadcrumb": ["community", "profile.self"],
+      "permissions": { "discover": {}, "view": {}, "edit": { "recordScope": "self" } },
+      "maturity": "pilot",
+      "globalMenu": false,
+      "mobilePresentation": { "kind": "external-web", "destination": "/reputation/consents", "documentedException": "The independent-consent controls remain a responsive web flow; withdrawal must remain available even while the reputation pilot is disabled." },
+      "apiScopes": [
+        { "pathPrefix": "/reputation/consents", "methods": { "GET": "view", "PUT": "edit" } }
+      ]
+    },
+    {
       "id": "social.venues",
       "parentId": "social.events",
       "webRoute": null,
