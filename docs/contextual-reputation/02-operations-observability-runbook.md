@@ -303,6 +303,13 @@ usa IDs diarios deterministas y un lote máximo de 100, de modo que reinicios o
 varios workers no duplican el recálculo. Los runs de backfill/simulación con
 `high_water_mark` verifican además el fence de mutaciones antes de confirmar;
 una violación sigue el flujo normal de retry/DLQ y requiere un run nuevo.
+Cuando los productores automáticos están suprimidos porque no existe consumidor
+ni run abierto, una marca compacta de cobertura avanza en lugar de acumular una
+cola sin consumidor. La creación de un run rechaza cualquier `high_water_mark`
+anterior a esa marca: un backfill solo puede usar un intervalo para el cual el
+registro de mutaciones fue completo. Un run tampoco puede marcarse `succeeded`
+mientras conserve eventos pendientes, en retry, processing o DLQ, y un run
+terminal no acepta eventos nuevos.
 
 Las fuentes mínimas para dashboards sin PII son
 `reputation_worker_health`, `reputation_worker_queue_metrics`,

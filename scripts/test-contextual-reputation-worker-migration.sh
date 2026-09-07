@@ -104,6 +104,7 @@ draft_formula_id="draft-run-freeze-test-v1"
 draft_run_id="c5100000-0000-4000-8000-000000000001"
 future_run_id="c5100000-0000-4000-8000-000000000002"
 planned_cancel_run_id="c5100000-0000-4000-8000-000000000003"
+historical_gap_run_id="c5100000-0000-4000-8000-000000000004"
 psql_exec -c "
   INSERT INTO reputation_formula_version(
     id, public_parameters, preference_parameters, status
@@ -130,6 +131,18 @@ assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE id='$suppressed_source_event_id';")" \
   "0" \
   "Disabled-environment source producer suppression"
+if psql_exec -c "
+  INSERT INTO reputation_aggregation_run(
+    id, environment, run_kind, formula_version_id, high_water_mark
+  )
+  SELECT '$historical_gap_run_id', 'staging', 'backfill', '$draft_formula_id',
+         last_unrecorded_at - interval '1 microsecond'
+  FROM reputation_aggregation_source_coverage
+  WHERE singleton;
+" >/dev/null 2>&1; then
+  echo "Reputation aggregation run accepted an incomplete historical cutoff" >&2
+  exit 1
+fi
 
 psql_exec -c "
   INSERT INTO reputation_aggregation_run(
@@ -1181,6 +1194,14 @@ psql_exec -c "
   SET status='running', started_at='2026-09-01T12:05:00Z'
   WHERE id='$run_id';
 " >/dev/null
+if psql_exec -c "
+  UPDATE reputation_aggregation_run
+  SET status='succeeded', completed_at=now()
+  WHERE id='$run_id';
+" >/dev/null 2>&1; then
+  echo "Reputation aggregation run succeeded with incomplete events" >&2
+  exit 1
+fi
 live_candidate_before_bounded_run=$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")
 run_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-run-0001', 1, '2030-09-01T12:04:01Z');")
 run_claim_event_id=$(printf '%s' "$run_claim" | cut -d '|' -f 1)
@@ -1198,6 +1219,23 @@ assert_equal \
   "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregation_run_result WHERE run_id='$run_id' AND subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
   "50.0000:0:$run_event_a" \
   "Run high-water evidence cutoff snapshot"
+psql_exec -c "
+  UPDATE reputation_aggregation_run
+  SET status='succeeded', completed_at=now()
+  WHERE id='$run_id';
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT status FROM reputation_aggregation_run WHERE id='$run_id';")" \
+  "succeeded" \
+  "Complete run success transition"
+if psql_exec -c "SELECT reputation_enqueue_aggregation_event(
+  'c6000000-0000-4000-8000-000000000009', 'recalculation.requested',
+  102, 'service:mix-001', '$category_id', 1, 'public-bayes-roc-v1',
+  '$run_correlation_id', '$run_id', now()
+);" >/dev/null 2>&1; then
+  echo "Terminal reputation aggregation run accepted new work" >&2
+  exit 1
+fi
 
 requeued_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token || '|' || claimed_attempt FROM reputation_claim_aggregation_events('staging', 'worker-requeue-0001', 1, '2030-09-01T12:04:03Z');")
 requeued_event_id=$(printf '%s' "$requeued_claim" | cut -d '|' -f 1)
@@ -1485,7 +1523,7 @@ psql_exec -c "
     started_at
   ) VALUES (
     '$late_fence_run_id', 'staging', 'backfill', 'public-bayes-roc-v1',
-    'running', now() - interval '1 minute', now() - interval '1 minute'
+    'running', now(), now()
   );
   SELECT reputation_enqueue_aggregation_event(
     '$late_fence_event_id', 'recalculation.requested', 107,
@@ -1546,7 +1584,7 @@ psql_exec -c "
     started_at
   ) VALUES (
     '$role_fence_run_id', 'staging', 'backfill', 'public-bayes-roc-v1',
-    'running', now() - interval '1 minute', now() - interval '1 minute'
+    'running', now(), now()
   );
   SELECT reputation_enqueue_aggregation_event(
     '$role_fence_event_id', 'recalculation.requested', 105,
@@ -1948,4 +1986,4 @@ assert_equal \
   "50.0000:0:$run_event_a" \
   "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed disabled-environment producer gating with open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed disabled-environment producer gating with complete-coverage watermarks and open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future and coverage-safe high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation, complete-event success, terminal enqueue rejection, and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."

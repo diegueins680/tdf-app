@@ -82,6 +82,18 @@ CREATE TRIGGER trg_reputation_formula_version_guard
   BEFORE UPDATE ON reputation_formula_version
   FOR EACH ROW EXECUTE FUNCTION reputation_formula_version_guard();
 
+CREATE TABLE IF NOT EXISTS reputation_aggregation_source_coverage (
+  singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton),
+  last_unrecorded_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+INSERT INTO reputation_aggregation_source_coverage(
+  singleton, last_unrecorded_at, updated_at
+)
+VALUES (TRUE, clock_timestamp(), clock_timestamp())
+ON CONFLICT (singleton) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   environment TEXT NOT NULL CHECK (environment IN ('test', 'staging')),
@@ -111,6 +123,7 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   formula_status TEXT;
+  last_unrecorded_at TIMESTAMPTZ;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended(
     'reputation-aggregation-source-fence', 0
@@ -119,6 +132,15 @@ BEGIN
   IF NEW.high_water_mark > transaction_timestamp()
      OR NEW.created_at > transaction_timestamp() THEN
     RAISE EXCEPTION 'Reputation aggregation runs cannot use future snapshot times';
+  END IF;
+
+  SELECT coverage.last_unrecorded_at
+    INTO last_unrecorded_at
+  FROM reputation_aggregation_source_coverage coverage
+  WHERE coverage.singleton;
+  IF NOT FOUND OR NEW.high_water_mark < last_unrecorded_at THEN
+    RAISE EXCEPTION
+      'Reputation aggregation run predates complete source-mutation coverage';
   END IF;
 
   SELECT formula.status
@@ -159,6 +181,17 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Invalid reputation aggregation run transition % -> %',
       OLD.status, NEW.status;
+  END IF;
+  IF OLD.status = 'running'
+     AND NEW.status = 'succeeded'
+     AND EXISTS (
+       SELECT 1
+       FROM reputation_aggregation_outbox event
+       WHERE event.run_id = OLD.id
+         AND event.processing_status <> 'processed'
+     ) THEN
+    RAISE EXCEPTION
+      'Reputation aggregation run cannot succeed with incomplete events';
   END IF;
   IF OLD.started_at IS DISTINCT FROM NEW.started_at AND NOT (
     OLD.status = 'planned'
@@ -418,6 +451,19 @@ DECLARE
   existing reputation_aggregation_outbox%ROWTYPE;
   effective_occurred_at TIMESTAMPTZ := p_occurred_at;
 BEGIN
+  IF p_run_id IS NOT NULL THEN
+    PERFORM 1
+    FROM reputation_aggregation_run run
+    WHERE run.id = p_run_id
+      AND run.formula_version_id = p_algorithm_version
+      AND run.status IN ('planned', 'running')
+    FOR SHARE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION
+        'Reputation aggregation run is unavailable for event enqueue';
+    END IF;
+  END IF;
+
   IF p_run_id IS NULL AND p_event_type IN (
     'evaluation.submitted',
     'evaluation.edited',
@@ -452,6 +498,13 @@ BEGIN
       FROM reputation_aggregation_run run
       WHERE run.status IN ('planned', 'running')
     ) THEN
+      effective_occurred_at := clock_timestamp();
+      UPDATE reputation_aggregation_source_coverage
+      SET last_unrecorded_at = GREATEST(
+            last_unrecorded_at, effective_occurred_at
+          ),
+          updated_at = effective_occurred_at
+      WHERE singleton;
       RETURN p_event_id;
     END IF;
 
