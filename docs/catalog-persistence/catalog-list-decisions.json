@@ -8604,13 +8604,13 @@
       "reviewed": true
     },
     {
-      "id": "9003c7efcae1bac2cf14",
-      "classification": "security-system-registry",
+      "id": "b65c3ecaa729e449a097",
+      "classification": "governed-reference-data",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "A client/API mismatch could grant, withdraw, or render the wrong independent consent.",
-      "justification": "Consent kinds are a closed, security-relevant transport union validated by the database and OpenAPI contract; they are not user-managed reputation categories.",
+      "risk": "An unsupported language code could make consent evidence ambiguous during an audit or rights request.",
+      "justification": "The consent-event locale is a closed ISO language-code transport allowlist for the approved ES/EN disclosure, not a user-managed reputation category.",
       "reviewed": true
     },
     {

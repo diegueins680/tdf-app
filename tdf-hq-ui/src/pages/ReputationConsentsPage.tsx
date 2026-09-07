@@ -44,7 +44,7 @@ export default function ReputationConsentsPage() {
     void Reputation.getMyConsents().then(setItems).catch(() => setError(text.loadError));
   }, [text.loadError]);
 
-  const save = async (changes: Array<{ consentKind: ReputationConsentKind; granted: boolean }>) => {
+  const save = async (changes: { consentKind: ReputationConsentKind; granted: boolean }[]) => {
     setSaving(true); setError('');
     try {
       setItems(await Reputation.updateMyConsents(changes.map((change) => ({ ...change, consentCopyVersion, consentLocale: language }))));
