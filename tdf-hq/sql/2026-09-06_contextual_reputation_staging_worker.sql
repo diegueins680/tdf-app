@@ -882,9 +882,7 @@ DECLARE
   target RECORD;
 BEGIN
   FOR target IN
-    SELECT affected.category_id, affected.context_key,
-           affected.formula_version_id
-    FROM (
+    WITH RECURSIVE affected AS (
       SELECT candidate.category_id, candidate.context_key,
              candidate.formula_version_id
       FROM reputation_aggregate_candidate candidate
@@ -899,12 +897,75 @@ BEGIN
       JOIN reputation_interaction interaction
         ON interaction.id = evaluation.interaction_id
       WHERE rank.compared_party_id = p_subject_party_id
-    ) affected
-    ORDER BY affected.category_id, affected.context_key,
-             affected.formula_version_id
+    ), eligible_rank AS (
+      SELECT DISTINCT affected.category_id, affected.context_key,
+             affected.formula_version_id, rank.evaluation_id,
+             rank.compared_party_id
+      FROM affected
+      JOIN reputation_evaluation evaluation
+        ON evaluation.formula_version_id = affected.formula_version_id
+       AND evaluation.status = 'submitted'
+       AND evaluation.submitted_at IS NOT NULL
+      JOIN reputation_interaction interaction
+        ON interaction.id = evaluation.interaction_id
+       AND interaction.status = 'eligible'
+       AND lower(interaction.context_kind) || ':' || interaction.context_id =
+           affected.context_key
+      JOIN reputation_evaluation_rank rank
+        ON rank.evaluation_id = evaluation.id
+       AND rank.category_id = affected.category_id
+       AND rank.position_group IS NOT NULL
+       AND rank.excluded_reason IS NULL
+      JOIN reputation_category category
+        ON category.id = affected.category_id
+       AND category.status = 'active'
+       AND (
+         cardinality(category.applicable_contexts) = 0
+         OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+       )
+    ), pair_edge AS (
+      SELECT rank_left.category_id, rank_left.context_key,
+             rank_left.formula_version_id,
+             rank_left.compared_party_id AS left_party_id,
+             rank_right.compared_party_id AS right_party_id
+      FROM eligible_rank rank_left
+      JOIN eligible_rank rank_right
+        ON rank_right.category_id = rank_left.category_id
+       AND rank_right.context_key = rank_left.context_key
+       AND rank_right.formula_version_id = rank_left.formula_version_id
+       AND rank_right.evaluation_id = rank_left.evaluation_id
+       AND rank_right.compared_party_id > rank_left.compared_party_id
+    ), connected(
+      category_id, context_key, formula_version_id, subject_party_id
+    ) AS (
+      SELECT affected.category_id, affected.context_key,
+             affected.formula_version_id, p_subject_party_id
+      FROM affected
+      UNION
+      SELECT connected.category_id, connected.context_key,
+             connected.formula_version_id,
+             CASE
+               WHEN edge.left_party_id = connected.subject_party_id
+                 THEN edge.right_party_id
+               ELSE edge.left_party_id
+             END
+      FROM connected
+      JOIN pair_edge edge
+        ON edge.category_id = connected.category_id
+       AND edge.context_key = connected.context_key
+       AND edge.formula_version_id = connected.formula_version_id
+       AND connected.subject_party_id IN (
+         edge.left_party_id, edge.right_party_id
+       )
+    )
+    SELECT DISTINCT connected.subject_party_id, connected.category_id,
+           connected.context_key, connected.formula_version_id
+    FROM connected
+    ORDER BY connected.category_id, connected.context_key,
+             connected.formula_version_id, connected.subject_party_id
   LOOP
     PERFORM reputation_enqueue_aggregation_event(
-      gen_random_uuid(), 'subject.role_changed', p_subject_party_id,
+      gen_random_uuid(), 'subject.role_changed', target.subject_party_id,
       target.context_key, target.category_id, 0,
       target.formula_version_id, correlation, NULL, p_occurred_at
     );
@@ -1280,11 +1341,22 @@ BEGIN
     raw_weight NUMERIC NOT NULL CHECK (raw_weight > 0),
     adjusted_weight NUMERIC NOT NULL CHECK (adjusted_weight >= 0)
   ) ON COMMIT DROP;
+  CREATE TEMP TABLE IF NOT EXISTS reputation_bt_candidate_work (
+    subject_party_id BIGINT PRIMARY KEY,
+    score NUMERIC(7,4) NOT NULL,
+    lower_bound NUMERIC(7,4) NOT NULL,
+    upper_bound NUMERIC(7,4) NOT NULL,
+    verified_interaction_count INTEGER NOT NULL,
+    distinct_evaluator_count INTEGER NOT NULL,
+    observation_count INTEGER NOT NULL,
+    confidence TEXT NOT NULL
+  ) ON COMMIT DROP;
 
   TRUNCATE pg_temp.reputation_bt_component_work,
            pg_temp.reputation_bt_observation_work,
            pg_temp.reputation_bt_state_work,
-           pg_temp.reputation_bt_evaluator_weight_work;
+           pg_temp.reputation_bt_evaluator_weight_work,
+           pg_temp.reputation_bt_candidate_work;
 
   WITH RECURSIVE eligible_rank AS (
     SELECT rank.evaluation_id, rank.compared_party_id, rank.position_group
@@ -1606,74 +1678,74 @@ BEGIN
     FROM pg_temp.reputation_bt_state_work state
     JOIN metrics ON metrics.subject_party_id = state.subject_party_id
   )
-  INSERT INTO reputation_aggregate_candidate(
-    subject_party_id, category_id, context_key, formula_version_id,
+  INSERT INTO pg_temp.reputation_bt_candidate_work(
+    subject_party_id,
     score, lower_bound, upper_bound, verified_interaction_count,
-    distinct_evaluator_count, observation_count, confidence,
-    publication_state, source_event_id, calculated_at
+    distinct_evaluator_count, observation_count, confidence
   )
   SELECT candidate.subject_party_id,
-         event_row.category_id,
-         event_row.context_key,
-         event_row.algorithm_version,
          round(candidate.score, 4),
          round(GREATEST(0, candidate.score - candidate.margin), 4),
          round(LEAST(100, candidate.score + candidate.margin), 4),
          candidate.interaction_count,
          candidate.evaluator_count,
          candidate.observation_count,
-         candidate.confidence,
-         'simulation',
-         event_row.id,
-         p_now
-  FROM candidate
-  ON CONFLICT (subject_party_id, category_id, context_key, formula_version_id)
-  DO UPDATE SET
-    score = EXCLUDED.score,
-    lower_bound = EXCLUDED.lower_bound,
-    upper_bound = EXCLUDED.upper_bound,
-    verified_interaction_count = EXCLUDED.verified_interaction_count,
-    distinct_evaluator_count = EXCLUDED.distinct_evaluator_count,
-    observation_count = EXCLUDED.observation_count,
-    confidence = EXCLUDED.confidence,
-    publication_state = 'simulation',
-    source_event_id = EXCLUDED.source_event_id,
-    calculated_at = EXCLUDED.calculated_at;
+         candidate.confidence
+  FROM candidate;
 
-  INSERT INTO reputation_aggregation_run_result(
-    run_id, subject_party_id, category_id, context_key, formula_version_id,
-    score, lower_bound, upper_bound, verified_interaction_count,
-    distinct_evaluator_count, observation_count, confidence,
-    source_event_id, calculated_at
-  )
-  SELECT event_row.run_id, candidate.subject_party_id, candidate.category_id,
-         candidate.context_key, candidate.formula_version_id,
-         candidate.score, candidate.lower_bound, candidate.upper_bound,
-         candidate.verified_interaction_count,
-         candidate.distinct_evaluator_count, candidate.observation_count,
-         candidate.confidence, candidate.source_event_id,
-         candidate.calculated_at
-  FROM reputation_aggregate_candidate candidate
-  JOIN pg_temp.reputation_bt_component_work component
-    ON component.subject_party_id = candidate.subject_party_id
-  WHERE event_row.run_id IS NOT NULL
-    AND candidate.category_id = event_row.category_id
-    AND candidate.context_key = event_row.context_key
-    AND candidate.formula_version_id = event_row.algorithm_version
-  ON CONFLICT (
-    run_id, subject_party_id, category_id, context_key, formula_version_id
-  ) DO NOTHING;
+  IF event_row.run_id IS NULL THEN
+    INSERT INTO reputation_aggregate_candidate(
+      subject_party_id, category_id, context_key, formula_version_id,
+      score, lower_bound, upper_bound, verified_interaction_count,
+      distinct_evaluator_count, observation_count, confidence,
+      publication_state, source_event_id, calculated_at
+    )
+    SELECT candidate.subject_party_id, event_row.category_id,
+           event_row.context_key, event_row.algorithm_version,
+           candidate.score, candidate.lower_bound, candidate.upper_bound,
+           candidate.verified_interaction_count,
+           candidate.distinct_evaluator_count, candidate.observation_count,
+           candidate.confidence, 'simulation', event_row.id, p_now
+    FROM pg_temp.reputation_bt_candidate_work candidate
+    ON CONFLICT (subject_party_id, category_id, context_key, formula_version_id)
+    DO UPDATE SET
+      score = EXCLUDED.score,
+      lower_bound = EXCLUDED.lower_bound,
+      upper_bound = EXCLUDED.upper_bound,
+      verified_interaction_count = EXCLUDED.verified_interaction_count,
+      distinct_evaluator_count = EXCLUDED.distinct_evaluator_count,
+      observation_count = EXCLUDED.observation_count,
+      confidence = EXCLUDED.confidence,
+      publication_state = 'simulation',
+      source_event_id = EXCLUDED.source_event_id,
+      calculated_at = EXCLUDED.calculated_at;
+  ELSE
+    INSERT INTO reputation_aggregation_run_result(
+      run_id, subject_party_id, category_id, context_key, formula_version_id,
+      score, lower_bound, upper_bound, verified_interaction_count,
+      distinct_evaluator_count, observation_count, confidence,
+      source_event_id, calculated_at
+    )
+    SELECT event_row.run_id, candidate.subject_party_id,
+           event_row.category_id, event_row.context_key,
+           event_row.algorithm_version, candidate.score,
+           candidate.lower_bound, candidate.upper_bound,
+           candidate.verified_interaction_count,
+           candidate.distinct_evaluator_count, candidate.observation_count,
+           candidate.confidence, event_row.id, p_now
+    FROM pg_temp.reputation_bt_candidate_work candidate
+    ON CONFLICT (
+      run_id, subject_party_id, category_id, context_key, formula_version_id
+    ) DO NOTHING;
+  END IF;
 
   SELECT candidate.verified_interaction_count,
          candidate.distinct_evaluator_count,
          candidate.observation_count,
          candidate.confidence
     INTO interaction_count, evaluator_count, observation_count, confidence_value
-  FROM reputation_aggregate_candidate candidate
-  WHERE candidate.subject_party_id = event_row.subject_party_id
-    AND candidate.category_id = event_row.category_id
-    AND candidate.context_key = event_row.context_key
-    AND candidate.formula_version_id = event_row.algorithm_version;
+  FROM pg_temp.reputation_bt_candidate_work candidate
+  WHERE candidate.subject_party_id = event_row.subject_party_id;
 
   UPDATE reputation_aggregation_outbox
   SET processing_status = 'processed', processed_at = p_now,

@@ -202,6 +202,75 @@ assert_equal \
   "1" \
   "Applicable subject role evidence acceptance"
 
+psql_exec -c "
+  INSERT INTO party_security_role(party_id, role_id)
+  VALUES (104, 'c5000000-0000-4000-8000-000000000002');
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(DISTINCT subject_party_id) FROM reputation_aggregation_outbox WHERE event_type='subject.role_changed' AND processing_status IN ('pending', 'retry') AND category_id='$role_category_id' AND context_key='service:role-001' AND subject_party_id IN (104, 105);")" \
+  "2" \
+  "Role addition comparison-component fan-out"
+psql_exec -c "
+  DO \$\$
+  DECLARE
+    claimed RECORD;
+  BEGIN
+    FOR claimed IN
+      SELECT *
+      FROM reputation_claim_aggregation_events(
+        'staging', 'worker-role-addition-0001', 10,
+        '2030-08-01T12:02:02Z'
+      )
+    LOOP
+      PERFORM reputation_complete_aggregation_event(
+        claimed.event_id::uuid, claimed.claim_token::uuid,
+        '2030-08-01T12:02:03Z'
+      );
+    END LOOP;
+  END \$\$;
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE subject_party_id IN (104, 105) AND category_id='$role_category_id' AND context_key='service:role-001' AND observation_count=2;")" \
+  "2" \
+  "Role addition connected-component recalculation"
+
+psql_exec -c "
+  DELETE FROM party_security_role
+  WHERE party_id=104
+    AND role_id='c5000000-0000-4000-8000-000000000002';
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(DISTINCT subject_party_id) FROM reputation_aggregation_outbox WHERE event_type='subject.role_changed' AND processing_status IN ('pending', 'retry') AND category_id='$role_category_id' AND context_key='service:role-001' AND subject_party_id IN (104, 105);")" \
+  "2" \
+  "Role removal comparison-component fan-out"
+psql_exec -c "
+  DO \$\$
+  DECLARE
+    claimed RECORD;
+  BEGIN
+    FOR claimed IN
+      SELECT *
+      FROM reputation_claim_aggregation_events(
+        'staging', 'worker-role-removal-0001', 10,
+        '2030-08-01T12:02:04Z'
+      )
+    LOOP
+      PERFORM reputation_complete_aggregation_event(
+        claimed.event_id::uuid, claimed.claim_token::uuid,
+        '2030-08-01T12:02:05Z'
+      );
+    END LOOP;
+  END \$\$;
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT observation_count FROM reputation_aggregate_candidate WHERE subject_party_id=104 AND category_id='$role_category_id' AND context_key='service:role-001';")" \
+  "0" \
+  "Role-removed subject evidence cleanup"
+assert_equal \
+  "$(psql_exec -Atc "SELECT observation_count FROM reputation_aggregate_candidate WHERE subject_party_id=105 AND category_id='$role_category_id' AND context_key='service:role-001';")" \
+  "1" \
+  "Role-removal former-peer recalculation"
+
 pair_category_a_id="c5210000-0000-4000-8000-000000000001"
 pair_category_b_id="c5210000-0000-4000-8000-000000000002"
 pair_interaction_id="c5210000-0000-4000-8000-000000000003"
@@ -873,6 +942,7 @@ psql_exec -c "
   SET status='running', started_at='2026-09-01T12:05:00Z'
   WHERE id='$run_id';
 " >/dev/null
+live_candidate_before_bounded_run=$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")
 run_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-run-0001', 1, '2030-09-01T12:04:01Z');")
 run_claim_event_id=$(printf '%s' "$run_claim" | cut -d '|' -f 1)
 run_claim_token=$(printf '%s' "$run_claim" | cut -d '|' -f 2)
@@ -883,8 +953,12 @@ assert_equal \
   "Bounded run processing"
 assert_equal \
   "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "$live_candidate_before_bounded_run" \
+  "Bounded run shared-candidate isolation"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregation_run_result WHERE run_id='$run_id' AND subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
   "50.0000:0:$run_event_a" \
-  "Run high-water evidence cutoff"
+  "Run high-water evidence cutoff snapshot"
 
 requeued_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token || '|' || claimed_attempt FROM reputation_claim_aggregation_events('staging', 'worker-requeue-0001', 1, '2030-09-01T12:04:03Z');")
 requeued_event_id=$(printf '%s' "$requeued_claim" | cut -d '|' -f 1)
@@ -1152,7 +1226,7 @@ psql_exec -c "
     AND role_id='c5000000-0000-4000-8000-000000000002';
 " >/dev/null
 assert_equal \
-  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='subject.role_changed' AND subject_party_id=105 AND category_id='$role_category_id' AND context_key='service:role-001';")" \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='subject.role_changed' AND processing_status IN ('pending', 'retry') AND subject_party_id=105 AND category_id='$role_category_id' AND context_key='service:role-001';")" \
   "1" \
   "Subject role mutation event"
 role_fence_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-role-fence-0001', 1, '2030-09-01T12:04:15Z');")
@@ -1392,4 +1466,4 @@ assert_equal \
   "50.0000:0:$run_event_a" \
   "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, immutable and run-frozen formula parameters, late-submission, evidence and role-mutation fenced run cutoffs, irreversible run lifecycle and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction tuple-move invalidation, leasing and expired-lease limits, simulation isolation, role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, immutable and run-frozen formula parameters, late-submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction tuple-move invalidation, leasing and expired-lease limits, simulation isolation, role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, role-change comparison-component fan-out, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."
