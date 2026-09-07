@@ -8,7 +8,7 @@ Original continuation baseline: `edbb90e4c98f174946fc39c15d362e4bd9084f3c` (`fea
 
 Reconciled stacked baseline: `e4ce8403127bc620de430af9e3a8e3cff3941f5f` (`feature/onboarding-first-ux-20260904`)
 
-Final merged-base reconciliation: `0a047a70e` (includes root `main` at `48992e37f`)
+Final integrated-code reconciliation: `1749e4c7d78ca44fae60e8a1eec1edf35bd50194` (includes root `main` at `b181fae331f900a7214feda140b5b36cd3fa9d28`)
 
 Working branch: `feature/onboarding-continuity-20260906`
 
@@ -31,7 +31,7 @@ The existing onboarding experiment remains paused. Its exposure state is still d
 | Capability | Status | Evidence from actual check | Consequence |
 | --- | --- | --- | --- |
 | Repository read/write | Available | Isolated worktree `/private/tmp/tdf-onboarding-continuity-20260906` accepted source, test, migration, and report changes. | Safe implementation is possible without touching the user’s unrelated dirty checkout. |
-| Branch and commit | Available | Continuation branch started at `edbb90e4…`; schema commit `64702d26…` was created before the manifest entry, and the branch was reconciled through `0a047a70e` after its parent work merged. | Migration ancestry is immutable and reviewable. Root PR #241 can target `main` directly. |
+| Branch and commit | Available | Continuation branch started at `edbb90e4…`; schema commit `64702d26…` was created before the manifest entry, and the published integrated code head `1749e4c7d…` includes `main` at `b181fae33…`. | Migration ancestry is immutable and reviewable. Root PR #241 targets `main` directly. |
 | Existing work protection | Available | All continuation work stayed in the isolated worktree; no hard reset, force push, or default-branch mutation occurred. | Unrelated user work remains outside this batch. |
 | Mobile submodule | Available | Required client generation and checks executed against the initialized submodule. Mobile head `1e07ae92d46677b42b14f33c59766b3dea84e830` was pushed after the contract and Party-scoped saved-event changes. | The parent pointer references a published commit, not an unpublishable local object. |
 | Runtimes and package managers | Available | Existing Node/npm, TypeScript, Jest, ESLint, OpenAPI generator, Stack/GHC, Docker, and PostgreSQL tooling executed. | Web/mobile/contract/migration verification is supported. |
@@ -43,8 +43,8 @@ The existing onboarding experiment remains paused. Its exposure state is still d
 | Local/staging configuration | Partial | Local dependency/build state was available; no controlled staging environment was established. | Validation remains local and mocked except for the disposable database. |
 | Synthetic test accounts/fixtures | Available but not exercised end-to-end here | Existing fictional persona fixtures remain in the repository; this batch’s UI tests used mocks. | No real identity, communication, OAuth, or payment was used. |
 | Analytics access | Partial | Event code and taxonomy were inspected and unit-tested; no PostHog dashboard or representative field data was accessed. | Completion semantics are tested in code; conversion uplift and field p75 remain not measured. |
-| GitHub authentication | Available | Mobile branch push and draft PR #40 succeeded. Root publication is recorded in the handoff section after completion. | Draft review is possible without merging or deploying. |
-| Push/deploy safety | Available for feature branches | Mobile workflows were inspected: validation/synthetics run only for `main` or PR events; release readiness is manual and gated. Root automation is rechecked after final publication. | Feature publication does not authorize or perform production deployment. |
+| GitHub authentication | Available | Mobile branch/draft PR #40 and root branch/draft PR #241 were pushed successfully. | Draft review is possible without merging or deploying. |
+| Push/deploy safety | Available for feature branches | Mobile workflows were inspected: validation/synthetics run only for `main` or PR events; release readiness is manual and gated. Root workflow inspection confirmed that feature-branch/PR events run validation and preview jobs, while image publication is limited to `main` or an explicit workflow dispatch. | Feature publication did not authorize or perform a production deployment; automatically created Vercel/Cloudflare artifacts are PR previews. |
 | Documented preflight | Available from first batch | The mandatory initial `npm run ai:doctor` result is preserved in the 2026-09-05 report; this continuation did not reinterpret a configured command as a new execution. | Initial warnings remain disclosed; no false fresh preflight claim is made. |
 
 No secret values were printed. No production write, deployment, merge, real payment, real communication, or indefinite supervisor was started.
@@ -251,11 +251,11 @@ No participant was contacted and no session result, quotation, completion rate, 
 
 ## 15. Branch and pull-request handoff
 
-- Root: `feature/onboarding-continuity-20260906`, with the original implementation commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, later evidence/contract/mobile-pointer commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test commit `98b195664`, and merged-base reconciliation `0a047a70e`. Draft PR: https://github.com/diegueins680/tdf-app/pull/241, retargeted to `main` after its parent merged.
+- Root: `feature/onboarding-continuity-20260906`, with original implementation commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, evidence/contract/mobile-pointer commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test commit `98b195664`, documentation commit `34f0b53f0`, and integrated-code reconciliation `1749e4c7d78ca44fae60e8a1eec1edf35bd50194`. Draft PR: https://github.com/diegueins680/tdf-app/pull/241, targeting `main`.
 - Second-batch root code: `cf971dadc` (artist evidence, directory resume, regenerated contract, and published mobile pointer).
 - Mobile: `feature/onboarding-continuity-20260906`, published head `1e07ae92d46677b42b14f33c59766b3dea84e830`, including Party-scoped saved-event state and regenerated access-request operations. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, retargeted to `main` after its parent merged.
 - No PR was merged and no production deployment was performed.
 
-At the final local reconciliation, root `main` was `48992e37f` and the continuation merged it at `0a047a70e`; the parent onboarding PR and intervening YouTube-catalog work were therefore both present. The mobile continuation was likewise retargeted to `main`. Every independently runnable affected gate was rerun. Hosted CI must still reproduce the published root head rather than treating local green checks as future integration proof.
+At the final integrated-code reconciliation, root `main` was `b181fae331f900a7214feda140b5b36cd3fa9d28` and the continuation merged it at `1749e4c7d78ca44fae60e8a1eec1edf35bd50194`; the parent onboarding work, intervening catalog work, and service-storefront migration repair were therefore present. The mobile continuation was likewise retargeted to `main`. Every independently runnable affected local gate was rerun. Hosted exact-head status is recorded separately so local results are not treated as integration proof.
 
-An existing workspace `continuous-improvement-loop[bot]` process had previously created the mobile-pointer and stacked-base merge commits while this work was active, and later raced the catalog-audit fix into commit `d20cdf64f`; this task did not start that process. The commit was inspected rather than trusted: it updates only the reviewed onboarding-intent fingerprint, repairs four Haskell string-gap escapes in the new SQLite fixture, and its catalog and focused backend results were independently reproduced locally.
+An existing workspace `continuous-improvement-loop[bot]` process had previously created the mobile-pointer and stacked-base merge commits while this work was active, later raced the catalog-audit fix into commit `d20cdf64f`, and completed/pushed reconciliation commit `1749e4c7d` while this task was active; this task did not start that process. Those commits were inspected rather than trusted: the catalog decisions match the combined migration registry, the root branch contains the published mobile commit, and the relevant local release, catalog, and focused backend evidence was independently reproduced.

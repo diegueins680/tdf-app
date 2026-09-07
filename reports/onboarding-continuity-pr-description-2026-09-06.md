@@ -26,7 +26,7 @@ The parent onboarding PRs have merged, so this root draft and mobile draft PR #4
 - mobile final full Jest after saved-event containment: 66 suites, 340 tests passed with `REQUIRE_MOBILE_WORKSPACE=1`; typecheck and full lint passed
 - regenerated web/mobile API clients match byte-for-byte
 
-The artist-follow and access-request evidence SQLite cases compiled and passed locally via the freshly linked test executable. The interrupted Stack wrapper is not counted as a passing command; CI must reproduce the result on the published head before review completion.
+The artist-follow and access-request evidence SQLite cases compiled and passed locally via the freshly linked test executable. The interrupted Stack wrapper is not counted as a passing command; hosted CI status is reported against the published PR head at handoff.
 
 A full web Jest attempt before this continuation's final reconciliation reproduced the unrelated `CourseRegistrationsAdminPage` timeout/overlapping-`act()` cascade from the stacked baseline and an unrelated `PromoCodeField` failure. The run was stopped after those failures; the touched onboarding suites were rerun separately and passed 12/12. No test was disabled or weakened.
 
