@@ -407,6 +407,11 @@
       "introducedBy": "0258057e726097c584a4619ad521c1ee2740639c"
     },
     {
+      "id": "2026-09-07_service_storefront_package_bounds_repair",
+      "path": "tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql",
+      "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
+    },
+    {
       "id": "2026-09-06_user_onboarding_progress",
       "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
       "introducedBy": "64702d26ac2129f96f40b921f943dea907828419"

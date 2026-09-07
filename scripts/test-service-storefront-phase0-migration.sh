@@ -43,8 +43,17 @@ docker exec -i "$TDF_SERVICE_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U pos
 docker exec -i "$TDF_SERVICE_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_service_migration_test \
   < "$TDF_SERVICE_MIGRATION_ROOT/tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql" >/dev/null
 
+psql_exec -c "UPDATE service_storefront_package SET max_song_count = 1 WHERE service_kind = 'Mastering' AND tier = 'Pro';" >/dev/null
+psql_exec -c "UPDATE service_storefront_package SET min_song_count = 2, max_song_count = 4 WHERE service_kind = 'Mixing' AND tier = 'Basic';" >/dev/null
+docker exec -i "$TDF_SERVICE_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_service_migration_test \
+  < "$TDF_SERVICE_MIGRATION_ROOT/tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql" >/dev/null
+docker exec -i "$TDF_SERVICE_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_service_migration_test \
+  < "$TDF_SERVICE_MIGRATION_ROOT/tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql" >/dev/null
+
 pro_max=$(psql_exec -Atc "SELECT max_song_count FROM service_storefront_package WHERE service_kind = 'Mastering' AND tier = 'Pro';")
 test "$pro_max" = "3"
+custom_bounds=$(psql_exec -Atc "SELECT min_song_count || '|' || max_song_count FROM service_storefront_package WHERE service_kind = 'Mixing' AND tier = 'Basic';")
+test "$custom_bounds" = "2|4"
 
 if psql_exec -c "UPDATE service_storefront_package SET min_song_count = 4, max_song_count = 3 WHERE service_kind = 'Mastering' AND tier = 'Pro';" >/dev/null 2>&1; then
   echo "Package quantity constraint accepted an invalid range" >&2
@@ -74,4 +83,4 @@ test "$remaining_columns" = "0"
 docker exec -i "$TDF_SERVICE_MIGRATION_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d tdf_service_migration_test \
   < "$TDF_SERVICE_MIGRATION_ROOT/tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql" >/dev/null
 
-echo "Service storefront Phase 0 migration passed forward, constraint, rollback, and reapply checks."
+echo "Service storefront Phase 0 migration and additive bounds repair passed forward, idempotency, preservation, constraint, rollback, and reapply checks."
