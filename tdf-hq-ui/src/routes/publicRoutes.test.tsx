@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 import { renderPublicRoutes } from './publicRoutes';
+import { SessionProvider } from '../session/SessionContext';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -60,7 +61,7 @@ describe('public routes', () => {
 
     try {
       await act(async () => {
-        root?.render(<MemoryRouter initialEntries={[path]}><Routes>{renderPublicRoutes()}</Routes></MemoryRouter>);
+        root?.render(<SessionProvider><MemoryRouter initialEntries={[path]}><Routes>{renderPublicRoutes()}</Routes></MemoryRouter></SessionProvider>);
         await flushPromises();
         await flushPromises();
       });
