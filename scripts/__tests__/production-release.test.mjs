@@ -153,6 +153,10 @@ test('already-applied production migrations retain their recorded checksums', ()
       'ab983f7af3b192e6425b29096e800f7095ef185d288a0f639a280d1a5e361278',
     ],
     [
+      '../../tdf-hq/sql/2026-08-14_catalog_integrity.sql',
+      '4a856fb813417e2e87aed286b1b664d54cbda004ffb1c44baed89f4b4901571b',
+    ],
+    [
       '../../tdf-hq/sql/2026-08-18_music_directory_profile_images.sql',
       '63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312',
     ],
