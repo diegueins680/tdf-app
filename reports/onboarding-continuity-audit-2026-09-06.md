@@ -240,7 +240,7 @@ No participant was contacted and no session result, quotation, completion rate, 
 
 ## 15. Branch and pull-request handoff
 
-- Root: `feature/onboarding-continuity-20260906`, stacked on `feature/onboarding-first-ux-20260904` / draft PR #238. Final root commits and draft PR URL are recorded after publication.
+- Root: `feature/onboarding-continuity-20260906`, commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, stacked on `feature/onboarding-first-ux-20260904` / draft PR #238. Draft PR: https://github.com/diegueins680/tdf-app/pull/241.
 - Mobile: `feature/onboarding-continuity-20260906`, commits `c1421e0b14509713daa3bcd7cf3bffaca5d475aa` and `29299d042e0874bd7c49a993dac03245d4edeeaa`. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, stacked on `feature/onboarding-first-ux-20260905` / PR #39.
 - No PR was merged and no production deployment was performed.
 
