@@ -58,7 +58,7 @@ export default function PublicReputationRightsPage({ view = 'privacy' }: { view?
         {view === 'privacy' && <>
           <Typography id="retirar-consentimientos" variant="h6">{copy.withdrawal}</Typography>
           <Typography>{copy.withdrawalBody}</Typography>
-          <Link href={mailto(copy.withdrawalSubject)}>{copy.withdrawal}</Link>
+          <Link component={RouterLink} to="/reputation/consents">{copy.withdrawal}</Link>
         </>}
         {view === 'appeal' && <Link href={mailto(copy.appealSubject)}>{copy.appealAction}</Link>}
         {view === 'calculation' && <Link component={RouterLink} to="/privacidad">{copy.privacyAction}</Link>}
