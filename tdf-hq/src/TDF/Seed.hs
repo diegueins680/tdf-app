@@ -582,12 +582,39 @@ seedRecordsCatalogDefaults now = do
 
     recordsRecordingVideos :: [Value]
     recordsRecordingVideos =
-        [ recordingVideo 1 "Federico Molinari @ TDF Electro Sessions" "Federico Molinari" "f2BabxM1Pjc" "44:14" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
-        , recordingVideo 2 "Just One Nite @ TDF Electro Sessions" "Just One Nite" "rRkAeNB0R14" "56:21" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
-        , recordingVideo 3 "Morex DJ Set @ TDF Electro Sessions" "Morex" "wZQAlIqllQY" "1:02:21" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
-        , recordingVideo 4 "Diego Saá @ TDF Electro Sessions" "Diego Saá" "YDODXZ4lyRk" "48:09" "TDF Electro Sessions" "Live set publicado en el canal TDF Records."
-        , recordingVideo 5 "Everaldo Vasco @ TDF Sessions" "Everaldo Vasco" "1hKWOram3aw" "1:26:18" "TDF Sessions" "Sesión publicada en el canal TDF Records."
-        , recordingVideo 6 "COHEMA @ TDF Sessions" "COHEMA" "xqeey8SrH8M" "1:00:00" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        [ recordingVideo 1 "Llama Este Pez @ Sereno Moreno Live Set Pt 1" "Llama Este Pez" "ooPsIHsikYU" "12:36" "Live set" "Live set publicado en el canal TDF Records."
+        , recordingVideo 2 "Llama Este Pez @ Sereno Moreno Live Set Pt 2" "Llama Este Pez" "Cb7VGZJ6apo" "04:54" "Live set" "Live set publicado en el canal TDF Records."
+        , recordingVideo 3 "Federico Molinari @ TDF Electro Sessions" "Federico Molinari" "f2BabxM1Pjc" "44:15" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 4 "Just One Nite @ TDF Electro Sessions" "Just One Nite" "rRkAeNB0R14" "56:22" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 5 "Morex DJ Set @ TDF Electro Sessions" "Morex" "wZQAlIqllQY" "1:02:22" "TDF Electro Sessions" "DJ set publicado en el canal TDF Records."
+        , recordingVideo 6 "Diego Saá Live Set @ Rio Hostel Buritaca | 2h30 Electro/Minimal House | TDF Sessions #spacetrip" "Diego Saá" "Re3lL-myniY" "2:31:02" "TDF Sessions" "Live set publicado en el canal TDF Records."
+        , recordingVideo 7 "Diego Saá Live @ Domo Pululahua | Electro-Micro-Minimal House – 44 min Impro Set" "Diego Saá" "YXBDWshbw18" "44:24" "Live set" "Live set publicado en el canal TDF Records."
+        , recordingVideo 8 "Diego Saá @ TDF Electro Sessions" "Diego Saá" "YDODXZ4lyRk" "48:09" "TDF Electro Sessions" "Live set publicado en el canal TDF Records."
+        , recordingVideo 9 "Everaldo Vasco @ TDF Sessions" "Everaldo Vasco" "1hKWOram3aw" "1:26:19" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 10 "COHEMA @ TDF Sessions" "COHEMA" "xqeey8SrH8M" "1:00:00" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 11 "AVR @ TDF Sessions" "AVR" "PamFdN2RjUI" "46:35" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 12 "Owen @ TDF Sessions" "Owen" "YLz4dnol3yE" "1:01:13" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 13 "MELANIA @ TDF SESSIONS" "MELANIA" "eU9Y9Rah7RA" "56:30" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 14 "ELI LASSO @ TDF SESSIONS" "ELI LASSO" "Vqdp_AfB36Q" "56:48" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 15 "LYSERGICMAN @ TDF SESSIONS" "LYSERGICMAN" "aRaeiPtyav4" "1:04:51" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 16 "Semiazas @ TDF Sessions" "Semiazas" "EqxpOaVs6FU" "45:28" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 17 "Juan Diego @ TDF Sessions" "Juan Diego" "g1U0xwX8XDo" "1:22:14" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 18 "MOOD PATTERN @ TDF SESSIONS" "MOOD PATTERN" "SEXPiDKvlpI" "45:34" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 19 "LE CHU B2B LABII @ TDF SESSIONS" "LE CHU B2B LABII" "y0TXaWlmpyQ" "1:03:29" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 20 "ALEJANDRO ROMERO @ TDF SESSIONS" "ALEJANDRO ROMERO" "xdPLcTASCxA" "38:25" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 21 "La Bestia Quiñonez - Agua Que va a Caer @ TDF SESSIONS" "La Bestia Quiñonez" "bHObIKaoAZE" "04:54" "TDF Sessions" "Presentación publicada en el canal TDF Records."
+        , recordingVideo 22 "ESTEBAN MUÑOZ @ TDF SESSIONS" "ESTEBAN MUÑOZ" "G5tgENvi4SQ" "57:10" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 23 "JULIO DIAZ @ TDF SESSIONS" "JULIO DIAZ" "2r1P5sTBsLE" "1:05:19" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 24 "Fabro @ TDF SESSIONS" "Fabro" "gCNSV_rJQMQ" "1:06:14" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 25 "DATI DICE @ TDF SESSIONS" "DATI DICE" "ZJTXaPPIo2Q" "42:57" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 26 "MELANIA @ TDF ESTUDIO" "MELANIA" "Sbb_LQAilLY" "40:37" "TDF Estudio" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 27 "Agus @ TDF SESSIONS" "Agus" "hQx_eOTQOGg" "53:01" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 28 "Diego Saá (Live set modular) @ TDF SESSIONS" "Diego Saá" "QXxt-DELqo0" "27:32" "TDF Sessions" "Live set publicado en el canal TDF Records."
+        , recordingVideo 29 "La Clau @ TDF SESSIONS" "La Clau" "2m7HiIxTPvM" "1:04:55" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 30 "JUANO LEDESMA @ TDF SESSIONS" "JUANO LEDESMA" "nC4vict39i4" "41:19" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 31 "DANI ALBAN @ TDF SESSIONS" "DANI ALBAN" "hexW4ROF0r0" "45:59" "TDF Sessions" "Sesión publicada en el canal TDF Records."
+        , recordingVideo 32 "Liquid Paper Girl @ TDF SESSIONS (Liveset)" "Liquid Paper Girl" "msDxB2NU3c4" "47:05" "TDF Sessions" "Live set publicado en el canal TDF Records."
+        , recordingVideo 33 "Diego Saá @ TDF ESTUDIO" "Diego Saá" "8Cv0RGQdJA4" "33:50" "TDF Estudio" "Sesión publicada en el canal TDF Records."
         ]
 
     recordingVideo :: Int -> Text -> Text -> Text -> Text -> Text -> Text -> Value
@@ -757,8 +784,28 @@ seedNormalizedRecords now releaseValues recordingValues sessionValues = do
     sessions <- parseSeedValues "recording session" (parseVideoSeed "guests") sessionValues
     seedRecordsCollections now
     mapM_ (seedReleaseRecord now) releases
+    vacateRecordingCollectionOrder
     mapM_ (seedVideoRecording now) recordings
+    appendUnseededRecordingCollectionEntries
+        (maximum (0 : map normalizedVideoSortOrder recordings))
     mapM_ (seedVideoSession now) sessions
+
+-- Development seeds are intentionally replayable. Move every current
+-- membership to a reserved range first so a changed source order cannot hit
+-- the collection's unique (collection_id, sort_order) constraint. Seeded
+-- videos reclaim their canonical positions; unrelated rows are retained after
+-- the seeded range by appendUnseededRecordingCollectionEntries.
+vacateRecordingCollectionOrder :: SqlPersistT IO ()
+vacateRecordingCollectionOrder =
+    rawExecute
+        "WITH ranked AS (SELECT membership.id, row_number() OVER (ORDER BY membership.sort_order, membership.id) AS temporary_order FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id WHERE collection.code='tdf-records-recordings') UPDATE collection_recording membership SET sort_order=-9000000000000000000 + ranked.temporary_order FROM ranked WHERE membership.id=ranked.id"
+        []
+
+appendUnseededRecordingCollectionEntries :: Int -> SqlPersistT IO ()
+appendUnseededRecordingCollectionEntries seededMaximum =
+    rawExecute
+        "WITH ranked AS (SELECT membership.id, row_number() OVER (ORDER BY membership.sort_order, membership.id) AS retained_order FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id WHERE collection.code='tdf-records-recordings' AND membership.sort_order < 0) UPDATE collection_recording membership SET sort_order=? + ranked.retained_order FROM ranked WHERE membership.id=ranked.id"
+        [PersistInt64 (fromIntegral seededMaximum)]
 
 parseSeedValues :: Text -> (Value -> Maybe value) -> [Value] -> SqlPersistT IO [value]
 parseSeedValues label parser values =
@@ -848,16 +895,16 @@ seedVideoRecording now NormalizedVideoSeed{..} = do
         durationMs = durationTextToMilliseconds normalizedVideoDuration
     seedRecordContributor now contributorCode normalizedVideoContributor "artist"
     rawExecute
-        "INSERT INTO recording (catalog_id, code, recording_type_id, title_es, title_en, description_es, description_en, duration_ms, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, recording_type.id, ?, ?, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_type_reference recording_type ON recording_type.code='music-video' AND recording_type.active WHERE catalog.code='records-recordings' ON CONFLICT (code) DO NOTHING"
+        "INSERT INTO recording (catalog_id, code, recording_type_id, title_es, title_en, description_es, description_en, duration_ms, current_slug, sort_order, active, workflow_state_id, created_at, updated_at, published_revision, usage_count, version) SELECT catalog.id, ?, recording_type.id, ?, ?, ?, ?, ?, ?, ?, TRUE, state.id, ?, ?, 1, 0, 1 FROM catalog_definition catalog JOIN workflow_state state ON state.workflow_id=catalog.workflow_id AND state.code='published' JOIN recording_type_reference recording_type ON recording_type.code='music-video' AND recording_type.active WHERE catalog.code='records-recordings' ON CONFLICT (code) DO UPDATE SET title_es=EXCLUDED.title_es, title_en=EXCLUDED.title_en, description_es=EXCLUDED.description_es, description_en=EXCLUDED.description_en, duration_ms=EXCLUDED.duration_ms, sort_order=EXCLUDED.sort_order, active=TRUE, workflow_state_id=EXCLUDED.workflow_state_id, updated_at=EXCLUDED.updated_at, version=recording.version+1 WHERE (recording.title_es, recording.title_en, recording.description_es, recording.description_en, recording.duration_ms, recording.sort_order, recording.active, recording.workflow_state_id) IS DISTINCT FROM (EXCLUDED.title_es, EXCLUDED.title_en, EXCLUDED.description_es, EXCLUDED.description_en, EXCLUDED.duration_ms, EXCLUDED.sort_order, TRUE, EXCLUDED.workflow_state_id)"
         [ PersistText recordingCode, PersistText normalizedVideoTitle, PersistText normalizedVideoTitle
         , PersistText normalizedVideoDescription, PersistText normalizedVideoDescription
         , maybe PersistNull (PersistInt64 . fromIntegral) durationMs, PersistText recordingCode
         , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
         ]
-    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs (Just (youtubeThumbnailUrl normalizedVideoYoutubeId))
     seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
     rawExecute
-        "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO NOTHING"
+        "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO UPDATE SET sort_order=EXCLUDED.sort_order"
         [PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistText recordingCode]
 
 seedVideoSession :: UTCTime -> NormalizedVideoSeed -> SqlPersistT IO ()
@@ -874,7 +921,7 @@ seedVideoSession now seed@NormalizedVideoSeed{..} = do
         , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
         ]
     seedVideoRecordingRow now recordingCode seed durationMs
-    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs (Just (youtubeThumbnailUrl normalizedVideoYoutubeId))
     seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
     rawExecute
         "INSERT INTO session_recording (session_id, recording_id, sort_order, primary_recording) SELECT session.id, recording.id, 0, TRUE FROM recording_session session JOIN recording ON recording.code=? WHERE session.code=? ON CONFLICT (session_id, recording_id) DO NOTHING"
@@ -952,6 +999,10 @@ durationTextToMilliseconds raw =
         case reads (T.unpack text) of
             [(value, "")] | value >= (0 :: Int) -> Just value
             _ -> Nothing
+
+youtubeThumbnailUrl :: Text -> Text
+youtubeThumbnailUrl youtubeId =
+    "https://i.ytimg.com/vi/" <> youtubeId <> "/hqdefault.jpg"
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do
