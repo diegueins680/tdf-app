@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `subject.role_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -62,6 +62,12 @@ anteriores y actuales. Esto incluye perfiles retirados de
 no conservar un agregado obsoleto. Como alternativa, un evento versionado puede
 contener esa unión completa si el consumidor garantiza el mismo fan-out
 idempotente antes de confirmar el mensaje.
+
+El fan-out conserva pares reales, no el producto cartesiano de sujetos y
+categorías: el sujeto principal se combina con sus categorías seleccionadas y
+cada `compared_party_id` solo con el `category_id` de su propia fila de ranking.
+Así una evaluación que compara sujetos distintos en categorías distintas no
+crea candidatos sin evidencia para combinaciones que nunca fueron calificadas.
 
 Para el modelo Bradley--Terry bayesiano, esa unión es solo el punto de partida:
 el worker debe expandirla al componente conexo de comparaciones dentro del mismo
@@ -89,6 +95,12 @@ con exclusión provisional, archivan/fusionan categorías o cambian sus
 roles/contextos aplicables deben escribir el evento de invalidación
 correspondiente en el mismo outbox transaccional. Así se recalcula o retira la
 proyección existente aunque no haya una evaluación posterior.
+
+Crear, revocar o cambiar una asignación de rol de sujeto, y activar, desactivar
+o renombrar el rol canónico, escribe `subject.role_changed` para cada
+contexto/categoría/fórmula afectado. El evento recalcula la proyección normal y
+también participa en el fence de cualquier run acotado: un cambio confirmado
+después de su `high_water_mark` hace que ese run falle cerrado.
 
 Cada retiro o nueva concesión de consentimiento de visibilidad pública o
 rankings debe persistir `public_consent.changed` en la misma transacción. El
@@ -198,10 +210,10 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   vuelve a seleccionar atómicamente esa versión, sin borrar sus filas, mientras
   la nueva se investiga. Como la fuente v1 no conserva versiones históricas de
   cada fila, un run acotado falla cerrado si el outbox registra una edición,
-  invalidación, eliminación, moderación o restauración posterior a su
-  `high_water_mark` dentro del contexto/categoría. Operaciones debe crear un run
-  nuevo con un corte posterior; nunca forzar la confirmación del snapshot
-  mutable anterior.
+  invalidación, eliminación, moderación, restauración o cambio de rol de sujeto
+  posterior a su `high_water_mark` dentro del contexto/categoría. Operaciones
+  debe crear un run nuevo con un corte posterior; nunca forzar la confirmación
+  del snapshot mutable anterior.
   Una fórmula `draft` puede editarse solo antes de que cualquier run la
   referencie. La creación del run bloquea la fila de fórmula y desde entonces
   sus parámetros quedan congelados incluso si el run sigue `planned` o termina;
@@ -280,7 +292,10 @@ Las fuentes mínimas para dashboards sin PII son
 `reputation_worker_event_metrics`, `reputation_worker_processing_metrics` y
 `reputation_candidate_freshness_metrics`. Antes de habilitar staging se deben
 materializar sus paneles, aprobar umbrales y asignar on-call; disponer de las
-vistas no satisface por sí solo ese pendiente.
+vistas no satisface por sí solo ese pendiente. Las métricas de procesamiento
+separan cada ciclo abierto por una acción inmutable `requeued`, incluso cuando
+el contador de intentos vuelve a uno; nunca emparejan un claim nuevo con la
+finalización de un ciclo anterior.
 
 El rollback operativo del worker empieza por apagar el gate de base y la
 variable de proceso, sin borrar cola, candidatos, runs ni auditoría:

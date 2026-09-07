@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_outbox (
     'interaction.invalidated',
     'interaction.restored',
     'category.applicability_changed',
+    'subject.role_changed',
     'public_consent.changed',
     'pilot_consent.changed',
     'age_assurance.changed',
@@ -494,24 +495,18 @@ BEGIN
   END IF;
 
   FOR target IN
-    WITH subjects AS (
-      SELECT evaluation_row.subject_party_id AS subject_party_id
-      UNION
-      SELECT rank.compared_party_id
-      FROM reputation_evaluation_rank rank
-      WHERE rank.evaluation_id = p_evaluation_id
-    ), categories AS (
-      SELECT item.category_id
+    SELECT pair.subject_party_id, pair.category_id
+    FROM (
+      SELECT evaluation_row.subject_party_id AS subject_party_id,
+             item.category_id
       FROM reputation_evaluation_category item
       WHERE item.evaluation_id = p_evaluation_id
       UNION
-      SELECT rank.category_id
+      SELECT rank.compared_party_id, rank.category_id
       FROM reputation_evaluation_rank rank
       WHERE rank.evaluation_id = p_evaluation_id
-    )
-    SELECT subjects.subject_party_id, categories.category_id
-    FROM subjects CROSS JOIN categories
-    ORDER BY subjects.subject_party_id, categories.category_id
+    ) pair
+    ORDER BY pair.subject_party_id, pair.category_id
   LOOP
     PERFORM reputation_enqueue_aggregation_event(
       gen_random_uuid(), p_event_type, target.subject_party_id,
@@ -730,6 +725,114 @@ AS $$
   )
 $$;
 
+CREATE OR REPLACE FUNCTION reputation_emit_subject_role_change_events(
+  p_subject_party_id BIGINT,
+  p_occurred_at TIMESTAMPTZ
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  correlation UUID := gen_random_uuid();
+  emitted INTEGER := 0;
+  target RECORD;
+BEGIN
+  FOR target IN
+    SELECT affected.category_id, affected.context_key,
+           affected.formula_version_id
+    FROM (
+      SELECT candidate.category_id, candidate.context_key,
+             candidate.formula_version_id
+      FROM reputation_aggregate_candidate candidate
+      WHERE candidate.subject_party_id = p_subject_party_id
+      UNION
+      SELECT rank.category_id,
+             lower(interaction.context_kind) || ':' || interaction.context_id,
+             evaluation.formula_version_id
+      FROM reputation_evaluation_rank rank
+      JOIN reputation_evaluation evaluation
+        ON evaluation.id = rank.evaluation_id
+      JOIN reputation_interaction interaction
+        ON interaction.id = evaluation.interaction_id
+      WHERE rank.compared_party_id = p_subject_party_id
+    ) affected
+    ORDER BY affected.category_id, affected.context_key,
+             affected.formula_version_id
+  LOOP
+    PERFORM reputation_enqueue_aggregation_event(
+      gen_random_uuid(), 'subject.role_changed', p_subject_party_id,
+      target.context_key, target.category_id, 0,
+      target.formula_version_id, correlation, NULL, p_occurred_at
+    );
+    emitted := emitted + 1;
+  END LOOP;
+  RETURN emitted;
+END $$;
+
+CREATE OR REPLACE FUNCTION reputation_party_security_role_outbox_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    PERFORM reputation_emit_subject_role_change_events(NEW.party_id, now());
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    PERFORM reputation_emit_subject_role_change_events(OLD.party_id, now());
+    RETURN OLD;
+  END IF;
+
+  IF OLD.party_id IS NOT DISTINCT FROM NEW.party_id
+     AND OLD.role_id IS NOT DISTINCT FROM NEW.role_id
+     AND OLD.active IS NOT DISTINCT FROM NEW.active THEN
+    RETURN NEW;
+  END IF;
+
+  PERFORM reputation_emit_subject_role_change_events(OLD.party_id, now());
+  IF OLD.party_id IS DISTINCT FROM NEW.party_id THEN
+    PERFORM reputation_emit_subject_role_change_events(NEW.party_id, now());
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_party_security_role_outbox
+  ON party_security_role;
+CREATE TRIGGER trg_reputation_party_security_role_outbox
+  AFTER INSERT OR DELETE OR UPDATE OF party_id, role_id, active
+  ON party_security_role
+  FOR EACH ROW EXECUTE FUNCTION reputation_party_security_role_outbox_trigger();
+
+CREATE OR REPLACE FUNCTION reputation_security_role_outbox_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  affected_party_id BIGINT;
+BEGIN
+  IF OLD.code IS NOT DISTINCT FROM NEW.code
+     AND OLD.active IS NOT DISTINCT FROM NEW.active THEN
+    RETURN NEW;
+  END IF;
+
+  FOR affected_party_id IN
+    SELECT DISTINCT assignment.party_id
+    FROM party_security_role assignment
+    WHERE assignment.role_id IN (OLD.id, NEW.id)
+    ORDER BY assignment.party_id
+  LOOP
+    PERFORM reputation_emit_subject_role_change_events(
+      affected_party_id, now()
+    );
+  END LOOP;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_security_role_outbox
+  ON security_role;
+CREATE TRIGGER trg_reputation_security_role_outbox
+  AFTER UPDATE OF code, active ON security_role
+  FOR EACH ROW EXECUTE FUNCTION reputation_security_role_outbox_trigger();
+
 CREATE OR REPLACE FUNCTION reputation_claim_aggregation_events(
   p_environment TEXT,
   p_worker_id TEXT,
@@ -919,7 +1022,8 @@ BEGIN
         'appeal.resolved',
         'interaction.invalidated',
         'interaction.restored',
-        'category.applicability_changed'
+        'category.applicability_changed',
+        'subject.role_changed'
       )
   ) THEN
     RAISE EXCEPTION 'Reputation aggregation run source changed after its high-water mark';
@@ -1539,16 +1643,26 @@ GROUP BY event.event_type, event.algorithm_version,
          split_part(event.context_key, ':', 1), event.processing_status;
 
 CREATE OR REPLACE VIEW reputation_worker_processing_metrics AS
-WITH attempts AS (
+WITH sequenced_actions AS (
+  SELECT
+    action.*,
+    count(*) FILTER (WHERE action.action = 'requeued') OVER (
+      PARTITION BY action.event_id
+      ORDER BY action.id
+      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS retry_cycle
+  FROM reputation_aggregation_event_action action
+), attempts AS (
   SELECT
     action.event_id,
+    action.retry_cycle,
     action.attempt_count,
     max(action.created_at) FILTER (WHERE action.action = 'claimed') AS claimed_at,
     max(action.created_at) FILTER (
       WHERE action.action IN ('processed', 'fan_out', 'retry_scheduled', 'dead_lettered')
     ) AS completed_at
-  FROM reputation_aggregation_event_action action
-  GROUP BY action.event_id, action.attempt_count
+  FROM sequenced_actions action
+  GROUP BY action.event_id, action.retry_cycle, action.attempt_count
 )
 SELECT
   event.event_type,
