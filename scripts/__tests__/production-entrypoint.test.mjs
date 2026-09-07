@@ -109,6 +109,26 @@ test('production entrypoint skips asset self-copy for equivalent paths', (contex
   );
 });
 
+test('production entrypoint starts when persistent assets cannot be seeded', (context) => {
+  const current = fixture();
+  mkdirSync(current.servedAssets);
+  writeFileSync(
+    path.join(current.directory, 'bin', 'cp'),
+    '#!/bin/sh\nexit 1\n',
+    { mode: 0o755 },
+  );
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+
+  const result = run(current, {
+    HQ_ASSETS_DIR: current.servedAssets,
+    TDF_PACKAGED_ASSETS_DIR: current.packagedAssets,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /could not synchronize some packaged assets/i);
+  assert.equal(readFileSync(current.serverLog, 'utf8'), 'RUN_MIGRATIONS=false\nAPP_PORT=18881\n');
+});
+
 test('production entrypoint rejects inferred and reviewed migrations together', (context) => {
   const current = fixture();
   context.after(() => rmSync(current.directory, { recursive: true, force: true }));
