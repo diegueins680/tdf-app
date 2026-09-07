@@ -75,6 +75,10 @@ if psql_exec -c "UPDATE reputation_formula_version SET public_parameters=public_
   echo "Active reputation formula parameters allowed in-place mutation" >&2
   exit 1
 fi
+if psql_exec -c "UPDATE reputation_formula_version SET status='draft' WHERE id='public-bayes-roc-v1';" >/dev/null 2>&1; then
+  echo "Active reputation formula could return to draft" >&2
+  exit 1
+fi
 
 psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='staging';" >/dev/null
 if psql_exec -c "UPDATE reputation_worker_control SET enabled=TRUE WHERE environment='test';" >/dev/null 2>&1; then
@@ -142,6 +146,40 @@ assert_equal \
   "$(psql_exec -Atc 'SELECT count(*) FROM reputation_public_aggregate;')" \
   "0" \
   "Public aggregate isolation"
+
+psql_exec -c "UPDATE reputation_interaction SET status='disputed' WHERE id='$interaction_id';" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='interaction.invalidated' AND context_key='service:mix-001';")" \
+  "1" \
+  "Interaction invalidation fan-out"
+invalidation_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-restore-0001', 1, '2030-09-01T12:01:10Z');")
+invalidation_event_id=$(printf '%s' "$invalidation_claim" | cut -d '|' -f 1)
+invalidation_claim_token=$(printf '%s' "$invalidation_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$invalidation_event_id', '$invalidation_claim_token', '2030-09-01T12:01:11Z');")" \
+  "processed" \
+  "Invalidated interaction processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "50.0000:0" \
+  "Invalidated interaction evidence removal"
+
+psql_exec -c "UPDATE reputation_interaction SET status='eligible' WHERE id='$interaction_id';" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested' AND context_key='service:mix-001';")" \
+  "1" \
+  "Restored interaction recalculation fan-out"
+restoration_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-restore-0001', 1, '2030-09-01T12:01:20Z');")
+restoration_event_id=$(printf '%s' "$restoration_claim" | cut -d '|' -f 1)
+restoration_claim_token=$(printf '%s' "$restoration_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$restoration_event_id', '$restoration_claim_token', '2030-09-01T12:01:21Z');")" \
+  "processed" \
+  "Restored interaction processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "50.9091:1" \
+  "Restored interaction evidence recovery"
 
 ordinal_interaction_a="c6100000-0000-4000-8000-000000000001"
 ordinal_evaluation_a="c6100000-0000-4000-8000-000000000002"
@@ -347,6 +385,10 @@ psql_exec -c "
     '2026-09-01T12:05:00Z'
   );
 " >/dev/null
+if psql_exec -c "UPDATE reputation_aggregation_run SET high_water_mark='2031-09-01T12:05:00Z' WHERE id='$run_id';" >/dev/null 2>&1; then
+  echo "Reputation aggregation run high-water mark allowed mutation" >&2
+  exit 1
+fi
 first_run_event=$(psql_exec -Atc "SELECT reputation_enqueue_aggregation_event(
   '$run_event_a', 'recalculation.requested', 102, 'service:mix-001',
   '$category_id', 1, 'public-bayes-roc-v1', '$run_correlation_id', '$run_id',
@@ -364,10 +406,14 @@ assert_equal \
   "1" \
   "Run/source audit uniqueness"
 
-retry_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-test-0001', 1, '2030-09-01T12:03:00Z');")
+psql_exec -c "
+  UPDATE reputation_worker_control SET max_attempts=20 WHERE environment='staging';
+  UPDATE reputation_aggregation_outbox SET attempt_count=19 WHERE id='$stable_event_id';
+" >/dev/null
+retry_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token || '|' || claimed_attempt FROM reputation_claim_aggregation_events('staging', 'worker-test-0001', 1, '2030-09-01T12:03:00Z');")
 retry_event_id=$(printf '%s' "$retry_claim" | cut -d '|' -f 1)
 retry_token=$(printf '%s' "$retry_claim" | cut -d '|' -f 2)
-psql_exec -c "UPDATE reputation_worker_control SET max_attempts=1 WHERE environment='staging';" >/dev/null
+assert_equal "$(printf '%s' "$retry_claim" | cut -d '|' -f 3)" "20" "Maximum claim attempt"
 assert_equal \
   "$(psql_exec -Atc "SELECT reputation_fail_aggregation_event('staging', '$retry_event_id', '$retry_token', 'synthetic_failure', '2030-09-01T12:03:01Z');")" \
   "dead_letter" \
@@ -378,9 +424,32 @@ psql_exec -c "SELECT reputation_requeue_dead_letter_event(
   '2030-09-01T12:04:00Z'
 );" >/dev/null
 assert_equal \
-  "$(psql_exec -Atc "SELECT processing_status || ':' || (last_error_code IS NULL)::text FROM reputation_aggregation_outbox WHERE id='$retry_event_id';")" \
-  "retry:true" \
-  "Audited dead-letter replay"
+  "$(psql_exec -Atc "SELECT processing_status || ':' || attempt_count || ':' || (last_error_code IS NULL)::text FROM reputation_aggregation_outbox WHERE id='$retry_event_id';")" \
+  "retry:0:true" \
+  "Audited dead-letter retry-cycle reset"
+
+run_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-run-0001', 1, '2030-09-01T12:04:01Z');")
+run_claim_event_id=$(printf '%s' "$run_claim" | cut -d '|' -f 1)
+run_claim_token=$(printf '%s' "$run_claim" | cut -d '|' -f 2)
+assert_equal "$run_claim_event_id" "$run_event_a" "Bounded run claim"
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$run_claim_event_id', '$run_claim_token', '2030-09-01T12:04:02Z');")" \
+  "processed" \
+  "Bounded run processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "50.0000:0:$run_event_a" \
+  "Run high-water evidence cutoff"
+
+requeued_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token || '|' || claimed_attempt FROM reputation_claim_aggregation_events('staging', 'worker-requeue-0001', 1, '2030-09-01T12:04:03Z');")
+requeued_event_id=$(printf '%s' "$requeued_claim" | cut -d '|' -f 1)
+requeued_claim_token=$(printf '%s' "$requeued_claim" | cut -d '|' -f 2)
+assert_equal "$requeued_event_id" "$retry_event_id" "Requeued event claim"
+assert_equal "$(printf '%s' "$requeued_claim" | cut -d '|' -f 3)" "1" "Requeued claim attempt"
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$requeued_event_id', '$requeued_claim_token', '2030-09-01T12:04:04Z');")" \
+  "processed" \
+  "Requeued event processing"
 
 if psql_exec -c "UPDATE reputation_aggregation_event_action SET action='processed' WHERE event_id='$retry_event_id';" >/dev/null 2>&1; then
   echo "Reputation event action audit allowed mutation" >&2
@@ -421,7 +490,7 @@ assert_equal \
   "Non-identifying event metric context"
 assert_equal \
   "$(psql_exec -Atc 'SELECT count(*) FROM reputation_worker_processing_metrics WHERE duration_seconds_p95 IS NOT NULL;')" \
-  "2" \
+  "3" \
   "Processing duration metrics"
 
 psql_exec -c "UPDATE reputation_worker_control SET enabled=FALSE WHERE environment='staging';" >/dev/null
@@ -445,4 +514,4 @@ assert_equal \
   "1" \
   "Migration rerun audit-run preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, run/source idempotency, immutable outbox evidence, leasing, simulation isolation, deterministic absolute and ordinal Bayesian aggregation, connected-component and tie handling, removed-subject and category-control fan-out, bounded DLQ, audited replay, non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, immutable formula and run cutoffs, run/source idempotency, immutable outbox evidence, leasing, simulation isolation, deterministic absolute and ordinal Bayesian aggregation, connected-component and tie handling, invalidation/restoration and category-control fan-out, bounded recoverable DLQ cycles, audited replay, non-identifying metrics, and rerun checks."

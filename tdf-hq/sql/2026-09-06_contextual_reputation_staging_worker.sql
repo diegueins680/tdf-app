@@ -54,6 +54,9 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Activated reputation formula versions are immutable';
   END IF;
+  IF OLD.status = 'active' AND NEW.status = 'draft' THEN
+    RAISE EXCEPTION 'Activated reputation formula versions cannot return to draft';
+  END IF;
   IF OLD.status = 'retired' AND NEW.status <> 'retired' THEN
     RAISE EXCEPTION 'Retired reputation formula versions cannot be reactivated';
   END IF;
@@ -86,6 +89,29 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   CHECK ((status IN ('succeeded', 'failed', 'cancelled')) = (completed_at IS NOT NULL)),
   CHECK (completed_at IS NULL OR completed_at >= started_at)
 );
+
+CREATE OR REPLACE FUNCTION reputation_aggregation_run_guard()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF OLD.id IS DISTINCT FROM NEW.id
+     OR OLD.environment IS DISTINCT FROM NEW.environment
+     OR OLD.run_kind IS DISTINCT FROM NEW.run_kind
+     OR OLD.formula_version_id IS DISTINCT FROM NEW.formula_version_id
+     OR OLD.high_water_mark IS DISTINCT FROM NEW.high_water_mark
+     OR OLD.requested_by_party_id IS DISTINCT FROM NEW.requested_by_party_id
+     OR OLD.created_at IS DISTINCT FROM NEW.created_at THEN
+    RAISE EXCEPTION 'Reputation aggregation run identity and high-water mark are immutable';
+  END IF;
+  RETURN NEW;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_aggregation_run_guard
+  ON reputation_aggregation_run;
+CREATE TRIGGER trg_reputation_aggregation_run_guard
+  BEFORE UPDATE ON reputation_aggregation_run
+  FOR EACH ROW EXECUTE FUNCTION reputation_aggregation_run_guard();
 
 CREATE TABLE IF NOT EXISTS reputation_aggregation_outbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -473,6 +499,18 @@ BEGIN
         evaluation_id, 'interaction.invalidated', now()
       );
     END LOOP;
+  ELSIF OLD.status <> 'eligible' AND NEW.status = 'eligible' THEN
+    FOR evaluation_id IN
+      SELECT evaluation.id
+      FROM reputation_evaluation evaluation
+      WHERE evaluation.interaction_id = NEW.id
+        AND evaluation.status = 'submitted'
+      ORDER BY evaluation.id
+    LOOP
+      PERFORM reputation_emit_evaluation_events(
+        evaluation_id, 'recalculation.requested', now()
+      );
+    END LOOP;
   END IF;
   RETURN NEW;
 END $$;
@@ -566,12 +604,23 @@ BEGIN
     SELECT event.id
     FROM reputation_aggregation_outbox event
     WHERE (
-      event.processing_status IN ('pending', 'retry')
-      AND event.available_at <= p_now
-    ) OR (
-      event.processing_status = 'processing'
-      AND event.lease_expires_at <= p_now
+      (
+        event.processing_status IN ('pending', 'retry')
+        AND event.available_at <= p_now
+      ) OR (
+        event.processing_status = 'processing'
+        AND event.lease_expires_at <= p_now
+      )
     )
+      AND (
+        event.run_id IS NULL
+        OR EXISTS (
+          SELECT 1
+          FROM reputation_aggregation_run run
+          WHERE run.id = event.run_id
+            AND run.environment = p_environment
+        )
+      )
     ORDER BY event.available_at, event.occurred_at, event.id
     FOR UPDATE SKIP LOCKED
     LIMIT p_batch_size
@@ -619,6 +668,8 @@ DECLARE
   half_life_days NUMERIC;
   evaluator_cap NUMERIC;
   prior_probability NUMERIC;
+  run_high_water_mark TIMESTAMPTZ;
+  evidence_reference_time TIMESTAMPTZ;
   iteration_index INTEGER;
   component_count INTEGER := 0;
   interaction_count INTEGER := 0;
@@ -638,6 +689,19 @@ BEGIN
      OR event_row.lease_expires_at < p_now THEN
     RAISE EXCEPTION 'Reputation event lease is unavailable';
   END IF;
+
+  IF event_row.run_id IS NOT NULL THEN
+    SELECT run.high_water_mark
+      INTO run_high_water_mark
+    FROM reputation_aggregation_run run
+    WHERE run.id = event_row.run_id
+      AND run.formula_version_id = event_row.algorithm_version
+    FOR SHARE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Reputation aggregation run is unavailable or uses another formula';
+    END IF;
+  END IF;
+  evidence_reference_time := COALESCE(run_high_water_mark, p_now);
 
   IF event_row.category_id IS NULL THEN
     INSERT INTO reputation_aggregation_outbox(
@@ -737,6 +801,10 @@ BEGIN
       AND evaluation.formula_version_id = event_row.algorithm_version
       AND evaluation.status = 'submitted'
       AND evaluation.submitted_at IS NOT NULL
+      AND (
+        run_high_water_mark IS NULL
+        OR evaluation.submitted_at <= run_high_water_mark
+      )
       AND interaction.status = 'eligible'
       AND category.status = 'active'
       AND (
@@ -784,7 +852,10 @@ BEGIN
          rank.absolute_score::numeric / 100,
          power(
            0.5::numeric,
-           GREATEST(0, extract(epoch FROM (p_now - evaluation.submitted_at)) / 86400)
+           GREATEST(
+             0,
+             extract(epoch FROM (evidence_reference_time - evaluation.submitted_at)) / 86400
+           )
              / half_life_days
          )
   FROM reputation_evaluation_rank rank
@@ -799,6 +870,10 @@ BEGIN
     AND evaluation.formula_version_id = event_row.algorithm_version
     AND evaluation.status = 'submitted'
     AND evaluation.submitted_at IS NOT NULL
+    AND (
+      run_high_water_mark IS NULL
+      OR evaluation.submitted_at <= run_high_water_mark
+    )
     AND interaction.status = 'eligible'
     AND category.status = 'active'
     AND (
@@ -824,7 +899,10 @@ BEGIN
          END,
          power(
            0.5::numeric,
-           GREATEST(0, extract(epoch FROM (p_now - evaluation.submitted_at)) / 86400)
+           GREATEST(
+             0,
+             extract(epoch FROM (evidence_reference_time - evaluation.submitted_at)) / 86400
+           )
              / half_life_days
          )
   FROM reputation_evaluation_rank rank_left
@@ -847,6 +925,10 @@ BEGIN
     AND evaluation.formula_version_id = event_row.algorithm_version
     AND evaluation.status = 'submitted'
     AND evaluation.submitted_at IS NOT NULL
+    AND (
+      run_high_water_mark IS NULL
+      OR evaluation.submitted_at <= run_high_water_mark
+    )
     AND interaction.status = 'eligible'
     AND category.status = 'active'
     AND (
@@ -1036,6 +1118,7 @@ BEGIN
       'confidence', confidence_value,
       'distinctEvaluatorCount', evaluator_count,
       'observationCount', observation_count,
+      'runHighWaterMark', run_high_water_mark,
       'verifiedInteractionCount', interaction_count
     ),
     p_now
@@ -1133,7 +1216,7 @@ BEGIN
   END IF;
 
   UPDATE reputation_aggregation_outbox
-  SET processing_status = 'retry', available_at = p_now,
+  SET processing_status = 'retry', attempt_count = 0, available_at = p_now,
       lease_token = NULL, lease_owner_hash = NULL, lease_expires_at = NULL,
       processed_at = NULL, last_error_code = NULL
   WHERE id = event_row.id;
