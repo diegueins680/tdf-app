@@ -8594,13 +8594,43 @@
       "reviewed": true
     },
     {
-      "id": "e961e9a8428c32b9ef29",
+      "id": "80e2ea056ea47fd7129f",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
-      "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
+      "risk": "Changing the migration registry could break deployment execution or skip required schema changes.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "9003c7efcae1bac2cf14",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A client/API mismatch could grant, withdraw, or render the wrong independent consent.",
+      "justification": "Consent kinds are a closed, security-relevant transport union validated by the database and OpenAPI contract; they are not user-managed reputation categories.",
+      "reviewed": true
+    },
+    {
+      "id": "607b195fbacda1cda7ba",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An ungoverned consent value could bypass the independent-consent boundary or make withdrawal ineffective.",
+      "justification": "The schema allowlist is the persisted enforcement boundary for the four independent reputation consents and must match its versioned API contract.",
+      "reviewed": true
+    },
+    {
+      "id": "45f33e33f834798912c3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncontrolled event provenance could weaken the consent audit trail used for disputes and compliance.",
+      "justification": "Consent-event sources are a closed audit-provenance allowlist enforced by the migration, not a user-selectable product catalog.",
       "reviewed": true
     },
     {
