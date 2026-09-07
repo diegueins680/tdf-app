@@ -432,7 +432,7 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing artist-follow evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow, and an access_requested claim requires a Party-bound feature-access request; each record must have been created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
         delete?: never;
@@ -5383,6 +5383,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/access-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the authenticated party's feature access requests
+         * @description Returns only requests submitted by the authenticated Party, newest first. Expired pending requests are transitioned before the list is returned.
+         */
+        get: operations["listMyFeatureAccessRequests"];
+        put?: never;
+        /**
+         * Submit a governed feature access request
+         * @description Creates a pending request for the authenticated Party. This does not assign a role, permission, or effective access.
+         */
+        post: operations["createFeatureAccessRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the reviewer's visible feature access requests
+         * @description Requires a compatible reviewer role and returns only requests the authenticated reviewer is authorized to decide.
+         */
+        get: operations["listFeatureAccessRequestsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-requests/{requestId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Approve or reject a pending feature access request
+         * @description Requires a reviewer authorized for the requested feature action. Approval records a governance decision but does not itself assign a role, permission, or effective access.
+         */
+        patch: operations["decideFeatureAccessRequest"];
+        trace?: never;
+    };
+    "/access-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cancel the authenticated party's pending feature access request
+         * @description A request owned by another Party is not disclosed and returns the same response as a missing request.
+         */
+        patch: operations["cancelFeatureAccessRequest"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7001,7 +7085,7 @@ export interface components {
         };
         OnboardingCompletionRequest: {
             /**
-             * @description Optional successful first useful action. Omit when the user explicitly exits optional onboarding.
+             * @description Optional successful first useful action. artist_followed and access_requested require Party-bound server evidence created during the signup eligibility window. Omit when the user explicitly exits optional onboarding.
              * @enum {string}
              */
             firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
@@ -21073,6 +21157,237 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyFeatureAccessRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests submitted by the authenticated Party */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Access request submitted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Unknown, unavailable, unsupported, non-requestable, or malformed feature request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The Party already has access or an active duplicate request exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listFeatureAccessRequestsForReview: {
+        parameters: {
+            query?: {
+                /** @description Request lifecycle state to review. Defaults to pending. */
+                status?: components["schemas"]["FeatureAccessRequestStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requests visible within the reviewer's governed scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"][];
+                };
+            };
+            /** @description Unsupported status filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Compatible reviewer role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestDecision"];
+            };
+        };
+        responses: {
+            /** @description Updated access request and transition history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Unsupported decision or malformed reviewer notes */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reviewer is unauthorized or attempted to decide their own request */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request or governed feature not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request is no longer pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelFeatureAccessRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureAccessRequestCancel"];
+            };
+        };
+        responses: {
+            /** @description Cancelled access request and transition history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeatureAccessRequest"];
+                };
+            };
+            /** @description Malformed cancellation note */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request not found or owned by another Party */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only pending access requests can be cancelled */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

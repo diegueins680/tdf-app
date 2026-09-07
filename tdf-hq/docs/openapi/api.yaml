@@ -520,7 +520,7 @@ paths:
   /session/onboarding/complete:
     post:
       summary: Complete eligible onboarding idempotently
-      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing artist-follow evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow, and an access_requested claim requires a Party-bound feature-access request; each record must have been created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
       operationId: completeOnboarding
       security:
         - bearerAuth: [ ]
@@ -5883,6 +5883,134 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /access-requests:
+    get:
+      tags: [Access requests]
+      summary: List the authenticated party's feature access requests
+      description: Returns only requests submitted by the authenticated Party, newest first. Expired pending requests are transitioned before the list is returned.
+      operationId: listMyFeatureAccessRequests
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Requests submitted by the authenticated Party
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '401': { description: Authentication required }
+    post:
+      tags: [Access requests]
+      summary: Submit a governed feature access request
+      description: Creates a pending request for the authenticated Party. This does not assign a role, permission, or effective access.
+      operationId: createFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestCreate' }
+      responses:
+        '200':
+          description: Access request submitted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: 'Unknown, unavailable, unsupported, non-requestable, or malformed feature request' }
+        '401': { description: Authentication required }
+        '409': { description: The Party already has access or an active duplicate request exists }
+  /access-requests/review:
+    get:
+      tags: [Access requests]
+      summary: List the reviewer's visible feature access requests
+      description: Requires a compatible reviewer role and returns only requests the authenticated reviewer is authorized to decide.
+      operationId: listFeatureAccessRequestsForReview
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Request lifecycle state to review. Defaults to pending.
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/FeatureAccessRequestStatus'
+            default: pending
+      responses:
+        '200':
+          description: Requests visible within the reviewer's governed scope
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Unsupported status filter }
+        '401': { description: Authentication required }
+        '403': { description: Compatible reviewer role required }
+  /access-requests/{requestId}/decision:
+    patch:
+      tags: [Access requests]
+      summary: Approve or reject a pending feature access request
+      description: Requires a reviewer authorized for the requested feature action. Approval records a governance decision but does not itself assign a role, permission, or effective access.
+      operationId: decideFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestDecision' }
+      responses:
+        '200':
+          description: Updated access request and transition history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Unsupported decision or malformed reviewer notes }
+        '401': { description: Authentication required }
+        '403': { description: Reviewer is unauthorized or attempted to decide their own request }
+        '404': { description: Request or governed feature not found }
+        '409': { description: Request is no longer pending }
+  /access-requests/{requestId}/cancel:
+    patch:
+      tags: [Access requests]
+      summary: Cancel the authenticated party's pending feature access request
+      description: A request owned by another Party is not disclosed and returns the same response as a missing request.
+      operationId: cancelFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestCancel' }
+      responses:
+        '200':
+          description: Cancelled access request and transition history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Malformed cancellation note }
+        '401': { description: Authentication required }
+        '404': { description: Request not found or owned by another Party }
+        '409': { description: Only pending access requests can be cancelled }
 
 security:
   - bearerAuth: [ ]
@@ -7918,7 +8046,7 @@ components:
         firstValue:
           type: string
           enum: [artist_followed, access_requested, event_saved, moment_reaction]
-          description: Optional successful first useful action. Omit when the user explicitly exits optional onboarding.
+          description: Optional successful first useful action. artist_followed and access_requested require Party-bound server evidence created during the signup eligibility window. Omit when the user explicitly exits optional onboarding.
     OnboardingProgress:
       type: object
       required: [eligible, signupCompletedAt, onboardingIntent, completedAt, firstValue, firstValueCompletedAt, updatedAt]
