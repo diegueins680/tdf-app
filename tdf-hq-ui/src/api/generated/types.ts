@@ -5007,6 +5007,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reputation/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the authenticated viewer's independent reputation consents */
+        get: operations["getMyReputationConsents"];
+        /**
+         * Grant or withdraw independent reputation consents
+         * @description Withdrawals take effect immediately and remain available while contextual reputation is disabled.
+         */
+        put: operations["updateMyReputationConsents"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/eligibility": {
         parameters: {
             query?: never;
@@ -10244,6 +10265,11 @@ export interface components {
                 weight: number;
                 notApplicable: boolean;
             }[];
+        };
+        ReputationConsentUpdate: {
+            /** @enum {string} */
+            consentKind: "pilot_participation" | "public_visibility" | "public_rankings" | "rating_reminders";
+            granted: boolean;
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -20124,6 +20150,74 @@ export interface operations {
             };
             /** @description Preference revision conflict or idempotency key conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyReputationConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current consent state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMyReputationConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReputationConsentUpdate"][];
+            };
+        };
+        responses: {
+            /** @description Updated current consent state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or duplicate consent kind */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description New grants unavailable while the feature is disabled */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
