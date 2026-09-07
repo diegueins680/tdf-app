@@ -64,6 +64,8 @@ reviewsProtectedServer user =
        )
   :<|> getPersonalReputationPreference user
   :<|> savePersonalReputationPreference user
+  :<|> getReputationConsents user
+  :<|> updateReputationConsents user
 
 listPublicReviews :: Text -> Text -> Maybe UUID -> Maybe Int -> AppM ExperienceReviewPage
 listPublicReviews rawTargetKind rawTargetId cursor requestedLimit = do
@@ -94,6 +96,8 @@ getPublicReputation :: Int64 -> AppM Value
 getPublicReputation partyId = do
   exists <- jsonRows "SELECT to_jsonb(TRUE) FROM party WHERE id=?" [PersistInt64 partyId]
   when (null exists) (throwError err404 {errBody = "profile not found"})
+  visible <- jsonRows "SELECT to_jsonb(TRUE) FROM reputation_consent_state WHERE party_id=? AND consent_kind='public_visibility' AND granted" [PersistInt64 partyId]
+  when (null visible) (throwError err404 {errBody = "public reputation is unavailable"})
   result <- jsonRows
     ( "SELECT jsonb_build_object('partyId',?::bigint,'formulaVersion','public-bayes-roc-v1',"
    <> "'status',CASE WHEN coalesce(sum(aggregate.verified_count),0)<3 THEN 'forming' ELSE 'published' END,"
@@ -196,6 +200,31 @@ savePersonalReputationPreference user idempotencyKey request = do
           | sqlState sqlError == BS8.pack "23514" ->
               throwError err400 { errBody = "Invalid preference categories or weights" }
         _ -> liftIO (throwIO exception)
+
+reputationConsentKinds :: [Text]
+reputationConsentKinds = ["pilot_participation", "public_visibility", "public_rankings", "rating_reminders"]
+
+getReputationConsents :: AuthedUser -> AppM [Value]
+getReputationConsents user = jsonRows
+  "SELECT jsonb_build_object('consentKind',kind,'granted',coalesce(state.granted,false),'version',coalesce(state.version,0),'updatedAt',state.updated_at) FROM unnest(ARRAY['pilot_participation','public_visibility','public_rankings','rating_reminders']::text[]) kind LEFT JOIN reputation_consent_state state ON state.party_id=? AND state.consent_kind=kind ORDER BY kind"
+  [PersistInt64 (fromSqlKey (auPartyId user))]
+
+updateReputationConsents :: AuthedUser -> [ReputationConsentUpdate] -> AppM [Value]
+updateReputationConsents user updates = do
+  when (null updates || length updates /= length (nub (map consentKind updates)) || any (\update -> consentKind update `notElem` reputationConsentKinds) updates) $
+    throwError err400 { errBody = "Invalid reputation consent update" }
+  cfg <- asks envConfig
+  when (any granted updates && not (contextualReputationEnabled cfg)) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  let partyId = fromSqlKey (auPartyId user)
+  runDB $ mapM_ (persistConsent partyId) updates
+  getReputationConsents user
+  where
+    persistConsent partyId ReputationConsentUpdate{consentKind, granted} = do
+      rows <- rawSql "INSERT INTO reputation_consent_state(party_id,consent_kind,granted,version,updated_at) VALUES (?,?,?,1,now()) ON CONFLICT(party_id,consent_kind) DO UPDATE SET granted=EXCLUDED.granted,version=reputation_consent_state.version+1,updated_at=now() WHERE reputation_consent_state.granted IS DISTINCT FROM EXCLUDED.granted RETURNING version" [PersistInt64 partyId, PersistText consentKind, PersistBool granted] :: SqlPersistT IO [Single Int]
+      case rows of
+        [Single version] -> rawExecute "INSERT INTO reputation_consent_event(party_id,consent_kind,granted,version,source) VALUES (?,?,?,?, 'self_service')" [PersistInt64 partyId, PersistText consentKind, PersistBool granted, PersistInt64 (fromIntegral version)]
+        _ -> pure ()
 
 validatePreferenceSaveRequest :: Text -> ReputationPreferenceSaveRequest -> AppM ()
 validatePreferenceSaveRequest idempotencyKey ReputationPreferenceSaveRequest{expectedRevision, categories} = do

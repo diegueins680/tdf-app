@@ -51,6 +51,14 @@ data ReputationPreferenceSaveRequest = ReputationPreferenceSaveRequest
 instance FromJSON ReputationPreferenceSaveRequest
 instance ToJSON ReputationPreferenceSaveRequest
 
+data ReputationConsentUpdate = ReputationConsentUpdate
+  { consentKind :: Text
+  , granted :: Bool
+  } deriving (Show, Generic)
+
+instance FromJSON ReputationConsentUpdate
+instance ToJSON ReputationConsentUpdate
+
 type RequiredReviewIdempotency =
   Header' '[Required, Strict] "Idempotency-Key" Text
 
@@ -81,3 +89,7 @@ type ReviewsProtectedAPI =
          :> RequiredReviewIdempotency
          :> ReqBody '[JSON] ReputationPreferenceSaveRequest
          :> Put '[JSON] Value
+  :<|> "reputation" :> "consents" :> Get '[JSON] [Value]
+  :<|> "reputation" :> "consents"
+         :> ReqBody '[JSON] [ReputationConsentUpdate]
+         :> Put '[JSON] [Value]
