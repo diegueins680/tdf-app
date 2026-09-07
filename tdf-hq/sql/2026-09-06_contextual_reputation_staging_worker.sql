@@ -531,8 +531,12 @@ BEGIN
   RETURN scheduled_count;
 END $$;
 
-CREATE OR REPLACE FUNCTION reputation_emit_evaluation_events(
+CREATE OR REPLACE FUNCTION reputation_emit_evaluation_tuple_events(
   p_evaluation_id UUID,
+  p_subject_party_id BIGINT,
+  p_context_key TEXT,
+  p_formula_version_id TEXT,
+  p_source_version BIGINT,
   p_event_type TEXT,
   p_occurred_at TIMESTAMPTZ
 )
@@ -540,26 +544,14 @@ RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  evaluation_row RECORD;
   correlation UUID := gen_random_uuid();
   emitted INTEGER := 0;
   target RECORD;
 BEGIN
-  SELECT evaluation.id, evaluation.subject_party_id, evaluation.revision,
-         evaluation.formula_version_id, interaction.context_kind, interaction.context_id
-    INTO evaluation_row
-  FROM reputation_evaluation evaluation
-  JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
-  WHERE evaluation.id = p_evaluation_id;
-
-  IF NOT FOUND THEN
-    RETURN 0;
-  END IF;
-
   FOR target IN
     SELECT pair.subject_party_id, pair.category_id
     FROM (
-      SELECT evaluation_row.subject_party_id AS subject_party_id,
+      SELECT p_subject_party_id AS subject_party_id,
              item.category_id
       FROM reputation_evaluation_category item
       WHERE item.evaluation_id = p_evaluation_id
@@ -572,9 +564,8 @@ BEGIN
   LOOP
     PERFORM reputation_enqueue_aggregation_event(
       gen_random_uuid(), p_event_type, target.subject_party_id,
-      lower(evaluation_row.context_kind) || ':' || evaluation_row.context_id,
-      target.category_id, evaluation_row.revision,
-      evaluation_row.formula_version_id, correlation, NULL, p_occurred_at
+      p_context_key, target.category_id, p_source_version,
+      p_formula_version_id, correlation, NULL, p_occurred_at
     );
     emitted := emitted + 1;
   END LOOP;
@@ -582,29 +573,93 @@ BEGIN
   RETURN emitted;
 END $$;
 
+CREATE OR REPLACE FUNCTION reputation_emit_evaluation_events(
+  p_evaluation_id UUID,
+  p_event_type TEXT,
+  p_occurred_at TIMESTAMPTZ
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  evaluation_row RECORD;
+BEGIN
+  SELECT evaluation.subject_party_id, evaluation.revision,
+         evaluation.formula_version_id, interaction.context_kind,
+         interaction.context_id
+    INTO evaluation_row
+  FROM reputation_evaluation evaluation
+  JOIN reputation_interaction interaction
+    ON interaction.id = evaluation.interaction_id
+  WHERE evaluation.id = p_evaluation_id;
+
+  IF NOT FOUND THEN
+    RETURN 0;
+  END IF;
+
+  RETURN reputation_emit_evaluation_tuple_events(
+    p_evaluation_id,
+    evaluation_row.subject_party_id,
+    lower(evaluation_row.context_kind) || ':' || evaluation_row.context_id,
+    evaluation_row.formula_version_id,
+    evaluation_row.revision,
+    p_event_type,
+    p_occurred_at
+  );
+END $$;
+
 CREATE OR REPLACE FUNCTION reputation_evaluation_outbox_trigger()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
+DECLARE
+  old_context_key TEXT;
+  tuple_changed BOOLEAN;
+  evidence_changed BOOLEAN;
 BEGIN
-  IF TG_OP = 'INSERT' AND NEW.status = 'submitted' THEN
-    PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.submitted', now());
-  ELSIF TG_OP = 'UPDATE'
-     AND NEW.status = 'submitted'
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.status = 'submitted' THEN
+      PERFORM reputation_emit_evaluation_events(
+        NEW.id, 'evaluation.submitted', now()
+      );
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  tuple_changed :=
+    OLD.interaction_id IS DISTINCT FROM NEW.interaction_id
+    OR OLD.subject_party_id IS DISTINCT FROM NEW.subject_party_id
+    OR OLD.formula_version_id IS DISTINCT FROM NEW.formula_version_id;
+  evidence_changed :=
+    tuple_changed
+    OR OLD.evaluator_party_id IS DISTINCT FROM NEW.evaluator_party_id
+    OR OLD.direction IS DISTINCT FROM NEW.direction
+    OR OLD.submitted_at IS DISTINCT FROM NEW.submitted_at
+    OR OLD.revision IS DISTINCT FROM NEW.revision;
+
+  IF OLD.status = 'submitted' AND tuple_changed THEN
+    SELECT lower(interaction.context_kind) || ':' || interaction.context_id
+      INTO old_context_key
+    FROM reputation_interaction interaction
+    WHERE interaction.id = OLD.interaction_id;
+    PERFORM reputation_emit_evaluation_tuple_events(
+      OLD.id, OLD.subject_party_id, old_context_key,
+      OLD.formula_version_id, NEW.revision, 'evaluation.edited', now()
+    );
+  END IF;
+
+  IF NEW.status = 'submitted'
      AND OLD.status = 'draft' THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.submitted', now());
-  ELSIF TG_OP = 'UPDATE'
-     AND NEW.status = 'submitted'
+  ELSIF NEW.status = 'submitted'
      AND OLD.status NOT IN ('draft', 'submitted') THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.edited', now());
-  ELSIF TG_OP = 'UPDATE'
-     AND OLD.status = 'submitted'
+  ELSIF OLD.status = 'submitted'
      AND NEW.status IN ('under_review', 'void') THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.invalidated', now());
-  ELSIF TG_OP = 'UPDATE'
-     AND OLD.status = 'submitted'
+  ELSIF OLD.status = 'submitted'
      AND NEW.status = 'submitted'
-     AND OLD.revision IS DISTINCT FROM NEW.revision THEN
+     AND evidence_changed THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.edited', now());
   END IF;
   RETURN NEW;
@@ -687,10 +742,36 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  evaluation_id UUID;
+  evaluation_row RECORD;
+  context_changed BOOLEAN;
+  old_context_key TEXT;
 BEGIN
-  IF OLD.status = 'eligible' AND NEW.status IN ('disputed', 'void', 'expired') THEN
-    FOR evaluation_id IN
+  context_changed :=
+    OLD.context_kind IS DISTINCT FROM NEW.context_kind
+    OR OLD.context_id IS DISTINCT FROM NEW.context_id;
+  old_context_key := lower(OLD.context_kind) || ':' || OLD.context_id;
+
+  IF OLD.status = 'eligible' AND context_changed THEN
+    FOR evaluation_row IN
+      SELECT evaluation.id, evaluation.subject_party_id,
+             evaluation.formula_version_id, evaluation.revision
+      FROM reputation_evaluation evaluation
+      WHERE evaluation.interaction_id = OLD.id
+        AND evaluation.status IN ('submitted', 'under_review', 'void')
+      ORDER BY evaluation.id
+    LOOP
+      PERFORM reputation_emit_evaluation_tuple_events(
+        evaluation_row.id, evaluation_row.subject_party_id,
+        old_context_key, evaluation_row.formula_version_id,
+        evaluation_row.revision, 'interaction.invalidated', now()
+      );
+    END LOOP;
+  END IF;
+
+  IF OLD.status = 'eligible'
+     AND NEW.status IN ('disputed', 'void', 'expired')
+     AND NOT context_changed THEN
+    FOR evaluation_row IN
       SELECT evaluation.id
       FROM reputation_evaluation evaluation
       WHERE evaluation.interaction_id = NEW.id
@@ -698,11 +779,12 @@ BEGIN
       ORDER BY evaluation.id
     LOOP
       PERFORM reputation_emit_evaluation_events(
-        evaluation_id, 'interaction.invalidated', now()
+        evaluation_row.id, 'interaction.invalidated', now()
       );
     END LOOP;
-  ELSIF OLD.status <> 'eligible' AND NEW.status = 'eligible' THEN
-    FOR evaluation_id IN
+  ELSIF NEW.status = 'eligible'
+     AND (OLD.status <> 'eligible' OR context_changed) THEN
+    FOR evaluation_row IN
       SELECT evaluation.id
       FROM reputation_evaluation evaluation
       WHERE evaluation.interaction_id = NEW.id
@@ -710,7 +792,7 @@ BEGIN
       ORDER BY evaluation.id
     LOOP
       PERFORM reputation_emit_evaluation_events(
-        evaluation_id, 'interaction.restored', now()
+        evaluation_row.id, 'interaction.restored', now()
       );
     END LOOP;
   END IF;
@@ -719,7 +801,7 @@ END $$;
 
 DROP TRIGGER IF EXISTS trg_reputation_interaction_outbox ON reputation_interaction;
 CREATE TRIGGER trg_reputation_interaction_outbox
-  AFTER UPDATE OF status ON reputation_interaction
+  AFTER UPDATE OF status, context_kind, context_id ON reputation_interaction
   FOR EACH ROW EXECUTE FUNCTION reputation_interaction_outbox_trigger();
 
 CREATE OR REPLACE FUNCTION reputation_category_outbox_trigger()
@@ -1076,6 +1158,7 @@ BEGIN
         OR mutation.category_id = event_row.category_id
       )
       AND mutation.event_type IN (
+        'evaluation.submitted',
         'evaluation.edited',
         'evaluation.invalidated',
         'evaluation.erased_or_anonymized',
@@ -1111,7 +1194,27 @@ BEGIN
       FROM reputation_evaluation_rank rank
       JOIN reputation_evaluation evaluation ON evaluation.id = rank.evaluation_id
       JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
+      JOIN reputation_category category ON category.id = rank.category_id
       WHERE rank.compared_party_id = event_row.subject_party_id
+        AND rank.excluded_reason IS NULL
+        AND (rank.position_group IS NOT NULL OR rank.absolute_score IS NOT NULL)
+        AND evaluation.formula_version_id = event_row.algorithm_version
+        AND evaluation.status = 'submitted'
+        AND evaluation.submitted_at IS NOT NULL
+        AND (
+          run_high_water_mark IS NULL
+          OR evaluation.submitted_at <= run_high_water_mark
+        )
+        AND interaction.status = 'eligible'
+        AND category.status = 'active'
+        AND (
+          cardinality(category.applicable_contexts) = 0
+          OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+        )
+        AND reputation_subject_has_applicable_role(
+          rank.compared_party_id,
+          category.applicable_roles
+        )
         AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key
     ) categories
     ON CONFLICT (parent_event_id, subject_party_id, context_key, category_id, algorithm_version)

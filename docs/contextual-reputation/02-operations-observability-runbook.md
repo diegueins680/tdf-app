@@ -68,6 +68,10 @@ categorías: el sujeto principal se combina con sus categorías seleccionadas y
 cada `compared_party_id` solo con el `category_id` de su propia fila de ranking.
 Así una evaluación que compara sujetos distintos en categorías distintas no
 crea candidatos sin evidencia para combinaciones que nunca fueron calificadas.
+Si una evaluación `submitted` cambia de interacción, sujeto o fórmula, el
+productor invalida la tupla anterior y recalcula la nueva aunque la revisión no
+cambie. Una corrección de `context_kind` o `context_id` de una interacción
+elegible aplica la misma regla a sus contextos anterior y nuevo.
 
 Para el modelo Bradley--Terry bayesiano, esa unión es solo el punto de partida:
 el worker debe expandirla al componente conexo de comparaciones dentro del mismo
@@ -159,6 +163,9 @@ señal al cálculo, y rechazar esas contribuciones si son privadas/no verificada
 Eventos administrativos de invalidación, consentimiento, categoría o recálculo
 no requieren una interacción propia: disparan un cálculo desde la fuente
 canónica, que vuelve a filtrar exclusivamente evidencia elegible.
+Un evento global con `category_id = null` expande solo categorías con evidencia
+`submitted`, elegible, aplicable, anterior al corte y de su misma fórmula; nunca
+incorpora rankings draft/void, de otra fórmula o sin valor observable.
 
 ## 5. Concurrencia, reintentos y recuperación
 
@@ -218,11 +225,12 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   mark protegido por el mismo fence de productores; solo entonces el rollback
   vuelve a seleccionar atómicamente esa versión, sin borrar sus filas, mientras
   la nueva se investiga. Como la fuente v1 no conserva versiones históricas de
-  cada fila, un run acotado falla cerrado si el outbox registra una edición,
-  invalidación, eliminación, moderación, restauración o cambio de rol de sujeto
-  posterior a su `high_water_mark` dentro del contexto/categoría. Operaciones
-  debe crear un run nuevo con un corte posterior; nunca forzar la confirmación
-  del snapshot mutable anterior.
+  cada fila, un run acotado falla cerrado si el outbox registra una nueva
+  evaluación —aunque su `submitted_at` haya sido importado con una fecha
+  anterior—, edición, invalidación, eliminación, moderación, restauración o
+  cambio de rol de sujeto posterior a su `high_water_mark` dentro del
+  contexto/categoría. Operaciones debe crear un run nuevo con un corte
+  posterior; nunca forzar la confirmación del snapshot mutable anterior.
   Una fórmula `draft` puede editarse solo antes de que cualquier run la
   referencie. La creación del run bloquea la fila de fórmula y desde entonces
   sus parámetros quedan congelados incluso si el run sigue `planned` o termina;
