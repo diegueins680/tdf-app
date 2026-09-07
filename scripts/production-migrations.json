@@ -415,6 +415,11 @@
       "id": "2026-09-06_user_onboarding_progress",
       "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
       "introducedBy": "64702d26ac2129f96f40b921f943dea907828419"
+    },
+    {
+      "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+      "path": "tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql",
+      "introducedBy": "dfea3d01484395c62b080a4adee270308d0ed912"
     }
   ]
 }
