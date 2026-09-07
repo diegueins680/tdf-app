@@ -141,6 +141,10 @@ test('production migration manifest uses immutable full commit SHAs', () => {
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
+      '../../tdf-hq/sql/2026-08-13_service_storefront_phase0_hardening.sql',
+      '7541ba81474ae699a6de2849ace0baad3623bc7dbffb285d70d611b17ea50b0b',
+    ],
+    [
       '../../tdf-hq/sql/2026-08-13_unified_checkout_core.sql',
       '79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0',
     ],
