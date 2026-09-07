@@ -575,7 +575,7 @@ BEGIN
     END IF;
 
     UPDATE catalog_backfill_run
-    SET status = 'complete',
+    SET status = 'completed',
         scanned_rows = 33,
         mapped_rows = 33,
         ambiguous_rows = 0,

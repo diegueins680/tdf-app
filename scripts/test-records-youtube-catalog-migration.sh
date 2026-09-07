@@ -312,7 +312,7 @@ test "$(psql_exec -Atc "SELECT recording.title_es FROM collection_recording memb
 test "$(psql_exec -Atc "SELECT membership.sort_order FROM collection_recording membership JOIN recording ON recording.id=membership.recording_id WHERE recording.code='legacy-recording-fixture';")" = "34"
 test "$(psql_exec -Atc "SELECT duration_ms FROM recording WHERE code='youtube-recording-Re3lL-myniY';")" = "9062000"
 test "$(psql_exec -Atc "SELECT count(*) FROM catalog_migration_mapping WHERE status='mapped';")" = "33"
-test "$(psql_exec -Atc "SELECT status || ':' || scanned_rows || ':' || mapped_rows FROM catalog_backfill_run WHERE run_code='records-youtube-catalog-2026-09-06';")" = "complete:33:33"
+test "$(psql_exec -Atc "SELECT status || ':' || scanned_rows || ':' || mapped_rows FROM catalog_backfill_run WHERE run_code='records-youtube-catalog-2026-09-06';")" = "completed:33:33"
 test "$(psql_exec -Atc "SELECT source_version FROM catalog_definition WHERE code='records-recordings';")" = "UCx9Jpaw_XDrMtIdzWYlU51g/videos@2026-09-06"
 
 version_before_replay=$(psql_exec -Atc "SELECT sum(version) FROM recording;")
