@@ -3,7 +3,7 @@
 
 module TDF.ServerSpec (spec) where
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 import Control.Exception (bracket, toException, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
@@ -5328,6 +5328,122 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected repeated event-save completion to remain idempotent, got: " <> show serverErr)
+
+        it "requires Party-bound, in-window moment-reaction evidence on publicly visible events" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , hiddenEventEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        partyText ownerPartyId = T.pack (show (fromSqlKey ownerPartyId))
+                        insertMoment eventId momentId isPublic = liftIO $ flip runSqlPool pool $ do
+                            when isPublic $
+                                rawExecute
+                                    "INSERT INTO directory_public_event(id) VALUES (?)"
+                                    [toPersistValue eventId]
+                            rawExecute
+                                "INSERT INTO event_moment(id,event_id) VALUES (?,?)"
+                                [toPersistValue momentId,toPersistValue eventId]
+                        insertMomentReaction reactionId ownerPartyId momentId createdAtValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO event_moment_reaction(id,moment_id,reactor_party_id,created_at) VALUES (?,?,?,?)"
+                                [ PersistText reactionId
+                                , toPersistValue momentId
+                                , PersistText (partyText ownerPartyId)
+                                , toPersistValue createdAtValue
+                                ]
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        completeMomentReaction =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                                )
+                                env
+                    missingEvidence <- completeMomentReaction
+                    insertMoment (1001 :: Int) (2001 :: Int) True
+                    insertMomentReaction "other-party-reaction" otherPartyId (2001 :: Int) now
+                    otherPartyEvidence <- completeMomentReaction
+                    insertMoment (1002 :: Int) (2002 :: Int) True
+                    insertMomentReaction "pre-signup-reaction" partyId (2002 :: Int) (addUTCTime (-1) signupAt)
+                    preSignupEvidence <- completeMomentReaction
+                    insertMoment (1003 :: Int) (2003 :: Int) True
+                    insertMomentReaction "future-reaction" partyId (2003 :: Int) (addUTCTime 3600 now)
+                    futureEvidence <- completeMomentReaction
+                    insertMoment (1004 :: Int) (2004 :: Int) False
+                    insertMomentReaction "hidden-event-reaction" partyId (2004 :: Int) now
+                    hiddenEventEvidence <- completeMomentReaction
+                    insertMoment (1005 :: Int) (2005 :: Int) True
+                    insertMomentReaction "valid-reaction" partyId (2005 :: Int) now
+                    validEvidence <- completeMomentReaction
+                    repeated <- completeMomentReaction
+                    pure
+                        ( missingEvidence
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , hiddenEventEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " moment-reaction evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            assertPending "non-public" hiddenEventEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "moment_reaction"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid moment-reaction evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "moment_reaction"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -15157,6 +15273,23 @@ initializeAuthSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"account_party_id\") REFERENCES \"party\"(\"id\"),\
         \UNIQUE(\"account_party_id\", \"target_kind\", \"target_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"event_id\" INTEGER NOT NULL\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment_reaction\" (\
+        \\"id\" VARCHAR PRIMARY KEY,\
+        \\"moment_id\" INTEGER NOT NULL,\
+        \\"reactor_party_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"moment_id\") REFERENCES \"event_moment\"(\"id\")\
         \)"
         []
 

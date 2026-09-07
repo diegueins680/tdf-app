@@ -647,9 +647,7 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
     }
 
 -- Keep the client completion handshake so existing web/mobile analytics can emit
--- exactly once, but require durable server evidence for actions migrated here.
--- Remaining values retain their current compatibility behavior until their
--- authoritative persistence is available and wired into this check.
+-- exactly once, but require durable server evidence for every named first value.
 onboardingFirstValueEvidenceSatisfied
   :: PartyId
   -> Maybe UTCTime
@@ -683,6 +681,15 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
         Single count:_ -> count > 0
         [] -> False
     (Just "event_saved", Nothing) -> pure False
+    (Just "moment_reaction", Just signupAt) -> do
+      counts <- rawSql
+        "SELECT COUNT(*) FROM event_moment_reaction reaction INNER JOIN event_moment moment ON moment.id=reaction.moment_id INNER JOIN directory_public_event event ON event.id=moment.event_id WHERE reaction.reactor_party_id=CAST(? AS TEXT) AND reaction.created_at>=? AND reaction.created_at<=?"
+        [toPersistValue partyIdValue,toPersistValue signupAt,toPersistValue now]
+        :: SqlPersistT IO [Single Int64]
+      pure $ case counts of
+        Single count:_ -> count > 0
+        [] -> False
+    (Just "moment_reaction", Nothing) -> pure False
     _ -> pure True
 
 authV1Server :: ServerT Api.AuthV1API AppM
