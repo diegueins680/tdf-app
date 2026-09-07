@@ -745,6 +745,14 @@ assert_equal \
   "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$requeued_event_id', '$requeued_claim_token', '2030-09-01T12:04:04Z');")" \
   "processed" \
   "Requeued event processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregation_run_result WHERE run_id='$run_id' AND subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "50.0000:0:$run_event_a" \
+  "Immutable bounded-run result snapshot"
+if psql_exec -c "UPDATE reputation_aggregation_run_result SET score=60 WHERE run_id='$run_id';" >/dev/null 2>&1; then
+  echo "Reputation aggregation run result allowed mutation" >&2
+  exit 1
+fi
 
 cancelled_run_id="c6100000-0000-4000-8000-000000000001"
 cancelled_event_id="c6100000-0000-4000-8000-000000000002"
@@ -785,6 +793,14 @@ assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE source_event_id='$cancelled_event_id';")" \
   "0" \
   "Cancelled run candidate suppression"
+if psql_exec -c "
+  UPDATE reputation_aggregation_run
+  SET status='running', completed_at=NULL
+  WHERE id='$cancelled_run_id';
+" >/dev/null 2>&1; then
+  echo "Terminal reputation aggregation run could be reopened" >&2
+  exit 1
+fi
 
 expired_event_id="c6300000-0000-4000-8000-000000000001"
 expired_correlation_id="c6300000-0000-4000-8000-000000000002"
@@ -1009,6 +1025,20 @@ assert_equal \
   "Retry-cycle-separated processing metrics"
 psql_exec -c "UPDATE reputation_worker_control SET max_attempts=20 WHERE environment='staging';" >/dev/null
 
+health_queue_before=$(psql_exec -Atc "SELECT queue_depth FROM reputation_worker_health WHERE environment='staging';")
+health_planned_event_id="c6510000-0000-4000-8000-000000000001"
+health_planned_correlation_id="c6510000-0000-4000-8000-000000000002"
+psql_exec -c "SELECT reputation_enqueue_aggregation_event(
+  '$health_planned_event_id', 'recalculation.requested', 103,
+  'service:planned-health-001', '$category_id', 1, '$draft_formula_id',
+  '$health_planned_correlation_id', '$draft_run_id',
+  '2030-09-01T12:05:12Z'
+);" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT queue_depth FROM reputation_worker_health WHERE environment='staging';")" \
+  "$health_queue_before" \
+  "Unclaimable planned-run health exclusion"
+
 if psql_exec -c "UPDATE reputation_aggregation_event_action SET action='processed' WHERE event_id='$retry_event_id';" >/dev/null 2>&1; then
   echo "Reputation event action audit allowed mutation" >&2
   exit 1
@@ -1128,5 +1158,9 @@ assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_run WHERE id='$run_id';")" \
   "1" \
   "Migration rerun audit-run preservation"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || observation_count || ':' || source_event_id FROM reputation_aggregation_run_result WHERE run_id='$run_id' AND subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
+  "50.0000:0:$run_event_a" \
+  "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, immutable and run-frozen formula parameters, evidence and role-mutation fenced run cutoffs, claim/completion run lifecycle gating, run/source idempotency, immutable outbox evidence, exact subject/category fan-out, leasing and expired-lease limits, simulation isolation, role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, immutable and run-frozen formula parameters, evidence and role-mutation fenced run cutoffs, irreversible run lifecycle and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category fan-out, leasing and expired-lease limits, simulation isolation, role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, claimable-work health filtering, retry-cycle-separated non-identifying metrics, and rerun checks."

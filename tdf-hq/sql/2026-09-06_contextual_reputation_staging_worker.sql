@@ -138,6 +138,30 @@ BEGIN
      OR OLD.created_at IS DISTINCT FROM NEW.created_at THEN
     RAISE EXCEPTION 'Reputation aggregation run identity and high-water mark are immutable';
   END IF;
+  IF OLD.status IS DISTINCT FROM NEW.status AND NOT (
+    (OLD.status = 'planned' AND NEW.status IN ('running', 'cancelled'))
+    OR
+    (OLD.status = 'running' AND NEW.status IN ('succeeded', 'failed', 'cancelled'))
+  ) THEN
+    RAISE EXCEPTION 'Invalid reputation aggregation run transition % -> %',
+      OLD.status, NEW.status;
+  END IF;
+  IF OLD.started_at IS DISTINCT FROM NEW.started_at AND NOT (
+    OLD.status = 'planned'
+    AND NEW.status = 'running'
+    AND OLD.started_at IS NULL
+    AND NEW.started_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Reputation aggregation run start time is immutable';
+  END IF;
+  IF OLD.completed_at IS DISTINCT FROM NEW.completed_at AND NOT (
+    OLD.status IN ('planned', 'running')
+    AND NEW.status IN ('succeeded', 'failed', 'cancelled')
+    AND OLD.completed_at IS NULL
+    AND NEW.completed_at IS NOT NULL
+  ) THEN
+    RAISE EXCEPTION 'Reputation aggregation run completion time is immutable';
+  END IF;
   RETURN NEW;
 END $$;
 
@@ -244,6 +268,44 @@ CREATE TABLE IF NOT EXISTS reputation_aggregate_candidate (
   PRIMARY KEY(subject_party_id, category_id, context_key, formula_version_id),
   CHECK (lower_bound <= score AND score <= upper_bound)
 );
+
+CREATE TABLE IF NOT EXISTS reputation_aggregation_run_result (
+  run_id UUID NOT NULL
+    REFERENCES reputation_aggregation_run(id) ON DELETE RESTRICT,
+  subject_party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  category_id UUID NOT NULL REFERENCES reputation_category(id) ON DELETE RESTRICT,
+  context_key TEXT NOT NULL,
+  formula_version_id TEXT NOT NULL
+    REFERENCES reputation_formula_version(id) ON DELETE RESTRICT,
+  score NUMERIC(7,4) NOT NULL CHECK (score BETWEEN 0 AND 100),
+  lower_bound NUMERIC(7,4) NOT NULL CHECK (lower_bound BETWEEN 0 AND 100),
+  upper_bound NUMERIC(7,4) NOT NULL CHECK (upper_bound BETWEEN 0 AND 100),
+  verified_interaction_count INTEGER NOT NULL CHECK (verified_interaction_count >= 0),
+  distinct_evaluator_count INTEGER NOT NULL CHECK (distinct_evaluator_count >= 0),
+  observation_count INTEGER NOT NULL CHECK (observation_count >= 0),
+  confidence TEXT NOT NULL,
+  source_event_id UUID NOT NULL
+    REFERENCES reputation_aggregation_outbox(id) ON DELETE RESTRICT,
+  calculated_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY(
+    run_id, subject_party_id, category_id, context_key, formula_version_id
+  ),
+  CHECK (lower_bound <= score AND score <= upper_bound)
+);
+
+CREATE OR REPLACE FUNCTION reputation_reject_run_result_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION 'Reputation aggregation run results are immutable';
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_run_result_immutable
+  ON reputation_aggregation_run_result;
+CREATE TRIGGER trg_reputation_run_result_immutable
+  BEFORE UPDATE OR DELETE ON reputation_aggregation_run_result
+  FOR EACH ROW EXECUTE FUNCTION reputation_reject_run_result_mutation();
 
 CREATE TABLE IF NOT EXISTS reputation_aggregation_event_action (
   id BIGSERIAL PRIMARY KEY,
@@ -1475,6 +1537,30 @@ BEGIN
     source_event_id = EXCLUDED.source_event_id,
     calculated_at = EXCLUDED.calculated_at;
 
+  INSERT INTO reputation_aggregation_run_result(
+    run_id, subject_party_id, category_id, context_key, formula_version_id,
+    score, lower_bound, upper_bound, verified_interaction_count,
+    distinct_evaluator_count, observation_count, confidence,
+    source_event_id, calculated_at
+  )
+  SELECT event_row.run_id, candidate.subject_party_id, candidate.category_id,
+         candidate.context_key, candidate.formula_version_id,
+         candidate.score, candidate.lower_bound, candidate.upper_bound,
+         candidate.verified_interaction_count,
+         candidate.distinct_evaluator_count, candidate.observation_count,
+         candidate.confidence, candidate.source_event_id,
+         candidate.calculated_at
+  FROM reputation_aggregate_candidate candidate
+  JOIN pg_temp.reputation_bt_component_work component
+    ON component.subject_party_id = candidate.subject_party_id
+  WHERE event_row.run_id IS NOT NULL
+    AND candidate.category_id = event_row.category_id
+    AND candidate.context_key = event_row.context_key
+    AND candidate.formula_version_id = event_row.algorithm_version
+  ON CONFLICT (
+    run_id, subject_party_id, category_id, context_key, formula_version_id
+  ) DO NOTHING;
+
   SELECT candidate.verified_interaction_count,
          candidate.distinct_evaluator_count,
          candidate.observation_count,
@@ -1712,7 +1798,15 @@ SELECT
   max(event.updated_at) FILTER (WHERE event.processing_status = 'dead_letter')
     AS last_dead_letter_at
 FROM reputation_worker_control control
-LEFT JOIN reputation_aggregation_outbox event ON TRUE
+LEFT JOIN reputation_aggregation_outbox event
+  ON event.run_id IS NULL
+  OR EXISTS (
+    SELECT 1
+    FROM reputation_aggregation_run run
+    WHERE run.id = event.run_id
+      AND run.environment = control.environment
+      AND run.status = 'running'
+  )
 GROUP BY control.environment, control.enabled, control.simulation_only;
 
 COMMIT;

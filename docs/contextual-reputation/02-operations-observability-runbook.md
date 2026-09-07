@@ -162,6 +162,10 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
 
 ## 5. Concurrencia, reintentos y recuperación
 
+- Cada proceso reclama un evento inmediatamente antes de calcularlo y usa una
+  hora fresca al completar o fallar. El tamaño de lote limita trabajo por tick,
+  no crea un grupo de leases que luego se consume en serie; así otro worker no
+  puede recuperar prematuramente los eventos posteriores del lote.
 - Bloquear de forma acotada por `subject_id + context_key + category_id`, o usar
   versión optimista de proyección; nunca bloquear una cola completa. Un
   recálculo global (`category_id = null`) adquiere todas las llaves de categoría
@@ -189,6 +193,11 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   run está `running`; estados `planned`, `succeeded`, `failed` o `cancelled`
   permanecen sin reclamar. El mismo estado y ambiente se vuelven a verificar
   al completar para que una cancelación también cerque trabajo ya reclamado.
+  Las transiciones son monotónicas: un run terminal no puede reabrirse y todo
+  retry operativo crea un `run_id` nuevo. Cada resultado completo del run se
+  conserva en `reputation_aggregation_run_result`; una proyección candidata
+  posterior puede avanzar sin borrar score, bounds, conteos, confianza, evento
+  fuente ni hora calculada del run anterior.
   No usar el insert histórico no versionado como entrada replay-safe hasta que
   tenga esa garantía y prueba explícita.
 - La versión activa de fórmula debe residir en configuración persistida y ser
@@ -295,7 +304,9 @@ materializar sus paneles, aprobar umbrales y asignar on-call; disponer de las
 vistas no satisface por sí solo ese pendiente. Las métricas de procesamiento
 separan cada ciclo abierto por una acción inmutable `requeued`, incluso cuando
 el contador de intentos vuelve a uno; nunca emparejan un claim nuevo con la
-finalización de un ciclo anterior.
+finalización de un ciclo anterior. La salud de cada ambiente excluye eventos de
+runs `planned` o terminales y eventos de runs pertenecientes a otro ambiente,
+igual que el predicado de claim, para que no produzcan backlog o edad falsos.
 
 El rollback operativo del worker empieza por apagar el gate de base y la
 variable de proceso, sin borrar cola, candidatos, runs ni auditoría:

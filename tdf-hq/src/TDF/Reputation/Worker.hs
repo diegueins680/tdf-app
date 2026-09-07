@@ -11,7 +11,7 @@ module TDF.Reputation.Worker
 
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Exception.Safe (displayException, tryAny)
-import Control.Monad (foldM, forever, unless, void, when)
+import Control.Monad (forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower)
 import Data.Int (Int64)
@@ -128,23 +128,45 @@ reputationWorkerTick
   -> Text
   -> IO (ReputationWorkerStats, ReputationWorkerHealth)
 reputationWorkerTick Env{envPool} settings workerId = do
-  now <- getCurrentTime
-  runSqlPool (scheduleDecayRecalculations settings now) envPool
-  claims <- runSqlPool (claimEvents settings workerId now) envPool
-  stats <- foldM (processClaim envPool settings now) emptyStats claims
+  scheduleNow <- getCurrentTime
+  runSqlPool (scheduleDecayRecalculations settings scheduleNow) envPool
+  stats <- processAvailableClaims
+    envPool settings workerId (rwsBatchSize settings) emptyStats
   health <- runSqlPool (loadWorkerHealth (rwsEnvironment settings)) envPool
   pure (stats, health)
+
+processAvailableClaims
+  :: ConnectionPool
+  -> ReputationWorkerSettings
+  -> Text
+  -> Int
+  -> ReputationWorkerStats
+  -> IO ReputationWorkerStats
+processAvailableClaims envPool settings workerId remaining stats
+  | remaining <= 0 = pure stats
+  | otherwise = do
+      claimNow <- getCurrentTime
+      claims <- runSqlPool
+        (claimEvents settings workerId 1 claimNow) envPool
+      case claims of
+        [] -> pure stats
+        [claim] -> do
+          nextStats <- processClaim envPool settings stats claim
+          processAvailableClaims
+            envPool settings workerId (remaining - 1) nextStats
+        _ -> ioError (userError
+          "Reputation aggregation worker claimed more than one event")
 
 processClaim
   :: ConnectionPool
   -> ReputationWorkerSettings
-  -> UTCTime
   -> ReputationWorkerStats
   -> (Single Text, Single Text, Single Int)
   -> IO ReputationWorkerStats
-processClaim envPool settings now stats (Single eventId, Single claimToken, _) = do
+processClaim envPool settings stats (Single eventId, Single claimToken, _) = do
+  completionNow <- getCurrentTime
   processed <- tryAny $ runSqlPool
-    (completeEvent eventId claimToken now) envPool
+    (completeEvent eventId claimToken completionNow) envPool
   let claimedStats = stats { rwsClaimed = rwsClaimed stats + 1 }
   case processed of
     Right "processed" -> pure claimedStats
@@ -160,8 +182,10 @@ processClaim envPool settings now stats (Single eventId, Single claimToken, _) =
       failClaim "processing_failed" claimedStats
   where
     failClaim errorCode currentStats = do
+      failureNow <- getCurrentTime
       failure <- tryAny $ runSqlPool
-        (failEvent (rwsEnvironment settings) eventId claimToken errorCode now) envPool
+        (failEvent
+          (rwsEnvironment settings) eventId claimToken errorCode failureNow) envPool
       case failure of
         Right "retry" -> pure currentStats
           { rwsRetried = rwsRetried currentStats + 1
@@ -176,13 +200,14 @@ processClaim envPool settings now stats (Single eventId, Single claimToken, _) =
 claimEvents
   :: ReputationWorkerSettings
   -> Text
+  -> Int
   -> UTCTime
   -> SqlPersistT IO [(Single Text, Single Text, Single Int)]
-claimEvents settings workerId now = rawSql
+claimEvents settings workerId batchSize now = rawSql
   "SELECT event_id, claim_token, claimed_attempt FROM reputation_claim_aggregation_events(?,?,?,?)"
   [ PersistText (rwsEnvironment settings)
   , PersistText workerId
-  , PersistInt64 (fromIntegral (rwsBatchSize settings))
+  , PersistInt64 (fromIntegral batchSize)
   , PersistUTCTime now
   ]
 
