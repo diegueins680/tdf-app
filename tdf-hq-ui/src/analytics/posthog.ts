@@ -165,7 +165,10 @@ export function getAnalyticsClient(): AnalyticsClient {
     mask_personal_data_properties: true,
     before_send: (event) => {
       if (event === null) return null;
+      const projectToken = event.properties?.['token'];
       event.properties = sanitizeAnalyticsProperties(event.properties ?? {});
+      // PostHog injects its public project token at the root; application tokens stay stripped.
+      if (projectToken === key) event.properties['token'] = projectToken;
       return event;
     },
   });
