@@ -784,8 +784,28 @@ seedNormalizedRecords now releaseValues recordingValues sessionValues = do
     sessions <- parseSeedValues "recording session" (parseVideoSeed "guests") sessionValues
     seedRecordsCollections now
     mapM_ (seedReleaseRecord now) releases
+    vacateRecordingCollectionOrder
     mapM_ (seedVideoRecording now) recordings
+    appendUnseededRecordingCollectionEntries
+        (maximum (0 : map normalizedVideoSortOrder recordings))
     mapM_ (seedVideoSession now) sessions
+
+-- Development seeds are intentionally replayable. Move every current
+-- membership to a reserved range first so a changed source order cannot hit
+-- the collection's unique (collection_id, sort_order) constraint. Seeded
+-- videos reclaim their canonical positions; unrelated rows are retained after
+-- the seeded range by appendUnseededRecordingCollectionEntries.
+vacateRecordingCollectionOrder :: SqlPersistT IO ()
+vacateRecordingCollectionOrder =
+    rawExecute
+        "WITH ranked AS (SELECT membership.id, row_number() OVER (ORDER BY membership.sort_order, membership.id) AS temporary_order FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id WHERE collection.code='tdf-records-recordings') UPDATE collection_recording membership SET sort_order=-9000000000000000000 + ranked.temporary_order FROM ranked WHERE membership.id=ranked.id"
+        []
+
+appendUnseededRecordingCollectionEntries :: Int -> SqlPersistT IO ()
+appendUnseededRecordingCollectionEntries seededMaximum =
+    rawExecute
+        "WITH ranked AS (SELECT membership.id, row_number() OVER (ORDER BY membership.sort_order, membership.id) AS retained_order FROM collection_recording membership JOIN editorial_collection collection ON collection.id=membership.collection_id WHERE collection.code='tdf-records-recordings' AND membership.sort_order < 0) UPDATE collection_recording membership SET sort_order=? + ranked.retained_order FROM ranked WHERE membership.id=ranked.id"
+        [PersistInt64 (fromIntegral seededMaximum)]
 
 parseSeedValues :: Text -> (Value -> Maybe value) -> [Value] -> SqlPersistT IO [value]
 parseSeedValues label parser values =
@@ -884,7 +904,7 @@ seedVideoRecording now NormalizedVideoSeed{..} = do
     seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
     seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
     rawExecute
-        "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO NOTHING"
+        "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO UPDATE SET sort_order=EXCLUDED.sort_order"
         [PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistText recordingCode]
 
 seedVideoSession :: UTCTime -> NormalizedVideoSeed -> SqlPersistT IO ()
