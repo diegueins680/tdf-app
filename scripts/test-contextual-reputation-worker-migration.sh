@@ -522,6 +522,15 @@ assert_equal \
   "retry:0:true" \
   "Audited dead-letter retry-cycle reset"
 
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_claim_aggregation_events('staging', 'worker-run-0001', 1, '2030-09-01T12:03:59Z');")" \
+  "0" \
+  "Planned run claim suppression"
+psql_exec -c "
+  UPDATE reputation_aggregation_run
+  SET status='running', started_at='2026-09-01T12:05:00Z'
+  WHERE id='$run_id';
+" >/dev/null
 run_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-run-0001', 1, '2030-09-01T12:04:01Z');")
 run_claim_event_id=$(printf '%s' "$run_claim" | cut -d '|' -f 1)
 run_claim_token=$(printf '%s' "$run_claim" | cut -d '|' -f 2)
@@ -612,10 +621,11 @@ psql_exec -c "
   SET status='submitted', submitted_at='2026-09-05T12:00:00Z'
   WHERE id='$fence_evaluation_id';
   INSERT INTO reputation_aggregation_run(
-    id, environment, run_kind, formula_version_id, high_water_mark
+    id, environment, run_kind, formula_version_id, status, high_water_mark,
+    started_at
   ) VALUES (
-    '$fence_run_id', 'staging', 'backfill', 'public-bayes-roc-v1',
-    '2026-09-06T00:00:00Z'
+    '$fence_run_id', 'staging', 'backfill', 'public-bayes-roc-v1', 'running',
+    '2026-09-06T00:00:00Z', '2026-09-06T00:00:00Z'
   );
   SELECT reputation_enqueue_aggregation_event(
     '$fence_event_id', 'recalculation.requested', 102, 'service:fence-001',
@@ -700,15 +710,49 @@ assert_equal \
   "true" \
   "Processing duration metrics"
 
+retired_formula_id="retired-decay-test-v1"
+retired_context_key="service:retired-decay-001"
+psql_exec -c "
+  INSERT INTO reputation_formula_version(
+    id, public_parameters, preference_parameters, status
+  ) VALUES (
+    '$retired_formula_id',
+    '{\"priorStrength\":8,\"priorMean\":50,\"minimumVerifiedRatings\":3,\"halfLifeDays\":365,\"perEvaluatorCap\":0.25}',
+    '{\"method\":\"rank-order-centroid\",\"scale\":100}',
+    'retired'
+  );
+  INSERT INTO reputation_aggregate_candidate(
+    subject_party_id, category_id, context_key, formula_version_id,
+    score, lower_bound, upper_bound, verified_interaction_count,
+    distinct_evaluator_count, observation_count, confidence,
+    publication_state, source_event_id, calculated_at
+  ) VALUES (
+    104, '$category_id', '$retired_context_key', '$retired_formula_id',
+    50, 25, 75, 0, 0, 0, 'forming', 'simulation',
+    '$stable_event_id', '2029-09-01T00:00:00Z'
+  );
+" >/dev/null
 simulation_candidate_count=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")
+processable_candidate_count=$(psql_exec -Atc "
+  SELECT count(*)
+  FROM reputation_aggregate_candidate candidate
+  JOIN reputation_formula_version formula
+    ON formula.id=candidate.formula_version_id
+  WHERE candidate.publication_state='simulation'
+    AND formula.status IN ('active', 'draft');
+")
 decay_event_count_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested';")
 decay_scheduled_count=$(psql_exec -Atc "SELECT reputation_schedule_decay_recalculations('staging', 100, '2030-09-02T12:00:00Z');")
-assert_equal "$decay_scheduled_count" "$simulation_candidate_count" "Daily decay recalculation schedule"
+assert_equal "$decay_scheduled_count" "$processable_candidate_count" "Daily decay recalculation schedule"
 decay_event_count_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested';")
 assert_equal \
   "$((decay_event_count_after - decay_event_count_before))" \
   "$decay_scheduled_count" \
   "Daily decay event fan-out"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested' AND algorithm_version='$retired_formula_id' AND context_key='$retired_context_key';")" \
+  "0" \
+  "Retired formula decay suppression"
 assert_equal \
   "$(psql_exec -Atc "SELECT reputation_schedule_decay_recalculations('staging', 100, '2030-09-02T23:59:59Z');")" \
   "0" \
@@ -734,4 +778,4 @@ assert_equal \
   "1" \
   "Migration rerun audit-run preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, immutable formula and fenced run cutoffs, run/source idempotency, immutable outbox evidence, leasing and expired-lease limits, simulation isolation, adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, immutable formula and fenced run cutoffs, running-run claim gating, run/source idempotency, immutable outbox evidence, leasing and expired-lease limits, simulation isolation, adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, active/draft-only periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, non-identifying metrics, and rerun checks."

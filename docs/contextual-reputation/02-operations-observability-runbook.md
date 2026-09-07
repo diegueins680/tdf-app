@@ -165,11 +165,14 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   confianza indefinidamente. La implementación de staging agenda una vez por
   día UTC un `recalculation.requested` determinista por candidato vencido; su
   UUID incorpora ambiente, sujeto, categoría, contexto, fórmula y día UTC, por
-  lo que ticks repetidos son idempotentes.
+  lo que ticks repetidos son idempotentes. Solo agenda fórmulas `active` o
+  `draft`; una fórmula `retired` no vuelve a crear trabajo periódico.
 - Backfill y simulación usan `run_id` persistente y una clave única de auditoría
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
-  auditorías semánticas. No usar el insert histórico no versionado como entrada
-  replay-safe hasta que tenga esa garantía y prueba explícita.
+  auditorías semánticas. El worker reclama sus eventos únicamente mientras el
+  run está `running`; estados `planned`, `succeeded`, `failed` o `cancelled`
+  permanecen sin reclamar. No usar el insert histórico no versionado como
+  entrada replay-safe hasta que tenga esa garantía y prueba explícita.
 - La versión activa de fórmula debe residir en configuración persistida y ser
   consultada por el lector; no se codifica de forma fija en la API. Una versión
   activada es inmutable: todo cambio de fórmula, umbral o parámetro crea un

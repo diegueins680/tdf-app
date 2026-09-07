@@ -387,6 +387,9 @@ BEGIN
     SELECT candidate.subject_party_id, candidate.category_id,
            candidate.context_key, candidate.formula_version_id
     FROM reputation_aggregate_candidate candidate
+    JOIN reputation_formula_version formula
+      ON formula.id = candidate.formula_version_id
+     AND formula.status IN ('active', 'draft')
     WHERE candidate.publication_state = 'simulation'
       AND candidate.calculated_at < schedule_bucket
       AND NOT EXISTS (
@@ -725,6 +728,7 @@ BEGIN
           FROM reputation_aggregation_run run
           WHERE run.id = event.run_id
             AND run.environment = p_environment
+            AND run.status = 'running'
         )
       )
     ORDER BY event.available_at, event.occurred_at, event.id
