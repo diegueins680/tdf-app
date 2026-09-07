@@ -81,7 +81,7 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, upsertBy, (=.), (==.), (<-.))
+import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
 import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
@@ -621,21 +621,51 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
             (userOnboardingProgressCompletedAt stored)) ->
               pure (Just entity, False)
         | otherwise -> do
-            changed <- updateWhereCount
-              [ UserOnboardingProgressId ==. progressId
-              , UserOnboardingProgressCompletedAt ==. Nothing
-              ]
-              [ UserOnboardingProgressCompletedAt =. Just now
-              , UserOnboardingProgressFirstValue =. firstValueValue
-              , UserOnboardingProgressFirstValueCompletedAt =. (now <$ firstValueValue)
-              , UserOnboardingProgressUpdatedAt =. now
-              ]
-            refreshed <- get progressId
-            pure (Entity progressId <$> refreshed, changed == 1)
+            evidenceSatisfied <- onboardingFirstValueEvidenceSatisfied
+              (auPartyId user)
+              (userOnboardingProgressSignupCompletedAt stored)
+              firstValueValue
+              now
+            if not evidenceSatisfied
+              then pure (Just entity, False)
+              else do
+                changed <- updateWhereCount
+                  [ UserOnboardingProgressId ==. progressId
+                  , UserOnboardingProgressCompletedAt ==. Nothing
+                  ]
+                  [ UserOnboardingProgressCompletedAt =. Just now
+                  , UserOnboardingProgressFirstValue =. firstValueValue
+                  , UserOnboardingProgressFirstValueCompletedAt =. (now <$ firstValueValue)
+                  , UserOnboardingProgressUpdatedAt =. now
+                  ]
+                refreshed <- get progressId
+                pure (Entity progressId <$> refreshed, changed == 1)
   pure OnboardingCompletionResult
     { progress = onboardingProgressToDTO now mProgress
     , newlyCompleted = newlyCompletedValue
     }
+
+-- Keep the client completion handshake so existing web/mobile analytics can emit
+-- exactly once, but require durable server evidence for actions migrated here.
+-- Remaining values retain their current compatibility behavior until their
+-- authoritative persistence is available and wired into this check.
+onboardingFirstValueEvidenceSatisfied
+  :: PartyId
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> UTCTime
+  -> SqlPersistT IO Bool
+onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now =
+  case (firstValueValue, mSignupAt) of
+    (Just "artist_followed", Just signupAt) ->
+      isJust <$> selectFirst
+        [ FanFollowFanPartyId ==. partyIdValue
+        , FanFollowCreatedAt >=. signupAt
+        , FanFollowCreatedAt <=. now
+        ]
+        []
+    (Just "artist_followed", Nothing) -> pure False
+    _ -> pure True
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword

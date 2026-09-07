@@ -5020,12 +5020,12 @@ spec = describe "TDF.Server helpers" $ do
                 googlePartyId
                 googleResult
 
-        it "keeps onboarding progress Party-bound and completion idempotent" $ do
-            (currentResult, updatedResult, firstResult, repeatedResult) <-
+        it "keeps onboarding progress Party-bound, evidence-backed, and completion idempotent" $ do
+            (currentResult, updatedResult, missingEvidenceResult, firstResult, repeatedResult) <-
                 runNoLoggingT $ do
                     pool <- createSqlitePool ":memory:" 1
                     liftIO $ runSqlPool initializeAuthSchema pool
-                    (_, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    (artistPartyId, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
                     now <- liftIO getCurrentTime
                     liftIO $ flip runSqlPool pool $ insert_
                         M.UserOnboardingProgress
@@ -5052,6 +5052,18 @@ spec = describe "TDF.Server helpers" $ do
                             Nothing
                             (DTO.OnboardingIntentUpdate "follow_artists")
                         )
+                    missingEvidence <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "artist_followed"))
+                        )
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.FanFollow
+                            { M.fanFollowFanPartyId = partyId
+                            , M.fanFollowArtistPartyId = artistPartyId
+                            , M.fanFollowCreatedAt = now
+                            }
                     first <- runSessionAction
                         ( completeProgress
                             (Just "Bearer google-token")
@@ -5064,7 +5076,7 @@ spec = describe "TDF.Server helpers" $ do
                             Nothing
                             (DTO.OnboardingCompletionRequest (Just "event_saved"))
                         )
-                    pure (current, updated, first, repeated)
+                    pure (current, updated, missingEvidence, first, repeated)
 
             case currentResult of
                 Right (DTO.OnboardingProgressDTO eligibleValue _ intentValue completedValue _ _ _) -> do
@@ -5077,6 +5089,13 @@ spec = describe "TDF.Server helpers" $ do
                     eligibleValue `shouldBe` True
                     intentValue `shouldBe` Just "follow_artists"
                 Left serverErr -> expectationFailure ("Expected onboarding intent update, got: " <> show serverErr)
+            case missingEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` True
+                    completedValue `shouldBe` Nothing
+                    firstValueValue `shouldBe` Nothing
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected missing follow evidence to fail closed, got: " <> show serverErr)
             case firstResult of
                 Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
                     eligibleValue `shouldBe` False
@@ -14889,6 +14908,18 @@ initializeAuthSchema = do
         \\"first_value_completed_at\" TIMESTAMP NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
+        \"id\" INTEGER PRIMARY KEY,\
+        \"fan_party_id\" INTEGER NOT NULL,\
+        \"artist_party_id\" INTEGER NOT NULL,\
+        \"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
+        \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
         \)"
         []
 

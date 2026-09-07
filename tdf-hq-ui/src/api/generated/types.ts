@@ -432,7 +432,7 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a client-observed successful action, or after an explicit optional-onboarding exit. Repeated calls and calls from accounts outside the eligibility window return newlyCompleted=false. This endpoint deduplicates progress; it does not independently prove that the referenced action occurred.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing artist-follow evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
         delete?: never;
