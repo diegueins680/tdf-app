@@ -81,9 +81,9 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
+import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, toPersistValue, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
+import Database.Persist.Sql (Single (..), fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
@@ -674,6 +674,15 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
         ]
         []
     (Just "access_requested", Nothing) -> pure False
+    (Just "event_saved", Just signupAt) -> do
+      counts <- rawSql
+        "SELECT COUNT(*) FROM directory_favorite favorite INNER JOIN directory_public_event event ON CAST(event.id AS TEXT)=favorite.target_id WHERE favorite.account_party_id=? AND favorite.target_kind='event' AND favorite.created_at>=? AND favorite.created_at<=?"
+        [toPersistValue partyIdValue,toPersistValue signupAt,toPersistValue now]
+        :: SqlPersistT IO [Single Int64]
+      pure $ case counts of
+        Single count:_ -> count > 0
+        [] -> False
+    (Just "event_saved", Nothing) -> pure False
     _ -> pure True
 
 authV1Server :: ServerT Api.AuthV1API AppM

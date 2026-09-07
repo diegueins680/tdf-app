@@ -36,6 +36,7 @@ import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Data.Scientific (toBoundedInteger)
 import Servant
+import Text.Read (readMaybe)
 
 import TDF.API.Directory
 import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
@@ -1089,24 +1090,61 @@ validateReviewBody (Just value) =
   where
     unsafeControl character = isControl character && character `notElem` ['\n','\r','\t']
 
-listFavorites user = jsonRows
-  "SELECT jsonb_build_object('targetKind',favorite.target_kind,'targetId',favorite.target_id,'createdAt',favorite.created_at,'result',CASE WHEN document.entity_id IS NULL THEN NULL ELSE jsonb_build_object('type',document.entity_kind,'id',document.entity_id,'slug',document.slug,'title',document.title,'city',document.city_name) END) FROM directory_favorite favorite LEFT JOIN directory_public_search_document document ON document.entity_kind=favorite.target_kind AND document.entity_id=favorite.target_id WHERE favorite.account_party_id=? ORDER BY favorite.created_at DESC"
-  [toPersistValue (auPartyId user)]
+listFavorites user mTargetKind = do
+  targetKind <- traverse validateTargetKind mTargetKind
+  case targetKind of
+    Nothing -> jsonRows
+      (favoriteSelectSql <> " WHERE favorite.account_party_id=? ORDER BY favorite.created_at DESC")
+      [toPersistValue (auPartyId user)]
+    Just "event" -> jsonRows
+      (favoriteSelectSql <> " INNER JOIN directory_public_event visible_event ON CAST(visible_event.id AS TEXT)=favorite.target_id WHERE favorite.account_party_id=? AND favorite.target_kind='event' ORDER BY favorite.created_at DESC")
+      [toPersistValue (auPartyId user)]
+    Just kind -> jsonRows
+      (favoriteSelectSql <> " WHERE favorite.account_party_id=? AND favorite.target_kind=? ORDER BY favorite.created_at DESC")
+      [toPersistValue (auPartyId user),PersistText kind]
+
+favoriteSelectSql :: Text
+favoriteSelectSql =
+  "SELECT jsonb_build_object('targetKind',favorite.target_kind,'targetId',favorite.target_id,'createdAt',favorite.created_at,'result',CASE WHEN document.entity_id IS NULL THEN NULL ELSE jsonb_build_object('type',document.entity_kind,'id',document.entity_id,'slug',document.slug,'title',document.title,'city',document.city_name) END) FROM directory_favorite favorite LEFT JOIN directory_public_search_document document ON document.entity_kind=favorite.target_kind AND document.entity_id=favorite.target_id"
 
 addFavorite user targetKind targetId = do
-  validateTarget targetKind targetId
-  runDB $ rawExecute "INSERT INTO directory_favorite(account_party_id,target_kind,target_id) VALUES (?,?,?) ON CONFLICT DO NOTHING" [toPersistValue (auPartyId user),PersistText targetKind,PersistText targetId]
+  normalizedKind <- validateTarget targetKind targetId
+  validateFavoriteTargetExists normalizedKind targetId
+  runDB $ rawExecute "INSERT INTO directory_favorite(account_party_id,target_kind,target_id) VALUES (?,?,?) ON CONFLICT DO NOTHING" [toPersistValue (auPartyId user),PersistText normalizedKind,PersistText (T.strip targetId)]
   pure NoContent
 
 removeFavorite user targetKind targetId = do
-  validateTarget targetKind targetId
-  runDB $ rawExecute "DELETE FROM directory_favorite WHERE account_party_id=? AND target_kind=? AND target_id=?" [toPersistValue (auPartyId user),PersistText targetKind,PersistText targetId]
+  normalizedKind <- validateTarget targetKind targetId
+  runDB $ rawExecute "DELETE FROM directory_favorite WHERE account_party_id=? AND target_kind=? AND target_id=?" [toPersistValue (auPartyId user),PersistText normalizedKind,PersistText (T.strip targetId)]
   pure NoContent
 
-validateTarget :: Text -> Text -> AppM ()
+validateTarget :: Text -> Text -> AppM Text
 validateTarget kind identifier = do
-  unless (kind `Set.member` Set.fromList ["profile","classified","event","venue"]) $ throwError err400 {errBody="invalid targetKind"}
+  normalizedKind <- validateTargetKind kind
   when (T.null (T.strip identifier) || T.length identifier>160) $ throwError err400 {errBody="invalid targetId"}
+  pure normalizedKind
+
+validateTargetKind :: Text -> AppM Text
+validateTargetKind rawKind = do
+  let kind = T.toLower (T.strip rawKind)
+  unless (kind `Set.member` Set.fromList ["profile","classified","event","venue"]) $
+    throwError err400 {errBody="invalid targetKind"}
+  pure kind
+
+validateFavoriteTargetExists :: Text -> Text -> AppM ()
+validateFavoriteTargetExists "event" identifier = do
+  eventId <- maybe
+    (throwError err400 {errBody="event targetId must be a positive integer"})
+    pure
+    (readMaybe (T.unpack (T.strip identifier)) :: Maybe Int64)
+  when (eventId <= 0) $
+    throwError err400 {errBody="event targetId must be a positive integer"}
+  visibleCounts <- runDB
+    (rawSql "SELECT COUNT(*) FROM directory_public_event WHERE id=?" [PersistInt64 eventId]
+      :: SqlPersistT IO [Single Int64])
+  when (all (\(Single count) -> count == 0) visibleCounts) $
+    throwError err404 {errBody="event not found or not publicly visible"}
+validateFavoriteTargetExists _ _ = pure ()
 
 listSavedSearches user = jsonRows "SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency,'lastEvaluatedAt',last_evaluated_at,'createdAt',created_at) FROM directory_saved_search WHERE account_party_id=? ORDER BY created_at DESC,id" [toPersistValue (auPartyId user)]
 

@@ -234,14 +234,24 @@ paths:
       tags: [Music directory account]
       operationId: listDirectoryFavorites
       security: [{ bearerAuth: [] }]
-      responses: { '200': { description: Current user's favorites, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryFavorite' } } } } } }
+      parameters:
+        - name: targetKind
+          in: query
+          description: Restrict the Party-scoped result to one supported favorite kind. Mobile saved-event synchronization uses `event`.
+          schema: { $ref: '#/components/schemas/DirectoryEntityType' }
+      responses:
+        '200': { description: Current authenticated Party's favorites, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryFavorite' } } } } }
+        '400': { description: Unsupported target kind }
   /directory/favorites/{targetKind}/{targetId}:
     put:
       tags: [Music directory account]
       operationId: saveDirectoryFavorite
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/TargetKind' }, { $ref: '#/components/parameters/TargetId' }]
-      responses: { '200': { description: Idempotently saved favorite } }
+      responses:
+        '200': { description: Favorite desired state is saved idempotently; event targets must exist in the public event projection }
+        '400': { description: Invalid target kind or identifier }
+        '404': { description: Event target does not exist or is not publicly visible }
     delete:
       tags: [Music directory account]
       operationId: deleteDirectoryFavorite

@@ -5223,6 +5223,112 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected repeated access-request completion to remain idempotent, got: " <> show serverErr)
 
+        it "requires Party-bound, in-window, publicly visible event-save evidence" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , hiddenEventEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertVisibleEvent eventId =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_public_event(id) VALUES (?)"
+                                [toPersistValue eventId]
+                        insertEventFavorite ownerPartyId eventId createdAtValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_favorite(account_party_id,target_kind,target_id,created_at) VALUES (?,'event',?,?)"
+                                [toPersistValue ownerPartyId,PersistText eventId,toPersistValue createdAtValue]
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        completeEventSave =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "event_saved"))
+                                )
+                                env
+                    missingEvidence <- completeEventSave
+                    insertVisibleEvent (901 :: Int)
+                    insertEventFavorite otherPartyId "901" now
+                    otherPartyEvidence <- completeEventSave
+                    insertVisibleEvent (902 :: Int)
+                    insertEventFavorite partyId "902" (addUTCTime (-1) signupAt)
+                    preSignupEvidence <- completeEventSave
+                    insertVisibleEvent (903 :: Int)
+                    insertEventFavorite partyId "903" (addUTCTime 3600 now)
+                    futureEvidence <- completeEventSave
+                    insertEventFavorite partyId "904" now
+                    hiddenEventEvidence <- completeEventSave
+                    insertVisibleEvent (905 :: Int)
+                    insertEventFavorite partyId "905" now
+                    validEvidence <- completeEventSave
+                    repeated <- completeEventSave
+                    pure
+                        ( missingEvidence
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , hiddenEventEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " event-save evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            assertPending "non-public" hiddenEventEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "event_saved"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid event-save evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "event_saved"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated event-save completion to remain idempotent, got: " <> show serverErr)
+
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
             validateOptionalSignupPhone Nothing `shouldBe` Right Nothing
@@ -15034,6 +15140,23 @@ initializeAuthSchema = do
         \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
         \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
         \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_public_event\" (\
+        \\"id\" INTEGER PRIMARY KEY\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_favorite\" (\
+        \\"account_party_id\" INTEGER NOT NULL,\
+        \\"target_kind\" VARCHAR NOT NULL,\
+        \\"target_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"account_party_id\") REFERENCES \"party\"(\"id\"),\
+        \UNIQUE(\"account_party_id\", \"target_kind\", \"target_id\")\
         \)"
         []
 
