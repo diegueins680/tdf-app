@@ -4,7 +4,9 @@ Execution date: 2026-09-06 (America/Guayaquil)
 
 Original audit baseline: `b62ccaa11908ecba062680edde580593d5cf6574`
 
-Continuation baseline: `edbb90e4c98f174946fc39c15d362e4bd9084f3c` (`feature/onboarding-first-ux-20260904`)
+Original continuation baseline: `edbb90e4c98f174946fc39c15d362e4bd9084f3c` (`feature/onboarding-first-ux-20260904`)
+
+Reconciled stacked baseline: `e4ce8403127bc620de430af9e3a8e3cff3941f5f` (`feature/onboarding-first-ux-20260904`)
 
 Working branch: `feature/onboarding-continuity-20260906`
 
@@ -29,9 +31,9 @@ The existing onboarding experiment remains paused. Its exposure state is still d
 | Repository read/write | Available | Isolated worktree `/private/tmp/tdf-onboarding-continuity-20260906` accepted source, test, migration, and report changes. | Safe implementation is possible without touching the user’s unrelated dirty checkout. |
 | Branch and commit | Available | Continuation branch started at `edbb90e4…`; schema commit `64702d26…` was created before the manifest entry. | Migration ancestry is immutable and reviewable. The branch is stacked on root PR #238. |
 | Existing work protection | Available | All continuation work stayed in the isolated worktree; no hard reset, force push, or default-branch mutation occurred. | Unrelated user work remains outside this batch. |
-| Mobile submodule | Available | Required client generation and checks executed against the initialized submodule. Mobile commit `29299d042e0874bd7c49a993dac03245d4edeeaa` was confirmed with `git ls-remote`. | The parent pointer references a published commit, not an unpublishable local object. |
+| Mobile submodule | Available | Required client generation and checks executed against the initialized submodule. Mobile head `03b5f07a3ed850e33bd11804e7b6556ef8faac3b` was pushed after reconciling the advanced stacked base. | The parent pointer references a published commit, not an unpublishable local object. |
 | Runtimes and package managers | Available | Existing Node/npm, TypeScript, Jest, ESLint, OpenAPI generator, Stack/GHC, Docker, and PostgreSQL tooling executed. | Web/mobile/contract/migration verification is supported. |
-| Backend/database | Partial | Disposable PostgreSQL 16 Docker test applied, reapplied, rolled back non-destructively, and reapplied the new migration. A clean optimized Stack build linked the backend and test executables, and the focused onboarding Hspec suite passed 3/3. | Migration and compiler/unit behavior are verified locally; no staging or production database was changed. |
+| Backend/database | Partial | Disposable PostgreSQL 16 Docker test applied, reapplied, rolled back non-destructively, and reapplied the new migration. Before stacked-base reconciliation, a clean optimized Stack build linked the backend and test executables and the focused onboarding Hspec suite passed 3/3. The final rerun remained queued behind an unrelated shared Stack build lock. | Migration behavior and the implementation commit's compiler/unit behavior are verified locally; the final merged-tree Hspec rerun is blocked, and no staging or production database was changed. |
 | Browser/device tooling | Partial | Browser tooling and prior real local screenshots remain available from the 2026-09-05 batch; no browser or native device runtime was launched for this continuation. | Source/unit evidence is not represented as device or browser proof. |
 | Screenshot capability | Available but unused in this batch | Prior actual screenshots remain under `artifacts/ux-audit-2026-09-05/`; no new screenshot was captured. | No fictitious before/after visual evidence is supplied for continuity behavior. |
 | Test runners | Available | Web/mobile Jest, TypeScript, ESLint, Node release tests, catalog audit, migration test, and Stack were invoked. | Executed results are separated from configured or skipped checks. |
@@ -65,7 +67,7 @@ Observed behavior and estimated business impact remain separate. “Verified” 
 | Web `/a/:slugOrId`, `/artista/:slugOrId` | Guest to authenticated Customer/Fan | Responsive web source | Matching target, mismatched/malformed ID, already followed, follow failure/success | Source and helper Jest | Safe explicit resume implemented; component/browser flow untested |
 | Web `/fans` | Anonymous, Customer/Fan, authorized manager | Responsive web source | Loading, eligible, completed, GET failure, dismiss, follow success, account change | Source, API Jest, type/lint | Authenticated durable state implemented; no focused component/E2E test |
 | Web `/solicitudes-acceso/nueva` | Authenticated requester | Responsive web source | Request success/failure, completion sync success/failure | Source and shared completion unit test | First value is requested only after real request success; integration untested |
-| Backend `/session/onboarding*` | Any authenticated Party | All clients | No row, eligible, completed, expired, invalid intent/value, duplicate completion, explicit exit | Haskell source/unit, OpenAPI, migration test | Implemented; clean Stack build and focused 3/3 Hspec pass; concurrency not load-tested |
+| Backend `/session/onboarding*` | Any authenticated Party | All clients | No row, eligible, completed, expired, invalid intent/value, duplicate completion, explicit exit | Haskell source/unit, OpenAPI, migration test | Implemented; pre-reconciliation clean Stack build and focused 3/3 Hspec pass; final merged-tree rerun blocked on shared build lock; concurrency not load-tested |
 | Password/Google signup transaction | Anonymous new account | All clients | Duplicate account, valid/invalid intent, Google existing/new distinction | Haskell source/JSON contract | Atomic marker in source; real PostgreSQL signup journey untested |
 | Mobile auth | Anonymous to authenticated Party | iOS/Android source | Interrupted intent, invalid stored value, login/signup failure/success, safe return, authorized intent fallback | Jest, TypeScript, ESLint | Mock-verified; native runtime untested |
 | Mobile first-run gate | New/returning authenticated Party | iOS/Android source | GET success/failure, account change, complete success/failure, repeat completion | Provider/gate Jest | Server-backed and fail-closed; no two-device runtime |
@@ -151,16 +153,17 @@ No uplift, completion rate, or conversion rate is claimed. The completion endpoi
 | Canonical web + required mobile API generation | Passed; generated clients match byte-for-byte | Clients reflect the same OpenAPI; not runtime compatibility by itself. |
 | Focused web Jest (`session`, onboarding analytics, artist intent) | 3 suites / 12 tests passed | Request shapes, duplicate event suppression, and safe artist binding pass with mocks. |
 | Web TypeScript | Passed | Current web client compiles. |
-| Web ESLint | Full source passed with `--quiet`; final focused changed-file run reported 0 errors and 17 pre-existing `prefer-nullish-coalescing` warnings in untouched Fan Hub expressions, and the same focused scope passed with `--quiet` | No lint error was reported in the executed scope; the final changed-file scope is not warning-clean. |
+| Web ESLint | Final configured full-source lint exited 0 with 0 errors and 102 existing warnings; a direct full-source `eslint --quiet` run passed | The final merged web source has no lint errors; it is not warning-clean. Seventeen warnings remain in untouched Fan Hub value-normalization expressions. |
+| Web production build | Passed; Vite built 12,414 modules and the repository initial-bundle check reported 5 preloads / 412,160 gzip bytes | The final merged web tree produces a production bundle and passes its configured initial budget; Vite still warns about chunks above 500 kB. |
 | Mobile initial focused Jest | 7 suites / 37 tests passed | Auth/provider/gate/API completion behavior with mocks. |
-| Mobile full Jest | 66 suites / 329 tests passed | Full mobile JavaScript test collection ran; not native device/backend integration. |
+| Mobile full Jest | 66 suites / 331 tests passed after stacked-base reconciliation | Full mobile JavaScript test collection ran; not native device/backend integration. |
 | Mobile follow-up auth Jest | 1 suite / 14 tests passed | Existing-login intent fallback resumes Social. |
-| Required mobile TypeScript and ESLint | Passed after follow-up | Final mobile TypeScript compiles and lint has zero warnings. |
+| Required mobile TypeScript and ESLint | Passed after stacked-base reconciliation | Final mobile TypeScript compiles and lint has zero warnings. |
 | Onboarding migration PostgreSQL test | Passed | Fresh/repeat apply, constraints, FK cascade, non-destructive rollback, and reapply work on disposable PostgreSQL 16. |
 | Production-release Node tests | 49/49 passed | Manifest/SHA/release/schema-verifier invariants pass; no deployment. |
 | CI-pipeline Node tests | 16/16 passed | Changed scopes retain required CI selection. |
 | Catalog list audit | Passed | No unreviewed/stale scanned list remained in the audited tree. Intent remains a documented transitional duplicated catalog. |
-| Backend Stack compile/link plus focused Hspec | Clean optimized backend and test executables linked; focused onboarding suite passed 3/3 in 0.0144 seconds | Intent/value validation, authoritative eligibility, Party-bound session persistence, and idempotent completion pass locally; not staging/production. |
+| Backend Stack compile/link plus focused Hspec | Before stacked-base reconciliation, clean optimized backend and test executables linked and the focused onboarding suite passed 3/3 in 0.0144 seconds. The final rerun produced only repeated build-lock waits and was terminated without a test result. | Intent/value validation, authoritative eligibility, Party-bound session persistence, and idempotent completion pass on the implementation commit; final merged-tree backend regression remains unverified, and this is not staging/production proof. |
 | `git diff --check` | Clean at review snapshots | No whitespace errors; not functional proof. |
 
 The full web Jest suite was attempted and reproduced the unrelated `CourseRegistrationsAdminPage.test.tsx` timeout/overlapping-`act()` cascade already recorded by the first-batch baseline, followed by another unrelated `PromoCodeField` failure. The noisy run was stopped after those failures; the three touched onboarding suites were rerun separately and passed 12/12. No test was disabled or assertion weakened.
@@ -196,7 +199,7 @@ Web:
 - `tdf-hq-ui/src/i18n/locales/es.ts`
 - `tdf-hq-ui/src/i18n/locales/en.ts`
 
-Mobile commit `29299d042e0874bd7c49a993dac03245d4edeeaa`:
+Mobile implementation commits `c1421e0b14509713daa3bcd7cf3bffaca5d475aa` and `29299d042e0874bd7c49a993dac03245d4edeeaa`, reconciled head `03b5f07a3ed850e33bd11804e7b6556ef8faac3b`:
 
 - `src/api/onboarding.ts` and generated types
 - `src/lib/onboardingIntent.ts`, `src/lib/firstRunFlags.ts`
@@ -240,8 +243,10 @@ No participant was contacted and no session result, quotation, completion rate, 
 
 ## 15. Branch and pull-request handoff
 
-- Root: `feature/onboarding-continuity-20260906`, commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, stacked on `feature/onboarding-first-ux-20260904` / draft PR #238. Draft PR: https://github.com/diegueins680/tdf-app/pull/241.
-- Mobile: `feature/onboarding-continuity-20260906`, commits `c1421e0b14509713daa3bcd7cf3bffaca5d475aa` and `29299d042e0874bd7c49a993dac03245d4edeeaa`. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, stacked on `feature/onboarding-first-ux-20260905` / PR #39.
+- Root: `feature/onboarding-continuity-20260906`, implementation commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, reconciled through `1837b7d71a859cc98978ad27fcdf269f364df3cd` onto `feature/onboarding-first-ux-20260904` / draft PR #238. Draft PR: https://github.com/diegueins680/tdf-app/pull/241.
+- Mobile: `feature/onboarding-continuity-20260906`, implementation commits `c1421e0b14509713daa3bcd7cf3bffaca5d475aa` and `29299d042e0874bd7c49a993dac03245d4edeeaa`, reconciled head `03b5f07a3ed850e33bd11804e7b6556ef8faac3b`. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, stacked on `feature/onboarding-first-ux-20260905` / PR #39.
 - No PR was merged and no production deployment was performed.
 
-At the last pre-publication check, `origin/main` was `850a7b63dfa08395c312443d4faf57f9baad636d`, 47 commits ahead of and 13 commits behind the current stacked root history; their merge base remains the original audited baseline `b62ccaa…`. Reviewers must update/reconcile the stacked branch and rerun CI before merge rather than treating local green checks as current-main integration proof.
+At the final local reconciliation, the stacked root base was `e4ce8403127bc620de430af9e3a8e3cff3941f5f` and included `origin/main` at `850a7b63dfa08395c312443d4faf57f9baad636d`. Both continuation branches were reconciled onto their advanced stacked bases and every independently runnable affected gate was rerun. Reviewers must still respect the stacked PR order and rerun CI after any further base movement rather than treating local green checks as future integration proof.
+
+An existing workspace `continuous-improvement-loop[bot]` process created the mobile-pointer commit and both stacked-base merge commits while this work was active. Those commits were inspected and their merged trees were validated; this task did not start that process. The final backend rerun remained blocked by a separate optimized Stack process holding the shared build lock.
