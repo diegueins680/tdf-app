@@ -5,6 +5,8 @@ import { resolveApiBase } from '../config/apiBase';
 const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
 const AUTH_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servicio. Revisa tu conexión e inténtalo de nuevo.';
+const AUTH_TIMEOUT_ERROR_MESSAGE = 'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.';
+const AUTH_REQUEST_TIMEOUT_MS = 30_000;
 const RETRYABLE_UNAVAILABLE_STATUS = 503;
 const LOGIN_RETRY_DELAYS_MS = [1000, 2000, 5000];
 const MAX_RETRY_DELAY_MS = 15_000;
@@ -56,12 +58,26 @@ const readConfiguredRetryDelayMs = (retryDelaysMs: readonly number[], attempt: n
   retryDelaysMs[attempt] ?? retryDelaysMs[retryDelaysMs.length - 1] ?? 0;
 
 const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const controller = new AbortController();
+  const callerSignal = init?.signal;
+  const abortForCaller = () => controller.abort();
+  if (callerSignal?.aborted) {
+    controller.abort();
+  } else {
+    callerSignal?.addEventListener('abort', abortForCaller, { once: true });
+  }
+  const timeoutId = setTimeout(() => controller.abort(), AUTH_REQUEST_TIMEOUT_MS);
+
   try {
-    return await fetch(input, init);
+    return await fetch(input, { ...init, signal: controller.signal });
   } catch (err) {
-    const wrapped = new Error(AUTH_NETWORK_ERROR_MESSAGE);
+    const timeout = controller.signal.aborted && !callerSignal?.aborted;
+    const wrapped = new Error(timeout ? AUTH_TIMEOUT_ERROR_MESSAGE : AUTH_NETWORK_ERROR_MESSAGE);
     (wrapped as Error & { cause?: unknown }).cause = err;
     throw wrapped;
+  } finally {
+    clearTimeout(timeoutId);
+    callerSignal?.removeEventListener('abort', abortForCaller);
   }
 };
 

@@ -1,0 +1,42 @@
+{
+  "capturedAt": "2026-09-05",
+  "route": "/login",
+  "environment": {
+    "browser": "Playwright Chromium headless",
+    "deviceProfile": "Pixel 7",
+    "locale": "es-EC",
+    "timezone": "America/Guayaquil",
+    "cpuThrottlingRate": 4,
+    "network": {
+      "latencyMs": 150,
+      "downloadBytesPerSecond": 200000,
+      "uploadBytesPerSecond": 93750,
+      "connectionType": "cellular3g"
+    },
+    "runsPerVariant": 5,
+    "baselineCommit": "b62ccaa11908ecba062680edde580593d5cf6574"
+  },
+  "limitations": [
+    "This is a local laboratory comparison, not representative field data at the 75th percentile.",
+    "INP was not measured because the script did not perform a representative user interaction.",
+    "The two previews ran on the same host and were measured sequentially; small differences are noise-prone."
+  ],
+  "baseline": [
+    { "fcpMs": 3504, "lcpMs": 4604, "cls": 0.0385, "domContentLoadedMs": 2973, "loadMs": 5204 },
+    { "fcpMs": 3208, "lcpMs": 4232, "cls": 0.0385, "domContentLoadedMs": 2743, "loadMs": 4866 },
+    { "fcpMs": 3188, "lcpMs": 4264, "cls": 0.0385, "domContentLoadedMs": 2719, "loadMs": 4991 },
+    { "fcpMs": 3240, "lcpMs": 4324, "cls": 0.0385, "domContentLoadedMs": 2744, "loadMs": 5013 },
+    { "fcpMs": 3328, "lcpMs": 4440, "cls": 0.0385, "domContentLoadedMs": 2772, "loadMs": 5097 }
+  ],
+  "after": [
+    { "fcpMs": 3288, "lcpMs": 4388, "cls": 0.0385, "domContentLoadedMs": 2760, "loadMs": 5241 },
+    { "fcpMs": 3312, "lcpMs": 4360, "cls": 0.0385, "domContentLoadedMs": 2757, "loadMs": 4990 },
+    { "fcpMs": 3296, "lcpMs": 4376, "cls": 0.0385, "domContentLoadedMs": 2763, "loadMs": 5000 },
+    { "fcpMs": 3300, "lcpMs": 4344, "cls": 0.0385, "domContentLoadedMs": 2761, "loadMs": 4963 },
+    { "fcpMs": 3276, "lcpMs": 4336, "cls": 0.0385, "domContentLoadedMs": 2764, "loadMs": 5131 }
+  ],
+  "median": {
+    "baseline": { "fcpMs": 3240, "lcpMs": 4324, "cls": 0.0385, "domContentLoadedMs": 2744, "loadMs": 5013 },
+    "after": { "fcpMs": 3296, "lcpMs": 4360, "cls": 0.0385, "domContentLoadedMs": 2761, "loadMs": 5000 }
+  }
+}

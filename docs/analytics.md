@@ -35,7 +35,7 @@ Both keys are **client-side** PostHog project keys (start with `phc_`). They are
 
 | Event | Surface | Emitter | Properties |
 |---|---|---|---|
-| `$identify` | mobile + web | on partyId becoming known | `partyId` (distinct id), `username`, `displayName`, `roles` (web only — mobile auth currently only exposes partyId) |
+| `$identify` | mobile + web | on partyId becoming known | opaque `partyId` distinct id only; no person properties |
 | `$screen` (mobile) / `$pageview` (web) | mobile + web | PostHog autocapture | route, screen name |
 | `experiment_assigned` | mobile (web TODO when ExperimentProvider lands on web) | `ExperimentProvider` on first assignment | `experimentId`, `variant`, `source: 'client_local'` |
 | `experiment_viewed`, `experiment_converted`, … | mobile + web | wherever `useExperimentEvent().track(...)` is called | `experimentId`, `variant`, free-form metadata |
@@ -88,7 +88,9 @@ These are the ones #128 will read. They are NOT emitted by this PR — they land
 ## What we deliberately do NOT do
 
 - **No session recording.** Disabled at init on both surfaces. Turn on per-context only with explicit user consent.
-- **No raw email / phone in event properties.** Use `partyId` and let PostHog person-properties carry contact info via `identify`.
+- **No personal or credential data in analytics.** Identify only with opaque `partyId`. Never send email, phone, username, display name, roles, passwords, tokens, OAuth codes/state, or free-text personal information as event or person properties.
+- **Sensitive URLs are redacted before delivery.** Web analytics masks credential-bearing query values such as reset tokens and OAuth code/state. New URL-bearing events must use the shared sanitizer and its sentinel-secret regression test.
+- **DOM autocapture is disabled.** Track only reviewed, named events from the shared taxonomy so labels and user-authored text are not collected implicitly.
 - **No server-side event emission for v1.** When we add it for high-value actions (e.g. RSVP broadcast confirmation from `tdf-hq` Haskell), it gets its own doc + a PostHog `phs_` key in the Haskell env, not in the client envs.
 - **No experiment assignment on the server yet.** `ExperimentProvider` still rolls dice client-side. When traffic grows enough that sticky-across-devices assignment matters, swap to PostHog feature flags.
 

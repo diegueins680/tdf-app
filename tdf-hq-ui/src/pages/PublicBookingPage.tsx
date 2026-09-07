@@ -3,6 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
+  clearSessionPersonalData,
+  readSessionPersonalData,
+  writeSessionPersonalData,
+} from '../utils/sessionPersonalData';
+import {
   Alert,
   Autocomplete,
   Box,
@@ -467,7 +472,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (typeof window === 'undefined') return;
     appliedStoredProfile.current = true;
     try {
-      const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+      const raw = readSessionPersonalData(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
       const nextService =
@@ -527,7 +532,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!rememberProfile) {
-      window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+      clearSessionPersonalData(PROFILE_STORAGE_KEY);
       return;
     }
     const payload = {
@@ -536,7 +541,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       phone: form.phone.trim(),
       serviceOfferingId: form.serviceOfferingId,
     };
-    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(payload));
+    writeSessionPersonalData(PROFILE_STORAGE_KEY, JSON.stringify(payload));
   }, [rememberProfile, form.fullName, form.email, form.phone, form.serviceOfferingId]);
 
   useEffect(() => {
@@ -1561,16 +1566,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                 </Grid>
                 <Grid item xs={12}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                    <Button
-                      variant="outlined"
-                      component={RouterLink}
-                      to={checkoutSuccess
-                        ? `/reservas/orden/${success.bookingId}`
-                        : '/login?redirect=/estudio/calendario'}
-                      size="medium"
-                    >
-                      {checkoutSuccess ? 'Seguir esta orden' : 'Ver mi reserva'}
-                    </Button>
+                    {checkoutSuccess && (
+                      <Button
+                        variant="outlined"
+                        component={RouterLink}
+                        to={`/reservas/orden/${success.bookingId}`}
+                        size="medium"
+                      >
+                        Seguir esta orden
+                      </Button>
+                    )}
                     <Button variant="contained" size="medium" onClick={resetForm}>
                       Crear otra reserva
                     </Button>
@@ -1910,7 +1915,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                 disabled={formDisabled}
                               />
                               <Typography variant="body2" color="text.secondary">
-                                Recordar mis datos en este navegador para la próxima vez.
+                                Recordar mis datos mientras esta pestaña siga abierta.
                               </Typography>
                               <Button
                                 size="small"
