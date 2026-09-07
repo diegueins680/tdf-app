@@ -5113,6 +5113,7 @@ spec = describe "TDF.Server helpers" $ do
             ( missingEvidenceResult
                 , otherPartyEvidenceResult
                 , preSignupEvidenceResult
+                , futureEvidenceResult
                 , validEvidenceResult
                 , repeatedResult
                 ) <-
@@ -5174,6 +5175,11 @@ spec = describe "TDF.Server helpers" $ do
                         (addUTCTime (-1) signupAt)
                         "pre-signup-request"
                     preSignupEvidence <- completeAccessRequest
+                    insertAccessRequest
+                        partyId
+                        (addUTCTime 3600 now)
+                        "future-request"
+                    futureEvidence <- completeAccessRequest
                     insertAccessRequest partyId now "in-window-request"
                     validEvidence <- completeAccessRequest
                     repeated <- completeAccessRequest
@@ -5181,11 +5187,12 @@ spec = describe "TDF.Server helpers" $ do
                         ( missingEvidence
                         , otherPartyEvidence
                         , preSignupEvidence
+                        , futureEvidence
                         , validEvidence
                         , repeated
                         )
 
-            let assertPending label result =
+            let assertPending evidenceLabel result =
                     case result of
                         Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
                             eligibleValue `shouldBe` True
@@ -5194,10 +5201,11 @@ spec = describe "TDF.Server helpers" $ do
                             newlyCompletedValue `shouldBe` False
                         Left serverErr ->
                             expectationFailure
-                                ("Expected " <> label <> " evidence to leave onboarding pending, got: " <> show serverErr)
+                                ("Expected " <> evidenceLabel <> " evidence to leave onboarding pending, got: " <> show serverErr)
             assertPending "missing" missingEvidenceResult
             assertPending "other-Party" otherPartyEvidenceResult
             assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
             case validEvidenceResult of
                 Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
                     eligibleValue `shouldBe` False
