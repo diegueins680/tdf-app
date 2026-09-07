@@ -49,4 +49,29 @@ describe('public routes', () => {
       document.body.removeChild(container);
     }
   });
+
+  it.each([
+    ['/privacidad', 'Privacidad y reputación'],
+    ['/apelaciones', 'Apelaciones de reputación'],
+  ])('renders the public reputation rights route %s', async (path, expectedHeading) => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let root: Root | null = createRoot(container);
+
+    try {
+      await act(async () => {
+        root?.render(<MemoryRouter initialEntries={[path]}><Routes>{renderPublicRoutes()}</Routes></MemoryRouter>);
+        await flushPromises();
+        await flushPromises();
+      });
+      expect(container.textContent).toContain(expectedHeading);
+    } finally {
+      await act(async () => {
+        root?.unmount();
+        await flushPromises();
+      });
+      root = null;
+      document.body.removeChild(container);
+    }
+  });
 });
