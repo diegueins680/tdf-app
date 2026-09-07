@@ -405,6 +405,11 @@
       "id": "2026-09-06_records_youtube_catalog",
       "path": "tdf-hq/sql/2026-09-06_records_youtube_catalog.sql",
       "introducedBy": "0258057e726097c584a4619ad521c1ee2740639c"
+    },
+    {
+      "id": "2026-09-07_service_storefront_package_bounds_repair",
+      "path": "tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql",
+      "introducedBy": "e84cfa0e495034a0b321e3510cd84611609bcc76"
     }
   ]
 }
