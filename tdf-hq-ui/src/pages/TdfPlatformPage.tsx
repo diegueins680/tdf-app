@@ -36,7 +36,7 @@ import { STUDIO_MAP_URL } from '../config/appConfig';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
 import { formatNumberForUser } from '../utils/formatters';
 
-const GENERAL_SIGNUP_PATH = '/login?signup=1&intent=follow_artists&redirect=/fans';
+const GENERAL_SIGNUP_PATH = '/login?signup=1';
 const FAN_SIGNUP_PATH = '/login?signup=1&intent=follow_artists&redirect=/fans';
 const ARTIST_SIGNUP_PATH = '/login?signup=1&intent=artist_profile';
 const HERO_VIDEO_SRC = '/videos/music-hero.mp4';

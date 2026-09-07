@@ -956,8 +956,8 @@ export default function TdfDomoCampaignPage() {
                           <TableCell>Rol</TableCell>
                           <TableCell>Uso</TableCell>
                           <TableCell>Fases</TableCell>
-                          <TableCell sx={{ minWidth: 160 }}>Estado</TableCell>
-                          <TableCell sx={{ minWidth: 220 }}>Notas</TableCell>
+                          <TableCell id="video-status-column" sx={{ minWidth: 160 }}>Estado</TableCell>
+                          <TableCell id="video-notes-column" sx={{ minWidth: 220 }}>Notas</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -965,7 +965,7 @@ export default function TdfDomoCampaignPage() {
                           const tracking = tracker.assetStatuses[String(asset.id)] ?? { status: 'pendiente', notes: '' };
                           return (
                             <TableRow key={asset.id}>
-                              <TableCell>
+                              <TableCell id={`video-${asset.id}-label`} component="th" scope="row">
                                 <Typography fontWeight={850}>Video {asset.id}</Typography>
                                 <Typography variant="body2" color="text.secondary">{asset.title}</Typography>
                               </TableCell>
@@ -987,6 +987,9 @@ export default function TdfDomoCampaignPage() {
                                     const status = event.target.value;
                                     updateAsset(asset.id, { status: isCreativeAssetStatus(status) ? status : 'pendiente' });
                                   }}
+                                  inputProps={{
+                                    'aria-labelledby': `video-${asset.id}-label video-status-column`,
+                                  }}
                                   fullWidth
                                 >
                                   {CREATIVE_ASSET_STATUS_OPTIONS.map((status) => (
@@ -1002,6 +1005,9 @@ export default function TdfDomoCampaignPage() {
                                   placeholder="Hook, corte, pauta, pendiente"
                                   value={tracking.notes}
                                   onChange={(event) => updateAsset(asset.id, { notes: event.target.value })}
+                                  inputProps={{
+                                    'aria-labelledby': `video-${asset.id}-label video-notes-column`,
+                                  }}
                                   fullWidth
                                 />
                               </TableCell>

@@ -170,12 +170,14 @@ function collectOpeningTags(source, tagName) {
 
 export function auditUiSource(source, filePath) {
   const findings = [];
+  const hasAccessibleName = (tag) =>
+    /\b(?:aria-label|aria-labelledby)\b["']?\s*[:=]/.test(tag);
   const rules = [
     {
       name: 'icon-button-label',
       severity: 'error',
       tags: collectOpeningTags(source, 'IconButton'),
-      passes: (tag) => /\baria-label\s*=/.test(tag) || /\baria-labelledby\s*=/.test(tag),
+      passes: hasAccessibleName,
       message: 'IconButton is missing an explicit accessible label.',
     },
     {
@@ -184,8 +186,7 @@ export function auditUiSource(source, filePath) {
       tags: collectOpeningTags(source, 'TextField'),
       passes: (tag) =>
         /\blabel\s*=/.test(tag) ||
-        /\baria-label\s*=/.test(tag) ||
-        /\baria-labelledby\s*=/.test(tag),
+        hasAccessibleName(tag),
       message: 'TextField is missing a visible or programmatic label.',
     },
     {
