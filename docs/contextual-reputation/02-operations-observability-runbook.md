@@ -211,6 +211,58 @@ accesos administrativos.
 
 ## 8. Validación en staging
 
+### 8.1 Implementación preparada
+
+La infraestructura de simulación se instala con
+`tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql` y se ensaya en
+una base PostgreSQL 16 aislada con:
+
+```sh
+npm run test:contextual-reputation-worker-migration
+```
+
+El proceso permanece apagado por defecto. Para un staging aprobado se requieren
+ambos gates, después de aplicar y verificar la migración:
+
+```text
+REPUTATION_AGGREGATION_WORKER_ENABLED=true
+REPUTATION_AGGREGATION_ENVIRONMENT=staging
+REPUTATION_AGGREGATION_MODE=simulation
+```
+
+```sql
+UPDATE reputation_worker_control
+SET enabled = TRUE, updated_at = now(), updated_by_party_id = :operator_party_id
+WHERE environment = 'staging' AND simulation_only;
+```
+
+Solo puede existir un ambiente habilitado. El proceso rechaza `production`, la
+restricción de base impide habilitarlo allí y el release productivo fuerza
+`REPUTATION_AGGREGATION_WORKER_ENABLED=false`. El worker escribe únicamente
+`reputation_aggregate_candidate.publication_state='simulation'`; no escribe
+`reputation_public_aggregate`.
+
+Las fuentes mínimas para dashboards sin PII son
+`reputation_worker_health`, `reputation_worker_queue_metrics`,
+`reputation_worker_event_metrics`, `reputation_worker_processing_metrics` y
+`reputation_candidate_freshness_metrics`. Antes de habilitar staging se deben
+materializar sus paneles, aprobar umbrales y asignar on-call; disponer de las
+vistas no satisface por sí solo ese pendiente.
+
+El rollback operativo del worker empieza por apagar el gate de base y la
+variable de proceso, sin borrar cola, candidatos, runs ni auditoría:
+
+```sql
+UPDATE reputation_worker_control
+SET enabled = FALSE, updated_at = now(), updated_by_party_id = :operator_party_id
+WHERE environment = 'staging';
+```
+
+El ensayo automatizado confirma que no se reclaman eventos con el gate cerrado
+y que la evidencia existente permanece intacta. Este rollback del worker no
+sustituye el cierre independiente del gate de lectura pública descrito en la
+sección 9.
+
 1. Aplicar el manifiesto checksum-pinned en una base aislada.
 2. Cargar datos sintéticos con roles, ciudades, empates, exclusiones, muestras
    pequeñas/grandes y señales antiguas.

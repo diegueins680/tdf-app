@@ -344,6 +344,9 @@ jobs:
       - name: Rehearse provider event operations migration
         run: ./scripts/test-provider-event-operations-migration.sh
 
+      - name: Rehearse contextual reputation staging worker migration
+        run: ./scripts/test-contextual-reputation-worker-migration.sh
+
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
 

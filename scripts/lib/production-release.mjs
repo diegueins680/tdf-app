@@ -263,6 +263,15 @@ export function validateFlyConfig(toml) {
   const contextualReputation = String(
     env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
   ).trim().toLowerCase();
+  const reputationAggregationWorker = String(
+    env.get('REPUTATION_AGGREGATION_WORKER_ENABLED') ?? '',
+  ).trim().toLowerCase();
+  const reputationAggregationEnvironment = String(
+    env.get('REPUTATION_AGGREGATION_ENVIRONMENT') ?? '',
+  ).trim().toLowerCase();
+  const reputationAggregationMode = String(
+    env.get('REPUTATION_AGGREGATION_MODE') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
@@ -309,6 +318,19 @@ export function validateFlyConfig(toml) {
   if (contextualReputation !== 'false') {
     throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
   }
+  if (reputationAggregationWorker !== 'false') {
+    throw new Error(
+      'fly.toml must keep REPUTATION_AGGREGATION_WORKER_ENABLED="false" in production.',
+    );
+  }
+  if (reputationAggregationEnvironment !== 'production') {
+    throw new Error(
+      'fly.toml must set REPUTATION_AGGREGATION_ENVIRONMENT="production".',
+    );
+  }
+  if (reputationAggregationMode !== 'simulation') {
+    throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
+  }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
   }
@@ -330,6 +352,9 @@ export function validateFlyConfig(toml) {
   return {
     runMigrations: false,
     autoApplyProductionMigrations: true,
+    reputationAggregationWorkerEnabled: false,
+    reputationAggregationEnvironment: 'production',
+    reputationAggregationMode: 'simulation',
     eventDiscoveryEnabled: false,
     defaultLocale: 'es',
     internalFeedbackUploadRoot: normalizedUploadRoot,
@@ -2138,6 +2163,9 @@ export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMa
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
+    '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
+    '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',

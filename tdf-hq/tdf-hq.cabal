@@ -106,6 +106,7 @@ executable tdf-hq-exe
     TDF.Services.Stripe
     TDF.RagStore
     TDF.Reputation
+    TDF.Reputation.Worker
     TDF.UserActivity
     TDF.Routes.Academy
     TDF.Seed
@@ -332,6 +333,7 @@ test-suite tdf-hq-test
     TDF.Profiles.ArtistSpec
     TDF.RagStore
     TDF.Reputation
+    TDF.Reputation.Worker
     TDF.Routes.Academy
     TDF.Routes.Courses
     TDF.Routes.DomoQuotes

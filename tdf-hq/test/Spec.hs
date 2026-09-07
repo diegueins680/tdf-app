@@ -88,6 +88,8 @@ import TDF.API.WhatsApp
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
+import TDF.Reputation.Worker
+    ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
@@ -805,6 +807,43 @@ main = hspec $ do
             confidenceFor 3 `shouldBe` Low
             confidenceFor 8 `shouldBe` Moderate
             confidenceFor 25 `shouldBe` High
+
+    describe "contextual reputation staging worker configuration" $ do
+        it "stays disabled unless explicitly enabled" $
+            parseReputationWorkerSettings [] `shouldBe` Right Nothing
+
+        it "accepts bounded simulation settings for staging" $
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "staging")
+                , ("REPUTATION_AGGREGATION_MODE", "simulation")
+                , ("REPUTATION_AGGREGATION_BATCH_SIZE", "40")
+                , ("REPUTATION_AGGREGATION_POLL_SECONDS", "3")
+                ]
+                `shouldBe` Right (Just (ReputationWorkerSettings "staging" 40 3))
+
+        it "fails closed for production and non-simulation modes" $ do
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "production")
+                ] `shouldSatisfy` isLeft
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "staging")
+                , ("REPUTATION_AGGREGATION_MODE", "publish")
+                ] `shouldSatisfy` isLeft
+
+        it "rejects unsafe batch and polling bounds" $ do
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "test")
+                , ("REPUTATION_AGGREGATION_BATCH_SIZE", "101")
+                ] `shouldSatisfy` isLeft
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "test")
+                , ("REPUTATION_AGGREGATION_POLL_SECONDS", "0")
+                ] `shouldSatisfy` isLeft
 
     describe "public upcoming event pagination" $ do
         it "continues past filtered pages until the requested limit is filled" $ do
