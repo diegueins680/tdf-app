@@ -1,33 +1,23 @@
 /**
  * Keeps short-lived personal-data drafts in the current browser tab only.
- * Any value left by the former persistent implementation is migrated once and
- * removed from localStorage so shared-device sessions do not retain it.
+ * Any value left by the former persistent implementation is discarded rather
+ * than restored, so a later user of a shared browser cannot inherit it.
  */
 export const readSessionPersonalData = (key: string): string | null => {
   if (typeof window === 'undefined') return null;
 
   let sessionValue: string | null = null;
-  let legacyValue: string | null = null;
   try {
     sessionValue = window.sessionStorage.getItem(key);
   } catch {
     // Continue so a legacy persistent value can still be removed.
   }
   try {
-    legacyValue = window.localStorage.getItem(key);
     window.localStorage.removeItem(key);
   } catch {
     // Storage can be unavailable in hardened/private browser contexts.
   }
-
-  if (sessionValue != null) return sessionValue;
-  if (legacyValue == null) return null;
-  try {
-    window.sessionStorage.setItem(key, legacyValue);
-  } catch {
-    // The caller can still use the in-memory value for the current render.
-  }
-  return legacyValue;
+  return sessionValue;
 };
 
 export const writeSessionPersonalData = (key: string, value: string): boolean => {

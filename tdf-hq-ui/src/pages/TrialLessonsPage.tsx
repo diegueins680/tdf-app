@@ -39,6 +39,7 @@ import { Trials } from '../api/trials';
 import { Rooms } from '../api/rooms';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
+import { createBookingPrefill } from './bookingsPageLogic';
 
 type StatusKey = 'programada' | 'por-confirmar' | 'cancelada' | 'realizada' | 'reprogramada';
 const STATUS_OPTIONS: readonly StatusKey[] = ['programada', 'por-confirmar', 'cancelada', 'realizada', 'reprogramada'];
@@ -597,14 +598,15 @@ export default function TrialLessonsPage() {
 
   const pushToCalendarWithPrefill = (cls: ClassSessionDTO, subjectName?: string, studentName?: string) => {
     try {
-      const prefill = {
+      const prefill = createBookingPrefill({
         title: `Trial - ${subjectName ?? 'Clase'}`,
         startAt: cls.startAt,
         endAt: cls.endAt,
-        customerName: studentName ?? cls.studentName ?? '',
+        customerPartyId: cls.studentId,
+        customerName: studentName ?? cls.studentName ?? 'Alumno de Trial Lessons',
         notes: cls.notes ?? '',
         hint: 'Prefill creado desde Trial lessons',
-      };
+      });
       if (typeof window !== 'undefined') {
         window.sessionStorage.setItem('booking-prefill', JSON.stringify(prefill));
       }

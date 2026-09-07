@@ -111,7 +111,7 @@ describe('analytics/posthog (web)', () => {
       eventId: analyticsFixtureIds.forwardedEventId,
       artistId: analyticsFixtureIds.forwardedArtistId,
     });
-    expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
+    expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, undefined);
     expect(captureMock).toHaveBeenCalledWith('$pageview', { name: 'Home' });
     expect(resetMock).toHaveBeenCalled();
   });
@@ -122,12 +122,19 @@ describe('analytics/posthog (web)', () => {
     const sanitizedUrl = redactSensitiveQueryValues(source);
     const sanitizedProperties = sanitizeAnalyticsProperties({
       $current_url: source,
-      $referrer: `https://tdf.test/oauth?code=${secret}&state=${secret}`,
+      $referrer: `https://tdf.test/oauth?redirect=${encodeURIComponent(`/reset?token=${secret}`)}`,
       route: '/reset',
+      token: secret,
+      nested: {
+        email: 'private@example.com',
+        password: secret,
+        returnUrl: source,
+      },
     });
 
     expect(sanitizedUrl).not.toContain(secret);
     expect(JSON.stringify(sanitizedProperties)).not.toContain(secret);
+    expect(JSON.stringify(sanitizedProperties)).not.toContain('private@example.com');
     expect(sanitizedProperties).toMatchObject({ route: '/reset' });
 
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };

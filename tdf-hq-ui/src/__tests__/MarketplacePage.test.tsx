@@ -490,7 +490,7 @@ describe('MarketplacePage', () => {
 
   it('restores the original saved buyer snapshot and clears buyer storage cleanly', async () => {
     window.localStorage.setItem('tdf-marketplace-cart-id', 'cart-1');
-    window.localStorage.setItem(
+    window.sessionStorage.setItem(
       'tdf-marketplace-buyer',
       JSON.stringify({
         name: 'Saved Buyer',
@@ -548,7 +548,7 @@ describe('MarketplacePage', () => {
       'tdf-marketplace-cart-meta',
       JSON.stringify({ cartId: 'cart-1', count: 1, updatedAt: Date.now() }),
     );
-    window.localStorage.setItem(
+    window.sessionStorage.setItem(
       'tdf-marketplace-buyer',
       JSON.stringify({ name: 'Saved Buyer', email: 'saved@example.com', pref: 'email' }),
     );
