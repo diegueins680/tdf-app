@@ -900,9 +900,9 @@ main = hspec $ do
 
     describe "service storefront commercial invariants" $ do
         it "limits the package song-count backfill to multi-song tiers" $ do
-            migration <- readFile "sql/2026-08-13_service_storefront_phase0_hardening.sql"
+            migration <- readFile "sql/2026-09-07_service_storefront_package_bounds_repair.sql"
             migration `shouldContain`
-                "WHERE (service_kind, tier) IN (\n  ('Mastering', 'Pro'),\n  ('Mastering', 'Premium'),\n  ('Bundle', 'Pro'),\n  ('Bundle', 'Premium')\n);"
+                "WHERE (service_kind, tier) IN (\n  ('Mastering', 'Pro'),\n  ('Mastering', 'Premium'),\n  ('Bundle', 'Pro'),\n  ('Bundle', 'Premium')\n)"
 
         it "accepts only server-configured package quantities" $
             QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
@@ -2175,13 +2175,6 @@ main = hspec $ do
             migration <- readFile "sql/002_party_booking_enhancements.sql"
             migration `shouldContain` "UPDATE booking SET title = 'Booking'\nWHERE title IS NULL;"
             migration `shouldNotContain` "UPDATE booking SET title = COALESCE(title, 'Booking');"
-
-    describe "catalog integrity migration" $
-        it "checks only invalid slug aliases without rewriting every alias" $ do
-            migration <- readFile "sql/2026-08-14_catalog_integrity.sql"
-            migration `shouldContain` "UPDATE catalog_slug_alias alias SET entity_id=alias.entity_id WHERE NOT"
-            migration `shouldContain` "alias.entity_kind='recording-session'"
-            migration `shouldNotContain` "UPDATE catalog_slug_alias SET entity_id=entity_id;"
 
     describe "operations control-center migrations" $ do
         it "limits rollback updates to rows whose enabled state changes" $ do
