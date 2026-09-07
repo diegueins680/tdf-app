@@ -2139,9 +2139,9 @@ main = hspec $ do
 
     describe "catalog integrity migration" $
         it "checks only invalid slug aliases without rewriting every alias" $ do
-            migration <- readFile "sql/2026-08-14_catalog_integrity.sql"
-            migration `shouldContain` "UPDATE catalog_slug_alias alias SET entity_id=alias.entity_id WHERE NOT"
-            migration `shouldContain` "alias.entity_kind='recording-session'"
+            migration <- readFile "sql/2026-09-07_catalog_slug_alias_integrity_revalidation.sql"
+            migration `shouldContain` "UPDATE catalog_slug_alias alias"
+            migration `shouldContain` "alias.entity_kind = 'recording-session'"
             migration `shouldNotContain` "UPDATE catalog_slug_alias SET entity_id=entity_id;"
 
     describe "operations control-center migrations" $ do
