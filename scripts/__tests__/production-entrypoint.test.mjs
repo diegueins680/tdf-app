@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -107,6 +107,26 @@ test('production entrypoint skips asset self-copy for equivalent paths', (contex
     readFileSync(path.join(current.packagedAssets, 'directory', 'profiles', 'artist.webp'), 'utf8'),
     'packaged artist photo',
   );
+});
+
+test('production entrypoint starts when persistent assets cannot be seeded', (context) => {
+  const current = fixture();
+  const servedDirectory = path.join(current.servedAssets, 'directory');
+  mkdirSync(servedDirectory, { recursive: true });
+  chmodSync(servedDirectory, 0o555);
+  context.after(() => {
+    chmodSync(servedDirectory, 0o755);
+    rmSync(current.directory, { recursive: true, force: true });
+  });
+
+  const result = run(current, {
+    HQ_ASSETS_DIR: current.servedAssets,
+    TDF_PACKAGED_ASSETS_DIR: current.packagedAssets,
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /could not synchronize some packaged assets/i);
+  assert.equal(readFileSync(current.serverLog, 'utf8'), 'RUN_MIGRATIONS=false\nAPP_PORT=18881\n');
 });
 
 test('production entrypoint rejects inferred and reviewed migrations together', (context) => {
