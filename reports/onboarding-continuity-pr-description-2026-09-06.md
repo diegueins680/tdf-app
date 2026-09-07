@@ -20,11 +20,11 @@ This draft is stacked on onboarding audit PR #238. Mobile runtime changes are in
 - web TypeScript and scoped changed-file lint: passed
 - web production build and initial-bundle check: passed; 12,415 modules, 5 preloads / 412,162 gzip bytes, with Vite's existing large-chunk warning
 - web lint: 0 errors and 102 existing warnings; direct full-source `eslint --quiet` passed
-- focused backend onboarding Hspec before stacked-base reconciliation: 3 examples, 0 failures; the final rerun remained queued behind an unrelated shared Stack build lock and produced no test result
+- clean post-reconciliation Stack build linked the backend and test executables; focused onboarding Hspec passed 3 examples / 0 failures, including missing-evidence rejection and Party-bound in-window follow acceptance
 - mobile final full Jest after retry/routing changes: 66 suites, 336 tests passed with `REQUIRE_MOBILE_WORKSPACE=1`; typecheck and scoped lint passed
 - regenerated web/mobile API clients match byte-for-byte
 
-The artist-evidence SQLite case is implemented but was not executed locally: a separate long-running GHC process held the shared build workspace. The prior focused onboarding Hspec run remains 3/3 green; the fresh PR backend job must compile and execute the new case before this change is called backend-verified.
+The artist-evidence SQLite case compiled and passed locally in the final post-reconciliation backend build. CI must still reproduce that result on the published head before review completion.
 
 A full web Jest attempt before this continuation's final reconciliation reproduced the unrelated `CourseRegistrationsAdminPage` timeout/overlapping-`act()` cascade from the stacked baseline and an unrelated `PromoCodeField` failure. The run was stopped after those failures; the touched onboarding suites were rerun separately and passed 12/12. No test was disabled or weakened.
 

@@ -14913,10 +14913,10 @@ initializeAuthSchema = do
 
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
-        \"id\" INTEGER PRIMARY KEY,\
-        \"fan_party_id\" INTEGER NOT NULL,\
-        \"artist_party_id\" INTEGER NOT NULL,\
-        \"created_at\" TIMESTAMP NOT NULL,\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"fan_party_id\" INTEGER NOT NULL,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
         \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
         \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
