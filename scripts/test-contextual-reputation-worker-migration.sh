@@ -50,7 +50,7 @@ assert_equal() {
 
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 psql_exec -c 'CREATE TABLE party (id BIGINT PRIMARY KEY);' >/dev/null
-psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103);' >/dev/null
+psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103), (104);' >/dev/null
 
 apply_file tdf-hq/sql/2026-09-01_contextual_reputation.sql
 apply_file tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql
@@ -142,6 +142,165 @@ assert_equal \
   "$(psql_exec -Atc 'SELECT count(*) FROM reputation_public_aggregate;')" \
   "0" \
   "Public aggregate isolation"
+
+ordinal_interaction_a="c6100000-0000-4000-8000-000000000001"
+ordinal_evaluation_a="c6100000-0000-4000-8000-000000000002"
+ordinal_interaction_b="c6100000-0000-4000-8000-000000000003"
+ordinal_evaluation_b="c6100000-0000-4000-8000-000000000004"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES
+    (
+      '$ordinal_interaction_a', 'service', 'ordinal-001', 101, 102,
+      '2030-09-01T12:02:00Z', '2030-09-01T12:02:00Z',
+      'eligible', 'test_fixture', 'ordinal-001-a'
+    ),
+    (
+      '$ordinal_interaction_b', 'service', 'ordinal-001', 101, 102,
+      '2030-09-01T12:02:00Z', '2030-09-01T12:02:00Z',
+      'eligible', 'test_fixture', 'ordinal-001-b'
+    );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES
+    (
+      '$ordinal_evaluation_a', '$ordinal_interaction_a', 101, 102, 'a_to_b',
+      'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
+    ),
+    (
+      '$ordinal_evaluation_b', '$ordinal_interaction_b', 101, 102, 'a_to_b',
+      'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
+    );
+  INSERT INTO reputation_evaluation_category(evaluation_id, category_id, position, weight)
+  VALUES
+    ('$ordinal_evaluation_a', '$category_id', 1, 100),
+    ('$ordinal_evaluation_b', '$category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group
+  ) VALUES
+    ('$ordinal_evaluation_a', '$category_id', 102, 1),
+    ('$ordinal_evaluation_a', '$category_id', 103, 2),
+    ('$ordinal_evaluation_b', '$category_id', 103, 1),
+    ('$ordinal_evaluation_b', '$category_id', 104, 2);
+  UPDATE reputation_evaluation
+  SET status='submitted', submitted_at='2030-09-01T12:02:00Z'
+  WHERE id IN ('$ordinal_evaluation_a', '$ordinal_evaluation_b');
+" >/dev/null
+
+ordinal_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-ordinal-0001', 1, '2030-09-01T12:02:30Z');")
+ordinal_event_id=$(printf '%s' "$ordinal_claim" | cut -d '|' -f 1)
+ordinal_claim_token=$(printf '%s' "$ordinal_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$ordinal_event_id', '$ordinal_claim_token', '2030-09-01T12:02:31Z');")" \
+  "processed" \
+  "Ordinal connected-component processing"
+assert_equal \
+  "$(psql_exec -Atc "
+    SELECT (winner.score > middle.score AND middle.score > loser.score)::text
+    FROM reputation_aggregate_candidate winner
+    JOIN reputation_aggregate_candidate middle
+      ON middle.category_id=winner.category_id
+     AND middle.context_key=winner.context_key
+     AND middle.formula_version_id=winner.formula_version_id
+    JOIN reputation_aggregate_candidate loser
+      ON loser.category_id=winner.category_id
+     AND loser.context_key=winner.context_key
+     AND loser.formula_version_id=winner.formula_version_id
+    WHERE winner.subject_party_id=102
+      AND middle.subject_party_id=103
+      AND loser.subject_party_id=104
+      AND winner.category_id='$category_id'
+      AND winner.context_key='service:ordinal-001';
+  ")" \
+  "true" \
+  "Bayesian Bradley-Terry ordinal ordering"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE category_id='$category_id' AND context_key='service:ordinal-001';")" \
+  "3" \
+  "Atomic connected-component candidate refresh"
+assert_equal \
+  "$(psql_exec -Atc "SELECT metadata->>'componentSubjectCount' FROM reputation_aggregation_event_action WHERE event_id='$ordinal_event_id' AND action='processed';")" \
+  "3" \
+  "Connected-component audit metadata"
+
+while :; do
+  ordinal_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-ordinal-0001', 1, '2030-09-01T12:02:32Z');")
+  [ -n "$ordinal_claim" ] || break
+  ordinal_event_id=$(printf '%s' "$ordinal_claim" | cut -d '|' -f 1)
+  ordinal_claim_token=$(printf '%s' "$ordinal_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$ordinal_event_id', '$ordinal_claim_token', '2030-09-01T12:02:33Z');")" \
+    "processed" \
+    "Ordinal follow-up event processing"
+done
+
+tie_interaction_id="c6200000-0000-4000-8000-000000000001"
+tie_evaluation_id="c6200000-0000-4000-8000-000000000002"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES (
+    '$tie_interaction_id', 'service', 'tie-001', 101, 102,
+    '2030-09-01T12:02:40Z', '2030-09-01T12:02:40Z',
+    'eligible', 'test_fixture', 'tie-001'
+  );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES (
+    '$tie_evaluation_id', '$tie_interaction_id', 101, 102, 'a_to_b',
+    'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
+  );
+  INSERT INTO reputation_evaluation_category(evaluation_id, category_id, position, weight)
+  VALUES ('$tie_evaluation_id', '$category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group
+  ) VALUES
+    ('$tie_evaluation_id', '$category_id', 102, 1),
+    ('$tie_evaluation_id', '$category_id', 103, 1);
+  UPDATE reputation_evaluation
+  SET status='submitted', submitted_at='2030-09-01T12:02:40Z'
+  WHERE id='$tie_evaluation_id';
+" >/dev/null
+
+tie_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-tie-0001', 1, '2030-09-01T12:02:50Z');")
+tie_event_id=$(printf '%s' "$tie_claim" | cut -d '|' -f 1)
+tie_claim_token=$(printf '%s' "$tie_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$tie_event_id', '$tie_claim_token', '2030-09-01T12:02:51Z');")" \
+  "processed" \
+  "Ordinal tie processing"
+assert_equal \
+  "$(psql_exec -Atc "
+    SELECT (left_candidate.score = right_candidate.score
+            AND left_candidate.score = 50.0000)::text
+    FROM reputation_aggregate_candidate left_candidate
+    JOIN reputation_aggregate_candidate right_candidate
+      ON right_candidate.category_id=left_candidate.category_id
+     AND right_candidate.context_key=left_candidate.context_key
+     AND right_candidate.formula_version_id=left_candidate.formula_version_id
+    WHERE left_candidate.subject_party_id=102
+      AND right_candidate.subject_party_id=103
+      AND left_candidate.category_id='$category_id'
+      AND left_candidate.context_key='service:tie-001';
+  ")" \
+  "true" \
+  "Bradley-Terry tie outcome"
+
+while :; do
+  tie_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-tie-0001', 1, '2030-09-01T12:02:52Z');")
+  [ -n "$tie_claim" ] || break
+  tie_event_id=$(printf '%s' "$tie_claim" | cut -d '|' -f 1)
+  tie_claim_token=$(printf '%s' "$tie_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$tie_event_id', '$tie_claim_token', '2030-09-01T12:02:53Z');")" \
+    "processed" \
+    "Tie follow-up event processing"
+done
 
 stable_event_id="c6000000-0000-4000-8000-000000000003"
 stable_correlation_id="c6000000-0000-4000-8000-000000000004"
@@ -248,7 +407,7 @@ psql_exec -c "
 " >/dev/null
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id';")" \
-  "1" \
+  "6" \
   "Category applicability control event"
 
 assert_equal \
@@ -275,14 +434,15 @@ assert_equal \
   "1" \
   "Rollback gate evidence preservation"
 
+simulation_candidate_count=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")
 apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")" \
-  "1" \
+  "$simulation_candidate_count" \
   "Migration rerun evidence preservation"
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_run WHERE id='$run_id';")" \
   "1" \
   "Migration rerun audit-run preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, run/source idempotency, immutable outbox evidence, leasing, simulation isolation, deterministic aggregation, removed-subject and category-control fan-out, bounded DLQ, audited replay, non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, run/source idempotency, immutable outbox evidence, leasing, simulation isolation, deterministic absolute and ordinal Bayesian aggregation, connected-component and tie handling, removed-subject and category-control fan-out, bounded DLQ, audited replay, non-identifying metrics, and rerun checks."

@@ -618,10 +618,9 @@ DECLARE
   prior_mean NUMERIC;
   half_life_days NUMERIC;
   evaluator_cap NUMERIC;
-  effective_weight NUMERIC := 0;
-  weighted_score NUMERIC := 0;
-  final_score NUMERIC;
-  interval_margin NUMERIC;
+  prior_probability NUMERIC;
+  iteration_index INTEGER;
+  component_count INTEGER := 0;
   interaction_count INTEGER := 0;
   evaluator_count INTEGER := 0;
   observation_count INTEGER := 0;
@@ -682,8 +681,8 @@ BEGIN
   END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(
-    event_row.subject_party_id::text || ':' || event_row.context_key || ':' ||
-      event_row.category_id::text || ':' || event_row.algorithm_version,
+    event_row.context_key || ':' || event_row.category_id::text || ':' ||
+      event_row.algorithm_version,
     0
   ));
 
@@ -703,21 +702,38 @@ BEGIN
     RAISE EXCEPTION 'Reputation formula parameters are invalid';
   END IF;
 
-  WITH evidence AS (
-    SELECT evaluation.evaluator_party_id,
-           evaluation.interaction_id,
-           rank.absolute_score::numeric AS absolute_score,
-           power(
-             0.5::numeric,
-             GREATEST(0, extract(epoch FROM (p_now - evaluation.submitted_at)) / 86400)
-               / half_life_days
-           ) AS decay_weight
+  prior_probability := LEAST(0.999999, GREATEST(0.000001, prior_mean / 100));
+
+  CREATE TEMP TABLE IF NOT EXISTS reputation_bt_component_work (
+    subject_party_id BIGINT PRIMARY KEY
+  ) ON COMMIT DROP;
+  CREATE TEMP TABLE IF NOT EXISTS reputation_bt_observation_work (
+    evaluator_party_id BIGINT NOT NULL,
+    interaction_id UUID NOT NULL,
+    left_party_id BIGINT NOT NULL,
+    right_party_id BIGINT,
+    left_outcome NUMERIC NOT NULL CHECK (left_outcome BETWEEN 0 AND 1),
+    raw_weight NUMERIC NOT NULL CHECK (raw_weight > 0),
+    adjusted_weight NUMERIC NOT NULL DEFAULT 0 CHECK (adjusted_weight >= 0)
+  ) ON COMMIT DROP;
+  CREATE TEMP TABLE IF NOT EXISTS reputation_bt_state_work (
+    subject_party_id BIGINT PRIMARY KEY,
+    ability NUMERIC NOT NULL
+  ) ON COMMIT DROP;
+
+  TRUNCATE pg_temp.reputation_bt_component_work,
+           pg_temp.reputation_bt_observation_work,
+           pg_temp.reputation_bt_state_work;
+
+  WITH RECURSIVE eligible_rank AS (
+    SELECT rank.evaluation_id, rank.compared_party_id, rank.position_group
     FROM reputation_evaluation_rank rank
     JOIN reputation_evaluation evaluation ON evaluation.id = rank.evaluation_id
     JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
     JOIN reputation_category category ON category.id = rank.category_id
-    WHERE rank.compared_party_id = event_row.subject_party_id
-      AND rank.category_id = event_row.category_id
+    WHERE rank.category_id = event_row.category_id
+      AND rank.position_group IS NOT NULL
+      AND rank.excluded_reason IS NULL
       AND evaluation.formula_version_id = event_row.algorithm_version
       AND evaluation.status = 'submitted'
       AND evaluation.submitted_at IS NOT NULL
@@ -727,55 +743,260 @@ BEGIN
         cardinality(category.applicable_contexts) = 0
         OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
       )
-      AND rank.absolute_score IS NOT NULL
-      AND rank.excluded_reason IS NULL
       AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key
-  ), evaluator_rollup AS (
-    SELECT evaluator_party_id,
-           sum(decay_weight) AS raw_weight,
-           sum(absolute_score * decay_weight) / NULLIF(sum(decay_weight), 0) AS evaluator_score
-    FROM evidence
-    GROUP BY evaluator_party_id
-  ), totals AS (
-    SELECT COALESCE(sum(raw_weight), 0) AS total_raw_weight
-    FROM evaluator_rollup
-  ), capped AS (
-    SELECT evaluator_score,
-           LEAST(raw_weight, totals.total_raw_weight * evaluator_cap) AS capped_weight
-    FROM evaluator_rollup CROSS JOIN totals
+  ), pair_edge AS (
+    SELECT rank_left.compared_party_id AS left_party_id,
+           rank_right.compared_party_id AS right_party_id
+    FROM eligible_rank rank_left
+    JOIN eligible_rank rank_right
+      ON rank_right.evaluation_id = rank_left.evaluation_id
+     AND rank_right.compared_party_id > rank_left.compared_party_id
+  ), connected(subject_party_id) AS (
+    SELECT event_row.subject_party_id
+    UNION
+    SELECT CASE
+      WHEN edge.left_party_id = connected.subject_party_id THEN edge.right_party_id
+      ELSE edge.left_party_id
+    END
+    FROM connected
+    JOIN pair_edge edge
+      ON connected.subject_party_id IN (edge.left_party_id, edge.right_party_id)
   )
-  SELECT COALESCE(sum(capped_weight), 0),
-         COALESCE(sum(evaluator_score * capped_weight), 0),
-         (SELECT count(DISTINCT interaction_id)::integer FROM evidence),
-         (SELECT count(DISTINCT evaluator_party_id)::integer FROM evidence),
-         (SELECT count(*)::integer FROM evidence)
-    INTO effective_weight, weighted_score, interaction_count,
-         evaluator_count, observation_count
-  FROM capped;
+  INSERT INTO pg_temp.reputation_bt_component_work(subject_party_id)
+  SELECT subject_party_id FROM connected;
 
-  final_score := (prior_strength * prior_mean + weighted_score)
-    / NULLIF(prior_strength + effective_weight, 0);
-  interval_margin := LEAST(50, 50 / sqrt(prior_strength + effective_weight));
-  confidence_value := CASE
-    WHEN LEAST(interaction_count, evaluator_count) < 3 THEN 'forming'
-    WHEN LEAST(interaction_count, evaluator_count) < 8 THEN 'low'
-    WHEN LEAST(interaction_count, evaluator_count) < 25 THEN 'moderate'
-    ELSE 'high'
-  END;
+  SELECT count(*) INTO component_count
+  FROM pg_temp.reputation_bt_component_work;
+  IF component_count > 500 THEN
+    RAISE EXCEPTION 'Reputation comparison component exceeds the staging limit';
+  END IF;
 
+  -- An absolute 0--100 score is a fractional result against a fixed neutral
+  -- opponent. This lets absolute and ordinal evidence share one likelihood.
+  INSERT INTO pg_temp.reputation_bt_observation_work(
+    evaluator_party_id, interaction_id, left_party_id, right_party_id,
+    left_outcome, raw_weight
+  )
+  SELECT evaluation.evaluator_party_id,
+         evaluation.interaction_id,
+         rank.compared_party_id,
+         NULL,
+         rank.absolute_score::numeric / 100,
+         power(
+           0.5::numeric,
+           GREATEST(0, extract(epoch FROM (p_now - evaluation.submitted_at)) / 86400)
+             / half_life_days
+         )
+  FROM reputation_evaluation_rank rank
+  JOIN reputation_evaluation evaluation ON evaluation.id = rank.evaluation_id
+  JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
+  JOIN reputation_category category ON category.id = rank.category_id
+  JOIN pg_temp.reputation_bt_component_work component
+    ON component.subject_party_id = rank.compared_party_id
+  WHERE rank.category_id = event_row.category_id
+    AND rank.absolute_score IS NOT NULL
+    AND rank.excluded_reason IS NULL
+    AND evaluation.formula_version_id = event_row.algorithm_version
+    AND evaluation.status = 'submitted'
+    AND evaluation.submitted_at IS NOT NULL
+    AND interaction.status = 'eligible'
+    AND category.status = 'active'
+    AND (
+      cardinality(category.applicable_contexts) = 0
+      OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+    )
+    AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key;
+
+  -- Every ordinal evaluation contributes pairwise wins, losses, or ties; no
+  -- position is converted to a synthetic star/absolute score.
+  INSERT INTO pg_temp.reputation_bt_observation_work(
+    evaluator_party_id, interaction_id, left_party_id, right_party_id,
+    left_outcome, raw_weight
+  )
+  SELECT evaluation.evaluator_party_id,
+         evaluation.interaction_id,
+         rank_left.compared_party_id,
+         rank_right.compared_party_id,
+         CASE
+           WHEN rank_left.position_group < rank_right.position_group THEN 1
+           WHEN rank_left.position_group = rank_right.position_group THEN 0.5
+           ELSE 0
+         END,
+         power(
+           0.5::numeric,
+           GREATEST(0, extract(epoch FROM (p_now - evaluation.submitted_at)) / 86400)
+             / half_life_days
+         )
+  FROM reputation_evaluation_rank rank_left
+  JOIN reputation_evaluation_rank rank_right
+    ON rank_right.evaluation_id = rank_left.evaluation_id
+   AND rank_right.category_id = rank_left.category_id
+   AND rank_right.compared_party_id > rank_left.compared_party_id
+  JOIN reputation_evaluation evaluation ON evaluation.id = rank_left.evaluation_id
+  JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
+  JOIN reputation_category category ON category.id = rank_left.category_id
+  JOIN pg_temp.reputation_bt_component_work left_component
+    ON left_component.subject_party_id = rank_left.compared_party_id
+  JOIN pg_temp.reputation_bt_component_work right_component
+    ON right_component.subject_party_id = rank_right.compared_party_id
+  WHERE rank_left.category_id = event_row.category_id
+    AND rank_left.position_group IS NOT NULL
+    AND rank_right.position_group IS NOT NULL
+    AND rank_left.excluded_reason IS NULL
+    AND rank_right.excluded_reason IS NULL
+    AND evaluation.formula_version_id = event_row.algorithm_version
+    AND evaluation.status = 'submitted'
+    AND evaluation.submitted_at IS NOT NULL
+    AND interaction.status = 'eligible'
+    AND category.status = 'active'
+    AND (
+      cardinality(category.applicable_contexts) = 0
+      OR lower(interaction.context_kind) = ANY(category.applicable_contexts)
+    )
+    AND lower(interaction.context_kind) || ':' || interaction.context_id = event_row.context_key;
+
+  IF (SELECT count(*) FROM pg_temp.reputation_bt_observation_work) > 25000 THEN
+    RAISE EXCEPTION 'Reputation comparison evidence exceeds the staging limit';
+  END IF;
+
+  WITH evaluator_weight AS (
+    SELECT evaluator_party_id, sum(raw_weight) AS raw_weight
+    FROM pg_temp.reputation_bt_observation_work
+    GROUP BY evaluator_party_id
+  ), total_weight AS (
+    SELECT COALESCE(sum(raw_weight), 0) AS raw_weight
+    FROM evaluator_weight
+  )
+  UPDATE pg_temp.reputation_bt_observation_work observation
+  SET adjusted_weight = observation.raw_weight * LEAST(
+    1,
+    total_weight.raw_weight * evaluator_cap / evaluator_weight.raw_weight
+  )
+  FROM evaluator_weight CROSS JOIN total_weight
+  WHERE evaluator_weight.evaluator_party_id = observation.evaluator_party_id;
+
+  INSERT INTO pg_temp.reputation_bt_state_work(subject_party_id, ability)
+  SELECT subject_party_id, ln(prior_probability / (1 - prior_probability))
+  FROM pg_temp.reputation_bt_component_work;
+
+  -- Fixed-count diagonal Newton updates keep staging runs deterministic. The
+  -- Bayesian prior makes the objective strictly regularized per subject.
+  FOR iteration_index IN 1..32 LOOP
+    WITH directional AS (
+      SELECT observation.left_party_id AS subject_party_id,
+             observation.right_party_id AS opponent_party_id,
+             observation.left_outcome AS outcome,
+             observation.adjusted_weight AS weight
+      FROM pg_temp.reputation_bt_observation_work observation
+      UNION ALL
+      SELECT observation.right_party_id,
+             observation.left_party_id,
+             1 - observation.left_outcome,
+             observation.adjusted_weight
+      FROM pg_temp.reputation_bt_observation_work observation
+      WHERE observation.right_party_id IS NOT NULL
+    ), probability AS (
+      SELECT directional.subject_party_id,
+             directional.outcome,
+             directional.weight,
+             1 / (1 + exp(-(
+               subject_state.ability - COALESCE(opponent_state.ability, 0)
+             ))) AS expected
+      FROM directional
+      JOIN pg_temp.reputation_bt_state_work subject_state
+        ON subject_state.subject_party_id = directional.subject_party_id
+      LEFT JOIN pg_temp.reputation_bt_state_work opponent_state
+        ON opponent_state.subject_party_id = directional.opponent_party_id
+    ), contribution AS (
+      SELECT subject_party_id,
+             sum(weight * (outcome - expected)) AS gradient,
+             sum(weight * expected * (1 - expected)) AS curvature
+      FROM probability
+      GROUP BY subject_party_id
+    ), next_state AS (
+      SELECT state.subject_party_id,
+             GREATEST(-10, LEAST(10,
+               state.ability + (
+                 prior_strength * (
+                   prior_probability - 1 / (1 + exp(-state.ability))
+                 ) + COALESCE(contribution.gradient, 0)
+               ) / NULLIF(
+                 prior_strength * (1 / (1 + exp(-state.ability))) *
+                   (1 - 1 / (1 + exp(-state.ability))) +
+                   COALESCE(contribution.curvature, 0),
+                 0
+               )
+             )) AS ability
+      FROM pg_temp.reputation_bt_state_work state
+      LEFT JOIN contribution
+        ON contribution.subject_party_id = state.subject_party_id
+    )
+    UPDATE pg_temp.reputation_bt_state_work state
+    SET ability = next_state.ability
+    FROM next_state
+    WHERE next_state.subject_party_id = state.subject_party_id;
+  END LOOP;
+
+  WITH directional AS (
+    SELECT observation.left_party_id AS subject_party_id,
+           observation.evaluator_party_id,
+           observation.interaction_id,
+           observation.adjusted_weight
+    FROM pg_temp.reputation_bt_observation_work observation
+    UNION ALL
+    SELECT observation.right_party_id,
+           observation.evaluator_party_id,
+           observation.interaction_id,
+           observation.adjusted_weight
+    FROM pg_temp.reputation_bt_observation_work observation
+    WHERE observation.right_party_id IS NOT NULL
+  ), metrics AS (
+    SELECT component.subject_party_id,
+           count(DISTINCT directional.interaction_id)::integer AS interaction_count,
+           count(DISTINCT directional.evaluator_party_id)::integer AS evaluator_count,
+           count(directional.interaction_id)::integer AS observation_count,
+           COALESCE(sum(directional.adjusted_weight), 0) AS effective_weight
+    FROM pg_temp.reputation_bt_component_work component
+    LEFT JOIN directional
+      ON directional.subject_party_id = component.subject_party_id
+    GROUP BY component.subject_party_id
+  ), candidate AS (
+    SELECT state.subject_party_id,
+           100 / (1 + exp(-state.ability)) AS score,
+           LEAST(50, 50 / sqrt(prior_strength + metrics.effective_weight)) AS margin,
+           metrics.interaction_count,
+           metrics.evaluator_count,
+           metrics.observation_count,
+           CASE
+             WHEN LEAST(metrics.interaction_count, metrics.evaluator_count) < 3 THEN 'forming'
+             WHEN LEAST(metrics.interaction_count, metrics.evaluator_count) < 8 THEN 'low'
+             WHEN LEAST(metrics.interaction_count, metrics.evaluator_count) < 25 THEN 'moderate'
+             ELSE 'high'
+           END AS confidence
+    FROM pg_temp.reputation_bt_state_work state
+    JOIN metrics ON metrics.subject_party_id = state.subject_party_id
+  )
   INSERT INTO reputation_aggregate_candidate(
     subject_party_id, category_id, context_key, formula_version_id,
     score, lower_bound, upper_bound, verified_interaction_count,
     distinct_evaluator_count, observation_count, confidence,
     publication_state, source_event_id, calculated_at
-  ) VALUES (
-    event_row.subject_party_id, event_row.category_id, event_row.context_key,
-    event_row.algorithm_version, round(final_score, 4),
-    round(GREATEST(0, final_score - interval_margin), 4),
-    round(LEAST(100, final_score + interval_margin), 4),
-    interaction_count, evaluator_count, observation_count, confidence_value,
-    'simulation', event_row.id, p_now
   )
+  SELECT candidate.subject_party_id,
+         event_row.category_id,
+         event_row.context_key,
+         event_row.algorithm_version,
+         round(candidate.score, 4),
+         round(GREATEST(0, candidate.score - candidate.margin), 4),
+         round(LEAST(100, candidate.score + candidate.margin), 4),
+         candidate.interaction_count,
+         candidate.evaluator_count,
+         candidate.observation_count,
+         candidate.confidence,
+         'simulation',
+         event_row.id,
+         p_now
+  FROM candidate
   ON CONFLICT (subject_party_id, category_id, context_key, formula_version_id)
   DO UPDATE SET
     score = EXCLUDED.score,
@@ -789,6 +1010,17 @@ BEGIN
     source_event_id = EXCLUDED.source_event_id,
     calculated_at = EXCLUDED.calculated_at;
 
+  SELECT candidate.verified_interaction_count,
+         candidate.distinct_evaluator_count,
+         candidate.observation_count,
+         candidate.confidence
+    INTO interaction_count, evaluator_count, observation_count, confidence_value
+  FROM reputation_aggregate_candidate candidate
+  WHERE candidate.subject_party_id = event_row.subject_party_id
+    AND candidate.category_id = event_row.category_id
+    AND candidate.context_key = event_row.context_key
+    AND candidate.formula_version_id = event_row.algorithm_version;
+
   UPDATE reputation_aggregation_outbox
   SET processing_status = 'processed', processed_at = p_now,
       lease_token = NULL, lease_owner_hash = NULL, lease_expires_at = NULL,
@@ -800,6 +1032,7 @@ BEGIN
     event_row.id, 'processed', event_row.attempt_count,
     event_row.lease_owner_hash,
     jsonb_build_object(
+      'componentSubjectCount', component_count,
       'confidence', confidence_value,
       'distinctEvaluatorCount', evaluator_count,
       'observationCount', observation_count,
