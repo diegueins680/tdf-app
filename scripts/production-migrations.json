@@ -400,6 +400,11 @@
       "id": "2026-09-05_contextual_reputation_preference_rounding",
       "path": "tdf-hq/sql/2026-09-05_contextual_reputation_preference_rounding.sql",
       "introducedBy": "000ef9f0c9be11250eebfbe13e35c373c767512e"
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_consent",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_consent.sql",
+      "introducedBy": "79d73a25e6d6a74250dc55cd0e888b6eaa34ea3d"
     }
   ]
 }
