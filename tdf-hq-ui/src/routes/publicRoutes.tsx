@@ -37,6 +37,7 @@ const PublicReputationRightsPage = lazy(() => import('../pages/PublicReputationR
 const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
+const PublicReputationRightsPage = lazy(() => import('../pages/PublicReputationRightsPage'));
 const RecordsPublicPage = lazy(() => import('../pages/RecordsPublicPage'));
 const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'));
 const TrialsPage = lazy(() => import('../pages/TrialsPage'));
@@ -95,6 +96,9 @@ export function renderPublicRoutes() {
       <Route path="/trials" element={<PublicBranding><TrialsPage /></PublicBranding>} />
       <Route path="/live-sessions/registro" element={<PublicBranding><LiveSessionPublicPage /></PublicBranding>} />
       <Route path="/feedback" element={<PublicBranding><FeedbackPage /></PublicBranding>} />
+      <Route path="/privacidad" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />
+      <Route path="/apelaciones" element={<PublicBranding><PublicReputationRightsPage view="appeal" /></PublicBranding>} />
+      <Route path="/reputacion/como-se-calcula" element={<PublicBranding><PublicReputationRightsPage view="calculation" /></PublicBranding>} />
       <Route path="/privacidad" element={<PublicBranding><PublicReputationRightsPage /></PublicBranding>} />
       <Route path="/apelaciones" element={<PublicBranding><PublicReputationRightsPage appeal /></PublicBranding>} />
       <Route path="/whatsapp/consentimiento" element={<PublicBranding><PublicWhatsAppConsentPage /></PublicBranding>} />

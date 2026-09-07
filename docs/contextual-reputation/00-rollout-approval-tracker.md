@@ -25,7 +25,10 @@ sin enlace a evidencia no cuenta como aprobación.
 
 ### Producto, Legal y Privacidad
 
-- [x] Jurisdicciones y base de tratamiento definidas. Ver [acta interna](rollout-evidence/2026-09-06-product-legal-approval.md).
+- [ ] Jurisdicciones y base de tratamiento aprobadas para cada territorio. La
+  [matriz de bases](rollout-evidence/2026-09-06-product-legal-approval.md)
+  registra la decisión de producto, pero sigue pendiente la validación local de
+  Ecuador, Colombia, Perú, México y la matriz estatal de Estados Unidos.
 - [ ] Consentimiento granular, retiro y copy ES/EN aprobados y publicados. Copy aprobado: [05-consent-copy-es-en-draft.md](05-consent-copy-es-en-draft.md); pendiente de publicación y enlaces finales.
 - [ ] Retención, exportación, eliminación/anominización y excepciones de
   seguridad aprobadas.

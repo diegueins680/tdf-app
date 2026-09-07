@@ -20,7 +20,7 @@
 - `[ ]` Permito ser considerado para rankings públicos cuando exista muestra suficiente. No hay posiciones exactas en grupos pequeños ni uso de atributos sensibles.
 - `[ ]` Acepto recibir solicitudes y recordatorios de valoración. Puedes desactivarlos cuando quieras; no enviamos mensajes en cola o reintento después del retiro.
 
-**Derechos y apelaciones:** Solicita acceso, exportación, rectificación, eliminación o revisión en [/privacidad](/privacidad). Reporta o apela una señal, categoría, badge o resultado agregado en [/apelaciones](/apelaciones). No revelamos la identidad de otros evaluadores.
+**Derechos y apelaciones:** Solicita acceso, exportación, rectificación, eliminación o revisión en [/privacidad](/privacidad). Puedes retirar cada consentimiento en [/privacidad](/privacidad#retirar-consentimientos). Consulta cómo se calcula la reputación en [/reputacion/como-se-calcula](/reputacion/como-se-calcula). Reporta o apela una señal, categoría, badge o resultado agregado en [/apelaciones](/apelaciones). No revelamos la identidad de otros evaluadores.
 
 ## English
 
@@ -33,7 +33,7 @@
 - `[ ]` I allow myself to be considered for public rankings when there is a sufficient sample. Rankings do not show exact positions in small groups or use sensitive attributes.
 - `[ ]` I agree to receive rating requests and reminders. You may turn them off at any time; we do not send queued or retrying messages after withdrawal.
 
-**Rights and appeals:** Request access, export, correction, deletion, or review through [/privacidad](/privacidad). Report or appeal a signal, category, badge, or aggregated result through [/apelaciones](/apelaciones). We do not reveal other evaluators’ identities.
+**Rights and appeals:** Request access, export, correction, deletion, or review through [/privacidad](/privacidad). You can withdraw each consent through [/privacidad#retirar-consentimientos](/privacidad#retirar-consentimientos). See how reputation is calculated at [/reputacion/como-se-calcula](/reputacion/como-se-calcula). Report or appeal a signal, category, badge, or aggregated result through [/apelaciones](/apelaciones). We do not reveal other evaluators’ identities.
 
 ## Publication required
 
