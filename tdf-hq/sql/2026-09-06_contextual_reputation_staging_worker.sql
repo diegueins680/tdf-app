@@ -96,7 +96,11 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_run (
   completed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   CHECK (high_water_mark <= created_at),
-  CHECK ((status = 'planned') = (started_at IS NULL)),
+  CHECK (
+    (status = 'planned' AND started_at IS NULL)
+    OR status = 'cancelled'
+    OR (status IN ('running', 'succeeded', 'failed') AND started_at IS NOT NULL)
+  ),
   CHECK ((status IN ('succeeded', 'failed', 'cancelled')) = (completed_at IS NOT NULL)),
   CHECK (completed_at IS NULL OR completed_at >= started_at)
 );
@@ -108,6 +112,10 @@ AS $$
 DECLARE
   formula_status TEXT;
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtextextended(
+    'reputation-aggregation-source-fence', 0
+  ));
+
   IF NEW.high_water_mark > transaction_timestamp()
      OR NEW.created_at > transaction_timestamp() THEN
     RAISE EXCEPTION 'Reputation aggregation runs cannot use future snapshot times';
@@ -408,6 +416,7 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   existing reputation_aggregation_outbox%ROWTYPE;
+  effective_occurred_at TIMESTAMPTZ := p_occurred_at;
 BEGIN
   IF p_run_id IS NULL AND p_event_type IN (
     'evaluation.submitted',
@@ -425,22 +434,34 @@ BEGIN
     'pilot_consent.changed',
     'age_assurance.changed'
   ) THEN
+    -- Automatic producers, run creation, and bounded completion share this
+    -- transaction-level fence. The gate must be checked after acquiring it so
+    -- a run cannot open between a disabled producer's check and its commit.
+    PERFORM pg_advisory_xact_lock_shared(hashtextextended(
+      'reputation-aggregation-source-fence', 0
+    ));
+
     IF NOT EXISTS (
       SELECT 1
       FROM reputation_worker_control control
       WHERE control.environment IN ('test', 'staging')
         AND control.enabled
         AND control.simulation_only
+    ) AND NOT EXISTS (
+      SELECT 1
+      FROM reputation_aggregation_run run
+      WHERE run.status IN ('planned', 'running')
     ) THEN
       RETURN p_event_id;
     END IF;
 
-    -- Source transactions and bounded completions share this transaction-level
-    -- fence. Whichever side acquires it first commits or completes before the
-    -- other can inspect canonical evidence.
-    PERFORM pg_advisory_xact_lock(hashtextextended(
-      'reputation-aggregation-source-fence', 0
-    ));
+    SELECT * INTO existing
+    FROM reputation_aggregation_outbox
+    WHERE id = p_event_id;
+    effective_occurred_at := CASE
+      WHEN FOUND THEN existing.occurred_at
+      ELSE clock_timestamp()
+    END;
   END IF;
 
   INSERT INTO reputation_aggregation_outbox(
@@ -449,8 +470,8 @@ BEGIN
     available_at
   ) VALUES (
     p_event_id, p_event_type, p_subject_party_id, btrim(p_context_key), p_category_id,
-    p_source_version, p_algorithm_version, p_correlation_id, p_run_id, p_occurred_at,
-    p_occurred_at
+    p_source_version, p_algorithm_version, p_correlation_id, p_run_id,
+    effective_occurred_at, effective_occurred_at
   )
   ON CONFLICT DO NOTHING;
 
@@ -478,7 +499,7 @@ BEGIN
      OR existing.algorithm_version IS DISTINCT FROM p_algorithm_version
      OR existing.correlation_id IS DISTINCT FROM p_correlation_id
      OR existing.run_id IS DISTINCT FROM p_run_id
-     OR existing.occurred_at IS DISTINCT FROM p_occurred_at THEN
+     OR existing.occurred_at IS DISTINCT FROM effective_occurred_at THEN
     RAISE EXCEPTION 'Reputation event ID conflicts with different immutable evidence';
   END IF;
 
@@ -732,43 +753,72 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  target_evaluation_id UUID;
-  evaluation_row RECORD;
+  old_evaluation_row RECORD;
+  new_evaluation_status TEXT;
+  emit_old_tuple BOOLEAN := FALSE;
 BEGIN
-  IF TG_OP = 'DELETE' THEN
-    target_evaluation_id := OLD.evaluation_id;
-  ELSE
-    target_evaluation_id := NEW.evaluation_id;
+  IF TG_OP = 'INSERT' THEN
+    IF EXISTS (
+      SELECT 1 FROM reputation_evaluation
+      WHERE id = NEW.evaluation_id AND status = 'submitted'
+    ) THEN
+      PERFORM reputation_emit_evaluation_events(
+        NEW.evaluation_id, 'evaluation.edited', clock_timestamp()
+      );
+    END IF;
+    RETURN NEW;
   END IF;
 
-  IF EXISTS (
-    SELECT 1 FROM reputation_evaluation
-    WHERE id = target_evaluation_id AND status = 'submitted'
-  ) THEN
+  SELECT evaluation.status, evaluation.revision,
+         evaluation.formula_version_id, interaction.context_kind,
+         interaction.context_id
+    INTO old_evaluation_row
+  FROM reputation_evaluation evaluation
+  JOIN reputation_interaction interaction
+    ON interaction.id = evaluation.interaction_id
+  WHERE evaluation.id = OLD.evaluation_id;
+
+  IF FOUND AND old_evaluation_row.status = 'submitted' THEN
     PERFORM reputation_emit_evaluation_events(
-      target_evaluation_id, 'evaluation.edited', now()
+      OLD.evaluation_id, 'evaluation.edited', clock_timestamp()
     );
 
-    IF TG_OP IN ('UPDATE', 'DELETE') THEN
-      SELECT evaluation.revision, evaluation.formula_version_id,
-             interaction.context_kind, interaction.context_id
-        INTO evaluation_row
-      FROM reputation_evaluation evaluation
-      JOIN reputation_interaction interaction
-        ON interaction.id = evaluation.interaction_id
-      WHERE evaluation.id = target_evaluation_id;
+    emit_old_tuple := TG_OP = 'DELETE';
+    IF TG_OP = 'UPDATE' THEN
+      emit_old_tuple :=
+        OLD.evaluation_id IS DISTINCT FROM NEW.evaluation_id
+        OR OLD.compared_party_id IS DISTINCT FROM NEW.compared_party_id
+        OR OLD.category_id IS DISTINCT FROM NEW.category_id;
+    END IF;
 
+    IF emit_old_tuple THEN
       PERFORM reputation_enqueue_aggregation_event(
         gen_random_uuid(), 'evaluation.edited', OLD.compared_party_id,
-        lower(evaluation_row.context_kind) || ':' || evaluation_row.context_id,
-        OLD.category_id, evaluation_row.revision, evaluation_row.formula_version_id,
-        gen_random_uuid(), NULL, now()
+        lower(old_evaluation_row.context_kind) || ':' ||
+          old_evaluation_row.context_id,
+        OLD.category_id, old_evaluation_row.revision,
+        old_evaluation_row.formula_version_id,
+        gen_random_uuid(), NULL, clock_timestamp()
       );
     END IF;
   END IF;
+
   IF TG_OP = 'DELETE' THEN
     RETURN OLD;
   END IF;
+
+  IF OLD.evaluation_id IS DISTINCT FROM NEW.evaluation_id THEN
+    SELECT evaluation.status
+      INTO new_evaluation_status
+    FROM reputation_evaluation evaluation
+    WHERE evaluation.id = NEW.evaluation_id;
+    IF new_evaluation_status = 'submitted' THEN
+      PERFORM reputation_emit_evaluation_events(
+        NEW.evaluation_id, 'evaluation.edited', clock_timestamp()
+      );
+    END IF;
+  END IF;
+
   RETURN NEW;
 END $$;
 
@@ -900,6 +950,40 @@ BEGIN
           WHERE assignment.party_id = rank.compared_party_id
             AND assignment.active
             AND role.code = ANY(NEW.applicable_roles)
+        )
+      )
+    UNION
+    SELECT DISTINCT rank.compared_party_id,
+           lower(interaction.context_kind) || ':' || interaction.context_id,
+           evaluation.formula_version_id
+    FROM reputation_evaluation_rank rank
+    JOIN reputation_evaluation evaluation ON evaluation.id = rank.evaluation_id
+    JOIN reputation_interaction interaction ON interaction.id = evaluation.interaction_id
+    JOIN reputation_formula_version formula
+      ON formula.id = evaluation.formula_version_id
+     AND formula.status IN ('active', 'draft')
+    WHERE rank.category_id = OLD.id
+      AND OLD.status = 'active'
+      AND rank.excluded_reason IS NULL
+      AND (rank.position_group IS NOT NULL OR rank.absolute_score IS NOT NULL)
+      AND evaluation.status = 'submitted'
+      AND evaluation.submitted_at IS NOT NULL
+      AND interaction.status = 'eligible'
+      AND (
+        cardinality(OLD.applicable_contexts) = 0
+        OR lower(interaction.context_kind) = ANY(OLD.applicable_contexts)
+      )
+      AND (
+        cardinality(OLD.applicable_roles) = 0
+        OR EXISTS (
+          SELECT 1
+          FROM party_security_role assignment
+          JOIN security_role role
+            ON role.id = assignment.role_id
+           AND role.active
+          WHERE assignment.party_id = rank.compared_party_id
+            AND assignment.active
+            AND role.code = ANY(OLD.applicable_roles)
         )
       )
   LOOP
