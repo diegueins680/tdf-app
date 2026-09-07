@@ -861,9 +861,9 @@ main = hspec $ do
 
     describe "service storefront commercial invariants" $ do
         it "limits the package song-count backfill to multi-song tiers" $ do
-            migration <- readFile "sql/2026-08-13_service_storefront_phase0_hardening.sql"
+            migration <- readFile "sql/2026-09-07_service_storefront_package_bounds_repair.sql"
             migration `shouldContain`
-                "WHERE (service_kind, tier) IN (\n  ('Mastering', 'Pro'),\n  ('Mastering', 'Premium'),\n  ('Bundle', 'Pro'),\n  ('Bundle', 'Premium')\n);"
+                "WHERE (service_kind, tier) IN (\n  ('Mastering', 'Pro'),\n  ('Mastering', 'Premium'),\n  ('Bundle', 'Pro'),\n  ('Bundle', 'Premium')\n)"
 
         it "accepts only server-configured package quantities" $
             QC.property $ \(QC.Positive priceCents) (QC.Positive minSongs) (QC.NonNegative range) ->
