@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | Contract DTOs for the independent, self-service reputation consents.
 -- Keep this small boundary separate from aggregate/review projections: it must
@@ -9,7 +10,7 @@ module TDF.DTO.ReputationConsent
   , ReputationConsentDTO(..)
   ) where
 
-import Data.Aeson (FromJSON, ToJSON, object, (.=), withObject, (.:), (.:?))
+import Data.Aeson (FromJSON(..), ToJSON(..), object, (.=), withObject, (.:), (.:?))
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import GHC.Generics (Generic)
@@ -25,17 +26,17 @@ instance FromJSON ReputationConsentUpdate
 instance ToJSON ReputationConsentUpdate
 
 data ReputationConsentDTO = ReputationConsentDTO
-  { consentKind :: Text
-  , granted :: Bool
+  { reputationConsentKind :: Text
+  , reputationConsentGranted :: Bool
   , consentStateVersion :: Int
   , updatedAt :: Maybe UTCTime
   } deriving (Show, Eq, Generic)
 
 instance ToJSON ReputationConsentDTO where
-  toJSON ReputationConsentDTO{consentKind, granted, consentStateVersion, updatedAt} =
+  toJSON ReputationConsentDTO{reputationConsentKind, reputationConsentGranted, consentStateVersion, updatedAt} =
     object
-      [ "consentKind" .= consentKind
-      , "granted" .= granted
+      [ "consentKind" .= reputationConsentKind
+      , "granted" .= reputationConsentGranted
       , "version" .= consentStateVersion
       , "updatedAt" .= updatedAt
       ]

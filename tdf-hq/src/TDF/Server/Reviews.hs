@@ -30,7 +30,7 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql
-  (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
+  (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Database.PostgreSQL.Simple (SqlError(..))
 import Servant
 import Text.Read (readMaybe)
