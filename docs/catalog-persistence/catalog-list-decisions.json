@@ -3984,7 +3984,7 @@
       "reviewed": true
     },
     {
-      "id": "e56ffb099089c4e7309f",
+      "id": "c7c31a11cdb3859ae4bb",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "security_role, party_security_role, role_permission",
@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "bd536820d780417edb18",
+      "id": "e1417a08a908629272e2",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9024,16 +9024,6 @@
       "reviewed": true
     },
     {
-      "id": "82e3ab110124708c621c",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
-      "priority": "P1-cross-platform",
-      "risk": "Web and mobile onboarding funnels could diverge, route to different products, or present inconsistent localized choices.",
-      "justification": "Onboarding intents are cross-client product choices whose identifiers, labels, order, and availability require one governed source.",
-      "reviewed": true
-    },
-    {
       "id": "29021a526fad50de4bf4",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -9381,6 +9371,46 @@
       "priority": "P3-retain",
       "risk": "Changing selection-action dimensions without review could break mobile telemetry aggregation or conceal duplicate prevention regressions.",
       "justification": "The mobile action union mirrors closed selector mechanics and emits no Party identity or user-provided content.",
+      "reviewed": true
+    },
+    {
+      "id": "05cf100aa2fff2a7c8ad",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "The public contract could diverge from governed onboarding choices and route users to unavailable products.",
+      "justification": "The OpenAPI enum mirrors the existing cross-client onboarding-intent catalog while preserving strict request validation during the catalog migration.",
+      "reviewed": true
+    },
+    {
+      "id": "3022d9364dbbe18e8bbb",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "onboarding_intent, onboarding_intent_label, navigation_item",
+      "priority": "P1-cross-platform",
+      "risk": "A database constraint that drifts from governed onboarding choices could reject valid account progress or admit unsupported intent.",
+      "justification": "The initial durable schema constrains the currently governed intent identifiers; a future catalog foreign key should replace this duplicated authority.",
+      "reviewed": true
+    },
+    {
+      "id": "c3ac50ba51fc338e502a",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "onboarding_first_value_event_allowlist",
+      "priority": "P3-retain",
+      "risk": "Contract drift could let clients submit unsupported completion events or prevent valid conversion claims.",
+      "justification": "The OpenAPI enum publishes the same closed first-value analytics protocol enforced by the backend.",
+      "reviewed": true
+    },
+    {
+      "id": "69594af6193f077ea0a2",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "onboarding_first_value_event_allowlist",
+      "priority": "P3-retain",
+      "risk": "Database drift could persist unsupported completion events and corrupt deduplicated onboarding reporting.",
+      "justification": "The SQL constraint is defense in depth for the closed first-value analytics protocol, not a business catalog.",
       "reviewed": true
     }
   ]

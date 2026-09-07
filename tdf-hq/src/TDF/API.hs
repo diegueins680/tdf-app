@@ -533,6 +533,9 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> Get '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> ReqBody '[JSON] LocalePreferencesUpdate :> Put '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "currency-conversions" :> ReqBody '[JSON] CurrencyConversionAuditCreate :> Post '[JSON] NoContent
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> Get '[JSON] OnboardingProgressDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "intent" :> ReqBody '[JSON] OnboardingIntentUpdate :> Put '[JSON] OnboardingProgressDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
 
 type AccessRequestsAPI =
        Get '[JSON] [FeatureAccessRequestDTO]

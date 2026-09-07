@@ -53,8 +53,8 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { markWebSignupCompleted } from '../analytics/onboardingProgress';
 import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { persistOnboardingIntent } from '../api/session';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
@@ -392,6 +392,9 @@ export default function LoginPage() {
       const targetPath = resolvePostAuthPath(requestedIntent, nextSession.roles, nextSession.modules, redirectPath);
 
       login(nextSession, { remember: rememberDevice });
+      if (requestedIntent) {
+        void persistOnboardingIntent(requestedIntent, response.token);
+      }
       captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
       navigate(targetPath, { replace: true });
     } catch (error) {
@@ -440,6 +443,7 @@ export default function LoginPage() {
             marketingOptIn: false,
             termsAccepted: true,
             termsVersion: ACCOUNT_TERMS_VERSION,
+            ...(signupIntent ? { onboardingIntent: signupIntent } : {}),
           } : {}),
         });
         const nextSession = await buildResolvedSession({
@@ -450,10 +454,12 @@ export default function LoginPage() {
           modules: response.modules,
           partyId: response.partyId,
         });
-        if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
+        if (activeIntent && !signupDialogOpen) {
+          void persistOnboardingIntent(activeIntent, response.token);
+        }
         const googleCreatedAccount = response.accountCreated === true;
         captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
           route: '/login',
@@ -697,6 +703,7 @@ export default function LoginPage() {
       marketingOptIn: false,
       termsAccepted: true as const,
       termsVersion: ACCOUNT_TERMS_VERSION,
+      ...(signupIntent ? { onboardingIntent: signupIntent } : {}),
     };
     if (!payload.email || !payload.password || (!payload.firstName && !payload.lastName)) {
       captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'missing_required_fields', intent: signupIntent ?? 'general' });
@@ -729,7 +736,6 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
-      markWebSignupCompleted(response.partyId);
       const targetPath = resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath);
       login(nextSession, { remember: rememberDevice });
       captureGrowthEvent(analytics, 'signup_completed', {

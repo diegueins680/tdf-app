@@ -4925,7 +4925,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -4964,7 +4964,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5013,6 +5013,76 @@ spec = describe "TDF.Server helpers" $ do
                 "google@example.com"
                 googlePartyId
                 googleResult
+
+        it "keeps onboarding progress Party-bound and completion idempotent" $ do
+            (currentResult, updatedResult, firstResult, repeatedResult) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (_, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just now
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = now
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress = sessionServer
+                        runSessionAction action =
+                            liftIO $ runHandler $ runReaderT action env
+                    current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
+                    updated <- runSessionAction
+                        ( updateIntent
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingIntentUpdate "follow_artists")
+                        )
+                    first <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "artist_followed"))
+                        )
+                    repeated <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "event_saved"))
+                        )
+                    pure (current, updated, first, repeated)
+
+            case currentResult of
+                Right (DTO.OnboardingProgressDTO eligibleValue _ intentValue completedValue _ _ _) -> do
+                    eligibleValue `shouldBe` True
+                    intentValue `shouldBe` Just "events"
+                    completedValue `shouldBe` Nothing
+                Left serverErr -> expectationFailure ("Expected onboarding progress, got: " <> show serverErr)
+            case updatedResult of
+                Right (DTO.OnboardingProgressDTO eligibleValue _ intentValue _ _ _ _) -> do
+                    eligibleValue `shouldBe` True
+                    intentValue `shouldBe` Just "follow_artists"
+                Left serverErr -> expectationFailure ("Expected onboarding intent update, got: " <> show serverErr)
+            case firstResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "artist_followed"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr -> expectationFailure ("Expected first onboarding completion, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "artist_followed"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected repeated onboarding completion, got: " <> show serverErr)
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -5089,16 +5159,17 @@ spec = describe "TDF.Server helpers" $ do
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $
             case decodeSignup
-                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42,\"onboardingIntent\":\"follow_artists\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical signup payload to decode, got: " <> decodeErr)
-                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ fanArtistIdsValue claimArtistIdValue) -> do
+                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ fanArtistIdsValue claimArtistIdValue onboardingIntentValue) -> do
                     firstNameValue `shouldBe` "Ada"
                     lastNameValue `shouldBe` "Lovelace"
                     emailValue `shouldBe` "ada@example.com"
                     phoneValue `shouldBe` Just "+593991234567"
                     fanArtistIdsValue `shouldBe` Just [7, 11]
                     claimArtistIdValue `shouldBe` Just 42
+                    onboardingIntentValue `shouldBe` Just "follow_artists"
 
         it "rejects caller-selected security roles" $
             decodeSignup
@@ -5125,7 +5196,7 @@ spec = describe "TDF.Server helpers" $ do
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
-                Right (DTO.GoogleLoginRequest idTokenValue _ _ _) ->
+                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _) ->
                     idTokenValue `shouldBe` "google-id-token"
 
             case decodeChangePasswordRequest
@@ -14798,6 +14869,20 @@ initializeAuthSchema = do
         \\"country_id\" VARCHAR NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_onboarding_progress\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL UNIQUE,\
+        \\"signup_completed_at\" TIMESTAMP NULL,\
+        \\"intent\" VARCHAR NULL,\
+        \\"completed_at\" TIMESTAMP NULL,\
+        \\"first_value\" VARCHAR NULL,\
+        \\"first_value_completed_at\" TIMESTAMP NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 

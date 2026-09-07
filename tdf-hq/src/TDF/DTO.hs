@@ -1010,9 +1010,12 @@ data GoogleLoginRequest = GoogleLoginRequest
   , marketingOptIn :: Maybe Bool
   , termsAccepted :: Maybe Bool
   , termsVersion :: Maybe Text
+  , onboardingIntent :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON GoogleLoginRequest where
-  parseJSON = genericParseJSON strictDecodeOptions
+  parseJSON value = do
+    rejectNullOptionalFields "GoogleLoginRequest" ["onboardingIntent"] value
+    genericParseJSON strictDecodeOptions value
 
 data SignupRequest = SignupRequest
   { firstName       :: Text
@@ -1026,6 +1029,7 @@ data SignupRequest = SignupRequest
   , termsVersion    :: Maybe Text
   , fanArtistIds    :: Maybe [Int64]
   , claimArtistId   :: Maybe Int64
+  , onboardingIntent :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON SignupRequest where
   parseJSON value = do
@@ -1034,6 +1038,7 @@ instance FromJSON SignupRequest where
       [ "googleIdToken"
       , "fanArtistIds"
       , "claimArtistId"
+      , "onboardingIntent"
       ]
       value
     genericParseJSON strictDecodeOptions value
@@ -1082,6 +1087,41 @@ data SessionResponse = SessionResponse
 
 instance ToJSON SessionResponse where
   toJSON = genericToJSON defaultOptions { fieldLabelModifier = dtoCamelDrop 7 }
+
+data OnboardingIntentUpdate = OnboardingIntentUpdate
+  { onboardingIntent :: Text
+  } deriving (Show, Generic)
+
+instance FromJSON OnboardingIntentUpdate where
+  parseJSON = genericParseJSON strictDecodeOptions
+
+data OnboardingCompletionRequest = OnboardingCompletionRequest
+  { firstValue :: Maybe Text
+  } deriving (Show, Generic)
+
+instance FromJSON OnboardingCompletionRequest where
+  parseJSON value = do
+    rejectNullOptionalFields "OnboardingCompletionRequest" ["firstValue"] value
+    genericParseJSON strictDecodeOptions value
+
+data OnboardingProgressDTO = OnboardingProgressDTO
+  { eligible              :: Bool
+  , signupCompletedAt     :: Maybe UTCTime
+  , onboardingIntent      :: Maybe Text
+  , completedAt           :: Maybe UTCTime
+  , firstValue            :: Maybe Text
+  , firstValueCompletedAt :: Maybe UTCTime
+  , updatedAt             :: Maybe UTCTime
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON OnboardingProgressDTO
+
+data OnboardingCompletionResult = OnboardingCompletionResult
+  { progress       :: OnboardingProgressDTO
+  , newlyCompleted :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON OnboardingCompletionResult
 
 data FeatureAccessRequestCreate = FeatureAccessRequestCreate
   { featureId     :: Text

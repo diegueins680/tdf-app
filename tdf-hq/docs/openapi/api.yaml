@@ -438,23 +438,6 @@ paths:
                 $ref: '#/components/schemas/LocalePreferences'
         '401':
           description: Authentication required
-  /session/currency-conversions:
-    post:
-      summary: Record an audited currency conversion
-      operationId: recordCurrencyConversion
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CurrencyConversionAuditCreate'
-      responses:
-        '200':
-          description: Conversion recorded
-        '400':
-          description: Invalid currency, amount, rate, or source
-        '401':
-          description: Authentication required
     put:
       summary: Update locale preferences
       operationId: updateLocalePreferences
@@ -473,6 +456,90 @@ paths:
                 $ref: '#/components/schemas/LocalePreferences'
         '400':
           description: Unsupported locale, currency, timezone, or country
+        '401':
+          description: Authentication required
+  /session/currency-conversions:
+    post:
+      summary: Record an audited currency conversion
+      operationId: recordCurrencyConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyConversionAuditCreate'
+      responses:
+        '200':
+          description: Conversion recorded
+        '400':
+          description: Invalid currency, amount, rate, or source
+        '401':
+          description: Authentication required
+  /session/onboarding:
+    get:
+      summary: Get account-bound onboarding progress
+      description: Returns durable onboarding eligibility, intent, and completion for the authenticated party. Accounts without an authoritative signup marker are never classified as new.
+      operationId: getOnboardingProgress
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingProgress'
+        '401':
+          description: Authentication required
+  /session/onboarding/intent:
+    put:
+      summary: Persist onboarding intent
+      description: Stores personalization intent for the authenticated party. It never grants a role, module, or permission.
+      operationId: updateOnboardingIntent
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingIntentUpdate'
+      responses:
+        '200':
+          description: Updated onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingProgress'
+        '400':
+          description: Unsupported onboarding intent
+        '401':
+          description: Authentication required
+  /session/onboarding/complete:
+    post:
+      summary: Complete eligible onboarding idempotently
+      description: Marks an authoritative new-account onboarding record complete after a client-observed successful action, or after an explicit optional-onboarding exit. Repeated calls and calls from accounts outside the eligibility window return newlyCompleted=false. This endpoint deduplicates progress; it does not independently prove that the referenced action occurred.
+      operationId: completeOnboarding
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingCompletionRequest'
+      responses:
+        '200':
+          description: Completion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingCompletionResult'
+        '400':
+          description: Unsupported first useful action
         '401':
           description: Authentication required
   /public/courses/{slug}:
@@ -7763,6 +7830,8 @@ components:
           type: string
           maxLength: 100
           description: Version of the account terms accepted during Google signup.
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
     SignupRequest:
       type: object
       additionalProperties: false
@@ -7806,10 +7875,12 @@ components:
         claimArtistId:
           type: integer
           format: int64
-          nullable: true
           description: Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
     LoginResponse:
       type: object
+      required: [token, partyId, roles, modules]
       properties:
         token:
           type: string
@@ -7829,6 +7900,66 @@ components:
         accountCreated:
           type: boolean
           description: Present on Google authentication to distinguish a newly created account from an existing login.
+    OnboardingIntent:
+      type: string
+      enum: [events, follow_artists, artist_profile, internships, learning, professional_tools]
+      description: Product-personalization intent only. It never assigns a security role or permission.
+    OnboardingIntentUpdate:
+      type: object
+      additionalProperties: false
+      required: [onboardingIntent]
+      properties:
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
+    OnboardingCompletionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        firstValue:
+          type: string
+          enum: [artist_followed, access_requested, event_saved, moment_reaction]
+          description: Optional successful first useful action. Omit when the user explicitly exits optional onboarding.
+    OnboardingProgress:
+      type: object
+      required: [eligible, signupCompletedAt, onboardingIntent, completedAt, firstValue, firstValueCompletedAt, updatedAt]
+      properties:
+        eligible:
+          type: boolean
+          description: True only for an authoritative signup within the eligibility window that has not completed onboarding.
+        signupCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        onboardingIntent:
+          allOf:
+            - $ref: '#/components/schemas/OnboardingIntent'
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        firstValue:
+          type: string
+          enum: [artist_followed, access_requested, event_saved, moment_reaction]
+          nullable: true
+        firstValueCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    OnboardingCompletionResult:
+      type: object
+      additionalProperties: false
+      required: [progress, newlyCompleted]
+      properties:
+        progress:
+          $ref: '#/components/schemas/OnboardingProgress'
+        newlyCompleted:
+          type: boolean
+          description: True only for the single request that changed an eligible account from incomplete to complete.
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
@@ -7956,6 +8087,7 @@ components:
         - Promotor
         - Promoter
         - Producer
+        - Agency
         - Songwriter
         - DJ
         - Publicist

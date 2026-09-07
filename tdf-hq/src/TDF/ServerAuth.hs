@@ -44,6 +44,9 @@ module TDF.ServerAuth
   , validateOptionalSignupPhone
   , validateSignupFanArtistIds
   , validateSignupFanArtistTargets
+  , validateOnboardingIntent
+  , validateOnboardingFirstValue
+  , isOnboardingEligible
   ) where
 
 import Control.Applicative ((<|>))
@@ -75,12 +78,12 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, (=.), (==.), (<-.))
+import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, upsertBy, (=.), (==.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, SqlPersistT)
+import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
@@ -454,6 +457,185 @@ sessionServer =
   :<|> currentLocalePreferences
   :<|> updateLocalePreferences
   :<|> recordCurrencyConversion
+  :<|> currentOnboardingProgress
+  :<|> updateOnboardingIntent
+  :<|> completeOnboarding
+
+onboardingIntentValues :: Set.Set Text
+onboardingIntentValues = Set.fromList
+  [ "events"
+  , "follow_artists"
+  , "artist_profile"
+  , "internships"
+  , "learning"
+  , "professional_tools"
+  ]
+
+onboardingFirstValueValues :: Set.Set Text
+onboardingFirstValueValues = Set.fromList
+  [ "artist_followed"
+  , "access_requested"
+  , "event_saved"
+  , "moment_reaction"
+  ]
+
+validateOnboardingIntent :: Text -> Either ServerError Text
+validateOnboardingIntent raw =
+  validateOnboardingValue "onboardingIntent" onboardingIntentValues raw
+
+validateOnboardingFirstValue :: Text -> Either ServerError Text
+validateOnboardingFirstValue raw =
+  validateOnboardingValue "firstValue" onboardingFirstValueValues raw
+
+validateOnboardingValue :: Text -> Set.Set Text -> Text -> Either ServerError Text
+validateOnboardingValue fieldName allowed raw =
+  let normalized = T.toLower (T.strip raw)
+  in if normalized `Set.member` allowed
+       then Right normalized
+       else Left err400
+         { errBody = BL.fromStrict (TE.encodeUtf8 (fieldName <> " is unsupported"))
+         }
+
+newUserOnboardingWindow :: NominalDiffTime
+newUserOnboardingWindow = 24 * 60 * 60
+
+isOnboardingEligible :: UTCTime -> Maybe UTCTime -> Maybe UTCTime -> Bool
+isOnboardingEligible now mSignupAt mCompletedAt =
+  isNothing mCompletedAt
+    && maybe False (\signupAt -> signupAt <= now && now <= addUTCTime newUserOnboardingWindow signupAt) mSignupAt
+
+onboardingProgressToDTO
+  :: UTCTime
+  -> Maybe (Entity UserOnboardingProgress)
+  -> OnboardingProgressDTO
+onboardingProgressToDTO now mProgress =
+  case entityVal <$> mProgress of
+    Nothing -> OnboardingProgressDTO
+      { eligible = False
+      , signupCompletedAt = Nothing
+      , onboardingIntent = Nothing
+      , completedAt = Nothing
+      , firstValue = Nothing
+      , firstValueCompletedAt = Nothing
+      , updatedAt = Nothing
+      }
+    Just stored -> OnboardingProgressDTO
+      { eligible = isOnboardingEligible
+          now
+          (userOnboardingProgressSignupCompletedAt stored)
+          (userOnboardingProgressCompletedAt stored)
+      , signupCompletedAt = userOnboardingProgressSignupCompletedAt stored
+      , onboardingIntent = userOnboardingProgressIntent stored
+      , completedAt = userOnboardingProgressCompletedAt stored
+      , firstValue = userOnboardingProgressFirstValue stored
+      , firstValueCompletedAt = userOnboardingProgressFirstValueCompletedAt stored
+      , updatedAt = Just (userOnboardingProgressUpdatedAt stored)
+      }
+
+initialOnboardingProgress
+  :: PartyId
+  -> Maybe UTCTime
+  -> Maybe Text
+  -> UTCTime
+  -> UserOnboardingProgress
+initialOnboardingProgress partyIdValue mSignupAt mIntent now = UserOnboardingProgress
+  { userOnboardingProgressPartyId = partyIdValue
+  , userOnboardingProgressSignupCompletedAt = mSignupAt
+  , userOnboardingProgressIntent = mIntent
+  , userOnboardingProgressCompletedAt = Nothing
+  , userOnboardingProgressFirstValue = Nothing
+  , userOnboardingProgressFirstValueCompletedAt = Nothing
+  , userOnboardingProgressUpdatedAt = now
+  }
+
+storeOnboardingIntent
+  :: PartyId
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Entity UserOnboardingProgress)
+storeOnboardingIntent partyIdValue intentValue now =
+  upsertBy
+    (UniqueUserOnboardingProgress partyIdValue)
+    (initialOnboardingProgress partyIdValue Nothing (Just intentValue) now)
+    [ UserOnboardingProgressIntent =. Just intentValue
+    , UserOnboardingProgressUpdatedAt =. now
+    ]
+
+initializeSignupOnboarding
+  :: PartyId
+  -> Maybe Text
+  -> UTCTime
+  -> SqlPersistT IO ()
+initializeSignupOnboarding partyIdValue intentValue now = do
+  void $ upsertBy
+    (UniqueUserOnboardingProgress partyIdValue)
+    (initialOnboardingProgress partyIdValue (Just now) intentValue now)
+    [ UserOnboardingProgressSignupCompletedAt =. Just now
+    , UserOnboardingProgressIntent =. intentValue
+    , UserOnboardingProgressCompletedAt =. Nothing
+    , UserOnboardingProgressFirstValue =. Nothing
+    , UserOnboardingProgressFirstValueCompletedAt =. Nothing
+    , UserOnboardingProgressUpdatedAt =. now
+    ]
+
+currentOnboardingProgress :: Maybe Text -> Maybe Text -> AppM OnboardingProgressDTO
+currentOnboardingProgress mAuthorizationHeader mCookieHeader = do
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  now <- liftIO getCurrentTime
+  mProgress <- liftIO $ flip runSqlPool pool $
+    getBy (UniqueUserOnboardingProgress (auPartyId user))
+  pure (onboardingProgressToDTO now mProgress)
+
+updateOnboardingIntent
+  :: Maybe Text
+  -> Maybe Text
+  -> OnboardingIntentUpdate
+  -> AppM OnboardingProgressDTO
+updateOnboardingIntent mAuthorizationHeader mCookieHeader OnboardingIntentUpdate{onboardingIntent = rawIntent} = do
+  intentValue <- either throwError pure (validateOnboardingIntent rawIntent)
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  now <- liftIO getCurrentTime
+  progressEntity <- liftIO $ flip runSqlPool pool $
+    storeOnboardingIntent (auPartyId user) intentValue now
+  pure (onboardingProgressToDTO now (Just progressEntity))
+
+completeOnboarding
+  :: Maybe Text
+  -> Maybe Text
+  -> OnboardingCompletionRequest
+  -> AppM OnboardingCompletionResult
+completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionRequest{firstValue = rawFirstValue} = do
+  firstValueValue <- traverse (either throwError pure . validateOnboardingFirstValue) rawFirstValue
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  now <- liftIO getCurrentTime
+  (mProgress, newlyCompletedValue) <- liftIO $ flip runSqlPool pool $ do
+    existing <- getBy (UniqueUserOnboardingProgress (auPartyId user))
+    case existing of
+      Nothing -> pure (Nothing, False)
+      Just entity@(Entity progressId stored)
+        | not (isOnboardingEligible now
+            (userOnboardingProgressSignupCompletedAt stored)
+            (userOnboardingProgressCompletedAt stored)) ->
+              pure (Just entity, False)
+        | otherwise -> do
+            changed <- updateWhereCount
+              [ UserOnboardingProgressId ==. progressId
+              , UserOnboardingProgressCompletedAt ==. Nothing
+              ]
+              [ UserOnboardingProgressCompletedAt =. Just now
+              , UserOnboardingProgressFirstValue =. firstValueValue
+              , UserOnboardingProgressFirstValueCompletedAt =. (now <$ firstValueValue)
+              , UserOnboardingProgressUpdatedAt =. now
+              ]
+            refreshed <- get progressId
+            pure (Entity progressId <$> refreshed, changed == 1)
+  pure OnboardingCompletionResult
+    { progress = onboardingProgressToDTO now mProgress
+    , newlyCompleted = newlyCompletedValue
+    }
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword
@@ -791,6 +973,7 @@ googleLogin :: GoogleLoginRequest -> AppM (Api.SessionCookieHeaders LoginRespons
 googleLogin GoogleLoginRequest{..} = do
   tokenClean <- either throwError pure (validateGoogleIdTokenInput idToken)
   acceptedTermsVersion <- either throwError pure (validateSignupTermsAcceptance termsAccepted termsVersion)
+  onboardingIntentClean <- traverse (either throwError pure . validateOnboardingIntent) onboardingIntent
   Env pool cfg <- ask
   let mClientId = googleClientId cfg
   when (isNothing mClientId) $
@@ -800,7 +983,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin acceptedTermsVersion marketingOptIn onboardingIntentClean profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -820,6 +1003,7 @@ signup SignupRequest
   , termsVersion = rawTermsVersion
   , fanArtistIds = requestedFanArtistIds
   , claimArtistId = rawClaimArtistId
+  , onboardingIntent = rawOnboardingIntent
   } = do
   let emailInput = T.strip rawEmail
   when (T.null emailInput) $ throwBadRequest "Email is required"
@@ -833,6 +1017,7 @@ signup SignupRequest
   displayNameText <- either throwError pure (validateSignupDisplayName rawFirst rawLast)
   phoneClean <- either throwError pure (validateOptionalSignupPhone rawPhone)
   claimArtistIdClean <- either throwError pure (validateOptionalSignupClaimArtistId rawClaimArtistId)
+  onboardingIntentClean <- traverse (either throwError pure . validateOnboardingIntent) rawOnboardingIntent
   sanitizedFanArtists <- either throwError pure (validateSignupFanArtistIds requestedFanArtistIds)
   now <- liftIO getCurrentTime
   Env pool cfg <- ask
@@ -848,6 +1033,7 @@ signup SignupRequest
       phoneClean
       validatedFanArtistIds
       claimArtistIdClean
+      onboardingIntentClean
       acceptedTermsVersion
       requestedMarketingOptIn
       now
@@ -1333,8 +1519,8 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Text -> Maybe Bool -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin acceptedTermsVersion marketingConsent GoogleProfile{..} = do
+completeGoogleLogin :: Maybe Text -> Maybe Bool -> Maybe Text -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin acceptedTermsVersion marketingConsent requestedOnboardingIntent GoogleProfile{..} = do
   existingResult <- lookupByEmail gpEmail
   case existingResult of
     Left err -> pure (Left err)
@@ -1344,6 +1530,9 @@ completeGoogleLogin acceptedTermsVersion marketingConsent GoogleProfile{..} = do
           | not (userCredentialActive cred) ->
               pure (Left "Cuenta deshabilitada. Contacta a soporte.")
           | otherwise -> do
+              for_ requestedOnboardingIntent $ \intentValue -> do
+                now <- liftIO getCurrentTime
+                void (storeOnboardingIntent (userCredentialPartyId cred) intentValue now)
               sessionToken <-
                 createReusableSessionToken
                   (userCredentialPartyId cred)
@@ -1406,6 +1595,7 @@ completeGoogleLogin acceptedTermsVersion marketingConsent GoogleProfile{..} = do
                       pure (Left "No pudimos cargar tu perfil.")
                     Just user -> do
                       recordAccountCreationConsent pid "google" supportedAccountTermsVersion marketingConsent
+                      initializeSignupOnboarding pid requestedOnboardingIntent now
                       pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
 
 runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
@@ -1479,11 +1669,12 @@ runSignupDb
   -> Maybe Text
   -> [Int64]
   -> Maybe Int64
+  -> Maybe Text
   -> Text
   -> Maybe Bool
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
-runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId acceptedTermsVersion marketingConsent nowVal = do
+runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId requestedOnboardingIntent acceptedTermsVersion marketingConsent nowVal = do
   existing <- signupEmailExists emailVal
   if existing
     then pure (Left SignupEmailExists)
@@ -1536,6 +1727,7 @@ runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaim
                   pure (Left SignupProfileError)
                 Just user -> do
                   recordAccountCreationConsent pid "password" acceptedTermsVersion marketingConsent
+                  initializeSignupOnboarding pid requestedOnboardingIntent nowVal
                   pure (Right (toLoginResponse sessionToken user))
 
 resolveParty

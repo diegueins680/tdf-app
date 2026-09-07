@@ -355,7 +355,8 @@ export interface paths {
         };
         /** Get locale preferences */
         get: operations["getLocalePreferences"];
-        put?: never;
+        /** Update locale preferences */
+        put: operations["updateLocalePreferences"];
         post?: never;
         delete?: never;
         options?: never;
@@ -371,10 +372,69 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Update locale preferences */
-        put: operations["updateLocalePreferences"];
+        put?: never;
         /** Record an audited currency conversion */
         post: operations["recordCurrencyConversion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get account-bound onboarding progress
+         * @description Returns durable onboarding eligibility, intent, and completion for the authenticated party. Accounts without an authoritative signup marker are never classified as new.
+         */
+        get: operations["getOnboardingProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Persist onboarding intent
+         * @description Stores personalization intent for the authenticated party. It never grants a role, module, or permission.
+         */
+        put: operations["updateOnboardingIntent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete eligible onboarding idempotently
+         * @description Marks an authoritative new-account onboarding record complete after a client-observed successful action, or after an explicit optional-onboarding exit. Repeated calls and calls from accounts outside the eligibility window return newlyCompleted=false. This endpoint deduplicates progress; it does not independently prove that the referenced action occurred.
+         */
+        post: operations["completeOnboarding"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6884,6 +6944,7 @@ export interface components {
             termsAccepted?: boolean;
             /** @description Version of the account terms accepted during Google signup. */
             termsVersion?: string;
+            onboardingIntent?: components["schemas"]["OnboardingIntent"];
         };
         SignupRequest: {
             /** @example Diego */
@@ -6917,17 +6978,53 @@ export interface components {
              * Format: int64
              * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
              */
-            claimArtistId?: number | null;
+            claimArtistId?: number;
+            onboardingIntent?: components["schemas"]["OnboardingIntent"];
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests when a client is not using cookies. */
-            token?: string;
+            token: string;
             /** Format: int64 */
-            partyId?: number;
-            roles?: components["schemas"]["Role"][];
-            modules?: string[];
+            partyId: number;
+            roles: components["schemas"]["Role"][];
+            modules: string[];
             /** @description Present on Google authentication to distinguish a newly created account from an existing login. */
             accountCreated?: boolean;
+        };
+        /**
+         * @description Product-personalization intent only. It never assigns a security role or permission.
+         * @enum {string}
+         */
+        OnboardingIntent: "events" | "follow_artists" | "artist_profile" | "internships" | "learning" | "professional_tools";
+        OnboardingIntentUpdate: {
+            onboardingIntent: components["schemas"]["OnboardingIntent"];
+        };
+        OnboardingCompletionRequest: {
+            /**
+             * @description Optional successful first useful action. Omit when the user explicitly exits optional onboarding.
+             * @enum {string}
+             */
+            firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
+        };
+        OnboardingProgress: {
+            /** @description True only for an authoritative signup within the eligibility window that has not completed onboarding. */
+            eligible: boolean;
+            /** Format: date-time */
+            signupCompletedAt: string | null;
+            onboardingIntent: components["schemas"]["OnboardingIntent"] | null;
+            /** Format: date-time */
+            completedAt: string | null;
+            /** @enum {string|null} */
+            firstValue: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction" | null;
+            /** Format: date-time */
+            firstValueCompletedAt: string | null;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        OnboardingCompletionResult: {
+            progress: components["schemas"]["OnboardingProgress"];
+            /** @description True only for the single request that changed an eligible account from incomplete to complete. */
+            newlyCompleted: boolean;
         };
         SessionResponse: {
             username: string;
@@ -7004,7 +7101,7 @@ export interface components {
          * @description Assigned platform role.
          * @enum {string}
          */
-        Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
+        Role: "Admin" | "Manager" | "Studio Manager" | "Intern" | "Engineer" | "Teacher" | "Reception" | "Accounting" | "Live Sessions Producer" | "Webmaster" | "Artist" | "Artista" | "Promotor" | "Promoter" | "Producer" | "Agency" | "Songwriter" | "DJ" | "Publicist" | "TourManager" | "LabelRep" | "StageManager" | "RoadCrew" | "Photographer" | "A&R" | "Student" | "ReadOnly" | "Vendor" | "Customer" | "Fan" | "Maintenance";
         UserRoleSummary: {
             /** Format: int64 */
             id: number;
@@ -11030,6 +11127,109 @@ export interface operations {
                 content?: never;
             };
             /** @description Invalid currency, amount, rate, or source */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getOnboardingProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current onboarding progress */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgress"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateOnboardingIntent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingIntentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated onboarding progress */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingProgress"];
+                };
+            };
+            /** @description Unsupported onboarding intent */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completeOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingCompletionRequest"];
+            };
+        };
+        responses: {
+            /** @description Completion result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingCompletionResult"];
+                };
+            };
+            /** @description Unsupported first useful action */
             400: {
                 headers: {
                     [name: string]: unknown;

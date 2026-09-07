@@ -9,6 +9,7 @@ import Data.Int (Int64)
 import Data.Either (isLeft)
 import qualified Data.Set as Set
 import qualified Data.Text as T
+import Data.Time (UTCTime (..), addUTCTime, fromGregorian, secondsToDiffTime)
 import Database.Persist (Entity (..), Key)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
@@ -45,6 +46,9 @@ import TDF.ServerAuth
   , validateSignupGoogleIdToken
   , validateSignupTermsAcceptance
   , validateOptionalSignupPhone
+  , validateOnboardingFirstValue
+  , validateOnboardingIntent
+  , isOnboardingEligible
   )
 
 spec :: Spec
@@ -64,6 +68,7 @@ spec = do
   signupPhoneSpec
   signupFanArtistIdsSpec
   signupArtistClaimEmailSpec
+  onboardingProgressSpec
   passwordResetTokenSpec
   googleIdTokenInputSpec
   googleTokenInfoSpec
@@ -327,6 +332,7 @@ signupContractSpec = describe "SignupRequest canonical security contract" $ do
                 )
     assertNullRejected "fanArtistIds"
     assertNullRejected "claimArtistId"
+    assertNullRejected "onboardingIntent"
 
   it "rejects removed role-dependent internship fields" $
     ( A.eitherDecode
@@ -487,6 +493,28 @@ signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
       `shouldBe` Left "Artist profile email does not match signup email"
     validateSignupArtistClaimEmail "ada@example.com" (Just "not-an-email")
       `shouldBe` Left "Artist profile email does not match signup email"
+
+onboardingProgressSpec :: Spec
+onboardingProgressSpec = describe "account-bound onboarding progress" $ do
+  let now = UTCTime (fromGregorian 2026 9 6) (secondsToDiffTime 43200)
+      assertBadRequest result =
+        case result of
+          Left err -> errHTTPCode err `shouldBe` 400
+          Right value -> expectationFailure ("Expected onboarding value to be rejected, got " <> show value)
+
+  it "accepts only supported personalization intents and first useful actions" $ do
+    validateOnboardingIntent " Follow_Artists " `shouldBe` Right "follow_artists"
+    validateOnboardingFirstValue " ARTIST_FOLLOWED " `shouldBe` Right "artist_followed"
+    assertBadRequest (validateOnboardingIntent "admin")
+    assertBadRequest (validateOnboardingFirstValue "login_completed")
+
+  it "requires an authoritative recent signup and no completion" $ do
+    isOnboardingEligible now (Just now) Nothing `shouldBe` True
+    isOnboardingEligible now (Just (addUTCTime (-86400) now)) Nothing `shouldBe` True
+    isOnboardingEligible now (Just (addUTCTime (-86401) now)) Nothing `shouldBe` False
+    isOnboardingEligible now (Just (addUTCTime 1 now)) Nothing `shouldBe` False
+    isOnboardingEligible now Nothing Nothing `shouldBe` False
+    isOnboardingEligible now (Just now) (Just now) `shouldBe` False
 
 passwordResetTokenSpec :: Spec
 passwordResetTokenSpec = describe "validatePasswordResetToken" $ do

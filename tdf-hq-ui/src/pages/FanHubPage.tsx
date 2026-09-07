@@ -68,6 +68,7 @@ import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
+import { completeOnboardingProgress, loadOnboardingProgress } from '../api/session';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -323,10 +324,30 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
-  const [onboardingVisible, setOnboardingVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const onboardingQuery = useQuery({
+    queryKey: ['onboarding-progress', viewerId],
+    queryFn: loadOnboardingProgress,
+    enabled: Boolean(viewerId && !isHomeManagerView),
+    retry: false,
   });
+  const completeOnboardingMutation = useMutation({
+    mutationFn: () => completeOnboardingProgress(),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['onboarding-progress', viewerId] });
+    },
+  });
+  const managerTipsDismissalKey = viewerId
+    ? `fanhub-manager-tips-dismissed:${viewerId}`
+    : null;
+  const onboardingVisible = !onboardingDismissed && (
+    isHomeManagerView
+      ? Boolean(
+          managerTipsDismissalKey
+            && (typeof window === 'undefined' || window.localStorage.getItem(managerTipsDismissalKey) !== '1'),
+        )
+      : !isAuthenticated || onboardingQuery.data?.eligible === true
+  );
 
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
@@ -358,11 +379,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   }, [session?.partyId]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!onboardingVisible) {
-      window.localStorage.setItem('fanhub-onboarding-dismissed', '1');
+    setOnboardingDismissed(false);
+  }, [isHomeManagerView, viewerId]);
+
+  const dismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    if (isHomeManagerView && managerTipsDismissalKey) {
+      window.localStorage.setItem(managerTipsDismissalKey, '1');
+      return;
     }
-  }, [onboardingVisible]);
+    if (isAuthenticated && onboardingQuery.data?.eligible === true) {
+      completeOnboardingMutation.mutate();
+    }
+  };
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -399,7 +428,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed')
+        .then((newlyCompleted) => {
+          if (!newlyCompleted) return;
+          setOnboardingDismissed(true);
+          void qc.invalidateQueries({ queryKey: ['onboarding-progress', viewerId] });
+        });
     },
   });
 
@@ -790,7 +824,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {onboardingVisible && (
           <Alert
             severity="info"
-            onClose={() => setOnboardingVisible(false)}
+            onClose={dismissOnboarding}
             icon={<VisibilityIcon />}
           >
             <AlertTitle>{isHomeManagerView ? 'Lo más útil ahora' : 'Primeros pasos'}</AlertTitle>

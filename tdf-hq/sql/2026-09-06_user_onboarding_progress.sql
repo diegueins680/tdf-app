@@ -37,10 +37,18 @@ CREATE TABLE IF NOT EXISTS user_onboarding_progress (
   CONSTRAINT user_onboarding_progress_first_value_pair_check CHECK (
     (first_value IS NULL) = (first_value_completed_at IS NULL)
   ),
+  CONSTRAINT user_onboarding_progress_first_value_completion_check CHECK (
+    first_value IS NULL OR completed_at IS NOT NULL
+  ),
   CONSTRAINT user_onboarding_progress_completion_order_check CHECK (
     completed_at IS NULL
       OR signup_completed_at IS NULL
       OR completed_at >= signup_completed_at
+  ),
+  CONSTRAINT user_onboarding_progress_first_value_order_check CHECK (
+    first_value_completed_at IS NULL
+      OR signup_completed_at IS NULL
+      OR first_value_completed_at >= signup_completed_at
   )
 );
 

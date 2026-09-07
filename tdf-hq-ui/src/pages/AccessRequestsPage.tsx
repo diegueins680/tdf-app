@@ -282,7 +282,7 @@ export function NewAccessRequestPage() {
         feature_id: request.featureId,
         feature_action: request.action,
       });
-      captureFirstValueOnce(analytics, session?.partyId, 'access_requested');
+      void captureFirstValueOnce(analytics, session?.partyId, 'access_requested');
       navigate('/solicitudes-acceso', { replace: true });
     },
   });

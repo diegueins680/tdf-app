@@ -80,6 +80,12 @@ const en = {
     empty: 'This artist does not have any fans yet.',
     followedSince: 'Fan since {{date}}',
   },
+  artistFollow: {
+    authCta: 'Create an account or sign in to follow',
+    resumeMessage: 'You are signed in. Continue where you left off and follow {{artist}}.',
+    resumeAction: 'Follow now',
+    resumeError: 'We could not follow {{artist}}. Check your connection and try again.',
+  },
   partyRelated: {
     unavailable: 'Contact unavailable',
     contact: 'Contact',
