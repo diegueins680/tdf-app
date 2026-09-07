@@ -901,7 +901,7 @@ seedVideoRecording now NormalizedVideoSeed{..} = do
         , maybe PersistNull (PersistInt64 . fromIntegral) durationMs, PersistText recordingCode
         , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
         ]
-    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs (Just (youtubeThumbnailUrl normalizedVideoYoutubeId))
     seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
     rawExecute
         "INSERT INTO collection_recording (collection_id, recording_id, sort_order, featured) SELECT collection.id, recording.id, ?, FALSE FROM editorial_collection collection JOIN recording ON recording.code=? WHERE collection.code='tdf-records-recordings' ON CONFLICT (collection_id, recording_id) DO UPDATE SET sort_order=EXCLUDED.sort_order"
@@ -921,7 +921,7 @@ seedVideoSession now seed@NormalizedVideoSeed{..} = do
         , PersistInt64 (fromIntegral normalizedVideoSortOrder), PersistUTCTime now, PersistUTCTime now
         ]
     seedVideoRecordingRow now recordingCode seed durationMs
-    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs Nothing
+    seedExternalResource now "youtube" "video" normalizedVideoYoutubeId normalizedVideoUrl durationMs (Just (youtubeThumbnailUrl normalizedVideoYoutubeId))
     seedRecordingRelations recordingCode contributorCode "youtube" "video" normalizedVideoYoutubeId
     rawExecute
         "INSERT INTO session_recording (session_id, recording_id, sort_order, primary_recording) SELECT session.id, recording.id, 0, TRUE FROM recording_session session JOIN recording ON recording.code=? WHERE session.code=? ON CONFLICT (session_id, recording_id) DO NOTHING"
@@ -999,6 +999,10 @@ durationTextToMilliseconds raw =
         case reads (T.unpack text) of
             [(value, "")] | value >= (0 :: Int) -> Just value
             _ -> Nothing
+
+youtubeThumbnailUrl :: Text -> Text
+youtubeThumbnailUrl youtubeId =
+    "https://i.ytimg.com/vi/" <> youtubeId <> "/hqdefault.jpg"
 
 seedAcademy :: UTCTime -> SqlPersistT IO ()
 seedAcademy now = do
