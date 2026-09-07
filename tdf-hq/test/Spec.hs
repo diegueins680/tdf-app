@@ -124,7 +124,7 @@ import qualified TDF.Catalog.RecordsSpec as CatalogRecordsSpec
 import qualified TDF.Catalog.SecuritySpec as CatalogSecuritySpec
 import qualified TDF.Catalog.PipelineSpec as CatalogPipelineSpec
 import qualified TDF.Directory.PolicySpec as DirectoryPolicySpec
-import TDF.Email (resolveRefundTimelineMessage)
+import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
@@ -2041,6 +2041,15 @@ main = hspec $ do
         it "uses the provided refund timeline verbatim" $
             resolveRefundTimelineMessage (Just "Tu banco lo verá en 48 horas.")
                 `shouldBe` "Tu banco lo verá en 48 horas."
+
+    describe "accountCreatedEmailContent" $ do
+        it "never includes a credential or reset token" $ do
+            let (subject, preheader, greeting, bodyLines) =
+                    accountCreatedEmailContent "Ana"
+                content = Data.Text.toCaseFold (Data.Text.unlines (subject : preheader : greeting : bodyLines))
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "contraseña temporal")
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "token")
+            content `shouldSatisfy` (not . Data.Text.isInfixOf "ana@example.com")
 
     describe "seededCredentialSeedingAllowed" $ do
         it "allows seeded demo credentials in local development by default" $

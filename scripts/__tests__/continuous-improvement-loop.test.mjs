@@ -564,6 +564,20 @@ test('auditUiSource does not treat arrow functions as the end of a labeled tag',
   assert.equal(findings.length, 0);
 });
 
+test('auditUiSource recognizes accessible names passed through TextField inputProps', () => {
+  const source = `
+    <TextField inputProps={{ 'aria-label': 'Buscar contactos' }} />
+    <TextField
+      inputProps={{
+        'aria-labelledby': \`video-\${asset.id}-label video-status-column\`,
+      }}
+    />
+  `;
+
+  const findings = auditUiSource(source, 'Example.tsx');
+  assert.equal(findings.length, 0);
+});
+
 test('auditUiSource ignores commented-out pseudo-tags', () => {
   const source = `
     {/* <IconButton onClick={toggleSidebar}><MenuIcon /></IconButton> */}

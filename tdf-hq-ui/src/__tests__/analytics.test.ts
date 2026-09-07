@@ -31,7 +31,12 @@ jest.unstable_mockModule('../utils/logger', () => ({
   },
 }));
 
-const { __resetAnalyticsForTests, getAnalyticsClient } = await import('../analytics/posthog');
+const {
+  __resetAnalyticsForTests,
+  getAnalyticsClient,
+  redactSensitiveQueryValues,
+  sanitizeAnalyticsProperties,
+} = await import('../analytics/posthog');
 
 type AnalyticsFixtureIds = Readonly<{
   noKeyEventId: string;
@@ -106,9 +111,55 @@ describe('analytics/posthog (web)', () => {
       eventId: analyticsFixtureIds.forwardedEventId,
       artistId: analyticsFixtureIds.forwardedArtistId,
     });
-    expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
+    expect(identifyMock).toHaveBeenCalledWith(analyticsFixtureIds.identifiedUserId, undefined);
     expect(captureMock).toHaveBeenCalledWith('$pageview', { name: 'Home' });
     expect(resetMock).toHaveBeenCalled();
+  });
+
+  test('redacts credentials while preserving PostHog\'s required project token', () => {
+    const secret = 'reset-secret-sentinel';
+    const source = `https://tdf.test/reset?token=${secret}&redirect=%2Ffans`;
+    const sanitizedUrl = redactSensitiveQueryValues(source);
+    const sanitizedProperties = sanitizeAnalyticsProperties({
+      $current_url: source,
+      $referrer: `https://tdf.test/oauth?redirect=${encodeURIComponent(`/reset?token=${secret}`)}`,
+      route: '/reset',
+      token: secret,
+      nested: {
+        email: 'private@example.com',
+        password: secret,
+        returnUrl: source,
+      },
+    });
+
+    expect(sanitizedUrl).not.toContain(secret);
+    expect(JSON.stringify(sanitizedProperties)).not.toContain(secret);
+    expect(JSON.stringify(sanitizedProperties)).not.toContain('private@example.com');
+    expect(sanitizedProperties).toMatchObject({ route: '/reset' });
+
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    getAnalyticsClient();
+    const initOptions = initMock.mock.calls[0]?.[1] as {
+      autocapture?: boolean;
+      before_send?: (event: { properties: Record<string, unknown> }) => {
+        properties: Record<string, unknown>;
+      } | null;
+    };
+    expect(initOptions.autocapture).toBe(false);
+    const outgoing = initOptions.before_send?.({
+      properties: {
+        $current_url: source,
+        token: 'phc_unit_test',
+        nested: { token: secret },
+      },
+    });
+    expect(JSON.stringify(outgoing)).not.toContain(secret);
+    expect(outgoing?.properties.token).toBe('phc_unit_test');
+
+    const outgoingWithApplicationToken = initOptions.before_send?.({
+      properties: { token: secret },
+    });
+    expect(outgoingWithApplicationToken?.properties).not.toHaveProperty('token');
   });
 
   test('logs PostHog failures through the app logger', () => {

@@ -865,10 +865,10 @@ signup SignupRequest
       welcomeResult <-
         liftIO $
           ((try $
-            EmailSvc.sendWelcome emailSvc displayNameText emailClean emailClean passwordClean) :: IO (Either SomeException ()))
+            EmailSvc.sendAccountCreated emailSvc displayNameText emailClean) :: IO (Either SomeException ()))
       case welcomeResult of
-        Left err -> do
-          let msg = "[Signup] Account created but welcome email failed for " <> emailClean <> ": " <> T.pack (displayException err)
+        Left _ -> do
+          let msg = "[Signup] Account created but account-created email failed."
           liftIO $ do
             hPutStrLn stderr (T.unpack msg)
             LogBuf.addLog LogBuf.LogWarning msg
@@ -1116,8 +1116,8 @@ passwordReset PasswordResetRequest{..} = do
         ((try $
           EmailSvc.sendPasswordReset emailSvc displayName recipientEmail resetToken) :: IO (Either SomeException ()))
     case resetResult of
-      Left err -> do
-        let msg = "[PasswordReset] Failed to email reset link to " <> recipientEmail <> ": " <> T.pack (displayException err)
+      Left _ -> do
+        let msg = "[PasswordReset] Failed to send a reset email."
         liftIO $ do
           hPutStrLn stderr (T.unpack msg)
           LogBuf.addLog LogBuf.LogWarning msg

@@ -32,6 +32,100 @@ export interface AnalyticsClient {
 
 let cachedClient: AnalyticsClient | null = null;
 
+const SENSITIVE_QUERY_PARAMETER = /(^|[_-])(token|code|state|password|secret|key)($|[_-])/i;
+const REDACTED_QUERY_VALUE = '[REDACTED]';
+const SENSITIVE_PROPERTY_NAMES = new Set([
+  'authorization',
+  'cookie',
+  'email',
+  'emailaddress',
+  'phone',
+  'phonenumber',
+  'username',
+  'displayname',
+  'role',
+  'roles',
+  'partyid',
+  'password',
+  'currentpassword',
+  'newpassword',
+  'token',
+  'accesstoken',
+  'refreshtoken',
+  'idtoken',
+  'code',
+  'state',
+  'secret',
+  'clientsecret',
+  'key',
+  'apikey',
+]);
+
+const normalizePropertyName = (key: string): string => key.replace(/[^a-z\d]/gi, '').toLowerCase();
+
+const isSensitivePropertyName = (key: string): boolean =>
+  SENSITIVE_PROPERTY_NAMES.has(normalizePropertyName(key));
+
+export function redactSensitiveQueryValues(value: string, depth = 0): string {
+  if (!value.includes('?')) return value;
+
+  try {
+    const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
+    const parsed = new URL(value, 'https://analytics.invalid');
+    let changed = false;
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (SENSITIVE_QUERY_PARAMETER.test(key)) {
+        parsed.searchParams.set(key, REDACTED_QUERY_VALUE);
+        changed = true;
+        continue;
+      }
+      if (depth >= 2) continue;
+      const currentValue = parsed.searchParams.get(key);
+      if (currentValue == null) continue;
+      const sanitizedValue = redactSensitiveQueryValues(currentValue, depth + 1);
+      if (sanitizedValue !== currentValue) {
+        parsed.searchParams.set(key, sanitizedValue);
+        changed = true;
+      }
+    }
+    if (!changed) return value;
+    return isAbsolute
+      ? parsed.toString()
+      : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return value;
+  }
+}
+
+const sanitizeAnalyticsValue = (value: unknown): unknown => {
+  if (typeof value === 'string') return redactSensitiveQueryValues(value);
+  if (Array.isArray(value)) return value.map(sanitizeAnalyticsValue);
+  if (typeof value !== 'object' || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !isSensitivePropertyName(key))
+      .map(([key, nestedValue]) => [key, sanitizeAnalyticsValue(nestedValue)]),
+  );
+};
+
+export function sanitizeAnalyticsProperties<T extends Record<string, unknown>>(
+  properties: T,
+): T {
+  return Object.fromEntries(
+    Object.entries(properties)
+      .filter(([key]) => !isSensitivePropertyName(key))
+      .map(([key, value]) => [key, sanitizeAnalyticsValue(value)]),
+  ) as T;
+}
+
+const sanitizedOptionalProperties = (
+  properties?: Record<string, unknown>,
+): Record<string, unknown> | undefined => {
+  if (!properties) return undefined;
+  const sanitized = sanitizeAnalyticsProperties(properties);
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+};
+
 function logAnalyticsFailure(operation: string, error: unknown): void {
   logger.warn(`[analytics] ${operation} failed`, { error });
 }
@@ -63,24 +157,34 @@ export function getAnalyticsClient(): AnalyticsClient {
 
   posthog.init(key, {
     api_host: host,
+    autocapture: false,
     capture_pageview: true,
     capture_pageleave: true,
     disable_session_recording: true,
     persistence: 'localStorage+cookie',
+    mask_personal_data_properties: true,
+    before_send: (event) => {
+      if (event === null) return null;
+      const projectToken = event.properties?.['token'];
+      event.properties = sanitizeAnalyticsProperties(event.properties ?? {});
+      // PostHog injects its public project token at the root; application tokens stay stripped.
+      if (projectToken === key) event.properties['token'] = projectToken;
+      return event;
+    },
   });
 
   cachedClient = {
     ready: true,
     capture: (event, properties) => {
       try {
-        posthog.capture(event, properties);
+        posthog.capture(event, sanitizedOptionalProperties(properties));
       } catch (err) {
         logAnalyticsFailure('capture', err);
       }
     },
     identify: (distinctId, properties) => {
       try {
-        posthog.identify(distinctId, properties);
+        posthog.identify(distinctId, sanitizedOptionalProperties(properties));
       } catch (err) {
         logAnalyticsFailure('identify', err);
       }
@@ -94,7 +198,7 @@ export function getAnalyticsClient(): AnalyticsClient {
     },
     page: (name, properties) => {
       try {
-        posthog.capture('$pageview', { ...properties, name });
+        posthog.capture('$pageview', sanitizeAnalyticsProperties({ ...properties, name }));
       } catch (err) {
         logAnalyticsFailure('page', err);
       }
