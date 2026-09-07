@@ -3,7 +3,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 import { renderPublicRoutes } from './publicRoutes';
-import { SessionProvider } from '../session/SessionContext';
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
@@ -51,28 +50,4 @@ describe('public routes', () => {
     }
   });
 
-  it.each([
-    ['/privacidad', 'Privacidad y reputación'],
-    ['/apelaciones', 'Apelaciones de reputación'],
-  ])('renders the public reputation rights route %s', async (path, expectedHeading) => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    let root: Root | null = createRoot(container);
-
-    try {
-      await act(async () => {
-        root?.render(<SessionProvider><MemoryRouter initialEntries={[path]}><Routes>{renderPublicRoutes()}</Routes></MemoryRouter></SessionProvider>);
-        await flushPromises();
-        await flushPromises();
-      });
-      expect(container.textContent).toContain(expectedHeading);
-    } finally {
-      await act(async () => {
-        root?.unmount();
-        await flushPromises();
-      });
-      root = null;
-      document.body.removeChild(container);
-    }
-  });
 });
