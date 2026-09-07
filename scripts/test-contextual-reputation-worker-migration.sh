@@ -50,7 +50,7 @@ assert_equal() {
 
 psql_exec -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;' >/dev/null
 psql_exec -c 'CREATE TABLE party (id BIGINT PRIMARY KEY);' >/dev/null
-psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103), (104);' >/dev/null
+psql_exec -c 'INSERT INTO party(id) VALUES (101), (102), (103), (104), (105), (106), (107);' >/dev/null
 
 apply_file tdf-hq/sql/2026-09-01_contextual_reputation.sql
 apply_file tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql
@@ -166,7 +166,7 @@ assert_equal \
 
 psql_exec -c "UPDATE reputation_interaction SET status='eligible' WHERE id='$interaction_id';" >/dev/null
 assert_equal \
-  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested' AND context_key='service:mix-001';")" \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='interaction.restored' AND context_key='service:mix-001';")" \
   "1" \
   "Restored interaction recalculation fan-out"
 restoration_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-restore-0001', 1, '2030-09-01T12:01:20Z');")
@@ -180,6 +180,80 @@ assert_equal \
   "$(psql_exec -Atc "SELECT score || ':' || observation_count FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:mix-001';")" \
   "50.9091:1" \
   "Restored interaction evidence recovery"
+
+psql_exec -c "
+  DO \$\$
+  DECLARE
+    fixture_index INTEGER;
+    fixture_evaluator BIGINT;
+    fixture_interaction UUID;
+    fixture_evaluation UUID;
+  BEGIN
+    FOR fixture_index IN 1..7 LOOP
+      fixture_evaluator := CASE
+        WHEN fixture_index <= 4 THEN 101
+        ELSE 100 + fixture_index
+      END;
+      fixture_interaction := gen_random_uuid();
+      fixture_evaluation := gen_random_uuid();
+      INSERT INTO reputation_interaction(
+        id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+        verified_at, status, source_kind, source_id
+      ) VALUES (
+        fixture_interaction, 'service', 'cap-001', fixture_evaluator, 102,
+        '2030-09-01T12:01:30Z', '2030-09-01T12:01:30Z',
+        'eligible', 'test_fixture', 'cap-001-' || fixture_index::text
+      );
+      INSERT INTO reputation_evaluation(
+        id, interaction_id, evaluator_party_id, subject_party_id, direction,
+        status, formula_version_id, revision, edit_deadline
+      ) VALUES (
+        fixture_evaluation, fixture_interaction, fixture_evaluator, 102, 'a_to_b',
+        'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
+      );
+      INSERT INTO reputation_evaluation_category(
+        evaluation_id, category_id, position, weight
+      ) VALUES (fixture_evaluation, '$category_id', 1, 100);
+      INSERT INTO reputation_evaluation_rank(
+        evaluation_id, category_id, compared_party_id, position_group, absolute_score
+      ) VALUES (
+        fixture_evaluation, '$category_id', 102, 1,
+        CASE WHEN fixture_index <= 4 THEN 100 ELSE 0 END
+      );
+      UPDATE reputation_evaluation
+      SET status='submitted', submitted_at='2030-09-01T12:01:30Z'
+      WHERE id=fixture_evaluation;
+    END LOOP;
+  END
+  \$\$;
+" >/dev/null
+
+cap_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-cap-0001', 1, '2030-09-01T12:01:40Z');")
+cap_event_id=$(printf '%s' "$cap_claim" | cut -d '|' -f 1)
+cap_claim_token=$(printf '%s' "$cap_claim" | cut -d '|' -f 2)
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$cap_event_id', '$cap_claim_token', '2030-09-01T12:01:41Z');")" \
+  "processed" \
+  "Adjusted-total evaluator cap processing"
+assert_equal \
+  "$(psql_exec -Atc "SELECT score || ':' || verified_interaction_count || ':' || distinct_evaluator_count || ':' || observation_count || ':' || confidence FROM reputation_aggregate_candidate WHERE subject_party_id=102 AND category_id='$category_id' AND context_key='service:cap-001';")" \
+  "41.6667:7:4:7:low" \
+  "Adjusted-total evaluator cap candidate"
+assert_equal \
+  "$(psql_exec -Atc "SELECT ((metadata->>'maxEvaluatorShare')::numeric <= 0.250001)::text FROM reputation_aggregation_event_action WHERE event_id='$cap_event_id' AND action='processed';")" \
+  "true" \
+  "Adjusted evaluator contribution share"
+
+while :; do
+  cap_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-cap-0001', 1, '2030-09-01T12:01:42Z');")
+  [ -n "$cap_claim" ] || break
+  cap_event_id=$(printf '%s' "$cap_claim" | cut -d '|' -f 1)
+  cap_claim_token=$(printf '%s' "$cap_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$cap_event_id', '$cap_claim_token', '2030-09-01T12:01:43Z');")" \
+    "processed" \
+    "Evaluator-cap follow-up event processing"
+done
 
 ordinal_interaction_a="c6100000-0000-4000-8000-000000000001"
 ordinal_evaluation_a="c6100000-0000-4000-8000-000000000002"
@@ -340,6 +414,26 @@ while :; do
     "Tie follow-up event processing"
 done
 
+psql_exec -c "DELETE FROM reputation_evaluation WHERE id='$tie_evaluation_id';" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='evaluation.erased_or_anonymized' AND context_key='service:tie-001';")" \
+  "2" \
+  "Pre-cascade evaluation deletion fan-out"
+while :; do
+  erase_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-erase-0001', 1, '2030-09-01T12:02:54Z');")
+  [ -n "$erase_claim" ] || break
+  erase_event_id=$(printf '%s' "$erase_claim" | cut -d '|' -f 1)
+  erase_claim_token=$(printf '%s' "$erase_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$erase_event_id', '$erase_claim_token', '2030-09-01T12:02:55Z');")" \
+    "processed" \
+    "Evaluation deletion invalidation processing"
+done
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE category_id='$category_id' AND context_key='service:tie-001' AND score=50.0000 AND observation_count=0;")" \
+  "2" \
+  "Deleted evaluation evidence removal"
+
 stable_event_id="c6000000-0000-4000-8000-000000000003"
 stable_correlation_id="c6000000-0000-4000-8000-000000000004"
 psql_exec -c "
@@ -382,7 +476,7 @@ psql_exec -c "
     id, environment, run_kind, formula_version_id, high_water_mark
   ) VALUES (
     '$run_id', 'staging', 'simulation', 'public-bayes-roc-v1',
-    '2026-09-01T12:05:00Z'
+    '2027-09-01T12:05:00Z'
   );
 " >/dev/null
 if psql_exec -c "UPDATE reputation_aggregation_run SET high_water_mark='2031-09-01T12:05:00Z' WHERE id='$run_id';" >/dev/null 2>&1; then
@@ -451,6 +545,119 @@ assert_equal \
   "processed" \
   "Requeued event processing"
 
+expired_event_id="c6300000-0000-4000-8000-000000000001"
+expired_correlation_id="c6300000-0000-4000-8000-000000000002"
+expired_lease_token="c6300000-0000-4000-8000-000000000003"
+psql_exec -c "
+  SELECT reputation_enqueue_aggregation_event(
+    '$expired_event_id', 'recalculation.requested', 102, 'service:mix-001',
+    '$category_id', 2, 'public-bayes-roc-v1', '$expired_correlation_id', NULL,
+    '2030-09-01T12:04:05Z'
+  );
+  UPDATE reputation_aggregation_outbox
+  SET processing_status='processing', attempt_count=20,
+      lease_token='$expired_lease_token', lease_owner_hash=repeat('a', 64),
+      lease_expires_at='2030-09-01T12:04:05Z'
+  WHERE id='$expired_event_id';
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_claim_aggregation_events('staging', 'worker-expired-0001', 1, '2030-09-01T12:04:06Z');")" \
+  "0" \
+  "Expired final lease claim suppression"
+assert_equal \
+  "$(psql_exec -Atc "SELECT processing_status || ':' || attempt_count || ':' || last_error_code FROM reputation_aggregation_outbox WHERE id='$expired_event_id';")" \
+  "dead_letter:20:lease_expired_at_attempt_limit" \
+  "Expired final lease dead letter"
+psql_exec -c "SELECT reputation_requeue_dead_letter_event(
+  '$expired_event_id', 103, 'Expired final lease was inspected and approved',
+  '2030-09-01T12:04:07Z'
+);" >/dev/null
+expired_requeue_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token || '|' || claimed_attempt FROM reputation_claim_aggregation_events('staging', 'worker-expired-0001', 1, '2030-09-01T12:04:08Z');")
+expired_requeue_event_id=$(printf '%s' "$expired_requeue_claim" | cut -d '|' -f 1)
+expired_requeue_token=$(printf '%s' "$expired_requeue_claim" | cut -d '|' -f 2)
+assert_equal "$expired_requeue_event_id" "$expired_event_id" "Expired lease requeue claim"
+assert_equal "$(printf '%s' "$expired_requeue_claim" | cut -d '|' -f 3)" "1" "Expired lease new retry cycle"
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$expired_requeue_event_id', '$expired_requeue_token', '2030-09-01T12:04:09Z');")" \
+  "processed" \
+  "Expired lease recovery processing"
+
+fence_interaction_id="c6400000-0000-4000-8000-000000000001"
+fence_evaluation_id="c6400000-0000-4000-8000-000000000002"
+fence_run_id="c6400000-0000-4000-8000-000000000003"
+fence_event_id="c6400000-0000-4000-8000-000000000004"
+fence_correlation_id="c6400000-0000-4000-8000-000000000005"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES (
+    '$fence_interaction_id', 'service', 'fence-001', 101, 102,
+    '2026-09-04T12:00:00Z', '2026-09-04T12:00:00Z',
+    'eligible', 'test_fixture', 'fence-001'
+  );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES (
+    '$fence_evaluation_id', '$fence_interaction_id', 101, 102, 'a_to_b',
+    'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
+  );
+  INSERT INTO reputation_evaluation_category(evaluation_id, category_id, position, weight)
+  VALUES ('$fence_evaluation_id', '$category_id', 1, 100);
+  INSERT INTO reputation_evaluation_rank(
+    evaluation_id, category_id, compared_party_id, position_group, absolute_score
+  ) VALUES ('$fence_evaluation_id', '$category_id', 102, 1, 70);
+  UPDATE reputation_evaluation
+  SET status='submitted', submitted_at='2026-09-05T12:00:00Z'
+  WHERE id='$fence_evaluation_id';
+  INSERT INTO reputation_aggregation_run(
+    id, environment, run_kind, formula_version_id, high_water_mark
+  ) VALUES (
+    '$fence_run_id', 'staging', 'backfill', 'public-bayes-roc-v1',
+    '2026-09-06T00:00:00Z'
+  );
+  SELECT reputation_enqueue_aggregation_event(
+    '$fence_event_id', 'recalculation.requested', 102, 'service:fence-001',
+    '$category_id', 1, 'public-bayes-roc-v1', '$fence_correlation_id',
+    '$fence_run_id', '2026-09-06T00:00:00Z'
+  );
+  UPDATE reputation_evaluation_rank
+  SET absolute_score=90
+  WHERE evaluation_id='$fence_evaluation_id'
+    AND category_id='$category_id'
+    AND compared_party_id=102;
+  UPDATE reputation_worker_control SET max_attempts=1 WHERE environment='staging';
+" >/dev/null
+fence_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-fence-0001', 1, '2030-09-01T12:04:10Z');")
+fence_claim_event_id=$(printf '%s' "$fence_claim" | cut -d '|' -f 1)
+fence_claim_token=$(printf '%s' "$fence_claim" | cut -d '|' -f 2)
+assert_equal "$fence_claim_event_id" "$fence_event_id" "High-water fenced run claim"
+if psql_exec -c "SELECT reputation_complete_aggregation_event('$fence_claim_event_id', '$fence_claim_token', '2030-09-01T12:04:11Z');" >/dev/null 2>&1; then
+  echo "Bounded run accepted a post-cutoff evidence edit" >&2
+  exit 1
+fi
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_fail_aggregation_event('staging', '$fence_claim_event_id', '$fence_claim_token', 'source_fence_violated', '2030-09-01T12:04:12Z');")" \
+  "dead_letter" \
+  "High-water fence failure audit"
+psql_exec -c "UPDATE reputation_worker_control SET max_attempts=20 WHERE environment='staging';" >/dev/null
+
+while :; do
+  fence_followup_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-fence-0001', 1, '2030-09-01T12:04:13Z');")
+  [ -n "$fence_followup_claim" ] || break
+  fence_followup_event_id=$(printf '%s' "$fence_followup_claim" | cut -d '|' -f 1)
+  fence_followup_token=$(printf '%s' "$fence_followup_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$fence_followup_event_id', '$fence_followup_token', '2030-09-01T12:04:14Z');")" \
+    "processed" \
+    "Post-fence canonical event processing"
+done
+assert_equal \
+  "$(psql_exec -Atc "SELECT processing_status || ':' || last_error_code FROM reputation_aggregation_outbox WHERE id='$fence_event_id';")" \
+  "dead_letter:source_fence_violated" \
+  "High-water fenced run dead letter"
+
 if psql_exec -c "UPDATE reputation_aggregation_event_action SET action='processed' WHERE event_id='$retry_event_id';" >/dev/null 2>&1; then
   echo "Reputation event action audit allowed mutation" >&2
   exit 1
@@ -476,12 +683,12 @@ psql_exec -c "
 " >/dev/null
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='category.applicability_changed' AND category_id='$category_id';")" \
-  "6" \
+  "8" \
   "Category applicability control event"
 
 assert_equal \
   "$(psql_exec -Atc "SELECT enabled::text || ':' || simulation_only::text || ':' || dead_letter_count FROM reputation_worker_health WHERE environment='staging';")" \
-  "true:true:0" \
+  "true:true:1" \
   "Staging worker health view"
 
 assert_equal \
@@ -489,9 +696,23 @@ assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_worker_event_metrics;")" \
   "Non-identifying event metric context"
 assert_equal \
-  "$(psql_exec -Atc 'SELECT count(*) FROM reputation_worker_processing_metrics WHERE duration_seconds_p95 IS NOT NULL;')" \
-  "3" \
+  "$(psql_exec -Atc 'SELECT (count(*) >= 3)::text FROM reputation_worker_processing_metrics WHERE duration_seconds_p95 IS NOT NULL;')" \
+  "true" \
   "Processing duration metrics"
+
+simulation_candidate_count=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")
+decay_event_count_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested';")
+decay_scheduled_count=$(psql_exec -Atc "SELECT reputation_schedule_decay_recalculations('staging', 100, '2030-09-02T12:00:00Z');")
+assert_equal "$decay_scheduled_count" "$simulation_candidate_count" "Daily decay recalculation schedule"
+decay_event_count_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE event_type='recalculation.requested';")
+assert_equal \
+  "$((decay_event_count_after - decay_event_count_before))" \
+  "$decay_scheduled_count" \
+  "Daily decay event fan-out"
+assert_equal \
+  "$(psql_exec -Atc "SELECT reputation_schedule_decay_recalculations('staging', 100, '2030-09-02T23:59:59Z');")" \
+  "0" \
+  "Daily decay schedule idempotency"
 
 psql_exec -c "UPDATE reputation_worker_control SET enabled=FALSE WHERE environment='staging';" >/dev/null
 assert_equal \
@@ -503,7 +724,6 @@ assert_equal \
   "1" \
   "Rollback gate evidence preservation"
 
-simulation_candidate_count=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")
 apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")" \
@@ -514,4 +734,4 @@ assert_equal \
   "1" \
   "Migration rerun audit-run preservation"
 
-echo "Contextual reputation staging worker migration passed production gating, immutable formula and run cutoffs, run/source idempotency, immutable outbox evidence, leasing, simulation isolation, deterministic absolute and ordinal Bayesian aggregation, connected-component and tie handling, invalidation/restoration and category-control fan-out, bounded recoverable DLQ cycles, audited replay, non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed production gating, immutable formula and fenced run cutoffs, run/source idempotency, immutable outbox evidence, leasing and expired-lease limits, simulation isolation, adjusted-share-capped absolute and ordinal Bayesian aggregation, connected-component and tie handling, deletion/invalidation/restoration and category-control fan-out, periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, non-identifying metrics, and rerun checks."

@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS reputation_aggregation_outbox (
     'appeal.provisional_opened',
     'appeal.resolved',
     'interaction.invalidated',
+    'interaction.restored',
     'category.applicability_changed',
     'public_consent.changed',
     'pilot_consent.changed',
@@ -347,6 +348,86 @@ BEGIN
   RETURN existing.id;
 END $$;
 
+CREATE OR REPLACE FUNCTION reputation_schedule_decay_recalculations(
+  p_environment TEXT,
+  p_batch_size INTEGER,
+  p_now TIMESTAMPTZ
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  schedule_bucket TIMESTAMPTZ;
+  schedule_bucket_key TEXT;
+  scheduled_count INTEGER := 0;
+  target RECORD;
+BEGIN
+  IF p_environment NOT IN ('test', 'staging') THEN
+    RAISE EXCEPTION 'Reputation aggregation worker is staging-only';
+  END IF;
+  IF p_batch_size NOT BETWEEN 1 AND 100 THEN
+    RAISE EXCEPTION 'Reputation decay schedule batch size is invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM reputation_worker_control control
+    WHERE control.environment = p_environment
+      AND control.enabled
+      AND control.simulation_only
+  ) THEN
+    RETURN 0;
+  END IF;
+
+  schedule_bucket := date_trunc('day', p_now AT TIME ZONE 'UTC') AT TIME ZONE 'UTC';
+  schedule_bucket_key := to_char(
+    schedule_bucket AT TIME ZONE 'UTC',
+    'YYYY-MM-DD"T"HH24:MI:SS"Z"'
+  );
+  FOR target IN
+    SELECT candidate.subject_party_id, candidate.category_id,
+           candidate.context_key, candidate.formula_version_id
+    FROM reputation_aggregate_candidate candidate
+    WHERE candidate.publication_state = 'simulation'
+      AND candidate.calculated_at < schedule_bucket
+      AND NOT EXISTS (
+        SELECT 1
+        FROM reputation_aggregation_outbox existing
+        WHERE existing.id = md5(
+          'reputation-decay:' || p_environment || ':' ||
+          candidate.subject_party_id::text || ':' || candidate.category_id::text || ':' ||
+          candidate.context_key || ':' || candidate.formula_version_id || ':' ||
+          schedule_bucket_key
+        )::uuid
+      )
+    ORDER BY candidate.calculated_at, candidate.subject_party_id,
+             candidate.category_id, candidate.context_key,
+             candidate.formula_version_id
+    LIMIT p_batch_size
+  LOOP
+    PERFORM reputation_enqueue_aggregation_event(
+      md5(
+        'reputation-decay:' || p_environment || ':' ||
+        target.subject_party_id::text || ':' || target.category_id::text || ':' ||
+        target.context_key || ':' || target.formula_version_id || ':' ||
+        schedule_bucket_key
+      )::uuid,
+      'recalculation.requested',
+      target.subject_party_id,
+      target.context_key,
+      target.category_id,
+      extract(epoch FROM schedule_bucket)::bigint,
+      target.formula_version_id,
+      md5(
+        'reputation-decay-correlation:' || p_environment || ':' || schedule_bucket_key
+      )::uuid,
+      NULL,
+      schedule_bucket
+    );
+    scheduled_count := scheduled_count + 1;
+  END LOOP;
+  RETURN scheduled_count;
+END $$;
+
 CREATE OR REPLACE FUNCTION reputation_emit_evaluation_events(
   p_evaluation_id UUID,
   p_event_type TEXT,
@@ -409,9 +490,16 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  IF NEW.status = 'submitted'
-     AND (TG_OP = 'INSERT' OR OLD.status <> 'submitted') THEN
+  IF TG_OP = 'INSERT' AND NEW.status = 'submitted' THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.submitted', now());
+  ELSIF TG_OP = 'UPDATE'
+     AND NEW.status = 'submitted'
+     AND OLD.status = 'draft' THEN
+    PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.submitted', now());
+  ELSIF TG_OP = 'UPDATE'
+     AND NEW.status = 'submitted'
+     AND OLD.status NOT IN ('draft', 'submitted') THEN
+    PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.edited', now());
   ELSIF TG_OP = 'UPDATE'
      AND OLD.status = 'submitted'
      AND NEW.status IN ('under_review', 'void') THEN
@@ -424,6 +512,23 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+
+CREATE OR REPLACE FUNCTION reputation_evaluation_delete_outbox_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  PERFORM reputation_emit_evaluation_events(
+    OLD.id, 'evaluation.erased_or_anonymized', now()
+  );
+  RETURN OLD;
+END $$;
+
+DROP TRIGGER IF EXISTS trg_reputation_evaluation_delete_outbox
+  ON reputation_evaluation;
+CREATE TRIGGER trg_reputation_evaluation_delete_outbox
+  BEFORE DELETE ON reputation_evaluation
+  FOR EACH ROW EXECUTE FUNCTION reputation_evaluation_delete_outbox_trigger();
 
 DROP TRIGGER IF EXISTS trg_reputation_evaluation_outbox ON reputation_evaluation;
 CREATE TRIGGER trg_reputation_evaluation_outbox
@@ -508,7 +613,7 @@ BEGIN
       ORDER BY evaluation.id
     LOOP
       PERFORM reputation_emit_evaluation_events(
-        evaluation_id, 'recalculation.requested', now()
+        evaluation_id, 'interaction.restored', now()
       );
     END LOOP;
   END IF;
@@ -601,7 +706,8 @@ BEGIN
 
   worker_hash := encode(digest(btrim(p_worker_id), 'sha256'), 'hex');
   FOR queued IN
-    SELECT event.id
+    SELECT event.id, event.processing_status, event.attempt_count,
+           event.lease_owner_hash
     FROM reputation_aggregation_outbox event
     WHERE (
       (
@@ -625,6 +731,22 @@ BEGIN
     FOR UPDATE SKIP LOCKED
     LIMIT p_batch_size
   LOOP
+    IF queued.processing_status = 'processing'
+       AND queued.attempt_count >= control.max_attempts THEN
+      UPDATE reputation_aggregation_outbox
+      SET processing_status = 'dead_letter',
+          lease_token = NULL, lease_owner_hash = NULL, lease_expires_at = NULL,
+          processed_at = NULL, last_error_code = 'lease_expired_at_attempt_limit'
+      WHERE id = queued.id;
+      INSERT INTO reputation_aggregation_event_action(
+        event_id, action, attempt_count, worker_hash, error_code, created_at
+      ) VALUES (
+        queued.id, 'dead_lettered', queued.attempt_count,
+        queued.lease_owner_hash, 'lease_expired_at_attempt_limit', p_now
+      );
+      CONTINUE;
+    END IF;
+
     token := gen_random_uuid();
     UPDATE reputation_aggregation_outbox
     SET processing_status = 'processing',
@@ -671,6 +793,10 @@ DECLARE
   run_high_water_mark TIMESTAMPTZ;
   evidence_reference_time TIMESTAMPTZ;
   iteration_index INTEGER;
+  cap_iteration_index INTEGER;
+  evaluator_total_count INTEGER := 0;
+  effective_evidence_weight NUMERIC := 0;
+  max_evaluator_share NUMERIC := 0;
   component_count INTEGER := 0;
   interaction_count INTEGER := 0;
   evaluator_count INTEGER := 0;
@@ -702,6 +828,33 @@ BEGIN
     END IF;
   END IF;
   evidence_reference_time := COALESCE(run_high_water_mark, p_now);
+
+  IF run_high_water_mark IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM reputation_aggregation_outbox mutation
+    WHERE mutation.run_id IS NULL
+      AND mutation.algorithm_version = event_row.algorithm_version
+      AND mutation.context_key = event_row.context_key
+      AND mutation.occurred_at > run_high_water_mark
+      AND (
+        event_row.category_id IS NULL
+        OR mutation.category_id IS NULL
+        OR mutation.category_id = event_row.category_id
+      )
+      AND mutation.event_type IN (
+        'evaluation.edited',
+        'evaluation.invalidated',
+        'evaluation.erased_or_anonymized',
+        'signal.moderated',
+        'appeal.provisional_opened',
+        'appeal.resolved',
+        'interaction.invalidated',
+        'interaction.restored',
+        'category.applicability_changed'
+      )
+  ) THEN
+    RAISE EXCEPTION 'Reputation aggregation run source changed after its high-water mark';
+  END IF;
 
   IF event_row.category_id IS NULL THEN
     INSERT INTO reputation_aggregation_outbox(
@@ -784,10 +937,16 @@ BEGIN
     subject_party_id BIGINT PRIMARY KEY,
     ability NUMERIC NOT NULL
   ) ON COMMIT DROP;
+  CREATE TEMP TABLE IF NOT EXISTS reputation_bt_evaluator_weight_work (
+    evaluator_party_id BIGINT PRIMARY KEY,
+    raw_weight NUMERIC NOT NULL CHECK (raw_weight > 0),
+    adjusted_weight NUMERIC NOT NULL CHECK (adjusted_weight >= 0)
+  ) ON COMMIT DROP;
 
   TRUNCATE pg_temp.reputation_bt_component_work,
            pg_temp.reputation_bt_observation_work,
-           pg_temp.reputation_bt_state_work;
+           pg_temp.reputation_bt_state_work,
+           pg_temp.reputation_bt_evaluator_weight_work;
 
   WITH RECURSIVE eligible_rank AS (
     SELECT rank.evaluation_id, rank.compared_party_id, rank.position_group
@@ -941,21 +1100,56 @@ BEGIN
     RAISE EXCEPTION 'Reputation comparison evidence exceeds the staging limit';
   END IF;
 
-  WITH evaluator_weight AS (
-    SELECT evaluator_party_id, sum(raw_weight) AS raw_weight
-    FROM pg_temp.reputation_bt_observation_work
-    GROUP BY evaluator_party_id
-  ), total_weight AS (
-    SELECT COALESCE(sum(raw_weight), 0) AS raw_weight
-    FROM evaluator_weight
+  INSERT INTO pg_temp.reputation_bt_evaluator_weight_work(
+    evaluator_party_id, raw_weight, adjusted_weight
   )
+  SELECT evaluator_party_id, sum(raw_weight), sum(raw_weight)
+  FROM pg_temp.reputation_bt_observation_work
+  GROUP BY evaluator_party_id;
+
+  SELECT count(*) INTO evaluator_total_count
+  FROM pg_temp.reputation_bt_evaluator_weight_work;
+
+  IF evaluator_total_count > 0
+     AND evaluator_total_count * evaluator_cap >= 1 THEN
+    -- Water-fill against the effective total. Repeatedly capping against the
+    -- previous adjusted total converges to sum(min(raw_i, cap * total)).
+    FOR cap_iteration_index IN 1..64 LOOP
+      SELECT COALESCE(sum(adjusted_weight), 0)
+        INTO effective_evidence_weight
+      FROM pg_temp.reputation_bt_evaluator_weight_work;
+      UPDATE pg_temp.reputation_bt_evaluator_weight_work evaluator
+      SET adjusted_weight = LEAST(
+        evaluator.raw_weight,
+        effective_evidence_weight * evaluator_cap
+      );
+    END LOOP;
+  ELSE
+    -- With fewer evaluators than 1/cap, a positive evidence total cannot
+    -- satisfy the fractional cap. Retain the conservative one-pass shrinkage
+    -- for this mathematically infeasible sparse-evidence case.
+    SELECT COALESCE(sum(raw_weight), 0)
+      INTO effective_evidence_weight
+    FROM pg_temp.reputation_bt_evaluator_weight_work;
+    UPDATE pg_temp.reputation_bt_evaluator_weight_work evaluator
+    SET adjusted_weight = LEAST(
+      evaluator.raw_weight,
+      effective_evidence_weight * evaluator_cap
+    );
+  END IF;
+
   UPDATE pg_temp.reputation_bt_observation_work observation
-  SET adjusted_weight = observation.raw_weight * LEAST(
-    1,
-    total_weight.raw_weight * evaluator_cap / evaluator_weight.raw_weight
-  )
-  FROM evaluator_weight CROSS JOIN total_weight
-  WHERE evaluator_weight.evaluator_party_id = observation.evaluator_party_id;
+  SET adjusted_weight = observation.raw_weight *
+    evaluator.adjusted_weight / evaluator.raw_weight
+  FROM pg_temp.reputation_bt_evaluator_weight_work evaluator
+  WHERE evaluator.evaluator_party_id = observation.evaluator_party_id;
+
+  SELECT COALESCE(
+           max(adjusted_weight) / NULLIF(sum(adjusted_weight), 0),
+           0
+         )
+    INTO max_evaluator_share
+  FROM pg_temp.reputation_bt_evaluator_weight_work;
 
   INSERT INTO pg_temp.reputation_bt_state_work(subject_party_id, ability)
   SELECT subject_party_id, ln(prior_probability / (1 - prior_probability))
@@ -1117,6 +1311,7 @@ BEGIN
       'componentSubjectCount', component_count,
       'confidence', confidence_value,
       'distinctEvaluatorCount', evaluator_count,
+      'maxEvaluatorShare', round(max_evaluator_share, 6),
       'observationCount', observation_count,
       'runHighWaterMark', run_high_water_mark,
       'verifiedInteractionCount', interaction_count

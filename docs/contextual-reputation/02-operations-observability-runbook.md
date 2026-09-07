@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -121,7 +121,12 @@ evita exposición durante la cola.
    publican un evento de agregación ni satisfacen este predicado.
 2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto.
 3. Calcular con fórmula y parámetros versionados, prior bayesiano, límite por
-   evaluador y decaimiento temporal aprobados.
+   evaluador y decaimiento temporal aprobados. El límite se mide contra el
+   total efectivo después del ajuste: el worker redistribuye iterativamente el
+   peso hasta que ningún evaluador supere 25% cuando existen al menos cuatro
+   evaluadores; cuando la diversidad hace matemáticamente imposible ese tope,
+   conserva el ajuste conservador de una pasada y registra la participación
+   máxima efectiva para auditoría.
 4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
    fórmula, parámetros y hora de cálculo.
 5. Publicar solo con consentimiento vigente para la superficie/contexto, gate
@@ -157,7 +162,10 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   proyección, para cada `context_key` publicado. La cadencia aprobada debe ser
   como máximo la necesaria para reflejar la semivida de 365 días y registrar su
   última actualización; la ausencia de nuevas mutaciones no congela score ni
-  confianza indefinidamente.
+  confianza indefinidamente. La implementación de staging agenda una vez por
+  día UTC un `recalculation.requested` determinista por candidato vencido; su
+  UUID incorpora ambiente, sujeto, categoría, contexto, fórmula y día UTC, por
+  lo que ticks repetidos son idempotentes.
 - Backfill y simulación usan `run_id` persistente y una clave única de auditoría
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
   auditorías semánticas. No usar el insert histórico no versionado como entrada
@@ -179,7 +187,12 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   la versión anterior, o antes de reabrirla se la reprocesa hasta un high-water
   mark protegido por el mismo fence de productores; solo entonces el rollback
   vuelve a seleccionar atómicamente esa versión, sin borrar sus filas, mientras
-  la nueva se investiga.
+  la nueva se investiga. Como la fuente v1 no conserva versiones históricas de
+  cada fila, un run acotado falla cerrado si el outbox registra una edición,
+  invalidación, eliminación, moderación o restauración posterior a su
+  `high_water_mark` dentro del contexto/categoría. Operaciones debe crear un run
+  nuevo con un corte posterior; nunca forzar la confirmación del snapshot
+  mutable anterior.
 
 ## 6. Métricas, trazas y alertas
 
@@ -241,6 +254,13 @@ restricción de base impide habilitarlo allí y el release productivo fuerza
 `REPUTATION_AGGREGATION_WORKER_ENABLED=false`. El worker escribe únicamente
 `reputation_aggregate_candidate.publication_state='simulation'`; no escribe
 `reputation_public_aggregate`.
+
+Cada tick habilitado agenda primero los candidatos de simulación cuya última
+actualización precede al día UTC actual y luego reclama la cola. El scheduler
+usa IDs diarios deterministas y un lote máximo de 100, de modo que reinicios o
+varios workers no duplican el recálculo. Los runs de backfill/simulación con
+`high_water_mark` verifican además el fence de mutaciones antes de confirmar;
+una violación sigue el flujo normal de retry/DLQ y requiere un run nuevo.
 
 Las fuentes mínimas para dashboards sin PII son
 `reputation_worker_health`, `reputation_worker_queue_metrics`,

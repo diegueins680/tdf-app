@@ -129,6 +129,7 @@ reputationWorkerTick
   -> IO (ReputationWorkerStats, ReputationWorkerHealth)
 reputationWorkerTick Env{envPool} settings workerId = do
   now <- getCurrentTime
+  runSqlPool (scheduleDecayRecalculations settings now) envPool
   claims <- runSqlPool (claimEvents settings workerId now) envPool
   stats <- foldM (processClaim envPool settings now) emptyStats claims
   health <- runSqlPool (loadWorkerHealth (rwsEnvironment settings)) envPool
@@ -184,6 +185,21 @@ claimEvents settings workerId now = rawSql
   , PersistInt64 (fromIntegral (rwsBatchSize settings))
   , PersistUTCTime now
   ]
+
+scheduleDecayRecalculations
+  :: ReputationWorkerSettings
+  -> UTCTime
+  -> SqlPersistT IO ()
+scheduleDecayRecalculations settings now = do
+  rows <- rawSql
+    "SELECT reputation_schedule_decay_recalculations(?,?,?)"
+    [ PersistText (rwsEnvironment settings)
+    , PersistInt64 (fromIntegral (rwsBatchSize settings))
+    , PersistUTCTime now
+    ] :: SqlPersistT IO [Single Int64]
+  case rows of
+    [Single _] -> pure ()
+    _ -> liftWorkerError "Reputation decay scheduling returned an ambiguous result"
 
 completeEvent :: Text -> Text -> UTCTime -> SqlPersistT IO Text
 completeEvent eventId claimToken now = do
