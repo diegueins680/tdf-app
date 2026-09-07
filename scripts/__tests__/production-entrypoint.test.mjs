@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -111,13 +111,13 @@ test('production entrypoint skips asset self-copy for equivalent paths', (contex
 
 test('production entrypoint starts when persistent assets cannot be seeded', (context) => {
   const current = fixture();
-  const servedDirectory = path.join(current.servedAssets, 'directory');
-  mkdirSync(servedDirectory, { recursive: true });
-  chmodSync(servedDirectory, 0o555);
-  context.after(() => {
-    chmodSync(servedDirectory, 0o755);
-    rmSync(current.directory, { recursive: true, force: true });
-  });
+  mkdirSync(current.servedAssets);
+  writeFileSync(
+    path.join(current.directory, 'bin', 'cp'),
+    '#!/bin/sh\nexit 1\n',
+    { mode: 0o755 },
+  );
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
 
   const result = run(current, {
     HQ_ASSETS_DIR: current.servedAssets,
