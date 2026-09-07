@@ -3,7 +3,9 @@
 - add Party-bound signup, intent, eligibility, completion, and first-value persistence
 - expose authenticated onboarding APIs and regenerate web/mobile contracts
 - switch web and mobile completion analytics to the atomic `newlyCompleted` result
-- resume artist-follow and supported product intent safely after authentication
+- require Party-bound, in-window server evidence before accepting `artist_followed` completion
+- resume artist-follow, directory contact, and supported product intent safely after authentication
+- retain mobile intent for retry after transient sync failure and expose the supported internships path
 - add production migration guards, a disposable PostgreSQL rehearsal, and a consolidated continuity audit
 
 This draft is stacked on onboarding audit PR #238. Mobile runtime changes are in draft TDF-mobile PR #40, stacked on mobile PR #39.
@@ -14,20 +16,24 @@ This draft is stacked on onboarding audit PR #238. Mobile runtime changes are in
 - production-release tests: 49/49 passed
 - CI-pipeline tests: 16/16 passed
 - onboarding migration forward/idempotency/constraints/cascade/non-destructive rollback/reapply: passed on disposable PostgreSQL 16
-- focused web Jest: 3 suites, 12 tests passed on the reconciled tree
-- web TypeScript: passed on the reconciled tree
-- web production build and initial-bundle check: passed; 5 preloads / 412,160 gzip bytes, with Vite's existing large-chunk warning
+- focused web Jest: 5 suites, 27 tests passed on the second-batch tree
+- web TypeScript and scoped changed-file lint: passed
+- web production build and initial-bundle check: passed; 12,415 modules, 5 preloads / 412,162 gzip bytes, with Vite's existing large-chunk warning
 - web lint: 0 errors and 102 existing warnings; direct full-source `eslint --quiet` passed
 - focused backend onboarding Hspec before stacked-base reconciliation: 3 examples, 0 failures; the final rerun remained queued behind an unrelated shared Stack build lock and produced no test result
-- mobile final full Jest after stacked-base reconciliation: 66 suites, 331 tests passed; required typecheck and lint passed
+- mobile final full Jest after retry/routing changes: 66 suites, 336 tests passed with `REQUIRE_MOBILE_WORKSPACE=1`; typecheck and scoped lint passed
+- regenerated web/mobile API clients match byte-for-byte
+
+The artist-evidence SQLite case is implemented but was not executed locally: a separate long-running GHC process held the shared build workspace. The prior focused onboarding Hspec run remains 3/3 green; the fresh PR backend job must compile and execute the new case before this change is called backend-verified.
 
 A full web Jest attempt before this continuation's final reconciliation reproduced the unrelated `CourseRegistrationsAdminPage` timeout/overlapping-`act()` cascade from the stacked baseline and an unrelated `PromoCodeField` failure. The run was stopped after those failures; the touched onboarding suites were rerun separately and passed 12/12. No test was disabled or weakened.
 
 ## Risks and rollback
 
-- onboarding completion is idempotent but still records a client-observed action; the paused experiment must remain paused until server-observed action and account-bound exposure semantics exist
+- artist-follow completion is now server-evidence-backed; access requests, event saves, and reactions remain client-observed, so the paused experiment must remain paused until every included action and account-bound exposure semantics are authoritative
 - mobile saved events remain device-local even though onboarding completion is now account-durable
-- no browser, native-device, real OAuth, staging email, payment, production database, or representative analytics validation was performed in this batch
+- directory contact has safe routing/helper/build coverage but no authenticated browser-component run
+- no new browser, native-device, real OAuth, staging email, payment, production database, or representative analytics validation was performed in this batch
 - application rollback is non-destructive: the additive onboarding table and its account history remain in place; no destructive down migration is included
 
 No merge or deployment is requested by this draft. No production data, real transaction, customer communication, or experiment activation occurred.
