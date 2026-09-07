@@ -10,6 +10,7 @@ import Data.Text (Text)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
+import TDF.DTO.ReputationConsent (ReputationConsentDTO, ReputationConsentUpdate)
 
 data ExperienceReviewPage = ExperienceReviewPage
   { summary :: Value
@@ -51,16 +52,6 @@ data ReputationPreferenceSaveRequest = ReputationPreferenceSaveRequest
 instance FromJSON ReputationPreferenceSaveRequest
 instance ToJSON ReputationPreferenceSaveRequest
 
-data ReputationConsentUpdate = ReputationConsentUpdate
-  { consentKind :: Text
-  , granted :: Bool
-  , consentCopyVersion :: Maybe Text
-  , consentLocale :: Maybe Text
-  } deriving (Show, Generic)
-
-instance FromJSON ReputationConsentUpdate
-instance ToJSON ReputationConsentUpdate
-
 type RequiredReviewIdempotency =
   Header' '[Required, Strict] "Idempotency-Key" Text
 
@@ -91,7 +82,7 @@ type ReviewsProtectedAPI =
          :> RequiredReviewIdempotency
          :> ReqBody '[JSON] ReputationPreferenceSaveRequest
          :> Put '[JSON] Value
-  :<|> "reputation" :> "consents" :> Get '[JSON] [Value]
+  :<|> "reputation" :> "consents" :> Get '[JSON] [ReputationConsentDTO]
   :<|> "reputation" :> "consents"
          :> ReqBody '[JSON] [ReputationConsentUpdate]
-         :> Put '[JSON] [Value]
+         :> Put '[JSON] [ReputationConsentDTO]

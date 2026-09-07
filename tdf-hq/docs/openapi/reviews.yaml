@@ -86,6 +86,7 @@ paths:
           content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ReputationConsent' } } } }
         '400': { description: Invalid or duplicate consent kind }
         '401': { description: Authentication required }
+        '403': { description: Age assurance or currently approved, evidenced guardian authorization is required for grants }
         '404': { description: New grants unavailable while the feature is disabled }
   /reviews/{targetKind}/{targetId}:
     get:

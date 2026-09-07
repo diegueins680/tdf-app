@@ -30,7 +30,7 @@ import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql
-  (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+  (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
 import Database.PostgreSQL.Simple (SqlError(..))
 import Servant
 import Text.Read (readMaybe)
@@ -40,6 +40,8 @@ import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
 import TDF.Config (contextualReputationEnabled)
 import TDF.DB (Env(..))
+import TDF.DB.ReputationConsent (listReputationConsents, persistReputationConsent)
+import TDF.DTO.ReputationConsent (ReputationConsentDTO, ReputationConsentUpdate(..))
 import TDF.Server.SocialEventsHandlers (postgresVisibleImportedMetadataClause)
 
 type AppM = ReaderT Env Handler
@@ -96,7 +98,7 @@ getPublicReputation :: Int64 -> AppM Value
 getPublicReputation partyId = do
   exists <- jsonRows "SELECT to_jsonb(TRUE) FROM party WHERE id=?" [PersistInt64 partyId]
   when (null exists) (throwError err404 {errBody = "profile not found"})
-  visible <- jsonRows "SELECT to_jsonb(TRUE) FROM reputation_consent_state WHERE party_id=? AND consent_kind='public_visibility' AND granted" [PersistInt64 partyId]
+  visible <- jsonRows "SELECT to_jsonb(TRUE) FROM reputation_consent_state WHERE party_id=? AND consent_kind IN ('pilot_participation','public_visibility') AND granted GROUP BY party_id HAVING count(*)=2" [PersistInt64 partyId]
   when (null visible) (throwError err404 {errBody = "public reputation is unavailable"})
   result <- jsonRows
     ( "SELECT jsonb_build_object('partyId',?::bigint,'formulaVersion','public-bayes-roc-v1',"
@@ -204,12 +206,10 @@ savePersonalReputationPreference user idempotencyKey request = do
 reputationConsentKinds :: [Text]
 reputationConsentKinds = ["pilot_participation", "public_visibility", "public_rankings", "rating_reminders"]
 
-getReputationConsents :: AuthedUser -> AppM [Value]
-getReputationConsents user = jsonRows
-  "SELECT jsonb_build_object('consentKind',kind,'granted',coalesce(state.granted,false),'version',coalesce(state.version,0),'updatedAt',state.updated_at) FROM unnest(ARRAY['pilot_participation','public_visibility','public_rankings','rating_reminders']::text[]) kind LEFT JOIN reputation_consent_state state ON state.party_id=? AND state.consent_kind=kind ORDER BY kind"
-  [PersistInt64 (fromSqlKey (auPartyId user))]
+getReputationConsents :: AuthedUser -> AppM [ReputationConsentDTO]
+getReputationConsents user = runDB (listReputationConsents (fromSqlKey (auPartyId user)))
 
-updateReputationConsents :: AuthedUser -> [ReputationConsentUpdate] -> AppM [Value]
+updateReputationConsents :: AuthedUser -> [ReputationConsentUpdate] -> AppM [ReputationConsentDTO]
 updateReputationConsents user updates = do
   when (null updates || length updates /= length (nub (map consentKind updates)) || any (\update -> consentKind update `notElem` reputationConsentKinds) updates) $
     throwError err400 { errBody = "Invalid reputation consent update" }
@@ -226,21 +226,24 @@ updateReputationConsents user updates = do
   where
     hasCurrentConsentDisclosure ReputationConsentUpdate{consentCopyVersion, consentLocale} =
       consentCopyVersion == Just "reputation-consent-v0.1" && consentLocale `elem` [Just "es", Just "en"]
-    persistConsent partyId ReputationConsentUpdate{consentKind, granted, consentCopyVersion, consentLocale} = do
-      rows <- rawSql "INSERT INTO reputation_consent_state(party_id,consent_kind,granted,version,updated_at) VALUES (?,?,?,1,now()) ON CONFLICT(party_id,consent_kind) DO UPDATE SET granted=EXCLUDED.granted,version=reputation_consent_state.version+1,updated_at=now() WHERE reputation_consent_state.granted IS DISTINCT FROM EXCLUDED.granted RETURNING version" [PersistInt64 partyId, PersistText consentKind, PersistBool granted] :: SqlPersistT IO [Single Int]
-      case rows of
-        [Single version] -> rawExecute "INSERT INTO reputation_consent_event(party_id,consent_kind,granted,version,source,consent_copy_version,consent_locale) VALUES (?,?,?,?, 'self_service',?,?)" [PersistInt64 partyId, PersistText consentKind, PersistBool granted, PersistInt64 (fromIntegral version), maybe PersistNull PersistText consentCopyVersion, maybe PersistNull PersistText consentLocale]
-        _ -> pure ()
+    persistConsent partyId ReputationConsentUpdate{consentKind, granted, consentCopyVersion, consentLocale} =
+      persistReputationConsent partyId consentKind granted consentCopyVersion consentLocale
 
 requireReputationConsentGrantEligibility :: AuthedUser -> AppM ()
 requireReputationConsentGrantEligibility user = do
   rows <- jsonRows
-    "SELECT to_jsonb(assurance_status) FROM directory_age_assurance WHERE account_party_id=?"
+    "SELECT jsonb_build_object('status',assurance_status,'guardianStatus',guardian_consent_status,'evidenceReference',evidence_reference,'guardianAuthorizationCurrent',(expires_at IS NULL OR expires_at > now())) FROM directory_age_assurance WHERE account_party_id=?"
     [PersistInt64 (fromSqlKey (auPartyId user))]
-  let status = case listToMaybe rows of
-        Just (String value) -> value
-        _ -> "unknown"
-  unless (status `elem` ["adult_attested", "adult_verified", "guardian_approved"]) $
+  let eligible = case listToMaybe rows of
+        Just (Object value) ->
+          case (KeyMap.lookup "status" value, KeyMap.lookup "guardianStatus" value, KeyMap.lookup "evidenceReference" value, KeyMap.lookup "guardianAuthorizationCurrent" value) of
+            (Just (String "adult_attested"), _, _, _) -> True
+            (Just (String "adult_verified"), _, _, _) -> True
+            (Just (String "guardian_approved"), Just (String "approved"), Just (String evidence), Just (Bool True)) ->
+              not (T.null (T.strip evidence))
+            _ -> False
+        _ -> False
+  unless eligible $
     throwError err403 { errBody = "Age assurance or approved guardian consent is required" }
 
 validatePreferenceSaveRequest :: Text -> ReputationPreferenceSaveRequest -> AppM ()

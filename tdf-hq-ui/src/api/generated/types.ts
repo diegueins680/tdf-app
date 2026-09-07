@@ -20235,6 +20235,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Age assurance or currently approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description New grants unavailable while the feature is disabled */
             404: {
                 headers: {
