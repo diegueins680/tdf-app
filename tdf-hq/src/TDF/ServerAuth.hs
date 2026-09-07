@@ -116,6 +116,7 @@ import qualified TDF.Email.Service as EmailSvc
 import qualified TDF.LogBuffer as LogBuf
 import TDF.Models
 import qualified TDF.Models as M
+import qualified TDF.ModelsExtra as ME
 import TDF.UserActivity (recordUserActivity)
 
 type AppM = ReaderT Env Handler
@@ -665,6 +666,14 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
         ]
         []
     (Just "artist_followed", Nothing) -> pure False
+    (Just "access_requested", Just signupAt) ->
+      isJust <$> selectFirst
+        [ ME.FeatureAccessRequestRequesterPartyId ==. partyIdValue
+        , ME.FeatureAccessRequestRequestedAt >=. signupAt
+        , ME.FeatureAccessRequestRequestedAt <=. now
+        ]
+        []
+    (Just "access_requested", Nothing) -> pure False
     _ -> pure True
 
 authV1Server :: ServerT Api.AuthV1API AppM

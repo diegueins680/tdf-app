@@ -5109,6 +5109,112 @@ spec = describe "TDF.Server helpers" $ do
                     newlyCompletedValue `shouldBe` False
                 Left serverErr -> expectationFailure ("Expected repeated onboarding completion, got: " <> show serverErr)
 
+        it "requires Party-bound, in-window access-request evidence and stays idempotent" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertAccessRequest requesterPartyId requestedAtValue featureIdValue =
+                            liftIO $ flip runSqlPool pool $ insert_
+                                ME.FeatureAccessRequest
+                                    { ME.featureAccessRequestRequesterPartyId = requesterPartyId
+                                    , ME.featureAccessRequestFeatureId = featureIdValue
+                                    , ME.featureAccessRequestAction = "view"
+                                    , ME.featureAccessRequestRoleContext = "[]"
+                                    , ME.featureAccessRequestModuleContext = "[]"
+                                    , ME.featureAccessRequestJustification = Nothing
+                                    , ME.featureAccessRequestStatus = "pending"
+                                    , ME.featureAccessRequestReviewerGroup = "admin"
+                                    , ME.featureAccessRequestReviewerPartyId = Nothing
+                                    , ME.featureAccessRequestReviewerNotes = Nothing
+                                    , ME.featureAccessRequestRequestedAt = requestedAtValue
+                                    , ME.featureAccessRequestUpdatedAt = requestedAtValue
+                                    , ME.featureAccessRequestDecidedAt = Nothing
+                                    , ME.featureAccessRequestCancelledAt = Nothing
+                                    , ME.featureAccessRequestExpiresAt = Nothing
+                                    }
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "professional_tools"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        completeAccessRequest =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "access_requested"))
+                                )
+                                env
+                    missingEvidence <- completeAccessRequest
+                    insertAccessRequest otherPartyId signupAt "other-party-request"
+                    otherPartyEvidence <- completeAccessRequest
+                    insertAccessRequest
+                        partyId
+                        (addUTCTime (-1) signupAt)
+                        "pre-signup-request"
+                    preSignupEvidence <- completeAccessRequest
+                    insertAccessRequest partyId now "in-window-request"
+                    validEvidence <- completeAccessRequest
+                    repeated <- completeAccessRequest
+                    pure
+                        ( missingEvidence
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending label result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> label <> " evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "access_requested"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid access-request evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "access_requested"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated access-request completion to remain idempotent, got: " <> show serverErr)
+
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
             validateOptionalSignupPhone Nothing `shouldBe` Right Nothing
@@ -14920,6 +15026,29 @@ initializeAuthSchema = do
         \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
         \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
         \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"feature_access_requests\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"requester_party_id\" INTEGER NOT NULL,\
+        \\"feature_id\" VARCHAR NOT NULL,\
+        \\"action\" VARCHAR NOT NULL,\
+        \\"role_context\" VARCHAR NOT NULL,\
+        \\"module_context\" VARCHAR NOT NULL,\
+        \\"justification\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"reviewer_group\" VARCHAR NOT NULL,\
+        \\"reviewer_party_id\" INTEGER NULL,\
+        \\"reviewer_notes\" VARCHAR NULL,\
+        \\"requested_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \\"decided_at\" TIMESTAMP NULL,\
+        \\"cancelled_at\" TIMESTAMP NULL,\
+        \\"expires_at\" TIMESTAMP NULL,\
+        \FOREIGN KEY(\"requester_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"reviewer_party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 
