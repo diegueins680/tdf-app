@@ -250,7 +250,7 @@ export default function LoginPage() {
           boxShadow: '0 0 0 1px rgba(37,99,235,0.35)',
         },
       },
-      '& .MuiFormHelperText-root': { color: 'rgba(226,232,240,0.84)' },
+      '& .MuiFormHelperText-root': { color: 'text.secondary' },
       '& .MuiInputBase-input::placeholder': { color: 'rgba(15,23,42,0.45)', opacity: 1 },
     }),
     [],
