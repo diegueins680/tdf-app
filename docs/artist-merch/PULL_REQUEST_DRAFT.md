@@ -40,7 +40,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
 - Backend Haskell: PASS, 2.474/2.474 ejemplos.
-- Build web: PASS; presupuesto inicial JS PASS (413.691 bytes gzip).
+- Build web: PASS; presupuesto inicial JS PASS (413.750 bytes gzip).
 - Web y móvil typecheck: PASS.
 - Jest web merch API: PASS 5/5.
 - Jest móvil deep links: PASS 2/2.

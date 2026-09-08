@@ -5,7 +5,7 @@
 | Capacidad | Resultado |
 |---|---|
 | Leer/modificar repositorio | Disponible; trabajo en worktree aislado |
-| Rama | `feat/artist-merch-storefronts` sobre `269f3784121b8bdca378ec516d5cb446cc818e39` |
+| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `714060ffcc1db56448f6d3cb82e055e0085af4e7` |
 | Backend Haskell | Build/test local disponible; resultado final se registra abajo |
 | PostgreSQL aislado | Disponible; bases temporales creadas por el script |
 | Migraciones | Aplicación, reejecución, rollback guardado/limpio y reapply disponibles |
@@ -21,7 +21,7 @@
 - Web `tsc --noEmit -p tdf-hq-ui/tsconfig.app.json`: PASS.
 - Móvil `tsc --noEmit -p tdf-mobile/tsconfig.json`: PASS.
 - Backend `stack test --fast`: PASS, 2.474/2.474 ejemplos (incluye cinco reglas unitarias de merch).
-- Build web de producción: PASS; presupuesto inicial de JavaScript PASS (413.691 bytes gzip).
+- Build web de producción: PASS; presupuesto inicial de JavaScript PASS (413.750 bytes gzip).
 - Jest web `tdf-hq-ui/src/api/merch.test.ts`: PASS, 5/5.
 - Jest móvil `tdf-mobile/__tests__/merchDeepLinks.test.ts`: PASS, 2/2.
 - Playwright `artist-merch.spec.mjs` en Chromium desktop y Pixel 7: PASS, 4/4. Cubre piloto cerrado honesto, descubrimiento, storefront, producto, checkout deshabilitado y capturas adjuntas al reporte.
