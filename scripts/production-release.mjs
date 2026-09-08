@@ -47,15 +47,21 @@ const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
   CONTEXTUAL_REPUTATION_ENABLED: 'false',
+  REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+  REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
+  REPUTATION_AGGREGATION_MODE: 'simulation',
   EVENT_DISCOVERY_ENABLED: 'false',
   DEFAULT_LOCALE: 'es',
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
   '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
   '"${CONTEXTUAL_REPUTATION_ENABLED-__UNSET__}" ',
+  '"${REPUTATION_AGGREGATION_WORKER_ENABLED-__UNSET__}" ',
+  '"${REPUTATION_AGGREGATION_ENVIRONMENT-__UNSET__}" ',
+  '"${REPUTATION_AGGREGATION_MODE-__UNSET__}" ',
   '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
   '"${DEFAULT_LOCALE-__UNSET__}"',
   "'",
@@ -312,6 +318,10 @@ function runtimeEnvBlockers(rows, options = {}) {
       options.allowUnavailableAutomaticRunner === true
       && name === 'AUTO_APPLY_PRODUCTION_MIGRATIONS'
       && [undefined, '__UNSET__', 'false'].includes(values[name])
+    ) && !(
+      options.allowUnavailableReputationWorker === true
+      && name.startsWith('REPUTATION_AGGREGATION_')
+      && [undefined, '__UNSET__'].includes(values[name])
     ))
     .filter(([name, expected]) => values[name] !== expected)
     .map(([name, expected]) => {
@@ -391,7 +401,10 @@ async function remotePreflight(context) {
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
   const secrets = await readSecretNames(context.app);
-  const blockers = runtimeEnvBlockers(runtimeEnv, { allowUnavailableAutomaticRunner: true });
+  const blockers = runtimeEnvBlockers(runtimeEnv, {
+    allowUnavailableAutomaticRunner: true,
+    allowUnavailableReputationWorker: true,
+  });
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);
     machine.releaseSnapshot = {

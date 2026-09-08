@@ -38,6 +38,9 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   CONTEXTUAL_REPUTATION_ENABLED = "false"
+  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
+  REPUTATION_AGGREGATION_ENVIRONMENT = "production"
+  REPUTATION_AGGREGATION_MODE = "simulation"
   EVENT_DISCOVERY_ENABLED = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
@@ -489,6 +492,9 @@ test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged ro
 
   assert.equal(validation.runMigrations, false);
   assert.equal(validation.autoApplyProductionMigrations, true);
+  assert.equal(validation.reputationAggregationWorkerEnabled, false);
+  assert.equal(validation.reputationAggregationEnvironment, 'production');
+  assert.equal(validation.reputationAggregationMode, 'simulation');
   assert.equal(validation.eventDiscoveryEnabled, false);
   assert.equal(validation.internalFeedbackUploadRoot, '/data/assets/.internal-feedback');
   assert.equal(validation.healthCheckPath, '/health');
@@ -560,6 +566,39 @@ test('validateFlyConfig fails closed when contextual reputation would start duri
       ),
     ),
     /CONTEXTUAL_REPUTATION_ENABLED|contextual reputation/i,
+  );
+});
+
+test('validateFlyConfig rejects the staging-only reputation worker in production', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_WORKER_ENABLED = "false"',
+        'REPUTATION_AGGREGATION_WORKER_ENABLED = "true"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_WORKER_ENABLED|reputation worker/i,
+  );
+});
+
+test('validateFlyConfig structurally identifies production reputation configuration', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_ENVIRONMENT = "production"',
+        'REPUTATION_AGGREGATION_ENVIRONMENT = "staging"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_ENVIRONMENT|production/i,
+  );
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_MODE = "simulation"',
+        'REPUTATION_AGGREGATION_MODE = "publish"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_MODE|simulation/i,
   );
 });
 
@@ -894,6 +933,9 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 

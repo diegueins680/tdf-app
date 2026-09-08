@@ -17,7 +17,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
 | Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
 | Producto/Legal | Aprobación registrada; cierre pendiente | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) + checklist completo | Producto + Legal |
-| Worker/observabilidad | Pendiente | Cola, worker, dashboards, DLQ y staging | Infraestructura |
+| Worker/observabilidad | Pendiente (infraestructura preparada) | Migración/worker en simulación; aún faltan staging, dashboards, alertas, DLQ y on-call aprobados | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |
 | QA/accesibilidad/piloto | Pendiente | Evidencia WCAG, dispositivo físico y staging | QA + Accesibilidad |
 
@@ -36,6 +36,13 @@ sin enlace a evidencia no cuenta como aprobación.
 - [ ] Política `01-product-legal-policy.md` revisada y versionada.
 
 ### Infraestructura y Operaciones
+
+La implementación preparada incluye la migración
+`2026-09-06_contextual_reputation_staging_worker.sql`, el worker Haskell apagado
+por defecto y el ensayo reproducible
+`npm run test:contextual-reputation-worker-migration`. Esto no marca ninguna
+casilla: aún requiere provisionamiento real en staging, evidencia operativa y
+aprobación de responsables.
 
 - [ ] Outbox, cola durable y worker idempotente disponibles en staging.
 - [ ] `event_id`, `run_id`, correlación, versión de fórmula y deduplicación

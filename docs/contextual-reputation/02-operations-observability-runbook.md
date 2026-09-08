@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (solo si sigue `submitted`), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `category.applicability_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `subject.role_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -62,6 +62,16 @@ anteriores y actuales. Esto incluye perfiles retirados de
 no conservar un agregado obsoleto. Como alternativa, un evento versionado puede
 contener esa unión completa si el consumidor garantiza el mismo fan-out
 idempotente antes de confirmar el mensaje.
+
+El fan-out conserva pares reales, no el producto cartesiano de sujetos y
+categorías: el sujeto principal se combina con sus categorías seleccionadas y
+cada `compared_party_id` solo con el `category_id` de su propia fila de ranking.
+Así una evaluación que compara sujetos distintos en categorías distintas no
+crea candidatos sin evidencia para combinaciones que nunca fueron calificadas.
+Si una evaluación `submitted` cambia de interacción, sujeto o fórmula, el
+productor invalida la tupla anterior y recalcula la nueva aunque la revisión no
+cambie. Una corrección de `context_kind` o `context_id` de una interacción
+elegible aplica la misma regla a sus contextos anterior y nuevo.
 
 Para el modelo Bradley--Terry bayesiano, esa unión es solo el punto de partida:
 el worker debe expandirla al componente conexo de comparaciones dentro del mismo
@@ -89,6 +99,12 @@ con exclusión provisional, archivan/fusionan categorías o cambian sus
 roles/contextos aplicables deben escribir el evento de invalidación
 correspondiente en el mismo outbox transaccional. Así se recalcula o retira la
 proyección existente aunque no haya una evaluación posterior.
+
+Crear, revocar o cambiar una asignación de rol de sujeto, y activar, desactivar
+o renombrar el rol canónico, escribe `subject.role_changed` para cada
+contexto/categoría/fórmula afectado. El evento recalcula la proyección normal y
+también participa en el fence de cualquier run acotado: un cambio confirmado
+después de su `high_water_mark` hace que ese run falle cerrado.
 
 Cada retiro o nueva concesión de consentimiento de visibilidad pública o
 rankings debe persistir `public_consent.changed` en la misma transacción. El
@@ -119,9 +135,17 @@ evita exposición durante la cola.
 1. Cargar solo señales verificadas, vigentes, `submitted` y no excluidas
    provisionalmente. Borradores, autosaves y evaluaciones privadas nunca
    publican un evento de agregación ni satisfacen este predicado.
-2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto.
+2. Verificar aplicabilidad de categoría y comparabilidad de roles/contexto. Si
+   `applicable_roles` no está vacío, cada sujeto observado debe tener una
+   asignación activa a uno de esos roles en el registro canónico; el rol del
+   evaluador no sustituye el rol del sujeto.
 3. Calcular con fórmula y parámetros versionados, prior bayesiano, límite por
-   evaluador y decaimiento temporal aprobados.
+   evaluador y decaimiento temporal aprobados. El límite se mide contra el
+   total efectivo después del ajuste: el worker redistribuye iterativamente el
+   peso hasta que ningún evaluador supere 25% cuando existen al menos cuatro
+   evaluadores; cuando la diversidad hace matemáticamente imposible ese tope,
+   conserva el ajuste conservador de una pasada y registra la participación
+   máxima efectiva para auditoría.
 4. Guardar score, intervalo/confianza, muestra, conteo verificable, versión de
    fórmula, parámetros y hora de cálculo.
 5. Publicar solo con consentimiento vigente para la superficie/contexto, gate
@@ -139,9 +163,16 @@ señal al cálculo, y rechazar esas contribuciones si son privadas/no verificada
 Eventos administrativos de invalidación, consentimiento, categoría o recálculo
 no requieren una interacción propia: disparan un cálculo desde la fuente
 canónica, que vuelve a filtrar exclusivamente evidencia elegible.
+Un evento global con `category_id = null` expande solo categorías con evidencia
+`submitted`, elegible, aplicable, anterior al corte y de su misma fórmula; nunca
+incorpora rankings draft/void, de otra fórmula o sin valor observable.
 
 ## 5. Concurrencia, reintentos y recuperación
 
+- Cada proceso reclama un evento inmediatamente antes de calcularlo y usa una
+  hora fresca al completar o fallar. El tamaño de lote limita trabajo por tick,
+  no crea un grupo de leases que luego se consume en serie; así otro worker no
+  puede recuperar prematuramente los eventos posteriores del lote.
 - Bloquear de forma acotada por `subject_id + context_key + category_id`, o usar
   versión optimista de proyección; nunca bloquear una cola completa. Un
   recálculo global (`category_id = null`) adquiere todas las llaves de categoría
@@ -157,11 +188,25 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   proyección, para cada `context_key` publicado. La cadencia aprobada debe ser
   como máximo la necesaria para reflejar la semivida de 365 días y registrar su
   última actualización; la ausencia de nuevas mutaciones no congela score ni
-  confianza indefinidamente.
+  confianza indefinidamente. La implementación de staging agenda una vez por
+  día UTC un `recalculation.requested` determinista por candidato vencido; su
+  UUID incorpora ambiente, sujeto, categoría, contexto, fórmula y día UTC, por
+  lo que ticks repetidos son idempotentes. Solo agenda fórmulas `active` o
+  `draft` y categorías `active`; una fórmula retirada o categoría inactiva no
+  vuelve a crear trabajo periódico.
 - Backfill y simulación usan `run_id` persistente y una clave única de auditoría
   por fuente/run/versión; una segunda ejecución no duplica proyecciones ni
-  auditorías semánticas. No usar el insert histórico no versionado como entrada
-  replay-safe hasta que tenga esa garantía y prueba explícita.
+  auditorías semánticas. El worker reclama sus eventos únicamente mientras el
+  run está `running`; estados `planned`, `succeeded`, `failed` o `cancelled`
+  permanecen sin reclamar. El mismo estado y ambiente se vuelven a verificar
+  al completar para que una cancelación también cerque trabajo ya reclamado.
+  Las transiciones son monotónicas: un run terminal no puede reabrirse y todo
+  retry operativo crea un `run_id` nuevo. Cada resultado completo del run se
+  conserva en `reputation_aggregation_run_result`; una proyección candidata
+  posterior puede avanzar sin borrar score, bounds, conteos, confianza, evento
+  fuente ni hora calculada del run anterior.
+  No usar el insert histórico no versionado como entrada replay-safe hasta que
+  tenga esa garantía y prueba explícita.
 - La versión activa de fórmula debe residir en configuración persistida y ser
   consultada por el lector; no se codifica de forma fija en la API. Una versión
   activada es inmutable: todo cambio de fórmula, umbral o parámetro crea un
@@ -179,7 +224,17 @@ canónica, que vuelve a filtrar exclusivamente evidencia elegible.
   la versión anterior, o antes de reabrirla se la reprocesa hasta un high-water
   mark protegido por el mismo fence de productores; solo entonces el rollback
   vuelve a seleccionar atómicamente esa versión, sin borrar sus filas, mientras
-  la nueva se investiga.
+  la nueva se investiga. Como la fuente v1 no conserva versiones históricas de
+  cada fila, un run acotado falla cerrado si el outbox registra una nueva
+  evaluación —aunque su `submitted_at` haya sido importado con una fecha
+  anterior—, edición, invalidación, eliminación, moderación, restauración o
+  cambio de rol de sujeto posterior a su `high_water_mark` dentro del
+  contexto/categoría. Operaciones debe crear un run nuevo con un corte
+  posterior; nunca forzar la confirmación del snapshot mutable anterior.
+  Una fórmula `draft` puede editarse solo antes de que cualquier run la
+  referencie. La creación del run bloquea la fila de fórmula y desde entonces
+  sus parámetros quedan congelados incluso si el run sigue `planned` o termina;
+  esto evita que un mismo `run_id` mezcle matemáticas distintas.
 
 ## 6. Métricas, trazas y alertas
 
@@ -210,6 +265,77 @@ Moderación para señales disputadas. Los dashboards no sustituyen auditoría de
 accesos administrativos.
 
 ## 8. Validación en staging
+
+### 8.1 Implementación preparada
+
+La infraestructura de simulación se instala con
+`tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql` y se ensaya en
+una base PostgreSQL 16 aislada con:
+
+```sh
+npm run test:contextual-reputation-worker-migration
+```
+
+El proceso permanece apagado por defecto. Para un staging aprobado se requieren
+ambos gates, después de aplicar y verificar la migración:
+
+```text
+REPUTATION_AGGREGATION_WORKER_ENABLED=true
+REPUTATION_AGGREGATION_ENVIRONMENT=staging
+REPUTATION_AGGREGATION_MODE=simulation
+```
+
+```sql
+UPDATE reputation_worker_control
+SET enabled = TRUE, updated_at = now(), updated_by_party_id = :operator_party_id
+WHERE environment = 'staging' AND simulation_only;
+```
+
+Solo puede existir un ambiente habilitado. El proceso rechaza `production`, la
+restricción de base impide habilitarlo allí y el release productivo fuerza
+`REPUTATION_AGGREGATION_WORKER_ENABLED=false`. El worker escribe únicamente
+`reputation_aggregate_candidate.publication_state='simulation'`; no escribe
+`reputation_public_aggregate`.
+
+Cada tick habilitado agenda primero los candidatos de simulación cuya última
+actualización precede al día UTC actual y luego reclama la cola. El scheduler
+usa IDs diarios deterministas y un lote máximo de 100, de modo que reinicios o
+varios workers no duplican el recálculo. Los runs de backfill/simulación con
+`high_water_mark` verifican además el fence de mutaciones antes de confirmar;
+una violación sigue el flujo normal de retry/DLQ y requiere un run nuevo.
+Cuando los productores automáticos están suprimidos porque no existe consumidor
+ni run abierto, una marca compacta de cobertura avanza en lugar de acumular una
+cola sin consumidor. La creación de un run rechaza cualquier `high_water_mark`
+anterior a esa marca: un backfill solo puede usar un intervalo para el cual el
+registro de mutaciones fue completo. Un run tampoco puede marcarse `succeeded`
+mientras conserve eventos pendientes, en retry, processing o DLQ, y un run
+terminal no acepta eventos nuevos.
+
+Las fuentes mínimas para dashboards sin PII son
+`reputation_worker_health`, `reputation_worker_queue_metrics`,
+`reputation_worker_event_metrics`, `reputation_worker_processing_metrics` y
+`reputation_candidate_freshness_metrics`. Antes de habilitar staging se deben
+materializar sus paneles, aprobar umbrales y asignar on-call; disponer de las
+vistas no satisface por sí solo ese pendiente. Las métricas de procesamiento
+separan cada ciclo abierto por una acción inmutable `requeued`, incluso cuando
+el contador de intentos vuelve a uno; nunca emparejan un claim nuevo con la
+finalización de un ciclo anterior. La salud de cada ambiente excluye eventos de
+runs `planned` o terminales y eventos de runs pertenecientes a otro ambiente,
+igual que el predicado de claim, para que no produzcan backlog o edad falsos.
+
+El rollback operativo del worker empieza por apagar el gate de base y la
+variable de proceso, sin borrar cola, candidatos, runs ni auditoría:
+
+```sql
+UPDATE reputation_worker_control
+SET enabled = FALSE, updated_at = now(), updated_by_party_id = :operator_party_id
+WHERE environment = 'staging';
+```
+
+El ensayo automatizado confirma que no se reclaman eventos con el gate cerrado
+y que la evidencia existente permanece intacta. Este rollback del worker no
+sustituye el cierre independiente del gate de lectura pública descrito en la
+sección 9.
 
 1. Aplicar el manifiesto checksum-pinned en una base aislada.
 2. Cargar datos sintéticos con roles, ciudades, empates, exclusiones, muestras
