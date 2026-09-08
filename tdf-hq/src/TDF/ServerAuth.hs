@@ -647,9 +647,8 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
     }
 
 -- Keep the client completion handshake so existing web/mobile analytics can emit
--- exactly once, but require durable server evidence for actions migrated here.
--- Remaining values retain their current compatibility behavior until their
--- authoritative persistence is available and wired into this check.
+-- exactly once, but require durable server evidence for every supplied first value.
+-- Omitting firstValue remains the explicit exit path for optional onboarding.
 onboardingFirstValueEvidenceSatisfied
   :: PartyId
   -> Maybe UTCTime
@@ -660,9 +659,11 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
   case (firstValueValue, mSignupAt) of
     (Just "artist_followed", Just signupAt) ->
       isJust <$> selectFirst
-        [ FanFollowFanPartyId ==. partyIdValue
-        , FanFollowCreatedAt >=. signupAt
-        , FanFollowCreatedAt <=. now
+        [ EngagementEventActorPartyId ==. Just partyIdValue
+        , EngagementEventEntityType ==. "artist"
+        , EngagementEventEventType ==. "follow"
+        , EngagementEventCreatedAt >=. signupAt
+        , EngagementEventCreatedAt <=. now
         ]
         []
     (Just "artist_followed", Nothing) -> pure False
@@ -683,7 +684,18 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
         Single occurredAt : _ -> occurredAt >= signupAt
         [] -> False
     (Just "event_saved", Nothing) -> pure False
-    _ -> pure True
+    (Just "moment_reaction", Just signupAt) ->
+      isJust <$> selectFirst
+        [ EngagementEventActorPartyId ==. Just partyIdValue
+        , EngagementEventEntityType ==. "event_moment"
+        , EngagementEventEventType ==. "reaction_added"
+        , EngagementEventCreatedAt >=. signupAt
+        , EngagementEventCreatedAt <=. now
+        ]
+        []
+    (Just "moment_reaction", Nothing) -> pure False
+    (Nothing, _) -> pure True
+    _ -> pure False
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword

@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, insert, insertKey)
+import Database.Persist (Entity (..), count, get, insert, insertKey, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -56,6 +56,7 @@ import TDF.Auth (AuthedUser (..), modulesForRoles)
 import qualified TDF.Config as Config
 import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Admin, Fan))
+import qualified TDF.Models as M
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( decodeStoredPromoCodeTierIds
@@ -1115,6 +1116,27 @@ spec = describe "social event handler helpers" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- liftIO getCurrentTime
+        actorPartyId <-
+            runSqlPool
+                ( insert
+                    Party
+                        { partyLegalName = Nothing
+                        , partyDisplayName = "Carla"
+                        , partyIsOrg = False
+                        , partyTaxId = Nothing
+                        , partyPrimaryEmail = Just "carla@example.com"
+                        , partyPrimaryPhone = Nothing
+                        , partyWhatsapp = Nothing
+                        , partyInstagram = Nothing
+                        , partyEmergencyContact = Nothing
+                        , partyNotes = Nothing
+                        , partyStripeCustomerId = Nothing
+                        , partyCountryCode = Nothing
+                        , partyCountryId = Nothing
+                        , partyCreatedAt = now
+                        }
+                )
+                pool
         artistId <-
             runSqlPool
                 ( insert
@@ -1133,11 +1155,21 @@ spec = describe "social event handler helpers" $ do
                 )
                 pool
 
-        first <- followArtistDb pool artistId "carla"
-        second <- followArtistDb pool artistId "carla"
+        let actorPartyText = T.pack (show (fromSqlKey actorPartyId))
+        first <- followArtistDb pool artistId actorPartyId actorPartyText
+        second <- followArtistDb pool artistId actorPartyId actorPartyText
+        evidenceCount <- runSqlPool
+            ( count
+                [ M.EngagementEventActorPartyId ==. Just actorPartyId
+                , M.EngagementEventEntityType ==. "artist"
+                , M.EngagementEventEventType ==. "follow"
+                ]
+            )
+            pool
         liftIO $ do
             (afFollowId first) `shouldSatisfy` (/= Nothing)
             (afFollowId second) `shouldSatisfy` (/= Nothing)
+            evidenceCount `shouldBe` 1
 
 socialEventUpdateHandlerFor
     :: AuthedUser
@@ -1499,6 +1531,20 @@ initializeSocialSchema = do
         \\"country_code\" VARCHAR NULL,\
         \\"country_id\" VARCHAR NULL,\
         \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"engagement_event\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"actor_party_id\" INTEGER NULL,\
+        \\"target_artist_id\" INTEGER NULL,\
+        \\"entity_type\" VARCHAR NOT NULL,\
+        \\"entity_id\" INTEGER NULL,\
+        \\"event_type\" VARCHAR NOT NULL,\
+        \\"metadata\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"actor_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"target_artist_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
     rawExecute

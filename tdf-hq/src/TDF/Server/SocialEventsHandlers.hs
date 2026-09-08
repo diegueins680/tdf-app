@@ -10,6 +10,7 @@ module TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     socialEventsServer,
     stripeWebhookServer,
+    toggleMomentReactionDb,
     validateRsvpStatus,
     validateInvitationToPartyId,
     validateInvitationFromPartyId,
@@ -262,6 +263,7 @@ import TDF.DTO.SocialEventsDTO (
  )
 import qualified TDF.Email as Email
 import TDF.Models (EntityField (PartyStripeCustomerId), Party (..), PartyId)
+import qualified TDF.Models as M
 import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueCity, venueContact, venueCountry, venueCreatedAt, venueName, venueUpdatedAt)
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.ModelsExtra as ME
@@ -3215,7 +3217,7 @@ socialEventsServer user =
             liftIO (resolveExistingPartyIdText envPool "followerPartyId" afrFollowerPartyId)
                 >>= either throwError pure
         either throwError pure (validateAuthenticatedPartyReference user followerParty)
-        liftIO $ followArtistDb envPool artistKey followerParty
+        liftIO $ followArtistDb envPool artistKey (auPartyId user) followerParty
 
     unfollowArtist :: T.Text -> Maybe T.Text -> AppM NoContent
     unfollowArtist artistIdStr mFollower = do
@@ -3552,32 +3554,9 @@ socialEventsServer user =
         reactionTypeId <-
             liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
                 >>= either throwError pure
-        existingSameReaction <-
-            liftIO $
-                runSqlPool
-                    ( selectFirst
-                        [ EventMomentReactionMomentId ==. momentKey
-                        , EventMomentReactionReactionTypeId ==. Just reactionTypeId
-                        , EventMomentReactionReactorPartyId ==. currentPartyId
-                        ]
-                        []
-                    )
-                    envPool
-        liftIO $
-            runSqlPool
-                ( do
-                    deleteWhere [EventMomentReactionMomentId ==. momentKey, EventMomentReactionReactorPartyId ==. currentPartyId]
-                    when (isNothing existingSameReaction) $
-                        insert_
-                            EventMomentReaction
-                                { eventMomentReactionMomentId = momentKey
-                                , eventMomentReactionReactionTypeId = Just reactionTypeId
-                                , eventMomentReactionReaction = Nothing
-                                , eventMomentReactionReactorPartyId = currentPartyId
-                                , eventMomentReactionCreatedAt = now
-                                }
-                )
-                envPool
+        _ <- liftIO $ runSqlPool
+            (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
+            envPool
         liftIO $ loadMomentDTO envPool momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
@@ -6823,24 +6802,96 @@ buildLogisticsIssues activities =
     routeMessage "infeasible" = "El tiempo reservado es menor que la duración estimada del traslado."
     routeMessage _ = "No se pudo verificar la ruta."
 
+-- | Toggle the current Party's canonical moment reaction and append evidence
+-- only when the resulting state is active. The mutation and evidence insert
+-- share one database transaction through the caller's 'runSqlPool'.
+toggleMomentReactionDb
+    :: PartyId
+    -> T.Text
+    -> EventMomentId
+    -> UUID.UUID
+    -> Maybe Bool
+    -> UTCTime
+    -> SqlPersistT IO Bool
+toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId desiredActive now = do
+    existingSameReaction <-
+        selectFirst
+            [ EventMomentReactionMomentId ==. momentKey
+            , EventMomentReactionReactionTypeId ==. Just reactionTypeId
+            , EventMomentReactionReactorPartyId ==. actorPartyText
+            ]
+            []
+    let deleteActorReactions =
+            deleteWhere
+                [ EventMomentReactionMomentId ==. momentKey
+                , EventMomentReactionReactorPartyId ==. actorPartyText
+                ]
+        activate = do
+            deleteActorReactions
+            inserted <- insertUnique
+                EventMomentReaction
+                    { eventMomentReactionMomentId = momentKey
+                    , eventMomentReactionReactionTypeId = Just reactionTypeId
+                    , eventMomentReactionReaction = Nothing
+                    , eventMomentReactionReactorPartyId = actorPartyText
+                    , eventMomentReactionCreatedAt = now
+                    }
+            when (isJust inserted) $
+                insert_
+                    M.EngagementEvent
+                        { M.engagementEventActorPartyId = Just actorPartyId
+                        , M.engagementEventTargetArtistId = Nothing
+                        , M.engagementEventEntityType = "event_moment"
+                        , M.engagementEventEntityId = Just (fromIntegral (fromSqlKey momentKey))
+                        , M.engagementEventEventType = "reaction_added"
+                        , M.engagementEventMetadata = Nothing
+                        , M.engagementEventCreatedAt = now
+                        }
+            pure True
+    case (desiredActive, existingSameReaction) of
+        (Just True, Just _) -> pure True
+        (Just True, Nothing) -> activate
+        (Just False, Just _) -> deleteActorReactions >> pure False
+        (Just False, Nothing) -> pure False
+        (Nothing, Just _) -> deleteActorReactions >> pure False
+        (Nothing, Nothing) -> activate
+
 -- | Stable, human-friendly identifier for a follow (artistId + follower id).
 renderFollowId :: ArtistProfileId -> T.Text -> T.Text
 renderFollowId artistId followerPartyId =
     T.intercalate ":" [renderKeyText artistId, followerPartyId]
 
 -- | Insert or fetch an artist follow while keeping the created timestamp stable.
-followArtistDb :: ConnectionPool -> ArtistProfileId -> T.Text -> IO ArtistFollowerDTO
-followArtistDb pool artistId followerPartyIdRaw = do
+followArtistDb :: ConnectionPool -> ArtistProfileId -> PartyId -> T.Text -> IO ArtistFollowerDTO
+followArtistDb pool artistId actorPartyId followerPartyIdRaw = do
     now <- getCurrentTime
     let followerPartyId = fromMaybe (T.strip followerPartyIdRaw) (normalizePositivePartyIdText followerPartyIdRaw)
     let followKey = ArtistFollowKey artistId followerPartyId
-    existing <- runSqlPool (get followKey) pool
-    _ <- case existing of
-        Just _ -> pure followKey
-        Nothing -> do
-            mInserted <- runSqlPool (insertUnique (ArtistFollow artistId followerPartyId now)) pool
-            pure (fromMaybe followKey mInserted)
-    let createdAtVal = maybe now artistFollowCreatedAt existing
+    createdAtVal <- runSqlPool
+        ( do
+            existing <- get followKey
+            case existing of
+                Just stored -> pure (artistFollowCreatedAt stored)
+                Nothing -> do
+                    mInserted <- insertUnique (ArtistFollow artistId followerPartyId now)
+                    case mInserted of
+                        Just _ -> do
+                            insert_
+                                M.EngagementEvent
+                                    { M.engagementEventActorPartyId = Just actorPartyId
+                                    , M.engagementEventTargetArtistId = Nothing
+                                    , M.engagementEventEntityType = "artist"
+                                    , M.engagementEventEntityId = Just (fromIntegral (fromSqlKey artistId))
+                                    , M.engagementEventEventType = "follow"
+                                    , M.engagementEventMetadata = Nothing
+                                    , M.engagementEventCreatedAt = now
+                                    }
+                            pure now
+                        Nothing -> do
+                            concurrent <- get followKey
+                            pure (maybe now artistFollowCreatedAt concurrent)
+        )
+        pool
     pure
         ArtistFollowerDTO
             { afFollowId = Just (renderFollowId artistId followerPartyId)

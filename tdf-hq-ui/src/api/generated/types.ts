@@ -71,7 +71,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Toggle a persisted reaction type on an event moment */
+        /**
+         * Set a persisted reaction type on an event moment
+         * @description Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior.
+         */
         post: operations["reactToSocialEventMoment"];
         delete?: never;
         options?: never;
@@ -432,7 +435,7 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow, and an access_requested claim requires a Party-bound feature-access request; each record must have been created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every supplied first-value claim requires Party-bound server evidence created during the signup eligibility window. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
         delete?: never;
@@ -6737,6 +6740,8 @@ export interface components {
              * @description Canonical UUID of an active published item in the `reaction-types` catalog.
              */
             emrrReactionTypeId: string;
+            /** @description Desired selected state for the authenticated Party. Repeating the same value is idempotent. Omit only for legacy toggle behavior. */
+            emrrActive?: boolean;
         };
         ContentReactionRequest: {
             /**
@@ -7085,7 +7090,7 @@ export interface components {
         };
         OnboardingCompletionRequest: {
             /**
-             * @description Optional successful first useful action. artist_followed and access_requested require Party-bound server evidence created during the signup eligibility window. Omit when the user explicitly exits optional onboarding.
+             * @description Optional successful first useful action. Every supplied value requires Party-bound server evidence created during the signup eligibility window; artist_followed requires a server-recorded artist follow, event_saved requires a validated event-favorite audit, and moment_reaction requires a server-recorded canonical addition on a persisted event moment. Omit when the user explicitly exits optional onboarding.
              * @enum {string}
              */
             firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
@@ -10667,6 +10672,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EventMoment"];
                 };
+            };
+            /** @description Event or moment identifier is malformed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or moment was not found or the moment does not belong to the event */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Reaction type UUID is unknown, inactive, deprecated, or unpublished */
             422: {

@@ -10112,7 +10112,16 @@ main = hspec $ do
                 Left err ->
                     expectationFailure ("Expected canonical moment reaction payload to decode, got " <> err)
                 Right parsed ->
-                    emrrReactionTypeId parsed `shouldBe` "50800000-0000-4000-8000-000000000001"
+                    (emrrReactionTypeId parsed, emrrActive parsed)
+                        `shouldBe` ("50800000-0000-4000-8000-000000000001", Nothing)
+
+            case eitherDecode
+                "{\"emrrReactionTypeId\":\"50800000-0000-4000-8000-000000000001\",\"emrrActive\":true}"
+                :: Either String EventMomentReactionRequestDTO of
+                Left err ->
+                    expectationFailure ("Expected desired reaction state to decode, got " <> err)
+                Right parsed ->
+                    emrrActive parsed `shouldBe` Just True
 
             case eitherDecode
                 "{\"emccAuthorName\":\"Ada\",\"emccBody\":\"Set impecable\"}"
