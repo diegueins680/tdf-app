@@ -6,6 +6,14 @@ Reviewed implementation worktree: `/private/tmp/tdf-event-save-continuity-202609
 
 Local implementation branch: `feature/event-save-continuity-isolated-20260907`
 
+Published reviewed root branch: `feature/event-save-continuity-20260907-reviewed`
+
+Published stacked base: `feature/onboarding-continuity-20260906` at `8cd5cae4ecee4385ef0c228012368fa576162145`
+
+Published root implementation/report head before this final metadata update: `f7e3463cdb108597d8918bf47de03ca9d753aefa`
+
+Draft root pull request: [tdf-app #254](https://github.com/diegueins680/tdf-app/pull/254)
+
 Local reconciled baseline: `21edb4da6427850d907e3c62b2570ec07c4e7dda`
 
 Published onboarding parent: `8cd5cae4ecee4385ef0c228012368fa576162145`
@@ -41,8 +49,8 @@ The observed impact is improved privacy, cross-device continuity, and truthful o
 | Android tooling/device | Partial | ADB `1.0.41` is installed; `adb devices -l` returned no attached device. | Source/Jest/static checks ran; no emulator or physical Android runtime was verified. |
 | iOS tooling/device | Unavailable in this execution | `xcrun simctl list devices available` could not connect to CoreSimulatorService and reported no usable runtimes. | No iOS launch, safe-area, orientation, keyboard, VoiceOver, or screenshot evidence is claimed. |
 | Test runners | Available | Hspec, Node test, Jest, TypeScript, ESLint, Vite, OpenAPI generation, Docker/psql migration scripts all executed. | Exact completed results and warnings are recorded below. |
-| Network | Partial/available for scoped publication | Git push published the mobile branch. GitHub API access required an unsandboxed call. | Feature-branch publication works; ordinary sandbox network access is restricted. |
-| GitHub authentication | Partial | The inherited token used by `npm run ai:doctor` is invalid; after unsetting only the stale token variables, the keychain login was valid and draft mobile PR creation succeeded. | Publication must avoid the stale environment token and must not expose credential values. |
+| Network | Partial/available for scoped publication | Git push published the distinct reviewed root and mobile branches. GitHub API access required an unsandboxed call. | Feature-branch publication works; ordinary sandbox network access is restricted. |
+| GitHub authentication | Partial | The inherited token used by `npm run ai:doctor` is invalid; after unsetting only the stale token variables, the keychain login was valid and draft root/mobile PR creation succeeded. | Publication must avoid the stale environment token and must not expose credential values. |
 | Local configuration | Partial | Example/local environment files exist, but values were not printed. The implementation used synthetic fixtures and local databases. | No claim is made about every provider-backed integration. |
 | Staging/production access | Not verified for mutation; intentionally unused | No staging/production migration, write, transaction, message, or deploy command ran. | Release and live-data behavior remain outside this local validation. |
 | Synthetic accounts/fixtures | Partial | In-memory SQLite Party/auth rows, synthetic public/private events, and disposable PostgreSQL fixtures ran. No controlled OAuth/email/payment user was exercised. | Authorization/state logic is tested; external delivery and real transactions are not. |
@@ -362,4 +370,4 @@ Published mobile:
 
 The shorter mobile branch name already contained a separate concurrent implementation (`fa0ff3e`). It was inspected and preserved; no force-push or blind merge occurred. This reviewed implementation uses the distinct `-reviewed` branch.
 
-Root clean publication and draft-PR details are appended after the isolated commits are replayed onto published onboarding parent `8cd5cae4e`. No merge or deployment is part of this task.
+The root commits were cleanly replayed onto published onboarding parent `8cd5cae4e` and published on the distinct reviewed branch without overwriting concurrent branch work. Draft root PR [#254](https://github.com/diegueins680/tdf-app/pull/254) targets the onboarding parent so the review diff contains only this coherent batch; it can be retargeted to `main` after parent draft PR [#241](https://github.com/diegueins680/tdf-app/pull/241) merges. The parent gitlink references the published mobile commit from draft mobile PR [#46](https://github.com/diegueins680/TDF-mobile/pull/46). No merge or deployment is part of this task.
