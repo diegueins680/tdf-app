@@ -5344,10 +5344,1000 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/merch/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report the server-verified merch rollout and provider capabilities */
+        get: operations["getMerchCapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/storefronts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Discover published artist merch storefronts */
+        get: operations["listMerchStorefronts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/storefronts/{storeSlug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one public storefront integrated with its artist profile */
+        get: operations["getMerchStorefront"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/storefronts/{storeSlug}/products/{productSlug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read a public merch product and its available variants */
+        get: operations["getMerchProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/carts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a single-seller guest cart */
+        post: operations["createMerchCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/carts/{cartId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resume an unexpired guest cart */
+        get: operations["getMerchCart"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/carts/{cartId}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set a variant quantity in a single-seller cart */
+        put: operations["putMerchCartItem"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/carts/{cartId}/items/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a variant from a guest cart */
+        delete: operations["deleteMerchCartItem"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/carts/{cartId}/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Atomically reserve stock and create one idempotent single-seller order
+         * @description The server recalculates every amount. This operation creates a pending order; a browser return can never confirm payment.
+         */
+        post: operations["checkoutMerchCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Track a guest merch order without exposing enumerable customer data */
+        get: operations["getMerchOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report a delivery, return, cancellation, refund, or product problem */
+        post: operations["createMerchOrderIssue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/favorites/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["addMerchFavorite"];
+        post?: never;
+        delete: operations["deleteMerchFavorite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSellerMerchStores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply using a claimed or verified artist or band profile managed by the caller */
+        post: operations["createMerchStoreApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateSellerMerchStore"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMerchStoreMembers"];
+        put?: never;
+        /** @description Clients select the party through name, artist name, or username search; the user never types a Party ID. */
+        post: operations["inviteMerchStoreMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMerchStoreMember"];
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createMerchStorePolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/shipping-zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createMerchShippingZone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSellerMerchProducts"];
+        put?: never;
+        post: operations["createMerchProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/products/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateMerchProduct"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/products/{productId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateSellerMerchProductStatus"];
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/products/{productId}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadMerchProductImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/variants/{variantId}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update stock with optimistic concurrency and no access to catalog, order, or finance fields */
+        patch: operations["updateMerchVariantStock"];
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSellerMerchOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/orders/{orderId}/fulfillment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Advance fulfillment without implicitly changing payment or refund status */
+        patch: operations["updateMerchOrderFulfillment"];
+        trace?: never;
+    };
+    "/merch/admin/stores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminMerchStores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/stores/{storeId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviewMerchStore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdminMerchProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/products/{productId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reviewMerchProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare an auditable manual seller settlement */
+        post: operations["createMerchSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/settlements/{settlementId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Approval and paid confirmation require separation of duties; this endpoint never triggers an automatic payout. */
+        patch: operations["updateMerchSettlementStatus"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        MerchCapabilities: {
+            /** @enum {string} */
+            environment: "sandbox" | "staging" | "production";
+            market: {
+                /** @enum {string} */
+                countryCode: "EC";
+                /** @enum {string} */
+                currency: "USD";
+            };
+            features: {
+                storefronts: boolean;
+                sellerApplications: boolean;
+                publicCatalog: boolean;
+                /** @description True only when at least one payment method is enabled and fully configured. */
+                checkout: boolean;
+                reviews: boolean;
+                notifications: boolean;
+                experimental: boolean;
+            };
+            paymentMethods: {
+                /** @description True only with an enabled flag and complete server credentials. */
+                datafast: boolean;
+                /** @description True only with an enabled flag and complete server credentials. */
+                paypal: boolean;
+                /** @description True only when independent receipt review is operational. */
+                bankTransfer: boolean;
+            };
+            /** @enum {boolean} */
+            automaticPayouts: false;
+            message: string;
+        };
+        /** @enum {string} */
+        MerchProductCategory: "apparel" | "vinyl" | "cd" | "cassette" | "poster" | "accessory" | "limited_edition" | "bundle" | "other";
+        /** @enum {string} */
+        MerchProductStatus: "draft" | "pending_review" | "published" | "sold_out" | "paused" | "rejected" | "archived";
+        /** @enum {string} */
+        MerchFulfillmentStatus: "pending" | "preparing" | "ready_for_pickup" | "shipped" | "delivered" | "return_requested" | "returned" | "problem" | "cancelled";
+        MerchPermissions: {
+            catalog: boolean;
+            stock: boolean;
+            orders: boolean;
+            fulfillment: boolean;
+            finance: boolean;
+            settings: boolean;
+        };
+        MerchStorefront: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            profileId?: string;
+            slug: string;
+            displayName: string;
+            description?: string | null;
+            coverImageUrl?: string | null;
+            logoImageUrl?: string | null;
+            /** @enum {string} */
+            countryCode?: "EC";
+            /** @enum {string} */
+            currency: "USD";
+            /** @enum {string} */
+            applicationStatus?: "requested" | "under_review" | "approved" | "rejected" | "withdrawn";
+            /** @enum {string} */
+            operationalStatus?: "inactive" | "active" | "suspended" | "closed";
+            permissions?: components["schemas"]["MerchPermissions"];
+            products?: components["schemas"]["MerchProduct"][];
+            policies?: {
+                [key: string]: unknown;
+            };
+            shippingZones?: components["schemas"]["MerchShippingZone"][];
+        } & {
+            [key: string]: unknown;
+        };
+        MerchStoreApplicationRequest: {
+            /** Format: uuid */
+            profileId: string;
+            slug: string;
+            displayName: string;
+            description?: string | null;
+            applicationNote: string;
+        };
+        MerchStoreUpdateRequest: {
+            displayName: string;
+            description?: string | null;
+            coverImageUrl?: string | null;
+            logoImageUrl?: string | null;
+        };
+        MerchStoreReviewRequest: {
+            /** @enum {string} */
+            decision: "approve" | "reject" | "suspend" | "reactivate";
+            reviewerNotes: string;
+            /** @description 1000 is 10%; 0 may be used for an audited pilot override. */
+            commissionBps?: number | null;
+            commissionReason?: string | null;
+        };
+        MerchStoreMember: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            partyId: number;
+            displayName: string;
+            username?: string | null;
+            avatarUrl?: string | null;
+            /** @enum {string} */
+            role: "owner" | "collaborator";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "revoked" | "expired";
+            permissions: components["schemas"]["MerchPermissions"];
+            /** Format: date-time */
+            expiresAt?: string | null;
+        };
+        MerchMemberInviteRequest: {
+            /**
+             * Format: int64
+             * @description Selected by PartySelector search; never entered manually.
+             */
+            partyId: number;
+            permissions: components["schemas"]["MerchPermissions"];
+        };
+        MerchMemberUpdateRequest: {
+            /** @enum {string} */
+            status: "accepted" | "revoked";
+            permissions?: components["schemas"]["MerchPermissions"];
+            reason?: string | null;
+        };
+        MerchPolicyRequest: {
+            shippingPolicy: string;
+            returnPolicy: string;
+            preorderPolicy?: string | null;
+            /** Format: email */
+            supportEmail?: string | null;
+        };
+        MerchShippingZoneRequest: {
+            name: string;
+            /** @enum {string} */
+            countryCode: "EC";
+            subdivisionCodes: string[];
+            /** @enum {string} */
+            deliveryMethod: "national_shipping" | "coordinated_pickup";
+            /** Format: int64 */
+            rateMinor: number;
+            /** Format: int64 */
+            freeShippingMinMinor?: number | null;
+            estimatedMinDays?: number | null;
+            estimatedMaxDays?: number | null;
+            active: boolean;
+        };
+        MerchShippingZone: components["schemas"]["MerchShippingZoneRequest"] & {
+            /** Format: uuid */
+            id: string;
+        };
+        MerchVariantRequest: {
+            /** Format: uuid */
+            id?: string | null;
+            sku: string;
+            name: string;
+            optionValues: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            priceMinor: number;
+            /** Format: int64 */
+            compareAtPriceMinor?: number | null;
+            /** @enum {string} */
+            currency: "USD";
+            weightGrams: number;
+            customsDescription?: string | null;
+            /** @enum {string} */
+            stockMode: "finite" | "made_to_order";
+            stockOnHand: number;
+            reorderThreshold: number;
+            active: boolean;
+        };
+        MerchStockRequest: {
+            stockOnHand: number;
+            reorderThreshold: number;
+            active: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        MerchProductRequest: {
+            slug: string;
+            name: string;
+            description: string;
+            category: components["schemas"]["MerchProductCategory"];
+            /** @enum {string} */
+            visibility: "public" | "unlisted" | "hidden";
+            /** @enum {string} */
+            availabilityMode: "in_stock" | "preorder" | "made_to_order";
+            /** Format: date-time */
+            preorderReleaseAt?: string | null;
+            /** Format: date-time */
+            publishAt?: string | null;
+            /** Format: date-time */
+            unpublishAt?: string | null;
+            buyerLimit?: number | null;
+            /** Format: uuid */
+            policyId?: string | null;
+            variants: components["schemas"]["MerchVariantRequest"][];
+        };
+        MerchProduct: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            storeId: string;
+            storeSlug?: string;
+            storeName?: string;
+            slug: string;
+            name: string;
+            description?: string;
+            category: components["schemas"]["MerchProductCategory"];
+            status: components["schemas"]["MerchProductStatus"];
+            /** @enum {string} */
+            visibility?: "public" | "unlisted" | "hidden";
+            /** @enum {string} */
+            availabilityMode: "in_stock" | "preorder" | "made_to_order";
+            /** Format: date-time */
+            preorderReleaseAt?: string | null;
+            /** Format: date-time */
+            publishAt?: string | null;
+            /** Format: date-time */
+            unpublishAt?: string | null;
+            buyerLimit?: number | null;
+            /** Format: uuid */
+            policyId?: string | null;
+            /** Format: int64 */
+            priceFromMinor?: number;
+            /** @enum {string} */
+            currency?: "USD";
+            available?: boolean;
+            imageUrl?: string | null;
+            canonicalUrl?: string;
+            rejectionReason?: string | null;
+            variants?: components["schemas"]["MerchVariant"][];
+            images?: components["schemas"]["MerchProductImage"][];
+            related?: {
+                [key: string]: unknown;
+            }[];
+            reviewsEnabled?: boolean;
+            reviews?: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        MerchVariant: {
+            /** Format: uuid */
+            id: string;
+            sku: string;
+            name: string;
+            optionValues: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            priceMinor: number;
+            /** Format: int64 */
+            compareAtPriceMinor?: number | null;
+            /** @enum {string} */
+            currency: "USD";
+            weightGrams: number;
+            /** @enum {string} */
+            stockMode: "finite" | "made_to_order";
+            stockOnHand?: number;
+            stockReserved?: number;
+            stockSold?: number;
+            availableQuantity?: number | null;
+            available?: boolean;
+            /** Format: int64 */
+            version: number;
+            reorderThreshold?: number;
+            active: boolean;
+        } & {
+            [key: string]: unknown;
+        };
+        MerchProductImage: {
+            /** Format: uuid */
+            id: string;
+            url: string;
+            variants: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+            altText: string;
+            sortOrder: number;
+            /** @enum {string} */
+            scanStatus?: "pending" | "clean" | "rejected";
+            /** @enum {string} */
+            moderationStatus?: "pending" | "allowed" | "blocked";
+            width?: number;
+            height?: number;
+        };
+        MerchCartCreateRequest: {
+            storeSlug: string;
+        };
+        MerchCartItemRequest: {
+            /** Format: uuid */
+            variantId: string;
+            quantity: number;
+        };
+        MerchCart: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            storeId: string;
+            /** @description Present only on creation. */
+            lookupToken?: string;
+            /** @enum {string} */
+            currency: "USD";
+            /** @enum {string} */
+            status: "active" | "checkout_started" | "converted" | "expired" | "abandoned";
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: int64 */
+            productSubtotalMinor: number;
+            /** Format: int64 */
+            totalMinor: number;
+            items: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        MerchRecipientRequest: {
+            name: string;
+            /** Format: email */
+            email: string;
+            phone?: string | null;
+            /** @enum {string} */
+            countryCode: "EC";
+            subdivision?: string | null;
+            city: string;
+            addressLine1: string;
+            addressLine2?: string | null;
+            postalCode?: string | null;
+            deliveryNote?: string | null;
+        };
+        MerchCheckoutRequest: {
+            recipient: components["schemas"]["MerchRecipientRequest"];
+            /** Format: uuid */
+            shippingZoneId: string;
+            createAccount?: boolean | null;
+            /** @enum {string|null} */
+            locale?: "es" | "en" | null;
+        };
+        MerchOrder: {
+            /** Format: uuid */
+            id: string;
+            orderNumber: string;
+            /** @description Present only on creation. */
+            lookupToken?: string;
+            /** @enum {string} */
+            currency: "USD";
+            /** Format: int64 */
+            productSubtotalMinor: number;
+            /** Format: int64 */
+            discountMinor?: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            shippingMinor: number;
+            /** Format: int64 */
+            processorFeeMinor?: number;
+            /** Format: int64 */
+            tdfCommissionMinor?: number;
+            /** Format: int64 */
+            sellerNetMinor?: number;
+            /** Format: int64 */
+            totalMinor: number;
+            commercialStatus: string;
+            paymentStatus: string;
+            fulfillmentStatus: components["schemas"]["MerchFulfillmentStatus"];
+            refundStatus: string;
+            disputeStatus: string;
+            settlementStatus?: string;
+            lines: {
+                [key: string]: unknown;
+            }[];
+            timeline?: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        MerchIssueRequest: {
+            /** @enum {string} */
+            issueType: "general" | "address" | "stock" | "shipping" | "damaged" | "missing" | "cancellation" | "return" | "refund" | "dispute";
+            message: string;
+        };
+        MerchStatusRequest: {
+            status: string;
+            reason?: string | null;
+        };
+        MerchFulfillmentRequest: {
+            status: components["schemas"]["MerchFulfillmentStatus"];
+            publicNote?: string | null;
+            privateNote?: string | null;
+            carrier?: string | null;
+            trackingNumber?: string | null;
+            /** Format: uri */
+            trackingUrl?: string | null;
+        };
+        MerchSettlementRequest: {
+            /** Format: uuid */
+            storeId: string;
+            /** Format: date */
+            periodStart: string;
+            /** Format: date */
+            periodEnd: string;
+            orderIds: string[];
+            reviewNotes?: string | null;
+        };
+        MerchSettlement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            storeId: string;
+            /** Format: date-time */
+            periodStart: string;
+            /** Format: date-time */
+            periodEnd: string;
+            /** @enum {string} */
+            currency: "USD";
+            /** @enum {string} */
+            status: "draft" | "under_review" | "approved" | "paid" | "held" | "reversed";
+            /** Format: int64 */
+            grossProductMinor: number;
+            /** Format: int64 */
+            discountsMinor: number;
+            /** Format: int64 */
+            taxesMinor: number;
+            /** Format: int64 */
+            shippingMinor: number;
+            /** Format: int64 */
+            processorFeesMinor: number;
+            /** Format: int64 */
+            tdfCommissionMinor: number;
+            /** Format: int64 */
+            refundsMinor: number;
+            /** Format: int64 */
+            adjustmentsMinor: number;
+            /** Format: int64 */
+            sellerNetMinor: number;
+            /** Format: int64 */
+            preparedBy: number;
+            /** Format: int64 */
+            approvedBy?: number | null;
+            /** Format: int64 */
+            paidBy?: number | null;
+            /** Format: date-time */
+            approvedAt?: string | null;
+            /** Format: date-time */
+            paidAt?: string | null;
+            evidenceObjectKey?: string | null;
+            /** Format: int64 */
+            orderCount: number;
+        } & {
+            [key: string]: unknown;
+        };
         PublicDomoStorefront: {
             checkoutAvailable: boolean;
             unavailableReason?: string | null;
@@ -10326,6 +11316,13 @@ export interface components {
         };
     };
     parameters: {
+        MerchCartId: string;
+        /** @description Unguessable token returned once when a guest cart is created. */
+        MerchCartLookupToken: string;
+        MerchStoreId: string;
+        MerchProductId: string;
+        MerchOrderId: string;
+        MerchSettlementId: string;
         PublicEventId: number;
         PublicEventTicketOrderId: number;
         /** @description Immutable canonical UUID of the Domo quote runtime. */
@@ -20993,6 +21990,1038 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchCapabilities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Capability matrix; a false value must not be presented as available by clients. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchCapabilities"];
+                };
+            };
+        };
+    };
+    listMerchStorefronts: {
+        parameters: {
+            query?: {
+                q?: string;
+                category?: components["schemas"]["MerchProductCategory"];
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published storefronts only */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"][];
+                };
+            };
+        };
+    };
+    getMerchStorefront: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Storefront */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"];
+                };
+            };
+            /** @description Storefront is not public or does not exist */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeSlug: string;
+                productSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published product */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"];
+                };
+            };
+            /** @description Product is not public or does not exist */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMerchCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCartCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Cart with a lookup token returned only to the caller */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchCart"];
+                };
+            };
+            /** @description Storefront or merch checkout is unavailable */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchCart: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once when a guest cart is created. */
+                "X-Cart-Lookup-Token": components["parameters"]["MerchCartLookupToken"];
+            };
+            path: {
+                cartId: components["parameters"]["MerchCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current server-priced cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchCart"];
+                };
+            };
+            /** @description Cart or lookup token not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putMerchCartItem: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once when a guest cart is created. */
+                "X-Cart-Lookup-Token": components["parameters"]["MerchCartLookupToken"];
+            };
+            path: {
+                cartId: components["parameters"]["MerchCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCartItemRequest"];
+            };
+        };
+        responses: {
+            /** @description Repriced cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchCart"];
+                };
+            };
+            /** @description Variant */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMerchCartItem: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once when a guest cart is created. */
+                "X-Cart-Lookup-Token": components["parameters"]["MerchCartLookupToken"];
+            };
+            path: {
+                cartId: components["parameters"]["MerchCartId"];
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repriced cart */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchCart"];
+                };
+            };
+        };
+    };
+    checkoutMerchCart: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once when a guest cart is created. */
+                "X-Cart-Lookup-Token": components["parameters"]["MerchCartLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                cartId: components["parameters"]["MerchCartId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Existing idempotent order or newly created pending order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOrder"];
+                };
+            };
+            /** @description Cart */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+            };
+            path: {
+                orderId: components["parameters"]["MerchOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Privacy-minimized order timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOrder"];
+                };
+            };
+            /** @description Order or lookup token not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMerchOrderIssue: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                orderId: components["parameters"]["MerchOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchIssueRequest"];
+            };
+        };
+        responses: {
+            /** @description Issue received without changing payment */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    addMerchFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Favorite stored */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMerchFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Favorite removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSellerMerchStores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stores scoped to accepted memberships */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"][];
+                };
+            };
+        };
+    };
+    createMerchStoreApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStoreApplicationRequest"];
+            };
+        };
+        responses: {
+            /** @description Pending application; not an activated store */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"];
+                };
+            };
+            /** @description Profile is ineligible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSellerMerchStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStoreUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated store */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"];
+                };
+            };
+            /** @description Settings permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMerchStoreMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStoreMember"][];
+                };
+            };
+            /** @description Settings permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    inviteMerchStoreMember: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchMemberInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Pending scoped invitation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStoreMember"];
+                };
+            };
+            /** @description Settings permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMerchStoreMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchMemberUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated member */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStoreMember"];
+                };
+            };
+            /** @description Primary owner protections or invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMerchStorePolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description New versioned policy; order snapshots do not change retroactively */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    createMerchShippingZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchShippingZoneRequest"];
+            };
+        };
+        responses: {
+            /** @description Seller shipping rate */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchShippingZone"];
+                };
+            };
+        };
+    };
+    listSellerMerchProducts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All seller product states */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"][];
+                };
+            };
+        };
+    };
+    createMerchProduct: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Draft product and variants */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"];
+                };
+            };
+        };
+    };
+    updateMerchProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchProductRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated draft */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"];
+                };
+            };
+            /** @description Product is locked by review or archived */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSellerMerchProductStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Product in its new explicit state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"];
+                };
+            };
+            /** @description Invalid transition or missing policy */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadMerchProductImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description JPEG or PNG; maximum 10 MiB and 40 megapixels
+                     */
+                    file: string;
+                    altText: string;
+                    sortOrder: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Durable responsive image reference pending moderation */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProductImage"];
+                };
+            };
+            /** @description MIME */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMerchVariantStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                variantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStockRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated stock projection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchVariant"];
+                };
+            };
+            /** @description Version changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listSellerMerchOrders: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchFulfillmentStatus"];
+            };
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders scoped to this seller */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOrder"][];
+                };
+            };
+        };
+    };
+    updateMerchOrderFulfillment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                orderId: components["parameters"]["MerchOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchFulfillmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated operational timeline */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOrder"];
+                };
+            };
+            /** @description Invalid fulfillment transition or missing tracking fields */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminMerchStores: {
+        parameters: {
+            query?: {
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Review queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"][];
+                };
+            };
+        };
+    };
+    reviewMerchStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStoreReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Approved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchStorefront"];
+                };
+            };
+        };
+    };
+    listAdminMerchProducts: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchProductStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Product moderation queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"][];
+                };
+            };
+        };
+    };
+    reviewMerchProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: components["parameters"]["MerchProductId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Reviewed product */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchProduct"];
+                };
+            };
+            /** @description Invalid moderation transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMerchSettlement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchSettlementRequest"];
+            };
+        };
+        responses: {
+            /** @description Prepared settlement; no payout was executed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchSettlement"];
+                };
+            };
+            /** @description Orders are ineligible or already assigned */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMerchSettlementStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                settlementId: components["parameters"]["MerchSettlementId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated manual settlement evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchSettlement"];
+                };
+            };
+            /** @description Invalid transition or dual-control violation */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
