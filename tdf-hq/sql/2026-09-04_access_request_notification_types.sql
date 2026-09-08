@@ -33,9 +33,30 @@ BEGIN
           AND NOT attribute.attisdropped
           AND attribute.atttypid = 'pg_catalog.text'::pg_catalog.regtype
           AND attribute.atttypmod = -1
-          AND attribute.attnotnull
     ) THEN
-        RAISE EXCEPTION 'public.notification.notif_type must be non-null text';
+        RAISE EXCEPTION 'public.notification.notif_type must be text';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.notification
+        WHERE notif_type IS NULL
+    ) THEN
+        RAISE EXCEPTION
+            'public.notification.notif_type contains NULL values; repair data before enforcing NOT NULL';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_attribute AS attribute
+        WHERE attribute.attrelid = 'public.notification'::pg_catalog.regclass
+          AND attribute.attname = 'notif_type'
+          AND attribute.attnum > 0
+          AND NOT attribute.attisdropped
+          AND NOT attribute.attnotnull
+    ) THEN
+        ALTER TABLE public.notification
+            ALTER COLUMN notif_type SET NOT NULL;
     END IF;
 
     SELECT pg_catalog.pg_get_expr(constraint_row.conbin, constraint_row.conrelid, TRUE)

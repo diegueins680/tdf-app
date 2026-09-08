@@ -5,6 +5,7 @@ test_container="tdf-access-request-notification-test-$$"
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 up_migration="$repo_root/tdf-hq/sql/2026-09-04_access_request_notification_types.sql"
 down_migration="$repo_root/tdf-hq/sql/2026-09-04_access_request_notification_types_rollback.sql"
+nullability_repair="$repo_root/tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql"
 
 cleanup() {
   docker rm -f "$test_container" >/dev/null 2>&1 || true
@@ -49,8 +50,25 @@ apply_file() {
 psql_exec -c 'CREATE TABLE party (id BIGSERIAL PRIMARY KEY);' >/dev/null
 psql_exec -c 'INSERT INTO party DEFAULT VALUES;' >/dev/null
 apply_file "$repo_root/tdf-hq/sql/2026-07-12_notification_table.sql"
+psql_exec -c 'ALTER TABLE notification ALTER COLUMN notif_type DROP NOT NULL;' >/dev/null
 apply_file "$up_migration"
 apply_file "$up_migration"
+
+notif_type_nullable=$(psql_exec -Atc "SELECT is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='notif_type';")
+if [ "$notif_type_nullable" != "NO" ]; then
+  echo "Access-request migration did not restore notification.notif_type NOT NULL" >&2
+  exit 1
+fi
+
+psql_exec -c 'ALTER TABLE notification ALTER COLUMN notif_type DROP NOT NULL;' >/dev/null
+apply_file "$nullability_repair"
+apply_file "$nullability_repair"
+
+notif_type_nullable=$(psql_exec -Atc "SELECT is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='notif_type';")
+if [ "$notif_type_nullable" != "NO" ]; then
+  echo "Notification nullability repair did not restore notification.notif_type NOT NULL" >&2
+  exit 1
+fi
 
 for notification_type in \
   reaction_received post_trending weekly_top artist_liked \
