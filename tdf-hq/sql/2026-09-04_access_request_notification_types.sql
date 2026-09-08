@@ -24,7 +24,21 @@ BEGIN
         RAISE EXCEPTION 'public.notification is required for access-request notification types';
     END IF;
 
-    IF NOT EXISTS (
+    IF EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_attribute AS attribute
+        WHERE attribute.attrelid = 'public.notification'::pg_catalog.regclass
+          AND attribute.attname = 'notif_type'
+          AND attribute.attnum > 0
+          AND NOT attribute.attisdropped
+          AND attribute.atttypid = 'pg_catalog.varchar'::pg_catalog.regtype
+    ) THEN
+        -- The pre-ledger staging baseline used unconstrained varchar. This
+        -- widening conversion is lossless and lets the canonical runtime
+        -- representation be validated below.
+        ALTER TABLE public.notification
+            ALTER COLUMN notif_type TYPE text USING notif_type::text;
+    ELSIF NOT EXISTS (
         SELECT 1
         FROM pg_catalog.pg_attribute AS attribute
         WHERE attribute.attrelid = 'public.notification'::pg_catalog.regclass
@@ -34,7 +48,7 @@ BEGIN
           AND attribute.atttypid = 'pg_catalog.text'::pg_catalog.regtype
           AND attribute.atttypmod = -1
     ) THEN
-        RAISE EXCEPTION 'public.notification.notif_type must be text';
+        RAISE EXCEPTION 'public.notification.notif_type must be text or varchar';
     END IF;
 
     IF EXISTS (
@@ -70,7 +84,10 @@ BEGIN
       AND NOT constraint_row.connoinherit;
 
     IF current_check IS NULL THEN
-        RAISE EXCEPTION 'public.notification has no valid canonical notif_type constraint';
+        -- Older installations intentionally had no allowlist. Do not invent
+        -- one: several independently deployed notification producers have
+        -- valid persisted types outside this feature's original seven values.
+        RETURN;
     ELSIF current_check = expected_check THEN
         RETURN;
     ELSIF current_check <> legacy_check THEN
@@ -116,7 +133,7 @@ BEGIN
       AND constraint_row.convalidated
       AND NOT constraint_row.connoinherit;
 
-    IF actual_check IS DISTINCT FROM expected_check THEN
+    IF actual_check IS NOT NULL AND actual_check IS DISTINCT FROM expected_check THEN
         RAISE EXCEPTION 'Access-request notification constraint is invalid: %', actual_check;
     END IF;
 END

@@ -14,7 +14,18 @@ BEGIN
         RAISE EXCEPTION 'public.notification is required for notification nullability repair';
     END IF;
 
-    IF NOT EXISTS (
+    IF EXISTS (
+        SELECT 1
+        FROM pg_catalog.pg_attribute AS attribute
+        WHERE attribute.attrelid = 'public.notification'::pg_catalog.regclass
+          AND attribute.attname = 'notif_type'
+          AND attribute.attnum > 0
+          AND NOT attribute.attisdropped
+          AND attribute.atttypid = 'pg_catalog.varchar'::pg_catalog.regtype
+    ) THEN
+        ALTER TABLE public.notification
+            ALTER COLUMN notif_type TYPE text USING notif_type::text;
+    ELSIF NOT EXISTS (
         SELECT 1
         FROM pg_catalog.pg_attribute AS attribute
         WHERE attribute.attrelid = 'public.notification'::pg_catalog.regclass
@@ -24,7 +35,7 @@ BEGIN
           AND attribute.atttypid = 'pg_catalog.text'::pg_catalog.regtype
           AND attribute.atttypmod = -1
     ) THEN
-        RAISE EXCEPTION 'public.notification.notif_type must be text';
+        RAISE EXCEPTION 'public.notification.notif_type must be text or varchar';
     END IF;
 
     IF EXISTS (
