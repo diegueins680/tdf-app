@@ -37,6 +37,12 @@ jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
   retryPendingFirstValueCompletion: retryPendingFirstValueCompletionMock,
 }));
 
+const retryPendingOnboardingIntentMock = jest.fn(async () => false);
+
+jest.unstable_mockModule('../session/onboardingIntentRecovery', () => ({
+  retryPendingOnboardingIntent: retryPendingOnboardingIntentMock,
+}));
+
 jest.unstable_mockModule('../components/SidebarNav', () => ({
   default: () => <aside data-testid="sidebar-nav" />,
 }));
@@ -115,15 +121,17 @@ describe('Shell', () => {
     window.localStorage.clear();
     delete session.partyId;
     retryPendingFirstValueCompletionMock.mockClear();
+    retryPendingOnboardingIntentMock.mockClear();
   });
 
-  it('replays pending first-value completion for the authenticated Party', async () => {
+  it('replays pending onboarding state for the authenticated Party', async () => {
     session.partyId = 42;
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderShell(container, '/inicio');
 
     try {
+      expect(retryPendingOnboardingIntentMock).toHaveBeenCalledWith(42);
       expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledWith(expect.anything(), 42);
     } finally {
       await cleanup();

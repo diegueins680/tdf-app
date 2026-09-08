@@ -54,7 +54,7 @@ import {
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
-import { persistOnboardingIntent } from '../api/session';
+import { persistOnboardingIntentWithRetry } from '../session/onboardingIntentRecovery';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
@@ -393,7 +393,11 @@ export default function LoginPage() {
 
       login(nextSession, { remember: rememberDevice });
       if (requestedIntent) {
-        void persistOnboardingIntent(requestedIntent, response.token);
+        void persistOnboardingIntentWithRetry(
+          nextSession.partyId,
+          requestedIntent,
+          response.token,
+        );
       }
       captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
       navigate(targetPath, { replace: true });
@@ -458,7 +462,11 @@ export default function LoginPage() {
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
         if (activeIntent && !signupDialogOpen) {
-          void persistOnboardingIntent(activeIntent, response.token);
+          void persistOnboardingIntentWithRetry(
+            nextSession.partyId,
+            activeIntent,
+            response.token,
+          );
         }
         const googleCreatedAccount = response.accountCreated === true;
         captureGrowthEvent(analytics, googleCreatedAccount ? 'signup_completed' : 'login_completed', {
