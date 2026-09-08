@@ -47,7 +47,7 @@ paths:
     get:
       tags: [Social events]
       summary: List social events using canonical catalog identifiers
-      description: Returns events that are both explicitly public and in a workflow state with the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
+      description: Returns events whose canonical metadata does not mark them private and whose workflow state has the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
       operationId: listSocialEvents
       security:
         - bearerAuth: [ ]

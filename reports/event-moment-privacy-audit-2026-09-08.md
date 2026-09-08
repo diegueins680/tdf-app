@@ -14,13 +14,15 @@ Root implementation commit: `39c4cabf8dd6399eb2ad7e9c957d7b5472c61580`
 
 Mobile implementation commit: `e6cec2cdb25a7ae4339f8486042f6e121272233c`
 
-Publication status: both implementation commits are published and stacked draft pull requests are open. The report commit is recorded in section 13 after publication.
+Mobile contract-wording head: `3409aeb692ee754525567412ec053b6ae18c2458`
+
+Publication status: both implementation commits, the regenerated contract clarification, and the report creation commit are published; stacked draft pull requests are open.
 
 ## Executive outcome
 
 This continuation implements the two highest-priority privacy items deferred by the preceding onboarding evidence-integrity batch.
 
-First, locally authored events now use the same fail-closed public-visibility contract as imported events. An ordinary authenticated Party can see an event only when it owns the event or the event has valid public metadata and an active lifecycle state with the persisted `public-listable` capability. Strict administrators retain internal visibility. This prevents private and planning-stage event details and their nested routes from becoming an authenticated-user discovery surface while preserving a creator's access to unfinished work.
+First, locally authored events now use the same fail-closed public-visibility contract as imported events. An ordinary authenticated Party can see an event only when it owns the event or the event has valid metadata that does not mark it private and an active lifecycle state with the persisted `public-listable` capability. Strict administrators retain internal visibility. This prevents private and planning-stage event details and their nested routes from becoming an authenticated-user discovery surface while preserving a creator's access to unfinished work.
 
 Second, event-moment reaction responses no longer enumerate other reactors' Party identifiers or activity timestamps. One response row is retained for each stored reaction so existing clients can continue deriving counts; only the caller's own row carries Party identity and time. The mobile mapper already supported anonymous count placeholders, and its regression suite now locks that behavior.
 
@@ -114,7 +116,7 @@ Historical reports were preserved rather than rewritten: `reports/ux-ui-audit-20
 - Evidence: baseline `requireEventVisibleToUser`, `selectVisibleSocialEvents`, external-reference predicate, and synthetic route/list tasks.
 - Severity/confidence/impact: high confidentiality and workflow-integrity risk, high confidence. Exposure is observed in code/tests; production incidence and affected record count are unknown.
 - Likely cause: visibility evolved around imported discovery and treated absence of an external reference as implicitly visible.
-- Remedy/effort/dependencies: one owner-aware rule for all events, requiring valid public metadata plus the persisted lifecycle capability for non-owners. Medium; existing tables/capabilities, no migration.
+- Remedy/effort/dependencies: one owner-aware rule for all events, requiring valid metadata that does not mark the event private plus the persisted lifecycle capability for non-owners. Medium; existing tables/capabilities, no migration.
 - Acceptance criteria: public/on-sale event visible; private and planning event hidden from an ordinary non-owner; owner sees all own states; strict admin sees internal states; hidden direct/nested routes return generic 404; malformed/missing state fails closed.
 - Status: implemented and locally verified.
 
@@ -149,7 +151,7 @@ No analytics event or SDK was added. Reaction completion semantics from the prio
 | Executed check | Result | Limitation |
 | --- | --- | --- |
 | `REQUIRE_MOBILE_WORKSPACE=1 npm run generate:api` | Passed for web and the real mobile submodule | Contract generation, not transport runtime |
-| Generated-client SHA-1 | Both `ea6a41fac892ad00a8ec31743e4c672c775d28d6` | Byte equality only |
+| Generated-client SHA-1 | Both `bd2ab1663403c1900d2cf735a9df82faffad4b67` | Byte equality only |
 | Focused Hspec private-event test | 1 example / 0 failures | Synthetic SQLite |
 | Focused Hspec reaction-privacy test | 1 example / 0 failures | DTO structure, not live HTTP JSON |
 | First affected social-event group run | 20 examples / 1 failure | Correctly exposed an old organizer-auth fixture with no public lifecycle state; not counted as a pass |
@@ -224,8 +226,9 @@ No participant was contacted and no task result, quotation, rate, or approval is
 - Mobile branch: `feature/event-moment-privacy-20260908-reviewed`
 - Root implementation commit: `39c4cabf8dd6399eb2ad7e9c957d7b5472c61580`
 - Mobile implementation commit: `e6cec2cdb25a7ae4339f8486042f6e121272233c`
+- Mobile PR head after generated contract wording: `3409aeb692ee754525567412ec053b6ae18c2458`
 - Root draft PR: [tdf-app #272](https://github.com/diegueins680/tdf-app/pull/272)
 - Mobile draft PR: [TDF-mobile #48](https://github.com/diegueins680/TDF-mobile/pull/48)
 - Stacked base in both repositories: `feature/moment-reaction-evidence-20260907-reviewed`
-- Report commit: pending at draft time
+- Report creation commit: `0e7afc17598d8f18a8f1cbe12740d111f94fa1d6`
 - No merge, production transaction, customer communication, or production deployment was performed. Repository integrations may create automatic feature previews; those are not production validation.
