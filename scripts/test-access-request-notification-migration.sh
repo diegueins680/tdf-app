@@ -51,6 +51,17 @@ psql_exec -c 'CREATE TABLE party (id BIGSERIAL PRIMARY KEY);' >/dev/null
 psql_exec -c 'INSERT INTO party DEFAULT VALUES;' >/dev/null
 apply_file "$repo_root/tdf-hq/sql/2026-07-12_notification_table.sql"
 psql_exec -c 'ALTER TABLE notification ALTER COLUMN notif_type DROP NOT NULL;' >/dev/null
+psql_exec -c "INSERT INTO notification (recipient_party_id, notif_type, title, body)
+  VALUES (1, NULL, 'preserve', 'preserve');" >/dev/null
+if apply_file "$up_migration" 2>/dev/null; then
+  echo "Access-request migration accepted a NULL notification type" >&2
+  exit 1
+fi
+if [ "$(psql_exec -Atc 'SELECT count(*) FROM notification WHERE notif_type IS NULL;')" != "1" ]; then
+  echo "Access-request migration did not preserve the rejected NULL row" >&2
+  exit 1
+fi
+psql_exec -c 'DELETE FROM notification WHERE notif_type IS NULL;' >/dev/null
 apply_file "$up_migration"
 apply_file "$up_migration"
 
@@ -61,6 +72,17 @@ if [ "$notif_type_nullable" != "NO" ]; then
 fi
 
 psql_exec -c 'ALTER TABLE notification ALTER COLUMN notif_type DROP NOT NULL;' >/dev/null
+psql_exec -c "INSERT INTO notification (recipient_party_id, notif_type, title, body)
+  VALUES (1, NULL, 'preserve', 'preserve');" >/dev/null
+if apply_file "$nullability_repair" 2>/dev/null; then
+  echo "Notification nullability repair accepted a NULL notification type" >&2
+  exit 1
+fi
+if [ "$(psql_exec -Atc 'SELECT count(*) FROM notification WHERE notif_type IS NULL;')" != "1" ]; then
+  echo "Notification nullability repair did not preserve the rejected NULL row" >&2
+  exit 1
+fi
+psql_exec -c 'DELETE FROM notification WHERE notif_type IS NULL;' >/dev/null
 apply_file "$nullability_repair"
 apply_file "$nullability_repair"
 
