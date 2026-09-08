@@ -15,6 +15,7 @@ Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Dataf
 - Tokens opacos hasheados para carrito/orden y snapshots inmutables.
 - API Servant/OpenAPI y clientes TypeScript regenerados.
 - UI web completa para comprador/vendedor/staff; móvil para compra y operación esencial.
+- Dependencia móvil revisable: [TDF-mobile#49](https://github.com/diegueins680/TDF-mobile/pull/49).
 
 ## UX
 
@@ -49,6 +50,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
 - Regresión web global: la suite preexistente de administración de cursos falló durante la corrida simultánea; queda por repetir en CI/aislamiento. Las pruebas específicas de merch pasaron.
 - OpenAPI YAML + regeneración web/móvil: PASS.
+- Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
 
 No se ejecutó runtime en dispositivo/emulador móvil ni integración real con proveedor de pagos.

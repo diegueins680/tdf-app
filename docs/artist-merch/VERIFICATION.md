@@ -29,6 +29,7 @@
 - Regresión móvil completa: 319/320 en la corrida simultánea; el único timeout preexistente (`TicketCheckout`) pasó aislado 15/15. Se conserva la advertencia `act(...)` preexistente.
 - Regresión web completa: FAIL en la suite preexistente `CourseRegistrationsAdminPage.test.tsx` durante una corrida con alta contención; las pruebas específicas de merch y E2E pasaron. Debe repetirse en CI o en aislamiento después del rebase.
 - OpenAPI: YAML parseado y tipos generados para ambos clientes.
+- Manifiesto/mecanismo de release: PASS, 47/47 pruebas; migración anclada al SHA de introducción.
 - Feature registry: generación PASS. Auditoría reporta solo el destino preexistente no relacionado `/reputation/consents`.
 
 ## Pendiente antes de recomendar lanzamiento
