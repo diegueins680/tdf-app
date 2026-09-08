@@ -384,6 +384,8 @@ pair_category_a_id="c5210000-0000-4000-8000-000000000001"
 pair_category_b_id="c5210000-0000-4000-8000-000000000002"
 pair_interaction_id="c5210000-0000-4000-8000-000000000003"
 pair_evaluation_id="c5210000-0000-4000-8000-000000000004"
+pair_category_c_id="c5210000-0000-4000-8000-000000000005"
+pair_category_d_id="c5210000-0000-4000-8000-000000000006"
 psql_exec -c "
   INSERT INTO reputation_category(
     id, slug, name_es, name_en, applicable_contexts, default_position
@@ -395,6 +397,14 @@ psql_exec -c "
     (
       '$pair_category_b_id', 'pair-category-b-test',
       'Categoría B', 'Category B', ARRAY['service'], 11
+    ),
+    (
+      '$pair_category_c_id', 'pair-category-c-test',
+      'Categoría C', 'Category C', ARRAY['service'], 12
+    ),
+    (
+      '$pair_category_d_id', 'pair-category-d-test',
+      'Categoría D', 'Category D', ARRAY['service'], 13
     );
   INSERT INTO reputation_interaction(
     id, context_kind, context_id, party_a_id, party_b_id, completed_at,
@@ -412,10 +422,11 @@ psql_exec -c "
     'draft', 'public-bayes-roc-v1', 1, '2030-10-01T00:00:00Z'
   );
   INSERT INTO reputation_evaluation_category(
-    evaluation_id, category_id, position, weight
+    evaluation_id, category_id, position, weight, not_applicable
   ) VALUES
-    ('$pair_evaluation_id', '$pair_category_a_id', 1, 50),
-    ('$pair_evaluation_id', '$pair_category_b_id', 2, 50);
+    ('$pair_evaluation_id', '$pair_category_a_id', 1, 50, FALSE),
+    ('$pair_evaluation_id', '$pair_category_b_id', 2, 50, FALSE),
+    ('$pair_evaluation_id', '$pair_category_c_id', 3, 0, TRUE);
   INSERT INTO reputation_evaluation_rank(
     evaluation_id, category_id, compared_party_id, position_group,
     absolute_score
@@ -446,6 +457,10 @@ assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND subject_party_id=102;")" \
   "2" \
   "Evaluation subject selected-category preservation"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND subject_party_id=102 AND category_id='$pair_category_c_id';")" \
+  "0" \
+  "Not-applicable evaluation category suppression"
 while :; do
   pair_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-pair-0001', 1, '2030-08-01T12:05:00Z');")
   [ -n "$pair_claim" ] || break
@@ -455,6 +470,72 @@ while :; do
     "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$pair_event_id', '$pair_claim_token', '2030-08-01T12:05:01Z');")" \
     "processed" \
     "Subject/category pair follow-up processing"
+done
+
+if psql_exec -c "
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$pair_evaluation_id', '$pair_category_d_id', 4, 0);
+" >/dev/null 2>&1; then
+  echo "Submitted evaluation allowed a category insert" >&2
+  exit 1
+fi
+if psql_exec -c "
+  UPDATE reputation_evaluation_category
+  SET not_applicable=FALSE
+  WHERE evaluation_id='$pair_evaluation_id'
+    AND category_id='$pair_category_c_id';
+" >/dev/null 2>&1; then
+  echo "Submitted evaluation allowed a category update" >&2
+  exit 1
+fi
+if psql_exec -c "
+  DELETE FROM reputation_evaluation_category
+  WHERE evaluation_id='$pair_evaluation_id'
+    AND category_id='$pair_category_a_id';
+" >/dev/null 2>&1; then
+  echo "Submitted evaluation allowed a category delete" >&2
+  exit 1
+fi
+
+pair_invalidations_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND event_type='evaluation.invalidated';")
+psql_exec -c "
+  UPDATE reputation_evaluation
+  SET status='draft'
+  WHERE id='$pair_evaluation_id';
+" >/dev/null
+pair_invalidations_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND event_type='evaluation.invalidated';")
+assert_equal \
+  "$((pair_invalidations_after - pair_invalidations_before))" \
+  "4" \
+  "Submitted-to-draft full tuple invalidation"
+
+psql_exec -c "
+  UPDATE reputation_evaluation_category
+  SET not_applicable=FALSE
+  WHERE evaluation_id='$pair_evaluation_id'
+    AND category_id='$pair_category_c_id';
+" >/dev/null
+pair_resubmissions_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND event_type='evaluation.submitted';")
+psql_exec -c "
+  UPDATE reputation_evaluation
+  SET status='submitted'
+  WHERE id='$pair_evaluation_id';
+" >/dev/null
+pair_resubmissions_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:pair-001' AND event_type='evaluation.submitted';")
+assert_equal \
+  "$((pair_resubmissions_after - pair_resubmissions_before))" \
+  "5" \
+  "Draft category edit resubmission fan-out"
+while :; do
+  pair_edit_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-pair-edit-0001', 1, '2030-08-01T12:05:02Z');")
+  [ -n "$pair_edit_claim" ] || break
+  pair_edit_event_id=$(printf '%s' "$pair_edit_claim" | cut -d '|' -f 1)
+  pair_edit_claim_token=$(printf '%s' "$pair_edit_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$pair_edit_event_id', '$pair_edit_claim_token', '2030-08-01T12:05:03Z');")" \
+    "processed" \
+    "Draft category edit follow-up processing"
 done
 
 global_draft_interaction_id="c5220000-0000-4000-8000-000000000001"
@@ -2022,4 +2103,4 @@ assert_equal \
   "50.0000:0:$run_event_a" \
   "Migration rerun run-result preservation"
 
-echo "Contextual reputation staging worker migration passed disabled-environment producer gating with complete-coverage watermarks and open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future and coverage-safe high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation, complete-event success, terminal enqueue rejection, and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, processable role-change comparison-component fan-out with draft suppression, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health and queue metrics, retry-cycle-separated non-identifying metrics, and rerun checks."
+echo "Contextual reputation staging worker migration passed disabled-environment producer gating with complete-coverage watermarks and open-run mutation preservation, production gating, immutable and run-frozen formula parameters, non-future and coverage-safe high-water marks, serialized run creation and late submission, evidence and role-mutation fenced run cutoffs, bounded-run candidate isolation, irreversible run lifecycle with planned cancellation, complete-event success, terminal enqueue rejection, and claim/completion gating, run/source idempotency, immutable per-run results and outbox evidence, exact subject/category and eligible global fan-out with not-applicable suppression and submitted-category draft-edit enforcement, evaluation/interaction/rank tuple-move invalidation, leasing and expired-lease limits, simulation isolation, exact role-applicable adjusted-share-capped absolute and ordinal Bayesian aggregation, processable role-change comparison-component fan-out with draft suppression, connected-component and tie handling, deletion/invalidation/restoration and old/new-scope processable category-control fan-out, active-formula/category periodic decay scheduling, bounded recoverable DLQ cycles, audited replay, due-only claimable-work health and queue metrics, retry-cycle-separated non-identifying metrics, and rerun checks."
