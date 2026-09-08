@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "23972701952c2373f31a",
+      "id": "fb69cfbbc6a9e4b92a98",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9431,6 +9431,16 @@
       "priority": "P3-retain",
       "risk": "Changing a live version's arm identifiers could rebucket durable assignments or fragment exposure reporting.",
       "justification": "These values are immutable wire discriminants for experiment version 1. The server persists the selected arm per Party, and any arm change requires a new experiment version rather than mutable catalog administration.",
+      "reviewed": true
+    },
+    {
+      "id": "1fc12a91554dc9bed3fa",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Database drift could admit unsupported arm identifiers and fragment durable assignment or exposure reporting.",
+      "justification": "The SQL check is defense in depth for the immutable experiment-version wire protocol mirrored by OpenAPI; arm changes require a new version.",
       "reviewed": true
     }
   ]
