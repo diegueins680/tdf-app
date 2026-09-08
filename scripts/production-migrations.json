@@ -398,7 +398,7 @@
     {
       "id": "2026-09-04_access_request_notification_types",
       "path": "tdf-hq/sql/2026-09-04_access_request_notification_types.sql",
-      "compatibleAppliedChecksums": ["200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab"],
+      "compatibleAppliedChecksums": ["200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab", "ad04cc74dae4f937932cc50772d8f2bcb0be8f8cf6652c0b6d1162d85fc7c0e9"],
       "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
     },
     {

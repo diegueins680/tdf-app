@@ -130,5 +130,44 @@ if [ "$access_request_rows" != "3" ]; then
   exit 1
 fi
 
+# Reproduce the pre-ledger staging baseline: varchar, a named NOT NULL
+# constraint, no type allowlist, and notification types emitted by another
+# valid producer. The compatibility path must preserve those rows and widen
+# varchar to the runtime's canonical text representation without inventing a
+# restrictive check constraint.
+psql_exec -c 'DELETE FROM notification;' >/dev/null
+psql_exec -c 'ALTER TABLE notification DROP CONSTRAINT notification_notif_type_check;' >/dev/null
+psql_exec -c 'ALTER TABLE notification ALTER COLUMN notif_type TYPE varchar USING notif_type::varchar;' >/dev/null
+psql_exec -c "INSERT INTO notification (recipient_party_id, notif_type, title, body)
+  VALUES (1, 'test_sink_captured', 'test', 'test'),
+         (1, 'test_sink_failed', 'test', 'test');" >/dev/null
+apply_file "$up_migration"
+apply_file "$up_migration"
+apply_file "$nullability_repair"
+apply_file "$nullability_repair"
+
+legacy_notif_type=$(psql_exec -Atc "SELECT data_type || ':' || is_nullable
+  FROM information_schema.columns
+  WHERE table_schema='public' AND table_name='notification' AND column_name='notif_type';")
+if [ "$legacy_notif_type" != "text:NO" ]; then
+  echo "Legacy varchar notification baseline was not widened to non-null text" >&2
+  exit 1
+fi
+
+legacy_type_rows=$(psql_exec -Atc "SELECT count(*) FROM notification
+  WHERE notif_type IN ('test_sink_captured', 'test_sink_failed');")
+if [ "$legacy_type_rows" != "2" ]; then
+  echo "Legacy notification types were not preserved" >&2
+  exit 1
+fi
+
+legacy_allowlist=$(psql_exec -Atc "SELECT count(*) FROM pg_constraint
+  WHERE conrelid='public.notification'::regclass
+    AND conname='notification_notif_type_check';")
+if [ "$legacy_allowlist" != "0" ]; then
+  echo "Legacy unconstrained notification baseline gained an unsafe allowlist" >&2
+  exit 1
+fi
+
 echo "Access-request notification migration passed forward, idempotency,"
-echo "constraint, rollback-safety, and reapply checks."
+echo "constraint, rollback-safety, reapply, and legacy-varchar compatibility checks."
