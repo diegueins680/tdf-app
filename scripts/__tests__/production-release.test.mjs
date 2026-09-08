@@ -894,6 +894,11 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     /IF EXISTS \([\s\S]*notification_notif_type_check[\s\S]*\) AND NOT EXISTS \([\s\S]*access_request_submitted/i,
     'the historical unconstrained notification baseline must remain valid while a named allowlist fails closed',
   );
+  assert.match(
+    sql,
+    /notification_notif_type_check[\s\S]*contype = 'c'\s*\) AND NOT EXISTS/i,
+    'an unvalidated named notification allowlist must not be mistaken for an absent allowlist',
+  );
 });
 
 test('buildSchemaPreflightSql is read-only and accepts unapplied release tables', () => {
