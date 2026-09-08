@@ -21,11 +21,17 @@ module TDF.Directory.Policy
   , applyProfileFieldUpdate
   , detailIdsMatch
   , serviceAreaPrimaryValid
+  , canonicalFavoriteKind
+  , canonicalFavoriteTarget
   ) where
 
+import Data.Int (Int64)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
+import qualified Data.Text as T
+import qualified Data.UUID as UUID
+import Text.Read (readMaybe)
 
 data ProfileStatus
   = ProfileDraft | ProfilePendingReview | ProfilePublished | ProfilePaused
@@ -167,3 +173,33 @@ detailIdsMatch ids detailIds =
 serviceAreaPrimaryValid :: [Bool] -> Bool
 serviceAreaPrimaryValid primaryFlags =
   null primaryFlags || length (filter id primaryFlags) == 1
+
+canonicalFavoriteKind :: Text -> Either Text Text
+canonicalFavoriteKind rawKind
+  | kind `Set.member` Set.fromList ["profile", "classified", "event", "venue"] = Right kind
+  | otherwise = Left "invalid targetKind"
+  where
+    kind = T.toLower (T.strip rawKind)
+
+canonicalFavoriteTarget :: Text -> Text -> Either Text (Text, Text)
+canonicalFavoriteTarget rawKind rawIdentifier = do
+  kind <- canonicalFavoriteKind rawKind
+  identifier <- case kind of
+    "event" -> canonicalNumericIdentifier "event" rawIdentifier
+    "venue" -> canonicalNumericIdentifier "venue" rawIdentifier
+    "profile" -> canonicalUuidIdentifier "profile" rawIdentifier
+    "classified" -> canonicalUuidIdentifier "classified" rawIdentifier
+    _ -> Left "invalid targetKind"
+  pure (kind, identifier)
+
+canonicalNumericIdentifier :: Text -> Text -> Either Text Text
+canonicalNumericIdentifier kind rawIdentifier =
+  case readMaybe (T.unpack (T.strip rawIdentifier)) :: Maybe Int64 of
+    Just identifier | identifier > 0 -> Right (T.pack (show identifier))
+    _ -> Left (kind <> " targetId must be a positive integer")
+
+canonicalUuidIdentifier :: Text -> Text -> Either Text Text
+canonicalUuidIdentifier kind rawIdentifier =
+  case UUID.fromText (T.strip rawIdentifier) of
+    Just identifier -> Right (UUID.toText identifier)
+    Nothing -> Left (kind <> " targetId must be a UUID")

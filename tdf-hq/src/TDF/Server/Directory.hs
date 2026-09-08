@@ -1089,24 +1089,69 @@ validateReviewBody (Just value) =
   where
     unsafeControl character = isControl character && character `notElem` ['\n','\r','\t']
 
-listFavorites user = jsonRows
-  "SELECT jsonb_build_object('targetKind',favorite.target_kind,'targetId',favorite.target_id,'createdAt',favorite.created_at,'result',CASE WHEN document.entity_id IS NULL THEN NULL ELSE jsonb_build_object('type',document.entity_kind,'id',document.entity_id,'slug',document.slug,'title',document.title,'city',document.city_name) END) FROM directory_favorite favorite LEFT JOIN directory_public_search_document document ON document.entity_kind=favorite.target_kind AND document.entity_id=favorite.target_id WHERE favorite.account_party_id=? ORDER BY favorite.created_at DESC"
-  [toPersistValue (auPartyId user)]
+listFavorites user mTargetKind = do
+  targetKind <- traverse (either favoriteValidationError pure . canonicalFavoriteKind) mTargetKind
+  jsonRows
+    "SELECT jsonb_build_object('targetKind',favorite.target_kind,'targetId',favorite.target_id,'createdAt',favorite.created_at,'result',CASE WHEN document.entity_id IS NULL THEN NULL ELSE jsonb_build_object('type',document.entity_kind,'id',document.entity_id,'slug',document.slug,'title',document.title,'city',document.city_name) END) FROM directory_favorite favorite LEFT JOIN directory_public_search_document document ON document.entity_kind=favorite.target_kind AND document.entity_id=favorite.target_id WHERE favorite.account_party_id=? AND (CAST(? AS text) IS NULL OR favorite.target_kind=CAST(? AS text)) ORDER BY favorite.created_at DESC"
+    [toPersistValue (auPartyId user), optionalText targetKind, optionalText targetKind]
 
-addFavorite user targetKind targetId = do
-  validateTarget targetKind targetId
-  runDB $ rawExecute "INSERT INTO directory_favorite(account_party_id,target_kind,target_id) VALUES (?,?,?) ON CONFLICT DO NOTHING" [toPersistValue (auPartyId user),PersistText targetKind,PersistText targetId]
+addFavorite user rawTargetKind rawTargetId = do
+  (targetKind, targetId) <- either favoriteValidationError pure (canonicalFavoriteTarget rawTargetKind rawTargetId)
+  correlationId <- ("favorite-save-" <>) . UUID.toText <$> liftIO nextRandom
+  status <- jsonRows
+    ( "WITH requested AS (SELECT CAST(? AS text) AS target_kind,CAST(? AS text) AS target_id),"
+      <> "eligible AS (SELECT requested.target_kind,requested.target_id FROM requested WHERE "
+      <> favoriteTargetEligibilitySql targetKind
+      <> "),"
+      <> "inserted AS (INSERT INTO directory_favorite(account_party_id,target_kind,target_id) SELECT ?,eligible.target_kind,eligible.target_id FROM eligible WHERE NOT EXISTS (SELECT 1 FROM directory_favorite existing WHERE existing.account_party_id=? AND existing.target_kind=eligible.target_kind AND directory_canonical_favorite_target(existing.target_kind,existing.target_id)=eligible.target_id) ON CONFLICT DO NOTHING RETURNING target_kind,target_id),"
+      <> "audited AS (INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) SELECT ?,'favorite.saved',inserted.target_kind,inserted.target_id,?,jsonb_build_object('source','directory.favorite.put','visibility','public-upcoming') FROM inserted RETURNING id) "
+      <> "SELECT jsonb_build_object('targetExists',EXISTS(SELECT 1 FROM eligible),'newlySaved',EXISTS(SELECT 1 FROM inserted),'auditWritten',EXISTS(SELECT 1 FROM audited))"
+    )
+    [ PersistText targetKind
+    , PersistText targetId
+    , toPersistValue (auPartyId user)
+    , toPersistValue (auPartyId user)
+    , toPersistValue (auPartyId user)
+    , PersistText correlationId
+    ]
+  unless (any favoriteTargetWasEligible status) $
+    throwError err404 {errBody="Favorite target not found, not public, or no longer upcoming"}
   pure NoContent
 
-removeFavorite user targetKind targetId = do
-  validateTarget targetKind targetId
-  runDB $ rawExecute "DELETE FROM directory_favorite WHERE account_party_id=? AND target_kind=? AND target_id=?" [toPersistValue (auPartyId user),PersistText targetKind,PersistText targetId]
+removeFavorite user rawTargetKind rawTargetId = do
+  targetKind <- either favoriteValidationError pure (canonicalFavoriteKind rawTargetKind)
+  when (T.null (T.strip rawTargetId) || T.length rawTargetId > 160) $
+    favoriteValidationError "invalid targetId"
+  let canonicalTargetId = either (const Nothing) (Just . snd) (canonicalFavoriteTarget targetKind rawTargetId)
+  runDB $ rawExecute
+    "DELETE FROM directory_favorite WHERE account_party_id=? AND target_kind=? AND (target_id=? OR (CAST(? AS text) IS NOT NULL AND directory_canonical_favorite_target(target_kind,target_id)=CAST(? AS text)))"
+    [ toPersistValue (auPartyId user)
+    , PersistText targetKind
+    , PersistText rawTargetId
+    , optionalText canonicalTargetId
+    , optionalText canonicalTargetId
+    ]
   pure NoContent
 
-validateTarget :: Text -> Text -> AppM ()
-validateTarget kind identifier = do
-  unless (kind `Set.member` Set.fromList ["profile","classified","event","venue"]) $ throwError err400 {errBody="invalid targetKind"}
-  when (T.null (T.strip identifier) || T.length identifier>160) $ throwError err400 {errBody="invalid targetId"}
+favoriteValidationError :: Text -> AppM a
+favoriteValidationError message = throwError err400 {errBody=BL.fromStrict (TE.encodeUtf8 message)}
+
+favoriteTargetEligibilitySql :: Text -> Text
+favoriteTargetEligibilitySql targetKind = case targetKind of
+  "event" ->
+    "EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id=CAST(requested.target_id AS bigint) AND event.start_time>=CURRENT_TIMESTAMP)"
+  "venue" ->
+    "EXISTS (SELECT 1 FROM directory_public_venue venue WHERE venue.id=CAST(requested.target_id AS bigint))"
+  "profile" ->
+    "EXISTS (SELECT 1 FROM directory_public_profile profile WHERE profile.id=CAST(requested.target_id AS uuid))"
+  "classified" ->
+    "EXISTS (SELECT 1 FROM classified item JOIN directory_public_profile author ON author.id=item.author_profile_id WHERE item.id=CAST(requested.target_id AS uuid) AND item.status='published' AND item.moderation_status='allowed' AND item.expires_at>CURRENT_TIMESTAMP)"
+  _ -> "FALSE"
+
+favoriteTargetWasEligible :: Value -> Bool
+favoriteTargetWasEligible (Object status) =
+  KeyMap.lookup (Key.fromText "targetExists") status == Just (Bool True)
+favoriteTargetWasEligible _ = False
 
 listSavedSearches user = jsonRows "SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency,'lastEvaluatedAt',last_evaluated_at,'createdAt',created_at) FROM directory_saved_search WHERE account_party_id=? ORDER BY created_at DESC,id" [toPersistValue (auPartyId user)]
 

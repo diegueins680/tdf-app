@@ -5223,6 +5223,124 @@ spec = describe "TDF.Server helpers" $ do
                     expectationFailure
                         ("Expected repeated access-request completion to remain idempotent, got: " <> show serverErr)
 
+        it "requires Party-bound, in-window, server-validated event-save evidence" $ do
+            ( missingEvidenceResult
+                , legacyFavoriteResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , wrongEntityEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertFavoriteAudit actorPartyId entityKindValue occurredAtValue correlationIdValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved',?,'42',?,'{}',?)"
+                                [ toPersistValue actorPartyId
+                                , PersistText entityKindValue
+                                , PersistText correlationIdValue
+                                , toPersistValue occurredAtValue
+                                ]
+                        insertCurrentFavoriteAudit actorPartyId entityKindValue correlationIdValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved',?,'42',?,'{}',CURRENT_TIMESTAMP)"
+                                [ toPersistValue actorPartyId
+                                , PersistText entityKindValue
+                                , PersistText correlationIdValue
+                                ]
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        completeEventSave =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "event_saved"))
+                                )
+                                env
+                    missingEvidence <- completeEventSave
+                    liftIO $ flip runSqlPool pool $ do
+                        rawExecute
+                            "INSERT INTO directory_public_event(id) VALUES (42)"
+                            []
+                        rawExecute
+                            "INSERT INTO directory_favorite(account_party_id,target_kind,target_id,created_at) VALUES (?,'event','42',?)"
+                            [toPersistValue partyId, toPersistValue now]
+                    legacyFavorite <- completeEventSave
+                    insertFavoriteAudit otherPartyId "event" now "other-party-save"
+                    otherPartyEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "event" (addUTCTime (-1) signupAt) "pre-signup-save"
+                    preSignupEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "event" (addUTCTime 3600 now) "future-save"
+                    futureEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "venue" now "wrong-entity-save"
+                    wrongEntityEvidence <- completeEventSave
+                    insertCurrentFavoriteAudit partyId "event" "valid-event-save"
+                    validEvidence <- completeEventSave
+                    repeated <- completeEventSave
+                    pure
+                        ( missingEvidence
+                        , legacyFavorite
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , wrongEntityEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " event-save evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "pre-hardening favorite without validation audit" legacyFavoriteResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            assertPending "wrong-entity" wrongEntityEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    (eligibleValue, maybe False (const True) completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, True, Just "event_saved", True)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid event-save evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "event_saved"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated event-save completion to remain idempotent, got: " <> show serverErr)
+
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
             validateOptionalSignupPhone Nothing `shouldBe` Right Nothing
@@ -15034,6 +15152,35 @@ initializeAuthSchema = do
         \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
         \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
         \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_favorite\" (\
+        \\"account_party_id\" INTEGER NOT NULL,\
+        \\"target_kind\" VARCHAR NOT NULL,\
+        \\"target_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \PRIMARY KEY(\"account_party_id\", \"target_kind\", \"target_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_public_event\" (\
+        \\"id\" INTEGER PRIMARY KEY\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_audit_event\" (\
+        \\"id\" VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))),\
+        \\"actor_party_id\" INTEGER NULL,\
+        \\"action\" VARCHAR NOT NULL,\
+        \\"entity_kind\" VARCHAR NOT NULL,\
+        \\"entity_id\" VARCHAR NOT NULL,\
+        \\"correlation_id\" VARCHAR NOT NULL,\
+        \\"metadata\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
         \)"
         []
 

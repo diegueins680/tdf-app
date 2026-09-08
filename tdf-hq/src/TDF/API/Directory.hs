@@ -308,7 +308,7 @@ type DirectoryProtectedAPI = "directory" :>
     :<|> "contact" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryContactRequest :> PostCreated '[JSON] Value
     :<|> "review-eligibility" :> QueryParam "authorProfileId" UUID :> Get '[JSON] [Value]
     :<|> "reviews" :> RequiredIdempotency :> ReqBody '[JSON] DirectoryReviewCreateRequest :> PostCreated '[JSON] Value
-    :<|> "favorites" :> Get '[JSON] [Value]
+    :<|> "favorites" :> QueryParam "targetKind" Text :> Get '[JSON] [Value]
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Put '[JSON] NoContent
     :<|> "favorites" :> Capture "targetKind" Text :> Capture "targetId" Text :> Delete '[JSON] NoContent
     :<|> "saved-searches" :> Get '[JSON] [Value]

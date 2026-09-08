@@ -31,20 +31,23 @@ import MapIcon from '@mui/icons-material/Map';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ShareIcon from '@mui/icons-material/Share';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import LoginIcon from '@mui/icons-material/Login';
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   Directory,
   type DirectoryEntityType,
+  type DirectoryFavorite,
   type DirectorySearchItem,
   type DirectorySearchQuery,
 } from '../api/directory';
 import OpenStreetMapResults from '../components/directory/OpenStreetMapResults';
 import { getAnalyticsClient } from '../analytics/posthog';
+import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
@@ -82,6 +85,8 @@ export default function DirectorySearchPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { session } = useSession();
+  const queryClient = useQueryClient();
+  const activePartyIdRef = useRef(session?.partyId);
   const initial = useMemo(() => new URLSearchParams(location.search), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [draftQuery, setDraftQuery] = useState(initial.get('q') ?? '');
   const [query, setQuery] = useState(initial.get('q') ?? '');
@@ -101,6 +106,10 @@ export default function DirectorySearchPage() {
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'grid' | 'map'>('list');
+
+  useEffect(() => {
+    activePartyIdRef.current = session?.partyId;
+  }, [session?.partyId]);
 
   useMetaTags({
     title: query ? `${query} en el directorio musical` : 'Directorio y clasificados musicales',
@@ -122,11 +131,11 @@ export default function DirectorySearchPage() {
   });
 
   useEffect(() => {
-    if (!cityId && taxonomies.data?.cities.length) {
-      const quito = taxonomies.data.cities.find((city) => city.code === 'quito-ec-p');
-      if (quito) setCityId(quito.id);
-    }
-  }, [cityId, taxonomies.data]);
+    if (coordinates || !taxonomies.data?.cities.length) return;
+    if (taxonomies.data.cities.some((city) => city.id === cityId)) return;
+    const quito = taxonomies.data.cities.find((city) => city.code === 'quito-ec-p');
+    setCityId(quito?.id ?? taxonomies.data.cities[0]?.id ?? '');
+  }, [cityId, coordinates, taxonomies.data]);
 
   useEffect(() => {
     if (cityId) localStorage.setItem(CITY_STORAGE_KEY, cityId);
@@ -159,6 +168,58 @@ export default function DirectorySearchPage() {
   const items = pages.flatMap((page) => page.items);
   const sponsored = pages[0]?.sponsoredItems ?? [];
   const facets = pages[0]?.facets;
+  const citySelectValue = coordinates
+    ? '__nearby'
+    : taxonomies.data?.cities.some((city) => city.id === cityId)
+      ? cityId
+      : '';
+  const favoritesQueryKey = ['directory', 'favorites', session?.partyId] as const;
+  const favorites = useQuery({
+    queryKey: favoritesQueryKey,
+    queryFn: () => Directory.favorites(),
+    enabled: Boolean(session?.partyId),
+    retry: false,
+  });
+  const favoriteKeys = useMemo(
+    () => new Set((favorites.data ?? []).map((favorite) => `${favorite.targetKind}:${favorite.targetId}`)),
+    [favorites.data],
+  );
+  const favoriteAvailability = !session?.partyId
+    ? 'unauthenticated'
+    : favorites.isLoading
+      ? 'loading'
+      : favorites.isError
+        ? 'error'
+        : 'ready';
+  const updateFavoriteCache = (
+    expectedPartyId: number,
+    item: DirectorySearchItem,
+    saved: boolean,
+  ) => {
+    if (activePartyIdRef.current !== expectedPartyId) return;
+    queryClient.setQueryData<DirectoryFavorite[]>(favoritesQueryKey, (current = []) => {
+      const withoutTarget = current.filter(
+        (favorite) => favorite.targetKind !== item.type || favorite.targetId !== item.id,
+      );
+      if (!saved) return withoutTarget;
+      return [
+        {
+          targetKind: item.type,
+          targetId: item.id,
+          createdAt: new Date().toISOString(),
+          result: {
+            type: item.type,
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            city: item.location.city ?? null,
+          },
+        },
+        ...withoutTarget,
+      ];
+    });
+    void favorites.refetch();
+  };
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -227,7 +288,7 @@ export default function DirectorySearchPage() {
                 />
                 <FormControl sx={{ minWidth: { sm: 220 } }}>
                   <InputLabel id="directory-city-label">Ciudad</InputLabel>
-                  <Select labelId="directory-city-label" label="Ciudad" value={coordinates ? '__nearby' : cityId} onChange={(event) => { setCoordinates(null); setCityId(event.target.value); }}>
+                  <Select labelId="directory-city-label" label="Ciudad" value={citySelectValue} onChange={(event) => { setCoordinates(null); setCityId(event.target.value); }}>
                     {coordinates && <MenuItem value="__nearby">Cerca de mí</MenuItem>}
                     {(taxonomies.data?.cities ?? []).map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
                   </Select>
@@ -287,6 +348,15 @@ export default function DirectorySearchPage() {
             </Stack>
           </Paper>
 
+          {favorites.isError && session?.partyId ? (
+            <Alert
+              severity="warning"
+              action={<Button onClick={() => { void favorites.refetch(); }}>Reintentar</Button>}
+            >
+              No pudimos consultar tus guardados. Tus eventos siguen en tu cuenta; vuelve a intentarlo para actualizarlos.
+            </Alert>
+          ) : null}
+
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
             <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && value in ENTITY_LABELS) setEntityType(value as DirectoryEntityType | 'all'); }} variant="scrollable" aria-label="Tipos de resultado">
               {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'all')[]).map((type) => (
@@ -303,7 +373,7 @@ export default function DirectorySearchPage() {
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout="list" />)}</Stack>
+              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout="list" isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} isActiveParty={(expectedPartyId) => activePartyIdRef.current === expectedPartyId} />)}</Stack>
             </Box>
           )}
 
@@ -324,7 +394,7 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout={view === 'grid' ? 'grid' : 'list'} />)}
+              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} partyId={session?.partyId} layout={view === 'grid' ? 'grid' : 'list'} isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)} favoriteAvailability={favoriteAvailability} onFavoriteChanged={updateFavoriteCache} isActiveParty={(expectedPartyId) => activePartyIdRef.current === expectedPartyId} />)}
             </Box>
           ) : null}
           {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
@@ -334,12 +404,46 @@ export default function DirectorySearchPage() {
   );
 }
 
-function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem; sessionActive: boolean; layout: 'list' | 'grid' }) {
+function ResultCard({
+  item,
+  partyId,
+  layout,
+  isFavorite,
+  favoriteAvailability,
+  onFavoriteChanged,
+  isActiveParty,
+}: {
+  item: DirectorySearchItem;
+  partyId?: number;
+  layout: 'list' | 'grid';
+  isFavorite: boolean;
+  favoriteAvailability: 'unauthenticated' | 'loading' | 'error' | 'ready';
+  onFavoriteChanged: (partyId: number, item: DirectorySearchItem, saved: boolean) => void;
+  isActiveParty: (partyId: number) => boolean;
+}) {
   const path = resultPath(item);
   const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
   const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
   const favorite = useMutation({
-    mutationFn: () => Directory.addFavorite(item.type, item.id),
+    mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
+      if (saved) await Directory.addFavorite(item.type, item.id);
+      else await Directory.removeFavorite(item.type, item.id);
+      return { ownerPartyId, saved };
+    },
+    onSuccess: ({ ownerPartyId, saved }) => {
+      if (!isActiveParty(ownerPartyId)) return;
+      onFavoriteChanged(ownerPartyId, item, saved);
+      const analytics = getAnalyticsClient();
+      analytics.capture('feature_favorite_changed', {
+        feature: item.type,
+        item_id: item.id,
+        state: saved,
+        source: 'web_directory_search',
+      });
+      if (saved && item.type === 'event') {
+        void captureFirstValueOnce(analytics, ownerPartyId, 'event_saved');
+      }
+    },
   });
   const share = async () => {
     const url = `${window.location.origin}${path}`;
@@ -401,14 +505,36 @@ function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
           <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>Ver detalle</Button>
           <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
-          {sessionActive ? (
-            <Button onClick={() => favorite.mutate()} disabled={favorite.isPending || favorite.isSuccess} startIcon={<BookmarkBorderIcon />}>
-              {favorite.isSuccess ? 'Guardado' : 'Guardar'}
+          {partyId ? (
+            <Button
+              onClick={() => favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite })}
+              disabled={favorite.isPending || favoriteAvailability !== 'ready'}
+              startIcon={isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+              aria-pressed={isFavorite}
+              aria-busy={favorite.isPending || undefined}
+              aria-label={isFavorite ? `Quitar ${item.title} de tus guardados` : `Guardar ${item.title} en tu cuenta`}
+            >
+              {favorite.isPending
+                ? 'Actualizando…'
+                : favoriteAvailability === 'loading'
+                  ? 'Consultando…'
+                  : favoriteAvailability === 'error'
+                    ? 'Guardados no disponibles'
+                    : isFavorite
+                      ? 'Quitar guardado'
+                      : 'Guardar'}
             </Button>
           ) : (
-            <Button component={RouterLink} to={buildLoginRedirectPath(path)} startIcon={<LoginIcon />}>Ingresar para contactar</Button>
+            <Button component={RouterLink} to={`${buildLoginRedirectPath(path)}${item.type === 'event' ? '&intent=events' : ''}`} startIcon={<LoginIcon />}>
+              {item.type === 'event' ? 'Ingresar para guardar' : 'Ingresar para contactar'}
+            </Button>
           )}
         </CardActions>
+        {favorite.isError ? (
+          <Alert severity="error" sx={{ mx: 2, mb: 2 }}>
+            No se pudo {isFavorite ? 'quitar' : 'guardar'} este resultado. Tu cuenta no cambió; inténtalo otra vez.
+          </Alert>
+        ) : null}
       </Box>
     </Card>
   );

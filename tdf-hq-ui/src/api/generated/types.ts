@@ -9730,11 +9730,6 @@ export interface components {
             facets: components["schemas"]["DirectoryFacets"];
             nextCursor?: string | null;
         };
-        ApiError: {
-            error: string;
-            code?: string;
-            correlationId?: string;
-        };
         DirectorySuggestion: {
             label: string;
             canonicalQuery: string;
@@ -9857,6 +9852,11 @@ export interface components {
                 reviewCount?: number;
             };
             canonicalUrl: string;
+        };
+        ApiError: {
+            error: string;
+            code?: string;
+            correlationId?: string;
         };
         /** @enum {string} */
         DirectoryInteractionType: "booking" | "service_order" | "marketplace_order" | "event_collaboration" | "confirmed_collaboration";
@@ -10267,12 +10267,20 @@ export interface components {
             authorProfile: components["schemas"]["DirectoryProfileReference"];
             subjectProfile: components["schemas"]["DirectoryProfileReference"];
         };
+        DirectoryFavoriteResult: {
+            type: components["schemas"]["DirectoryEntityType"];
+            id: string;
+            slug: string;
+            title: string;
+            city?: string | null;
+        };
         DirectoryFavorite: {
             targetKind: components["schemas"]["DirectoryEntityType"];
+            /** @description Canonical identifier for this favorite kind. */
             targetId: string;
             /** Format: date-time */
             createdAt: string;
-            result?: components["schemas"]["DirectorySearchItem"];
+            result: components["schemas"]["DirectoryFavoriteResult"] | null;
         };
         SavedSearchCreate: {
             name: string;
@@ -10446,8 +10454,8 @@ export interface components {
         };
     };
     responses: {
-        /** @description Invalid input */
-        BadRequest: {
+        /** @description Not found or not publicly eligible */
+        NotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -10455,8 +10463,8 @@ export interface components {
                 "application/json": components["schemas"]["ApiError"];
             };
         };
-        /** @description Not found or not publicly eligible */
-        NotFound: {
+        /** @description Invalid input */
+        BadRequest: {
             headers: {
                 [name: string]: unknown;
             };
@@ -10507,6 +10515,7 @@ export interface components {
         ProfileId: string;
         ClassifiedId: string;
         TargetKind: components["schemas"]["DirectoryEntityType"];
+        /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
         TargetId: string;
         "parameters-TargetKind": components["schemas"]["ExperienceReviewTargetKind"];
         "parameters-TargetId": string;
@@ -19301,7 +19310,13 @@ export interface operations {
                     "application/json": components["schemas"]["DirectorySearchResponse"];
                 };
             };
-            400: components["responses"]["BadRequest"];
+            /** @description Unsupported target kind filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     suggestDirectoryQuery: {
@@ -19906,14 +19921,17 @@ export interface operations {
     };
     listDirectoryFavorites: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Restrict the authenticated Party's favorites to one supported kind. Saved-event synchronization uses `event`. */
+                targetKind?: components["schemas"]["DirectoryEntityType"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Current user's favorites */
+            /** @description Current authenticated Party favorites */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -19922,6 +19940,7 @@ export interface operations {
                     "application/json": components["schemas"]["DirectoryFavorite"][];
                 };
             };
+            400: components["responses"]["BadRequest"];
         };
     };
     saveDirectoryFavorite: {
@@ -19930,14 +19949,29 @@ export interface operations {
             header?: never;
             path: {
                 targetKind: components["parameters"]["TargetKind"];
+                /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
                 targetId: components["parameters"]["TargetId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Idempotently saved favorite */
+            /** @description Desired saved state confirmed idempotently after validating the canonical public target; event targets must still be upcoming */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported kind or malformed target identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Target not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -19951,14 +19985,22 @@ export interface operations {
             header?: never;
             path: {
                 targetKind: components["parameters"]["TargetKind"];
+                /** @description Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data. */
                 targetId: components["parameters"]["TargetId"];
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Favorite removed */
+            /** @description Desired removed state confirmed idempotently; canonical and valid legacy identifier variants are removed together */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported kind or empty/oversized target identifier */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
