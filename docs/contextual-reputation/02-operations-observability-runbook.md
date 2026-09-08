@@ -72,7 +72,9 @@ Una categoría marcada `not_applicable` tampoco crea una tupla para el sujeto
 principal. Las filas de categoría quedan inmutables mientras la evaluación está
 `submitted`: para corregirlas, primero se regresa la evaluación a `draft`
 (lo que invalida todas sus tuplas vigentes), se editan las categorías y luego se
-vuelve a enviar la evaluación para emitir el nuevo conjunto completo.
+vuelve a enviar la evaluación para emitir el nuevo conjunto completo. El guard
+bloquea la fila padre antes de autorizar una mutación de categoría, de modo que
+una edición concurrente y el envío se serializan sobre un único conjunto.
 Si una evaluación `submitted` cambia de interacción, sujeto o fórmula, el
 productor invalida la tupla anterior y recalcula la nueva aunque la revisión no
 cambie. Una corrección de `context_kind` o `context_id` de una interacción

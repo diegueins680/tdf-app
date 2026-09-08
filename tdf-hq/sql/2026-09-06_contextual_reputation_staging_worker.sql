@@ -734,6 +734,10 @@ BEGIN
   END IF;
 
   IF TG_OP = 'INSERT' THEN
+    PERFORM 1
+    FROM reputation_evaluation evaluation
+    WHERE evaluation.id = NEW.evaluation_id
+    FOR UPDATE;
     IF EXISTS (
       SELECT 1
       FROM reputation_evaluation evaluation
@@ -745,6 +749,10 @@ BEGIN
     END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
+    PERFORM 1
+    FROM reputation_evaluation evaluation
+    WHERE evaluation.id = OLD.evaluation_id
+    FOR UPDATE;
     IF EXISTS (
       SELECT 1
       FROM reputation_evaluation evaluation
@@ -757,6 +765,13 @@ BEGIN
     RETURN OLD;
   END IF;
 
+  -- Lock moved parents in UUID order so concurrent submissions cannot observe
+  -- a partial category mutation and cross-parent moves cannot deadlock.
+  PERFORM 1
+  FROM reputation_evaluation evaluation
+  WHERE evaluation.id IN (OLD.evaluation_id, NEW.evaluation_id)
+  ORDER BY evaluation.id
+  FOR UPDATE;
   IF EXISTS (
     SELECT 1
     FROM reputation_evaluation evaluation

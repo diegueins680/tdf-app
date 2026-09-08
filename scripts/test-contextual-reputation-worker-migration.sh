@@ -538,6 +538,96 @@ while :; do
     "Draft category edit follow-up processing"
 done
 
+category_lock_interaction_id="c5230000-0000-4000-8000-000000000001"
+category_lock_evaluation_id="c5230000-0000-4000-8000-000000000002"
+psql_exec -c "
+  INSERT INTO reputation_interaction(
+    id, context_kind, context_id, party_a_id, party_b_id, completed_at,
+    verified_at, status, source_kind, source_id
+  ) VALUES (
+    '$category_lock_interaction_id', 'service', 'category-lock-001', 101, 102,
+    '2030-08-01T12:05:04Z', '2030-08-01T12:05:04Z',
+    'eligible', 'test_fixture', 'category-lock-001'
+  );
+  INSERT INTO reputation_evaluation(
+    id, interaction_id, evaluator_party_id, subject_party_id, direction,
+    status, formula_version_id, revision, edit_deadline
+  ) VALUES (
+    '$category_lock_evaluation_id', '$category_lock_interaction_id',
+    101, 102, 'a_to_b', 'draft', 'public-bayes-roc-v1', 1,
+    '2030-10-01T00:00:00Z'
+  );
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$category_lock_evaluation_id', '$pair_category_a_id', 1, 100);
+" >/dev/null
+
+psql_exec -c "
+  BEGIN;
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$category_lock_evaluation_id', '$pair_category_d_id', 2, 0);
+  SELECT pg_sleep(2);
+  COMMIT;
+" >/dev/null &
+category_first_writer_pid=$!
+sleep 1
+category_first_submissions_before=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:category-lock-001' AND event_type='evaluation.submitted';")
+psql_exec -c "
+  UPDATE reputation_evaluation
+  SET status='submitted', submitted_at='2030-08-01T12:05:05Z'
+  WHERE id='$category_lock_evaluation_id';
+" >/dev/null
+wait "$category_first_writer_pid"
+category_first_submissions_after=$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregation_outbox WHERE context_key='service:category-lock-001' AND event_type='evaluation.submitted';")
+assert_equal \
+  "$((category_first_submissions_after - category_first_submissions_before))" \
+  "2" \
+  "Category-first submission serialization"
+
+psql_exec -c "
+  UPDATE reputation_evaluation
+  SET status='draft'
+  WHERE id='$category_lock_evaluation_id';
+  DELETE FROM reputation_evaluation_category
+  WHERE evaluation_id='$category_lock_evaluation_id'
+    AND category_id='$pair_category_d_id';
+" >/dev/null
+psql_exec -c "
+  BEGIN;
+  UPDATE reputation_evaluation
+  SET status='submitted'
+  WHERE id='$category_lock_evaluation_id';
+  SELECT pg_sleep(2);
+  COMMIT;
+" >/dev/null &
+submission_first_writer_pid=$!
+sleep 1
+if psql_exec -c "
+  INSERT INTO reputation_evaluation_category(
+    evaluation_id, category_id, position, weight
+  ) VALUES ('$category_lock_evaluation_id', '$pair_category_d_id', 2, 0);
+" >/dev/null 2>&1; then
+  wait "$submission_first_writer_pid"
+  echo "Concurrent submitted evaluation allowed a category insert" >&2
+  exit 1
+fi
+wait "$submission_first_writer_pid"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_evaluation_category WHERE evaluation_id='$category_lock_evaluation_id' AND category_id='$pair_category_d_id';")" \
+  "0" \
+  "Submission-first category mutation rejection"
+while :; do
+  category_lock_claim=$(psql_exec -Atc "SELECT event_id || '|' || claim_token FROM reputation_claim_aggregation_events('staging', 'worker-category-lock-0001', 1, '2030-08-01T12:05:10Z');")
+  [ -n "$category_lock_claim" ] || break
+  category_lock_event_id=$(printf '%s' "$category_lock_claim" | cut -d '|' -f 1)
+  category_lock_claim_token=$(printf '%s' "$category_lock_claim" | cut -d '|' -f 2)
+  assert_equal \
+    "$(psql_exec -Atc "SELECT reputation_complete_aggregation_event('$category_lock_event_id', '$category_lock_claim_token', '2030-08-01T12:05:11Z');")" \
+    "processed" \
+    "Serialized category mutation follow-up processing"
+done
+
 global_draft_interaction_id="c5220000-0000-4000-8000-000000000001"
 global_draft_evaluation_id="c5220000-0000-4000-8000-000000000002"
 global_event_id="c5220000-0000-4000-8000-000000000003"
