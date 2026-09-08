@@ -9,6 +9,7 @@ import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, Circul
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
+import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -64,6 +65,17 @@ export default function SocialEventDetailPage() {
     queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
     enabled: Boolean(eventId),
   });
+  const numericEventId = Number(eventId);
+  const storefrontQuery = useQuery({
+    queryKey: ['public-event-ticket-storefront', eventId],
+    queryFn: () => EventTickets.getStorefront(numericEventId),
+    enabled: Number.isSafeInteger(numericEventId)
+      && numericEventId > 0
+      && Boolean(tiersQuery.data?.length)
+      && eventQuery.data?.eventPublicListable === true
+      && eventQuery.data?.eventTicketPurchaseEnabled === true,
+    retry: false,
+  });
   const postMutation = useMutation({
     mutationFn: async () => {
       if (!session) throw new Error('Inicia sesión para publicar en el evento.');
@@ -116,7 +128,7 @@ export default function SocialEventDetailPage() {
 
   const event = eventQuery.data;
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
-  const canShareTickets = Boolean(event && tiersQuery.data?.length);
+  const canShareTickets = storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
     ? ''
     : new URL(`/eventos/${encodeURIComponent(eventId)}/entradas`, window.location.origin).toString();

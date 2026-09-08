@@ -7,6 +7,7 @@ import type { SocialEventDTO, SocialTicketTierDTO } from '../api/socialEvents';
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<never[]>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
+const getStorefrontMock = jest.fn<(eventId: number) => Promise<{ checkoutAvailable: boolean }>>();
 
 jest.unstable_mockModule('../api/socialEvents', () => ({
   SocialEventsAPI: {
@@ -21,6 +22,12 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
 
 jest.unstable_mockModule('../api/catalogs', () => ({
   Catalogs: { getItem: jest.fn() },
+}));
+
+jest.unstable_mockModule('../api/eventTickets', () => ({
+  EventTickets: {
+    getStorefront: (eventId: number) => getStorefrontMock(eventId),
+  },
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -47,6 +54,8 @@ const eventFixture: SocialEventDTO = {
   eventTitle: 'Listening Party — Labii & Llama Este Pez',
   eventDescription: 'Una noche de música en vivo.',
   eventStart: '2026-09-10T20:00:00-05:00',
+  eventPublicListable: true,
+  eventTicketPurchaseEnabled: true,
   eventCurrency: 'USD',
   eventArtists: [],
 };
@@ -90,6 +99,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     getEventMock.mockReset().mockResolvedValue(eventFixture);
     listMomentsMock.mockReset().mockResolvedValue([]);
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
+    getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
   });
@@ -99,6 +109,29 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const view = renderPage();
 
     expect(await screen.findByText('Aún no hay tickets para este evento.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+    expect(getStorefrontMock).not.toHaveBeenCalled();
+
+    view.unmount();
+  });
+
+  it('hides the share action when the public storefront cannot accept checkout', async () => {
+    getStorefrontMock.mockResolvedValue({ checkoutAvailable: false });
+    const view = renderPage();
+
+    expect(await screen.findByText('General')).toBeTruthy();
+    await waitFor(() => expect(getStorefrontMock).toHaveBeenCalledWith(121));
+    expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+
+    view.unmount();
+  });
+
+  it('does not load or share a storefront for a non-public event', async () => {
+    getEventMock.mockResolvedValue({ ...eventFixture, eventPublicListable: false });
+    const view = renderPage();
+
+    expect(await screen.findByText('General')).toBeTruthy();
+    expect(getStorefrontMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
 
     view.unmount();

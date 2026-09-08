@@ -96,6 +96,7 @@ module TDF.Server.SocialEventsHandlers (
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
+    validateEventDeletionCheckoutHistory,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
@@ -442,6 +443,16 @@ validateEventDeleteAccess user currentParty eventRow
     | hasStrictAdminAccess user || isEventManager currentParty eventRow = Right ()
     | otherwise =
         Left err403{errBody = "Only the event organizer or an administrator can delete this event"}
+
+validateEventDeletionCheckoutHistory :: Bool -> Either ServerError ()
+validateEventDeletionCheckoutHistory hasTicketOrders
+    | hasTicketOrders =
+        Left
+            err409
+                { errBody =
+                    "Events with ticket orders cannot be deleted; unpublish the event instead to preserve checkout history"
+                }
+    | otherwise = Right ()
 
 parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
 parseStripePaymentIntentResponse paymentIntent =
@@ -2766,41 +2777,73 @@ socialEventsServer user =
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
         either throwError pure (validateEventDeleteAccess user currentPartyId existing)
-        liftIO $
+        now <- liftIO getCurrentTime
+        deletionResult <- liftIO $
             runSqlPool
                 ( do
-                    deleteWhere [EventArtistEventId ==. eventKey]
-                    deleteWhere [EventRsvpEventId ==. eventKey]
-                    deleteWhere [EventInvitationEventId ==. eventKey]
-                    momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
-                    unless (null momentKeys) $ do
-                        deleteWhere [EventMomentReactionMomentId <-. momentKeys]
-                        deleteWhere [EventMomentCommentMomentId <-. momentKeys]
-                    deleteWhere [EventMomentEventId ==. eventKey]
-                    deleteWhere [EventTicketEventId ==. eventKey]
-                    deleteWhere [EventTicketOrderEventId ==. eventKey]
-                    deleteWhere [EventTicketTierEventId ==. eventKey]
-                    deleteWhere [EventFinanceEntryEventId ==. eventKey]
-                    deleteWhere [EventBudgetLineEventId ==. eventKey]
-                    logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
-                    unless (null logisticsActivityKeys) $ do
-                        deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
-                        deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
-                        deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
-                        deleteWhere
-                            [ FilterOr
-                                [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
-                                , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
+                    -- Checkout runtime and fulfillment rows are rooted in an event ticket order.
+                    -- Preserve that full audit chain by refusing to hard-delete any event with orders.
+                    hasTicketOrders <- isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+                    case validateEventDeletionCheckoutHistory hasTicketOrders of
+                        Left err -> pure (Left err)
+                        Right () -> do
+                            updateWhere
+                                [EventResearchCandidateEventId ==. Just eventKey]
+                                [EventResearchCandidateEventId =. Nothing]
+                            updateWhere
+                                [EventResearchChangeEventId ==. Just eventKey]
+                                [EventResearchChangeEventId =. Nothing]
+                            deleteWhere [EventArtistEventId ==. eventKey]
+                            deleteWhere [EventRsvpEventId ==. eventKey]
+                            deleteWhere [EventInvitationEventId ==. eventKey]
+                            momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
+                            unless (null momentKeys) $ do
+                                deleteWhere [EventMomentReactionMomentId <-. momentKeys]
+                                deleteWhere [EventMomentCommentMomentId <-. momentKeys]
+                            deleteWhere [EventMomentEventId ==. eventKey]
+                            deleteWhere [EventLiveBroadcastEventId ==. eventKey]
+                            deleteWhere [EventWaitlistEventId ==. eventKey]
+                            ticketKeys <- selectKeysList [EventTicketEventId ==. eventKey] []
+                            unless (null ticketKeys) $ do
+                                deleteWhere [TicketQRCodeTicketId <-. ticketKeys]
+                                deleteWhere [TicketTransferTicketId <-. ticketKeys]
+                            deleteWhere [EventTicketEventId ==. eventKey]
+                            backendName <- T.toCaseFold <$> getRDBMS
+                            -- SQLite tests do not install the production-only checkout policy table.
+                            when ("postgres" `T.isInfixOf` backendName) $
+                                rawExecute
+                                    "DELETE FROM event_ticket_checkout_policy WHERE event_id = ?"
+                                    [PersistInt64 (fromSqlKey eventKey)]
+                            updateWhere
+                                [PromoCodeEventId ==. Just eventKey]
+                                [ PromoCodeEventId =. Nothing
+                                , PromoCodeIsActive =. False
+                                , PromoCodeUpdatedAt =. now
                                 ]
-                            ]
-                    deleteWhere [EventLogisticsActivityEventId ==. eventKey]
-                    deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
-                    deleteWhere [EventLogisticsMemberEventId ==. eventKey]
-                    deleteWhere [EventLogisticsPlanEventId ==. eventKey]
-                    deleteWhere [ExternalEventRefEventId ==. eventKey]
-                    delete eventKey
+                            deleteWhere [EventTicketTierEventId ==. eventKey]
+                            deleteWhere [EventFinanceEntryEventId ==. eventKey]
+                            deleteWhere [EventBudgetLineEventId ==. eventKey]
+                            logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
+                            unless (null logisticsActivityKeys) $ do
+                                deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
+                                deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
+                                deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
+                                deleteWhere
+                                    [ FilterOr
+                                        [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
+                                        , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
+                                        ]
+                                    ]
+                            deleteWhere [EventLogisticsActivityEventId ==. eventKey]
+                            deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
+                            deleteWhere [EventLogisticsMemberEventId ==. eventKey]
+                            deleteWhere [EventLogisticsPlanEventId ==. eventKey]
+                            deleteWhere [ExternalEventRefEventId ==. eventKey]
+                            delete eventKey
+                            pure (Right ())
                 )
                 envPool
+        either throwError pure deletionResult
         pure NoContent
 
     -- Venues

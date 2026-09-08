@@ -65,6 +65,7 @@ import TDF.Server.SocialEventsHandlers
     , socialEventsServer
     , validateEventImageUploadSize
     , validateEventDeleteAccess
+    , validateEventDeletionCheckoutHistory
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
@@ -1087,6 +1088,14 @@ spec = describe "social event handler helpers" $ do
         case validateEventDeleteAccess (strictAdminSocialEventUser 3) "3" event of
             Left err -> expectationFailure ("Expected strict admin deletion access, got: " <> show err)
             Right () -> pure ()
+
+    it "preserves ticket checkout history instead of hard-deleting its event" $ do
+        validateEventDeletionCheckoutHistory False `shouldBe` Right ()
+        case validateEventDeletionCheckoutHistory True of
+            Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
+            Right () -> expectationFailure "Expected ticket-order history to block event deletion"
 
     it "rejects spoofed invitation senders before inserting social event invitations" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
