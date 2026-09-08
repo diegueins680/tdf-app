@@ -404,7 +404,7 @@
     {
       "id": "2026-09-08_notification_notif_type_not_null_repair",
       "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
-      "introducedBy": "46f6ecdc78e49c6745fd2c9450c5763dc60d71dd"
+      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
     },
     {
       "id": "2026-09-05_party_selector_username_diacritic_indexes",
