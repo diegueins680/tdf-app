@@ -115,7 +115,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   };
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${title} · ${canonical}`)}`;
 
-  if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress /></Stack>;
+  if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
   if (detail.isError) return <Container maxWidth="md" sx={{ py: 8 }}><Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert></Container>;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
@@ -310,14 +310,14 @@ function ProfileReviews({ slug, profileId, authenticated }: { slug: string; prof
           {summary?.count ? `${summary.average?.toFixed(1) ?? '—'} de 5 · ${summary.count} reseña${summary.count === 1 ? '' : 's'}` : 'Todavía no hay reseñas públicas.'}
         </Typography>
       </Box>
-      {reviews.isLoading && <CircularProgress size={24} />}
+      {reviews.isLoading && <CircularProgress size={24} aria-label="Cargando reseñas" />}
       {reviews.isError && <Alert severity="error">No pudimos cargar las reseñas.</Alert>}
       {items.map((review) => <ReviewCard key={review.id} review={review} authenticated={authenticated} />)}
       {reviews.hasNextPage && <Button onClick={() => { void reviews.fetchNextPage(); }} disabled={reviews.isFetchingNextPage}>{reviews.isFetchingNextPage ? 'Cargando…' : 'Ver más reseñas'}</Button>}
       <Divider />
       {!authenticated ? (
         <Alert severity="info">Inicia sesión para reseñar después de una reserva, orden o colaboración completada y verificada.</Alert>
-      ) : eligibility.isLoading ? <CircularProgress size={24} /> : eligibility.isError ? (
+      ) : eligibility.isLoading ? <CircularProgress size={24} aria-label="Comprobando interacciones elegibles" /> : eligibility.isError ? (
         <Alert severity="error">No pudimos comprobar tus interacciones elegibles.</Alert>
       ) : eligible.length === 0 ? (
         <Alert severity="info">No tienes una interacción completada y verificada pendiente de reseña con este perfil.</Alert>
