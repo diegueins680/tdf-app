@@ -24,11 +24,13 @@ The authenticated API now exposes assignment resolution and one-shot exposure re
 ## Verification
 
 - PostgreSQL migration rehearsal passed forward application, repeat application, constraints, Party cascade, non-destructive rollback, and reapply.
+- Backend focused Hspec passed the Party-bound assignment/exposure scenario for paused, treatment, control, repeated, and expired states, plus startup flag default/true/invalid validation.
 - Production-release contract passed 51/51 tests; CI-scope safeguards passed 16/16.
 - Mobile focused experiment/onboarding tests passed 16/16.
 - Full mobile quality passed 66 suites and 355 tests, TypeScript, and ESLint.
 - Mobile production release checks passed assets, lint, TypeScript, release profile, and Expo configuration.
 - OpenAPI web and mobile clients regenerated successfully.
+- Full web quality passed 185 suites and 1,755 tests, TypeScript, lint, and the production bundle budget.
 - Strict catalog-list audit has no unreviewed candidate or stale decision.
 
 ## Scope

@@ -5446,13 +5446,33 @@ spec = describe "TDF.Server helpers" $ do
                         ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
 
         it "keeps experiment-assignment and exposure Party-bound, versioned, atomic, and paused by default" $ do
-            (pausedResult, firstAssignmentResult, repeatedAssignmentResult, firstExposureResult, repeatedExposureResult, expiredResult) <-
+            (pausedResult, firstAssignmentResult, repeatedAssignmentResult, firstExposureResult, repeatedExposureResult, controlAssignmentResult, controlExposureResult, expiredResult) <-
                 runNoLoggingT $ do
                     pool <- createSqlitePool ":memory:" 1
                     liftIO $ runSqlPool initializeAuthSchema pool
-                    (expiredPartyId, eligiblePartyId) <-
+                    (controlPartyId, treatmentPartyId) <-
                         liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
                     now <- liftIO getCurrentTime
+                    expiredPartyId <- liftIO $ flip runSqlPool pool $ do
+                        partyIdValue <- insert
+                            M.Party
+                                { M.partyLegalName = Nothing
+                                , M.partyDisplayName = "Expired Experiment User"
+                                , M.partyIsOrg = False
+                                , M.partyTaxId = Nothing
+                                , M.partyPrimaryEmail = Just "expired-experiment@example.com"
+                                , M.partyPrimaryPhone = Nothing
+                                , M.partyWhatsapp = Nothing
+                                , M.partyInstagram = Nothing
+                                , M.partyEmergencyContact = Nothing
+                                , M.partyNotes = Nothing
+                                , M.partyStripeCustomerId = Nothing
+                                , M.partyCountryCode = Nothing
+                                , M.partyCountryId = Nothing
+                                , M.partyCreatedAt = now
+                                }
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        pure partyIdValue
                     let signupAt = addUTCTime (-3600) now
                         insertProgress partyIdValue signupAtValue =
                             liftIO $ flip runSqlPool pool $ insert_
@@ -5472,15 +5492,18 @@ spec = describe "TDF.Server helpers" $ do
                             liftIO $ runHandler $ runReaderT
                                 (action (Just ("Bearer " <> tokenValue)) Nothing "single-feature-onboarding-v1")
                                 env
-                    insertProgress eligiblePartyId signupAt
+                    insertProgress controlPartyId signupAt
+                    insertProgress treatmentPartyId signupAt
                     insertProgress expiredPartyId (addUTCTime (-(25 * 60 * 60)) now)
                     paused <- runExperiment pausedEnv "google-token" getExperiment
                     firstAssignment <- runExperiment enabledEnv "google-token" getExperiment
                     repeatedAssignment <- runExperiment enabledEnv "google-token" getExperiment
                     firstExposure <- runExperiment enabledEnv "google-token" recordExposure
                     repeatedExposure <- runExperiment enabledEnv "google-token" recordExposure
-                    expired <- runExperiment enabledEnv "ambiguous-token" getExperiment
-                    pure (paused, firstAssignment, repeatedAssignment, firstExposure, repeatedExposure, expired)
+                    controlAssignment <- runExperiment enabledEnv "ambiguous-token" getExperiment
+                    controlExposure <- runExperiment enabledEnv "ambiguous-token" recordExposure
+                    expired <- runExperiment enabledEnv "expired-experiment-token" getExperiment
+                    pure (paused, firstAssignment, repeatedAssignment, firstExposure, repeatedExposure, controlAssignment, controlExposure, expired)
 
             case pausedResult of
                 Right assignmentValue -> do
@@ -5494,6 +5517,7 @@ spec = describe "TDF.Server helpers" $ do
                     DTO.experimentEnabled firstAssignment `shouldBe` True
                     DTO.experimentEligible firstAssignment `shouldBe` True
                     DTO.experimentVersion firstAssignment `shouldBe` 1
+                    DTO.variant firstAssignment `shouldBe` "treatment_singlefeature"
                     DTO.newlyAssigned firstAssignment `shouldBe` True
                     DTO.newlyAssigned repeatedAssignment `shouldBe` False
                     DTO.variant repeatedAssignment `shouldBe` DTO.variant firstAssignment
@@ -5508,6 +5532,13 @@ spec = describe "TDF.Server helpers" $ do
                     DTO.exposedAt (DTO.assignment repeatedExposure)
                         `shouldBe` DTO.exposedAt (DTO.assignment firstExposure)
                 results -> expectationFailure ("Expected idempotent experiment exposure, got: " <> show results)
+            case (controlAssignmentResult, controlExposureResult) of
+                (Right controlAssignment, Right controlExposure) -> do
+                    DTO.variant controlAssignment `shouldBe` "control"
+                    DTO.newlyAssigned controlAssignment `shouldBe` True
+                    DTO.newlyExposed controlExposure `shouldBe` True
+                    DTO.variant (DTO.assignment controlExposure) `shouldBe` "control"
+                results -> expectationFailure ("Expected an eligible control assignment and exposure, got: " <> show results)
             case expiredResult of
                 Right assignmentValue -> do
                     DTO.experimentEnabled assignmentValue `shouldBe` True
