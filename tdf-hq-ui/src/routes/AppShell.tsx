@@ -20,6 +20,7 @@ import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
+import { retryPendingFirstValueCompletion } from '../analytics/onboardingProgress';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
@@ -137,6 +138,11 @@ export function Shell() {
       });
     }
   }, [legacyEventsTarget, loading, location.pathname, navigationPreferences.visit, session]);
+
+  useEffect(() => {
+    if (loading || !session?.partyId) return;
+    void retryPendingFirstValueCompletion(getAnalyticsClient(), session.partyId);
+  }, [loading, session?.partyId]);
 
   if (loading) {
     return <RouteLoadingFallback />;

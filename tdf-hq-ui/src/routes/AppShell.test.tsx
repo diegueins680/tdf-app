@@ -5,7 +5,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
-const session = {
+const session: {
+  username: string;
+  displayName: string;
+  roles: string[];
+  modules: string[];
+  partyId?: number;
+} = {
   username: 'admin',
   displayName: 'Admin',
   roles: ['admin'],
@@ -23,6 +29,12 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 
 jest.unstable_mockModule('../hooks/useNavigationPreferences', () => ({
   useNavigationPreferences: () => ({ visit: { mutate: jest.fn() } }),
+}));
+
+const retryPendingFirstValueCompletionMock = jest.fn(async () => false);
+
+jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
+  retryPendingFirstValueCompletion: retryPendingFirstValueCompletionMock,
 }));
 
 jest.unstable_mockModule('../components/SidebarNav', () => ({
@@ -101,6 +113,21 @@ describe('Shell', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    delete session.partyId;
+    retryPendingFirstValueCompletionMock.mockClear();
+  });
+
+  it('replays pending first-value completion for the authenticated Party', async () => {
+    session.partyId = 42;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/inicio');
+
+    try {
+      expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledWith(expect.anything(), 42);
+    } finally {
+      await cleanup();
+    }
   });
 
   it('canonicalizes the legacy social events route and preserves deep links', () => {
