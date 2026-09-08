@@ -687,8 +687,10 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conrelid = 'public.notification'::regclass
-      AND conname = 'notification_notif_type_check'
-      AND contype = 'c'
+      AND (
+        conname = 'notification_notif_type_check'
+        OR (contype = 'c' AND 3 = ANY (conkey))
+      )
   ) AND NOT EXISTS (
     SELECT 1
     FROM pg_constraint

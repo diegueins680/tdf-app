@@ -167,6 +167,18 @@ test('already-applied production migrations retain their recorded checksums', ()
       '../../tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql',
       '5ec11f453dddf2b167c79f4d54ac7ec677591f8c2f9fa7bb2a9bc389878a6959',
     ],
+    [
+      '../../tdf-hq/sql/2026-09-04_access_request_notification_types.sql',
+      'a2eede1722ecfa4decd054755a3f871902808ec2bca5dcf8413d9b9b7c644d1e',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql',
+      'f83049fb3f27f4d57ac2c5594849ec10cef83b847363a25e76712f9369d2cf5d',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql',
+      'e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204',
+    ],
   ]);
 
   for (const [relativePath, checksum] of expected) {
@@ -175,6 +187,32 @@ test('already-applied production migrations retain their recorded checksums', ()
       .digest('hex');
     assert.equal(actual, checksum, `${relativePath} must remain byte-for-byte immutable`);
   }
+});
+
+test('notification repair checksum history advances through a new forward migration', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const accessIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-04_access_request_notification_types',
+  );
+  const nullabilityIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-08_notification_notif_type_not_null_repair',
+  );
+  const compatibilityIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-08_notification_notif_type_text_compatibility',
+  );
+
+  assert.deepEqual(manifest.migrations[accessIndex].compatibleAppliedChecksums, [
+    '200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab',
+    'ad04cc74dae4f937932cc50772d8f2bcb0be8f8cf6652c0b6d1162d85fc7c0e9',
+    '90a2e34be1feb89975baa608a6a07a1491e4632fd0dd5bca3ac1edf387c8670c',
+  ]);
+  assert.deepEqual(manifest.migrations[nullabilityIndex].compatibleAppliedChecksums, [
+    '7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347',
+  ]);
+  assert.equal(compatibilityIndex, nullabilityIndex + 1);
 });
 
 test('production release refuses to omit a migration outside the release ancestry', () => {
@@ -896,8 +934,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
   );
   assert.match(
     sql,
-    /notification_notif_type_check[\s\S]*contype = 'c'\s*\) AND NOT EXISTS/i,
-    'an unvalidated named notification allowlist must not be mistaken for an absent allowlist',
+    /conname = 'notification_notif_type_check'[\s\S]*OR \(contype = 'c' AND 3 = ANY \(conkey\)\)/i,
+    'unvalidated named and differently named notification allowlists must not be mistaken for no allowlist',
   );
 });
 
