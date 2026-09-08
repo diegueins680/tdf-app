@@ -10,7 +10,7 @@ Mobile baseline: `ee3f20955b11f66a6663aa9dd4fb023e8eec749c` (`feature/event-save
 
 Implementation branches: `feature/moment-reaction-evidence-20260907-reviewed` in the root and mobile repositories
 
-Publication status: functional root/mobile commits are published and stacked draft PRs are open; this report is prepared for its focused documentation commit.
+Publication status: functional root/mobile commits and the report commit `dc8af41b0` are published; stacked draft PRs are open.
 
 ## Executive outcome
 
@@ -283,6 +283,7 @@ No participant was contacted and no task result, quotation, completion rate, or 
 - Root branch: `feature/moment-reaction-evidence-20260907-reviewed`
 - Mobile branch: `feature/moment-reaction-evidence-20260907-reviewed`
 - Root functional commit: `c6d44945e20a33135ffec7ef689fd330c2a59fcc`
+- Root report commit: `dc8af41b0`
 - Mobile commit: `bc02f52d0cc9bc31d66afcfd0e6f1c28d14466d8`
 - Root draft PR: [tdf-app #264](https://github.com/diegueins680/tdf-app/pull/264)
 - Mobile draft PR: [TDF-mobile #47](https://github.com/diegueins680/TDF-mobile/pull/47)
