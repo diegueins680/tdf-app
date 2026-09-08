@@ -38,7 +38,7 @@ consumidor tolera eventos duplicados, fuera de orden y reentregas.
 | Campo | Regla |
 | --- | --- |
 | `event_id` | UUID estable, único y trazable |
-| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `subject.role_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
+| `event_type` | `evaluation.submitted`, `evaluation.edited` (incluye reenvío a `submitted` después de revisión), `evaluation.invalidated` (`submitted -> draft|under_review|void`), `evaluation.erased_or_anonymized`, `signal.moderated`, `appeal.provisional_opened`, `appeal.resolved`, `interaction.invalidated`, `interaction.restored`, `category.applicability_changed`, `subject.role_changed`, `public_consent.changed`, `pilot_consent.changed`, `age_assurance.changed` o `recalculation.requested` |
 | `occurred_at` | Hora UTC de la mutación fuente |
 | `subject_id` | Usuario cuya proyección puede cambiar |
 | `context_key` | Clave canónica única de rol, interacción/servicio y segmento comparable |
@@ -68,6 +68,13 @@ categorías: el sujeto principal se combina con sus categorías seleccionadas y
 cada `compared_party_id` solo con el `category_id` de su propia fila de ranking.
 Así una evaluación que compara sujetos distintos en categorías distintas no
 crea candidatos sin evidencia para combinaciones que nunca fueron calificadas.
+Una categoría marcada `not_applicable` tampoco crea una tupla para el sujeto
+principal. Las filas de categoría quedan inmutables mientras la evaluación está
+`submitted`: para corregirlas, primero se regresa la evaluación a `draft`
+(lo que invalida todas sus tuplas vigentes), se editan las categorías y luego se
+vuelve a enviar la evaluación para emitir el nuevo conjunto completo. El guard
+bloquea la fila padre antes de autorizar una mutación de categoría, de modo que
+una edición concurrente y el envío se serializan sobre un único conjunto.
 Si una evaluación `submitted` cambia de interacción, sujeto o fórmula, el
 productor invalida la tupla anterior y recalcula la nueva aunque la revisión no
 cambie. Una corrección de `context_kind` o `context_id` de una interacción
@@ -94,7 +101,7 @@ y nunca suma ni lista categorías de contextos distintos; sin selector válido s
 devuelve una respuesta contextual no publicada, no un agregado combinado.
 
 Las mutaciones que quitan elegibilidad (`eligible -> disputed|void|expired`),
-cambian una evaluación de `submitted` a `under_review|void`, abren una apelación
+cambian una evaluación de `submitted` a `draft|under_review|void`, abren una apelación
 con exclusión provisional, archivan/fusionan categorías o cambian sus
 roles/contextos aplicables deben escribir el evento de invalidación
 correspondiente en el mismo outbox transaccional. Así se recalcula o retira la
