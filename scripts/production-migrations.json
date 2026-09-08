@@ -189,6 +189,7 @@
     {
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "compatibleAppliedChecksums": ["88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"],
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     },
     {
