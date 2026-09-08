@@ -9442,6 +9442,16 @@
       "risk": "Database drift could admit unsupported arm identifiers and fragment durable assignment or exposure reporting.",
       "justification": "The SQL check is defense in depth for the immutable experiment-version wire protocol mirrored by OpenAPI; arm changes require a new version.",
       "reviewed": true
+    },
+    {
+      "id": "3e60b15491f1902f743a",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "authenticated_session, security_role, security_module",
+      "priority": "P3-consumer",
+      "risk": "A test fixture must never become an authority for authenticated identities, roles, or modules.",
+      "justification": "This synthetic session carries no grants and only consumes the canonical authenticated-session shape while exercising Party-scoped onboarding behavior.",
+      "reviewed": true
     }
   ]
 }

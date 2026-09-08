@@ -325,6 +325,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const activeOnboardingPartyIdRef = useRef(viewerId);
+  activeOnboardingPartyIdRef.current = viewerId;
   const onboardingQuery = useQuery({
     queryKey: ['onboarding-progress', viewerId],
     queryFn: loadOnboardingProgress,
@@ -332,9 +334,20 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     retry: false,
   });
   const completeOnboardingMutation = useMutation({
-    mutationFn: () => completeOnboardingProgress(),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['onboarding-progress', viewerId] });
+    mutationFn: async (partyId: number) => {
+      await completeOnboardingProgress();
+      return partyId;
+    },
+    onSuccess: (partyId) => {
+      if (activeOnboardingPartyIdRef.current === partyId) {
+        setOnboardingDismissed(true);
+      }
+      void qc.invalidateQueries({ queryKey: ['onboarding-progress', partyId] });
+    },
+    onError: (_error, partyId) => {
+      if (activeOnboardingPartyIdRef.current === partyId) {
+        setOnboardingDismissed(false);
+      }
     },
   });
   const managerTipsDismissalKey = viewerId
@@ -348,6 +361,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         )
       : !isAuthenticated || onboardingQuery.data?.eligible === true
   );
+  const onboardingLoadFailed = isAuthenticated
+    && !isHomeManagerView
+    && onboardingQuery.isError;
+  const onboardingCompletionFailed = isAuthenticated
+    && !isHomeManagerView
+    && completeOnboardingMutation.isError
+    && completeOnboardingMutation.variables === viewerId;
 
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
@@ -388,9 +408,15 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       window.localStorage.setItem(managerTipsDismissalKey, '1');
       return;
     }
-    if (isAuthenticated && onboardingQuery.data?.eligible === true) {
-      completeOnboardingMutation.mutate();
+    if (isAuthenticated && viewerId && onboardingQuery.data?.eligible === true) {
+      completeOnboardingMutation.mutate(viewerId);
     }
+  };
+
+  const retryOnboardingCompletion = () => {
+    if (!viewerId) return;
+    setOnboardingDismissed(true);
+    completeOnboardingMutation.mutate(viewerId);
   };
 
   useEffect(() => {
@@ -893,6 +919,30 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               </Stack>
             )}
+          </Alert>
+        )}
+        {onboardingLoadFailed && (
+          <Alert
+            severity="warning"
+            action={(
+              <Button color="inherit" size="small" onClick={() => { void onboardingQuery.refetch(); }}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.
+          </Alert>
+        )}
+        {onboardingCompletionFailed && (
+          <Alert
+            severity="error"
+            action={(
+              <Button color="inherit" size="small" onClick={retryOnboardingCompletion}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.
           </Alert>
         )}
         {showHubDataAlert && (
