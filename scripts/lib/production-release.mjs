@@ -434,6 +434,13 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       id: String(migration.id ?? path.posix.basename(relativePath, '.sql')),
       path: relativePath,
       checksum,
+      compatibleAppliedChecksums: (migration.compatibleAppliedChecksums ?? []).map((value) => {
+        const normalized = String(value).toLowerCase();
+        if (!/^[0-9a-f]{64}$/.test(normalized)) {
+          throw new Error(`Migration ${relativePath} has an invalid compatible applied checksum.`);
+        }
+        return normalized;
+      }),
       source: migrationSource(migration),
     };
   });
@@ -452,7 +459,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       '  IF EXISTS (',
       '    SELECT 1 FROM public.tdf_schema_migration',
       `    WHERE migration_id = ${sqlLiteral(entry.id)}`,
-      `      AND checksum <> ${sqlLiteral(entry.checksum)}`,
+      `      AND checksum NOT IN (${[entry.checksum, ...(entry.compatibleAppliedChecksums ?? [])].map(sqlLiteral).join(', ')})`,
       '  ) THEN',
       `    RAISE EXCEPTION 'Checksum mismatch for migration ${entry.id}';`,
       '  END IF;',

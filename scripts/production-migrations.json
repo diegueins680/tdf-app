@@ -189,11 +189,13 @@
     {
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "compatibleAppliedChecksums": ["88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"],
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     },
     {
       "id": "2026-08-13_distribution_accounting_core",
       "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+      "compatibleAppliedChecksums": ["4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"],
       "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
     },
     {
@@ -294,6 +296,7 @@
     {
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
+      "compatibleAppliedChecksums": ["7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"],
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
     },
     {
