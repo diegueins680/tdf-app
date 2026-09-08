@@ -95,6 +95,7 @@ module TDF.Server.SocialEventsHandlers (
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
+    validateEventDeleteAccess,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
@@ -435,6 +436,12 @@ validateAuthenticatedPartyReference :: AuthedUser -> T.Text -> Either ServerErro
 validateAuthenticatedPartyReference user referencedPartyId
     | normalizePositivePartyIdText referencedPartyId == Just (renderPartyId user) = Right ()
     | otherwise = Left err403{errBody = "Followers can only be changed for the authenticated party"}
+
+validateEventDeleteAccess :: AuthedUser -> T.Text -> SocialEvent -> Either ServerError ()
+validateEventDeleteAccess user currentParty eventRow
+    | hasStrictAdminAccess user || isEventManager currentParty eventRow = Right ()
+    | otherwise =
+        Left err403{errBody = "Only the event organizer or an administrator can delete this event"}
 
 parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
 parseStripePaymentIntentResponse paymentIntent =
@@ -2754,10 +2761,11 @@ socialEventsServer user =
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
+        requireFeatureAction "social.events" "delete"
         eventKey <- parseVisibleEventKey rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey existing
+        either throwError pure (validateEventDeleteAccess user currentPartyId existing)
         liftIO $
             runSqlPool
                 ( do

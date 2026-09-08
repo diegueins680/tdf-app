@@ -8,6 +8,11 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Grid,
   MenuItem,
@@ -25,6 +30,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SellIcon from '@mui/icons-material/Sell';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
@@ -57,6 +63,7 @@ import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
+import { hasStrictAdminAccess } from '../utils/accessControl';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -71,6 +78,11 @@ interface TicketCheckoutState {
   eventId: string;
   eventTitle: string;
   tier: SocialTicketTierDTO;
+}
+
+interface PendingEventDeletion {
+  eventId: string;
+  eventTitle: string;
 }
 
 interface TicketTierFormState {
@@ -415,10 +427,12 @@ export default function SocialEventsPage() {
   const [contractDrafts, setContractDrafts] = useState<Record<string, ContractDraftState>>({});
   const [checkInCodes, setCheckInCodes] = useState<Record<string, string>>({});
   const [eventPosterFiles, setEventPosterFiles] = useState<Record<string, File | null>>({});
+  const [pendingEventDeletion, setPendingEventDeletion] = useState<PendingEventDeletion | null>(null);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => DateTime.local().toISODate() ?? '');
   const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
+  const hasAdminAccess = hasStrictAdminAccess(session?.roles, session?.modules);
   const eventsQueryKey = ['social-events', city, eventTypeFilter, eventWorkflowStateFilter, startAfter] as const;
 
   const eventsQuery = useQuery({
@@ -490,6 +504,19 @@ export default function SocialEventsPage() {
     listLoadSucceeded: eventsQuery.isSuccess,
   });
   const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
+
+  const deleteEventMutation = useMutation({
+    mutationFn: ({ eventId }: PendingEventDeletion) => SocialEventsAPI.deleteEvent(eventId),
+    onSuccess: (_response, deletedEvent) => {
+      qc.setQueryData<SocialEventDTO[]>(eventsQueryKey, (current) =>
+        current?.filter((event) => String(event.eventId) !== deletedEvent.eventId),
+      );
+      setPendingEventDeletion(null);
+      setFeedback({ kind: 'success', message: `Evento eliminado: ${deletedEvent.eventTitle}.` });
+      void qc.invalidateQueries({ queryKey: ['social-events'] });
+      void qc.invalidateQueries({ queryKey: ['public-upcoming-events'] });
+    },
+  });
 
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, SocialEventDTO[]>();
@@ -1302,6 +1329,7 @@ export default function SocialEventsPage() {
             const tiers = ticketTierQueries[index]?.data ?? [];
             const eventCardActionUiState = getSocialEventCardActionUiState({
               hasSession,
+              hasAdminAccess,
               isOrganizer,
               ticketTierCount: tiers.length,
             });
@@ -1401,9 +1429,26 @@ export default function SocialEventsPage() {
 
                     <Typography variant="h6" fontWeight={800}>{ev.eventTitle}</Typography>
                     {eventId && (
-                      <Button component={RouterLink} to={`/social/eventos/${eventId}`} size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }}>
-                        Abrir página del evento
-                      </Button>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignSelf: 'flex-start' }}>
+                        <Button component={RouterLink} to={`/social/eventos/${eventId}`} size="small" variant="outlined">
+                          Abrir página del evento
+                        </Button>
+                        {eventCardActionUiState.showDeleteAction && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteOutlineIcon />}
+                            aria-label={`Eliminar evento ${ev.eventTitle}`}
+                            onClick={() => {
+                              deleteEventMutation.reset();
+                              setPendingEventDeletion({ eventId, eventTitle: ev.eventTitle });
+                            }}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </Stack>
                     )}
                     {ev.eventVenueId && (
                       <Typography variant="body2" color="text.secondary">
@@ -2261,6 +2306,49 @@ export default function SocialEventsPage() {
           })}
         </Grid>
       )}
+      <Dialog
+        open={pendingEventDeletion !== null}
+        onClose={() => {
+          if (!deleteEventMutation.isPending) setPendingEventDeletion(null);
+        }}
+        aria-labelledby="delete-event-dialog-title"
+        aria-describedby="delete-event-dialog-description"
+      >
+        <DialogTitle id="delete-event-dialog-title">Eliminar evento</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-event-dialog-description">
+            {pendingEventDeletion
+              ? `¿Eliminar “${pendingEventDeletion.eventTitle}”? También se eliminarán sus invitaciones, tickets, publicaciones y datos operativos. Esta acción no se puede deshacer.`
+              : ''}
+          </DialogContentText>
+          {deleteEventMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteEventMutation.error instanceof Error
+                ? deleteEventMutation.error.message
+                : 'No se pudo eliminar el evento.'}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setPendingEventDeletion(null)}
+            disabled={deleteEventMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={deleteEventMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <DeleteOutlineIcon />}
+            onClick={() => {
+              if (pendingEventDeletion) deleteEventMutation.mutate(pendingEventDeletion);
+            }}
+            disabled={!pendingEventDeletion || deleteEventMutation.isPending}
+          >
+            {deleteEventMutation.isPending ? 'Eliminando…' : 'Eliminar evento'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       {ticketCheckout && (
         <StripeCheckoutModal
           open
