@@ -209,7 +209,7 @@ export default function ReservasEquipoPage() {
                               )}
                             </Typography>
                           )}
-                          {(asset.currentCheckoutHolderEmail || asset.currentCheckoutHolderPhone) && (
+                          {(Boolean(asset.currentCheckoutHolderEmail) || Boolean(asset.currentCheckoutHolderPhone)) && (
                             <Typography variant="body2" color="text.secondary">
                               {[asset.currentCheckoutHolderEmail, asset.currentCheckoutHolderPhone].filter(Boolean).join(' · ')}
                             </Typography>

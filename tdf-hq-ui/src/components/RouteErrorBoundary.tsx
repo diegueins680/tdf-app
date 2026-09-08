@@ -10,6 +10,10 @@ interface RouteErrorBoundaryState {
   error: Error | null;
 }
 
+interface PostHogErrorReporter {
+  captureException: (error: Error, properties: Record<string, unknown>) => void;
+}
+
 export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProps, RouteErrorBoundaryState> {
   override state: RouteErrorBoundaryState = { error: null };
 
@@ -23,8 +27,11 @@ export default class RouteErrorBoundary extends Component<RouteErrorBoundaryProp
     // Report to error tracking service
     try {
       // PostHog error capture (already integrated in the app)
-      if (typeof window !== 'undefined' && (window as any).posthog) {
-        (window as any).posthog.captureException(error, {
+      const posthog = typeof window === 'undefined'
+        ? undefined
+        : (window as Window & { posthog?: PostHogErrorReporter }).posthog;
+      if (posthog) {
+        posthog.captureException(error, {
           componentStack: info.componentStack,
           url: window.location.href,
         });

@@ -32,6 +32,7 @@ import type {
 import PageShell, { EmptyState } from '../components/PageShell';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
+import { firstNonEmptyString } from '../utils/stringValues';
 import {
   adminCompletionAction,
   buildInternalReportHref,
@@ -94,7 +95,11 @@ function ExecutionHistory({ testCaseId }: { testCaseId: string }) {
             Ejecución {execution.itexExecutionNumber}: {STATUS_LABELS[execution.itexStatus]}
           </Typography>
           <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-            {execution.itexActualResult || execution.itexBlockerReason || 'Sin observación.'}
+            {firstNonEmptyString(
+              execution.itexActualResult,
+              execution.itexBlockerReason,
+              'Sin observación.',
+            )}
           </Typography>
         </Box>
       ))}
@@ -248,7 +253,7 @@ export default function InternAuditPlanPage() {
         </Button>
       )}
     >
-      {!loading && (!plan || planQuery.error || casesQuery.error) && (
+      {!loading && (!plan || Boolean(planQuery.error) || Boolean(casesQuery.error)) && (
         <EmptyState title="Plan no disponible" description="No existe o no tienes permiso para verlo." />
       )}
       {plan && (
@@ -444,10 +449,10 @@ export default function InternAuditPlanPage() {
                 {finalQuery.data?.ifsGeneratedSnapshot && (
                   <Alert severity="info"><pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{formatGeneratedSnapshot(finalQuery.data.ifsGeneratedSnapshot)}</pre></Alert>
                 )}
-                <TextField label="Conclusiones y tres recomendaciones prioritarias" value={conclusions || finalQuery.data?.ifsConclusions || ''} onChange={(event) => setConclusions(event.target.value)} multiline minRows={8} helperText="Incluye diferencias web/móvil, accesibilidad, riesgos restantes y lo que no pudiste encontrar o entender." />
+                <TextField label="Conclusiones y tres recomendaciones prioritarias" value={firstNonEmptyString(conclusions, finalQuery.data?.ifsConclusions)} onChange={(event) => setConclusions(event.target.value)} multiline minRows={8} helperText="Incluye diferencias web/móvil, accesibilidad, riesgos restantes y lo que no pudiste encontrar o entender." />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button variant="outlined" onClick={() => saveFinal.mutate(false)} disabled={plan.iapStatus !== 'active' || saveFinal.isPending}>Guardar borrador</Button>
-                  <Button variant="contained" onClick={() => saveFinal.mutate(true)} disabled={plan.iapStatus !== 'active' || saveFinal.isPending || !(conclusions || finalQuery.data?.ifsConclusions || '').trim()}>Enviar a revisión final</Button>
+                  <Button variant="contained" onClick={() => saveFinal.mutate(true)} disabled={plan.iapStatus !== 'active' || saveFinal.isPending || !firstNonEmptyString(conclusions, finalQuery.data?.ifsConclusions).trim()}>Enviar a revisión final</Button>
                 </Stack>
               </Stack>
             </CardContent>

@@ -6,6 +6,7 @@ import {
   Divider, Grid, IconButton, Stack, Tab, Tabs, TextField, Typography,
   Avatar, Tooltip, ImageList, ImageListItem, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
+import type { ChipProps } from '@mui/material';
 import {
   PushPinOutlined as PushPinOutlinedIcon,
   VisibilityOff as VisibilityOffIcon,
@@ -31,11 +32,17 @@ import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useLocalValue } from '../hooks/useLocalValue';
+import { firstNonEmptyString } from '../utils/stringValues';
 import type { FanClubPostDTO, FanClubEventDTO, FanClubElectionDTO, FanClubFeedItemDTO, FanClubMemoryDTO, FanClubInboxMessageDTO } from '../api/types';
+
+const optionalImageSource = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  return value;
+};
 
 export default function FanClubPage() {
   const { artistId } = useParams();
-  const artistIdNum = parseInt(artistId || '0', 10);
+  const artistIdNum = parseInt(firstNonEmptyString(artistId, '0'), 10);
   const { session } = useSession();
   const isAuthenticated = Boolean(session);
   const [tab, setTab] = useLocalValue(0);
@@ -94,11 +101,11 @@ export default function FanClubPage() {
     if (!isAuthenticated && club) {
       setTab((prev) => (3 > prev ? 3 : prev));
     }
-  }, [isAuthenticated, club]);
+  }, [isAuthenticated, club, setTab]);
 
   return (
     <PageShell
-      title={club?.fcName || 'Club de Fans'}
+      title={firstNonEmptyString(club?.fcName, 'Club de Fans')}
       subtitle={club ? `${club.fcFollowerCount} seguidores` : undefined}
       loading={clubQuery.isLoading}
     >
@@ -156,7 +163,7 @@ export default function FanClubPage() {
                   {club.fcOfficers.map(o => (
                     <Chip
                       key={o.fcoPartyId}
-                      avatar={<Avatar src={o.fcoAvatarUrl || undefined} />}
+                      avatar={<Avatar src={optionalImageSource(o.fcoAvatarUrl)} />}
                       label={`${o.fcoFanName} — ${o.fcoRole}`}
                       color="primary"
                       variant="outlined"
@@ -297,7 +304,7 @@ function ClubFeed({ artistId, feed, isOfficer, loading }: { artistId: number; fe
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={item.fcfAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Avatar src={optionalImageSource(item.fcfAvatarUrl)} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{item.fcfAuthorName}</Typography>
                         {item.fcfIsOfficer && <Chip size="small" label="Directiva" color="primary" />}
                         {item.fcfIsPinned && <Chip size="small" label="Fijado" color="primary" />}
@@ -377,7 +384,7 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
   const filtered = filterStatus === 'all' ? messages : messages.filter(m => m.fcimStatus === filterStatus);
   const unreadCount = messages.filter(m => m.fcimStatus === 'unread').length;
 
-  const statusColor = (status: string) => {
+  const statusColor = (status: string): ChipProps['color'] => {
     switch (status) {
       case 'unread': return 'error';
       case 'opened': return 'warning';
@@ -414,9 +421,9 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={msg.fcimFanAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{msg.fcimFanName}</Typography>
-                        <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
+                        <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                         <Box flexGrow={1} />
                         <Button size="small" variant="outlined" onClick={() => setDetailOpen(msg.fcimId)}>Ver</Button>
                         {msg.fcimStatus !== 'replied' && (
@@ -451,16 +458,16 @@ function ClubInbox({ artistId, messages, loading }: { artistId: number; messages
             return (
               <Stack spacing={2} sx={{ mt: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Avatar src={msg.fcimFanAvatarUrl || undefined} />
+                  <Avatar src={optionalImageSource(msg.fcimFanAvatarUrl)} />
                   <Typography variant="subtitle1">{msg.fcimFanName}</Typography>
-                  <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus) as any} />
+                  <Chip size="small" label={msg.fcimStatus} color={statusColor(msg.fcimStatus)} />
                 </Stack>
                 {msg.fcimSubject && <Typography variant="h6">{msg.fcimSubject}</Typography>}
                 <Typography variant="body1">{msg.fcimBody}</Typography>
                 {msg.fcimReplyBody && (
                   <Card variant="outlined" sx={{ bgcolor: 'action.hover' }}>
                     <CardContent>
-                      <Typography variant="subtitle2">Respuesta de {msg.fcimOfficerName || 'Directiva'}</Typography>
+                      <Typography variant="subtitle2">Respuesta de {firstNonEmptyString(msg.fcimOfficerName, 'Directiva')}</Typography>
                       <Typography variant="body2">{msg.fcimReplyBody}</Typography>
                     </CardContent>
                   </Card>
@@ -555,7 +562,7 @@ function ClubForum({ artistId, posts, isOfficer, loading }: { artistId: number; 
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={post.fcpAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Avatar src={optionalImageSource(post.fcpAvatarUrl)} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{post.fcpAuthorName}</Typography>
                         {post.fcpIsPinned && <Chip size="small" label="Fijado" color="primary" />}
                         <Box flexGrow={1} />
@@ -720,7 +727,7 @@ function ClubMemories({ artistId, memories, isOfficer, loading }: { artistId: nu
                   <CardContent>
                     <Stack spacing={1}>
                       <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar src={memory.fcmMemberAvatarUrl || undefined} sx={{ width: 32, height: 32 }} />
+                        <Avatar src={optionalImageSource(memory.fcmMemberAvatarUrl)} sx={{ width: 32, height: 32 }} />
                         <Typography variant="subtitle2">{memory.fcmMemberName}</Typography>
                         <Box flexGrow={1} />
                         {isOfficer && (
@@ -1044,7 +1051,7 @@ function ClubElections({ artistId, elections }: { artistId: number; elections: F
               }}>
                 <CardContent>
                   <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar src={c.fccAvatarUrl || undefined} />
+                    <Avatar src={optionalImageSource(c.fccAvatarUrl)} />
                     <Box>
                       <Typography variant="subtitle2">{c.fccFanName}</Typography>
                       <Typography variant="caption">{c.fccRole}</Typography>
