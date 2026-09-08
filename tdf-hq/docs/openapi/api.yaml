@@ -5545,6 +5545,7 @@ paths:
   /reputation/profiles/{partyId}: { $ref: './reviews.yaml#/paths/~1reputation~1profiles~1{partyId}' }
   /reputation/categories: { $ref: './reviews.yaml#/paths/~1reputation~1categories' }
   /reputation/preferences: { $ref: './reviews.yaml#/paths/~1reputation~1preferences' }
+  /reputation/consents: { $ref: './reviews.yaml#/paths/~1reputation~1consents' }
   /reviews/eligibility: { $ref: './reviews.yaml#/paths/~1reviews~1eligibility' }
   /reviews: { $ref: './reviews.yaml#/paths/~1reviews' }
 

@@ -8514,13 +8514,23 @@
       "reviewed": true
     },
     {
-      "id": "9b2d5cc654d9e1fd8ccd",
+      "id": "b98598fcc3a39ba88a8d",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
+      "reviewed": true
+    },
+    {
+      "id": "a8c245a50ea4cc27d69a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A malformed route view could show the wrong public rights content or break a shareable destination.",
+      "justification": "This closed union only selects one of three internal render modes for a single public page; it is not user-governed business data.",
       "reviewed": true
     },
     {
@@ -8591,6 +8601,46 @@
       "priority": "P3-retain",
       "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "c92ba067a511c9585251",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration registry could break deployment execution or skip required schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "b65c3ecaa729e449a097",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unsupported language code could make consent evidence ambiguous during an audit or rights request.",
+      "justification": "The consent-event locale is a closed ISO language-code transport allowlist for the approved ES/EN disclosure, not a user-managed reputation category.",
+      "reviewed": true
+    },
+    {
+      "id": "607b195fbacda1cda7ba",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An ungoverned consent value could bypass the independent-consent boundary or make withdrawal ineffective.",
+      "justification": "The schema allowlist is the persisted enforcement boundary for the four independent reputation consents and must match its versioned API contract.",
+      "reviewed": true
+    },
+    {
+      "id": "45f33e33f834798912c3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncontrolled event provenance could weaken the consent audit trail used for disputes and compliance.",
+      "justification": "Consent-event sources are a closed audit-provenance allowlist enforced by the migration, not a user-selectable product catalog.",
       "reviewed": true
     },
     {
