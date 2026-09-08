@@ -260,6 +260,8 @@ The existing taxonomy is reused: `feature_favorite_changed`, `first_value_comple
 | Generated client SHA comparison | Equal: `1c9284bb97dd954525840f304216582d92abae77` | Byte identity only; consumers separately compiled |
 | `node scripts/test-music-directory-contract.mjs` | Passed | Privacy/public-auth/taxonomy/sponsorship/idempotency contract assertions |
 | `npm run test:production-release` | 50 tests, 50 passed | Migration/release invariants; no deployment |
+| `npm run test:catalog-list-audit` | 1 test, 1 passed | Deterministic discovery excludes ignored local source files |
+| `npm run audit:catalog-lists` after decision repair | Passed | Zero unreviewed candidates and zero stale decisions with the mobile submodule initialized at `ee3f20955` |
 | Web focused Jest | 2 suites, 5 tests passed | Public directory accessibility, hydrated remove, acknowledged save, completion analytics |
 | Web full Jest | 185 suites, 1,757 tests passed in 288.979 s | No skipped test reported; extensive pre-existing MUI and missing-`act` console warnings remain |
 | Web TypeScript | Passed | `tsc --noEmit -p tsconfig.app.json` through build |
@@ -272,7 +274,7 @@ The existing taxonomy is reused: `feature_favorite_changed`, `first_value_comple
 | `REQUIRE_MOBILE_WORKSPACE=1 npm run ai:doctor` | 14 OK, 4 warnings, 0 errors | Expected dirty worktree/missing isolated memory notes plus stale inherited GitHub token; keychain auth separately succeeded |
 | Workflow inspection | Passed for feature review safety | Production image only on `main`/manual; mobile EAS release manual with explicit boolean |
 
-Diagnostic failures were not hidden: the first multi-word Stack matcher invocation ran no tests because Stack split the argument; it was replaced with valid single-token matchers. The initial event-evidence fixture exposed a real SQLite/PostgreSQL timestamp-representation portability problem; the implementation now keeps the database-clock future bound in SQL and performs the signup bound as typed `UTCTime`, after which focused and full Hspec passed. The first full mobile run found two optional-argument call-shape assertions; compatibility was restored and the complete suite reran green. A web test-isolation change exposed a stale selected-city rerender; the product selector and fixture were made stable, then focused/full suites reran green. No test was disabled or assertion weakened.
+Diagnostic failures were not hidden: the first multi-word Stack matcher invocation ran no tests because Stack split the argument; it was replaced with valid single-token matchers. The initial event-evidence fixture exposed a real SQLite/PostgreSQL timestamp-representation portability problem; the implementation now keeps the database-clock future bound in SQL and performs the signup bound as typed `UTCTime`, after which focused and full Hspec passed. The first full mobile run found two optional-argument call-shape assertions; compatibility was restored and the complete suite reran green. A web test-isolation change exposed a stale selected-city rerender; the product selector and fixture were made stable, then focused/full suites reran green. Initial root PR CI also found three unreviewed catalog-list fingerprints and two stale decisions: the registered migration and current generated mobile registry had replaced their prior reviewed fingerprints, while the focused event-search test introduced a DTO-field fixture. The two established decisions were carried forward without changing classification, the fixture received an explicit test-only technical decision, and the exact audit plus its unit test then passed locally. No test was disabled or assertion weakened.
 
 ## 11. Changed files
 
@@ -311,6 +313,7 @@ Mobile repository:
 
 Documentation:
 
+- `docs/catalog-persistence/catalog-list-decisions.json`
 - this report
 
 ## 12. Screenshots and artifacts
@@ -369,5 +372,14 @@ Published mobile:
 - Draft PR: https://github.com/diegueins680/TDF-mobile/pull/46
 
 The shorter mobile branch name already contained a separate concurrent implementation (`fa0ff3e`). It was inspected and preserved; no force-push or blind merge occurred. This reviewed implementation uses the distinct `-reviewed` branch.
+
+Published root:
+
+- Branch: `feature/event-save-continuity-20260907-reviewed`
+- Privacy migration commit: `7e2a82debb321c5cc50e0cfa03361113a5ff554c`
+- Migration registration commit: `a7020bf98327a4f959f2680f7c4233f358ce6cca`
+- Favorite/onboarding/web/mobile integration commit: `6937db1cbf67d59b888129e8b5983d0557280e16`
+- Initial consolidated report commit: `f7e3463cda5d6cd9aab16efeb609d4c6be2e90f6`
+- Draft PR: https://github.com/diegueins680/tdf-app/pull/254
 
 The root commits were cleanly replayed onto published onboarding parent `8cd5cae4e` and published on the distinct reviewed branch without overwriting concurrent branch work. Draft root PR [#254](https://github.com/diegueins680/tdf-app/pull/254) targets the onboarding parent so the review diff contains only this coherent batch; it can be retargeted to `main` after parent draft PR [#241](https://github.com/diegueins680/tdf-app/pull/241) merges. The parent gitlink references the published mobile commit from draft mobile PR [#46](https://github.com/diegueins680/TDF-mobile/pull/46). No merge or deployment is part of this task.

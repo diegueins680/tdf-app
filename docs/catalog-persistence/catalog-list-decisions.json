@@ -8514,7 +8514,7 @@
       "reviewed": true
     },
     {
-      "id": "9b2d5cc654d9e1fd8ccd",
+      "id": "b98598fcc3a39ba88a8d",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
@@ -8584,7 +8584,7 @@
       "reviewed": true
     },
     {
-      "id": "23972701952c2373f31a",
+      "id": "b0e71bcab2a49d422da0",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9421,6 +9421,16 @@
       "priority": "P3-retain",
       "risk": "Database drift could persist unsupported completion events and corrupt deduplicated onboarding reporting.",
       "justification": "The SQL constraint is defense in depth for the closed first-value analytics protocol, not a business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "67b836364c7275942855",
+      "classification": "genuine-technical-constant",
+      "disposition": "consumer-update",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-consumer",
+      "risk": "Changing test response fields without review could conceal a mismatch with the generated directory search contract.",
+      "justification": "This object contains typed API-response field names for a focused event-search fixture; it is not production authority for events, facets, or sponsored results.",
       "reviewed": true
     }
   ]
