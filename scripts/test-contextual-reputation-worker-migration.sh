@@ -76,6 +76,8 @@ apply_file tdf-hq/sql/2026-09-01_contextual_reputation.sql
 apply_file tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql
 apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
 apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
+apply_file tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql
+apply_file tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT enabled::text || ':' || simulation_only::text FROM reputation_worker_control WHERE environment='production';")" \
@@ -2179,7 +2181,7 @@ assert_equal \
   "1" \
   "Rollback gate evidence preservation"
 
-apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
+apply_file tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM reputation_aggregate_candidate WHERE publication_state='simulation';")" \
   "$simulation_candidate_count" \

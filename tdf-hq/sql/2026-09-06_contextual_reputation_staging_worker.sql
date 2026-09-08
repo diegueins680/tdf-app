@@ -669,7 +669,6 @@ BEGIN
              item.category_id
       FROM reputation_evaluation_category item
       WHERE item.evaluation_id = p_evaluation_id
-        AND NOT item.not_applicable
       UNION
       SELECT rank.compared_party_id, rank.category_id
       FROM reputation_evaluation_rank rank
@@ -723,74 +722,6 @@ BEGIN
   );
 END $$;
 
-CREATE OR REPLACE FUNCTION reputation_evaluation_category_submission_guard()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  -- Parent deletion already emits the complete pre-cascade tuple set.
-  IF TG_OP = 'DELETE' AND pg_trigger_depth() > 1 THEN
-    RETURN OLD;
-  END IF;
-
-  IF TG_OP = 'INSERT' THEN
-    PERFORM 1
-    FROM reputation_evaluation evaluation
-    WHERE evaluation.id = NEW.evaluation_id
-    FOR UPDATE;
-    IF EXISTS (
-      SELECT 1
-      FROM reputation_evaluation evaluation
-      WHERE evaluation.id = NEW.evaluation_id
-        AND evaluation.status = 'submitted'
-    ) THEN
-      RAISE EXCEPTION
-        'Submitted reputation evaluation categories are immutable; return the evaluation to draft first';
-    END IF;
-    RETURN NEW;
-  ELSIF TG_OP = 'DELETE' THEN
-    PERFORM 1
-    FROM reputation_evaluation evaluation
-    WHERE evaluation.id = OLD.evaluation_id
-    FOR UPDATE;
-    IF EXISTS (
-      SELECT 1
-      FROM reputation_evaluation evaluation
-      WHERE evaluation.id = OLD.evaluation_id
-        AND evaluation.status = 'submitted'
-    ) THEN
-      RAISE EXCEPTION
-        'Submitted reputation evaluation categories are immutable; return the evaluation to draft first';
-    END IF;
-    RETURN OLD;
-  END IF;
-
-  -- Lock moved parents in UUID order so concurrent submissions cannot observe
-  -- a partial category mutation and cross-parent moves cannot deadlock.
-  PERFORM 1
-  FROM reputation_evaluation evaluation
-  WHERE evaluation.id IN (OLD.evaluation_id, NEW.evaluation_id)
-  ORDER BY evaluation.id
-  FOR UPDATE;
-  IF EXISTS (
-    SELECT 1
-    FROM reputation_evaluation evaluation
-    WHERE evaluation.id IN (OLD.evaluation_id, NEW.evaluation_id)
-      AND evaluation.status = 'submitted'
-  ) THEN
-    RAISE EXCEPTION
-      'Submitted reputation evaluation categories are immutable; return the evaluation to draft first';
-  END IF;
-  RETURN NEW;
-END $$;
-
-DROP TRIGGER IF EXISTS trg_reputation_evaluation_category_submission_guard
-  ON reputation_evaluation_category;
-CREATE TRIGGER trg_reputation_evaluation_category_submission_guard
-  BEFORE INSERT OR UPDATE OR DELETE ON reputation_evaluation_category
-  FOR EACH ROW
-  EXECUTE FUNCTION reputation_evaluation_category_submission_guard();
-
 CREATE OR REPLACE FUNCTION reputation_evaluation_outbox_trigger()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -838,7 +769,7 @@ BEGIN
      AND OLD.status NOT IN ('draft', 'submitted') THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.edited', now());
   ELSIF OLD.status = 'submitted'
-     AND NEW.status IN ('draft', 'under_review', 'void') THEN
+     AND NEW.status IN ('under_review', 'void') THEN
     PERFORM reputation_emit_evaluation_events(NEW.id, 'evaluation.invalidated', now());
   ELSIF OLD.status = 'submitted'
      AND NEW.status = 'submitted'

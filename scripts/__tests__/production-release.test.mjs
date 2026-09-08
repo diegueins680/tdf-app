@@ -163,6 +163,10 @@ test('already-applied production migrations retain their recorded checksums', ()
       '../../tdf-hq/sql/2026-08-18_music_directory_profile_images.sql',
       '63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312',
     ],
+    [
+      '../../tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql',
+      '5ec11f453dddf2b167c79f4d54ac7ec677591f8c2f9fa7bb2a9bc389878a6959',
+    ],
   ]);
 
   for (const [relativePath, checksum] of expected) {
