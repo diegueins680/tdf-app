@@ -332,7 +332,7 @@
     {
       "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
       "path": "tdf-hq/sql/2026-09-08_studio_audit_historical_failure_gate_repair.sql",
-      "introducedBy": "009783f0497965155139bb503b21076d8fc143e3"
+      "introducedBy": "269f3784121b8bdca378ec516d5cb446cc818e39"
     },
     {
       "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
