@@ -2080,8 +2080,18 @@ socialEventsServer user =
     requireEventVisibleToUser eventKey =
         unless (hasStrictAdminAccess user) $ do
             Env{..} <- ask
-            hidden <- liftIO $ runSqlPool (isImportedEventHidden eventKey) envPool
-            when hidden $ throwError err404{errBody = "Event not found"}
+            visible <-
+                liftIO $
+                    runSqlPool
+                        ( do
+                            mEvent <- get eventKey
+                            maybe
+                                (pure False)
+                                (socialEventVisibleToParty currentPartyId)
+                                mEvent
+                        )
+                        envPool
+            unless visible $ throwError err404{errBody = "Event not found"}
 
     parseVisibleEventKey :: T.Text -> AppM SocialEventId
     parseVisibleEventKey rawId = do
@@ -2192,7 +2202,7 @@ socialEventsServer user =
                 runSqlPool
                     ( if hasStrictAdminAccess user
                         then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
-                        else selectVisibleSocialEvents filters dateOrder limit offset
+                        else selectVisibleSocialEvents currentPartyId filters dateOrder limit offset
                     )
                     envPool
         loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
@@ -3459,7 +3469,7 @@ socialEventsServer user =
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         _ <- requireExistingEvent envPool eventKey
-        liftIO $ loadEventMoments envPool eventKey
+        liftIO $ loadEventMoments envPool currentPartyId eventKey
 
     createMoment :: T.Text -> EventMomentCreateDTO -> AppM EventMomentDTO
     createMoment eventIdStr EventMomentCreateDTO{..} = do
@@ -3507,7 +3517,7 @@ socialEventsServer user =
                             }
                     )
                     envPool
-        liftIO $ loadMomentDTO envPool momentKey
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     uploadMomentImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
     uploadMomentImage rawId rawUploadForm = do
@@ -3557,7 +3567,7 @@ socialEventsServer user =
         _ <- liftIO $ runSqlPool
             (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
             envPool
-        liftIO $ loadMomentDTO envPool momentKey
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
     commentOnMoment eventIdStr momentIdStr EventMomentCommentCreateDTO{..} = do
@@ -8743,10 +8753,15 @@ loadEventWorkflowProjections eventRows = do
                         capabilitiesByState
             ]
 
-momentReactionEntityToDTO :: Map.Map UUID.UUID Catalog.ReactionType -> Entity EventMomentReaction -> Maybe EventMomentReactionDTO
-momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
+momentReactionEntityToDTO ::
+    T.Text ->
+    Map.Map UUID.UUID Catalog.ReactionType ->
+    Entity EventMomentReaction ->
+    Maybe EventMomentReactionDTO
+momentReactionEntityToDTO currentPartyId reactionTypes (Entity _ reactionRow) = do
     reactionTypeId <- eventMomentReactionReactionTypeId reactionRow
     reactionType <- Map.lookup reactionTypeId reactionTypes
+    let isCurrentParty = eventMomentReactionReactorPartyId reactionRow == currentPartyId
     pure
         EventMomentReactionDTO
             { emrReactionTypeId = UUID.toText reactionTypeId
@@ -8754,8 +8769,18 @@ momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
             , emrReactionNameEs = Catalog.reactionTypeNameEs reactionType
             , emrReactionNameEn = Catalog.reactionTypeNameEn reactionType
             , emrReactionEmoji = Catalog.reactionTypeEmoji reactionType
-            , emrPartyId = eventMomentReactionReactorPartyId reactionRow
-            , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
+            -- Counts remain compatible because each persisted reaction retains
+            -- one response row. Identity and activity time are only useful for
+            -- the authenticated Party's own selected state; exposing them for
+            -- every reactor would disclose unrelated Party activity.
+            , emrPartyId =
+                if isCurrentParty
+                    then Just (eventMomentReactionReactorPartyId reactionRow)
+                    else Nothing
+            , emrCreatedAt =
+                if isCurrentParty
+                    then Just (eventMomentReactionCreatedAt reactionRow)
+                    else Nothing
             }
 
 momentCommentEntityToDTO :: EventMomentCommentId -> EventMomentComment -> EventMomentCommentDTO
@@ -8797,37 +8822,57 @@ momentEntityToDTO momentKey momentRow reactions comments =
         , emComments = comments
         }
 
-loadMomentDTO :: ConnectionPool -> EventMomentId -> IO EventMomentDTO
-loadMomentDTO pool momentKey =
+loadMomentDTO :: ConnectionPool -> T.Text -> EventMomentId -> IO EventMomentDTO
+loadMomentDTO pool currentPartyId momentKey =
     runSqlPool
         ( do
             mMoment <- get momentKey
             case mMoment of
                 Nothing -> liftIO (ioError (userError "Moment not found"))
                 Just momentRow -> do
-                    reactionRows <- selectList [EventMomentReactionMomentId ==. momentKey] [Asc EventMomentReactionCreatedAt]
+                    reactionRows <-
+                        selectList
+                            [EventMomentReactionMomentId ==. momentKey]
+                            [Asc EventMomentReactionCreatedAt]
                     reactionTypes <- loadMomentReactionTypes reactionRows
-                    commentRows <- selectList [EventMomentCommentMomentId ==. momentKey] [Asc EventMomentCommentCreatedAt]
-                    let reactions = mapMaybe (momentReactionEntityToDTO reactionTypes) reactionRows
-                        comments = map (\(Entity commentKey commentRow) -> momentCommentEntityToDTO commentKey commentRow) commentRows
+                    commentRows <-
+                        selectList
+                            [EventMomentCommentMomentId ==. momentKey]
+                            [Asc EventMomentCommentCreatedAt]
+                    let reactions =
+                            mapMaybe
+                                (momentReactionEntityToDTO currentPartyId reactionTypes)
+                                reactionRows
+                        comments =
+                            map
+                                (\(Entity commentKey commentRow) ->
+                                    momentCommentEntityToDTO commentKey commentRow
+                                )
+                                commentRows
                     when (length reactions /= length reactionRows) $
                         liftIO (ioError (userError "Moment reaction is missing its canonical reaction type"))
                     pure (momentEntityToDTO momentKey momentRow reactions comments)
         )
         pool
 
-loadEventMoments :: ConnectionPool -> SocialEventId -> IO [EventMomentDTO]
-loadEventMoments pool eventKey =
+loadEventMoments :: ConnectionPool -> T.Text -> SocialEventId -> IO [EventMomentDTO]
+loadEventMoments pool currentPartyId eventKey =
     runSqlPool
         ( do
             momentRows <- selectList [EventMomentEventId ==. eventKey] [Desc EventMomentCreatedAt]
             let momentKeys = map entityKey momentRows
-            reactionRows <- selectList [EventMomentReactionMomentId <-. momentKeys] [Asc EventMomentReactionCreatedAt]
+            reactionRows <-
+                selectList
+                    [EventMomentReactionMomentId <-. momentKeys]
+                    [Asc EventMomentReactionCreatedAt]
             reactionTypes <- loadMomentReactionTypes reactionRows
-            commentRows <- selectList [EventMomentCommentMomentId <-. momentKeys] [Asc EventMomentCommentCreatedAt]
+            commentRows <-
+                selectList
+                    [EventMomentCommentMomentId <-. momentKeys]
+                    [Asc EventMomentCommentCreatedAt]
             let reactionsByMoment = Map.fromListWith (<>)
                     [ ( eventMomentReactionMomentId reactionRow
-                      , maybe [] pure (momentReactionEntityToDTO reactionTypes reactionEntity)
+                      , maybe [] pure (momentReactionEntityToDTO currentPartyId reactionTypes reactionEntity)
                       )
                     | reactionEntity@(Entity _ reactionRow) <- reactionRows
                     ]
@@ -8946,37 +8991,53 @@ loadExternalEventSources pool eventKey =
         )
         pool
 
+socialEventVisibleToParty :: T.Text -> SocialEvent -> SqlPersistT IO Bool
+socialEventVisibleToParty currentPartyId eventRow
+    | isEventManager currentPartyId eventRow = pure True
+    | otherwise =
+        case
+            ( decodeStoredEventMetadata (socialEventMetadata eventRow)
+            , socialEventWorkflowStateId eventRow
+            ) of
+            (Right metadata, Just workflowStateId)
+                | emIsPublic metadata /= Just False ->
+                    EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            _ -> pure False
+
 selectVisibleSocialEvents ::
+    T.Text ->
     [Filter SocialEvent] ->
     SelectOpt SocialEvent ->
     Int ->
     Int ->
     SqlPersistT IO [Entity SocialEvent]
-selectVisibleSocialEvents filters dateOrder limit offset = do
+selectVisibleSocialEvents currentPartyId filters dateOrder limit offset = do
     backend <- ask :: SqlPersistT IO SqlBackend
     eventTable <- getEscapedRawName "social_event"
-    externalRefTable <- getEscapedRawName "external_event_ref"
-    eventIdField <- getEscapedRawName "id"
+    eventOrganizerPartyIdField <- getEscapedRawName "organizer_party_id"
+    eventWorkflowStateIdField <- getEscapedRawName "workflow_state_id"
     eventMetadataField <- getEscapedRawName "metadata"
-    externalRefEventIdField <- getEscapedRawName "event_id"
     backendName <- T.toCaseFold <$> getRDBMS
     let (baseFilterClause, filterValues) =
             filterClauseWithVals (Just PrefixTableName) backend filters
-        eventIdColumn = eventTable <> "." <> eventIdField
+        eventOrganizerPartyIdColumn =
+            eventTable <> "." <> eventOrganizerPartyIdField
+        eventWorkflowStateIdColumn =
+            eventTable <> "." <> eventWorkflowStateIdField
         eventMetadataColumn =
             eventTable <> "." <> eventMetadataField
-        externalRefEventIdColumn =
-            externalRefTable <> "." <> externalRefEventIdField
         visibilityClause =
-            "(NOT EXISTS (SELECT 1 FROM "
-                <> externalRefTable
-                <> " WHERE "
-                <> externalRefEventIdColumn
-                <> "="
-                <> eventIdColumn
-                <> ") OR "
+            "("
+                <> eventOrganizerPartyIdColumn
+                <> "=? OR ("
                 <> visibleImportedMetadataClause backendName eventMetadataColumn
-                <> ")"
+                <> " AND EXISTS (SELECT 1 FROM workflow_state_capability capability"
+                <> " INNER JOIN workflow_state state ON state.id=capability.state_id"
+                <> " INNER JOIN workflow_definition workflow ON workflow.id=state.workflow_id"
+                <> " WHERE capability.state_id="
+                <> eventWorkflowStateIdColumn
+                <> " AND workflow.code=? AND workflow.active=TRUE AND state.active=TRUE"
+                <> " AND capability.capability_code=? AND capability.enabled=TRUE)))"
         combinedFilterClause
             | T.null baseFilterClause = " WHERE " <> visibilityClause
             | otherwise = baseFilterClause <> " AND " <> visibilityClause
@@ -8986,13 +9047,18 @@ selectVisibleSocialEvents filters dateOrder limit offset = do
                 <> combinedFilterClause
                 <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
     query <- getConnLimitOffset (limit, offset) orderedQuery
-    rawSql query filterValues
+    rawSql
+        query
+        ( filterValues
+            <> [ PersistText currentPartyId
+               , PersistText EventLifecycle.socialEventWorkflowCode
+               , PersistText "public-listable"
+               ]
+        )
 
--- Keep the imported-event visibility predicate correlated with each candidate
--- row. This avoids expanding the complete retained import history into a NOT IN
--- parameter list on every page request. Both supported databases validate the
--- complete canonical metadata shape before reading isPublic, so malformed or
--- unsupported metadata fails closed.
+-- Both supported databases validate the complete canonical metadata shape
+-- before reading isPublic, so malformed or unsupported metadata fails closed.
+-- The same predicate now protects imported and locally-authored event routes.
 visibleImportedMetadataClause :: T.Text -> T.Text -> T.Text
 visibleImportedMetadataClause backendName metadataColumn
     | "postgres" `T.isInfixOf` backendName = postgresVisibleImportedMetadataClause metadataColumn

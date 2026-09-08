@@ -51,7 +51,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List social events using canonical catalog identifiers */
+        /**
+         * List social events using canonical catalog identifiers
+         * @description Returns events that are both explicitly public and in a workflow state with the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
+         */
         get: operations["listSocialEvents"];
         put?: never;
         /** Create a social event using a canonical event type identifier */
@@ -73,7 +76,7 @@ export interface paths {
         put?: never;
         /**
          * Set a persisted reaction type on an event moment
-         * @description Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior.
+         * @description Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior. Reaction rows retain count-compatible cardinality, but only the caller's own row includes Party identity and activity time.
          */
         post: operations["reactToSocialEventMoment"];
         delete?: never;
@@ -6792,9 +6795,13 @@ export interface components {
             readonly emrReactionNameEs: string;
             readonly emrReactionNameEn: string;
             readonly emrReactionEmoji: string;
-            emrPartyId: string;
-            /** Format: date-time */
-            emrCreatedAt?: string | null;
+            /** @description Authenticated Party identifier when this is the caller's own reaction; null for every other count row. */
+            readonly emrPartyId?: string | null;
+            /**
+             * Format: date-time
+             * @description Caller reaction time when this is the caller's own reaction; null for every other count row.
+             */
+            readonly emrCreatedAt?: string | null;
         };
         EventMomentComment: {
             emcId?: string | null;
@@ -10664,7 +10671,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Moment with canonical reaction references */
+            /** @description Moment with canonical reaction references, anonymous counts, and only the caller's own reaction identity */
             200: {
                 headers: {
                     [name: string]: unknown;

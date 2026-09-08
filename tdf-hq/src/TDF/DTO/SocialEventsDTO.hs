@@ -660,7 +660,7 @@ data EventMomentReactionDTO = EventMomentReactionDTO
     , emrReactionNameEs :: Text
     , emrReactionNameEn :: Text
     , emrReactionEmoji :: Text
-    , emrPartyId :: Text
+    , emrPartyId :: Maybe Text
     , emrCreatedAt :: Maybe UTCTime
     }
     deriving (Show, Eq, Generic)

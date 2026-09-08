@@ -36,7 +36,8 @@ import TDF.DTO.SocialEventsDTO
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventMomentCreateDTO (..)
-    , EventMomentDTO
+    , EventMomentDTO (..)
+    , EventMomentReactionDTO (..)
     , EventSourceDTO (..)
     , EventUpdateDTO (..)
     , InvitationDTO (..)
@@ -882,6 +883,166 @@ spec = describe "social event handler helpers" $ do
         fmap ticketTransferStatus transferAfter `shouldBe` Just "pending"
         fmap eventTicketCurrentHolderPartyId ticketAfter `shouldBe` Just (Just "2")
 
+    it "keeps private and non-public local events visible only to their owner and strict admins" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let publicEventKey :: SocialEventId
+            publicEventKey = toSqlKey 31
+            privateEventKey :: SocialEventId
+            privateEventKey = toSqlKey 32
+            planningEventKey :: SocialEventId
+            planningEventKey = toSqlKey 33
+            localEvent eventKey title metadata workflowStateId =
+                insertKey
+                    eventKey
+                    ( (seedSocialEvent "9" title now)
+                        { socialEventMetadata = Just metadata
+                        , socialEventWorkflowStateId = Just workflowStateId
+                        }
+                    )
+        runSqlPool
+            ( do
+                localEvent publicEventKey "Public local event" "{\"isPublic\":true}" socialEventWorkflowStateFixtureId
+                localEvent privateEventKey "Private local event" "{\"isPublic\":false}" socialEventWorkflowStateFixtureId
+                localEvent planningEventKey "Planning local event" "{\"isPublic\":true}" socialEventPlanningStateFixtureId
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = cfg}
+            ordinaryUser = socialEventUser 2
+            ownerUser = socialEventUser 9
+            listFor user =
+                runHandler $
+                    runReaderT
+                        ( socialEventListHandlerFor
+                            user
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                            Nothing
+                        )
+                        env
+
+        ordinaryList <- listFor ordinaryUser
+        case ordinaryList of
+            Right events -> map eventId events `shouldBe` [Just "31"]
+            Left err -> expectationFailure ("Expected public local event list, got: " <> show err)
+
+        ownerList <- listFor ownerUser
+        case ownerList of
+            Right events -> map eventId events `shouldMatchList` [Just "31", Just "32", Just "33"]
+            Left err -> expectationFailure ("Expected owner event list, got: " <> show err)
+
+        privateGet <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser "32") env
+        assertHiddenEventRoute "private local event" privateGet
+        planningGet <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser "33") env
+        assertHiddenEventRoute "non-public local workflow" planningGet
+        privateMoments <-
+            runHandler $ runReaderT (socialEventMomentListHandlerFor ordinaryUser "32") env
+        assertHiddenEventRoute "private local event moments" privateMoments
+
+        ownerMoments <-
+            runHandler $ runReaderT (socialEventMomentListHandlerFor ownerUser "32") env
+        ownerMoments `shouldBe` Right []
+        ownerGet <- runHandler $ runReaderT (socialEventGetHandlerFor ownerUser "33") env
+        fmap eventId ownerGet `shouldBe` Right (Just "33")
+        adminGet <-
+            runHandler $
+                runReaderT
+                    (socialEventGetHandlerFor (strictAdminSocialEventUser 1) "33")
+                    env
+        fmap eventId adminGet `shouldBe` Right (Just "33")
+
+    it "preserves moment reaction counts while exposing only the current Party identity" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 41
+            momentKey :: EventMomentId
+            momentKey = toSqlKey 51
+            reactionTypeId =
+                maybe (error "Invalid reaction type fixture UUID") id $
+                    UUID.fromString "50800000-0000-4000-8000-000000000001"
+            reactionKey suffix =
+                EventMomentReactionKey $
+                    maybe (error "Invalid reaction fixture UUID") id $
+                        UUID.fromString suffix
+            reaction actor =
+                EventMomentReaction
+                    { eventMomentReactionMomentId = momentKey
+                    , eventMomentReactionReactionTypeId = Just reactionTypeId
+                    , eventMomentReactionReaction = Nothing
+                    , eventMomentReactionReactorPartyId = actor
+                    , eventMomentReactionCreatedAt = now
+                    }
+        runSqlPool
+            ( do
+                insertKey
+                    eventKey
+                    ( (seedSocialEvent "9" "Public reaction event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        }
+                    )
+                insertKey
+                    momentKey
+                    EventMoment
+                        { eventMomentEventId = eventKey
+                        , eventMomentAuthorPartyId = Just "9"
+                        , eventMomentAuthorName = "Event host"
+                        , eventMomentCaption = Nothing
+                        , eventMomentMediaUrl = "https://cdn.example.com/moment.jpg"
+                        , eventMomentMediaType = "image"
+                        , eventMomentMediaWidth = Just 800
+                        , eventMomentMediaHeight = Just 600
+                        , eventMomentMediaDurationMs = Nothing
+                        , eventMomentCreatedAt = now
+                        , eventMomentUpdatedAt = now
+                        }
+                insertKey
+                    (reactionKey "10000000-0000-4000-8000-000000000001")
+                    (reaction "2")
+                insertKey
+                    (reactionKey "10000000-0000-4000-8000-000000000002")
+                    (reaction "3")
+                rawExecute
+                    "INSERT INTO reaction_type (id,catalog_id,code,emoji,name_es,name_en,sort_order,active,workflow_state_id,created_at,updated_at,usage_count,version) VALUES ('50800000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000104','fire','🔥','Fuego','Fire',10,1,'00000000-0000-4000-8000-000000000233',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0,1)"
+                    []
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = cfg}
+            loadFor partyId =
+                runHandler $
+                    runReaderT
+                        (socialEventMomentListHandlerFor (socialEventUser partyId) "41")
+                        env
+
+        viewerResult <- loadFor 2
+        case viewerResult of
+            Right [moment] -> do
+                length (emReactions moment) `shouldBe` 2
+                map emrPartyId (emReactions moment) `shouldMatchList` [Just "2", Nothing]
+                map emrCreatedAt (emReactions moment) `shouldMatchList` [Just now, Nothing]
+            Right moments -> expectationFailure ("Expected one moment, got: " <> show moments)
+            Left err -> expectationFailure ("Expected viewer moment response, got: " <> show err)
+
+        otherResult <- loadFor 4
+        case otherResult of
+            Right [moment] -> do
+                length (emReactions moment) `shouldBe` 2
+                map emrPartyId (emReactions moment) `shouldBe` [Nothing, Nothing]
+                map emrCreatedAt (emReactions moment) `shouldBe` [Nothing, Nothing]
+            Right moments -> expectationFailure ("Expected one moment, got: " <> show moments)
+            Left err -> expectationFailure ("Expected anonymous reaction summaries, got: " <> show err)
+
     it "rejects punctuation-only ticket buyer names before creating ticket orders" $ do
         validateTicketPurchaseBuyerName Nothing `shouldBe` Right Nothing
         validateTicketPurchaseBuyerName (Just "  Diego Saa  ")
@@ -1041,7 +1202,11 @@ spec = describe "social event handler helpers" $ do
         runSqlPool
             ( insertKey
                 eventKey
-                (seedSocialEvent "1" "Original event" now)
+                ( (seedSocialEvent "1" "Original event" now)
+                    { socialEventWorkflowStateId =
+                        Just socialEventWorkflowStateFixtureId
+                    }
+                )
             )
             pool
 
@@ -1262,6 +1427,25 @@ socialEventRsvpCreateHandlerFor user =
             case rsvpsServer of
                 _listRsvps :<|> createRsvpHandler -> createRsvpHandler
 
+socialEventMomentListHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler [EventMomentDTO]
+socialEventMomentListHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> momentsServer
+            :<|> _ ->
+            case momentsServer of
+                listMomentsHandler :<|> _ -> listMomentsHandler
+
 socialEventMomentCreateHandlerFor
     :: AuthedUser
     -> T.Text
@@ -1431,6 +1615,12 @@ socialEventWorkflowStateFixtureId =
     case UUID.fromString "00000000-0000-4000-8000-000000000233" of
         Just workflowStateId -> workflowStateId
         Nothing -> error "Invalid social-event workflow-state fixture UUID"
+
+socialEventPlanningStateFixtureId :: UUID.UUID
+socialEventPlanningStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000231" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid social-event planning-state fixture UUID"
 
 seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
 seedSocialEvent owner title now =
@@ -1633,7 +1823,25 @@ initializeSocialSchema = do
         "INSERT INTO \"workflow_definition\" (\"id\",\"code\",\"active\") VALUES ('00000000-0000-4000-8000-000000000104','social-event-lifecycle',1)"
         []
     rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000231','00000000-0000-4000-8000-000000000104','planning','En planificación','Planning',1)"
+        []
+    rawExecute
         "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000104','on_sale','En venta','On sale',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state_capability\" (\"state_id\",\"capability_code\",\"enabled\") VALUES ('00000000-0000-4000-8000-000000000233','public-listable',1)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment\" (\"id\" INTEGER PRIMARY KEY,\"event_id\" INTEGER NOT NULL,\"author_party_id\" VARCHAR NULL,\"author_name\" VARCHAR NOT NULL,\"caption\" VARCHAR NULL,\"media_url\" VARCHAR NOT NULL,\"media_type\" VARCHAR NOT NULL,\"media_width\" INTEGER NULL,\"media_height\" INTEGER NULL,\"media_duration_ms\" INTEGER NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment_reaction\" (\"id\" VARCHAR PRIMARY KEY,\"moment_id\" INTEGER NOT NULL,\"reaction_type_id\" VARCHAR NULL,\"reaction\" VARCHAR NULL,\"reactor_party_id\" VARCHAR NOT NULL,\"created_at\" TIMESTAMP NOT NULL,UNIQUE(\"moment_id\",\"reaction_type_id\",\"reactor_party_id\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment_comment\" (\"id\" INTEGER PRIMARY KEY,\"moment_id\" INTEGER NOT NULL,\"author_party_id\" VARCHAR NULL,\"author_name\" VARCHAR NOT NULL,\"body\" VARCHAR NOT NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"reaction_type\" (\"id\" VARCHAR PRIMARY KEY,\"catalog_id\" VARCHAR NOT NULL,\"code\" VARCHAR NOT NULL UNIQUE,\"emoji\" VARCHAR NOT NULL,\"name_es\" VARCHAR NOT NULL,\"name_en\" VARCHAR NOT NULL,\"description_es\" VARCHAR NULL,\"description_en\" VARCHAR NULL,\"current_slug\" VARCHAR NULL UNIQUE,\"sort_order\" INTEGER NOT NULL,\"active\" BOOLEAN NOT NULL,\"workflow_state_id\" VARCHAR NOT NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,\"deprecated_at\" TIMESTAMP NULL,\"replacement_id\" VARCHAR NULL,\"usage_count\" INTEGER NOT NULL,\"version\" INTEGER NOT NULL)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"

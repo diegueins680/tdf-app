@@ -47,6 +47,7 @@ paths:
     get:
       tags: [Social events]
       summary: List social events using canonical catalog identifiers
+      description: Returns events that are both explicitly public and in a workflow state with the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
       operationId: listSocialEvents
       security:
         - bearerAuth: [ ]
@@ -99,7 +100,7 @@ paths:
     post:
       tags: [Social events]
       summary: Set a persisted reaction type on an event moment
-      description: Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior.
+      description: Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior. Reaction rows retain count-compatible cardinality, but only the caller's own row includes Party identity and activity time.
       operationId: reactToSocialEventMoment
       security:
         - bearerAuth: [ ]
@@ -122,7 +123,7 @@ paths:
               $ref: '#/components/schemas/EventMomentReactionRequest'
       responses:
         '200':
-          description: Moment with canonical reaction references
+          description: Moment with canonical reaction references, anonymous counts, and only the caller's own reaction identity
           content:
             application/json:
               schema:
@@ -7626,15 +7627,24 @@ components:
     EventMomentReaction:
       type: object
       additionalProperties: false
-      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji, emrPartyId]
+      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji]
       properties:
         emrReactionTypeId: { type: string, format: uuid }
         emrReactionCode: { type: string, readOnly: true }
         emrReactionNameEs: { type: string, readOnly: true }
         emrReactionNameEn: { type: string, readOnly: true }
         emrReactionEmoji: { type: string, readOnly: true }
-        emrPartyId: { type: string }
-        emrCreatedAt: { type: string, format: date-time, nullable: true }
+        emrPartyId:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Authenticated Party identifier when this is the caller's own reaction; null for every other count row.
+        emrCreatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+          description: Caller reaction time when this is the caller's own reaction; null for every other count row.
     EventMomentComment:
       type: object
       additionalProperties: false
