@@ -327,7 +327,13 @@
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
+      "compatibleAppliedChecksums": ["77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"],
       "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+    },
+    {
+      "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
+      "path": "tdf-hq/sql/2026-09-08_studio_audit_historical_failure_gate_repair.sql",
+      "introducedBy": "269f3784121b8bdca378ec516d5cb446cc818e39"
     },
     {
       "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
