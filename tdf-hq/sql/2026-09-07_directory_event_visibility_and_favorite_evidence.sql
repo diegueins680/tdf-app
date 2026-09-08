@@ -3,6 +3,8 @@
 -- event decoder: missing metadata is public, while malformed, duplicated,
 -- unsupported, incorrectly typed, and explicitly private metadata fails
 -- closed.
+BEGIN;
+
 CREATE OR REPLACE FUNCTION directory_social_event_metadata_is_public(event_metadata TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -52,6 +54,76 @@ AS $$
       )
   END
 $$;
+
+-- Normalize legacy identifiers admitted by the earlier permissive endpoint.
+-- Valid equivalents converge to one row while retaining the earliest saved
+-- timestamp; invalid historical rows remain available for exact deletion.
+CREATE OR REPLACE FUNCTION directory_canonical_favorite_target(
+  target_kind_value TEXT,
+  target_id_value TEXT
+)
+RETURNS TEXT
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT CASE
+    WHEN target_kind_value IN ('event', 'venue')
+      AND pg_input_is_valid(btrim(target_id_value), 'bigint')
+      THEN CASE
+        WHEN btrim(target_id_value)::bigint > 0
+          THEN (btrim(target_id_value)::bigint)::text
+        ELSE NULL
+      END
+    WHEN target_kind_value IN ('profile', 'classified')
+      AND pg_input_is_valid(btrim(target_id_value), 'uuid')
+      THEN (btrim(target_id_value)::uuid)::text
+    ELSE NULL
+  END
+$$;
+
+WITH normalized AS (
+  SELECT
+    favorite.account_party_id,
+    favorite.target_kind,
+    directory_canonical_favorite_target(
+      favorite.target_kind,
+      favorite.target_id
+    ) AS target_id,
+    min(favorite.created_at) AS created_at
+  FROM directory_favorite favorite
+  WHERE directory_canonical_favorite_target(
+    favorite.target_kind,
+    favorite.target_id
+  ) IS NOT NULL
+  GROUP BY
+    favorite.account_party_id,
+    favorite.target_kind,
+    directory_canonical_favorite_target(
+      favorite.target_kind,
+      favorite.target_id
+    )
+), converged AS (
+  INSERT INTO directory_favorite (
+    account_party_id,
+    target_kind,
+    target_id,
+    created_at
+  )
+  SELECT account_party_id, target_kind, target_id, created_at
+  FROM normalized
+  ON CONFLICT (account_party_id, target_kind, target_id) DO UPDATE
+  SET created_at = least(directory_favorite.created_at, EXCLUDED.created_at)
+  RETURNING account_party_id
+)
+DELETE FROM directory_favorite favorite
+WHERE favorite.target_id IS DISTINCT FROM
+  directory_canonical_favorite_target(favorite.target_kind, favorite.target_id)
+  AND directory_canonical_favorite_target(
+    favorite.target_kind,
+    favorite.target_id
+  ) IS NOT NULL
+  AND EXISTS (SELECT 1 FROM converged);
 
 CREATE OR REPLACE VIEW directory_public_event AS
 SELECT
@@ -112,3 +184,4 @@ CREATE INDEX IF NOT EXISTS directory_audit_actor_action_created_idx
 -- Deliberately no confidentiality-weakening rollback: reverting this boundary
 -- could re-expose private events. Recovery should restore this migration or a
 -- stricter replacement, never the prior view definition.
+COMMIT;

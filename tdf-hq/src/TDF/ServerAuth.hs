@@ -81,9 +81,9 @@ import qualified Data.Text.Encoding as TE
 import Data.Time (NominalDiffTime, UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID, fromText, toText)
 import Data.UUID.V4 (nextRandom)
-import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
+import Database.Persist (Entity (..), SelectOpt (Asc), get, getBy, getEntity, insert, insert_, insertBy, insertUnique, selectFirst, selectList, toPersistValue, update, upsert, upsertBy, (=.), (==.), (<=.), (>=.), (<-.))
 import Database.PostgreSQL.Simple (SqlError (..))
-import Database.Persist.Sql (fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
+import Database.Persist.Sql (Single (..), fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionSave, transactionUndo, updateWhereCount, SqlPersistT)
 import Database.Persist.Types (PersistValue (PersistBool, PersistText))
 import Network.HTTP.Client (Manager, Response, httpLbs, parseRequest, responseBody, responseStatus)
 import Network.HTTP.Types.Status (statusCode)
@@ -674,6 +674,15 @@ onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now
         ]
         []
     (Just "access_requested", Nothing) -> pure False
+    (Just "event_saved", Just signupAt) -> do
+      evidence <- rawSql
+        "SELECT audit.created_at FROM directory_audit_event audit WHERE audit.actor_party_id=? AND audit.action='favorite.saved' AND audit.entity_kind='event' AND audit.created_at<=CURRENT_TIMESTAMP ORDER BY audit.created_at DESC LIMIT 1"
+        [toPersistValue partyIdValue]
+        :: SqlPersistT IO [Single UTCTime]
+      pure $ case evidence of
+        Single occurredAt : _ -> occurredAt >= signupAt
+        [] -> False
+    (Just "event_saved", Nothing) -> pure False
     _ -> pure True
 
 authV1Server :: ServerT Api.AuthV1API AppM

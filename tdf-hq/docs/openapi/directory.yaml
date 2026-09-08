@@ -26,7 +26,7 @@ paths:
         - { $ref: '#/components/parameters/Limit' }
       responses:
         '200': { description: Organic results, separate sponsored results, and facets, content: { application/json: { schema: { $ref: '#/components/schemas/DirectorySearchResponse' } } } }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400': { description: Unsupported target kind filter }
   /directory/suggestions:
     get:
       tags: [Music directory]
@@ -234,20 +234,38 @@ paths:
       tags: [Music directory account]
       operationId: listDirectoryFavorites
       security: [{ bearerAuth: [] }]
-      responses: { '200': { description: Current user's favorites, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DirectoryFavorite' } } } } } }
+      parameters:
+        - name: targetKind
+          in: query
+          description: Restrict the authenticated Party's favorites to one supported kind. Saved-event synchronization uses `event`.
+          schema: { $ref: '#/components/schemas/DirectoryEntityType' }
+      responses:
+        '200':
+          description: Current authenticated Party favorites
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DirectoryFavorite' }
+        '400': { $ref: '#/components/responses/BadRequest' }
   /directory/favorites/{targetKind}/{targetId}:
     put:
       tags: [Music directory account]
       operationId: saveDirectoryFavorite
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/TargetKind' }, { $ref: '#/components/parameters/TargetId' }]
-      responses: { '200': { description: Idempotently saved favorite } }
+      responses:
+        '200': { description: Desired saved state confirmed idempotently after validating the canonical public target; event targets must still be upcoming }
+        '400': { description: Unsupported kind or malformed target identifier }
+        '404': { description: Target not found, not publicly eligible, or event no longer upcoming }
     delete:
       tags: [Music directory account]
       operationId: deleteDirectoryFavorite
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/TargetKind' }, { $ref: '#/components/parameters/TargetId' }]
-      responses: { '200': { description: Favorite removed } }
+      responses:
+        '200': { description: Desired removed state confirmed idempotently; canonical and valid legacy identifier variants are removed together }
+        '400': { description: Unsupported kind or empty/oversized target identifier }
   /directory/saved-searches:
     get:
       tags: [Music directory alerts]
@@ -344,7 +362,12 @@ components:
     ProfileId: { name: profileId, in: path, required: true, schema: { type: string, format: uuid } }
     ClassifiedId: { name: classifiedId, in: path, required: true, schema: { type: string, format: uuid } }
     TargetKind: { name: targetKind, in: path, required: true, schema: { $ref: '#/components/schemas/DirectoryEntityType' } }
-    TargetId: { name: targetId, in: path, required: true, schema: { type: string, maxLength: 160 } }
+    TargetId:
+      name: targetId
+      in: path
+      required: true
+      description: Event and venue IDs are canonical positive integers; profile and classified IDs are UUIDs. DELETE also accepts an exact invalid legacy value so an owner can remove historical data.
+      schema: { type: string, maxLength: 160 }
     IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 160 } }
   responses:
     BadRequest: { description: Invalid input, content: { application/json: { schema: { $ref: '#/components/schemas/ApiError' } } } }
@@ -750,7 +773,25 @@ components:
             count: { type: integer, minimum: 0 }
         items: { type: array, items: { $ref: '#/components/schemas/PublicDirectoryReview' } }
         nextCursor: { type: string, format: uuid, nullable: true }
-    DirectoryFavorite: { type: object, required: [targetKind, targetId, createdAt], properties: { targetKind: { $ref: '#/components/schemas/DirectoryEntityType' }, targetId: { type: string }, createdAt: { type: string, format: date-time }, result: { $ref: '#/components/schemas/DirectorySearchItem', nullable: true } } }
+    DirectoryFavoriteResult:
+      type: object
+      additionalProperties: false
+      required: [type, id, slug, title]
+      properties:
+        type: { $ref: '#/components/schemas/DirectoryEntityType' }
+        id: { type: string }
+        slug: { type: string }
+        title: { type: string }
+        city: { type: string, nullable: true }
+    DirectoryFavorite:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetId, createdAt, result]
+      properties:
+        targetKind: { $ref: '#/components/schemas/DirectoryEntityType' }
+        targetId: { type: string, description: Canonical identifier for this favorite kind. }
+        createdAt: { type: string, format: date-time }
+        result: { allOf: [{ $ref: '#/components/schemas/DirectoryFavoriteResult' }], nullable: true }
     SavedSearchCreate: { type: object, required: [name, canonicalQuery, alertsEnabled, alertFrequency], properties: { name: { type: string, minLength: 1, maxLength: 120 }, canonicalQuery: { type: object, additionalProperties: true }, alertsEnabled: { type: boolean }, alertFrequency: { type: string, enum: [instant, daily, weekly, off] } } }
     SavedDirectorySearch: { allOf: [{ $ref: '#/components/schemas/SavedSearchCreate' }, { type: object, required: [id, createdAt], properties: { id: { type: string, format: uuid }, createdAt: { type: string, format: date-time }, lastEvaluatedAt: { type: string, format: date-time, nullable: true } } }] }
     ClaimCreate: { type: object, required: [profileId, claimType, evidence], properties: { profileId: { type: string, format: uuid }, claimType: { type: string, enum: [profile, organization, venue, administration, credit] }, evidence: { type: array, items: { type: object, additionalProperties: true } } } }

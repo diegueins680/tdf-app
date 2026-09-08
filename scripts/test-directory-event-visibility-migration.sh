@@ -92,7 +92,18 @@ CREATE TABLE directory_audit_event (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   actor_party_id BIGINT,
   action TEXT NOT NULL,
+  entity_kind TEXT NOT NULL DEFAULT 'event',
+  entity_id TEXT NOT NULL DEFAULT '1',
+  correlation_id TEXT NOT NULL DEFAULT 'fixture-correlation',
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE directory_favorite (
+  account_party_id BIGINT NOT NULL,
+  target_kind TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (account_party_id, target_kind, target_id)
 );
 
 INSERT INTO workflow_state(id, active) VALUES
@@ -154,6 +165,11 @@ LEFT JOIN country_reference country ON country.id = coalesce(venue.country_id, c
 INSERT INTO directory_search_document(entity_kind, entity_id)
 SELECT 'event', id::text FROM social_event;
 INSERT INTO directory_search_document(entity_kind, entity_id) VALUES ('venue', '1'), ('venue', '2');
+INSERT INTO directory_favorite(account_party_id, target_kind, target_id, created_at) VALUES
+  (42, 'event', '0042', '2026-09-07T09:00:00Z'),
+  (42, 'event', '42', '2026-09-07T10:00:00Z'),
+  (42, 'profile', 'D1000000-0000-4000-8000-000000000001', '2026-09-07T11:00:00Z'),
+  (42, 'event', 'not-an-event', '2026-09-07T12:00:00Z');
 SQL
 
 before_private=$(psql_exec -qAt -c "SELECT count(*) FROM directory_public_event WHERE id=5;")
@@ -172,5 +188,29 @@ malformed_is_hidden=$(psql_exec -qAt -c "SELECT NOT directory_social_event_metad
 test "$malformed_is_hidden" = "t"
 evidence_index=$(psql_exec -qAt -c "SELECT count(*) FROM pg_indexes WHERE indexname='directory_audit_actor_action_created_idx';")
 test "$evidence_index" = "1"
+canonical_events=$(psql_exec -qAt -c "SELECT string_agg(target_id, ',' ORDER BY target_id) FROM directory_favorite WHERE account_party_id=42 AND target_kind='event';")
+test "$canonical_events" = "42,not-an-event"
+canonical_event_created_at=$(psql_exec -qAt -c "SELECT created_at FROM directory_favorite WHERE account_party_id=42 AND target_kind='event' AND target_id='42';")
+test "$canonical_event_created_at" = "2026-09-07 09:00:00+00"
+canonical_profile=$(psql_exec -qAt -c "SELECT target_id FROM directory_favorite WHERE account_party_id=42 AND target_kind='profile';")
+test "$canonical_profile" = "d1000000-0000-4000-8000-000000000001"
+invalid_favorite_preserved=$(psql_exec -qAt -c "SELECT count(*) FROM directory_favorite WHERE account_party_id=42 AND target_id='not-an-event';")
+test "$invalid_favorite_preserved" = "1"
 
-echo "Directory event visibility migration passed defect reproduction, fail-closed projection, stale-search cleanup, evidence-index, and idempotency checks."
+favorite_write_status=$(psql_exec -qAt -c "WITH requested AS (SELECT 'event'::text AS target_kind,'4'::text AS target_id), eligible AS (SELECT requested.target_kind,requested.target_id FROM requested WHERE EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id=CAST(requested.target_id AS bigint) AND event.start_time>=CURRENT_TIMESTAMP)), inserted AS (INSERT INTO directory_favorite(account_party_id,target_kind,target_id) SELECT 77,eligible.target_kind,eligible.target_id FROM eligible WHERE NOT EXISTS (SELECT 1 FROM directory_favorite existing WHERE existing.account_party_id=77 AND existing.target_kind=eligible.target_kind AND directory_canonical_favorite_target(existing.target_kind,existing.target_id)=eligible.target_id) ON CONFLICT DO NOTHING RETURNING target_kind,target_id), audited AS (INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) SELECT 77,'favorite.saved',inserted.target_kind,inserted.target_id,'favorite-save-test-1',jsonb_build_object('source','directory.favorite.put','visibility','public-upcoming') FROM inserted RETURNING id) SELECT EXISTS(SELECT 1 FROM eligible),EXISTS(SELECT 1 FROM inserted),EXISTS(SELECT 1 FROM audited);")
+test "$favorite_write_status" = "t|t|t"
+favorite_repeat_status=$(psql_exec -qAt -c "WITH requested AS (SELECT 'event'::text AS target_kind,'4'::text AS target_id), eligible AS (SELECT requested.target_kind,requested.target_id FROM requested WHERE EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id=CAST(requested.target_id AS bigint) AND event.start_time>=CURRENT_TIMESTAMP)), inserted AS (INSERT INTO directory_favorite(account_party_id,target_kind,target_id) SELECT 77,eligible.target_kind,eligible.target_id FROM eligible WHERE NOT EXISTS (SELECT 1 FROM directory_favorite existing WHERE existing.account_party_id=77 AND existing.target_kind=eligible.target_kind AND directory_canonical_favorite_target(existing.target_kind,existing.target_id)=eligible.target_id) ON CONFLICT DO NOTHING RETURNING target_kind,target_id), audited AS (INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) SELECT 77,'favorite.saved',inserted.target_kind,inserted.target_id,'favorite-save-test-2',jsonb_build_object('source','directory.favorite.put','visibility','public-upcoming') FROM inserted RETURNING id) SELECT EXISTS(SELECT 1 FROM eligible),EXISTS(SELECT 1 FROM inserted),EXISTS(SELECT 1 FROM audited);")
+test "$favorite_repeat_status" = "t|f|f"
+private_write_status=$(psql_exec -qAt -c "WITH requested AS (SELECT 'event'::text AS target_kind,'5'::text AS target_id), eligible AS (SELECT requested.target_kind,requested.target_id FROM requested WHERE EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id=CAST(requested.target_id AS bigint) AND event.start_time>=CURRENT_TIMESTAMP)), inserted AS (INSERT INTO directory_favorite(account_party_id,target_kind,target_id) SELECT 77,eligible.target_kind,eligible.target_id FROM eligible ON CONFLICT DO NOTHING RETURNING target_kind,target_id), audited AS (INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata) SELECT 77,'favorite.saved',inserted.target_kind,inserted.target_id,'favorite-save-private',jsonb_build_object('source','directory.favorite.put') FROM inserted RETURNING id) SELECT EXISTS(SELECT 1 FROM eligible),EXISTS(SELECT 1 FROM inserted),EXISTS(SELECT 1 FROM audited);")
+test "$private_write_status" = "f|f|f"
+favorite_audit_count=$(psql_exec -qAt -c "SELECT count(*) FROM directory_audit_event WHERE actor_party_id=77 AND action='favorite.saved' AND entity_kind='event' AND entity_id='4';")
+test "$favorite_audit_count" = "1"
+
+psql_exec -qAt -c "INSERT INTO directory_favorite(account_party_id,target_kind,target_id) VALUES (88,'event','0004');" >/dev/null
+legacy_put_status=$(psql_exec -qAt -c "WITH requested AS (SELECT 'event'::text AS target_kind,'4'::text AS target_id), eligible AS (SELECT requested.target_kind,requested.target_id FROM requested WHERE EXISTS (SELECT 1 FROM directory_public_event event WHERE event.id=CAST(requested.target_id AS bigint) AND event.start_time>=CURRENT_TIMESTAMP)), inserted AS (INSERT INTO directory_favorite(account_party_id,target_kind,target_id) SELECT 88,eligible.target_kind,eligible.target_id FROM eligible WHERE NOT EXISTS (SELECT 1 FROM directory_favorite existing WHERE existing.account_party_id=88 AND existing.target_kind=eligible.target_kind AND directory_canonical_favorite_target(existing.target_kind,existing.target_id)=eligible.target_id) ON CONFLICT DO NOTHING RETURNING target_kind,target_id) SELECT EXISTS(SELECT 1 FROM eligible),EXISTS(SELECT 1 FROM inserted);")
+test "$legacy_put_status" = "t|f"
+psql_exec -qAt -c "DELETE FROM directory_favorite WHERE account_party_id=88 AND target_kind='event' AND (target_id='4' OR directory_canonical_favorite_target(target_kind,target_id)='4');" >/dev/null
+legacy_delete_count=$(psql_exec -qAt -c "SELECT count(*) FROM directory_favorite WHERE account_party_id=88 AND target_kind='event';")
+test "$legacy_delete_count" = "0"
+
+echo "Directory event visibility migration passed defect reproduction, fail-closed projection, stale-search cleanup, legacy-favorite convergence, atomic save/audit, evidence-index, and idempotency checks."
