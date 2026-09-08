@@ -624,13 +624,23 @@
       "reviewed": true
     },
     {
-      "id": "ac1d43fea60bbc54a939",
+      "id": "2245e57c3a5e6500548e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "312bcac61ea490de4317",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the fixture shape could weaken API-contract coverage or conceal a ticket-sharing regression.",
+      "justification": "Synthetic SocialEventDTO fixture fields exercise the ticket-sharing API contract; they are not selectable or reportable business values.",
       "reviewed": true
     },
     {
