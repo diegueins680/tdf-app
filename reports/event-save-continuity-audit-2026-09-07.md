@@ -10,7 +10,7 @@ Published reviewed root branch: `feature/event-save-continuity-20260907-reviewed
 
 Published stacked base: `feature/onboarding-continuity-20260906` at `8cd5cae4ecee4385ef0c228012368fa576162145`
 
-Published root implementation/report head before this final metadata update: `f7e3463cdb108597d8918bf47de03ca9d753aefa`
+Published root implementation/report head before this final metadata update: `f7e3463cda5d6cd9aab16efeb609d4c6be2e90f6`
 
 Draft root pull request: [tdf-app #254](https://github.com/diegueins680/tdf-app/pull/254)
 
