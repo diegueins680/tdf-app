@@ -1,0 +1,83 @@
+# Draft PR: Artist merch storefronts
+
+## Problema y objetivo
+
+TDF podía exhibir perfiles y operar otros tipos de comercio, pero “las bandas pueden vender merch” no era todavía una capacidad real. Este PR introduce un dominio específico de merch físico integrado con perfiles, comunidad y checkout canónico, con rollout cerrado y honesto.
+
+## Estado anterior
+
+Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Datafast/PayPal/manual y administración. No existían tienda, producto físico, variante/SKU, stock, storefront ni orden de merch; la documentación la trataba como futura.
+
+## Arquitectura
+
+- Entidades `merch_*` para vendedor, catálogo, imágenes, inventario, orden, fulfillment, issues, reviews, settlement, outbox, analítica y auditoría.
+- Reutilización de `party`, `directory_profile`, permisos/PartySelector, `/assets/serve` y `commerce_checkout_*`.
+- Tokens opacos hasheados para carrito/orden y snapshots inmutables.
+- API Servant/OpenAPI y clientes TypeScript regenerados.
+- UI web completa para comprador/vendedor/staff; móvil para compra y operación esencial.
+
+## UX
+
+Storefront integrado al perfil y marketplace; mensajes explícitos para revisión, pago pendiente, proveedor no disponible, stock cambiado y permisos. Diseño responsive, controles táctiles y semántica accesible. Español/inglés en superficies nuevas. El móvil deriva configuración compleja al panel web responsive.
+
+## Datos y estados
+
+Producto: `draft → pending_review → published/sold_out/paused/rejected/archived`. Pago, orden, reserva, fulfillment, shipment, refund, disputa y settlement permanecen separados. Comisión general 1000 bps sobre producto después de descuento; override auditable, incluido 0%.
+
+## Seguridad y privacidad
+
+Autorización backend por store/acción; elegibilidad reclamada/verificada; locks/constraints contra sobreventa; idempotencia con fingerprint; `paid` solo por evidencia server-side; archivos decodificados/reencodados y object keys generados; referencias HTTPS/durables; analítica sin PII; auditoría append-only; settlement con doble control; flags cerrados y kill switch `merch.checkout.runtime_ready`.
+
+## Migración
+
+- Apply: `tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql`
+- Rollback: `tdf-hq/sql/2026-09-07_artist_merch_storefronts_rollback.sql`
+- Rehearsal: `scripts/test-artist-merch-storefronts-migration.sh`
+
+Rollback se niega si existe evidencia comercial. No hay conversión automática de assets; los tests usan datos sintéticos.
+
+## Pruebas ejecutadas
+
+- Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
+- Backend Haskell: PASS, 2.474/2.474 ejemplos.
+- Build web: PASS; presupuesto inicial JS PASS (413.691 bytes gzip).
+- Web y móvil typecheck: PASS.
+- Jest web merch API: PASS 5/5.
+- Jest móvil deep links: PASS 2/2.
+- Playwright Chromium desktop/Pixel 7: PASS 4/4, con capturas de runtime adjuntas al reporte.
+- Axe en recorridos públicos: PASS, sin impactos serios/críticos.
+- Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
+- Regresión web global: la suite preexistente de administración de cursos falló durante la corrida simultánea; queda por repetir en CI/aislamiento. Las pruebas específicas de merch pasaron.
+- OpenAPI YAML + regeneración web/móvil: PASS.
+- Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
+
+No se ejecutó runtime en dispositivo/emulador móvil ni integración real con proveedor de pagos.
+
+## Configuración y staging
+
+Todos los flags permanecen `false`. Staging debe configurar de forma independiente storefront, solicitud, catálogo, checkout runtime, proveedor, reviews, notificaciones y experimentos. Sin credenciales sandbox y evidencia de adapter, checkout debe continuar cerrado.
+
+## Riesgos
+
+- Los adapters específicos de pago/refund de merch todavía no están expuestos.
+- Falta validar workers/outbox y rate limiting en staging.
+- Falta runtime HTTP cross-tenant, E2E autenticado vendedor/staff y validación manual con lector/zoom.
+- Definición fiscal, contractual y de protección al consumidor pendiente.
+
+## Rollout y rollback
+
+Local sintético → staging → prueba interna con dos adultos/roles → piloto cerrado → validación operativa/legal/contable → progresivo → GA. Rollback inicial por flags; migración destructiva solo antes de datos comerciales. Ver `docs/artist-merch/OPERATIONS.md`.
+
+## Checklist bloqueante
+
+- [ ] Adapters de pago/refund/reconcile verificados en sandbox.
+- [ ] E2E comprador/vendedor/staff y cross-tenant.
+- [ ] Responsive/WCAG/teclado/lector/zoom con evidencia.
+- [ ] Observabilidad y soporte on-call.
+- [ ] Vendedor formal, facturación, impuestos/retenciones.
+- [ ] Acuerdo vendedor, privacidad, consumidor, IP y productos prohibidos.
+- [ ] Flujo de evidencia final de settlement y conciliación.
+
+## Alcance diferido
+
+Descargas digitales, multicurrency/países, cart multi-vendedor, couriers automáticos, payouts automáticos, chat nuevo y reviews públicas hasta cerrar moderación.
