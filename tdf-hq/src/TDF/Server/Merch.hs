@@ -1101,32 +1101,33 @@ reviewStore user storeId MerchStoreReviewRequest{..} = do
   requireAdmin user
   let decision = T.toLower (T.strip msrDecision)
   unless (decision `elem` ["approve","reject","suspend","reactivate"]) $ throwError (badRequest "Unsupported store decision")
-  current <- runDB (rawSql
-    "SELECT application_status,operational_status FROM merch_store WHERE id=?::uuid FOR UPDATE"
-    [PersistText (uuidText storeId)] :: SqlPersistT IO [(Single Text,Single Text)])
-  (applicationStatus,operationalStatus) <- case current of
-    [row] -> pure row
-    _ -> throwError err404
-  let transitionAllowed = case decision of
-        "approve" -> applicationStatus == Single "requested"
-        "reject" -> applicationStatus == Single "requested"
-        "suspend" -> applicationStatus == Single "approved" && operationalStatus == Single "active"
-        "reactivate" -> applicationStatus == Single "approved" && operationalStatus == Single "suspended"
-        _ -> False
-  unless transitionAllowed $ throwError (conflict "Store review transition is not allowed")
   notes <- requiredSafeText "reviewerNotes" 2000 msrReviewerNotes
+  commissionReason <- traverse (requiredSafeText "commissionReason" 500) msrCommissionReason
   when (decision == "approve" && maybe False (\bps -> bps < 0 || bps > 10000) msrCommissionBps) $
     throwError (badRequest "commissionBps must be between 0 and 10000")
-  runDB $ do
-    rawExecute
-      "UPDATE merch_store SET application_status=CASE WHEN ?='approve' THEN 'approved' WHEN ?='reject' THEN 'rejected' ELSE application_status END,operational_status=CASE WHEN ? IN ('approve','reactivate') THEN 'active' WHEN ?='suspend' THEN 'suspended' WHEN ?='reject' THEN 'inactive' ELSE operational_status END,reviewer_notes=?,reviewed_by=?,reviewed_at=CASE WHEN ? IN ('approve','reject') THEN now() ELSE reviewed_at END,activated_at=CASE WHEN ? IN ('approve','reactivate') THEN coalesce(activated_at,now()) ELSE activated_at END,suspended_at=CASE WHEN ?='suspend' THEN now() ELSE NULL END,suspension_reason=CASE WHEN ?='suspend' THEN ? ELSE NULL END,updated_at=now(),version=version+1 WHERE id=?::uuid"
-      [PersistText decision,PersistText decision,PersistText decision,PersistText decision,PersistText decision,PersistText notes,PersistInt64 (currentPartyId user),PersistText decision,PersistText decision,PersistText decision,PersistText decision,PersistText notes,PersistText (uuidText storeId)]
-    forM_ msrCommissionBps $ \bps -> do
-      rawExecute "UPDATE merch_commission_policy SET effective_until=now() WHERE store_id=?::uuid AND effective_until IS NULL" [PersistText (uuidText storeId)]
-      rawExecute "INSERT INTO merch_commission_policy(store_id,commission_bps,reason,approved_by) VALUES(?::uuid,?,?,?)"
-        [PersistText (uuidText storeId),PersistInt64 (fromIntegral bps),PersistText (fromMaybe notes msrCommissionReason),PersistInt64 (currentPartyId user)]
-    appendMerchAudit user "staff" (Just storeId) "store.reviewed" "store" (uuidText storeId)
-      (object ["decision" .= decision, "commissionBps" .= msrCommissionBps])
+  when (decision /= "approve" && msrCommissionBps /= Nothing) $
+    throwError (badRequest "A commission override may only be set while approving a store")
+  when (msrCommissionBps /= Nothing && maybe True T.null commissionReason) $
+    throwError (badRequest "commissionReason is required for a commission override")
+  transitioned <- runDB $ do
+    rows <- (rawSql
+      "UPDATE merch_store SET application_status=CASE WHEN ?='approve' THEN 'approved' WHEN ?='reject' THEN 'rejected' ELSE application_status END,operational_status=CASE WHEN ? IN ('approve','reactivate') THEN 'active' WHEN ?='suspend' THEN 'suspended' WHEN ?='reject' THEN 'inactive' ELSE operational_status END,reviewer_notes=?,reviewed_by=?,reviewed_at=CASE WHEN ? IN ('approve','reject') THEN now() ELSE reviewed_at END,activated_at=CASE WHEN ? IN ('approve','reactivate') THEN coalesce(activated_at,now()) ELSE activated_at END,suspended_at=CASE WHEN ?='suspend' THEN now() ELSE NULL END,suspension_reason=CASE WHEN ?='suspend' THEN ? ELSE NULL END,updated_at=now(),version=version+1 WHERE id=?::uuid AND ((? IN ('approve','reject') AND application_status='requested') OR (?='suspend' AND application_status='approved' AND operational_status='active') OR (?='reactivate' AND application_status='approved' AND operational_status='suspended')) RETURNING TRUE"
+      [ PersistText decision,PersistText decision,PersistText decision,PersistText decision,PersistText decision
+      , PersistText notes,PersistInt64 (currentPartyId user),PersistText decision,PersistText decision
+      , PersistText decision,PersistText decision,PersistText notes,PersistText (uuidText storeId)
+      , PersistText decision,PersistText decision,PersistText decision
+      ] :: SqlPersistT IO [Single Bool])
+    case rows of
+      [Single True] -> do
+        forM_ msrCommissionBps $ \bps -> do
+          rawExecute "UPDATE merch_commission_policy SET effective_until=now() WHERE store_id=?::uuid AND effective_until IS NULL" [PersistText (uuidText storeId)]
+          rawExecute "INSERT INTO merch_commission_policy(store_id,commission_bps,reason,approved_by) VALUES(?::uuid,?,?,?)"
+            [PersistText (uuidText storeId),PersistInt64 (fromIntegral bps),PersistText (fromMaybe notes commissionReason),PersistInt64 (currentPartyId user)]
+        appendMerchAudit user "staff" (Just storeId) "store.reviewed" "store" (uuidText storeId)
+          (object ["decision" .= decision, "commissionBps" .= msrCommissionBps])
+        pure True
+      _ -> pure False
+  unless transitioned $ throwError (conflict "Store review transition is not allowed")
   loadManagedStore (uuidText storeId)
 
 listAdminProducts :: AuthedUser -> Maybe Text -> AppM [Value]
@@ -1139,23 +1140,27 @@ listAdminProducts user rawStatus = do
 reviewProduct :: AuthedUser -> UUID -> MerchStatusRequest -> AppM Value
 reviewProduct user productId MerchStatusRequest{..} = do
   requireAdmin user
-  current <- runDB (rawSql "SELECT status FROM merch_product WHERE id=?::uuid"
-    [PersistText (uuidText productId)] :: SqlPersistT IO [Single Text])
-  old <- case current of [Single value] -> pure value; _ -> throwError err404
   let decision = T.toLower (T.strip mstStatus)
-  unless (old == "pending_review" && decision `elem` ["published","rejected"] && validProductTransition old decision) $
-    throwError (conflict "Product review transition is not allowed")
+  unless (decision `elem` ["published","rejected"] && validProductTransition "pending_review" decision) $
+    throwError (badRequest "Product review decision is not supported")
   when (decision == "rejected" && maybe True ((<5) . T.length . T.strip) mstReason) $
     throwError (badRequest "A rejection reason of at least 5 characters is required")
-  runDB $ do
-    rawExecute
-      "UPDATE merch_product SET status=?,reviewed_by=?,reviewed_at=now(),published_at=CASE WHEN ?='published' THEN coalesce(published_at,now()) ELSE published_at END,rejection_reason=CASE WHEN ?='rejected' THEN ? ELSE NULL END,updated_at=now(),version=version+1 WHERE id=?::uuid"
-      [PersistText decision,PersistInt64 (currentPartyId user),PersistText decision,PersistText decision,optionalText mstReason,PersistText (uuidText productId)]
-    when (decision == "published") $ rawExecute
-      "UPDATE merch_product_image SET moderation_status='allowed' WHERE product_id=?::uuid AND scan_status='clean' AND moderation_status='pending'"
-      [PersistText (uuidText productId)]
-    appendMerchAudit user "staff" Nothing "product.reviewed" "product" (uuidText productId)
-      (object ["from" .= old, "to" .= decision, "reason" .= mstReason])
+  normalizedReason <- traverse (requiredSafeText "reason" 2000) mstReason
+  transitioned <- runDB $ do
+    rows <- (rawSql
+      "UPDATE merch_product SET status=?,reviewed_by=?,reviewed_at=now(),published_at=CASE WHEN ?='published' THEN coalesce(published_at,now()) ELSE published_at END,rejection_reason=CASE WHEN ?='rejected' THEN ? ELSE NULL END,updated_at=now(),version=version+1 WHERE id=?::uuid AND status='pending_review' RETURNING TRUE"
+      [PersistText decision,PersistInt64 (currentPartyId user),PersistText decision,PersistText decision,optionalText normalizedReason,PersistText (uuidText productId)]
+      :: SqlPersistT IO [Single Bool])
+    case rows of
+      [Single True] -> do
+        when (decision == "published") $ rawExecute
+          "UPDATE merch_product_image SET moderation_status='allowed' WHERE product_id=?::uuid AND scan_status='clean' AND moderation_status='pending'"
+          [PersistText (uuidText productId)]
+        appendMerchAudit user "staff" Nothing "product.reviewed" "product" (uuidText productId)
+          (object ["from" .= ("pending_review" :: Text), "to" .= decision, "reason" .= normalizedReason])
+        pure True
+      _ -> pure False
+  unless transitioned $ throwError (conflict "Product review transition is not allowed")
   loadProduct (uuidText productId)
 
 createSettlement :: AuthedUser -> MerchSettlementRequest -> AppM Value
