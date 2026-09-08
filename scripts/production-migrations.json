@@ -407,6 +407,11 @@
       "introducedBy": "41eb1f3c109c2201a31305775e277abcfe62b383"
     },
     {
+      "id": "2026-09-07_contextual_reputation_invalidation_repair",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql",
+      "introducedBy": "114400d7eac3b4b1b54de1e1e676d75afc76388d"
+    },
+    {
       "id": "2026-09-07_contextual_reputation_consent",
       "path": "tdf-hq/sql/2026-09-07_contextual_reputation_consent.sql",
       "introducedBy": "79d73a25e6d6a74250dc55cd0e888b6eaa34ea3d"
