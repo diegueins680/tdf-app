@@ -1652,6 +1652,12 @@ export default function MarketplacePage() {
           <Typography variant="body2" color="text.secondary">
             1) Elige equipos, 2) Ingresa contacto, 3) Selecciona cómo pagar. Guarda tu carrito y retoma cuando quieras.
           </Typography>
+          <Alert
+            severity="info"
+            action={<Button component={RouterLink} to="/tiendas" size="small">Explorar merch</Button>}
+          >
+            La merch de artistas usa un catálogo y checkout separados por vendedor. Su disponibilidad depende del piloto.
+          </Alert>
           {restorableCartMeta ? (
             <Alert
               severity="info"

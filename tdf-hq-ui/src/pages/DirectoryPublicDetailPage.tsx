@@ -21,11 +21,13 @@ import LoginIcon from '@mui/icons-material/Login';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
+import { Merch } from '../api/merch';
 import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
@@ -62,6 +64,18 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       return await Directory.venue(identifier) as unknown as Record<string, unknown>;
     },
     enabled: Boolean(identifier),
+  });
+  const merchCapabilities = useQuery({
+    queryKey: ['merch-capabilities'],
+    queryFn: Merch.capabilities,
+    enabled: kind === 'profile',
+    retry: false,
+  });
+  const merchStores = useQuery({
+    queryKey: ['merch-profile-store', identifier],
+    queryFn: () => Merch.storefronts({ q: identifier }),
+    enabled: kind === 'profile' && merchCapabilities.data?.features.publicCatalog === true,
+    retry: false,
   });
   const value = detail.data ?? {};
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
@@ -126,6 +140,10 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
+  const merchStore = merchStores.data?.find((store) => {
+    const profile = record(store['profile']);
+    return text(profile?.['id']) === targetId || text(profile?.['slug']) === identifier;
+  });
 
   return (
     <Box sx={{ py: { xs: 4, md: 7 } }}>
@@ -162,6 +180,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                   </Box>
                 </Stack>
                 <Stack direction="row" gap={1} flexWrap="wrap" alignSelf={{ md: 'flex-start' }}>
+                  {merchStore && <Button component={RouterLink} to={`/tienda/${merchStore.slug}`} variant="contained" startIcon={<StorefrontIcon />}>Ver merch</Button>}
                   <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
                   <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />}>WhatsApp</Button>
                 </Stack>
