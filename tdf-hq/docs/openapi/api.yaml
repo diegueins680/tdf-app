@@ -520,7 +520,7 @@ paths:
   /session/onboarding/complete:
     post:
       summary: Complete eligible onboarding idempotently
-      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow, and an access_requested claim requires a Party-bound feature-access request; each record must have been created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every accepted first-value label requires Party-bound server evidence created during the signup eligibility window; event saves and moment reactions must also reference currently public events. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
       operationId: completeOnboarding
       security:
         - bearerAuth: [ ]
@@ -542,6 +542,56 @@ paths:
           description: Unsupported first useful action
         '401':
           description: Authentication required
+  /session/experiments/{experimentId}/assignment:
+    get:
+      summary: Resolve an account-bound experiment assignment
+      description: Returns a stable, versioned assignment for the authenticated Party only while the server-side experiment flag is enabled and authoritative onboarding eligibility is active. Paused, unknown, expired, completed, and legacy cohorts fail closed.
+      operationId: getExperimentAssignment
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: experimentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current authoritative assignment state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentAssignment'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
+  /session/experiments/{experimentId}/exposure:
+    post:
+      summary: Record an account-bound experiment exposure once
+      description: Atomically records first exposure for the authenticated Party's active, versioned assignment. Paused or ineligible assignments are never exposed.
+      operationId: recordExperimentExposure
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: experimentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current assignment and whether this request recorded its first exposure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentExposureResult'
+        '401':
+          description: Authentication required
+        '404':
+          description: Unsupported experiment
   /public/courses/{slug}:
     parameters:
       - name: slug
@@ -8046,7 +8096,7 @@ components:
         firstValue:
           type: string
           enum: [artist_followed, access_requested, event_saved, moment_reaction]
-          description: Optional successful first useful action. artist_followed and access_requested require Party-bound server evidence created during the signup eligibility window. Omit when the user explicitly exits optional onboarding.
+          description: Optional successful first useful action. Every value requires Party-bound server evidence created during the signup eligibility window; event saves and moment reactions must reference currently public events. Omit when the user explicitly exits optional onboarding.
     OnboardingProgress:
       type: object
       required: [eligible, signupCompletedAt, onboardingIntent, completedAt, firstValue, firstValueCompletedAt, updatedAt]
@@ -8088,6 +8138,49 @@ components:
         newlyCompleted:
           type: boolean
           description: True only for the single request that changed an eligible account from incomplete to complete.
+    ExperimentAssignment:
+      type: object
+      additionalProperties: false
+      required: [experimentId, experimentVersion, experimentEnabled, experimentEligible, variant, assignedAt, eligibleUntil, exposedAt, newlyAssigned]
+      properties:
+        experimentId:
+          type: string
+          enum: [single-feature-onboarding-v1]
+        experimentVersion:
+          type: integer
+          minimum: 1
+        experimentEnabled:
+          type: boolean
+        experimentEligible:
+          type: boolean
+        variant:
+          type: string
+          enum: [control, treatment_singlefeature]
+        assignedAt:
+          type: string
+          format: date-time
+          nullable: true
+        eligibleUntil:
+          type: string
+          format: date-time
+          nullable: true
+        exposedAt:
+          type: string
+          format: date-time
+          nullable: true
+        newlyAssigned:
+          type: boolean
+          description: True only for the request that atomically persisted this Party/version assignment.
+    ExperimentExposureResult:
+      type: object
+      additionalProperties: false
+      required: [assignment, newlyExposed]
+      properties:
+        assignment:
+          $ref: '#/components/schemas/ExperimentAssignment'
+        newlyExposed:
+          type: boolean
+          description: True only for the request that atomically persisted the first exposure.
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]

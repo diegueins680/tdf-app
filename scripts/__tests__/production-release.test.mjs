@@ -38,6 +38,7 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   CONTEXTUAL_REPUTATION_ENABLED = "false"
+  SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
   EVENT_DISCOVERY_ENABLED = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
@@ -563,6 +564,18 @@ test('validateFlyConfig fails closed when contextual reputation would start duri
   );
 });
 
+test('validateFlyConfig keeps the onboarding experiment paused until activation is approved', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"',
+        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "true"',
+      ),
+    ),
+    /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED|activation approval/i,
+  );
+});
+
 test('validateFlyConfig requires the persisted production default locale', () => {
   assert.throws(
     () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
@@ -832,6 +845,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'ddex-operational-cutover-2026-08-12',
     'user_onboarding_progress',
     'user_onboarding_progress_eligible_idx',
+    'user_experiment_assignment',
+    'user_experiment_assignment_pending_exposure_idx',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }
@@ -896,6 +911,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.match(canaryCommand, /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 

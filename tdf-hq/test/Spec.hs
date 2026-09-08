@@ -490,6 +490,7 @@ import TDF.Config
       chatKitApiBase,
       chatKitWorkflowId,
       contextualReputationEnabled,
+      singleFeatureOnboardingExperimentEnabled,
       courseInstructorAvatarFallback,
       courseMapFallback,
       courseSlugFallback,
@@ -2980,6 +2981,20 @@ main = hspec $ do
             withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "not-a-boolean")]
                 $ loadConfig `shouldThrow` \err ->
                     "CONTEXTUAL_REPUTATION_ENABLED must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
+        it "keeps single-feature onboarding experiments paused by default and validates activation explicitly" $ do
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Nothing)] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` False
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "true")] $ do
+                cfg <- loadConfig
+                singleFeatureOnboardingExperimentEnabled cfg `shouldBe` True
+
+            withEnvOverrides [("SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
         it "loads and validates international defaults from the environment" $ do

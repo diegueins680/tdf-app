@@ -332,6 +332,9 @@ jobs:
       - name: Rehearse access-request notification compatibility migration
         run: npm run test:access-request-notification-migration
 
+      - name: Rehearse account-bound experiment assignment migration
+        run: npm run test:user-experiment-assignment-migration
+
       - name: Rehearse the studio internship audit migration and rollback
         run: sh scripts/test-studio-internship-audit-migration.sh
 

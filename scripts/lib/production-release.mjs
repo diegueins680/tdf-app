@@ -263,6 +263,9 @@ export function validateFlyConfig(toml) {
   const contextualReputation = String(
     env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
   ).trim().toLowerCase();
+  const singleFeatureOnboardingExperiment = String(
+    env.get('SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
@@ -308,6 +311,9 @@ export function validateFlyConfig(toml) {
   }
   if (contextualReputation !== 'false') {
     throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+  }
+  if (singleFeatureOnboardingExperiment !== 'false') {
+    throw new Error('fly.toml must stage SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED="false" until explicit activation approval.');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
@@ -2139,6 +2145,22 @@ BEGIN
   ) <> 8 THEN
     RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
   END IF;
+
+  IF to_regclass('public.user_experiment_assignment') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_experiment_assignment'
+  ) <> 8 OR to_regclass('public.user_experiment_assignment_pending_exposure_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_experiment_assignment'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 7 THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
+  END IF;
 END
 $verify$;`;
 }
@@ -2154,6 +2176,7 @@ export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMa
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', 'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',

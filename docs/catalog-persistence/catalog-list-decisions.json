@@ -9422,6 +9422,16 @@
       "risk": "Database drift could persist unsupported completion events and corrupt deduplicated onboarding reporting.",
       "justification": "The SQL constraint is defense in depth for the closed first-value analytics protocol, not a business catalog.",
       "reviewed": true
+    },
+    {
+      "id": "68a9b5a3a194b9251fe9",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a live version's arm identifiers could rebucket durable assignments or fragment exposure reporting.",
+      "justification": "These values are immutable wire discriminants for experiment version 1. The server persists the selected arm per Party, and any arm change requires a new experiment version rather than mutable catalog administration.",
+      "reviewed": true
     }
   ]
 }

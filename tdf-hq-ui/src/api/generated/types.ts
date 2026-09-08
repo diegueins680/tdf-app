@@ -432,9 +432,49 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. An artist_followed claim requires a Party-bound follow, and an access_requested claim requires a Party-bound feature-access request; each record must have been created during the signup eligibility window. Other accepted action values remain client-observed until their domain persistence is integrated. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every accepted first-value label requires Party-bound server evidence created during the signup eligibility window; event saves and moment reactions must also reference currently public events. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/experiments/{experimentId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resolve an account-bound experiment assignment
+         * @description Returns a stable, versioned assignment for the authenticated Party only while the server-side experiment flag is enabled and authoritative onboarding eligibility is active. Paused, unknown, expired, completed, and legacy cohorts fail closed.
+         */
+        get: operations["getExperimentAssignment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/experiments/{experimentId}/exposure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record an account-bound experiment exposure once
+         * @description Atomically records first exposure for the authenticated Party's active, versioned assignment. Paused or ineligible assignments are never exposed.
+         */
+        post: operations["recordExperimentExposure"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7085,7 +7125,7 @@ export interface components {
         };
         OnboardingCompletionRequest: {
             /**
-             * @description Optional successful first useful action. artist_followed and access_requested require Party-bound server evidence created during the signup eligibility window. Omit when the user explicitly exits optional onboarding.
+             * @description Optional successful first useful action. Every value requires Party-bound server evidence created during the signup eligibility window; event saves and moment reactions must reference currently public events. Omit when the user explicitly exits optional onboarding.
              * @enum {string}
              */
             firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
@@ -7109,6 +7149,28 @@ export interface components {
             progress: components["schemas"]["OnboardingProgress"];
             /** @description True only for the single request that changed an eligible account from incomplete to complete. */
             newlyCompleted: boolean;
+        };
+        ExperimentAssignment: {
+            /** @enum {string} */
+            experimentId: "single-feature-onboarding-v1";
+            experimentVersion: number;
+            experimentEnabled: boolean;
+            experimentEligible: boolean;
+            /** @enum {string} */
+            variant: "control" | "treatment_singlefeature";
+            /** Format: date-time */
+            assignedAt: string | null;
+            /** Format: date-time */
+            eligibleUntil: string | null;
+            /** Format: date-time */
+            exposedAt: string | null;
+            /** @description True only for the request that atomically persisted this Party/version assignment. */
+            newlyAssigned: boolean;
+        };
+        ExperimentExposureResult: {
+            assignment: components["schemas"]["ExperimentAssignment"];
+            /** @description True only for the request that atomically persisted the first exposure. */
+            newlyExposed: boolean;
         };
         SessionResponse: {
             username: string;
@@ -11322,6 +11384,78 @@ export interface operations {
             };
             /** @description Authentication required */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getExperimentAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current authoritative assignment state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentAssignment"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported experiment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordExperimentExposure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                experimentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current assignment and whether this request recorded its first exposure */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentExposureResult"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported experiment */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

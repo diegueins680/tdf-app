@@ -536,6 +536,8 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> Get '[JSON] OnboardingProgressDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "intent" :> ReqBody '[JSON] OnboardingIntentUpdate :> Put '[JSON] OnboardingProgressDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "assignment" :> Get '[JSON] ExperimentAssignmentDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "experiments" :> Capture "experimentId" Text :> "exposure" :> Post '[JSON] ExperimentExposureResult
 
 type AccessRequestsAPI =
        Get '[JSON] [FeatureAccessRequestDTO]

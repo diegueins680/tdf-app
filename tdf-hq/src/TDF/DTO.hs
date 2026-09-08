@@ -1123,6 +1123,27 @@ data OnboardingCompletionResult = OnboardingCompletionResult
 
 instance ToJSON OnboardingCompletionResult
 
+data ExperimentAssignmentDTO = ExperimentAssignmentDTO
+  { experimentId       :: Text
+  , experimentVersion  :: Int
+  , experimentEnabled  :: Bool
+  , experimentEligible :: Bool
+  , variant            :: Text
+  , assignedAt         :: Maybe UTCTime
+  , eligibleUntil      :: Maybe UTCTime
+  , exposedAt          :: Maybe UTCTime
+  , newlyAssigned      :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON ExperimentAssignmentDTO
+
+data ExperimentExposureResult = ExperimentExposureResult
+  { assignment   :: ExperimentAssignmentDTO
+  , newlyExposed :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON ExperimentExposureResult
+
 data FeatureAccessRequestCreate = FeatureAccessRequestCreate
   { featureId     :: Text
   , action        :: Text
