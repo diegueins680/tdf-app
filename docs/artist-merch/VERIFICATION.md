@@ -5,7 +5,7 @@
 | Capacidad | Resultado |
 |---|---|
 | Leer/modificar repositorio | Disponible; trabajo en worktree aislado |
-| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `849444cdcce0254c3091293edce8a4cc5f8175fa` |
+| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `32d618a6e8704d82105c00c584d94f9c28ad13ea` |
 | Backend Haskell | Build/test local disponible; resultado final se registra abajo |
 | PostgreSQL aislado | Disponible; PostgreSQL 16 temporal verificado. Docker Desktop no arrancó en la última corrida, por lo que el mismo fixture se ejecutó contra un clúster local desechable |
 | Migraciones | Aplicación, reejecución, rollback guardado/limpio y reapply disponibles |
@@ -35,7 +35,7 @@
 - OpenAPI: YAML parseado y tipos generados para ambos clientes.
 - Manifiesto/mecanismo de release: PASS, 47/47 pruebas; migración anclada al SHA de introducción.
 - Feature registry: generación PASS. Auditoría reporta solo el destino preexistente no relacionado `/reputation/consents`.
-- Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos con decisión vigente; prueba determinista PASS. Se conservaron las decisiones revisadas preexistentes, se retiraron 2 huellas obsoletas y se clasificaron 54 candidatos nuevos.
+- Auditoría de listas/catálogos: PASS, 1.007/1.007 candidatos con decisión vigente; prueba determinista PASS 1/1. Se conservaron las decisiones revisadas preexistentes, se retiraron 2 huellas obsoletas y se clasificaron 54 candidatos del incremento más la fixture móvil read-only. Esta última se revisó como estructura técnica de un consumidor sintético; no define capacidades ni permisos de producción.
 
 ## Pendiente antes de recomendar lanzamiento
 
