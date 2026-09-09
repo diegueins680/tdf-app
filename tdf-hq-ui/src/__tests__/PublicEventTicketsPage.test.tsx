@@ -51,6 +51,18 @@ const storefrontFixture = {
   timezone: 'America/Guayaquil',
   venueName: 'Domo',
   venueAddress: null,
+  policy: {
+    policyVersion: 'owned-event-v1',
+    currency: 'USD',
+    buyerFeeBps: 200,
+    organizerFeeBps: 200,
+    taxBps: 0,
+    holdMinutes: 15,
+    termsVersion: 'event-ticket-terms-v1',
+    termsSummary: 'Aceptas el precio, las tarifas y las condiciones mostradas.',
+    refundPolicy: 'Reembolso total.',
+    transferAllowed: true,
+  },
   checkoutAvailable: true,
   unavailableReason: null,
   tiers: [{
@@ -149,6 +161,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
         <MemoryRouter initialEntries={[route]}>
           <QueryClientProvider client={queryClient}>
             <Routes>
+              <Route path="/eventos/:eventId/entradas" element={<PublicEventTicketsPage />} />
               <Route path="/eventos/:eventId/orden/:orderId" element={<PublicEventTicketsPage />} />
             </Routes>
           </QueryClientProvider>
@@ -157,6 +170,20 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     });
     await waitForExpectation(() => expect(getStorefrontMock).toHaveBeenCalledWith(41));
   };
+
+  it('shows the approved ticket policy before consent and checkout', async () => {
+    await renderTracking('/eventos/41/entradas');
+
+    await waitForExpectation(() => expect(container.textContent).toContain(
+      'Aceptas el precio, las tarifas y las condiciones mostradas.',
+    ));
+    expect(container.textContent).toContain('Política de reembolso: Reembolso total.');
+    expect(container.textContent).toContain('Tarifa al comprador: 2%');
+    expect(container.textContent).toContain('Tarifa al organizador (descontada del pago): 2%');
+    expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
+    expect(container.textContent).toContain('Transferencias: permitidas');
+    expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
+  });
 
   it('treats a Datafast browser return as processing until server verification finishes', async () => {
     confirmDatafastStatusMock.mockResolvedValue(checkoutFixture());

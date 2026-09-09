@@ -276,6 +276,9 @@ export function validateFlyConfig(toml) {
     env.get('REPUTATION_AGGREGATION_MODE') ?? '',
   ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
+  const eventDiscoveryAutoPublish = String(
+    env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
+  ).trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
   const internalFeedbackUploadRoot = String(
@@ -319,7 +322,7 @@ export function validateFlyConfig(toml) {
     );
   }
   if (contextualReputation !== 'false') {
-    throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+    throw new Error('fly.toml must keep CONTEXTUAL_REPUTATION_ENABLED="false" until a production cohort gate exists.');
   }
   if (publicReputationProjection !== 'true') {
     throw new Error(
@@ -341,6 +344,11 @@ export function validateFlyConfig(toml) {
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
+  }
+  if (eventDiscoveryAutoPublish !== 'false') {
+    throw new Error(
+      'fly.toml must stage EVENT_DISCOVERY_AUTO_PUBLISH="false" during rollout.',
+    );
   }
   if (defaultLocale !== 'es') {
     throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
@@ -364,6 +372,7 @@ export function validateFlyConfig(toml) {
     reputationAggregationEnvironment: 'production',
     reputationAggregationMode: 'simulation',
     eventDiscoveryEnabled: false,
+    eventDiscoveryAutoPublish: false,
     defaultLocale: 'es',
     internalFeedbackUploadRoot: normalizedUploadRoot,
     healthCheckPath: '/health',
@@ -2211,8 +2220,12 @@ export function buildMachineDeployArgs({
   sha,
   onlyMachine,
   excludeMachine,
+  contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
 }) {
+  if (typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
   }
@@ -2225,12 +2238,13 @@ export function buildMachineDeployArgs({
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
     '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
+    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',
@@ -2246,6 +2260,7 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
+  const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
@@ -2274,6 +2289,18 @@ export function buildReleaseSteps(options = {}) {
   const previousSha = descriptiveOnly && !rawPreviousSha
     ? '<captured-before-canary>'
     : normalizeFullSha(rawPreviousSha);
+  const rawPreviousContextualReputationEnabled =
+    options.priorContextualReputationEnabled?.[canary]
+    ?? options.previousContextualReputationEnabled;
+  if (!descriptiveOnly && typeof rawPreviousContextualReputationEnabled !== 'boolean') {
+    throw new Error(
+      'Executable release steps require the captured contextual-reputation flag for rollback.',
+    );
+  }
+  const previousContextualReputationEnabled =
+    typeof rawPreviousContextualReputationEnabled === 'boolean'
+      ? rawPreviousContextualReputationEnabled
+      : false;
 
   const rollbackCanary = {
     id: 'rollback-canary',
@@ -2283,6 +2310,7 @@ export function buildReleaseSteps(options = {}) {
       app,
       image: previousImage,
       sha: previousSha,
+      contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
       onlyMachine: canary,
     }),
@@ -2293,7 +2321,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2306,7 +2334,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,
