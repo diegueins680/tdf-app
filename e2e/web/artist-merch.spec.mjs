@@ -91,6 +91,7 @@ async function mockMerchApi(page, capabilities = enabledCapabilities) {
   await page.route('**/catalogs/batch?*', (route) => route.fulfill({ json: {} }));
   await page.route('**/merch/**', (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (!path.startsWith('/merch/')) return route.continue();
     if (path === '/merch/capabilities') return route.fulfill({ json: capabilities });
     if (path === '/merch/storefronts') return route.fulfill({ json: [storefront] });
     if (path === '/merch/storefronts/cementerio-sintetico') return route.fulfill({ json: storefront });
