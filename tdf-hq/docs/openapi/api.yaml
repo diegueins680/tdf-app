@@ -6969,10 +6969,25 @@ components:
         salesStart: { type: string, format: date-time, nullable: true }
         salesEnd: { type: string, format: date-time, nullable: true }
         transfersAllowed: { type: boolean }
+    PublicEventTicketPolicy:
+      type: object
+      additionalProperties: false
+      required: [policyVersion, currency, buyerFeeBps, organizerFeeBps, taxBps, holdMinutes, termsVersion, termsSummary, refundPolicy, transferAllowed]
+      properties:
+        policyVersion: { type: string, minLength: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        buyerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
+        organizerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
+        taxBps: { type: integer, minimum: 0, maximum: 10000 }
+        holdMinutes: { type: integer, minimum: 1 }
+        termsVersion: { type: string, minLength: 1 }
+        termsSummary: { type: string, minLength: 1 }
+        refundPolicy: { type: string, minLength: 1 }
+        transferAllowed: { type: boolean }
     PublicEventTicketStorefront:
       type: object
       additionalProperties: false
-      required: [eventId, title, startsAt, endsAt, tiers, checkoutAvailable]
+      required: [eventId, title, startsAt, endsAt, tiers, policy, checkoutAvailable]
       properties:
         eventId: { type: integer, format: int64, minimum: 1 }
         title: { type: string }
@@ -6985,6 +7000,10 @@ components:
         tiers:
           type: array
           items: { $ref: '#/components/schemas/PublicEventTicketTier' }
+        policy:
+          nullable: true
+          allOf:
+            - { $ref: '#/components/schemas/PublicEventTicketPolicy' }
         checkoutAvailable: { type: boolean }
         unavailableReason: { type: string, nullable: true }
     PublicEventTicketCheckoutRequest:

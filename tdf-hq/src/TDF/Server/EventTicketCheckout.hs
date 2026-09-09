@@ -59,6 +59,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpTaxBps          :: Int
   , atpHoldMinutes     :: Int
   , atpTermsVersion    :: Text
+  , atpTermsSummary    :: Text
   , atpRefundPolicy    :: Text
   , atpTransferAllowed :: Bool
   } deriving (Eq, Show)
@@ -195,7 +196,7 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ refund_policy, transfer_allowed\
+    \ terms_summary, refund_policy, transfer_allowed\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -204,13 +205,14 @@ loadApprovedTicketPolicy now eventKey = do
     [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
-       , Single Int, Single Int, Single Text, Single Text, Single Bool
+       , Single Int, Single Int, Single Text, Single Text, Single Text
+       , Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
-     , Single atpHoldMinutes, Single atpTermsVersion, Single atpRefundPolicy
-     , Single atpTransferAllowed
+     , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
+     , Single atpRefundPolicy, Single atpTransferAllowed
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -269,6 +271,19 @@ getPublicEventTicketStorefront rawEventId = do
       pure (SM.venueName <$> venue, venue >>= SM.venueAddress)
   let hasInventory = any ((> 0) . Routes.remaining) publicTiers
       available = domainEnabled && isJust policy && hasInventory
+      publicPolicy = (\ApprovedTicketPolicy{..} ->
+        Routes.PublicEventTicketPolicyDTO
+          { Routes.policyVersion = atpVersion
+          , Routes.currency = atpCurrency
+          , Routes.buyerFeeBps = atpBuyerFeeBps
+          , Routes.organizerFeeBps = atpOrganizerFeeBps
+          , Routes.taxBps = atpTaxBps
+          , Routes.holdMinutes = atpHoldMinutes
+          , Routes.termsVersion = atpTermsVersion
+          , Routes.termsSummary = atpTermsSummary
+          , Routes.refundPolicy = atpRefundPolicy
+          , Routes.transferAllowed = atpTransferAllowed
+          }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
         | not (isJust policy) = Just "This event has no approved active ticket price and fee policy"
@@ -285,6 +300,7 @@ getPublicEventTicketStorefront rawEventId = do
     , Routes.venueName = venueName
     , Routes.venueAddress = venueAddress
     , Routes.tiers = publicTiers
+    , Routes.policy = publicPolicy
     , Routes.checkoutAvailable = available
     , Routes.unavailableReason = reason
     }

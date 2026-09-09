@@ -47,6 +47,7 @@ primary_region = "gru"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
   REPUTATION_AGGREGATION_MODE = "simulation"
   EVENT_DISCOVERY_ENABLED = "false"
+  EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
 
@@ -567,6 +568,7 @@ test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged ro
   assert.equal(validation.reputationAggregationEnvironment, 'production');
   assert.equal(validation.reputationAggregationMode, 'simulation');
   assert.equal(validation.eventDiscoveryEnabled, false);
+  assert.equal(validation.eventDiscoveryAutoPublish, false);
   assert.equal(validation.internalFeedbackUploadRoot, '/data/assets/.internal-feedback');
   assert.equal(validation.healthCheckPath, '/health');
   assert.equal(validation.strategy, 'rolling');
@@ -625,6 +627,18 @@ test('validateFlyConfig fails closed when event discovery would start during the
       safeFlyConfig.replace('EVENT_DISCOVERY_ENABLED = "false"', 'EVENT_DISCOVERY_ENABLED = "true"'),
     ),
     /EVENT_DISCOVERY_ENABLED|discovery/i,
+  );
+});
+
+test('validateFlyConfig fails closed when event discovery could auto-publish during rollout', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'EVENT_DISCOVERY_AUTO_PUBLISH = "false"',
+        'EVENT_DISCOVERY_AUTO_PUBLISH = "true"',
+      ),
+    ),
+    /EVENT_DISCOVERY_AUTO_PUBLISH|auto-publish/i,
   );
 });
 
@@ -741,6 +755,7 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
     REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
     REPUTATION_AGGREGATION_MODE: 'simulation',
     EVENT_DISCOVERY_ENABLED: 'false',
+    EVENT_DISCOVERY_AUTO_PUBLISH: 'false',
     DEFAULT_LOCALE: 'es',
   };
   const rows = [
@@ -1086,6 +1101,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
+  assert.match(canaryCommand, /EVENT_DISCOVERY_AUTO_PUBLISH=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 
   const remainingCommand = commandText(steps.find(({ id }) => id === 'deploy-remaining-1'));
