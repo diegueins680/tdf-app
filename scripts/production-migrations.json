@@ -454,7 +454,7 @@
     {
       "id": "2026-09-08_event_rsvp_identity_privacy_feed",
       "path": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
-      "introducedBy": "3e7b9412b481a29bad19e513d586b8b90a5f2d53"
+      "introducedBy": "520222366178a2725172e3d54ec9928a1596f20d"
     },
     {
       "id": "2026-09-09_music_directory_suppressed_event_privacy",
