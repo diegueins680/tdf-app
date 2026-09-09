@@ -24,6 +24,9 @@ import Servant.Multipart
     , Tmp
     )
 import Servant.Server.Internal.Handler (runHandler)
+import System.Directory (createDirectoryIfMissing, doesDirectoryExist, doesFileExist)
+import System.FilePath ((</>))
+import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
 
 import TDF.API.SocialEventsAPI
@@ -60,6 +63,7 @@ import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( decodeStoredPromoCodeTierIds
     , followArtistDb
+    , removeSocialEventAssets
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
     , socialEventsServer
@@ -1098,12 +1102,89 @@ spec = describe "social event handler helpers" $ do
                 BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
             Right () -> expectationFailure "Expected ticket-order history to block event deletion"
 
+    it "removes only the deleted event's uploaded media directory" $
+        withSystemTempDirectory "social-event-delete-assets" $ \assetsRoot -> do
+            let deletedEventKey :: SocialEventId
+                deletedEventKey = toSqlKey 24
+                deletedEventDir = assetsRoot </> "social-events" </> "events" </> "24"
+                retainedPoster = assetsRoot </> "social-events" </> "events" </> "25" </> "poster.png"
+            createDirectoryIfMissing True (deletedEventDir </> "moments")
+            createDirectoryIfMissing True (assetsRoot </> "social-events" </> "events" </> "25")
+            writeFile (deletedEventDir </> "poster.png") "poster"
+            writeFile (deletedEventDir </> "moments" </> "moment.png") "moment"
+            writeFile retainedPoster "retained"
+
+            removeSocialEventAssets assetsRoot deletedEventKey
+
+            doesDirectoryExist deletedEventDir `shouldReturn` False
+            doesFileExist retainedPoster `shouldReturn` True
+            removeSocialEventAssets assetsRoot deletedEventKey
+            doesFileExist retainedPoster `shouldReturn` True
+
+    it "excludes suppressed imports inside strict-admin pagination" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let suppressedEventKey :: SocialEventId
+            suppressedEventKey = toSqlKey 26
+            visibleEventKey :: SocialEventId
+            visibleEventKey = toSqlKey 27
+            eventRow owner title =
+                (seedSocialEvent owner title now)
+                    { socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                    }
+        runSqlPool
+            ( do
+                insertKey suppressedEventKey (eventRow "system:event-discovery" "Suppressed import")
+                insertKey visibleEventKey (eventRow "1" "Visible managed event")
+                insert
+                    ExternalEventRef
+                        { externalEventRefProvider = "ticketmaster"
+                        , externalEventRefExternalId = "tm-suppressed-admin-list"
+                        , externalEventRefEventId = suppressedEventKey
+                        , externalEventRefCity = "Quito"
+                        , externalEventRefCountryCode = Just "EC"
+                        , externalEventRefSourceUrl = Just "https://tickets.example/suppressed"
+                        , externalEventRefPriceCents = Just 1000
+                        , externalEventRefCurrency = Just "USD"
+                        , externalEventRefLastSeenAt = now
+                        , externalEventRefMissingRuns = 0
+                        , externalEventRefSourceStatus = "  SuPpReSsEd  "
+                        }
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = cfg}
+        result <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        (strictAdminSocialEventUser 1)
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just 1)
+                        (Just 0)
+                    )
+                    env
+
+        case result of
+            Right events -> map eventId events `shouldBe` [Just "27"]
+            Left err ->
+                expectationFailure
+                    ("Expected strict-admin event list to succeed, got: " <> show err)
+
     it "turns an imported event deletion into a private tombstone" $ do
         let suppressed =
                 suppressImportedEventMetadata
-                    (Just "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}")
+                    (Just "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":\"https://cdn.example/poster.png\",\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}")
         suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
         suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"ticketUrl\":null")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"imageUrl\":null")
 
     it "tombstones imported events while respecting lifecycle transitions" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
