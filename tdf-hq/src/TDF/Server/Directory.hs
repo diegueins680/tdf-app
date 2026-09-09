@@ -42,6 +42,7 @@ import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env(..))
 import TDF.Directory.Policy
+import qualified TDF.Models.SocialEventsModels as Social
 
 type AppM = ReaderT Env Handler
 
@@ -103,9 +104,10 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , maybe PersistNull PersistBool mRemote, maybe PersistNull PersistBool mAvailable
         , optionalTime mDateFrom, optionalTime mDateTo
         ]
-  ranked <- jsonRows (searchSql False) (commonParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
-  sponsored <- jsonRows (searchSql True) (commonParams <> [PersistNull, PersistInt64 3])
-  facetRows <- jsonRows facetsSql commonParams
+      eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
+  ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
+  sponsored <- jsonRows (searchSql True) (commonParams <> eventVisibilityParams <> [PersistNull, PersistInt64 3])
+  facetRows <- jsonRows facetsSql (commonParams <> eventVisibilityParams)
   let visible = take limit ranked
       next = if length ranked > limit then valueCursor (last visible) else Nothing
       facetValue = fromMaybe (object ["entityTypes" .= object [], "cities" .= ([] :: [Value])]) (listToMaybe facetRows)
@@ -150,6 +152,10 @@ normalizeOptional value = case T.strip <$> value of
   Just trimmed | not (T.null trimmed) -> Just trimmed
   _ -> Nothing
 
+directoryVisibleEventDocumentClause :: Text
+directoryVisibleEventDocumentClause =
+  "AND (document.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref event_ref WHERE event_ref.event_id::text=document.entity_id AND lower(trim(event_ref.source_status))=?)) "
+
 searchSql :: Bool -> Text
 searchSql sponsoredOnly =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
@@ -157,6 +163,7 @@ searchSql sponsoredOnly =
   "CASE WHEN input.q='' THEN .5 ELSE greatest(ts_rank_cd(document.search_vector,plainto_tsquery('simple',directory_normalize_text(input.q))),directory_text_similarity(document.title,input.q)) END text_score," <>
   "CASE WHEN input.q='' THEN 0 WHEN EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%')) THEN 1 ELSE 0 END semantic_score " <>
   "FROM directory_public_search_document document CROSS JOIN input WHERE document.sponsored=" <> (if sponsoredOnly then "TRUE " else "FALSE ") <>
+  directoryVisibleEventDocumentClause <>
   "AND (input.entity_type IS NULL OR document.entity_kind=input.entity_type) AND (input.city_id IS NULL OR document.city_id=input.city_id) " <>
   "AND (input.profession_id IS NULL OR input.profession_id=ANY(document.profession_ids)) AND (input.service_id IS NULL OR input.service_id=ANY(document.service_ids)) " <>
   "AND (input.instrument_id IS NULL OR input.instrument_id=ANY(document.instrument_ids)) AND (input.genre_id IS NULL OR input.genre_id=ANY(document.genre_ids)) " <>
@@ -173,6 +180,7 @@ facetsSql :: Text
 facetsSql =
   "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to), " <>
   "filtered AS (SELECT document.* FROM directory_public_search_document document CROSS JOIN input WHERE NOT document.sponsored " <>
+  directoryVisibleEventDocumentClause <>
   "AND (input.q='' OR document.search_vector@@plainto_tsquery('simple',directory_normalize_text(input.q)) OR directory_text_similarity(document.search_text,input.q)>=.2 " <>
   "OR EXISTS (SELECT 1 FROM catalog_search_alias alias WHERE alias.entity_id=ANY(document.profession_ids||document.service_ids||document.instrument_ids||document.genre_ids) " <>
   "AND (alias.normalized_term LIKE directory_normalize_text(input.q)||'%' OR directory_normalize_text(input.q) LIKE alias.normalized_term||'%'))) " <>
@@ -334,7 +342,8 @@ publicClassified slugValue =
     [PersistText (T.toLower (T.strip slugValue))]
 
 publicEvent eventId = jsonOne err404
-  "SELECT jsonb_build_object('id',id,'title',title,'description',description,'startTime',start_time,'endTime',end_time,'timezone',timezone,'priceCents',price_cents,'currencyId',currency_id,'capacity',capacity,'venue',CASE WHEN venue_id IS NULL THEN NULL ELSE jsonb_build_object('id',venue_id,'name',venue_name) END,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'canonicalUrl','/eventos/'||id::text) FROM directory_public_event WHERE id=?" [PersistInt64 eventId]
+  "SELECT jsonb_build_object('id',event.id,'title',event.title,'description',event.description,'startTime',event.start_time,'endTime',event.end_time,'timezone',event.timezone,'priceCents',event.price_cents,'currencyId',event.currency_id,'capacity',event.capacity,'venue',CASE WHEN event.venue_id IS NULL THEN NULL ELSE jsonb_build_object('id',event.venue_id,'name',event.venue_name) END,'location',jsonb_build_object('cityId',event.city_id,'city',event.city_name,'countryCode',event.country_code,'latitude',event.public_latitude,'longitude',event.public_longitude,'precision','city'),'canonicalUrl','/eventos/'||event.id::text) FROM directory_public_event event WHERE event.id=? AND NOT EXISTS (SELECT 1 FROM external_event_ref event_ref WHERE event_ref.event_id=event.id AND lower(trim(event_ref.source_status))=?)"
+  [PersistInt64 eventId, PersistText Social.externalEventRefSuppressedStatus]
 
 publicVenue venueId = jsonOne err404
   "SELECT jsonb_build_object('id',id,'name',name,'capacity',capacity,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision','city'),'canonicalUrl','/venues/'||id::text) FROM directory_public_venue WHERE id=?" [PersistInt64 venueId]

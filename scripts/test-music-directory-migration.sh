@@ -349,6 +349,45 @@ INSERT INTO directory_invitation(id,sender_profile_id,target_profile_id,classifi
 VALUES ('d2000000-0000-4000-8000-000000000005','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002',NULL,'Synthetic expired invitation for transition enforcement.','pending','synthetic-expired-invitation','synthetic-expired-fingerprint',now()-interval '31 days',now()-interval '1 day');
 INSERT INTO directory_interaction(id,interaction_kind,external_id,profile_a_id,profile_b_id,status,verified_at)
 VALUES ('d2000000-0000-4000-8000-000000000006','confirmed_collaboration','synthetic-runtime-review-source','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002','completed',now());
+
+-- Keep the lifecycle state public-listable and retain a stale search row so
+-- the runtime handlers themselves must honor the imported-event tombstone.
+INSERT INTO social_event(
+  id,organizer_party_id,title,description,event_type_id,workflow_state_id,start_time,end_time,
+  metadata,created_at,updated_at
+) VALUES (
+  990001,'system:event-discovery','Suppressed directory tombstone',
+  'This imported event must never cross the anonymous directory boundary.',
+  (SELECT item.id FROM event_type item
+   JOIN catalog_definition catalog ON catalog.id=item.catalog_id
+   JOIN workflow_state state ON state.id=item.workflow_state_id
+   WHERE catalog.code='event-types' AND catalog.active AND item.active
+     AND item.deprecated_at IS NULL AND state.workflow_id=catalog.workflow_id
+     AND state.code='published' AND state.active
+     AND (item.effective_from IS NULL OR item.effective_from<=CURRENT_DATE)
+     AND (item.effective_until IS NULL OR item.effective_until>=CURRENT_DATE)
+   ORDER BY item.sort_order,item.id LIMIT 1),
+  '00000000-0000-4000-8000-000000000233',now()+interval '10 days',
+  now()+interval '10 days 2 hours','{"isPublic":false,"ticketUrl":null}',now(),now()
+);
+INSERT INTO external_event_ref(
+  provider,external_id,event_id,city,country_code,source_url,last_seen_at,
+  missing_runs,source_status
+) VALUES (
+  'ticketmaster','synthetic-suppressed-directory-event',990001,'Quito','EC',NULL,
+  now(),0,'suppressed'
+);
+INSERT INTO directory_search_document(
+  entity_kind,entity_id,slug,title,summary,search_text,search_vector,
+  source_status,visibility,moderation_status,effective_at,expires_at,
+  source_updated_at,source_version,sponsored
+) VALUES (
+  'event','990001','evento-990001','Suppressed directory tombstone',
+  'This stale public search row must be ignored.',
+  'suppressed directory tombstone',to_tsvector('simple','suppressed directory tombstone'),
+  'published','public','allowed',now()+interval '10 days',now()+interval '10 days 2 hours',
+  now(),1,FALSE
+);
 SQL
 
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
@@ -401,6 +440,17 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=
       if (!value.currencies.some((item) => item.code === "USD")) throw new Error("USD currency taxonomy is missing");
       if (!value.classifiedCategories.some((item) => Array.isArray(item.requirements?.required))) throw new Error("classified requirements are missing");
     });
+  '
+
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=990001;")" = "1"
+suppressed_event_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+  "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/events/990001")
+test "$suppressed_event_status" = "404"
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/search?entityType=event&q=Suppressed" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (value.items.some((item) => String(item.id) === "990001")) throw new Error("suppressed event escaped through directory search");
+    if (value.sponsoredItems.some((item) => String(item.id) === "990001")) throw new Error("suppressed event escaped through sponsored directory search");
   '
 
 # Legacy portfolio/link keys are projected through the closed modern DTO without

@@ -1116,6 +1116,7 @@ spec = describe "social event handler helpers" $ do
                     { socialEventMetadata =
                         Just
                             "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}"
+                    , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
                     }
         refKey <-
             runSqlPool
@@ -1158,6 +1159,8 @@ spec = describe "social event handler helpers" $ do
         storedRef <- runSqlPool (get refKey) pool
         fmap socialEventMetadata storedEvent
             `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+        fmap socialEventWorkflowStateId storedEvent
+            `shouldBe` Just (Just socialEventCancelledWorkflowStateFixtureId)
         fmap externalEventRefSourceStatus storedRef `shouldBe` Just externalEventRefSuppressedStatus
         fmap externalEventRefMissingRuns storedRef `shouldBe` Just 0
 
@@ -1506,6 +1509,12 @@ socialEventWorkflowStateFixtureId =
         Just workflowStateId -> workflowStateId
         Nothing -> error "Invalid social-event workflow-state fixture UUID"
 
+socialEventCancelledWorkflowStateFixtureId :: UUID.UUID
+socialEventCancelledWorkflowStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000239" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid cancelled social-event workflow-state fixture UUID"
+
 seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
 seedSocialEvent owner title now =
     SocialEvent
@@ -1694,6 +1703,9 @@ initializeSocialSchema = do
         []
     rawExecute
         "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000104','on_sale','En venta','On sale',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000239','00000000-0000-4000-8000-000000000104','cancelled','Cancelado','Cancelled',1)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"
