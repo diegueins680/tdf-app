@@ -8614,7 +8614,7 @@
       "reviewed": true
     },
     {
-      "id": "d90f041a4536a12b8bdd",
+      "id": "df90ed33a5450e6076b1",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -9461,6 +9461,16 @@
       "priority": "P1-cross-platform",
       "risk": "An unreviewed environment value could bypass the staging-only worker boundary or make production safety checks ambiguous.",
       "justification": "Worker environments are a closed deployment safety protocol enforced by process configuration, release validation, and database constraints; they are not user-editable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "950146db7f779ed96298",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_pilot_cohort_membership",
+      "priority": "P1-cross-platform",
+      "risk": "An unreviewed cohort state could bypass the server-enforced pilot boundary, prevent withdrawal, or expose contextual reputation outside the approved cohort.",
+      "justification": "Pilot membership states are a closed database-enforced safety lifecycle with audit evidence and expiry; they are not user-editable categories or a public ranking taxonomy.",
       "reviewed": true
     },
     {
