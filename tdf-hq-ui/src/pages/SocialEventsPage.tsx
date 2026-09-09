@@ -2320,7 +2320,7 @@ export default function SocialEventsPage() {
         <DialogContent>
           <DialogContentText id="delete-event-dialog-description">
             {pendingEventDeletion
-              ? `¿Eliminar “${pendingEventDeletion.eventTitle}”? También se eliminarán sus invitaciones, tickets, publicaciones y datos operativos. Esta acción no se puede deshacer.`
+              ? `¿Eliminar “${pendingEventDeletion.eventTitle}”? El evento dejará de estar disponible para nuevas ventas. Según su origen, sus datos se eliminarán permanentemente o se conservarán ocultos para impedir que una importación vuelva a publicarlo. Esta acción no se puede deshacer desde aquí.`
               : ''}
           </DialogContentText>
           {deleteEventMutation.isError && (
