@@ -4,55 +4,39 @@ set -eu
 TDF_MERCH_REPUTATION_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_MERCH_REPUTATION_CONTAINER="tdf-merch-reputation-migration-$$"
 TDF_MERCH_REPUTATION_DATABASE="tdf_merch_reputation_test"
-TDF_MERCH_REPUTATION_USE_DOCKER=false
 
 cleanup() {
-  if [ "$TDF_MERCH_REPUTATION_USE_DOCKER" = true ]; then
-    docker rm -f "$TDF_MERCH_REPUTATION_CONTAINER" >/dev/null 2>&1 || true
-  fi
+  docker rm -f "$TDF_MERCH_REPUTATION_CONTAINER" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
 
-if [ -n "${TDF_MERCH_REPUTATION_DATABASE_URL:-}" ]; then
-  psql_exec() {
-    PGOPTIONS='-c statement_timeout=15000' \
-      psql "$TDF_MERCH_REPUTATION_DATABASE_URL" -X -v ON_ERROR_STOP=1 "$@"
-  }
-  apply_file() {
-    PGOPTIONS='-c statement_timeout=15000' \
-      psql "$TDF_MERCH_REPUTATION_DATABASE_URL" -X -v ON_ERROR_STOP=1 \
-      < "$TDF_MERCH_REPUTATION_ROOT/$1" >/dev/null
-  }
-else
-  TDF_MERCH_REPUTATION_USE_DOCKER=true
-  docker run --rm -d \
-    --name "$TDF_MERCH_REPUTATION_CONTAINER" \
-    -e POSTGRES_PASSWORD=merch-reputation-test \
-    -e POSTGRES_DB="$TDF_MERCH_REPUTATION_DATABASE" \
-    postgres:16-alpine >/dev/null
+docker run --rm -d \
+  --name "$TDF_MERCH_REPUTATION_CONTAINER" \
+  -e POSTGRES_PASSWORD=merch-reputation-test \
+  -e POSTGRES_DB="$TDF_MERCH_REPUTATION_DATABASE" \
+  postgres:16-alpine >/dev/null
 
-  attempt=0
-  until docker exec "$TDF_MERCH_REPUTATION_CONTAINER" \
-    psql -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" -Atqc 'SELECT 1' \
-    >/dev/null 2>&1; do
-    attempt=$((attempt + 1))
-    if [ "$attempt" -ge 30 ]; then
-      echo "Merch reputation migration database did not become ready" >&2
-      exit 1
-    fi
-    sleep 1
-  done
+attempt=0
+until docker exec "$TDF_MERCH_REPUTATION_CONTAINER" \
+  psql -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" -Atqc 'SELECT 1' \
+  >/dev/null 2>&1; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 30 ]; then
+    echo "Merch reputation migration database did not become ready" >&2
+    exit 1
+  fi
+  sleep 1
+done
 
-  psql_exec() {
-    docker exec -i -e "PGOPTIONS=-c statement_timeout=15000" "$TDF_MERCH_REPUTATION_CONTAINER" \
-      psql -X -v ON_ERROR_STOP=1 -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" "$@"
-  }
-  apply_file() {
-    docker exec -i -e "PGOPTIONS=-c statement_timeout=15000" "$TDF_MERCH_REPUTATION_CONTAINER" \
-      psql -X -v ON_ERROR_STOP=1 -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" \
-      < "$TDF_MERCH_REPUTATION_ROOT/$1" >/dev/null
-  }
-fi
+psql_exec() {
+  docker exec -i -e "PGOPTIONS=-c statement_timeout=15000" "$TDF_MERCH_REPUTATION_CONTAINER" \
+    psql -X -v ON_ERROR_STOP=1 -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" "$@"
+}
+apply_file() {
+  docker exec -i -e "PGOPTIONS=-c statement_timeout=15000" "$TDF_MERCH_REPUTATION_CONTAINER" \
+    psql -X -v ON_ERROR_STOP=1 -U postgres -d "$TDF_MERCH_REPUTATION_DATABASE" \
+    < "$TDF_MERCH_REPUTATION_ROOT/$1" >/dev/null
+}
 
 assert_equal() {
   actual=$1
