@@ -42,7 +42,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
-- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: PASS 1/1. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor y triage seller/admin.
+- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor y triage seller/admin.
 - Backend Haskell: PASS, 2.476/2.476 ejemplos.
 - Reglas focalizadas posteriores: PASS 8/8 coincidencias `merch`.
 - Build web: PASS; presupuesto inicial JS PASS (413.750 bytes gzip).
