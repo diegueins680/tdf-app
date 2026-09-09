@@ -12,6 +12,7 @@ Saved-event synchronization uses the same live ownership boundary. If an account
 
 - Focused mobile Jest passed: 7 suites, 30 tests.
 - The complete mobile Jest corpus passed: 70 suites, 379 tests. A 15-second command-line timeout was used because of severe local machine contention; no test or source timeout was changed.
+- After CI exposed clean-install TypeScript inference in three new Jest wrappers, their argument tuples were made explicit. The exact root mobile-quality wrapper then passed lint and TypeScript; its default-timeout Jest phase passed 68/70 suites and 376/379 tests before two unchanged ticket-checkout tests exceeded five seconds and a downstream onboarding-gate wait missed its polling window under local contention. The three corrected screen suites passed 8/8 immediately afterward with the repository default timeout.
 - Mobile TypeScript passed.
 - Strict mobile ESLint passed with zero warnings.
 - Root catalog-list audit completed with 945 candidates, 0 unreviewed candidates, and 0 stale decisions.
@@ -20,7 +21,7 @@ Saved-event synchronization uses the same live ownership boundary. If an account
 
 ## Scope
 
-Mobile implementation: [TDF-mobile #55](https://github.com/diegueins680/TDF-mobile/pull/55), commit `56314b4fa0242fcd8dc832189e07109a366a1ff9`.
+Mobile implementation: [TDF-mobile #55](https://github.com/diegueins680/TDF-mobile/pull/55), commit `d126b9d`.
 
 This slice changes no API path, database schema, authorization rule, analytics taxonomy, experiment assignment, or release flag. The server remains authoritative for Party-bound domain evidence and onboarding eligibility.
 
