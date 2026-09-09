@@ -38,7 +38,7 @@ import Text.Read (readMaybe)
 import TDF.API.Reviews
 import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
-import TDF.Config (publicReputationProjectionEnabled)
+import TDF.Config (contextualReputationEnabled, publicReputationProjectionEnabled)
 import TDF.DB (Env(..))
 import TDF.DB.ReputationConsent (listReputationConsents, persistReputationConsent)
 import TDF.DTO.ReputationConsent (ReputationConsentDTO, ReputationConsentUpdate(..))
