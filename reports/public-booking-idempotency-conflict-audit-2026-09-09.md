@@ -25,7 +25,7 @@ Both first-party web callers and the generated web/native contracts were updated
 | Browser/device tooling | Available | Playwright ran Chromium desktop and the repository phone project against local Vite | The synthetic failure/retry/success journey was exercised at both viewports |
 | Screenshot capability | Available | Two real post-submit screenshots were captured and visually inspected | Current responsive evidence is retained; no fictitious baseline image was created |
 | Native mobile submodule | Available | Required API generation, lint, and typecheck ran; mobile commit `57abd23c0522133274e5bc2aa1a7e524d94dd62b` was pushed and verified with `git ls-remote` | Parent pointer references a remotely available contract commit; no native booking screen was found |
-| Network/GitHub | Partial | Git branch push capability was proven for the mobile repository; `npm run ai:doctor` still reports the stored `gh` token as invalid | Git publication may work while GitHub CLI status remains contradictory; operations are reported only if they succeed |
+| Network/GitHub | Available for requested operations | Root/mobile branch pushes and authorized draft-PR creation succeeded; `npm run ai:doctor` still reports the stored `gh` token as invalid | Both review paths are published; the contradictory status diagnostic remains documented rather than treated as stronger evidence than successful operations |
 | Local/staging configuration | Partial | Local UI used synthetic HTTP fixtures; README-referenced full backend default configuration was absent from this worktree | No staging persistence, external provider, SMTP, or end-to-end HTTP claim is made |
 | Synthetic accounts | Unavailable for this batch | The route is anonymous and used synthetic contact data; no configured authenticated/staging account was found | Account/session authorization was not part of runtime validation |
 | Analytics access | Unavailable | No PostHog project or representative field dataset was available | Funnel baselines and conversion impact remain “not yet measured” |
@@ -159,7 +159,7 @@ No Web Vitals or field p75 dataset was available. The batch adds no dependency, 
 - `npm run test:service-booking-migration`: **passed** on disposable PostgreSQL 17. Its deliberate overlapping legacy insert was rejected by the existing allocation exclusion.
 - `npm run test:production-release`: **passed**, 49/49 tests, after registering the migration with its immutable introducing commit SHA.
 - `npm run test:ci-pipeline`: **passed**, 16/16 tests, including OpenAPI/generated-client and migration change-scope behavior.
-- `npm run release:backend:plan -- --sha <final-commit>`: initially exposed the pre-existing directory-migration `introducedBy` ancestry mismatch described above. After correcting that metadata to the byte-identical introducing commit in current history, the final non-mutating plan is required to pass before publication.
+- `npm run release:backend:plan -- --sha 2b7fb46a122710ac342fd973683ba32ff22f5d33`: **passed** in non-mutating dry-run mode after correcting the pre-existing directory-migration ancestry metadata. It returned an empty command list and marked every planned release step `mutating: false`.
 - `PLAYWRIGHT_ARTIFACT_DIR=artifacts/public-booking-idempotency-conflict-2026-09-09 npx playwright test e2e/web/persona-public.spec.mjs --grep PW-PER-01-BOOKING --project=chromium-desktop --project=chromium-phone`: **passed**, 2/2 in 14.6 seconds. Each fixture returned one synthetic `503`, then success, and asserted exact key reuse across both requests.
 - `git diff --check` / staged diff check: **passed** at implementation commit.
 - Mobile `git ls-remote`: **passed**, confirming `57abd23c0522133274e5bc2aa1a7e524d94dd62b` on `origin/feature/public-booking-idempotency-contract-20260909`.
@@ -216,8 +216,11 @@ Regression/release evidence:
 
 - Root branch: `feature/public-booking-idempotency-conflicts-20260909`.
 - Root implementation commit: `2da5c939baca7cdeec8aba623a83e9b42440f2e3`.
+- Root evidence/manifest commit: `2b7fb46a122710ac342fd973683ba32ff22f5d33`.
 - Mobile branch: `feature/public-booking-idempotency-contract-20260909`.
 - Mobile commit: `57abd23c0522133274e5bc2aa1a7e524d94dd62b` (pushed and remotely verified).
-- Root report/manifest/artifact commit and draft PR: pending publication at the time this evidence section was written; the final handoff will record only operations that actually succeed.
+- Root draft PR: https://github.com/diegueins680/tdf-app/pull/318, stacked on `feature/public-booking-truthful-guest-continuity-20260909`.
+- Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/71.
+- A documentation-only handoff update follows the evidence commit above.
 
 No merge, deployment, production mutation, real transaction, or customer communication was performed.
