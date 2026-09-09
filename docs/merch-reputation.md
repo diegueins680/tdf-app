@@ -14,7 +14,7 @@ El motor usa sujetos tipados y proyecciones distintas. Nunca existe una suma, co
 
 La vista de artista etiqueta el bloque como “Reputación comercial” y explica que no mide calidad artística, popularidad ni reputación profesional. Una tienda nueva no hereda puntuaciones del artista, propietario, administradores ni otras tiendas. Identidad verificada y antigüedad aparecen como señales objetivas separadas.
 
-La migración incluye un modelo mínimo de tienda, membresía, producto, orden y línea porque la rama base no contiene todavía el dominio principal de tiendas de merch. Antes de integrar un checkout real, esos cinco objetos deben mapearse mediante una migración hacia las entidades canónicas del prompt principal, conservando los identificadores y constraints de reputación. Este trabajo no crea ni habilita cobros.
+Esta extensión se apila sobre el dominio canónico de tiendas de artista de `feat/artist-merch-storefronts` (PR #274). No crea copias de tienda, membresía, producto, orden o línea: los consume mediante vistas adaptadoras `merch_reputation_*_source`. La evaluación completa vive en `merch_reputation_review`, separada de la reseña preliminar de producto `merch_review` del módulo base. Este trabajo no crea ni habilita cobros.
 
 ## Modelo y estados
 
@@ -22,8 +22,8 @@ Las fuentes durables son evaluaciones, revisiones inmutables, dimensiones, imág
 
 Estados relevantes:
 
-- Orden: `pending`, `confirmed`, `preparing`, `partially_fulfilled`, `fulfilled`, `cancelled`, `closed`.
-- Fulfillment: `pending`, `preparing`, `partially_delivered`, `delivered`, `picked_up`, `cancelled`.
+- Orden comercial canónica: `created`, `confirmed`, `cancelled`, `completed`.
+- Fulfillment canónico: `pending`, `preparing`, `ready_for_pickup`, `shipped`, `delivered`, `cancelled`, `return_requested`, `returned`, `problem`; la vista de reputación normaliza retiro y recepción parcial.
 - Línea: además admite `replaced`, `returned`, `refunded` y `cancelled`.
 - Evaluación: `published`, `hidden`, `limited`, `removed`. Moderación cambia visibilidad, no borra revisiones.
 - Publicación del agregado: `new_store`, `unrated`, `published`.
@@ -33,7 +33,8 @@ Estados relevantes:
 
 ## Invariantes de elegibilidad
 
-- El autor se toma de la sesión backend y debe coincidir con `buyer_party_id`; el cliente no puede declararlo.
+- El autor se toma de la sesión backend y debe coincidir con el comprador canónico o con un vínculo durable creado al validar la capacidad privada de seguimiento de un checkout invitado; el cliente no puede declararlo.
+- El vínculo de comprador invitado es idempotente, no muta el snapshot comercial, no persiste el token y responde igual ante orden desconocida, token incorrecto o vínculo con otra cuenta.
 - La evidencia nace de orden, pago verificado y entrega/retiro/cancelación registrados en servidor. Un retorno del navegador no verifica una compra.
 - Entrega o retiro habilita la evaluación por 30 días desde el evento confirmado.
 - Una cancelación permite una evaluación de tienda sólo con comunicación y, si existió problema, resolución. Ninguna línea no recibida puede valorar producto.
@@ -63,10 +64,12 @@ Tratamiento de órdenes:
 
 ```mermaid
 flowchart LR
-  O[Orden y pago verificados] --> F[Fulfillment / entrega / retiro]
+  O[Checkout/orden y pago verificados] --> C[Vínculo privado de comprador invitado]
+  C --> F[Fulfillment / entrega / retiro]
   F --> E{Elegibilidad backend}
   E -->|30 días, comprador válido| R[Evaluación + revisión inmutable]
-  F --> S[Señal operativa con fuente y atribución]
+  F --> Q[Outbox de estados canónicos]
+  Q --> S[Señal sólo con evidencia y atribución suficientes]
   R --> X[Evento durable en la misma transacción]
   S --> X
   X --> B[Worker idempotente / checkpoint]
@@ -79,7 +82,7 @@ flowchart LR
   M --> X
 ```
 
-Si el worker falla, el evento y la evaluación quedan guardados; `merch_reputation_projection_checkpoint` conserva intentos/error y permite reintentar sin duplicar. `merch_reputation_projection_alerts` expone eventos sin procesar y fallos reiterados.
+Los triggers capturan de forma transaccional y sin PII los estados confiables de fulfillment, shipment, orden e incidencia en `merch_reputation_source_event`. El procesador es idempotente y falla cerrado: si faltan promesa temporal o atribución, conserva el hecho como evidencia insuficiente y no inventa una señal. Si un worker falla, el evento y la evaluación quedan guardados; los checkpoints conservan intentos/error y permiten reintentar sin duplicar. `merch_reputation_projection_alerts` expone eventos sin procesar y fallos reiterados.
 
 ## Fórmula comercial v1
 
@@ -134,9 +137,9 @@ Un índice parcial impide dos premios activos del mismo tipo. No hay endpoint de
 
 ## Descubrimiento y equidad
 
-El aporte de reputación requiere su flag, recibe el entorno explícito y está limitado al 12 % del score base. Debe sumarse a relevancia, disponibilidad, ubicación, afinidad, categoría y novedad; nunca reemplazarlos. `new_store` produce aporte neutral, no negativo.
+El aporte de reputación requiere su flag, recibe el entorno explícito y está limitado al 12 % del score base. El listado canónico compone primero relevancia textual, disponibilidad, categoría y novedad/exploración; luego suma el aporte acotado mediante `merch_reputation_search_contribution`. Ubicación y afinidad podrán añadirse como señales base cuando ese endpoint reciba contexto suficiente, pero la reputación nunca los reemplaza. `new_store` produce aporte neutral, no negativo, y no usa volumen de reseñas como multiplicador.
 
-El integrador de búsqueda debe reservar exploración y una superficie `new_store_discovery`. `merch_reputation_exposure_daily` registra sólo conteos agregados por tienda/superficie: impresiones, conversiones, condición de tienda nueva y contribución acumulada. Los dashboards deben alertar por concentración de impresiones/ventas, pérdida de visibilidad nueva y bucles de popularidad antes de habilitar `search_influence`.
+Las tiendas sin puntuación pública o activadas durante los últimos 90 días reciben un impulso base acotado y una etiqueta accesible `new_store_discovery`/“Descubre una tienda nueva” en web y móvil. `merch_reputation_exposure_daily` registra sólo conteos agregados por tienda/superficie: impresiones, conversiones, condición de tienda nueva y contribución acumulada. Los dashboards deben alertar por concentración de impresiones/ventas, pérdida de visibilidad nueva y bucles de popularidad antes de habilitar `search_influence`.
 
 ## Permisos y debido proceso
 
@@ -161,7 +164,7 @@ Una nota baja no abre casos, no retiene liquidaciones, no despublica, no bloquea
 | --- | --- |
 | Autoevaluación/cuentas relacionadas | vínculo por propiedad, membresía y banda comprobable; sin fingerprinting |
 | Sybil/brigading/reseñas compradas | sólo orden/pago/fulfillment legítimos, unicidad e idempotencia; métricas de crecimiento anómalo |
-| Enumeración de órdenes | UUID y consulta siempre ligada al comprador autenticado; misma respuesta 404 fuera de alcance |
+| Enumeración de órdenes | UUID, sesión y capacidad privada; el vínculo invitado devuelve el mismo 404 ante orden/token/vínculo inválido y nunca registra el token |
 | Acceso cruzado vendedor | `EXISTS` sobre membresía activa por tienda en cada consulta/mutación |
 | Alterar score desde cliente | no existe endpoint de score; sólo eventos de fuente confiable y proyección servidor |
 | Replay/concurrencia | clave idempotente, hash de request, advisory lock, índices únicos y revisión esperada |
@@ -185,9 +188,9 @@ La comparación por tarjetas permanece detrás de `comparison_cards` y no forma 
 
 ## Migración, reconstrucción y rollback
 
-`tdf-hq/sql/2026-09-08_merch_reputation.sql` es aditiva y reejecutable. No crea reviews ni scores. Todas las tiendas quedan sin agregado y se muestran como `new_store`; sólo un futuro backfill puede enlazar evidencia histórica inequívoca de orden/comprador. El procesador de eventos puede reconstruir agregados e insignias por lotes con checkpoints.
+`tdf-hq/sql/2026-09-08_merch_reputation.sql` es aditiva, reejecutable y depende de `2026-09-07_artist_merch_storefronts.sql`. No crea reviews ni scores. Todas las tiendas quedan sin agregado y se muestran como `new_store`; sólo un futuro backfill puede enlazar evidencia histórica inequívoca de orden/comprador. Los procesadores pueden reconstruir señales, agregados e insignias por lotes con checkpoints.
 
-`tdf-hq/sql/2026-09-08_merch_reputation_rollback.sql` sólo elimina una instalación prístina. Rechaza la operación si existe tienda, producto, orden, preferencia, evaluación, señal, evidencia, reporte, apelación, auditoría, riesgo o notificación durable. En un entorno usado se apagan flags y se corrige hacia adelante.
+`tdf-hq/sql/2026-09-08_merch_reputation_rollback.sql` sólo elimina una instalación de reputación prístina y nunca elimina tablas comerciales canónicas. Rechaza la operación si existe vínculo de comprador, preferencia, evaluación, fuente, señal, evidencia, reporte, apelación, auditoría, riesgo o notificación durable. En un entorno usado se apagan flags y se corrige hacia adelante.
 
 ## Flags, rollout y kill switches
 
@@ -214,11 +217,12 @@ Alertas mínimas: evento sin proyección, tres fallos de proyección, divergenci
 
 ## Validación y pendientes de salida
 
-La prueba de migración usa exclusivamente actores, tiendas, productos, órdenes y evaluaciones sintéticas. Comprueba reejecución, flags oscuros, umbral sin cuentas relacionadas, coherencia, autoevaluación, historial, devolución/reembolso, exclusión reversible por fraude, media segura, courier, eventos, reconstrucción, versión de fórmula, prioridades, sugerencias gobernadas, moderación por etapas, apelación, alcance vendedor y revisión financiera independiente.
+La prueba de migración usa exclusivamente actores, tiendas, productos, órdenes y evaluaciones sintéticas. Aplica primero el esquema canónico y luego reputación, ambos dos veces. Comprueba reclamo privado de checkout invitado, reejecución, flags oscuros, umbral sin cuentas relacionadas, coherencia, autoevaluación, historial, devolución/reembolso, exclusión reversible por fraude, media segura, courier, captura automática de estados confiables, reconstrucción, versión de fórmula, prioridades, sugerencias gobernadas, moderación por etapas, apelación, alcance vendedor y revisión financiera independiente.
 
 Antes de un piloto quedan como validaciones externas, no autorizadas por este cambio:
 
-- mapear el modelo mínimo a las órdenes/fulfillment canónicos del futuro módulo principal de merch;
+- fusionar primero el PR base #274 y mantener esta extensión apilada hasta entonces;
+- ejecutar en staging el flujo checkout invitado → vínculo autenticado → entrega/cancelación → evaluación sin activar tiendas reales;
 - conectar el uploader con antivirus/CDR y almacenamiento firmado;
 - ejecutar E2E con servicios de staging y tres identidades separadas;
 - revisión de copy, sesgo, accesibilidad asistida, retención y base jurídica;

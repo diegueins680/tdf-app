@@ -9,7 +9,7 @@ Este runbook no autoriza producción. Los pasos de activación sólo se ejecutan
 3. Aplicar la migración dos veces en una copia sintética y ejecutar `npm run test:merch-reputation-migration`.
 4. Regenerar OpenAPI/clientes y exigir diff vacío.
 5. Ejecutar fórmula, backend, web, móvil, E2E y axe; registrar SHA y resultados reales.
-6. Reconstruir proyecciones y comparar eventos/checkpoints/agregados.
+6. Procesar `merch_reputation_source_event`, reconstruir proyecciones y comparar fuentes/señales/eventos/checkpoints/agregados.
 
 ## Rollout
 
@@ -27,6 +27,7 @@ Salida por fase:
 ## Incidentes
 
 - Agregación fallida: apagar influencia en búsqueda e insignias; mantener reviews; revisar `merch_reputation_projection_alerts`; reintentar el worker idempotente.
+- Fuente operativa fallida: preservar la fila y `last_error`, corregir el parser o la evidencia y reintentar; nunca convertir ausencia de promesa/atribución en una penalización.
 - Manipulación: apagar creación si hace falta, preservar evidencia, abrir caso tipado; no castigar automáticamente por score.
 - PII/contenido peligroso: ocultar provisionalmente con motivo, evidencia y permiso; notificar salvo excepción de seguridad; permitir apelación.
 - Notificación sensible: apagar `notifications`, bloquear outbox afectada y revisar sólo `safe_payload`; no reenviar automáticamente.
@@ -45,6 +46,10 @@ Salida por fase:
 
 ```sql
 SELECT * FROM merch_reputation_projection_alerts ORDER BY recorded_at;
+SELECT id,source_type,processing_outcome,attempt_count,last_error
+FROM merch_reputation_source_event
+WHERE processed_at IS NULL OR last_error IS NOT NULL ORDER BY created_at;
+SELECT merch_reputation_process_source_events(100);
 SELECT environment,flag_key,enabled,version FROM merch_reputation_feature_flag ORDER BY environment,flag_key;
 SELECT subject_kind,publication_state,formula_version_id,count(*) FROM merch_reputation_aggregate GROUP BY 1,2,3;
 SELECT * FROM merch_reputation_metrics;

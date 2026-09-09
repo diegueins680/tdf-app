@@ -43,6 +43,7 @@ merchReputationPublicServer =
 merchReputationProtectedServer :: AuthedUser -> ServerT MerchReputationProtectedAPI AppM
 merchReputationProtectedServer user =
        getOrderEligibility user
+  :<|> claimOrderBuyer user
   :<|> submitStoreReview user
   :<|> submitProductReview user
   :<|> submitSellerResponse user
@@ -152,6 +153,15 @@ getOrderEligibility :: AuthedUser -> UUID -> AppM Value
 getOrderEligibility user orderId = do
   _ <- requireFlag "store_reviews"
   oneRow eligibilitySql [actorValue user,toPersistValue orderId,actorValue user]
+
+claimOrderBuyer :: AuthedUser -> UUID -> Text -> AppM Value
+claimOrderBuyer user orderId lookupToken = do
+  _ <- requireFlag "store_reviews"
+  when (T.length lookupToken<32 || T.length lookupToken>300
+      || T.any (<' ') lookupToken) $
+    throwError err404
+  runMutation "SELECT merch_reputation_claim_order_buyer(?,?,?)"
+    [toPersistValue orderId,actorValue user,PersistText lookupToken]
 
 submitStoreReview
   :: AuthedUser -> UUID -> Text -> MerchReviewSubmitRequest -> AppM Value
@@ -420,7 +430,9 @@ runMutation statement params = do
               throwError err400 {errBody="Invalid merch reputation input"}
           | sqlState sqlError=="P0001" ->
               let message = TE.decodeUtf8With (\_ _ -> Just '\xfffd') (sqlErrorMsg sqlError)
-              in if "revision conflict" `T.isInfixOf` T.toLower message
+              in if "order claim" `T.isInfixOf` T.toLower message
+                   then throwError err404
+                   else if "revision conflict" `T.isInfixOf` T.toLower message
                    then throwError err409 {errBody="Content changed elsewhere; reload and retry"}
                    else if "scope" `T.isInfixOf` T.toLower message
                      || "eligible" `T.isInfixOf` T.toLower message
@@ -437,7 +449,7 @@ artistStoresSql =
   <> "'rating',aggregate.public_rating,'verifiedReviewCount',coalesce(aggregate.verified_review_count,0),"
   <> "'confidence',coalesce(aggregate.confidence,'new'),'objectiveSignals',jsonb_build_object("
   <> "'identityVerified',store.identity_verified_at IS NOT NULL,'platformMemberSince',store.created_at)) "
-  <> "FROM merch_store store LEFT JOIN LATERAL (SELECT * FROM merch_reputation_aggregate "
+  <> "FROM merch_reputation_store_source store LEFT JOIN LATERAL (SELECT * FROM merch_reputation_aggregate "
   <> "WHERE subject_kind='store' AND subject_id=store.id ORDER BY calculated_through DESC LIMIT 1) aggregate ON true "
   <> "WHERE store.artist_party_id=? AND store.status='published' ORDER BY store.created_at DESC"
 
@@ -464,7 +476,7 @@ storeReputationSql =
   <> "FROM merch_reputation_badge_award award JOIN merch_reputation_badge_definition definition "
   <> "ON definition.code=award.badge_code "
   <> "WHERE award.store_id=store.id AND award.status='active' AND award.valid_until>now()),'[]'::jsonb)) "
-  <> "FROM merch_store store LEFT JOIN LATERAL (SELECT * FROM merch_reputation_aggregate "
+  <> "FROM merch_reputation_store_source store LEFT JOIN LATERAL (SELECT * FROM merch_reputation_aggregate "
   <> "WHERE subject_kind='store' AND subject_id=store.id ORDER BY calculated_through DESC LIMIT 1) aggregate ON true "
   <> "WHERE store.id=? AND store.status='published'"
 
@@ -485,8 +497,8 @@ productReputationSql =
 publicReviewsSql :: Text
 publicReviewsSql =
   "WITH requested AS (SELECT ?::text kind,?::uuid subject_id,?::uuid cursor),"
-  <> "boundary AS (SELECT review.created_at,review.id FROM merch_review review,requested WHERE review.id=requested.cursor),"
-  <> "page AS (SELECT review.* FROM merch_review review JOIN merch_order reviewed_order "
+  <> "boundary AS (SELECT review.created_at,review.id FROM merch_reputation_review review,requested WHERE review.id=requested.cursor),"
+  <> "page AS (SELECT review.* FROM merch_reputation_review review JOIN merch_reputation_order_source reviewed_order "
   <> "ON reviewed_order.id=review.order_id,requested WHERE reviewed_order.fraud_state='clear' "
   <> "AND review.review_kind=requested.kind "
   <> "AND (CASE requested.kind WHEN 'store' THEN review.store_id ELSE review.product_id END)=requested.subject_id "
@@ -535,10 +547,10 @@ eligibilitySql =
   <> "'state',CASE WHEN product_review.id IS NULL AND merch_review_evidence_is_eligible('product',line.id,orders.buyer_party_id) "
   <> "THEN 'available' WHEN product_review.id IS NOT NULL AND now()<=product_review.edit_deadline "
   <> "THEN 'edit_available' ELSE 'period_expired' END) ORDER BY line.created_at) "
-  <> "FROM merch_order_line line JOIN merch_product product ON product.id=line.product_id "
-  <> "LEFT JOIN merch_review product_review ON product_review.order_line_id=line.id "
+  <> "FROM merch_reputation_order_line_source line JOIN merch_product product ON product.id=line.product_id "
+  <> "LEFT JOIN merch_reputation_review product_review ON product_review.order_line_id=line.id "
   <> "WHERE line.order_id=orders.id),'[]'::jsonb)) "
-  <> "FROM merch_order orders LEFT JOIN merch_review store_review "
+  <> "FROM merch_reputation_order_source orders LEFT JOIN merch_reputation_review store_review "
   <> "ON store_review.order_id=orders.id AND store_review.review_kind='store' "
   <> "WHERE orders.id=? AND orders.buyer_party_id=?"
 
@@ -551,11 +563,11 @@ sellerStoreSql =
   <> "'reviews',coalesce((SELECT jsonb_agg(jsonb_build_object('reviewId',review.id,"
   <> "'orderId',review.order_id,'status',review.status,'rating',revision.overall_rating,"
   <> "'comment',revision.comment,'currentRevision',review.current_revision,'editDeadline',review.edit_deadline) "
-  <> "ORDER BY review.created_at DESC) FROM merch_review review JOIN merch_review_revision revision "
+  <> "ORDER BY review.created_at DESC) FROM merch_reputation_review review JOIN merch_review_revision revision "
   <> "ON revision.review_id=review.id AND revision.revision_no=review.current_revision "
-  <> "WHERE review.store_id=store.id),'[]'::jsonb)) FROM merch_store store "
+  <> "WHERE review.store_id=store.id),'[]'::jsonb)) FROM merch_reputation_store_source store "
   <> "WHERE store.id=? AND EXISTS (SELECT 1 FROM merch_store_member member "
-  <> "WHERE member.store_id=store.id AND member.party_id=? AND member.status='active')"
+  <> "WHERE member.store_id=store.id AND member.party_id=? AND member.invitation_status='accepted')"
 
 moderationCasesSql :: Text
 moderationCasesSql =

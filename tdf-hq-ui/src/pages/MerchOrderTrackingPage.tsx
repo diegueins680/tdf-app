@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Alert, Box, Button, Chip, CircularProgress, Divider, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Merch, createMerchIdempotencyKey, readStoredMerchOrder } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
 import { formatMerchMoney, merchLanguage, merchStatusLabel } from '../utils/merch';
 
 export default function MerchOrderTrackingPage() {
   const { orderId = '' } = useParams();
+  const navigate = useNavigate();
   const { i18n } = useTranslation();
   const language = merchLanguage(i18n.resolvedLanguage);
   const stored = readStoredMerchOrder(orderId);
@@ -26,6 +28,10 @@ export default function MerchOrderTrackingPage() {
       await order.refetch();
     },
   });
+  const claimReview = useMutation({
+    mutationFn: () => MerchReputation.claimBuyer(orderId, stored!.token),
+    onSuccess: () => navigate(`/merch/orden/${encodeURIComponent(orderId)}/evaluar`),
+  });
 
   if (!stored) return <Box py={4}><Alert severity="warning">{language === 'en' ? 'This browser does not have the private tracking capability for this order. Use the original browser or support channel.' : 'Este navegador no tiene la capacidad privada de seguimiento de esta orden. Usa el navegador original o el canal de soporte.'}</Alert></Box>;
   if (order.isLoading) return <Box py={8} textAlign="center"><CircularProgress aria-label="Cargando orden" /></Box>;
@@ -35,12 +41,14 @@ export default function MerchOrderTrackingPage() {
   const timeline = data.timeline ?? [];
   const issues = data.issues ?? [];
   const canCancelUnpaid = data.commercialStatus === 'created' && data.paymentStatus === 'pending' && data.fulfillmentStatus === 'pending';
+  const canReviewExperience = data.commercialStatus === 'cancelled' || data.fulfillmentStatus === 'delivered';
   return (
     <Box component="main" py={{ xs: 2, md: 5 }} maxWidth="md" mx="auto">
       <Stack spacing={3}>
         <Box><Typography component="h1" variant="h3" fontWeight={900}>{language === 'en' ? 'Order tracking' : 'Seguimiento del pedido'}</Typography><Typography>{data.orderNumber}</Typography></Box>
         {data.paymentStatus !== 'paid' && <Alert severity="warning">{language === 'en' ? 'Payment is pending verification. This order is not paid yet.' : 'El pago está pendiente de verificación. Esta orden aún no está pagada.'}</Alert>}
         <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack spacing={2}><Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Chip label={`${language === 'en' ? 'Payment' : 'Pago'}: ${merchStatusLabel(data.paymentStatus, language)}`} /><Chip label={`${language === 'en' ? 'Fulfillment' : 'Preparación'}: ${merchStatusLabel(data.fulfillmentStatus, language)}`} /><Chip label={`${language === 'en' ? 'Refund' : 'Reembolso'}: ${merchStatusLabel(data.refundStatus, language)}`} /></Stack><Divider />{lines.map((line, index) => <Stack key={line.id ?? index} direction="row" justifyContent="space-between"><Typography>{line.product?.name} · {line.variant?.name} × {line.quantity}</Typography></Stack>)}<Divider /><Stack direction="row" justifyContent="space-between"><Typography fontWeight={900}>Total</Typography><Typography fontWeight={900}>{formatMerchMoney(data.totalMinor, data.currency)}</Typography></Stack></Stack></Paper>
+        {canReviewExperience && <Paper component="section" variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack spacing={2}><Typography component="h2" variant="h5" fontWeight={800}>{language === 'en' ? 'Verified purchase review' : 'Evaluación de compra verificada'}</Typography><Typography>{language === 'en' ? 'Link this private order to your signed-in account to review the store and any eligible received products. The tracking capability is never shown publicly.' : 'Vincula esta orden privada con tu cuenta iniciada para evaluar la tienda y los productos recibidos que sean elegibles. La capacidad de seguimiento nunca se muestra públicamente.'}</Typography>{claimReview.isError && <Alert severity="error">{language === 'en' ? 'Sign in with the buyer account and try again. This order may already belong to another account.' : 'Inicia sesión con la cuenta compradora e inténtalo de nuevo. Esta orden puede estar vinculada a otra cuenta.'}</Alert>}<Button variant="contained" disabled={claimReview.isPending} onClick={() => claimReview.mutate()}>{claimReview.isPending ? (language === 'en' ? 'Linking…' : 'Vinculando…') : (language === 'en' ? 'Review verified purchase' : 'Evaluar compra verificada')}</Button></Stack></Paper>}
         <Box component="section" aria-labelledby="order-timeline"><Typography id="order-timeline" component="h2" variant="h5" fontWeight={800}>Timeline</Typography>{timeline.length === 0 ? <Typography color="text.secondary">{language === 'en' ? 'No public updates yet.' : 'Todavía no hay novedades públicas.'}</Typography> : <Stack component="ol" spacing={1} sx={{ pl: 3 }}>{timeline.map((raw, index) => { const event = raw as { eventType?: string; publicNote?: string; createdAt?: string }; return <Box component="li" key={`${event.createdAt}-${index}`}><Typography fontWeight={700}>{merchStatusLabel(event.eventType ?? '', language)}</Typography>{event.publicNote && <Typography>{event.publicNote}</Typography>}</Box>; })}</Stack>}</Box>
         {issues.length > 0 && <Box component="section" aria-labelledby="order-issues"><Typography id="order-issues" component="h2" variant="h5" fontWeight={800}>{language === 'en' ? 'Requests and issues' : 'Solicitudes e incidencias'}</Typography><Stack component="ul" spacing={1} sx={{ pl: 3 }}>{issues.map((raw) => { const item = raw as { id: string; issueType: string; status: string; message: string; resolution?: string | null }; return <Box component="li" key={item.id}><Typography fontWeight={700}>{merchStatusLabel(item.issueType, language)} · {merchStatusLabel(item.status, language)}</Typography><Typography>{item.message}</Typography>{item.resolution && <Typography color="text.secondary">{item.resolution}</Typography>}</Box>; })}</Stack></Box>}
         {canCancelUnpaid && <Paper component="form" variant="outlined" sx={{ p: 3, borderRadius: 3 }} onSubmit={(event) => { event.preventDefault(); cancel.mutate(); }}><Stack spacing={2}><Typography component="h2" variant="h5" fontWeight={800}>{language === 'en' ? 'Cancel this unpaid order' : 'Cancelar esta orden sin pagar'}</Typography><Alert severity="info">{language === 'en' ? 'Cancellation is immediate only while payment processing and fulfillment have not started. Reserved stock will be released.' : 'La cancelación es inmediata únicamente antes de iniciar el procesamiento del pago y la preparación. El stock reservado será liberado.'}</Alert><TextField required multiline minRows={2} inputProps={{ minLength: 10, maxLength: 2000 }} label={language === 'en' ? 'Reason for cancellation' : 'Motivo de cancelación'} value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} />{cancel.isError && <Alert severity="error">{language === 'en' ? 'The order could not be cancelled. Payment may have started; report an issue instead.' : 'No se pudo cancelar la orden. Es posible que el pago haya comenzado; registra una incidencia.'}</Alert>}{cancel.isSuccess && <Alert severity="success">{language === 'en' ? 'The unpaid order was cancelled and its stock was released.' : 'La orden sin pagar fue cancelada y su stock quedó liberado.'}</Alert>}<Button type="submit" color="error" variant="outlined" disabled={cancelReason.trim().length < 10 || cancel.isPending}>{cancel.isPending ? (language === 'en' ? 'Cancelling…' : 'Cancelando…') : (language === 'en' ? 'Cancel unpaid order' : 'Cancelar orden sin pagar')}</Button></Stack></Paper>}

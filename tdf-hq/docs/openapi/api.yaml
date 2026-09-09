@@ -5900,6 +5900,20 @@ paths:
           description: Eligibility for the authenticated order buyer
           content: { application/json: { schema: { $ref: '#/components/schemas/MerchReviewEligibility' } } }
         '404': { description: Order not found in buyer scope }
+  /merch/orders/{orderId}/review-buyer-claim:
+    put:
+      tags: [Merch reputation]
+      operationId: claimMerchOrderReviewBuyer
+      description: Links the authenticated buyer to a guest checkout after validating its private tracking capability. The token is neither persisted nor returned; unknown, mismatched, and already-claimed orders have the same response.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: orderId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/OrderLookupToken' }
+      responses:
+        '200':
+          description: The order is idempotently linked to the authenticated buyer for review eligibility
+          content: { application/json: { schema: { $ref: '#/components/schemas/MerchReviewBuyerClaim' } } }
+        '404': { description: Order unavailable or private capability does not match }
   /merch/orders/{orderId}/store-review:
     put:
       tags: [Merch reputation]
@@ -6807,13 +6821,20 @@ components:
         status: { type: string }
         verifiedPurchase: { type: boolean, enum: [true] }
         editDeadline: { type: string, format: date-time }
+    MerchReviewBuyerClaim:
+      type: object
+      additionalProperties: false
+      required: [orderId, buyerLinked]
+      properties:
+        orderId: { type: string, format: uuid, writeOnly: true }
+        buyerLinked: { type: boolean, enum: [true] }
     MerchReviewEligibility:
       type: object
       required: [orderId, storeId, orderState, fulfillmentState, storeReview, productLines]
       properties:
         orderId: { type: string, format: uuid, writeOnly: true }
         storeId: { type: string, format: uuid }
-        orderState: { type: string, enum: [pending, confirmed, preparing, partially_fulfilled, fulfilled, cancelled, closed] }
+        orderState: { type: string, enum: [created, confirmed, cancelled, completed] }
         fulfillmentState: { type: string, enum: [pending, preparing, partially_delivered, delivered, picked_up, cancelled] }
         storeReview: { type: object, additionalProperties: true }
         productLines: { type: array, items: { type: object, additionalProperties: true } }
@@ -7000,6 +7021,13 @@ components:
         logoImageUrl: { type: string, nullable: true }
         countryCode: { type: string, enum: [EC] }
         currency: { type: string, enum: [USD] }
+        discovery:
+          type: object
+          additionalProperties: false
+          required: [newStore, explorationEligible]
+          properties:
+            newStore: { type: boolean, description: True while no public numeric store score is eligible. }
+            explorationEligible: { type: boolean, description: Neutral exploration signal; it is never inherited from an owner or artist. }
         applicationStatus: { type: string, enum: [requested, under_review, approved, rejected, withdrawn] }
         operationalStatus: { type: string, enum: [inactive, active, suspended, closed] }
         permissions: { $ref: '#/components/schemas/MerchPermissions' }

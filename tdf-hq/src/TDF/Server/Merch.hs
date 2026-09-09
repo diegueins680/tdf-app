@@ -137,6 +137,14 @@ featureEnvironment = do
     Just "staging" -> "staging"
     _ -> "sandbox"
 
+reputationEnvironment :: IO Text
+reputationEnvironment = do
+  raw <- lookupEnv "COMMERCE_CHECKOUT_ENV"
+  pure $ case fmap (T.toLower . T.strip . T.pack) raw of
+    Just "production" -> "production"
+    Just "staging" -> "staging"
+    _ -> "development"
+
 featureEnabled :: Text -> AppM Bool
 featureEnabled key = do
   environment <- liftIO featureEnvironment
@@ -240,6 +248,7 @@ listPublicStorefronts :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int -> A
 listPublicStorefronts rawQuery rawCategory rawLimit rawOffset = do
   requireFeature "merch.storefronts"
   requireFeature "merch.public_catalog"
+  environment <- liftIO reputationEnvironment
   let query = T.take 160 (T.strip (fromMaybe "" rawQuery))
       category = T.toLower . T.strip <$> rawCategory
       limit = min 50 (max 1 (fromMaybe 24 rawLimit))
@@ -247,11 +256,15 @@ listPublicStorefronts rawQuery rawCategory rawLimit rawOffset = do
   when (maybe False (`Set.notMember` allowedProductCategories) category) $
     throwError (badRequest "Unsupported merch category")
   jsonRows
-    "SELECT jsonb_build_object(\
+    "WITH input AS (SELECT ?::text AS query, ?::text AS category, ?::text AS reputation_environment)\
+    \ SELECT jsonb_build_object(\
     \ 'id',store.id,'slug',store.slug,'displayName',store.display_name,\
     \ 'description',store.description,'coverImageUrl',store.cover_image_url,\
     \ 'logoImageUrl',store.logo_image_url,'countryCode',store.country_code,\
-    \ 'currency',store.currency,'profile',jsonb_build_object(\
+    \ 'currency',store.currency,'discovery',jsonb_build_object(\
+    \   'newStore',NOT EXISTS(SELECT 1 FROM merch_reputation_aggregate aggregate WHERE aggregate.subject_kind='store' AND aggregate.subject_id=store.id AND aggregate.publication_state='published'),\
+    \   'explorationEligible',store_record.activated_at >= now()-INTERVAL '90 days' OR NOT EXISTS(SELECT 1 FROM merch_reputation_aggregate aggregate WHERE aggregate.subject_kind='store' AND aggregate.subject_id=store.id AND aggregate.publication_state='published')),\
+    \ 'profile',jsonb_build_object(\
     \   'id',store.directory_profile_id,'slug',store.profile_slug,'name',store.profile_name,\
     \   'url','/directorio/'||store.profile_slug),\
     \ 'products',(SELECT coalesce(jsonb_agg(jsonb_build_object(\
@@ -261,15 +274,23 @@ listPublicStorefronts rawQuery rawCategory rawLimit rawOffset = do
     \   'available',coalesce(product.available,FALSE),'imageUrl',CASE WHEN product.primary_image_object_key IS NULL THEN NULL ELSE '/assets/serve/'||product.primary_image_object_key END\
     \ ) ORDER BY product.published_at DESC,product.id),'[]'::jsonb)\
     \ FROM merch_public_product product WHERE product.store_id=store.id\
-    \   AND (?::text IS NULL OR product.category=?::text)),\
+    \   AND (input.category IS NULL OR product.category=input.category)),\
     \ 'community',jsonb_build_object('profileUrl','/directorio/'||store.profile_slug,'canFollow',TRUE,'canRequestCollaboration',TRUE)\
     \) FROM merch_public_storefront store\
-    \ WHERE (?='' OR directory_normalize_text(store.display_name||' '||coalesce(store.description,''))\
-    \   LIKE '%'||directory_normalize_text(?)||'%')\
-    \ AND (?::text IS NULL OR EXISTS(SELECT 1 FROM merch_public_product product WHERE product.store_id=store.id AND product.category=?::text))\
-    \ ORDER BY store.display_name,store.id LIMIT ? OFFSET ?"
-    [ optionalText category, optionalText category, PersistText query, PersistText query
-    , optionalText category, optionalText category, PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
+    \ JOIN merch_store store_record ON store_record.id=store.id\
+    \ CROSS JOIN input\
+    \ CROSS JOIN LATERAL (SELECT 1.0::numeric\
+    \   + CASE WHEN input.query='' THEN 0 WHEN directory_normalize_text(store.display_name)=directory_normalize_text(input.query) THEN 1.0 WHEN directory_normalize_text(store.display_name) LIKE directory_normalize_text(input.query)||'%' THEN 0.75 ELSE 0.5 END\
+    \   + CASE WHEN EXISTS(SELECT 1 FROM merch_public_product available_product WHERE available_product.store_id=store.id AND coalesce(available_product.available,FALSE)) THEN 0.25 ELSE 0 END\
+    \   + CASE WHEN input.category IS NOT NULL THEN 0.15 ELSE 0 END\
+    \   + CASE WHEN store_record.activated_at >= now()-INTERVAL '90 days' OR NOT EXISTS(SELECT 1 FROM merch_reputation_aggregate aggregate WHERE aggregate.subject_kind='store' AND aggregate.subject_id=store.id AND aggregate.publication_state='published') THEN 0.20 ELSE 0 END AS base_score) ranking\
+    \ WHERE (input.query='' OR directory_normalize_text(store.display_name||' '||coalesce(store.description,''))\
+    \   LIKE '%'||directory_normalize_text(input.query)||'%')\
+    \ AND (input.category IS NULL OR EXISTS(SELECT 1 FROM merch_public_product product WHERE product.store_id=store.id AND product.category=input.category))\
+    \ ORDER BY ranking.base_score+merch_reputation_search_contribution(store.id,ranking.base_score,input.reputation_environment) DESC,\
+    \   store.display_name,store.id LIMIT ? OFFSET ?"
+    [ PersistText query, optionalText category, PersistText environment
+    , PersistInt64 (fromIntegral limit), PersistInt64 (fromIntegral offset)
     ]
 
 getPublicStorefront :: Text -> AppM Value

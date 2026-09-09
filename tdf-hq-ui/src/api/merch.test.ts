@@ -24,6 +24,7 @@ const {
   storeMerchCart,
   storeMerchOrder,
 } = await import('./merch');
+const { MerchReputation } = await import('./merchReputation');
 
 describe('merch API capabilities and idempotency', () => {
   beforeEach(() => {
@@ -85,6 +86,18 @@ describe('merch API capabilities and idempotency', () => {
       '/merch/orders/order%2Fid/cancel',
       { reason: 'Changed my mind' },
       { headers: { 'X-Order-Lookup-Token': 'order-secret', 'Idempotency-Key': 'cancel-key-123' } },
+    );
+  });
+
+  it('claims a guest order for reviews without placing its capability in the URL or body', async () => {
+    putMock.mockResolvedValueOnce({ orderId: 'order/id', buyerLinked: true });
+
+    await MerchReputation.claimBuyer('order/id', 'private-order-capability');
+
+    expect(putMock).toHaveBeenCalledWith(
+      '/merch/orders/order%2Fid/review-buyer-claim',
+      undefined,
+      { headers: { 'X-Order-Lookup-Token': 'private-order-capability' } },
     );
   });
 

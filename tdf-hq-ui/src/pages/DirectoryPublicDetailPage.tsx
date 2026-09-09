@@ -28,6 +28,8 @@ import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
 import { Merch } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
+import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
@@ -75,6 +77,17 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     queryKey: ['merch-profile-store', identifier],
     queryFn: () => Merch.storefronts({ q: identifier }),
     enabled: kind === 'profile' && merchCapabilities.data?.features.publicCatalog === true,
+    retry: false,
+  });
+  const preliminaryTargetId = text(detail.data?.['id']) ?? identifier;
+  const merchStore = merchStores.data?.find((store) => {
+    const profile = record(store['profile']);
+    return text(profile?.['id']) === preliminaryTargetId || text(profile?.['slug']) === identifier;
+  });
+  const merchStoreReputation = useQuery({
+    queryKey: ['merch-store-reputation', merchStore?.id],
+    queryFn: () => MerchReputation.store(merchStore!.id),
+    enabled: Boolean(merchStore?.id),
     retry: false,
   });
   const value = detail.data ?? {};
@@ -140,11 +153,6 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
-  const merchStore = merchStores.data?.find((store) => {
-    const profile = record(store['profile']);
-    return text(profile?.['id']) === targetId || text(profile?.['slug']) === identifier;
-  });
-
   return (
     <Box sx={{ py: { xs: 4, md: 7 } }}>
       <Container maxWidth="lg">
@@ -193,6 +201,16 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
               )}
               <Divider />
               <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</Typography>
+
+              {merchStoreReputation.data && (
+                <Paper component="section" variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+                  <Stack spacing={1.5}>
+                    <Alert severity="info">Esta reputación describe sólo la experiencia comercial de la tienda. No altera la reputación artística o profesional del perfil.</Alert>
+                    <MerchReputationSummary summary={merchStoreReputation.data} compact />
+                    <Button component={RouterLink} to={`/merch/tiendas/${merchStoreReputation.data.storeId ?? merchStore?.id}`} sx={{ alignSelf: 'flex-start' }}>Ver reputación comercial</Button>
+                  </Stack>
+                </Paper>
+              )}
 
               {kind === 'event' && (
                 <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>

@@ -36,7 +36,7 @@ BEGIN
     RAISE EXCEPTION 'Operational signals require a trusted server source';
   END IF;
   IF p_order_id IS NOT NULL THEN
-    SELECT store_id INTO actual_store FROM merch_order WHERE id=p_order_id;
+    SELECT store_id INTO actual_store FROM merch_reputation_order_source WHERE id=p_order_id;
     IF actual_store IS DISTINCT FROM p_store_id THEN
       RAISE EXCEPTION 'Operational signal order belongs to another store';
     END IF;
@@ -125,7 +125,7 @@ BEGIN
   primary_days:=(params->>'primaryPeriodDays')::INTEGER;
   IF p_subject_kind='store' THEN
     target_store:=p_subject_id;
-    SELECT count(*) INTO eligible_orders FROM merch_order orders
+    SELECT count(*) INTO eligible_orders FROM merch_reputation_order_source orders
       WHERE orders.store_id=target_store AND orders.fraud_state='clear'
         AND orders.verified_buyer_at IS NOT NULL
         AND NOT merch_reputation_accounts_related(orders.store_id,orders.buyer_party_id)
@@ -138,7 +138,7 @@ BEGIN
     SELECT store_id INTO target_store FROM merch_product WHERE id=p_subject_id;
     IF target_store IS NULL THEN RAISE EXCEPTION 'Unknown product subject'; END IF;
     SELECT count(DISTINCT line.order_id) INTO eligible_orders
-      FROM merch_order_line line JOIN merch_order orders ON orders.id=line.order_id
+      FROM merch_reputation_order_line_source line JOIN merch_reputation_order_source orders ON orders.id=line.order_id
       WHERE line.product_id=p_subject_id AND orders.fraud_state='clear'
         AND orders.verified_buyer_at IS NOT NULL
         AND NOT merch_reputation_accounts_related(orders.store_id,orders.buyer_party_id)
@@ -155,8 +155,8 @@ BEGIN
     COALESCE(sum(power(0.5,
       EXTRACT(EPOCH FROM (p_through-revision.submitted_at))/86400/half_life)),0)
   INTO review_count,primary_count,weighted_rating,rating_weight
-  FROM merch_review review
-  JOIN merch_order reviewed_order ON reviewed_order.id=review.order_id
+  FROM merch_reputation_review review
+  JOIN merch_reputation_order_source reviewed_order ON reviewed_order.id=review.order_id
   JOIN merch_review_revision revision
     ON revision.review_id=review.id AND revision.revision_no=review.current_revision
   WHERE review.review_kind=p_subject_kind
@@ -174,7 +174,7 @@ BEGIN
     INTO operational_sum,operational_weight_sum
     FROM merch_reputation_operational_signal signal
     WHERE signal.store_id=target_store AND signal.responsibility='seller'
-      AND (signal.order_id IS NULL OR EXISTS (SELECT 1 FROM merch_order signal_order
+      AND (signal.order_id IS NULL OR EXISTS (SELECT 1 FROM merch_reputation_order_source signal_order
         WHERE signal_order.id=signal.order_id AND signal_order.fraud_state='clear'))
       AND signal.occurred_at<=p_through;
   END IF;
@@ -237,8 +237,8 @@ BEGIN
       '4',count(*) FILTER (WHERE rating.rating=4),
       '5',count(*) FILTER (WHERE rating.rating=5)
     )
-  FROM merch_review review
-  JOIN merch_order reviewed_order ON reviewed_order.id=review.order_id
+  FROM merch_reputation_review review
+  JOIN merch_reputation_order_source reviewed_order ON reviewed_order.id=review.order_id
   JOIN merch_review_revision revision
     ON revision.review_id=review.id AND revision.revision_no=review.current_revision
   JOIN merch_review_dimension_rating rating ON rating.revision_id=revision.id
@@ -254,108 +254,133 @@ BEGIN
   );
 END $$;
 
-CREATE TABLE IF NOT EXISTS merch_store (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  owner_party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
-  artist_party_id BIGINT REFERENCES party(id) ON DELETE RESTRICT,
-  slug TEXT NOT NULL CHECK (slug = lower(slug) AND slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
-  name TEXT NOT NULL CHECK (length(btrim(name)) BETWEEN 2 AND 120),
-  status TEXT NOT NULL DEFAULT 'draft'
-    CHECK (status IN ('draft','published','paused','archived')),
-  identity_verified_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (slug)
+DO $$ BEGIN
+  IF to_regclass('public.merch_store') IS NULL
+     OR to_regclass('public.merch_product') IS NULL
+     OR to_regclass('public.merch_order') IS NULL
+     OR to_regclass('public.merch_order_line') IS NULL
+     OR to_regclass('public.merch_fulfillment_event') IS NULL
+     OR to_regclass('public.merch_shipment') IS NULL THEN
+    RAISE EXCEPTION 'Merch reputation requires the canonical artist merch storefront migration';
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS merch_reputation_order_integrity (
+  order_id UUID PRIMARY KEY REFERENCES merch_order(id) ON DELETE RESTRICT,
+  fraud_state TEXT NOT NULL CHECK (fraud_state IN ('review','confirmed','cleared')),
+  evidence JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(evidence)='object'),
+  decided_by BIGINT REFERENCES party(id) ON DELETE RESTRICT,
+  decided_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (fraud_state <> 'cleared' OR decided_by IS NOT NULL)
 );
 
-CREATE TABLE IF NOT EXISTS merch_store_member (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
-  party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
-  member_role TEXT NOT NULL CHECK (member_role IN ('owner','admin','collaborator')),
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','suspended','removed')),
-  added_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  removed_at TIMESTAMPTZ,
-  UNIQUE (store_id, party_id)
+CREATE TABLE IF NOT EXISTS merch_reputation_order_buyer_claim (
+  order_id UUID PRIMARY KEY REFERENCES merch_order(id) ON DELETE RESTRICT,
+  buyer_party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  verification_method TEXT NOT NULL DEFAULT 'private_tracking_capability'
+    CHECK (verification_method='private_tracking_capability'),
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (order_id,buyer_party_id)
 );
 
-CREATE INDEX IF NOT EXISTS merch_store_member_party_idx
-  ON merch_store_member(party_id, store_id) WHERE status='active';
-CREATE INDEX IF NOT EXISTS merch_store_artist_idx
-  ON merch_store(artist_party_id, created_at) WHERE status='published';
-
-CREATE OR REPLACE FUNCTION merch_store_sync_owner_membership()
+CREATE OR REPLACE FUNCTION merch_reputation_protect_claimed_order_buyer()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO merch_store_member(store_id, party_id, member_role, status)
-  VALUES (NEW.id, NEW.owner_party_id, 'owner', 'active')
-  ON CONFLICT (store_id, party_id) DO UPDATE
-    SET member_role='owner', status='active', removed_at=NULL;
+  IF NEW.customer_party_id IS NOT NULL AND EXISTS(
+    SELECT 1 FROM merch_reputation_order_buyer_claim claim
+    WHERE claim.order_id=NEW.id AND claim.buyer_party_id IS DISTINCT FROM NEW.customer_party_id
+  ) THEN
+    RAISE EXCEPTION 'Claimed order buyer cannot be reassigned to another account';
+  END IF;
   RETURN NEW;
 END $$;
-DROP TRIGGER IF EXISTS merch_store_sync_owner_membership_trigger ON merch_store;
-CREATE TRIGGER merch_store_sync_owner_membership_trigger
-  AFTER INSERT OR UPDATE OF owner_party_id ON merch_store
-  FOR EACH ROW EXECUTE FUNCTION merch_store_sync_owner_membership();
+DROP TRIGGER IF EXISTS merch_reputation_protect_claimed_order_buyer_trigger ON merch_order;
+CREATE TRIGGER merch_reputation_protect_claimed_order_buyer_trigger
+  BEFORE UPDATE OF customer_party_id ON merch_order
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_protect_claimed_order_buyer();
 
-CREATE TABLE IF NOT EXISTS merch_product (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
-  slug TEXT NOT NULL CHECK (slug = lower(slug) AND slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
-  name TEXT NOT NULL CHECK (length(btrim(name)) BETWEEN 2 AND 160),
-  status TEXT NOT NULL DEFAULT 'draft'
-    CHECK (status IN ('draft','published','sold_out','archived')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (store_id, slug),
-  UNIQUE (id, store_id)
+CREATE TABLE IF NOT EXISTS merch_reputation_line_receipt (
+  order_line_id UUID PRIMARY KEY REFERENCES merch_order_line(id) ON DELETE RESTRICT,
+  receipt_state TEXT NOT NULL CHECK (receipt_state IN (
+    'partially_delivered','delivered','picked_up','replaced','returned','cancelled'
+  )),
+  received_at TIMESTAMPTZ,
+  source_event_id BIGINT NOT NULL REFERENCES merch_fulfillment_event(id) ON DELETE RESTRICT,
+  evidence JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(evidence)='object'),
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CHECK (receipt_state NOT IN ('delivered','picked_up','replaced') OR received_at IS NOT NULL)
 );
 
-CREATE TABLE IF NOT EXISTS merch_order (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
-  buyer_party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
-  order_state TEXT NOT NULL DEFAULT 'pending'
-    CHECK (order_state IN ('pending','confirmed','preparing','partially_fulfilled','fulfilled','cancelled','closed')),
-  payment_state TEXT NOT NULL DEFAULT 'awaiting_payment'
-    CHECK (payment_state IN ('awaiting_payment','verified','partially_refunded','refunded','disputed','chargeback')),
-  fulfillment_state TEXT NOT NULL DEFAULT 'pending'
-    CHECK (fulfillment_state IN ('pending','preparing','partially_delivered','delivered','picked_up','cancelled')),
-  verified_buyer_at TIMESTAMPTZ,
-  verified_payment_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  pickup_confirmed_at TIMESTAMPTZ,
-  cancelled_at TIMESTAMPTZ,
-  cancellation_resolved_at TIMESTAMPTZ,
-  fraud_state TEXT NOT NULL DEFAULT 'clear' CHECK (fraud_state IN ('clear','review','confirmed')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (id, store_id),
-  CHECK ((fulfillment_state <> 'delivered') OR delivered_at IS NOT NULL),
-  CHECK ((fulfillment_state <> 'picked_up') OR pickup_confirmed_at IS NOT NULL),
-  CHECK ((order_state <> 'cancelled') OR cancelled_at IS NOT NULL)
-);
+CREATE OR REPLACE VIEW merch_reputation_store_source AS
+SELECT store.id, store.primary_owner_party_id AS owner_party_id,
+  store.seller_party_id AS artist_party_id, store.slug,
+  store.display_name AS name,
+  CASE WHEN store.application_status='approved' AND store.operational_status='active'
+    THEN 'published' ELSE store.operational_status END AS status,
+  CASE WHEN store.application_status='approved' THEN store.reviewed_at END AS identity_verified_at,
+  store.created_at, store.updated_at
+FROM merch_store store;
 
-CREATE INDEX IF NOT EXISTS merch_order_buyer_idx ON merch_order(buyer_party_id, updated_at DESC);
-CREATE INDEX IF NOT EXISTS merch_order_store_reputation_idx
-  ON merch_order(store_id, fulfillment_state, delivered_at DESC);
+CREATE OR REPLACE VIEW merch_reputation_order_source AS
+SELECT orders.id, orders.store_id,
+  coalesce(orders.customer_party_id,buyer_claim.buyer_party_id) AS buyer_party_id,
+  orders.commercial_status AS order_state,
+  CASE orders.payment_status
+    WHEN 'paid' THEN 'verified'
+    WHEN 'partially_refunded' THEN 'partially_refunded'
+    WHEN 'refunded' THEN 'refunded'
+    WHEN 'disputed' THEN 'disputed'
+    WHEN 'chargeback' THEN 'chargeback'
+    ELSE 'awaiting_payment' END AS payment_state,
+  CASE orders.fulfillment_status
+    WHEN 'delivered' THEN CASE WHEN orders.shipping_method='coordinated_pickup' THEN 'picked_up' ELSE 'delivered' END
+    WHEN 'cancelled' THEN 'cancelled'
+    ELSE orders.fulfillment_status END AS fulfillment_state,
+  CASE WHEN coalesce(orders.customer_party_id,buyer_claim.buyer_party_id) IS NOT NULL
+    THEN coalesce(buyer_claim.claimed_at,orders.created_at) END AS verified_buyer_at,
+  coalesce(checkout.paid_at,payment_event.created_at) AS verified_payment_at,
+  CASE WHEN orders.shipping_method='national_shipping' THEN receipt_event.received_at END AS delivered_at,
+  CASE WHEN orders.shipping_method='coordinated_pickup' THEN receipt_event.received_at END AS pickup_confirmed_at,
+  orders.cancelled_at, orders.cancelled_at AS cancellation_resolved_at,
+  CASE integrity.fraud_state WHEN 'cleared' THEN 'clear' ELSE coalesce(integrity.fraud_state,'clear') END AS fraud_state,
+  orders.created_at, orders.updated_at
+FROM merch_order orders
+LEFT JOIN merch_reputation_order_buyer_claim buyer_claim ON buyer_claim.order_id=orders.id
+LEFT JOIN merch_reputation_order_integrity integrity ON integrity.order_id=orders.id
+LEFT JOIN commerce_checkout_session checkout
+  ON checkout.id=orders.checkout_id AND checkout.domain_type='merch_order'
+  AND checkout.domain_order_id=orders.id::TEXT
+LEFT JOIN LATERAL (
+  SELECT event.created_at FROM merch_fulfillment_event event
+  WHERE event.order_id=orders.id AND event.event_type='payment_confirmed'
+  ORDER BY event.created_at,event.id LIMIT 1
+) payment_event ON TRUE
+LEFT JOIN LATERAL (
+  SELECT min(received_at) AS received_at FROM (
+    SELECT event.created_at AS received_at FROM merch_fulfillment_event event
+    WHERE event.order_id=orders.id AND event.event_type='delivered'
+    UNION ALL
+    SELECT shipment.delivered_at FROM merch_shipment shipment
+    WHERE shipment.order_id=orders.id AND shipment.delivered_at IS NOT NULL
+  ) receipt_times
+) receipt_event ON TRUE;
 
-CREATE TABLE IF NOT EXISTS merch_order_line (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID NOT NULL REFERENCES merch_order(id) ON DELETE RESTRICT,
-  product_id UUID NOT NULL REFERENCES merch_product(id) ON DELETE RESTRICT,
-  store_id UUID NOT NULL,
-  quantity INTEGER NOT NULL CHECK (quantity BETWEEN 1 AND 100),
-  variant_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(variant_snapshot)='object'),
-  fulfillment_state TEXT NOT NULL DEFAULT 'pending'
-    CHECK (fulfillment_state IN ('pending','partially_delivered','delivered','picked_up','replaced','returned','refunded','cancelled')),
-  delivered_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (id, order_id),
-  FOREIGN KEY (order_id, store_id) REFERENCES merch_order(id, store_id) ON DELETE RESTRICT,
-  FOREIGN KEY (product_id, store_id) REFERENCES merch_product(id, store_id) ON DELETE RESTRICT,
-  CHECK ((fulfillment_state NOT IN ('delivered','picked_up','replaced')) OR delivered_at IS NOT NULL)
-);
+CREATE OR REPLACE VIEW merch_reputation_order_line_source AS
+SELECT line.id, line.order_id, line.product_id, product.store_id, line.quantity,
+  line.variant_snapshot,
+  coalesce(receipt.receipt_state,
+    CASE orders.fulfillment_state
+      WHEN 'delivered' THEN 'delivered'
+      WHEN 'picked_up' THEN 'picked_up'
+      WHEN 'cancelled' THEN 'cancelled'
+      WHEN 'returned' THEN 'returned'
+      ELSE 'pending' END) AS fulfillment_state,
+  coalesce(receipt.received_at,orders.delivered_at,orders.pickup_confirmed_at) AS delivered_at,
+  line.created_at
+FROM merch_order_line line
+JOIN merch_product product ON product.id=line.product_id
+JOIN merch_reputation_order_source orders ON orders.id=line.order_id
+LEFT JOIN merch_reputation_line_receipt receipt ON receipt.order_line_id=line.id;
 
 CREATE TABLE IF NOT EXISTS merch_reputation_feature_flag (
   flag_key TEXT NOT NULL CHECK (flag_key IN (
@@ -527,7 +552,7 @@ CREATE TABLE IF NOT EXISTS merch_review_media_asset (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS merch_review (
+CREATE TABLE IF NOT EXISTS merch_reputation_review (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   review_kind TEXT NOT NULL CHECK (review_kind IN ('store','product')),
   store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
@@ -545,17 +570,17 @@ CREATE TABLE IF NOT EXISTS merch_review (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS merch_review_one_store_per_order
-  ON merch_review(order_id) WHERE review_kind='store';
+  ON merch_reputation_review(order_id) WHERE review_kind='store';
 CREATE UNIQUE INDEX IF NOT EXISTS merch_review_one_product_per_line
-  ON merch_review(order_line_id) WHERE review_kind='product';
+  ON merch_reputation_review(order_line_id) WHERE review_kind='product';
 CREATE INDEX IF NOT EXISTS merch_review_store_public_idx
-  ON merch_review(store_id, created_at DESC, id DESC) WHERE status IN ('published','limited');
+  ON merch_reputation_review(store_id, created_at DESC, id DESC) WHERE status IN ('published','limited');
 CREATE INDEX IF NOT EXISTS merch_review_product_public_idx
-  ON merch_review(product_id, created_at DESC, id DESC) WHERE status IN ('published','limited');
+  ON merch_reputation_review(product_id, created_at DESC, id DESC) WHERE status IN ('published','limited');
 
 CREATE TABLE IF NOT EXISTS merch_review_revision (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  review_id UUID NOT NULL REFERENCES merch_review(id) ON DELETE RESTRICT,
+  review_id UUID NOT NULL REFERENCES merch_reputation_review(id) ON DELETE RESTRICT,
   revision_no INTEGER NOT NULL CHECK (revision_no > 0),
   overall_rating SMALLINT NOT NULL CHECK (overall_rating BETWEEN 1 AND 5),
   issue_occurred BOOLEAN NOT NULL DEFAULT FALSE,
@@ -587,8 +612,8 @@ RETURNS BOOLEAN LANGUAGE plpgsql STABLE AS $$
 DECLARE artist_party BIGINT;
 BEGIN
   IF EXISTS (SELECT 1 FROM merch_store_member
-    WHERE store_id=$1 AND party_id=$2 AND status='active') THEN RETURN TRUE; END IF;
-  SELECT artist_party_id INTO artist_party FROM merch_store WHERE id=$1;
+    WHERE store_id=$1 AND party_id=$2 AND invitation_status='accepted') THEN RETURN TRUE; END IF;
+  SELECT artist_party_id INTO artist_party FROM merch_reputation_store_source WHERE id=$1;
   IF artist_party IS NULL THEN RETURN FALSE; END IF;
   IF artist_party=$2 THEN RETURN TRUE; END IF;
   IF to_regclass('public.band') IS NOT NULL AND to_regclass('public.band_member') IS NOT NULL THEN
@@ -610,14 +635,14 @@ BEGIN
       verified_buyer_at,verified_payment_at
     INTO source_time,source_store,source_buyer,source_fraud,source_payment,source_fulfillment,
       source_order_state,source_verified_buyer,source_verified_payment
-    FROM merch_order WHERE id=$2;
+    FROM merch_reputation_order_source WHERE id=$2;
   ELSIF $1='product' THEN
     SELECT line.delivered_at,orders.store_id,orders.buyer_party_id,orders.fraud_state,
       orders.payment_state,line.fulfillment_state,orders.order_state,
       orders.verified_buyer_at,orders.verified_payment_at
     INTO source_time,source_store,source_buyer,source_fraud,source_payment,source_fulfillment,
       source_order_state,source_verified_buyer,source_verified_payment
-    FROM merch_order_line line JOIN merch_order orders ON orders.id=line.order_id WHERE line.id=$2;
+    FROM merch_reputation_order_line_source line JOIN merch_reputation_order_source orders ON orders.id=line.order_id WHERE line.id=$2;
   ELSE RETURN FALSE;
   END IF;
   IF source_time IS NULL OR source_verified_buyer IS NULL
@@ -649,13 +674,13 @@ BEGIN
     NEW.updated_at:=NOW(); RETURN NEW;
   END IF;
   IF NEW.review_kind='store' THEN
-    SELECT store_id INTO expected_store FROM merch_order WHERE id=NEW.order_id;
+    SELECT store_id INTO expected_store FROM merch_reputation_order_source WHERE id=NEW.order_id;
     IF expected_store IS DISTINCT FROM NEW.store_id
       OR NOT merch_review_evidence_is_eligible('store',NEW.order_id,NEW.author_party_id) THEN
       RAISE EXCEPTION 'Store review requires an eligible coherent order'; END IF;
   ELSE
     SELECT store_id,product_id,order_id INTO expected_store,expected_product,expected_order
-    FROM merch_order_line WHERE id=NEW.order_line_id;
+    FROM merch_reputation_order_line_source WHERE id=NEW.order_line_id;
     IF ROW(expected_store,expected_product,expected_order) IS DISTINCT FROM
       ROW(NEW.store_id,NEW.product_id,NEW.order_id)
       OR NOT merch_review_evidence_is_eligible('product',NEW.order_line_id,NEW.author_party_id) THEN
@@ -663,12 +688,17 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
-DROP TRIGGER IF EXISTS merch_review_validate_identity_trigger ON merch_review;
-CREATE TRIGGER merch_review_validate_identity_trigger BEFORE INSERT OR UPDATE ON merch_review
+DROP TRIGGER IF EXISTS merch_review_validate_identity_trigger ON merch_reputation_review;
+CREATE TRIGGER merch_review_validate_identity_trigger BEFORE INSERT OR UPDATE ON merch_reputation_review
 FOR EACH ROW EXECUTE FUNCTION merch_review_validate_identity();
 
 CREATE OR REPLACE FUNCTION merch_reputation_immutable()
 RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Durable reputation evidence is immutable'; END $$;
+DROP TRIGGER IF EXISTS merch_reputation_order_buyer_claim_immutable_trigger
+  ON merch_reputation_order_buyer_claim;
+CREATE TRIGGER merch_reputation_order_buyer_claim_immutable_trigger
+  BEFORE UPDATE OR DELETE ON merch_reputation_order_buyer_claim
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_immutable();
 DROP TRIGGER IF EXISTS merch_review_revision_immutable_trigger ON merch_review_revision;
 CREATE TRIGGER merch_review_revision_immutable_trigger BEFORE UPDATE OR DELETE ON merch_review_revision
 FOR EACH ROW EXECUTE FUNCTION merch_reputation_immutable();
@@ -695,8 +725,8 @@ DECLARE kind TEXT; cancelled BOOLEAN; issue_present BOOLEAN; invalid_count BIGIN
 BEGIN
   SELECT review.review_kind,(orders.order_state='cancelled'),revision.issue_occurred
   INTO kind,cancelled,issue_present FROM merch_review_revision revision
-  JOIN merch_review review ON review.id=revision.review_id
-  JOIN merch_order orders ON orders.id=review.order_id WHERE revision.id=NEW.id;
+  JOIN merch_reputation_review review ON review.id=revision.review_id
+  JOIN merch_reputation_order_source orders ON orders.id=review.order_id WHERE revision.id=NEW.id;
   SELECT count(*) INTO invalid_count FROM merch_review_dimension_rating rating
   JOIN merch_reputation_dimension dimension ON dimension.code=rating.dimension_code
   WHERE rating.revision_id=NEW.id AND dimension.subject_kind<>kind;
@@ -728,7 +758,7 @@ FOR EACH ROW EXECUTE FUNCTION merch_review_validate_revision_dimensions();
 
 CREATE TABLE IF NOT EXISTS merch_seller_response (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  review_id UUID NOT NULL UNIQUE REFERENCES merch_review(id) ON DELETE RESTRICT,
+  review_id UUID NOT NULL UNIQUE REFERENCES merch_reputation_review(id) ON DELETE RESTRICT,
   store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
   current_revision INTEGER NOT NULL DEFAULT 0 CHECK (current_revision >= 0),
   status TEXT NOT NULL DEFAULT 'published'
@@ -795,6 +825,214 @@ CREATE TRIGGER merch_reputation_operational_signal_immutable_trigger
   BEFORE UPDATE OR DELETE ON merch_reputation_operational_signal
   FOR EACH ROW EXECUTE FUNCTION merch_reputation_immutable();
 
+CREATE TABLE IF NOT EXISTS merch_reputation_source_event (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_key TEXT NOT NULL UNIQUE CHECK (length(btrim(source_key)) BETWEEN 8 AND 240),
+  source_type TEXT NOT NULL CHECK (source_type IN ('fulfillment','shipment','order_state','issue')),
+  source_record_id TEXT NOT NULL CHECK (length(btrim(source_record_id)) BETWEEN 1 AND 200),
+  store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
+  order_id UUID NOT NULL REFERENCES merch_order(id) ON DELETE RESTRICT,
+  payload JSONB NOT NULL CHECK (jsonb_typeof(payload)='object'),
+  occurred_at TIMESTAMPTZ NOT NULL,
+  attempt_count INTEGER NOT NULL DEFAULT 0 CHECK (attempt_count>=0),
+  processed_at TIMESTAMPTZ,
+  processing_outcome TEXT CHECK (processing_outcome IN (
+    'signal_recorded','not_attributable','insufficient_evidence'
+  )),
+  last_error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS merch_reputation_source_event_pending_idx
+  ON merch_reputation_source_event(created_at,id) WHERE processed_at IS NULL;
+
+CREATE OR REPLACE FUNCTION merch_reputation_protect_source_event()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF ROW(NEW.source_key,NEW.source_type,NEW.source_record_id,NEW.store_id,NEW.order_id,
+      NEW.payload,NEW.occurred_at,NEW.created_at) IS DISTINCT FROM
+    ROW(OLD.source_key,OLD.source_type,OLD.source_record_id,OLD.store_id,OLD.order_id,
+      OLD.payload,OLD.occurred_at,OLD.created_at) THEN
+    RAISE EXCEPTION 'Reputation source-event evidence is immutable';
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_reputation_source_event_identity_trigger
+  ON merch_reputation_source_event;
+CREATE TRIGGER merch_reputation_source_event_identity_trigger
+  BEFORE UPDATE ON merch_reputation_source_event
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_protect_source_event();
+
+CREATE OR REPLACE FUNCTION merch_reputation_capture_fulfillment_event()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO merch_reputation_source_event(
+    source_key,source_type,source_record_id,store_id,order_id,payload,occurred_at
+  )
+  SELECT 'fulfillment:'||NEW.id,'fulfillment',NEW.id::TEXT,orders.store_id,NEW.order_id,
+    jsonb_strip_nulls(jsonb_build_object(
+      'eventType',NEW.event_type,'fromStatus',NEW.from_status,'toStatus',NEW.to_status,
+      'hasActor',NEW.actor_party_id IS NOT NULL,
+      'responsibility',NEW.metadata->>'responsibility',
+      'promisedDispatchAt',NEW.metadata->>'promisedDispatchAt',
+      'promisedTrackingAt',NEW.metadata->>'promisedTrackingAt',
+      'trackingRegisteredAt',NEW.metadata->>'trackingRegisteredAt',
+      'agreementDueAt',NEW.metadata->>'agreementDueAt',
+      'completedAt',NEW.metadata->>'completedAt',
+      'resolutionQuality',NEW.metadata->>'resolutionQuality',
+      'evidenceQuality',NEW.metadata->>'evidenceQuality'
+    )),NEW.created_at
+  FROM merch_order orders WHERE orders.id=NEW.order_id
+  ON CONFLICT (source_key) DO NOTHING;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_reputation_capture_fulfillment_event_trigger
+  ON merch_fulfillment_event;
+CREATE TRIGGER merch_reputation_capture_fulfillment_event_trigger
+  AFTER INSERT ON merch_fulfillment_event
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_capture_fulfillment_event();
+
+CREATE OR REPLACE FUNCTION merch_reputation_capture_shipment()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO merch_reputation_source_event(
+    source_key,source_type,source_record_id,store_id,order_id,payload,occurred_at
+  )
+  SELECT 'shipment:'||NEW.id||':'||NEW.status,'shipment',NEW.id::TEXT,orders.store_id,NEW.order_id,
+    jsonb_strip_nulls(jsonb_build_object(
+      'status',NEW.status,'trackingRegistered',NEW.tracking_number IS NOT NULL,
+      'shippedAt',NEW.shipped_at,'deliveredAt',NEW.delivered_at
+    )),coalesce(NEW.updated_at,NEW.created_at)
+  FROM merch_order orders WHERE orders.id=NEW.order_id
+  ON CONFLICT (source_key) DO NOTHING;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_reputation_capture_shipment_trigger ON merch_shipment;
+CREATE TRIGGER merch_reputation_capture_shipment_trigger
+  AFTER INSERT OR UPDATE OF status,shipped_at,delivered_at,tracking_number ON merch_shipment
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_capture_shipment();
+
+CREATE OR REPLACE FUNCTION merch_reputation_capture_order_state()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO merch_reputation_source_event(
+    source_key,source_type,source_record_id,store_id,order_id,payload,occurred_at
+  ) VALUES(
+    'order-state:'||NEW.id||':'||NEW.payment_status||':'||NEW.fulfillment_status||':'||
+      NEW.refund_status||':'||NEW.dispute_status,
+    'order_state',NEW.id::TEXT,NEW.store_id,NEW.id,
+    jsonb_build_object(
+      'commercialStatus',NEW.commercial_status,'paymentStatus',NEW.payment_status,
+      'fulfillmentStatus',NEW.fulfillment_status,'refundStatus',NEW.refund_status,
+      'disputeStatus',NEW.dispute_status,'refunded',NEW.refunded_minor>0
+    ),NEW.updated_at
+  ) ON CONFLICT (source_key) DO NOTHING;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_reputation_capture_order_state_trigger ON merch_order;
+CREATE TRIGGER merch_reputation_capture_order_state_trigger
+  AFTER UPDATE OF commercial_status,payment_status,fulfillment_status,refund_status,dispute_status
+  ON merch_order FOR EACH ROW
+  WHEN (ROW(OLD.commercial_status,OLD.payment_status,OLD.fulfillment_status,
+      OLD.refund_status,OLD.dispute_status) IS DISTINCT FROM
+    ROW(NEW.commercial_status,NEW.payment_status,NEW.fulfillment_status,
+      NEW.refund_status,NEW.dispute_status))
+  EXECUTE FUNCTION merch_reputation_capture_order_state();
+
+CREATE OR REPLACE FUNCTION merch_reputation_capture_issue()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO merch_reputation_source_event(
+    source_key,source_type,source_record_id,store_id,order_id,payload,occurred_at
+  )
+  SELECT 'issue:'||NEW.id||':'||NEW.status,'issue',NEW.id::TEXT,orders.store_id,NEW.order_id,
+    jsonb_strip_nulls(jsonb_build_object(
+      'issueType',NEW.issue_type,'status',NEW.status,'openedByType',NEW.opened_by_type,
+      'createdAt',NEW.created_at,'closedAt',NEW.closed_at
+    )),NEW.updated_at
+  FROM merch_order orders WHERE orders.id=NEW.order_id
+  ON CONFLICT (source_key) DO NOTHING;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_reputation_capture_issue_trigger ON merch_order_issue;
+CREATE TRIGGER merch_reputation_capture_issue_trigger
+  AFTER INSERT OR UPDATE OF status,closed_at ON merch_order_issue
+  FOR EACH ROW EXECUTE FUNCTION merch_reputation_capture_issue();
+
+CREATE OR REPLACE FUNCTION merch_reputation_process_source_events(p_limit INTEGER DEFAULT 100)
+RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE source RECORD; metric_value TEXT; signal UUID; handled INTEGER:=0; scored INTEGER:=0;
+  responsibility_value TEXT; outcome_value NUMERIC; quality_value NUMERIC;
+  evidence_source TEXT;
+BEGIN
+  IF p_limit NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'Source event limit must be 1-1000'; END IF;
+  FOR source IN
+    SELECT * FROM merch_reputation_source_event
+    WHERE processed_at IS NULL ORDER BY created_at,id LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      handled:=handled+1;
+      metric_value:=NULL;
+      responsibility_value:=source.payload->>'responsibility';
+      quality_value:=coalesce((source.payload->>'evidenceQuality')::NUMERIC,1);
+      evidence_source:=source.source_type;
+      IF source.source_type='fulfillment'
+         AND source.payload->>'eventType'='shipped'
+         AND source.payload ? 'promisedDispatchAt' THEN
+        metric_value:='dispatch_on_time';
+        responsibility_value:='seller';
+        outcome_value:=(source.occurred_at<=(source.payload->>'promisedDispatchAt')::TIMESTAMPTZ)::INTEGER;
+      ELSIF source.source_type='fulfillment'
+         AND source.payload->>'eventType'='shipment_created'
+         AND source.payload ? 'promisedTrackingAt'
+         AND source.payload ? 'trackingRegisteredAt' THEN
+        metric_value:='tracking_on_time';
+        responsibility_value:='seller';
+        outcome_value:=((source.payload->>'trackingRegisteredAt')::TIMESTAMPTZ
+          <=(source.payload->>'promisedTrackingAt')::TIMESTAMPTZ)::INTEGER;
+      ELSIF source.source_type='fulfillment'
+         AND source.payload->>'eventType'='cancelled'
+         AND responsibility_value='seller' THEN
+        metric_value:='seller_cancellation'; outcome_value:=0;
+        evidence_source:='cancellation';
+      ELSIF source.source_type='fulfillment'
+         AND source.payload->>'eventType'='dispute_updated'
+         AND responsibility_value='seller' THEN
+        metric_value:='seller_dispute'; outcome_value:=0;
+        evidence_source:='dispute';
+      ELSIF source.source_type='fulfillment'
+         AND source.payload->>'eventType'='refund_updated'
+         AND source.payload ? 'agreementDueAt' AND source.payload ? 'completedAt' THEN
+        metric_value:='refund_compliance'; responsibility_value:='seller';
+        outcome_value:=((source.payload->>'completedAt')::TIMESTAMPTZ
+          <=(source.payload->>'agreementDueAt')::TIMESTAMPTZ)::INTEGER;
+        evidence_source:='refund';
+      END IF;
+
+      IF metric_value IS NOT NULL THEN
+        signal:=merch_reputation_record_operational_signal(
+          'source:'||source.id,source.store_id,source.order_id,metric_value,outcome_value,
+          greatest(0,least(1,quality_value)),responsibility_value,
+          'source-evidence:'||source.id,evidence_source,source.source_record_id,'server',
+          source.payload,source.occurred_at);
+        UPDATE merch_reputation_source_event SET attempt_count=attempt_count+1,
+          processed_at=NOW(),processing_outcome='signal_recorded',last_error=NULL WHERE id=source.id;
+        scored:=scored+1;
+      ELSE
+        UPDATE merch_reputation_source_event SET attempt_count=attempt_count+1,
+          processed_at=NOW(),processing_outcome=CASE
+            WHEN responsibility_value IS NOT NULL AND responsibility_value<>'seller'
+              THEN 'not_attributable' ELSE 'insufficient_evidence' END,
+          last_error=NULL WHERE id=source.id;
+      END IF;
+    EXCEPTION WHEN OTHERS THEN
+      UPDATE merch_reputation_source_event SET attempt_count=attempt_count+1,
+        last_error=left(SQLERRM,1000) WHERE id=source.id;
+    END;
+  END LOOP;
+  RETURN jsonb_build_object('handled',handled,'signalsRecorded',scored);
+END $$;
+
 CREATE TABLE IF NOT EXISTS merch_reputation_event (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_key TEXT NOT NULL UNIQUE CHECK (length(btrim(event_key)) BETWEEN 8 AND 240),
@@ -805,7 +1043,7 @@ CREATE TABLE IF NOT EXISTS merch_reputation_event (
     'review_created','review_revised','review_visibility_changed','seller_response_changed',
     'operational_signal_recorded','moderation_decided','badge_changed','aggregate_rebuild_requested'
   )),
-  review_id UUID REFERENCES merch_review(id) ON DELETE RESTRICT,
+  review_id UUID REFERENCES merch_reputation_review(id) ON DELETE RESTRICT,
   operational_signal_id UUID REFERENCES merch_reputation_operational_signal(id) ON DELETE RESTRICT,
   payload JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(payload)='object'),
   occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -1011,6 +1249,53 @@ CREATE TRIGGER merch_reputation_audit_event_immutable_trigger
   BEFORE UPDATE OR DELETE ON merch_reputation_audit_event
   FOR EACH ROW EXECUTE FUNCTION merch_reputation_immutable();
 
+CREATE OR REPLACE FUNCTION merch_reputation_claim_order_buyer(
+  p_order_id UUID,p_buyer_party_id BIGINT,p_lookup_token TEXT
+) RETURNS JSONB LANGUAGE plpgsql AS $$
+DECLARE source_order RECORD; recorded_buyer BIGINT; inserted_rows INTEGER;
+BEGIN
+  IF p_buyer_party_id IS NULL OR p_lookup_token IS NULL
+     OR length(p_lookup_token) NOT BETWEEN 32 AND 300 THEN
+    RAISE EXCEPTION 'Order claim is invalid';
+  END IF;
+
+  SELECT orders.id,orders.store_id,orders.customer_party_id
+  INTO source_order
+  FROM merch_order orders
+  WHERE orders.id=p_order_id
+    AND orders.lookup_token_hash=encode(digest(p_lookup_token,'sha256'),'hex')
+  FOR UPDATE;
+
+  IF NOT FOUND OR (source_order.customer_party_id IS NOT NULL
+      AND source_order.customer_party_id IS DISTINCT FROM p_buyer_party_id) THEN
+    RAISE EXCEPTION 'Order claim is invalid';
+  END IF;
+
+  INSERT INTO merch_reputation_order_buyer_claim(order_id,buyer_party_id)
+  VALUES(p_order_id,p_buyer_party_id)
+  ON CONFLICT (order_id) DO NOTHING;
+  GET DIAGNOSTICS inserted_rows=ROW_COUNT;
+
+  SELECT buyer_party_id INTO recorded_buyer
+  FROM merch_reputation_order_buyer_claim WHERE order_id=p_order_id;
+  IF recorded_buyer IS DISTINCT FROM p_buyer_party_id THEN
+    RAISE EXCEPTION 'Order claim is invalid';
+  END IF;
+
+  IF inserted_rows=1 THEN
+    INSERT INTO merch_reputation_audit_event(
+      actor_party_id,action,record_type,record_id,reason,evidence
+    ) VALUES(
+      p_buyer_party_id,'order_buyer_claimed','merch_order',p_order_id::TEXT,
+      'Authenticated buyer linked using the private order tracking capability',
+      jsonb_build_object('storeId',source_order.store_id,
+        'verificationMethod','private_tracking_capability')
+    );
+  END IF;
+
+  RETURN jsonb_build_object('orderId',p_order_id,'buyerLinked',TRUE);
+END $$;
+
 CREATE TABLE IF NOT EXISTS merch_reputation_risk_policy_version (
   id TEXT PRIMARY KEY,
   status TEXT NOT NULL CHECK (status IN ('draft','active','retired')),
@@ -1137,7 +1422,7 @@ BEGIN
         SELECT count(orders.id)::INTEGER,
           CASE WHEN store.identity_verified_at IS NOT NULL THEN 1 ELSE 0 END
           INTO sample_count,measured_value
-        FROM merch_store store LEFT JOIN merch_order orders ON orders.store_id=store.id
+        FROM merch_reputation_store_source store LEFT JOIN merch_reputation_order_source orders ON orders.store_id=store.id
           AND orders.fraud_state='clear'
           AND orders.verified_buyer_at IS NOT NULL
           AND NOT merch_reputation_accounts_related(store.id,orders.buyer_party_id)
@@ -1154,14 +1439,14 @@ BEGIN
         FROM merch_reputation_operational_signal signal
         WHERE signal.store_id=p_store_id AND signal.metric=definition.requirements->>'metric'
           AND signal.responsibility=definition.requirements->>'responsibility'
-          AND (signal.order_id IS NULL OR EXISTS (SELECT 1 FROM merch_order signal_order
+          AND (signal.order_id IS NULL OR EXISTS (SELECT 1 FROM merch_reputation_order_source signal_order
             WHERE signal_order.id=signal.order_id AND signal_order.fraud_state='clear'))
           AND signal.occurred_at BETWEEN p_through-make_interval(days=>definition.validity_days) AND p_through;
         meets_requirement:=COALESCE(sample_count,0)>=definition.minimum_sample
           AND COALESCE(measured_value,0)>=(definition.requirements->>'minimumOutcome')::NUMERIC;
       WHEN 'standout_communication' THEN
         SELECT count(*)::INTEGER,avg(rating.rating) INTO sample_count,measured_value
-        FROM merch_review review JOIN merch_order reviewed_order ON reviewed_order.id=review.order_id
+        FROM merch_reputation_review review JOIN merch_reputation_order_source reviewed_order ON reviewed_order.id=review.order_id
         JOIN merch_review_revision revision
           ON revision.review_id=review.id AND revision.revision_no=review.current_revision
         JOIN merch_review_dimension_rating rating ON rating.revision_id=revision.id
@@ -1173,7 +1458,7 @@ BEGIN
           AND COALESCE(measured_value,0)>=(definition.requirements->>'minimumAverage')::NUMERIC;
       WHEN 'excellent_resolution' THEN
         SELECT count(*)::INTEGER,avg(rating.rating) INTO sample_count,measured_value
-        FROM merch_review review JOIN merch_order reviewed_order ON reviewed_order.id=review.order_id
+        FROM merch_reputation_review review JOIN merch_reputation_order_source reviewed_order ON reviewed_order.id=review.order_id
         JOIN merch_review_revision revision
           ON revision.review_id=review.id AND revision.revision_no=review.current_revision
         JOIN merch_review_dimension_rating rating ON rating.revision_id=revision.id
@@ -1214,7 +1499,7 @@ BEGIN
         notification_key,recipient_party_id,notification_type,safe_payload
       ) SELECT 'badge-gained:'||award_id,store.owner_party_id,'badge_gained',
           jsonb_build_object('storeId',p_store_id,'badgeCode',definition.code)
-        FROM merch_store store JOIN merch_reputation_notification_preference preference
+        FROM merch_reputation_store_source store JOIN merch_reputation_notification_preference preference
           ON preference.party_id=store.owner_party_id AND preference.badge_change
         WHERE store.id=p_store_id ON CONFLICT (notification_key) DO NOTHING;
     ELSIF NOT meets_requirement AND active_award.id IS NOT NULL THEN
@@ -1226,7 +1511,7 @@ BEGIN
         notification_key,recipient_party_id,notification_type,safe_payload
       ) SELECT 'badge-lost:'||active_award.id,store.owner_party_id,'badge_lost',
           jsonb_build_object('storeId',p_store_id,'badgeCode',definition.code)
-        FROM merch_store store JOIN merch_reputation_notification_preference preference
+        FROM merch_reputation_store_source store JOIN merch_reputation_notification_preference preference
           ON preference.party_id=store.owner_party_id AND preference.badge_change
         WHERE store.id=p_store_id ON CONFLICT (notification_key) DO NOTHING;
     END IF;
@@ -1461,7 +1746,7 @@ DECLARE
   target_store UUID;
   target_product UUID;
   source_time TIMESTAMPTZ;
-  target_review merch_review%ROWTYPE;
+  target_review merch_reputation_review%ROWTYPE;
   revision_id UUID;
   next_revision INTEGER;
   entry RECORD;
@@ -1505,17 +1790,19 @@ BEGIN
   END IF;
 
   IF p_review_kind='store' THEN
+    PERFORM 1 FROM merch_order WHERE id=p_order_id FOR UPDATE;
     SELECT store_id,COALESCE(delivered_at,pickup_confirmed_at,cancellation_resolved_at,cancelled_at)
-      INTO target_store,source_time FROM merch_order WHERE id=p_order_id FOR UPDATE;
+      INTO target_store,source_time FROM merch_reputation_order_source WHERE id=p_order_id;
     IF p_order_line_id IS NOT NULL
       OR NOT merch_review_evidence_is_eligible('store',p_order_id,p_actor_party_id) THEN
       RAISE EXCEPTION 'Order is not eligible for this store review';
     END IF;
   ELSE
+    PERFORM 1 FROM merch_order_line WHERE id=p_order_line_id FOR UPDATE;
     SELECT line.store_id,line.product_id,line.delivered_at
       INTO target_store,target_product,source_time
-      FROM merch_order_line line
-      WHERE line.id=p_order_line_id AND line.order_id=p_order_id FOR UPDATE;
+      FROM merch_reputation_order_line_source line
+      WHERE line.id=p_order_line_id AND line.order_id=p_order_id;
     IF target_product IS NULL
       OR NOT merch_review_evidence_is_eligible('product',p_order_line_id,p_actor_party_id) THEN
       RAISE EXCEPTION 'Order line is not eligible for this product review';
@@ -1523,15 +1810,15 @@ BEGIN
   END IF;
 
   IF p_review_kind='store' THEN
-    SELECT * INTO target_review FROM merch_review
+    SELECT * INTO target_review FROM merch_reputation_review
       WHERE review_kind='store' AND order_id=p_order_id FOR UPDATE;
   ELSE
-    SELECT * INTO target_review FROM merch_review
+    SELECT * INTO target_review FROM merch_reputation_review
       WHERE review_kind='product' AND order_line_id=p_order_line_id FOR UPDATE;
   END IF;
   IF NOT FOUND THEN
     IF p_expected_revision <> 0 THEN RAISE EXCEPTION 'Review revision conflict'; END IF;
-    INSERT INTO merch_review(
+    INSERT INTO merch_reputation_review(
       review_kind,store_id,product_id,order_id,order_line_id,author_party_id,edit_deadline
     ) VALUES (
       p_review_kind,target_store,target_product,p_order_id,p_order_line_id,p_actor_party_id,
@@ -1572,7 +1859,7 @@ BEGIN
     INSERT INTO merch_review_image(revision_id,media_asset_id,alt_text,position)
     SELECT revision_id,(entry.value->>'mediaAssetId')::UUID,entry.value->>'altText',entry.ordinality;
   END LOOP;
-  UPDATE merch_review SET current_revision=next_revision WHERE id=target_review.id;
+  UPDATE merch_reputation_review SET current_revision=next_revision WHERE id=target_review.id;
   IF p_review_kind='store' THEN
     UPDATE merch_reputation_notification_outbox SET cancelled_at=NOW()
       WHERE notification_key='review-reminder:'||p_order_id
@@ -1605,7 +1892,7 @@ CREATE OR REPLACE FUNCTION merch_reputation_respond(
   p_environment TEXT DEFAULT 'production'
 ) RETURNS JSONB LANGUAGE plpgsql AS $$
 DECLARE
-  target_review merch_review%ROWTYPE;
+  target_review merch_reputation_review%ROWTYPE;
   target_response merch_seller_response%ROWTYPE;
   next_revision INTEGER;
   request_hash TEXT;
@@ -1627,9 +1914,9 @@ BEGIN
     END IF;
     RETURN prior.response;
   END IF;
-  SELECT * INTO target_review FROM merch_review WHERE id=p_review_id;
+  SELECT * INTO target_review FROM merch_reputation_review WHERE id=p_review_id;
   IF NOT FOUND OR NOT EXISTS (SELECT 1 FROM merch_store_member
-      WHERE store_id=target_review.store_id AND party_id=p_actor_party_id AND status='active') THEN
+      WHERE store_id=target_review.store_id AND party_id=p_actor_party_id AND invitation_status='accepted') THEN
     RAISE EXCEPTION 'Seller response is outside actor scope';
   END IF;
   SELECT * INTO target_response FROM merch_seller_response
@@ -1691,7 +1978,7 @@ BEGIN
     RAISE EXCEPTION 'Merch review moderation is disabled';
   END IF;
   target_exists:=CASE p_target_type
-    WHEN 'review' THEN EXISTS (SELECT 1 FROM merch_review WHERE id=p_target_id)
+    WHEN 'review' THEN EXISTS (SELECT 1 FROM merch_reputation_review WHERE id=p_target_id)
     WHEN 'seller_response' THEN EXISTS (SELECT 1 FROM merch_seller_response WHERE id=p_target_id)
     ELSE FALSE END;
   IF NOT target_exists THEN RAISE EXCEPTION 'Report target does not exist'; END IF;
@@ -1732,7 +2019,7 @@ CREATE OR REPLACE FUNCTION merch_reputation_transition_moderation_case(
 DECLARE
   case_row merch_reputation_moderation_case%ROWTYPE;
   report_row merch_reputation_report%ROWTYPE;
-  review_row merch_review%ROWTYPE;
+  review_row merch_reputation_review%ROWTYPE;
   seller_response_row merch_seller_response%ROWTYPE;
   target_store_id UUID;
   target_review_id UUID;
@@ -1765,7 +2052,7 @@ BEGIN
   END IF;
   SELECT * INTO report_row FROM merch_reputation_report WHERE id=case_row.report_id;
   IF report_row.target_type='review' THEN
-    SELECT * INTO review_row FROM merch_review WHERE id=report_row.target_id FOR UPDATE;
+    SELECT * INTO review_row FROM merch_reputation_review WHERE id=report_row.target_id FOR UPDATE;
     target_store_id:=review_row.store_id;
     target_review_id:=review_row.id;
     prior_visibility:=review_row.status;
@@ -1797,7 +2084,7 @@ BEGIN
       UNION
       SELECT CASE WHEN report_row.target_type='review' THEN review_row.author_party_id
         ELSE store.owner_party_id END
-      FROM merch_store store WHERE store.id=target_store_id
+      FROM merch_reputation_store_source store WHERE store.id=target_store_id
     ) recipient
     JOIN merch_reputation_notification_preference preference
       ON preference.party_id=recipient.party_id AND preference.evidence_request
@@ -1808,7 +2095,7 @@ BEGIN
     END IF;
     next_state:='provisionally_hidden';
     IF report_row.target_type='review' THEN
-      UPDATE merch_review SET status='hidden' WHERE id=report_row.target_id;
+      UPDATE merch_reputation_review SET status='hidden' WHERE id=report_row.target_id;
     ELSE
       UPDATE merch_seller_response SET status='hidden' WHERE id=report_row.target_id;
     END IF;
@@ -1818,7 +2105,7 @@ BEGIN
     END IF;
     next_state:='in_review';
     IF report_row.target_type='review' THEN
-      UPDATE merch_review SET status=case_row.provisional_previous_visibility
+      UPDATE merch_reputation_review SET status=case_row.provisional_previous_visibility
         WHERE id=report_row.target_id;
     ELSE
       UPDATE merch_seller_response SET status=case_row.provisional_previous_visibility
@@ -1868,7 +2155,7 @@ CREATE OR REPLACE FUNCTION merch_reputation_decide_moderation(
 DECLARE
   target_case merch_reputation_moderation_case%ROWTYPE;
   target_report merch_reputation_report%ROWTYPE;
-  target_review merch_review%ROWTYPE;
+  target_review merch_reputation_review%ROWTYPE;
   target_response merch_seller_response%ROWTYPE;
   decision_id UUID;
   request_hash TEXT;
@@ -1901,7 +2188,7 @@ BEGIN
     WHEN 'hide' THEN 'hidden' WHEN 'limit' THEN 'limited'
     ELSE NULL END;
   IF target_report.target_type='review' THEN
-    SELECT * INTO target_review FROM merch_review WHERE id=target_report.target_id FOR UPDATE;
+    SELECT * INTO target_review FROM merch_reputation_review WHERE id=target_report.target_id FOR UPDATE;
     target_store:=target_review.store_id;
     previous_visibility:=COALESCE(target_case.provisional_previous_visibility,target_review.status);
   ELSE
@@ -1914,7 +2201,7 @@ BEGIN
     new_visibility:=previous_visibility;
   END IF;
   IF target_report.target_type='review' THEN
-    UPDATE merch_review SET status=new_visibility WHERE id=target_review.id;
+    UPDATE merch_reputation_review SET status=new_visibility WHERE id=target_review.id;
   ELSE
     UPDATE merch_seller_response SET status=new_visibility WHERE id=target_response.id;
   END IF;
@@ -1950,7 +2237,7 @@ BEGIN
     UNION
     SELECT CASE WHEN target_report.target_type='review' THEN target_review.author_party_id
       ELSE store.owner_party_id END
-    FROM merch_store store WHERE store.id=target_store
+    FROM merch_reputation_store_source store WHERE store.id=target_store
   ) recipient
   JOIN merch_reputation_notification_preference preference
     ON preference.party_id=recipient.party_id AND preference.moderation_change
@@ -1973,7 +2260,7 @@ DECLARE
   appeal_row merch_reputation_appeal%ROWTYPE;
   decision_row merch_reputation_moderation_decision%ROWTYPE;
   report_row merch_reputation_report%ROWTYPE;
-  review_row merch_review%ROWTYPE;
+  review_row merch_reputation_review%ROWTYPE;
   response_row merch_seller_response%ROWTYPE;
   request_hash TEXT;
   prior merch_reputation_idempotency%ROWTYPE;
@@ -2009,10 +2296,10 @@ BEGIN
     JOIN merch_reputation_report report ON report.id=moderation_case.report_id
     WHERE moderation_case.id=decision_row.case_id;
   IF report_row.target_type='review' THEN
-    SELECT * INTO review_row FROM merch_review WHERE id=report_row.target_id FOR UPDATE;
+    SELECT * INTO review_row FROM merch_reputation_review WHERE id=report_row.target_id FOR UPDATE;
     target_store:=review_row.store_id;
     IF p_outcome='reversed' THEN
-      UPDATE merch_review SET status=decision_row.previous_visibility WHERE id=review_row.id;
+      UPDATE merch_reputation_review SET status=decision_row.previous_visibility WHERE id=review_row.id;
     END IF;
   ELSE
     SELECT * INTO response_row FROM merch_seller_response WHERE id=report_row.target_id FOR UPDATE;
@@ -2061,7 +2348,7 @@ CREATE OR REPLACE FUNCTION merch_reputation_appeal_decision(
 DECLARE
   decision_row merch_reputation_moderation_decision%ROWTYPE;
   report_row merch_reputation_report%ROWTYPE;
-  review_row merch_review%ROWTYPE;
+  review_row merch_reputation_review%ROWTYPE;
   response_row merch_seller_response%ROWTYPE;
   request_hash TEXT;
   prior merch_reputation_idempotency%ROWTYPE;
@@ -2087,14 +2374,14 @@ BEGIN
     WHERE moderation_case.id=decision_row.case_id;
   authorized:=report_row.reporter_party_id=p_actor_party_id;
   IF report_row.target_type='review' THEN
-    SELECT * INTO review_row FROM merch_review WHERE id=report_row.target_id;
+    SELECT * INTO review_row FROM merch_reputation_review WHERE id=report_row.target_id;
     authorized:=authorized OR review_row.author_party_id=p_actor_party_id
       OR EXISTS (SELECT 1 FROM merch_store_member WHERE store_id=review_row.store_id
-        AND party_id=p_actor_party_id AND status='active');
+        AND party_id=p_actor_party_id AND invitation_status='accepted');
   ELSE
     SELECT * INTO response_row FROM merch_seller_response WHERE id=report_row.target_id;
     authorized:=authorized OR EXISTS (SELECT 1 FROM merch_store_member
-      WHERE store_id=response_row.store_id AND party_id=p_actor_party_id AND status='active');
+      WHERE store_id=response_row.store_id AND party_id=p_actor_party_id AND invitation_status='accepted');
   END IF;
   IF NOT authorized THEN RAISE EXCEPTION 'Appeal is outside actor scope'; END IF;
   INSERT INTO merch_reputation_appeal(decision_id,appellant_party_id,grounds)
@@ -2152,38 +2439,39 @@ END $$;
 CREATE OR REPLACE FUNCTION merch_reputation_enqueue_review_invitation()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NEW.fulfillment_state IN ('delivered','picked_up')
-    AND OLD.fulfillment_state IS DISTINCT FROM NEW.fulfillment_state THEN
+  IF NEW.customer_party_id IS NOT NULL
+    AND NEW.fulfillment_status IN ('delivered','cancelled')
+    AND OLD.fulfillment_status IS DISTINCT FROM NEW.fulfillment_status THEN
     INSERT INTO merch_reputation_notification_outbox(
       notification_key,recipient_party_id,notification_type,safe_payload,available_at
     )
-    SELECT 'review-invitation:'||NEW.id,NEW.buyer_party_id,'review_invitation',
+    SELECT 'review-invitation:'||NEW.id,NEW.customer_party_id,'review_invitation',
       jsonb_build_object('orderId',NEW.id,'storeId',NEW.store_id),NOW()
     FROM merch_reputation_notification_preference preference
     JOIN merch_reputation_feature_flag flag
       ON flag.flag_key='notifications'
       AND flag.environment=COALESCE(NULLIF(current_setting('tdf.runtime_environment',true),''),'production')
       AND flag.enabled
-    WHERE preference.party_id=NEW.buyer_party_id AND preference.review_invitation
+    WHERE preference.party_id=NEW.customer_party_id AND preference.review_invitation
     ON CONFLICT (notification_key) DO NOTHING;
     INSERT INTO merch_reputation_notification_outbox(
       notification_key,recipient_party_id,notification_type,safe_payload,available_at
     )
-    SELECT 'review-reminder:'||NEW.id,NEW.buyer_party_id,'review_reminder',
+    SELECT 'review-reminder:'||NEW.id,NEW.customer_party_id,'review_reminder',
       jsonb_build_object('orderId',NEW.id,'storeId',NEW.store_id),NOW()+INTERVAL '7 days'
     FROM merch_reputation_notification_preference preference
     JOIN merch_reputation_feature_flag flag
       ON flag.flag_key='notifications'
       AND flag.environment=COALESCE(NULLIF(current_setting('tdf.runtime_environment',true),''),'production')
       AND flag.enabled
-    WHERE preference.party_id=NEW.buyer_party_id AND preference.review_reminder
+    WHERE preference.party_id=NEW.customer_party_id AND preference.review_reminder
     ON CONFLICT (notification_key) DO NOTHING;
   END IF;
   RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS merch_reputation_review_invitation_trigger ON merch_order;
 CREATE TRIGGER merch_reputation_review_invitation_trigger
-  AFTER UPDATE OF fulfillment_state ON merch_order
+  AFTER UPDATE OF fulfillment_status ON merch_order
   FOR EACH ROW EXECUTE FUNCTION merch_reputation_enqueue_review_invitation();
 
 CREATE OR REPLACE FUNCTION merch_reputation_search_contribution(
@@ -2221,8 +2509,8 @@ SELECT
   count(DISTINCT moderation_case.id) FILTER (WHERE moderation_case.state IN ('decided','closed')) AS moderated_cases,
   count(DISTINCT appeal.id) AS appeals,
   count(DISTINCT appeal.id) FILTER (WHERE appeal.state='reversed') AS reversed_appeals
-FROM merch_order orders
-LEFT JOIN merch_review review ON review.order_id=orders.id
+FROM merch_reputation_order_source orders
+LEFT JOIN merch_reputation_review review ON review.order_id=orders.id
 LEFT JOIN merch_reputation_report report
   ON report.target_type='review' AND report.target_id=review.id
 LEFT JOIN merch_reputation_moderation_case moderation_case ON moderation_case.report_id=report.id
@@ -2243,7 +2531,7 @@ WHERE checkpoint.processed_at IS NULL;
 
 COMMENT ON TABLE merch_reputation_aggregate IS
   'Commercial projections only; never joined mathematically into person, artist, band or community reputation.';
-COMMENT ON COLUMN merch_review.order_id IS
+COMMENT ON COLUMN merch_reputation_review.order_id IS
   'Private verified-purchase evidence. Never expose publicly.';
 COMMENT ON TABLE merch_reputation_operational_signal IS
   'Durable server-originated signals. Courier, buyer, platform and unknown responsibility are excluded from store scoring.';

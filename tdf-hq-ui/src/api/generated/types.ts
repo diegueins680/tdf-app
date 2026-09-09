@@ -5457,6 +5457,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/merch/orders/{orderId}/review-buyer-claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Links the authenticated buyer to a guest checkout after validating its private tracking capability. The token is neither persisted nor returned; unknown, mismatched, and already-claimed orders have the same response. */
+        put: operations["claimMerchOrderReviewBuyer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/merch/orders/{orderId}/store-review": {
         parameters: {
             query?: never;
@@ -6448,13 +6465,19 @@ export interface components {
             /** Format: date-time */
             editDeadline: string;
         };
+        MerchReviewBuyerClaim: {
+            /** Format: uuid */
+            orderId: string;
+            /** @enum {boolean} */
+            buyerLinked: true;
+        };
         MerchReviewEligibility: {
             /** Format: uuid */
             orderId: string;
             /** Format: uuid */
             storeId: string;
             /** @enum {string} */
-            orderState: "pending" | "confirmed" | "preparing" | "partially_fulfilled" | "fulfilled" | "cancelled" | "closed";
+            orderState: "created" | "confirmed" | "cancelled" | "completed";
             /** @enum {string} */
             fulfillmentState: "pending" | "preparing" | "partially_delivered" | "delivered" | "picked_up" | "cancelled";
             storeReview: {
@@ -6620,6 +6643,12 @@ export interface components {
             countryCode?: "EC";
             /** @enum {string} */
             currency: "USD";
+            discovery?: {
+                /** @description True while no public numeric store score is eligible. */
+                newStore: boolean;
+                /** @description Neutral exploration signal; it is never inherited from an owner or artist. */
+                explorationEligible: boolean;
+            };
             /** @enum {string} */
             applicationStatus?: "requested" | "under_review" | "approved" | "rejected" | "withdrawn";
             /** @enum {string} */
@@ -22913,6 +22942,38 @@ export interface operations {
                 };
             };
             /** @description Order not found in buyer scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    claimMerchOrderReviewBuyer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order is idempotently linked to the authenticated buyer for review eligibility */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewBuyerClaim"];
+                };
+            };
+            /** @description Order unavailable or private capability does not match */
             404: {
                 headers: {
                     [name: string]: unknown;

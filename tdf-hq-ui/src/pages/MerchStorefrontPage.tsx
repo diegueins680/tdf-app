@@ -5,6 +5,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Merch } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
+import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
@@ -18,6 +20,12 @@ export default function MerchStorefrontPage() {
     queryKey: ['merch-storefront', storeSlug],
     queryFn: () => Merch.storefront(storeSlug),
     enabled: Boolean(storeSlug && capabilities.data?.features.storefronts && capabilities.data.features.publicCatalog),
+    retry: false,
+  });
+  const reputation = useQuery({
+    queryKey: ['merch-store-reputation', store.data?.id],
+    queryFn: () => MerchReputation.store(store.data!.id),
+    enabled: Boolean(store.data?.id),
     retry: false,
   });
 
@@ -55,6 +63,8 @@ export default function MerchStorefrontPage() {
             {profile?.url && <Button component={RouterLink} to={profile.url} startIcon={<GroupsIcon />}>{language === 'en' ? 'Artist profile & community' : 'Perfil y comunidad'}</Button>}
           </Stack>
         </Box>
+
+        {reputation.data && <Card component="section" variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack spacing={2}><MerchReputationSummary summary={reputation.data} /><Button component={RouterLink} to={`/merch/tiendas/${data.id}`} sx={{ alignSelf: 'flex-start' }}>{language === 'en' ? 'See verified reviews' : 'Ver evaluaciones verificadas'}</Button></Stack></Card>}
 
         <Box>
           <Typography component="h2" variant="h5" fontWeight={800} mb={2}>{language === 'en' ? 'Products' : 'Productos'}</Typography>

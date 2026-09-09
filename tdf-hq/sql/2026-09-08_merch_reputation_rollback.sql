@@ -11,16 +11,13 @@ BEGIN
     EXISTS (SELECT 1 FROM merch_review_revision)
     OR EXISTS (SELECT 1 FROM merch_reputation_priority_revision)
     OR EXISTS (SELECT 1 FROM merch_reputation_operational_signal)
+    OR EXISTS (SELECT 1 FROM merch_reputation_source_event)
     OR EXISTS (SELECT 1 FROM merch_reputation_evidence)
     OR EXISTS (SELECT 1 FROM merch_reputation_report)
     OR EXISTS (SELECT 1 FROM merch_reputation_appeal)
     OR EXISTS (SELECT 1 FROM merch_reputation_audit_event)
     OR EXISTS (SELECT 1 FROM merch_reputation_risk_case)
     OR EXISTS (SELECT 1 FROM merch_reputation_notification_outbox)
-    OR EXISTS (SELECT 1 FROM merch_order_line)
-    OR EXISTS (SELECT 1 FROM merch_order)
-    OR EXISTS (SELECT 1 FROM merch_product)
-    OR EXISTS (SELECT 1 FROM merch_store)
   INTO has_durable_data;
   IF has_durable_data THEN
     RAISE EXCEPTION USING
@@ -29,10 +26,28 @@ BEGIN
   END IF;
 END $$;
 
+DROP TRIGGER IF EXISTS merch_reputation_capture_fulfillment_event_trigger ON merch_fulfillment_event;
+DROP TRIGGER IF EXISTS merch_reputation_capture_shipment_trigger ON merch_shipment;
+DROP TRIGGER IF EXISTS merch_reputation_capture_order_state_trigger ON merch_order;
+DROP TRIGGER IF EXISTS merch_reputation_capture_issue_trigger ON merch_order_issue;
+DROP TRIGGER IF EXISTS merch_reputation_protect_claimed_order_buyer_trigger ON merch_order;
+
 DROP VIEW IF EXISTS merch_reputation_projection_alerts;
 DROP VIEW IF EXISTS merch_reputation_metrics;
+DROP VIEW IF EXISTS merch_reputation_order_line_source;
+DROP VIEW IF EXISTS merch_reputation_order_source;
+DROP VIEW IF EXISTS merch_reputation_store_source;
 
+DROP TRIGGER IF EXISTS merch_reputation_review_invitation_trigger ON merch_order;
 DROP FUNCTION IF EXISTS merch_reputation_search_contribution(UUID,NUMERIC,TEXT);
+DROP FUNCTION IF EXISTS merch_reputation_process_source_events(INTEGER);
+DROP FUNCTION IF EXISTS merch_reputation_capture_issue();
+DROP FUNCTION IF EXISTS merch_reputation_capture_order_state();
+DROP FUNCTION IF EXISTS merch_reputation_capture_shipment();
+DROP FUNCTION IF EXISTS merch_reputation_capture_fulfillment_event();
+DROP FUNCTION IF EXISTS merch_reputation_protect_source_event();
+DROP FUNCTION IF EXISTS merch_reputation_protect_claimed_order_buyer();
+DROP FUNCTION IF EXISTS merch_reputation_claim_order_buyer(UUID,BIGINT,TEXT);
 DROP FUNCTION IF EXISTS merch_reputation_decide_category_suggestion(BIGINT,UUID,TEXT,INTEGER,JSONB,JSONB,TEXT,TEXT);
 DROP FUNCTION IF EXISTS merch_reputation_submit_category_suggestion(BIGINT,TEXT,TEXT,TEXT,TEXT,TEXT);
 DROP FUNCTION IF EXISTS merch_reputation_set_priorities(BIGINT,TEXT,JSONB,INTEGER,TEXT);
@@ -67,6 +82,7 @@ DROP TABLE IF EXISTS merch_reputation_projection_checkpoint;
 DROP TABLE IF EXISTS merch_reputation_event;
 DROP TABLE IF EXISTS merch_reputation_dimension_aggregate;
 DROP TABLE IF EXISTS merch_reputation_aggregate;
+DROP TABLE IF EXISTS merch_reputation_source_event;
 DROP TABLE IF EXISTS merch_reputation_operational_signal;
 DROP TABLE IF EXISTS merch_reputation_evidence;
 DROP TABLE IF EXISTS merch_seller_response_revision;
@@ -74,7 +90,7 @@ DROP TABLE IF EXISTS merch_seller_response;
 DROP TABLE IF EXISTS merch_review_image;
 DROP TABLE IF EXISTS merch_review_dimension_rating;
 DROP TABLE IF EXISTS merch_review_revision;
-DROP TABLE IF EXISTS merch_review;
+DROP TABLE IF EXISTS merch_reputation_review;
 DROP TABLE IF EXISTS merch_review_media_asset;
 DROP TABLE IF EXISTS merch_review_privacy_preference;
 DROP TABLE IF EXISTS merch_reputation_priority_item;
@@ -84,11 +100,9 @@ DROP TABLE IF EXISTS merch_reputation_category_suggestion;
 DROP TABLE IF EXISTS merch_reputation_dimension;
 DROP TABLE IF EXISTS merch_reputation_formula_version;
 DROP TABLE IF EXISTS merch_reputation_feature_flag;
-DROP TABLE IF EXISTS merch_order_line;
-DROP TABLE IF EXISTS merch_order;
-DROP TABLE IF EXISTS merch_product;
-DROP TABLE IF EXISTS merch_store_member;
-DROP TABLE IF EXISTS merch_store;
+DROP TABLE IF EXISTS merch_reputation_line_receipt;
+DROP TABLE IF EXISTS merch_reputation_order_buyer_claim;
+DROP TABLE IF EXISTS merch_reputation_order_integrity;
 
 DROP FUNCTION IF EXISTS merch_review_validate_revision_dimensions();
 DROP FUNCTION IF EXISTS merch_reputation_immutable();
@@ -96,6 +110,5 @@ DROP FUNCTION IF EXISTS merch_review_validate_identity();
 DROP FUNCTION IF EXISTS merch_review_evidence_is_eligible(TEXT,UUID,BIGINT,TIMESTAMPTZ);
 DROP FUNCTION IF EXISTS merch_reputation_accounts_related(UUID,BIGINT);
 DROP FUNCTION IF EXISTS merch_reputation_formula_immutable();
-DROP FUNCTION IF EXISTS merch_store_sync_owner_membership();
 
 COMMIT;

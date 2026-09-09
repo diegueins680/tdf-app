@@ -4,10 +4,21 @@ import { Alert, Box, Card, CardActionArea, CardContent, CardMedia, Chip, Circula
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Merch } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
+import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
 
 const categories = ['', 'apparel', 'vinyl', 'cd', 'cassette', 'poster', 'accessory', 'limited_edition', 'bundle'] as const;
+
+function StoreCommercialReputation({ storeId }: { storeId: string }) {
+  const reputation = useQuery({
+    queryKey: ['merch-store-reputation', storeId],
+    queryFn: () => MerchReputation.store(storeId),
+    retry: false,
+  });
+  return reputation.data ? <MerchReputationSummary summary={reputation.data} compact /> : null;
+}
 
 export default function MerchDiscoveryPage() {
   const { i18n } = useTranslation();
@@ -61,6 +72,15 @@ export default function MerchDiscoveryPage() {
                     <CardContent>
                       <Stack spacing={1}>
                         <Typography component="h2" variant="h6" fontWeight={800}>{store.displayName}</Typography>
+                        {store.discovery?.newStore && (
+                          <Chip
+                            size="small"
+                            color="info"
+                            label={language === 'en' ? 'New-store discovery' : 'Descubre una tienda nueva'}
+                            sx={{ alignSelf: 'flex-start' }}
+                          />
+                        )}
+                        <StoreCommercialReputation storeId={store.id} />
                         {store.description && <Typography color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{store.description}</Typography>}
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip size="small" label={`${store.products?.length ?? 0} ${language === 'en' ? 'products' : 'productos'}`} />

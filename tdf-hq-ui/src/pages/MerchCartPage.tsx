@@ -6,6 +6,8 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Merch, createMerchIdempotencyKey, readStoredMerchCart, storeMerchOrder, type MerchCheckoutRequest } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
+import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { formatMerchMoney, merchLanguage } from '../utils/merch';
 
@@ -41,6 +43,7 @@ export default function MerchCartPage() {
   const [accountAfter, setAccountAfter] = useState(false);
   const capabilities = useQuery({ queryKey: ['merch-capabilities'], queryFn: Merch.capabilities, retry: false });
   const storefront = useQuery({ queryKey: ['merch-storefront', storeSlug], queryFn: () => Merch.storefront(storeSlug), enabled: Boolean(storeSlug && capabilities.data?.features.publicCatalog), retry: false });
+  const storeReputation = useQuery({ queryKey: ['merch-store-reputation', storefront.data?.id], queryFn: () => MerchReputation.store(storefront.data!.id), enabled: Boolean(storefront.data?.id), retry: false });
   const cart = useQuery({ queryKey: ['merch-cart', stored?.id], queryFn: () => Merch.cart(stored!.id, stored!.token), enabled: Boolean(stored), retry: false });
   const lines = (cart.data?.items ?? []) as unknown as CartLine[];
   const zones = storefront.data?.shippingZones ?? [];
@@ -84,6 +87,7 @@ export default function MerchCartPage() {
     <Box component="main" py={{ xs: 2, md: 5 }} maxWidth="md" mx="auto">
       <Stack spacing={3}>
         <Box><Typography component="h1" variant="h3" fontWeight={900}>{language === 'en' ? 'Your cart' : 'Tu carrito'}</Typography><Typography color="text.secondary">{storefront.data?.displayName}</Typography></Box>
+        {storeReputation.data && <Paper component="section" variant="outlined" sx={{ p: 2, borderRadius: 3 }}><MerchReputationSummary summary={storeReputation.data} compact /></Paper>}
         {!capabilities.data?.features.checkout && <Alert severity="info">{language === 'en' ? 'Checkout is not enabled for this pilot yet. No payment can be submitted.' : 'El checkout todavía no está habilitado para este piloto. No se puede enviar ningún pago.'}</Alert>}
         <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3 }}>
           <Stack spacing={2} divider={<Divider flexItem />}>

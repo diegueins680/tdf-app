@@ -130,6 +130,12 @@ export const MerchReputation = {
     get<Record<string, unknown>>('/merch/reputation/formula?locale=' + locale),
   eligibility: (orderId: string) =>
     get<MerchReviewEligibility>('/merch/orders/' + encodeURIComponent(orderId) + '/reviews/eligibility'),
+  claimBuyer: (orderId: string, lookupToken: string) =>
+    put<{ orderId: string; buyerLinked: true }>(
+      '/merch/orders/' + encodeURIComponent(orderId) + '/review-buyer-claim',
+      undefined,
+      { headers: { 'X-Order-Lookup-Token': lookupToken } },
+    ),
   submitStore: (orderId: string, body: MerchReviewSubmit, key?: string) =>
     put<Record<string, unknown>>(
       '/merch/orders/' + encodeURIComponent(orderId) + '/store-review',

@@ -129,6 +129,9 @@ instance ToJSON MerchNotificationPreferenceRequest
 type RequiredMerchIdempotency =
   Header' '[Required, Strict] "Idempotency-Key" Text
 
+type RequiredOrderLookup =
+  Header' '[Required, Strict] "X-Order-Lookup-Token" Text
+
 type MerchReputationPublicAPI =
        "merch" :> "artists" :> Capture "artistPartyId" Int64 :> "stores"
          :> Get '[JSON] [Value]
@@ -146,6 +149,8 @@ type MerchReputationPublicAPI =
 type MerchReputationProtectedAPI =
        "merch" :> "orders" :> Capture "orderId" UUID :> "reviews" :> "eligibility"
          :> Get '[JSON] Value
+  :<|> "merch" :> "orders" :> Capture "orderId" UUID :> "review-buyer-claim"
+         :> RequiredOrderLookup :> Put '[JSON] Value
   :<|> "merch" :> "orders" :> Capture "orderId" UUID :> "store-review"
          :> RequiredMerchIdempotency :> ReqBody '[JSON] MerchReviewSubmitRequest
          :> Put '[JSON] Value
