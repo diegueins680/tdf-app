@@ -87,6 +87,7 @@ const renderPage = () => {
   );
   return {
     ...view,
+    queryClient,
     unmount: () => {
       view.unmount();
       queryClient.clear();
@@ -133,6 +134,38 @@ describe('SocialEventDetailPage ticket sharing', () => {
     expect(await screen.findByText('General')).toBeTruthy();
     expect(getStorefrontMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+
+    view.unmount();
+  });
+
+  it('hides a cached share action when the event stops allowing public ticket purchases', async () => {
+    const view = renderPage();
+
+    expect(await screen.findByRole('button', { name: 'Compartir entradas' })).toBeTruthy();
+    getEventMock.mockResolvedValue({ ...eventFixture, eventPublicListable: false });
+    await view.queryClient.invalidateQueries({ queryKey: ['social-event', '121'] });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+    });
+    expect(getStorefrontMock).toHaveBeenCalledTimes(1);
+
+    view.unmount();
+  });
+
+  it('hides a cached share action when the event loses its last ticket tier', async () => {
+    const view = renderPage();
+
+    expect(await screen.findByRole('button', { name: 'Compartir entradas' })).toBeTruthy();
+    listTicketTiersMock.mockResolvedValue([]);
+    await view.queryClient.invalidateQueries({
+      queryKey: ['social-event-ticket-tiers', '121'],
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+    });
+    expect(getStorefrontMock).toHaveBeenCalledTimes(1);
 
     view.unmount();
   });

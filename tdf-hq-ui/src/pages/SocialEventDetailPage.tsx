@@ -66,14 +66,15 @@ export default function SocialEventDetailPage() {
     enabled: Boolean(eventId),
   });
   const numericEventId = Number(eventId);
+  const ticketStorefrontPrerequisitesMet = Number.isSafeInteger(numericEventId)
+    && numericEventId > 0
+    && Boolean(tiersQuery.data?.length)
+    && eventQuery.data?.eventPublicListable === true
+    && eventQuery.data?.eventTicketPurchaseEnabled === true;
   const storefrontQuery = useQuery({
     queryKey: ['public-event-ticket-storefront', eventId],
     queryFn: () => EventTickets.getStorefront(numericEventId),
-    enabled: Number.isSafeInteger(numericEventId)
-      && numericEventId > 0
-      && Boolean(tiersQuery.data?.length)
-      && eventQuery.data?.eventPublicListable === true
-      && eventQuery.data?.eventTicketPurchaseEnabled === true,
+    enabled: ticketStorefrontPrerequisitesMet,
     retry: false,
   });
   const postMutation = useMutation({
@@ -128,7 +129,8 @@ export default function SocialEventDetailPage() {
 
   const event = eventQuery.data;
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
-  const canShareTickets = storefrontQuery.data?.checkoutAvailable === true;
+  const canShareTickets = ticketStorefrontPrerequisitesMet
+    && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
     ? ''
     : new URL(`/eventos/${encodeURIComponent(eventId)}/entradas`, window.location.origin).toString();
