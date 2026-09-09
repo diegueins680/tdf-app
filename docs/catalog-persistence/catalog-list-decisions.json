@@ -484,16 +484,6 @@
       "reviewed": true
     },
     {
-      "id": "ea3cb96a1b6f519f3262",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "3391a96825357d78f794",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -9711,6 +9701,16 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true
+    },
+    {
+      "id": "ea3cb96a1b6f519f3262",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; every applied database revision is persisted separately in the migration ledger.",
       "reviewed": true
     },
     {

@@ -15,7 +15,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | Área | Estado | Evidencia requerida | Responsable |
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
-| Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
+| Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` en staging y producción hasta aprobar G0 | Operaciones |
 | Producto/Legal | Aprobación registrada; cierre pendiente | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) + checklist completo | Producto + Legal |
 | Worker/observabilidad | Pendiente (infraestructura preparada) | Migración/worker en simulación; aún faltan staging, dashboards, alertas, DLQ y on-call aprobados | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |

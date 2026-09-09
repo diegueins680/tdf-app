@@ -4,6 +4,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import {
+  captureContextualReputationGate,
+  runtimeEnvBlockers,
+} from '../production-release.mjs';
+import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMachineDeployArgs,
@@ -84,6 +88,10 @@ function releaseOptions(overrides = {}) {
       'canary-machine': '1111111111111111111111111111111111111111',
       'remaining-machine': '2222222222222222222222222222222222222222',
     },
+    priorContextualReputationEnabled: {
+      'canary-machine': false,
+      'remaining-machine': false,
+    },
     remainingMachineIds: ['remaining-machine'],
     sha: releaseSha,
     ...overrides,
@@ -142,6 +150,22 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
 });
 
+test('suppressed-event privacy migration is anchored to its released squash commit', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const migration = manifest.migrations.find(
+    ({ id }) => id === '2026-09-09_music_directory_suppressed_event_privacy',
+  );
+
+  assert.deepEqual(migration, {
+    id: '2026-09-09_music_directory_suppressed_event_privacy',
+    path: 'tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+    introducedBy: '849444cdcce0254c3091293edce8a4cc5f8175fa',
+  });
+});
+
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
@@ -179,6 +203,10 @@ test('already-applied production migrations retain their recorded checksums', ()
     [
       '../../tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql',
       'e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+      '33f89f61c2552cacc6c4842ac8513d6b518a7b342115a9b1cde3f01a76926712',
     ],
   ]);
 
@@ -600,7 +628,7 @@ test('validateFlyConfig fails closed when event discovery would start during the
   );
 });
 
-test('validateFlyConfig fails closed when contextual reputation would start during the initial release', () => {
+test('validateFlyConfig keeps contextual reputation dark without a production cohort gate', () => {
   assert.throws(
     () => validateFlyConfig(
       safeFlyConfig.replace(
@@ -689,6 +717,7 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
     app: 'tdf-hq',
     image,
     sha: normalizedReleaseSha,
+    contextualReputationEnabled: false,
     onlyMachine: 'canary-machine',
   });
 
@@ -700,6 +729,60 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
   assert.ok(args.includes('--update-only'));
   assert.ok(!args.includes('machine'));
   assert.ok(!args.includes('update'));
+  assert.ok(args.includes('CONTEXTUAL_REPUTATION_ENABLED=false'));
+});
+
+test('runtime preflight preserves a coherent captured contextual reputation gate', () => {
+  const values = {
+    RUN_MIGRATIONS: 'false',
+    AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+    CONTEXTUAL_REPUTATION_ENABLED: 'false',
+    REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+    REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
+    REPUTATION_AGGREGATION_MODE: 'simulation',
+    EVENT_DISCOVERY_ENABLED: 'false',
+    DEFAULT_LOCALE: 'es',
+  };
+  const rows = [
+    { machineId: 'machine-a', values },
+    { machineId: 'machine-b', values: { ...values } },
+  ];
+
+  assert.equal(captureContextualReputationGate(rows), false);
+  assert.deepEqual(runtimeEnvBlockers(rows), []);
+  assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
+  assert.match(
+    runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
+    /CONTEXTUAL_REPUTATION_ENABLED/,
+  );
+  const enabledRows = rows.map(({ machineId, values: rowValues }) => ({
+    machineId,
+    values: { ...rowValues, CONTEXTUAL_REPUTATION_ENABLED: 'true' },
+  }));
+  assert.equal(captureContextualReputationGate(enabledRows), true);
+  assert.match(runtimeEnvBlockers(enabledRows)[0], /CONTEXTUAL_REPUTATION_ENABLED/);
+  assert.throws(
+    () => captureContextualReputationGate([
+      rows[0],
+      { machineId: 'machine-b', values: { ...values, CONTEXTUAL_REPUTATION_ENABLED: 'true' } },
+    ]),
+    /same boolean CONTEXTUAL_REPUTATION_ENABLED/i,
+  );
+});
+
+test('buildMachineDeployArgs can restore a captured contextual-reputation gate', () => {
+  const args = buildMachineDeployArgs({
+    app: 'tdf-hq',
+    image: releaseImage,
+    sha: normalizedReleaseSha,
+    onlyMachine: 'canary-machine',
+    contextualReputationEnabled: false,
+  });
+
+  assert.equal(
+    args[args.indexOf('CONTEXTUAL_REPUTATION_ENABLED=false')],
+    'CONTEXTUAL_REPUTATION_ENABLED=false',
+  );
 });
 
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {
@@ -1010,6 +1093,15 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.doesNotMatch(remainingCommand, /--exclude-machines/);
   assert.match(remainingCommand, /--strategy rolling(?:\s|$)/);
   assert.match(remainingCommand, /--max-unavailable 1(?:\s|$)/);
+
+  const attemptedOverride = buildReleaseSteps(releaseOptions({
+    contextualReputationEnabled: true,
+  }));
+  const guardedCanaryCommand = commandText(
+    attemptedOverride.find(({ id }) => id === 'deploy-canary'),
+  );
+  assert.match(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.doesNotMatch(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
 });
 
 test('buildReleaseSteps rolls the canary back to its captured image before any remaining-machine rollout', () => {
@@ -1029,6 +1121,7 @@ test('buildReleaseSteps rolls the canary back to its captured image before any r
   const rollbackCommand = commandText(rollback);
   assert.match(rollbackCommand, /--only-machines canary-machine(?:\s|$)/);
   assert.match(rollbackCommand, /--image registry\.fly\.io\/tdf-hq:deployment-old-canary(?:\s|$)/);
+  assert.match(rollbackCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.doesNotMatch(rollbackCommand, new RegExp(releaseImage));
 });
 
