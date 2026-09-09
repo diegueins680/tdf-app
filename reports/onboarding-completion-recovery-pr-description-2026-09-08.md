@@ -29,8 +29,9 @@ A first useful action could succeed on the server while the separate onboarding-
 - repository doctor exited 0 with 14 OK / 4 documented warnings / 0 errors
 - backend late-reconciliation match: 3 examples / 0 failures
 - backend evidence match: 20 examples / 0 failures after correcting a SQLite/PostgreSQL timestamp-comparison regression caught by the first run
-- full web lint did not complete under local resource contention; generated types are lint-ignored and hosted results are recorded separately
-- root hosted results: see final PR update/report
+- full web lint did not complete under local resource contention; generated types are lint-ignored, while hosted `ui-quality` passed its configured UI lint, type, test, and build sequence
+- every selected hosted root check passed on implementation commit `ba19476b984f4b63ee93be8c8b8efb50aa36272c`, including API contracts, backend, build, repository, mobile, persona web E2E, UI, hardcoded-list, and production-migration gates; workflow-classified `migration-tests` was skipped
+- Vercel and Cloudflare preview checks passed; no production deployment was run
 
 Detailed evidence: `reports/onboarding-completion-recovery-audit-2026-09-08.md`.
 
@@ -49,3 +50,7 @@ Rollback is the focused root commit plus the mobile submodule-pointer commit. A 
 - broader platform audit and localization backlog remains in the report
 
 This is a stacked draft PR based on the preceding onboarding recovery/localization work. It must not be merged before its base stack.
+
+Root draft PR: https://github.com/diegueins680/tdf-app/pull/295
+
+Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/54

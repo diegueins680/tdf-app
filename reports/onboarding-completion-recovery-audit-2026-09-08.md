@@ -27,7 +27,7 @@ The paused `single-feature-onboarding-v1` experiment remains paused. There are n
 | Local/staging configuration | Partial | Local test configuration and no-op analytics are available; no synthetic authenticated staging fixture was provided | Source, mock, and local DB paths are covered; staging journey remains unverified |
 | Synthetic accounts | Unavailable | No synthetic external account credentials were present | No live signup/action/relaunch walkthrough was performed |
 | Analytics/dashboard access | Unavailable | PostHog reports disabled when `EXPO_PUBLIC_POSTHOG_KEY` is unset | Event semantics are code/test verified; field delivery and funnel baselines remain not yet measured |
-| GitHub authentication/PR | Available | Direct keyring-backed `gh auth status` and `gh api user` succeeded after excluding stale injected token variables; the mobile branch was pushed and draft PR #54 is open | Root push/PR can follow the local backend result; the repository doctor warning is an environment-variable conflict, not absence of keyring authentication |
+| GitHub authentication/PR | Available | Direct keyring-backed `gh auth status` and `gh api user` succeeded after excluding stale injected token variables; root draft PR #295 and mobile draft PR #54 are open | Both repositories are published on dedicated feature branches; the repository doctor warning is an environment-variable conflict, not absence of keyring authentication |
 | Production access | Not used | No deploy, real transaction, communication, or production mutation command was run | This report makes no production-validation claim |
 
 Session instructions read: root `AGENTS.md`, `SOUL.md`, `USER.md`, `MEMORY.md`, `AI_WORKFLOW.md`, `CONTRIBUTING.md`, backend `AGENTS.md`, and mobile `AGENTS.md`. The requested daily memory files for 2026-09-07 and 2026-09-08 were absent. Existing scripts were inspected before execution.
@@ -164,7 +164,7 @@ Final commands/results are recorded factually after execution:
 - `npm run release:check` in `tdf-mobile`: **pass**; 5 required release assets, lint, typecheck, production-profile release validation, and Expo config checks completed.
 - `npm run ai:doctor`: **exit 0**, 14 OK / 4 warnings / 0 errors. Warnings: two absent daily memory notes, the expected task worktree changes, and stale injected GitHub token variables; direct keyring-backed GitHub authentication succeeded separately.
 - `git diff --check`: **pass** in both repositories after generation; final repetition follows the root commit.
-- GitHub: mobile branch pushed and draft PR [TDF-mobile#54](https://github.com/diegueins680/TDF-mobile/pull/54) is open, clean, and has no configured check rollup for its stacked base. Root hosted checks await the focused root commit and draft PR recorded in the handoff update.
+- GitHub implementation head `ba19476b984f4b63ee93be8c8b8efb50aa36272c`: every selected hosted root check reached a passing terminal state, including API contracts, backend quality, build, repository quality, mobile quality, persona web E2E, UI quality, hardcoded-list audit, and the production-migration gate. `migration-tests` was explicitly skipped by the workflow's path classifier. Vercel and Cloudflare preview checks passed; these were preview builds, not production deployments. Mobile draft PR [TDF-mobile#54](https://github.com/diegueins680/TDF-mobile/pull/54) is open, clean, and has no configured check rollup for its stacked base.
 
 These are local/mock/SQLite checks unless explicitly described otherwise. They do not prove native-device storage, staging services, production delivery, or real analytics ingestion.
 
@@ -212,4 +212,8 @@ Published mobile commits:
 
 Mobile draft PR: [TDF-mobile#54](https://github.com/diegueins680/TDF-mobile/pull/54), stacked on `feature/onboarding-recovery-localization-20260908-reviewed`; GitHub reports the draft merge state clean and no configured status-check rollup for this stacked base.
 
-The focused root commit, root draft PR, and final hosted-check state are appended in a documentation-only handoff commit after the initial root push. Workflow inspection confirmed that feature-branch pushes do not execute the root Docker publish job, which is gated to `main`; mobile's validation workflows are gated to pull requests targeting `main`. Nothing in this batch was merged or deployed.
+Root implementation commit: `ba19476b984f4b63ee93be8c8b8efb50aa36272c` — backend reconciliation, mobile pointer, generated contract, tests, and reports.
+
+Root draft PR: [tdf-app#295](https://github.com/diegueins680/tdf-app/pull/295), stacked on `feature/onboarding-recovery-localization-20260908-reviewed`. All selected checks on the implementation head passed; the workflow-classified `migration-tests` job was skipped. This documentation-only handoff commit records that completed check state and will cause GitHub to evaluate the new PR head again.
+
+Workflow inspection confirmed that feature-branch pushes do not execute the root Docker publish job, which is gated to `main`; mobile's validation workflows are gated to pull requests targeting `main`. Automated preview deployments ran for the root PR. Nothing in this batch was merged or deployed to production.
