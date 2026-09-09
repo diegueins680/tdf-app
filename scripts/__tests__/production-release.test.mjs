@@ -702,6 +702,21 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
   assert.ok(!args.includes('update'));
 });
 
+test('buildMachineDeployArgs can restore a captured contextual-reputation gate', () => {
+  const args = buildMachineDeployArgs({
+    app: 'tdf-hq',
+    image: releaseImage,
+    sha: normalizedReleaseSha,
+    onlyMachine: 'canary-machine',
+    contextualReputationEnabled: false,
+  });
+
+  assert.equal(
+    args[args.indexOf('CONTEXTUAL_REPUTATION_ENABLED=false')],
+    'CONTEXTUAL_REPUTATION_ENABLED=false',
+  );
+});
+
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {
   const withoutHealthCheck = safeFlyConfig.replace(/\n  \[\[services\.http_checks\]\][\s\S]*$/, '\n');
 
@@ -1028,6 +1043,7 @@ test('buildReleaseSteps rolls the canary back to its captured image before any r
 
   const rollbackCommand = commandText(rollback);
   assert.match(rollbackCommand, /--only-machines canary-machine(?:\s|$)/);
+  assert.match(rollbackCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
   assert.match(rollbackCommand, /--image registry\.fly\.io\/tdf-hq:deployment-old-canary(?:\s|$)/);
   assert.doesNotMatch(rollbackCommand, new RegExp(releaseImage));
 });

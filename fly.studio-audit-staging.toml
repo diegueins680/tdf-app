@@ -19,8 +19,9 @@ primary_region = "gru"
   PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   REPUTATION_AGGREGATION_ENVIRONMENT = "staging"
   REPUTATION_AGGREGATION_MODE = "simulation"
-  # Simulation-only worker; the database control row must also be enabled.
-  REPUTATION_AGGREGATION_WORKER_ENABLED = "true"
+  # Keep the process off until the staging database control row is opened and
+  # verified in the subsequent simulation-only worker rollout.
+  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   PAYPAL_ENV = "sandbox"
   COMMERCE_CHECKOUT_ENV = "sandbox"
   DATAFAST_ENV = "sandbox"

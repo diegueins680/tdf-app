@@ -2186,8 +2186,12 @@ export function buildMachineDeployArgs({
   sha,
   onlyMachine,
   excludeMachine,
+  contextualReputationEnabled = true,
   publicReputationProjectionEnabled = false,
 }) {
+  if (typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
   }
@@ -2200,7 +2204,7 @@ export function buildMachineDeployArgs({
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=true',
+    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
     '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
@@ -2221,6 +2225,7 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
+  const contextualReputationEnabled = options.contextualReputationEnabled ?? true;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
@@ -2258,6 +2263,7 @@ export function buildReleaseSteps(options = {}) {
       app,
       image: previousImage,
       sha: previousSha,
+      contextualReputationEnabled,
       publicReputationProjectionEnabled,
       onlyMachine: canary,
     }),
@@ -2268,7 +2274,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2281,7 +2287,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,
