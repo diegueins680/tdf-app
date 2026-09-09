@@ -58,6 +58,7 @@ import {
   getSocialEventsCreateUiState,
   getSocialEventsFinanceSummaryUiState,
   getSocialEventsOverviewUiState,
+  removeDeletedSocialEventQueries,
 } from './socialEventsPageState';
 import { StripeCheckoutModal } from '../components/StripeCheckoutModal';
 import { UserSelector } from '../components/party-selector/PartySelector';
@@ -511,6 +512,7 @@ export default function SocialEventsPage() {
       qc.setQueryData<SocialEventDTO[]>(eventsQueryKey, (current) =>
         current?.filter((event) => String(event.eventId) !== deletedEvent.eventId),
       );
+      removeDeletedSocialEventQueries(qc, deletedEvent.eventId);
       setPendingEventDeletion(null);
       setFeedback({ kind: 'success', message: `Evento eliminado: ${deletedEvent.eventTitle}.` });
       void qc.invalidateQueries({ queryKey: ['social-events'] });

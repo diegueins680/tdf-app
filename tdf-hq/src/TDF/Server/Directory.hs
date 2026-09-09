@@ -210,8 +210,16 @@ valueUuid _ _ = Nothing
 suggestDirectory mQuery mCityId = do
   query <- validateQuery mQuery
   rows <- jsonRows
-    "SELECT jsonb_build_object('label',label,'canonicalQuery',canonical_query,'suggestionKind',kind,'entityId',entity_id) FROM (SELECT alias.term label,alias.normalized_term canonical_query,'taxonomy'::text kind,alias.entity_id::text entity_id,1 priority FROM catalog_search_alias alias JOIN catalog_definition catalog ON catalog.id=alias.catalog_id WHERE catalog.public_read AND alias.normalized_term LIKE directory_normalize_text(?)||'%' UNION ALL SELECT document.title,document.title,document.entity_kind,document.entity_id,2 FROM directory_public_search_document document WHERE NOT document.sponsored AND (?::uuid IS NULL OR document.city_id=?::uuid) AND document.search_text LIKE directory_normalize_text(?)||'%' ) suggestion ORDER BY priority,label LIMIT 10"
-    [PersistText query,optionalUuid mCityId,optionalUuid mCityId,PersistText query]
+    ( "SELECT jsonb_build_object('label',label,'canonicalQuery',canonical_query,'suggestionKind',kind,'entityId',entity_id) FROM (SELECT alias.term label,alias.normalized_term canonical_query,'taxonomy'::text kind,alias.entity_id::text entity_id,1 priority FROM catalog_search_alias alias JOIN catalog_definition catalog ON catalog.id=alias.catalog_id WHERE catalog.public_read AND alias.normalized_term LIKE directory_normalize_text(?)||'%' UNION ALL SELECT document.title,document.title,document.entity_kind,document.entity_id,2 FROM directory_public_search_document document WHERE NOT document.sponsored "
+        <> directoryVisibleEventDocumentClause
+        <> "AND (?::uuid IS NULL OR document.city_id=?::uuid) AND document.search_text LIKE directory_normalize_text(?)||'%' ) suggestion ORDER BY priority,label LIMIT 10"
+    )
+    [ PersistText query
+    , PersistText Social.externalEventRefSuppressedStatus
+    , optionalUuid mCityId
+    , optionalUuid mCityId
+    , PersistText query
+    ]
   pure [DirectorySuggestion l cq sk eid | Object item <- rows,
     Just (String l) <- [KeyMap.lookup "label" item],Just (String cq) <- [KeyMap.lookup "canonicalQuery" item],
     Just (String sk) <- [KeyMap.lookup "suggestionKind" item],

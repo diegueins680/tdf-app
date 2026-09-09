@@ -1,9 +1,48 @@
+import { QueryClient } from '@tanstack/react-query';
 import {
   getSocialEventCardActionUiState,
   getSocialEventsCreateUiState,
   getSocialEventsFinanceSummaryUiState,
   getSocialEventsOverviewUiState,
+  removeDeletedSocialEventQueries,
 } from './socialEventsPageState';
+
+describe('removeDeletedSocialEventQueries', () => {
+  it('removes every cached view of the deleted event without touching another event', () => {
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(['social-event', '121'], { eventId: '121' });
+    queryClient.setQueryData(['social-event-moments', '121'], [{ momentId: 'one' }]);
+    queryClient.setQueryData(['social-event-ticket-tiers', '121'], [{ ticketTierId: 'general' }]);
+    queryClient.setQueryData(['public-event-ticket-storefront', '121'], { checkoutAvailable: true });
+    queryClient.setQueryData(['public-event-ticket-storefront', 121], { checkoutAvailable: true });
+    queryClient.setQueryData(['event-logistics', '121'], { eventId: '121' });
+    queryClient.setQueryData(['social-invitations', '121'], [{ invitationId: 'invite-one' }]);
+    queryClient.setQueryData(['social-ticket-tiers', '121'], [{ ticketTierId: 'general' }]);
+    queryClient.setQueryData(['social-ticket-orders', '121', 'organizer'], [{ orderId: 'order-one' }]);
+    queryClient.setQueryData(['social-budget-lines', '121'], [{ budgetLineId: 'line-one' }]);
+    queryClient.setQueryData(['social-finance-entries', '121'], [{ financeEntryId: 'entry-one' }]);
+    queryClient.setQueryData(['social-finance-summary', '121'], { eventId: '121' });
+    queryClient.setQueryData(['social-event', '122'], { eventId: '122' });
+
+    removeDeletedSocialEventQueries(queryClient, '121');
+
+    expect(queryClient.getQueryData(['social-event', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-event-moments', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-event-ticket-tiers', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['public-event-ticket-storefront', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['public-event-ticket-storefront', 121])).toBeUndefined();
+    expect(queryClient.getQueryData(['event-logistics', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-invitations', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-ticket-tiers', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-ticket-orders', '121', 'organizer'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-budget-lines', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-finance-entries', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-finance-summary', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['social-event', '122'])).toEqual({ eventId: '122' });
+
+    queryClient.clear();
+  });
+});
 
 describe('getSocialEventsOverviewUiState', () => {
   it('hides empty calendar chrome on first run and points admins to the first event', () => {

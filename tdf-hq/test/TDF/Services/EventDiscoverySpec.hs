@@ -343,8 +343,22 @@ spec = do
             syncDiscoveredEvent
               pool
               (fixtureTime 10 10)
-              event{discoveredEventTitle = "Provider tried to restore this event"}
+              event
+                { discoveredEventTitle = "Provider tried to restore this event"
+                , discoveredEventVenue =
+                    (discoveredEventVenue event)
+                      { discoveredVenueName = "Provider tried to overwrite this venue"
+                      }
+                , discoveredEventArtists =
+                    [ artist
+                        { discoveredArtistName = "Provider tried to overwrite this artist"
+                        }
+                    | artist <- discoveredEventArtists event
+                    ]
+                }
           discoveryEventsCreated refreshStats `shouldBe` 0
+          discoveryVenuesCreated refreshStats `shouldBe` 0
+          discoveryArtistsCreated refreshStats `shouldBe` 0
 
           refreshedRef <- runSqlPool (get refId) pool
           Social.externalEventRefSourceStatus <$> refreshedRef
@@ -354,6 +368,26 @@ spec = do
           fmap Social.socialEventMetadata refreshedEvent
             `shouldSatisfy`
               maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+          refreshedVenueRef <-
+            runSqlPool
+              (getBy (Social.UniqueExternalVenueRef "ticketmaster" "tm-venue-1"))
+              pool
+          case refreshedVenueRef of
+            Nothing -> expectationFailure "Expected the original venue reference"
+            Just (Entity _ venueRef) -> do
+              refreshedVenue <-
+                runSqlPool (get (Social.externalVenueRefVenueId venueRef)) pool
+              Social.venueName <$> refreshedVenue `shouldBe` Just "Teatro Nacional"
+          refreshedArtistRef <-
+            runSqlPool
+              (getBy (Social.UniqueExternalArtistRef "ticketmaster" "tm-artist-1"))
+              pool
+          case refreshedArtistRef of
+            Nothing -> expectationFailure "Expected the original artist reference"
+            Just (Entity _ artistRef) -> do
+              refreshedArtist <-
+                runSqlPool (get (Social.externalArtistRefArtistId artistRef)) pool
+              Social.artistProfileName <$> refreshedArtist `shouldBe` Just "La Banda"
 
     it "propagates suppression to a new provider identity for the same event" $ do
       event <- case eitherDecode ticketmasterFixture of
@@ -364,6 +398,23 @@ spec = do
             other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
       pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
       runSqlPool initializeEventDiscoverySchema pool
+
+      let distractorStart = addUTCTime (24 * 60 * 60) (discoveredEventStart event)
+          distractorEnd = addUTCTime (2 * 60 * 60) distractorStart
+      runSqlPool
+        ( do
+            rawExecute
+              "WITH digits(value) AS (VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)), numbers(value) AS (SELECT ones.value+10*tens.value+100*hundreds.value+1000*thousands.value+1 FROM digits ones CROSS JOIN digits tens CROSS JOIN digits hundreds CROSS JOIN digits thousands) INSERT INTO social_event(id,organizer_party_id,title,description,venue_id,event_type_id,workflow_state_id,timezone,start_time,end_time,price_cents,currency_id,capacity,metadata,created_at,updated_at) SELECT 10000+value,'system:event-discovery','Canonical-match distractor',NULL,NULL,NULL,NULL,NULL,?,?,NULL,NULL,NULL,NULL,?,? FROM numbers WHERE value<=5001"
+              [ toPersistValue distractorStart
+              , toPersistValue distractorEnd
+              , toPersistValue (fixtureTime 10 1)
+              , toPersistValue (fixtureTime 10 1)
+              ]
+            rawExecute
+              "INSERT INTO external_event_ref(provider,external_id,event_id,city,country_code,source_url,price_cents,currency,last_seen_at,missing_runs,source_status) SELECT 'distractor','distractor-'||id,id,'Guayaquil','EC',NULL,NULL,'USD',?,0,'on_sale' FROM social_event WHERE id BETWEEN 10001 AND 15001"
+              [toPersistValue (fixtureTime 10 1)]
+        )
+        pool
 
       _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
       importedRef <-
@@ -378,7 +429,17 @@ spec = do
                 event
                   { discoveredEventProvider = "buenplan"
                   , discoveredEventExternalId = "bp-reissued-event-id"
-                  , discoveredEventArtists = []
+                  , discoveredEventVenue =
+                      (discoveredEventVenue event)
+                        { discoveredVenueName = "Ignored reissue venue"
+                        }
+                  , discoveredEventArtists =
+                      [ artist
+                          { discoveredArtistExternalId = "bp-suppressed-artist"
+                          , discoveredArtistName = "Ignored reissue artist"
+                          }
+                      | artist <- discoveredEventArtists event
+                      ]
                   , discoveredEventTicketUrl =
                       Just "https://www.buenplan.com.ec/event/festival-sonoro-reissued"
                   }
@@ -400,8 +461,14 @@ spec = do
           replacementStats <-
             syncDiscoveredEvent pool (fixtureTime 10 10) replacementIdentity
           discoveryEventsCreated replacementStats `shouldBe` 0
-          runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 1
-          runSqlPool (count ([] :: [Filter Social.ExternalEventRef])) pool `shouldReturn` 2
+          discoveryVenuesCreated replacementStats `shouldBe` 0
+          discoveryArtistsCreated replacementStats `shouldBe` 0
+          runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 5002
+          runSqlPool (count ([] :: [Filter Social.ExternalEventRef])) pool `shouldReturn` 5003
+          runSqlPool (count ([] :: [Filter Social.Venue])) pool `shouldReturn` 1
+          runSqlPool (count ([] :: [Filter Social.ExternalVenueRef])) pool `shouldReturn` 1
+          runSqlPool (count ([] :: [Filter Social.ArtistProfile])) pool `shouldReturn` 1
+          runSqlPool (count ([] :: [Filter Social.ExternalArtistRef])) pool `shouldReturn` 1
 
           replacementRef <-
             runSqlPool
