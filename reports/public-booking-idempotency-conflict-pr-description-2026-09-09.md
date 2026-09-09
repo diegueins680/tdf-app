@@ -26,6 +26,7 @@ The unauthenticated no-price booking compatibility route had no durable idempote
 - Existing PostgreSQL 17 service-booking rehearsal passed and rejected an overlapping legacy allocation.
 - Production-release suite passed 49/49.
 - The guarded release planner passed in non-mutating dry-run mode with an empty command list after repairing the pre-existing manifest ancestry pointer.
+- The strict catalog-list gate initially found two new fingerprints and one stale fingerprint; the reviewed metadata was updated, and the exact local discovery/policy commands now pass.
 - Playwright retry journey passed 2/2 on desktop and phone; the first synthetic `503` and second successful POST used the exact same key.
 - Mobile contract commit `57abd23c0522133274e5bc2aa1a7e524d94dd62b` is available on its pushed feature branch.
 - Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/71.

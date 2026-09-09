@@ -159,6 +159,7 @@ No Web Vitals or field p75 dataset was available. The batch adds no dependency, 
 - `npm run test:service-booking-migration`: **passed** on disposable PostgreSQL 17. Its deliberate overlapping legacy insert was rejected by the existing allocation exclusion.
 - `npm run test:production-release`: **passed**, 49/49 tests, after registering the migration with its immutable introducing commit SHA.
 - `npm run test:ci-pipeline`: **passed**, 16/16 tests, including OpenAPI/generated-client and migration change-scope behavior.
+- `npm run test:catalog-list-audit && npm run audit:catalog-lists`: **passed** after the first PR run exposed two new candidate fingerprints and one stale fingerprint. The fix preserves the reviewed deployment-registry decision under its new ID and classifies booking request keys as retained API mechanics; no catalog authority moved into code.
 - `npm run release:backend:plan -- --sha 2b7fb46a122710ac342fd973683ba32ff22f5d33`: **passed** in non-mutating dry-run mode after correcting the pre-existing directory-migration ancestry metadata. It returned an empty command list and marked every planned release step `mutating: false`.
 - `PLAYWRIGHT_ARTIFACT_DIR=artifacts/public-booking-idempotency-conflict-2026-09-09 npx playwright test e2e/web/persona-public.spec.mjs --grep PW-PER-01-BOOKING --project=chromium-desktop --project=chromium-phone`: **passed**, 2/2 in 14.6 seconds. Each fixture returned one synthetic `503`, then success, and asserted exact key reuse across both requests.
 - `git diff --check` / staged diff check: **passed** at implementation commit.
@@ -200,6 +201,7 @@ Regression/release evidence:
 - `e2e/web/persona-public.spec.mjs`
 - `scripts/test-public-booking-tentative-idempotency-migration.sh`
 - `scripts/production-migrations.json`
+- `docs/catalog-persistence/catalog-list-decisions.json`
 - `.github/workflows/ci.yml`
 - `package.json`
 - this report and its ready-to-use draft-PR description
@@ -217,6 +219,7 @@ Regression/release evidence:
 - Root branch: `feature/public-booking-idempotency-conflicts-20260909`.
 - Root implementation commit: `2da5c939baca7cdeec8aba623a83e9b42440f2e3`.
 - Root evidence/manifest commit: `2b7fb46a122710ac342fd973683ba32ff22f5d33`.
+- Root catalog-audit CI fix: `2425821ce` (`docs: classify booking contract constants`).
 - Mobile branch: `feature/public-booking-idempotency-contract-20260909`.
 - Mobile commit: `57abd23c0522133274e5bc2aa1a7e524d94dd62b` (pushed and remotely verified).
 - Root draft PR: https://github.com/diegueins680/tdf-app/pull/318, stacked on `feature/public-booking-truthful-guest-continuity-20260909`.
