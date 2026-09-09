@@ -10062,6 +10062,16 @@
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
       "reviewed": true
+    },
+    {
+      "id": "25bd48ebe5582108498d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing this fixture shape could conceal drift in the merch capability contract or make a native runtime check appear to expose checkout or payment capabilities that remain disabled.",
+      "justification": "These are immutable response-field names in a read-only synthetic mobile fixture, not selectable capabilities or permission authority; production feature and payment availability remains backend-authoritative.",
+      "reviewed": true
     }
   ]
 }
