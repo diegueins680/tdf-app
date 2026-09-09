@@ -203,6 +203,7 @@
       "pinEligible": false,
       "recentBehavior": "record",
       "mobilePresentation": { "kind": "native-contextual", "destination": "/directory/event/[id]", "documentedException": null },
+      "mobileAliases": ["/eventos/[eventId]"],
       "accessRequestEligible": false,
       "apiScopes": [{ "pathPrefix": "/directory/events", "methods": { "GET": "view" } }]
     },
