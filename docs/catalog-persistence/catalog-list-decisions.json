@@ -9994,6 +9994,46 @@
       "reviewed": true
     },
     {
+      "id": "cb78a7beeb769986f90c",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_state_capability",
+      "priority": "P1-cross-platform",
+      "risk": "An API enum that becomes independent authority can reject valid persisted states or advertise transitions that the backend does not allow.",
+      "justification": "The OpenAPI enum is a typed transport consumer of the merch issue workflow; persisted workflow rows must own state identity, transitions, labels, and behavior capabilities.",
+      "reviewed": true
+    },
+    {
+      "id": "b353ecdfc08e2a005034",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_state_capability",
+      "priority": "P1-cross-platform",
+      "risk": "Divergent terminal-state semantics could reopen immutable support evidence or allow contradictory post-sale transitions.",
+      "justification": "Terminal behavior belongs to explicit state capabilities in the persisted merch issue workflow; code should consume the capability and continue to deny unknown states by default.",
+      "reviewed": true
+    },
+    {
+      "id": "37947a8e810836a21c9a",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "merch_issue_role_policy",
+      "priority": "P0-security",
+      "risk": "Weakening this boundary could let a seller close cancellation, refund, dispute, or fraud evidence without independent staff review.",
+      "justification": "This exhaustive set is a fail-closed authorization boundary, not presentation data; changing it requires coordinated backend, schema-policy, audit, and security review and must never be user-configurable.",
+      "reviewed": true
+    },
+    {
+      "id": "282b46a9f2d482e2e13a",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_state_capability",
+      "priority": "P1-cross-platform",
+      "risk": "A handler allowlist that drifts from the persisted workflow can accept impossible transitions or reject governed states.",
+      "justification": "Filtering and transition validation must consume the persisted merch issue workflow; the handler should retain only deny-by-default parsing and authorization behavior.",
+      "reviewed": true
+    },
+    {
       "id": "37ea0e707778f319d771",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
