@@ -13,6 +13,7 @@ import {
 
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
+const PUBLIC_EVENT_RETURN_ROUTE = /^\/eventos\/[1-9]\d{0,18}$/;
 
 export type OnboardingIntent =
   | 'events'
@@ -77,6 +78,7 @@ export function resolvePostAuthPath(
   const hasArtistAccess = normalizedRoles.some((role) => ['artist', 'artista', 'admin'].includes(role));
   const redirectNeedsArtistAccess = intent === 'artist_profile'
     && Boolean(safeRedirect && (safeRedirect === '/mi-artista' || safeRedirect.startsWith('/artista/crear')));
+  if (safeRedirect && PUBLIC_EVENT_RETURN_ROUTE.test(safeRedirect)) return safeRedirect;
   if (
     safeRedirect
     && canAccessPath(safeRedirect, roles, modules)
@@ -139,12 +141,22 @@ export function pickLandingPath(roles: readonly string[], modules?: readonly str
 export function sanitizeRedirectPath(value: string | null | undefined): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
-  if (trimmed === '' || !trimmed.startsWith('/') || trimmed.startsWith('//')) return null;
+  if (
+    trimmed === ''
+    || trimmed.length > 500
+    || !trimmed.startsWith('/')
+    || trimmed.startsWith('//')
+    || Array.from(trimmed).some((character) => {
+      const code = character.charCodeAt(0);
+      return character === '\\' || code <= 31 || code === 127;
+    })
+  ) return null;
 
   try {
     const parsed = new URL(trimmed, URL_BASE);
     if (parsed.origin !== URL_BASE) return null;
     if (parsed.pathname === LOGIN_ROUTE) return null;
+    if (PUBLIC_EVENT_RETURN_ROUTE.test(parsed.pathname)) return parsed.pathname;
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     return null;

@@ -123,6 +123,42 @@ describe('SocialEventsAPI', () => {
     expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207/logistics/places/place%2F3');
   });
 
+  it('uses the authenticated self RSVP contract without client-controlled identity', async () => {
+    await SocialEventsAPI.upsertMyRsvp(' event/7 ', {
+      rsvpStatus: 'accepted',
+      rsvpShowOnProfile: true,
+    });
+
+    expect(putMock).toHaveBeenCalledWith(
+      '/social-events/events/%20event%2F7%20/rsvp',
+      {
+        rsvpStatus: 'accepted',
+        rsvpShowOnProfile: true,
+      },
+    );
+    expect(putMock.mock.calls[0]?.[1]).not.toHaveProperty('rsvpPartyId');
+    expect(putMock.mock.calls[0]?.[1]).not.toHaveProperty('rsvpEventId');
+  });
+
+  it('keeps own RSVP, aggregate counts, deletion, and invitation endpoints distinct', async () => {
+    await SocialEventsAPI.getMyRsvp('7');
+    await SocialEventsAPI.getRsvpSummary('7');
+    await SocialEventsAPI.deleteMyRsvp('7');
+
+    expect(getMock).toHaveBeenNthCalledWith(1, '/social-events/events/7/rsvp');
+    expect(getMock).toHaveBeenNthCalledWith(2, '/social-events/events/7/rsvp-summary');
+    expect(delMock).toHaveBeenCalledWith('/social-events/events/7/rsvp');
+    expect(getMock.mock.calls.map(([path]) => path).join(' ')).not.toContain('/invitations');
+  });
+
+  it('loads a directory RSVP feed by public slug without exposing a Party id', async () => {
+    await SocialEventsAPI.listDirectoryProfileRsvpFeed('persona segura', 'cursor/value', 12);
+
+    expect(getMock).toHaveBeenCalledWith(
+      '/social-events/directory-profiles/persona%20segura/rsvp-feed?cursor=cursor%2Fvalue&limit=12',
+    );
+  });
+
   it('respondInvitation includes invitationToPartyId required by backend schema', async () => {
     getMock.mockResolvedValueOnce([
       {

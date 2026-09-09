@@ -55,6 +55,7 @@ import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { markWebSignupCompleted } from '../analytics/onboardingProgress';
 import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { readEventRsvpIntent } from '../utils/eventRsvpIntent';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
@@ -460,6 +461,12 @@ export default function LoginPage() {
           method: 'google',
           ...(googleCreatedAccount ? { intent: signupIntent ?? 'general' } : {}),
         });
+        const pendingRsvpIntent = readEventRsvpIntent();
+        if (googleCreatedAccount && pendingRsvpIntent?.sharedAttribution) {
+          captureGrowthEvent(analytics, 'event_shared_visit_to_signup', {
+            platform: 'web', event_id: pendingRsvpIntent.eventId, method: 'google',
+          });
+        }
         setSignupDialogOpen(false);
         setSignupFeedback(null);
         navigate(googleTargetPath, { replace: true });
@@ -679,6 +686,11 @@ export default function LoginPage() {
     signupMutation.reset();
   };
 
+  const switchToExistingAccount = () => {
+    closeSignupDialog();
+    window.requestAnimationFrame(() => identifierInputRef.current?.focus());
+  };
+
   const handleSignupSubmit = async () => {
     if (servicePreparing) {
       setSignupFeedback({ type: 'error', message: servicePreparingMessage });
@@ -738,6 +750,12 @@ export default function LoginPage() {
         intent: signupIntent ?? 'general',
         destination: targetPath.split('?')[0],
       });
+      const pendingRsvpIntent = readEventRsvpIntent();
+      if (pendingRsvpIntent?.sharedAttribution) {
+        captureGrowthEvent(analytics, 'event_shared_visit_to_signup', {
+          platform: 'web', event_id: pendingRsvpIntent.eventId, method: 'password',
+        });
+      }
       navigate(targetPath, { replace: true });
     } catch (err) {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
@@ -1441,6 +1459,7 @@ export default function LoginPage() {
             </Stack>
           </DialogContent>
           <DialogActions>
+            <Button type="button" onClick={switchToExistingAccount}>Ya tengo una cuenta</Button>
             <Button type="button" onClick={closeSignupDialog}>Cancelar</Button>
             <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
               {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}

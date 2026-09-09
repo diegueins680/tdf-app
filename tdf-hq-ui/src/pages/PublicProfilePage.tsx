@@ -21,6 +21,8 @@ import { SocialAPI } from '../api/social';
 import { RadioAPI } from '../api/radio';
 import type { RadioPresenceDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
+import EventRsvpFeed from '../components/events/EventRsvpFeed';
+import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 
 const parsePositiveIntParam = (value: string | undefined): number | null => {
   const raw = value?.trim();
@@ -35,6 +37,7 @@ export default function PublicProfilePage() {
   const enabled = parsedId !== null;
   const qc = useQueryClient();
   const { session } = useSession();
+  const { locale } = useLocalePreferences();
   const isSelf = session?.partyId === parsedId;
 
   const partyQuery = useQuery({
@@ -141,7 +144,8 @@ export default function PublicProfilePage() {
 
   return (
     <Box p={{ xs: 2, md: 4 }}>
-      <Card sx={{ maxWidth: 720, mx: 'auto', borderRadius: 3, overflow: 'hidden' }}>
+      <Stack sx={{ maxWidth: 720, mx: 'auto' }} spacing={2}>
+      <Card sx={{ borderRadius: 3, overflow: 'hidden' }}>
         <CardContent>
           <Stack spacing={2}>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -234,6 +238,11 @@ export default function PublicProfilePage() {
           </Stack>
         </CardContent>
       </Card>
+      <Box component="section" aria-labelledby="profile-activity-title">
+        <Typography id="profile-activity-title" variant="h5" fontWeight={850} mb={1.5}>Actividad</Typography>
+        <EventRsvpFeed partyId={String(parsedId)} isSelf={isSelf} locale={locale} />
+      </Box>
+      </Stack>
     </Box>
   );
 }
