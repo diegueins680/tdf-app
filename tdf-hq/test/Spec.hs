@@ -132,6 +132,7 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -826,6 +827,22 @@ main = hspec $ do
             Merch.validFulfillmentTransition "pending" "delivered" `shouldBe` False
             Merch.validFulfillmentTransition "shipped" "return_requested" `shouldBe` True
 
+        it "allows immediate cancellation only before payment processing and fulfillment" $ do
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "holding" `shouldBe` True
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "awaiting_payment" `shouldBe` True
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "processing" `shouldBe` False
+            Merch.isUnpaidOrderCancellable "confirmed" "paid" "pending" "paid" `shouldBe` False
+            Merch.isUnpaidOrderCancellable "created" "pending" "preparing" "holding" `shouldBe` False
+
+        it "keeps financial issue decisions with staff while sellers can resolve operational cases" $ do
+            Merch.validSellerIssueTransition "shipping" "open" "seller_review" `shouldBe` True
+            Merch.validSellerIssueTransition "shipping" "seller_review" "resolved" `shouldBe` True
+            Merch.validSellerIssueTransition "refund" "open" "staff_review" `shouldBe` True
+            Merch.validSellerIssueTransition "refund" "seller_review" "resolved" `shouldBe` False
+            Merch.validSellerIssueTransition "refund" "staff_review" "seller_review" `shouldBe` False
+            Merch.validStaffIssueTransition "staff_review" "resolved" `shouldBe` True
+            Merch.validStaffIssueTransition "resolved" "staff_review" `shouldBe` False
+
         it "validates public slugs, scoped SKUs, quantities, and safe checkout text" $ do
             Merch.validateMerchSlug "cementerio-de-elefantes" `shouldBe` Right "cementerio-de-elefantes"
             Merch.validateMerchSlug "Cementerio" `shouldSatisfy` isLeft
@@ -835,6 +852,8 @@ main = hspec $ do
             Merch.validateQuantity 101 `shouldSatisfy` isLeft
             Merch.validateCheckoutText "recipient.name" 80 "  Paola  " `shouldBe` Right "Paola"
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
+
+    MerchRuntimeSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
