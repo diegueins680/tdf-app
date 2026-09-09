@@ -263,6 +263,9 @@ export function validateFlyConfig(toml) {
   const contextualReputation = String(
     env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
   ).trim().toLowerCase();
+  const publicReputationProjection = String(
+    env.get('PUBLIC_REPUTATION_PROJECTION_ENABLED') ?? '',
+  ).trim().toLowerCase();
   const reputationAggregationWorker = String(
     env.get('REPUTATION_AGGREGATION_WORKER_ENABLED') ?? '',
   ).trim().toLowerCase();
@@ -317,6 +320,11 @@ export function validateFlyConfig(toml) {
   }
   if (contextualReputation !== 'false') {
     throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+  }
+  if (publicReputationProjection !== 'true') {
+    throw new Error(
+      'fly.toml must set PUBLIC_REPUTATION_PROJECTION_ENABLED="true" for the separately authorized public-read gate.',
+    );
   }
   if (reputationAggregationWorker !== 'false') {
     throw new Error(
@@ -2183,6 +2191,7 @@ export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMa
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
     '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', 'PUBLIC_REPUTATION_PROJECTION_ENABLED=true',
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
