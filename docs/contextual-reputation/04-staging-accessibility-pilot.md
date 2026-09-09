@@ -118,7 +118,8 @@ DLQ sin dueño o bloqueador WCAG 2.2 AA.
 
 1. **Desactivar y verificar primero el gate independiente de lectura pública**
    para retirar agregados, categorías, badges, tendencia y rankings existentes
-   de toda superficie pública. No basta con apagar
+   de toda superficie pública: `PUBLIC_REPUTATION_PROJECTION_ENABLED=false`.
+   No basta con apagar
    `CONTEXTUAL_REPUTATION_ENABLED`.
 2. Apagar `CONTEXTUAL_REPUTATION_ENABLED` para el grupo/ambiente afectado y
    detener nuevos consumidores/escritores; preservar evidencia y registrar

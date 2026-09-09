@@ -522,6 +522,7 @@ import TDF.Config
       openAiApiKey,
       openAiEmbedModel,
       openAiModel,
+      publicReputationProjectionEnabled,
       ragAvailabilityDays,
       ragAvailabilityPerResource,
       ragChunkOverlap,
@@ -882,8 +883,11 @@ main = hspec $ do
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "FROM reputation_category WHERE status='active'"
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "ORDER BY default_position,slug"
 
-        it "keeps public aggregates dark until the contextual reputation flag is enabled" $
-            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "false")] $ do
+        it "keeps public aggregates dark until the independent public projection gate is enabled" $
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Just "true")
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "false")
+                ] $ do
                 cfg <- loadConfig
                 let disabledEnv =
                         Env
@@ -3026,18 +3030,31 @@ main = hspec $ do
                     DTO.ccaExchangeRate audit `shouldBe` 150
 
     describe "loadConfig" $ do
-        it "keeps contextual reputation dark by default and validates its rollout flag" $ do
-            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Nothing)] $ do
+        it "keeps contextual reputation and its public projection dark by default" $ do
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Nothing)
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Nothing)
+                ] $ do
                 cfg <- loadConfig
                 contextualReputationEnabled cfg `shouldBe` False
+                publicReputationProjectionEnabled cfg `shouldBe` False
 
-            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "true")] $ do
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Just "true")
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "true")
+                ] $ do
                 cfg <- loadConfig
                 contextualReputationEnabled cfg `shouldBe` True
+                publicReputationProjectionEnabled cfg `shouldBe` True
 
             withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "not-a-boolean")]
                 $ loadConfig `shouldThrow` \err ->
                     "CONTEXTUAL_REPUTATION_ENABLED must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides [("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "PUBLIC_REPUTATION_PROJECTION_ENABLED must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
         it "loads and validates international defaults from the environment" $ do

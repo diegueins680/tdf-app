@@ -363,8 +363,9 @@ Pausar el flag y la entrada de nuevas evaluaciones contextuales ante error de
 write >1%, fuga de identidad, variación no explicada >10 puntos, DLQ no
 atendida, fraude sin revisión humana o incumplimiento de privacidad.
 
-Para rollback: **primero desactivar y verificar el gate independiente de lectura
-de proyección pública** (no solo `CONTEXTUAL_REPUTATION_ENABLED`) para retirar
+Para rollback: **primero desactivar y verificar
+`PUBLIC_REPUTATION_PROJECTION_ENABLED`**, el gate independiente de lectura de
+proyección pública (no solo `CONTEXTUAL_REPUTATION_ENABLED`), para retirar
 agregados existentes de perfiles, búsqueda y rankings; luego apagar el flag,
 detener consumidores y escritores nuevos, preservar evidencia/auditoría y
 congelar la versión de fórmula afectada. El ensayo debe probar que la API no
