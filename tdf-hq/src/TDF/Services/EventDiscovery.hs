@@ -2020,7 +2020,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
             if effectiveAutoPublish
               then discoveredEventStatus
               else "draft:" <> discoveredEventStatus
-  (eventKey, eventCreated) <-
+  (eventKey, eventCreated, canonicalDeletionSuppressed) <-
     case existingRef of
       Just (Entity refKey ref)
         | deletionSuppressed -> do
@@ -2029,7 +2029,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               [ Social.ExternalEventRefLastSeenAt =. now
               , Social.ExternalEventRefMissingRuns =. 0
               ]
-            pure (Social.externalEventRefEventId ref, False)
+            pure (Social.externalEventRefEventId ref, False, False)
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
         shouldReplace <-
@@ -2073,11 +2073,19 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
           , Social.ExternalEventRefMissingRuns =. 0
           , Social.ExternalEventRefSourceStatus =. sourceStatus
           ]
-        pure (existingEventKey, False)
+        pure (existingEventKey, False, False)
       Nothing -> do
         mergeCandidate <- findCanonicalEventCandidate DiscoveredEvent{..}
+        canonicalDeletionSuppressed <-
+          maybe (pure False) eventHasSuppressedReference mergeCandidate
         (newEventKey, created) <-
           case mergeCandidate of
+            Just candidateKey
+              | canonicalDeletionSuppressed ->
+                  -- A provider/external ID can change for the same real-world
+                  -- event. Carry the administrator's tombstone onto the new
+                  -- identity instead of republishing or duplicating it.
+                  pure (candidateKey, False)
             Just candidateKey -> do
               shouldReplace <-
                 if effectiveAutoPublish
@@ -2141,10 +2149,17 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               , Social.externalEventRefCurrency = Just discoveredEventCurrency
               , Social.externalEventRefLastSeenAt = now
               , Social.externalEventRefMissingRuns = 0
-              , Social.externalEventRefSourceStatus = sourceStatus
+              , Social.externalEventRefSourceStatus =
+                  if canonicalDeletionSuppressed
+                    then Social.externalEventRefSuppressedStatus
+                    else sourceStatus
               }
-        pure (newEventKey, created)
-  unless (materializationPublicationHeld || deletionSuppressed) $
+        pure (newEventKey, created, canonicalDeletionSuppressed)
+  unless
+    ( materializationPublicationHeld
+        || deletionSuppressed
+        || canonicalDeletionSuppressed
+    ) $
     forM_ artistKeys $ \artistKey -> do
       _ <- insertUnique (Social.EventArtist eventKey artistKey Nothing)
       pure ()
@@ -2156,6 +2171,13 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
       , discoveryVenuesCreated = if venueCreated then 1 else 0
       , discoveryArtistsCreated = artistsCreated
       }
+
+eventHasSuppressedReference ::
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+eventHasSuppressedReference eventKey =
+  any (Social.externalEventRefIsSuppressed . entityVal)
+    <$> selectList [Social.ExternalEventRefEventId ==. eventKey] []
 
 findCanonicalEventCandidate ::
   DiscoveredEvent ->

@@ -355,6 +355,71 @@ spec = do
             `shouldSatisfy`
               maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
 
+    it "propagates suppression to a new provider identity for the same event" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
+      importedRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case importedRef of
+        Nothing -> expectationFailure "Expected a persisted provider event reference"
+        Just (Entity refId ref) -> do
+          let suppressedEventId = Social.externalEventRefEventId ref
+              replacementIdentity =
+                event
+                  { discoveredEventProvider = "buenplan"
+                  , discoveredEventExternalId = "bp-reissued-event-id"
+                  , discoveredEventArtists = []
+                  , discoveredEventTicketUrl =
+                      Just "https://www.buenplan.com.ec/event/festival-sonoro-reissued"
+                  }
+          runSqlPool
+            ( do
+                update
+                  refId
+                  [ Social.ExternalEventRefSourceStatus =.
+                      Social.externalEventRefSuppressedStatus
+                  ]
+                update
+                  suppressedEventId
+                  [ Social.SocialEventMetadata =.
+                      Just "{\"ticketUrl\":null,\"isPublic\":false,\"currency\":\"USD\"}"
+                  ]
+            )
+            pool
+
+          replacementStats <-
+            syncDiscoveredEvent pool (fixtureTime 10 10) replacementIdentity
+          discoveryEventsCreated replacementStats `shouldBe` 0
+          runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 1
+          runSqlPool (count ([] :: [Filter Social.ExternalEventRef])) pool `shouldReturn` 2
+
+          replacementRef <-
+            runSqlPool
+              (getBy (Social.UniqueExternalEventRef "buenplan" "bp-reissued-event-id"))
+              pool
+          case replacementRef of
+            Nothing -> expectationFailure "Expected the replacement provider identity to be retained"
+            Just (Entity _ replacement) -> do
+              Social.externalEventRefEventId replacement `shouldBe` suppressedEventId
+              Social.externalEventRefSourceStatus replacement
+                `shouldBe` Social.externalEventRefSuppressedStatus
+
+          suppressedEvent <- runSqlPool (get suppressedEventId) pool
+          Social.socialEventTitle <$> suppressedEvent `shouldBe` Just "Festival Sonoro"
+          fmap Social.socialEventMetadata suppressedEvent
+            `shouldSatisfy`
+              maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+
     it "reconciles materialization synthetic entity refs with real provider IDs" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
