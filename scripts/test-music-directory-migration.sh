@@ -39,7 +39,9 @@ docker run --rm -d \
   postgres:16-alpine >/dev/null
 
 attempt=0
-until docker exec "$TDF_DIRECTORY_CONTAINER" pg_isready -U postgres -d "$TDF_DIRECTORY_DATABASE" >/dev/null 2>&1; do
+until docker exec "$TDF_DIRECTORY_CONTAINER" \
+  psql -h 127.0.0.1 -U postgres -d "$TDF_DIRECTORY_DATABASE" -Atc 'SELECT 1' \
+  2>/dev/null | grep -qx '1'; do
   attempt=$((attempt + 1))
   if [ "$attempt" -ge 45 ]; then
     echo "Music directory migration test database did not become ready" >&2
@@ -69,6 +71,7 @@ TDF_DIRECTORY_API_PID=$!
 attempt=0
 until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | grep -q '"db":"ok"'; do
   if ! kill -0 "$TDF_DIRECTORY_API_PID" >/dev/null 2>&1; then
+    docker logs "$TDF_DIRECTORY_CONTAINER" >&2 || true
     tail -80 "$TDF_DIRECTORY_API_LOG" >&2
     echo "Backend exited while preparing the authoritative base schema" >&2
     exit 1
@@ -158,6 +161,102 @@ psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_med
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-26_music_directory_profile_media_reconciliation.sql" >/dev/null
 packaged_portfolio_count=$(psql_exec -Atc "SELECT count(*) FROM directory_profile profile CROSS JOIN LATERAL jsonb_array_elements(profile.portfolio) entry(value) WHERE profile.slug='diego-saa-bajista' AND entry.value->>'source'='packaged-profile-media';")
 test "$packaged_portfolio_count" = "1"
+
+psql_exec <<'SQL' >/dev/null
+DO $$
+DECLARE
+  public_state_id UUID;
+  public_event_type_id UUID;
+  fixture_venue_id BIGINT;
+  fixture_event_id BIGINT;
+BEGIN
+  SELECT state.id INTO STRICT public_state_id
+  FROM workflow_state state
+  JOIN workflow_definition workflow ON workflow.id=state.workflow_id
+  JOIN workflow_state_capability capability ON capability.state_id=state.id
+  WHERE workflow.code='social-event-lifecycle'
+    AND workflow.active
+    AND state.active
+    AND capability.capability_code='public-listable'
+    AND capability.enabled
+  ORDER BY state.sort_order,state.id
+  LIMIT 1;
+
+  SELECT item.id INTO STRICT public_event_type_id
+  FROM event_type item
+  JOIN catalog_definition catalog
+    ON catalog.id=item.catalog_id
+   AND catalog.code='event-types'
+   AND catalog.active
+  JOIN workflow_state state
+    ON state.id=item.workflow_state_id
+   AND state.workflow_id=catalog.workflow_id
+   AND state.code='published'
+   AND state.active
+  WHERE item.active
+    AND item.deprecated_at IS NULL
+    AND (item.effective_from IS NULL OR item.effective_from<=CURRENT_DATE)
+    AND (item.effective_until IS NULL OR item.effective_until>=CURRENT_DATE)
+  ORDER BY item.sort_order,item.id
+  LIMIT 1;
+
+  INSERT INTO venue(name,city,timezone,created_at,updated_at)
+  VALUES ('Synthetic suppressed directory venue','Quito','America/Guayaquil',now(),now())
+  RETURNING id INTO fixture_venue_id;
+
+  INSERT INTO social_event(
+    organizer_party_id,title,description,venue_id,event_type_id,workflow_state_id,timezone,
+    start_time,end_time,metadata,created_at,updated_at
+  )
+  VALUES (
+    NULL,'Synthetic suppressed directory event',
+    'Synthetic public event used only to verify tombstone privacy.',
+    fixture_venue_id,public_event_type_id,public_state_id,'America/Guayaquil',
+    now()-interval '1 hour',now()+interval '7 days',
+    '{"isPublic":true}',now(),now()
+  )
+  RETURNING id INTO fixture_event_id;
+
+  INSERT INTO external_event_ref(
+    provider,external_id,event_id,city,country_code,source_url,last_seen_at,
+    missing_runs,source_status
+  )
+  VALUES (
+    'synthetic-directory-provider','synthetic-directory-event',fixture_event_id,
+    'Quito','EC','https://example.test/synthetic-directory-event',now(),0,'active'
+  );
+
+  PERFORM directory_refresh_legacy_event_search();
+END
+$$;
+SQL
+
+public_event_before=$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE title='Synthetic suppressed directory event';")
+public_event_search_before=$(psql_exec -Atc "SELECT count(*) FROM directory_public_search_document WHERE entity_kind='event' AND title='Synthetic suppressed directory event';")
+test "$public_event_before" = "1"
+test "$public_event_search_before" = "1"
+
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql" >/dev/null
+# A retry before the migration ledger commits must preserve the privacy boundary.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql" >/dev/null
+
+public_event_after_migration=$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE title='Synthetic suppressed directory event';")
+test "$public_event_after_migration" = "1"
+
+psql_exec -c "UPDATE external_event_ref SET source_status='suppressed' WHERE provider='synthetic-directory-provider' AND external_id='synthetic-directory-event';" >/dev/null
+
+suppressed_event_raw=$(psql_exec -Atc "SELECT count(*) FROM social_event WHERE title='Synthetic suppressed directory event';")
+suppressed_event_public=$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE title='Synthetic suppressed directory event';")
+suppressed_event_search_raw=$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind='event' AND title='Synthetic suppressed directory event';")
+suppressed_event_search_public=$(psql_exec -Atc "SELECT count(*) FROM directory_public_search_document WHERE entity_kind='event' AND title='Synthetic suppressed directory event';")
+suppressed_venue_search_raw=$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind='venue' AND title='Synthetic suppressed directory venue';")
+suppressed_venue_search_public=$(psql_exec -Atc "SELECT count(*) FROM directory_public_search_document WHERE entity_kind='venue' AND title='Synthetic suppressed directory venue';")
+test "$suppressed_event_raw" = "1"
+test "$suppressed_event_public" = "0"
+test "$suppressed_event_search_raw" = "1"
+test "$suppressed_event_search_public" = "0"
+test "$suppressed_venue_search_raw" = "1"
+test "$suppressed_venue_search_public" = "0"
 
 unicode_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://música.example/profile.webp\"}]'::jsonb);")
 ipv6_image_url=$(psql_exec -Atc "SELECT directory_profile_primary_image_url('[{\"kind\":\"image\",\"url\":\"https://[::1]/profile.webp\"}]'::jsonb);")
@@ -372,6 +471,7 @@ TDF_DIRECTORY_API_PID=$!
 attempt=0
 until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | grep -q '"db":"ok"'; do
   if ! kill -0 "$TDF_DIRECTORY_API_PID" >/dev/null 2>&1; then
+    docker logs "$TDF_DIRECTORY_CONTAINER" >&2 || true
     tail -80 "$TDF_DIRECTORY_API_LOG" >&2
     echo "Backend exited while validating the public directory taxonomy" >&2
     exit 1
@@ -387,6 +487,23 @@ done
 
 curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/assets/serve/directory/profiles/diego-saa-bajista.webp" |
   cmp - "$TDF_DIRECTORY_ROOT/tdf-hq/assets/directory/profiles/diego-saa-bajista.webp"
+
+suppressed_event_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title='Synthetic suppressed directory event';")
+suppressed_event_detail_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+  "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/events/$suppressed_event_id")
+test "$suppressed_event_detail_status" = "404"
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/search?entityType=event&q=Synthetic%20suppressed%20directory%20event" |
+  node -e '
+    let raw = "";
+    process.stdin.on("data", (chunk) => { raw += chunk; });
+    process.stdin.on("end", () => {
+      const value = JSON.parse(raw);
+      const results = [...(value.items ?? []), ...(value.sponsoredItems ?? [])];
+      if (results.some((item) => item.title === "Synthetic suppressed directory event")) {
+        throw new Error("suppressed event leaked through anonymous directory search");
+      }
+    });
+  '
 
 curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=es" |
   node -e '

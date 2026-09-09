@@ -807,6 +807,31 @@ BEGIN
     RAISE EXCEPTION 'social_event_time_order is missing or invalid';
   END IF;
 
+  IF to_regclass('public.directory_public_event') IS NULL
+     OR to_regclass('public.directory_public_search_document') IS NULL THEN
+    RAISE EXCEPTION 'The anonymous directory privacy views are missing';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%external_event_ref%'
+     OR pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%suppressed%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce imported-event tombstones';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_event%'
+     OR pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_venue%' THEN
+    RAISE EXCEPTION 'directory_public_search_document does not recheck live event and venue eligibility';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM directory_public_event event
+    JOIN external_event_ref reference ON reference.event_id = event.id
+    WHERE lower(btrim(reference.source_status)) = 'suppressed'
+  ) THEN
+    RAISE EXCEPTION 'A suppressed imported event remains in the anonymous directory';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM catalog_backfill_run
     WHERE NOT dry_run AND status <> 'completed'
