@@ -2809,6 +2809,17 @@ socialEventsServer user =
                         else do
                             cancelledStateId <-
                                 EventLifecycle.resolveActiveSocialEventStateId "cancelled"
+                            cancellationAllowed <-
+                                case socialEventWorkflowStateId existing of
+                                    Nothing -> pure False
+                                    Just currentStateId ->
+                                        EventLifecycle.socialEventTransitionAllowed
+                                            currentStateId
+                                            cancelledStateId
+                            let workflowStateUpdates =
+                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
+                                    | cancellationAllowed
+                                    ]
                             updateWhere
                                 [ExternalEventRefEventId ==. eventKey]
                                 [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
@@ -2816,11 +2827,12 @@ socialEventsServer user =
                                 ]
                             update
                                 eventKey
-                                [ SocialEventMetadata =.
-                                    suppressImportedEventMetadata (socialEventMetadata existing)
-                                , SocialEventWorkflowStateId =. Just cancelledStateId
-                                , SocialEventUpdatedAt =. now
-                                ]
+                                ( [ SocialEventMetadata =.
+                                        suppressImportedEventMetadata (socialEventMetadata existing)
+                                  , SocialEventUpdatedAt =. now
+                                  ]
+                                    <> workflowStateUpdates
+                                )
                             withdrawEventDirectorySearch eventKey
                             pure (Right ())
                 )

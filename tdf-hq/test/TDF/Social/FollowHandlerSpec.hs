@@ -1105,7 +1105,7 @@ spec = describe "social event handler helpers" $ do
         suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
         suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"ticketUrl\":null")
 
-    it "retains a suppressed provider reference when an admin deletes an imported event" $ do
+    it "tombstones imported events while respecting lifecycle transitions" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
@@ -1163,6 +1163,56 @@ spec = describe "social event handler helpers" $ do
             `shouldBe` Just (Just socialEventCancelledWorkflowStateFixtureId)
         fmap externalEventRefSourceStatus storedRef `shouldBe` Just externalEventRefSuppressedStatus
         fmap externalEventRefMissingRuns storedRef `shouldBe` Just 0
+
+        let unavailableEventKey :: SocialEventId
+            unavailableEventKey = toSqlKey 25
+            unavailableEvent =
+                (seedSocialEvent "1" "Unavailable imported event" now)
+                    { socialEventMetadata =
+                        Just
+                            "{\"ticketUrl\":\"https://tickets.example/unavailable\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}"
+                    , socialEventWorkflowStateId = Just socialEventUnavailableWorkflowStateFixtureId
+                    }
+        unavailableRefKey <-
+            runSqlPool
+                ( do
+                    insertKey unavailableEventKey unavailableEvent
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-delete-unavailable"
+                            , externalEventRefEventId = unavailableEventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Just "https://tickets.example/unavailable"
+                            , externalEventRefPriceCents = Just 1000
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 1
+                            , externalEventRefSourceStatus = "unavailable"
+                            }
+                )
+                pool
+
+        unavailableResult <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "25")
+                    env
+
+        case unavailableResult of
+            Left err ->
+                expectationFailure
+                    ("Expected unavailable imported event deletion to succeed, got: " <> show err)
+            Right _ -> pure ()
+        storedUnavailableEvent <- runSqlPool (get unavailableEventKey) pool
+        storedUnavailableRef <- runSqlPool (get unavailableRefKey) pool
+        fmap socialEventMetadata storedUnavailableEvent
+            `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+        fmap socialEventWorkflowStateId storedUnavailableEvent
+            `shouldBe` Just (Just socialEventUnavailableWorkflowStateFixtureId)
+        fmap externalEventRefSourceStatus storedUnavailableRef `shouldBe` Just externalEventRefSuppressedStatus
+        fmap externalEventRefMissingRuns storedUnavailableRef `shouldBe` Just 0
 
     it "rejects spoofed invitation senders before inserting social event invitations" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -1515,6 +1565,12 @@ socialEventCancelledWorkflowStateFixtureId =
         Just workflowStateId -> workflowStateId
         Nothing -> error "Invalid cancelled social-event workflow-state fixture UUID"
 
+socialEventUnavailableWorkflowStateFixtureId :: UUID.UUID
+socialEventUnavailableWorkflowStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000236" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid unavailable social-event workflow-state fixture UUID"
+
 seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
 seedSocialEvent owner title now =
     SocialEvent
@@ -1696,6 +1752,9 @@ initializeSocialSchema = do
         "CREATE TABLE IF NOT EXISTS \"workflow_state\" (\"id\" VARCHAR PRIMARY KEY,\"workflow_id\" VARCHAR NOT NULL,\"code\" VARCHAR NOT NULL,\"name_es\" VARCHAR NOT NULL,\"name_en\" VARCHAR NOT NULL,\"active\" BOOLEAN NOT NULL)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"workflow_transition\" (\"workflow_id\" VARCHAR NOT NULL,\"from_state_id\" VARCHAR NOT NULL,\"to_state_id\" VARCHAR NOT NULL,\"required_permission_id\" VARCHAR NULL,\"requires_review\" BOOLEAN NOT NULL,\"requires_distinct_approver\" BOOLEAN NOT NULL,\"effective_from\" TIMESTAMP NULL,\"effective_until\" TIMESTAMP NULL,\"active\" BOOLEAN NOT NULL)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"workflow_state_capability\" (\"state_id\" VARCHAR NOT NULL,\"capability_code\" VARCHAR NOT NULL,\"enabled\" BOOLEAN NOT NULL,PRIMARY KEY (\"state_id\",\"capability_code\"))"
         []
     rawExecute
@@ -1706,6 +1765,12 @@ initializeSocialSchema = do
         []
     rawExecute
         "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000239','00000000-0000-4000-8000-000000000104','cancelled','Cancelado','Cancelled',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000236','00000000-0000-4000-8000-000000000104','unavailable','No disponible','Unavailable',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_transition\" (\"workflow_id\",\"from_state_id\",\"to_state_id\",\"required_permission_id\",\"requires_review\",\"requires_distinct_approver\",\"effective_from\",\"effective_until\",\"active\") VALUES ('00000000-0000-4000-8000-000000000104','00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000239',NULL,0,0,NULL,NULL,1)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"
