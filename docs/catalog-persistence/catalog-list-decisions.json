@@ -8584,13 +8584,23 @@
       "reviewed": true
     },
     {
-      "id": "b0e71bcab2a49d422da0",
+      "id": "ca1a91926f47d5e6540c",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "720d867f7e9dfc6e3a88",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing request field names without contract coordination could break public-booking serialization or backend validation.",
+      "justification": "These keys are the typed public-booking API request shape assembled from user input and canonical references; they are not selectable, displayable, or governed business catalog values.",
       "reviewed": true
     },
     {
