@@ -62,5 +62,9 @@ primary_region = "gru"
     protocol = "http"
 
 [deploy]
+  # Deploys run this checksum-verified preflight explicitly. Ordinary restarts
+  # keep automatic schema work off; the app starts only after this command
+  # completes successfully.
+  release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true /app/production-entrypoint.sh"
   strategy = "rolling"
   max_unavailable = 1

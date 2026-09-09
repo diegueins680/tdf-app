@@ -21,6 +21,10 @@ test('staging Fly config pins the isolated volume and disables background side e
   assert.match(config, /^  REPUTATION_AGGREGATION_MODE = "simulation"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"$/mu);
   assert.match(config, /^  AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"$/mu);
+  assert.match(
+    config,
+    /^  release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true \/app\/production-entrypoint\.sh"$/mu,
+  );
   assert.match(config, /^  ALLOWED_ORIGINS = "https:\/\/tdf-studio-audit-staging-web\.fly\.dev"$/mu);
   assert.match(config, /^  CORS_DISABLE_DEFAULTS = "true"$/mu);
   assert.match(config, /^  source = "tdf_staging_clean_20260908"$/mu);
