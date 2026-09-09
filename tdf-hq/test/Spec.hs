@@ -35,6 +35,7 @@ import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import Servant.Server.Internal.Handler (runHandler)
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory, setCurrentDirectory)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.FilePath ((</>))
@@ -889,7 +890,7 @@ main = hspec $ do
                             { envPool = error "envPool should be unused when public reputation is disabled"
                             , envConfig = cfg
                             }
-                result <- runExceptT (runReaderT (getPublicReputation 1) disabledEnv)
+                result <- runHandler (runReaderT (getPublicReputation 1) disabledEnv)
                 case result of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 404
