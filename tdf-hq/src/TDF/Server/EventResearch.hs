@@ -765,6 +765,8 @@ materializationEventRefSourceStatus publish eventAlreadyPublished sourceStatus
 
 materializationPublicationHoldSourceStatus :: T.Text -> T.Text
 materializationPublicationHoldSourceStatus rawStatus
+    | normalized == externalEventRefSuppressedStatus =
+        externalEventRefSuppressedStatus
     | Just sourceStatus <- T.stripPrefix "materialization_draft:" normalized =
         "materialization_draft:" <> sourceStatus
     | Just sourceStatus <- T.stripPrefix "draft:" normalized =
@@ -792,7 +794,8 @@ applyMaterializationPublicationIntent candidate request eventId
                     )
             case existingRef of
                 Just (Entity refId ref)
-                    | externalEventRefEventId ref == eventId ->
+                    | externalEventRefEventId ref == eventId
+                    , not (externalEventRefIsSuppressed ref) ->
                         update
                             refId
                             [ ExternalEventRefSourceStatus =.
@@ -843,30 +846,40 @@ existingEventCanSatisfy
     -> SocialEventId
     -> SqlPersistT IO Bool
 existingEventCanSatisfy request eventId = do
-    deletionSuppressed <-
-        isJust
-            <$> selectFirst
-                [ ExternalEventRefEventId ==. eventId
-                , ExternalEventRefSourceStatus ==. externalEventRefSuppressedStatus
-                ]
-                []
-    if deletionSuppressed
-        then pure False
-        else
-            if not request.erMaterializationPublish
-                then isJust <$> get eventId
-                else materializedEventIsPublished eventId
+    -- Admin deletion locks the event before reading or suppressing its source
+    -- references. Use the same order and make every suitability decision from
+    -- rows read after the event lock is held.
+    lockedEvents <-
+        rawSql
+            "SELECT ?? FROM social_event WHERE id=? FOR UPDATE"
+            [toPersistValue eventId]
+    case lockedEvents :: [Entity SocialEvent] of
+        [Entity _ eventRow] -> do
+            refs <- selectList [ExternalEventRefEventId ==. eventId] []
+            let deletionSuppressed =
+                    any (externalEventRefIsSuppressed . entityVal) refs
+            if deletionSuppressed
+                then pure False
+                else
+                    if not request.erMaterializationPublish
+                        then pure True
+                        else materializedEventRowIsPublished eventRow
+        _ -> pure False
 
 materializedEventIsPublished :: SocialEventId -> SqlPersistT IO Bool
 materializedEventIsPublished eventId = do
     event <- get eventId
     case event of
         Nothing -> pure False
-        Just row -> case socialEventWorkflowStateId row of
-            Nothing -> pure False
-            Just workflowStateId -> do
-                listable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
-                pure (listable && storedEventIsPublic (socialEventMetadata row))
+        Just row -> materializedEventRowIsPublished row
+
+materializedEventRowIsPublished :: SocialEvent -> SqlPersistT IO Bool
+materializedEventRowIsPublished row =
+    case socialEventWorkflowStateId row of
+        Nothing -> pure False
+        Just workflowStateId -> do
+            listable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            pure (listable && storedEventIsPublic (socialEventMetadata row))
 
 storedEventIsPublic :: Maybe T.Text -> Bool
 storedEventIsPublic Nothing = True

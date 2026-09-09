@@ -33,7 +33,7 @@ module TDF.Services.EventDiscovery
 
 import Control.Applicative ((<|>))
 import Control.Exception (try)
-import Control.Monad (forM, forM_, unless)
+import Control.Monad (filterM, forM, forM_, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay)
 import Data.Aeson
@@ -74,6 +74,7 @@ import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
   , PersistValue
+  , SelectOpt(Asc)
   , deleteWhere
   , get
   , getBy
@@ -1789,37 +1790,53 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
     reconcile = do
       allProviderRefs <-
         selectList [Social.ExternalEventRefProvider ==. provider] []
-      let refs =
+      let initialRefs =
             filter
               (refMatchesTargetCity . entityVal)
               allProviderRefs
-      changed <- forM refs $ \(Entity refKey ref) ->
-        if Map.member (Social.externalEventRefExternalId ref) seen
-          then pure 0
-          else do
-            let nextMissing = Social.externalEventRefMissingRuns ref + 1
-                nextStatus =
-                  if Social.externalEventRefIsSuppressed ref
-                    || isMaterializationDraftSourceStatus (Social.externalEventRefSourceStatus ref)
-                    then Social.externalEventRefSourceStatus ref
-                    else
-                      if nextMissing >= 2
-                        then "missing"
-                        else Social.externalEventRefSourceStatus ref
-            update
-              refKey
-              [ Social.ExternalEventRefMissingRuns =. nextMissing
-              , Social.ExternalEventRefSourceStatus =. nextStatus
-              ]
-            pure 1
-      let touchedEventKeys =
+          touchedEventKeys =
             Map.keys
               ( Map.fromList
                   [ (Social.externalEventRefEventId ref, ())
-                  | Entity _ ref <- refs
+                  | Entity _ ref <- initialRefs
                   ]
               )
-      forM_ touchedEventKeys (refreshCanonicalVisibility now)
+      changed <- forM touchedEventKeys $ \eventKey -> do
+        -- Deletion uses this same event-first lock order. Re-read references
+        -- only after taking it so a committed suppression marker can never be
+        -- overwritten by a status computed from the initial snapshot.
+        _ <- lockDiscoveredSocialEvent eventKey
+        currentProviderRefs <-
+          selectList
+            [ Social.ExternalEventRefProvider ==. provider
+            , Social.ExternalEventRefEventId ==. eventKey
+            ]
+            [Asc Social.ExternalEventRefId]
+        let currentRefs =
+              filter
+                (refMatchesTargetCity . entityVal)
+                currentProviderRefs
+        eventChanges <- forM currentRefs $ \(Entity refKey ref) ->
+          if Map.member (Social.externalEventRefExternalId ref) seen
+            then pure 0
+            else do
+              let nextMissing = Social.externalEventRefMissingRuns ref + 1
+                  nextStatus =
+                    if Social.externalEventRefIsSuppressed ref
+                      || isMaterializationDraftSourceStatus (Social.externalEventRefSourceStatus ref)
+                      then Social.externalEventRefSourceStatus ref
+                      else
+                        if nextMissing >= 2
+                          then "missing"
+                          else Social.externalEventRefSourceStatus ref
+              update
+                refKey
+                [ Social.ExternalEventRefMissingRuns =. nextMissing
+                , Social.ExternalEventRefSourceStatus =. nextStatus
+                ]
+              pure 1
+        refreshCanonicalVisibility now eventKey
+        pure (sum eventChanges)
       pure (sum changed)
 
     refMatchesTargetCity ref =
@@ -2004,16 +2021,26 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
             ]
           pure suppressedDiscoverySyncStats
     _ -> do
-      mergeCandidate <-
+      initialMergeCandidate <-
         case existingRef of
           Nothing -> findCanonicalEventCandidate event
           Just _ -> pure Nothing
-      canonicalDeletionSuppressed <-
-        case mergeCandidate of
-          Nothing -> pure False
+      (mergeCandidate, canonicalDeletionSuppressed) <-
+        case initialMergeCandidate of
+          Nothing -> pure (Nothing, False)
           Just candidateKey -> do
-            _ <- lockDiscoveredSocialEvent candidateKey
-            eventHasSuppressedReference candidateKey
+            lockedCandidate <- lockDiscoveredSocialEvent candidateKey
+            -- The candidate may have changed while this transaction waited
+            -- for its event lock, so rerun every canonical identity predicate.
+            stillMatches <-
+              case lockedCandidate of
+                Nothing -> pure False
+                Just _ -> canonicalEventCandidateMatches event candidateKey
+            if stillMatches
+              then do
+                deletionSuppressed <- eventHasSuppressedReference candidateKey
+                pure (Just candidateKey, deletionSuppressed)
+              else pure (Nothing, False)
       case mergeCandidate of
         Just candidateKey
           | canonicalDeletionSuppressed -> do
@@ -2257,72 +2284,95 @@ findCanonicalEventCandidate discovered = do
       [ toPersistValue (addUTCTime (-matchWindow) startTime)
       , toPersistValue (addUTCTime matchWindow startTime)
       ]
-  matches <- fmap catMaybes . forM refs $ \(Entity _ ref) -> do
-    eventRow <- get (Social.externalEventRefEventId ref)
-    case eventRow of
-      Nothing -> pure Nothing
-      Just existing
-        | normalizeCityKey (Social.externalEventRefCity ref)
-            /= normalizeCityKey
-              (discoveredVenueCity (discoveredEventVenue discovered)) ->
-            pure Nothing
-        | abs
-            ( diffUTCTime
-                (Social.socialEventStartTime existing)
-                (discoveredEventStart discovered)
-            )
-            > 90 * 60 ->
-            pure Nothing
-        | otherwise -> do
-            venueMatches <- canonicalVenueMatches existing
-            artistMatches <- canonicalArtistMatches (Social.externalEventRefEventId ref)
-            let titleScore =
-                  normalizedTokenSimilarity
-                    (Social.socialEventTitle existing)
-                    (discoveredEventTitle discovered)
-                veryClose =
-                  abs
-                    ( diffUTCTime
-                        (Social.socialEventStartTime existing)
-                        (discoveredEventStart discovered)
-                    )
-                    <= 15 * 60
-                highConfidence =
-                  (titleScore >= 0.92 && veryClose)
-                    || (titleScore >= 0.80 && (venueMatches || artistMatches))
-            pure
-              ( if highConfidence
-                  then Just (Social.externalEventRefEventId ref)
-                  else Nothing
-              )
+  let candidateKeys =
+        nub
+          [ Social.externalEventRefEventId ref
+          | Entity _ ref <- refs
+          ]
+  matches <- filterM (canonicalEventCandidateMatches discovered) candidateKeys
   pure (listToMaybe matches)
-  where
-    canonicalVenueMatches existing =
-      case Social.socialEventVenueId existing of
-        Nothing -> pure False
-        Just venueKey -> do
-          venue <- get venueKey
-          pure $
-            maybe
-              False
-              ( \venueRow ->
-                  normalizedTokenSimilarity
-                    (Social.venueName venueRow)
-                    (discoveredVenueName (discoveredEventVenue discovered))
-                    >= 0.85
-              )
-              venue
 
-    canonicalArtistMatches eventKey = do
-      links <- selectList [Social.EventArtistEventId ==. eventKey] []
-      names <-
-        fmap catMaybes . forM links $ \(Entity _ link) ->
-          fmap Social.artistProfileName <$> get (Social.eventArtistArtistId link)
-      let importedNames =
-            map (normalizeTokenText . discoveredArtistName)
-              (discoveredEventArtists discovered)
-          existingNames = map normalizeTokenText names
-      pure (any (`elem` existingNames) importedNames)
+canonicalEventCandidateMatches ::
+  DiscoveredEvent ->
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+canonicalEventCandidateMatches discovered eventKey = do
+  eventRow <- get eventKey
+  refs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+  case eventRow of
+    Nothing -> pure False
+    Just existing
+      | not
+          ( any
+              ( ( == normalizeCityKey
+                      (discoveredVenueCity (discoveredEventVenue discovered))
+                )
+                  . normalizeCityKey
+                  . Social.externalEventRefCity
+                  . entityVal
+              )
+              refs
+          ) ->
+          pure False
+      | abs
+          ( diffUTCTime
+              (Social.socialEventStartTime existing)
+              (discoveredEventStart discovered)
+          )
+          > 90 * 60 ->
+          pure False
+      | otherwise -> do
+          venueMatches <- canonicalVenueMatches discovered existing
+          artistMatches <- canonicalArtistMatches discovered eventKey
+          let titleScore =
+                normalizedTokenSimilarity
+                  (Social.socialEventTitle existing)
+                  (discoveredEventTitle discovered)
+              veryClose =
+                abs
+                  ( diffUTCTime
+                      (Social.socialEventStartTime existing)
+                      (discoveredEventStart discovered)
+                  )
+                  <= 15 * 60
+          pure $
+            (titleScore >= 0.92 && veryClose)
+              || (titleScore >= 0.80 && (venueMatches || artistMatches))
+
+canonicalVenueMatches ::
+  DiscoveredEvent ->
+  Social.SocialEvent ->
+  SqlPersistT IO Bool
+canonicalVenueMatches discovered existing =
+  case Social.socialEventVenueId existing of
+    Nothing -> pure False
+    Just venueKey -> do
+      venue <- get venueKey
+      pure $
+        maybe
+          False
+          ( \venueRow ->
+              normalizedTokenSimilarity
+                (Social.venueName venueRow)
+                (discoveredVenueName (discoveredEventVenue discovered))
+                >= 0.85
+          )
+          venue
+
+canonicalArtistMatches ::
+  DiscoveredEvent ->
+  Social.SocialEventId ->
+  SqlPersistT IO Bool
+canonicalArtistMatches discovered eventKey = do
+  links <- selectList [Social.EventArtistEventId ==. eventKey] []
+  names <-
+    fmap catMaybes . forM links $ \(Entity _ link) ->
+      fmap Social.artistProfileName <$> get (Social.eventArtistArtistId link)
+  let importedNames =
+        map (normalizeTokenText . discoveredArtistName)
+          (discoveredEventArtists discovered)
+      existingNames = map normalizeTokenText names
+  pure (any (`elem` existingNames) importedNames)
 
 providerShouldReplaceCanonical ::
   Text ->

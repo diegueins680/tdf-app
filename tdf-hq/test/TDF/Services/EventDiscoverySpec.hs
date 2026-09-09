@@ -339,6 +339,17 @@ spec = do
             pool
           countImportedDiscoveryEvents pool `shouldReturn` 0
 
+          _ <-
+            reconcileProviderEvents
+              pool
+              (fixtureTime 10 8)
+              "ticketmaster"
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
+              []
+          reconciledRef <- runSqlPool (get refId) pool
+          Social.externalEventRefSourceStatus <$> reconciledRef
+            `shouldBe` Just Social.externalEventRefSuppressedStatus
+
           refreshStats <-
             syncDiscoveredEvent
               pool
