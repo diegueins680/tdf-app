@@ -5,13 +5,13 @@
 | Capacidad | Resultado |
 |---|---|
 | Leer/modificar repositorio | Disponible; trabajo en worktree aislado |
-| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `714060ffcc1db56448f6d3cb82e055e0085af4e7` |
+| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `a4b1f497c38efae6286566f8d2c72718089fb695` |
 | Backend Haskell | Build/test local disponible; resultado final se registra abajo |
 | PostgreSQL aislado | Disponible; PostgreSQL 16 temporal verificado. Docker Desktop no arrancó en la última corrida, por lo que el mismo fixture se ejecutó contra un clúster local desechable |
 | Migraciones | Aplicación, reejecución, rollback guardado/limpio y reapply disponibles |
 | OpenAPI/clientes | Generador disponible; web y móvil regenerados |
 | Web | Typecheck/Jest/build y Playwright disponibles; Chromium desktop/teléfono verificado con datos sintéticos |
-| Móvil | Typecheck/Jest disponibles; build debug y runtime Android API 36.1 verificados con API sintética local; iOS/dispositivo físico pendientes |
+| Móvil | Typecheck/Jest disponibles; build debug y runtime Android API 36.1 verificados con API sintética local; Xcode 16.2 disponible, pero `CoreSimulatorService` no permitió descubrir simuladores iOS; iOS/dispositivo físico pendientes |
 | Pagos sandbox | Credenciales Datafast/PayPal/manual no disponibles; no se llamaron proveedores |
 | GitHub | Push disponible; draft PR raíz `#274` y draft PR móvil `#49` creados, sin merge ni despliegue |
 
@@ -26,7 +26,7 @@
 - Reglas Haskell focalizadas `stack test --fast --test-arguments=--match=merch`: PASS, 8/8 (siete de merch y una coincidencia preexistente de storefront).
 - Jest web `tdf-hq-ui/src/api/merch.test.ts`: PASS, 7/7.
 - Jest móvil `tdf-mobile/__tests__/merchDeepLinks.test.ts`: PASS, 2/2.
-- Android nativo: `app:assembleDebug` PASS (481 tareas; 60 ejecutadas, 421 `UP-TO-DATE`) para `x86_64`; APK debug instalado y lanzado en `Medium_Phone_API_36.1`. Con API sintética local y sin credenciales se verificaron deep link público, descubrimiento, ficha de producto, aviso de piloto y botón de compra accesible con `enabled=false`. Logcat no mostró excepciones ni muerte del proceso TDF. Se obtuvieron capturas locales reales; no se ejecutó iOS ni dispositivo físico.
+- Android nativo: `app:assembleDebug` PASS (481 tareas; 60 ejecutadas, 421 `UP-TO-DATE`) para `x86_64`; APK debug instalado y lanzado en `Medium_Phone_API_36.1`. Con API sintética local y sin credenciales se verificaron deep link público, descubrimiento, ficha de producto, aviso de piloto y botón de compra accesible con `enabled=false`. Logcat no mostró excepciones ni muerte del proceso TDF. Se obtuvieron capturas locales reales. Xcode 16.2 está instalado, pero `xcrun simctl list devices available` falló porque `CoreSimulatorService` perdió la conexión y `simdiskimaged` no estaba disponible; no se ejecutó runtime iOS ni dispositivo físico.
 - Playwright `artist-merch.spec.mjs` en Chromium desktop y Pixel 7: PASS, 4/4. Cubre piloto cerrado honesto, descubrimiento, storefront, producto, checkout deshabilitado y capturas adjuntas al reporte.
 - Axe en esos recorridos: PASS, 0 violaciones `serious` o `critical`.
 - Regresión móvil completa: 319/320 en la corrida simultánea; el único timeout preexistente (`TicketCheckout`) pasó aislado 15/15. Se conserva la advertencia `act(...)` preexistente.
