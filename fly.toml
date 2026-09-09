@@ -12,11 +12,11 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   # Apply only checksum-pinned SQL from production-migrations.json at startup.
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
-  # Explicitly authorized private contextual-reputation rollout. Public reads
-  # remain separately controllable through the projection gate below.
-  CONTEXTUAL_REPUTATION_ENABLED = "true"
+  # Keep contextual reputation dark until a server-enforced pilot cohort and
+  # the remaining approval gates have been verified.
+  CONTEXTUAL_REPUTATION_ENABLED = "false"
   # Public reads retain an independently controlled privacy gate. It is staged
-  # open for the authorized rollout and can be closed independently.
+  # open while the contextual workflow remains disabled.
   PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   # The aggregation worker is staging/test simulation infrastructure only.
   # Production is rejected independently by both process and database gates.

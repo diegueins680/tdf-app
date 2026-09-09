@@ -41,7 +41,7 @@ primary_region = "gru"
   DEFAULT_LOCALE = "es"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
-  CONTEXTUAL_REPUTATION_ENABLED = "true"
+  CONTEXTUAL_REPUTATION_ENABLED = "false"
   PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
@@ -608,12 +608,12 @@ test('validateFlyConfig fails closed when event discovery would start during the
   );
 });
 
-test('validateFlyConfig requires the explicitly authorized contextual reputation rollout', () => {
+test('validateFlyConfig keeps contextual reputation dark without a production cohort gate', () => {
   assert.throws(
     () => validateFlyConfig(
       safeFlyConfig.replace(
-        'CONTEXTUAL_REPUTATION_ENABLED = "true"',
         'CONTEXTUAL_REPUTATION_ENABLED = "false"',
+        'CONTEXTUAL_REPUTATION_ENABLED = "true"',
       ),
     ),
     /CONTEXTUAL_REPUTATION_ENABLED|contextual reputation/i,
@@ -712,7 +712,7 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
   assert.ok(args.includes('CONTEXTUAL_REPUTATION_ENABLED=false'));
 });
 
-test('runtime preflight accepts a coherent pre-activation contextual reputation gate', () => {
+test('runtime preflight preserves a coherent captured contextual reputation gate', () => {
   const values = {
     RUN_MIGRATIONS: 'false',
     AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
@@ -729,8 +729,12 @@ test('runtime preflight accepts a coherent pre-activation contextual reputation 
   ];
 
   assert.equal(captureContextualReputationGate(rows), false);
+  assert.deepEqual(runtimeEnvBlockers(rows), []);
   assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
-  assert.match(runtimeEnvBlockers(rows)[0], /CONTEXTUAL_REPUTATION_ENABLED/);
+  assert.match(
+    runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
+    /CONTEXTUAL_REPUTATION_ENABLED/,
+  );
   assert.throws(
     () => captureContextualReputationGate([
       rows[0],
@@ -1050,7 +1054,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, new RegExp(`--image ${releaseImage}`));
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
-  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
+  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);

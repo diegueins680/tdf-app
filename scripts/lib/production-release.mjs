@@ -318,8 +318,8 @@ export function validateFlyConfig(toml) {
       'fly.toml must set AUTO_APPLY_PRODUCTION_MIGRATIONS="true" for reviewed SQL migrations.',
     );
   }
-  if (contextualReputation !== 'true') {
-    throw new Error('fly.toml must set CONTEXTUAL_REPUTATION_ENABLED="true" for the authorized private rollout.');
+  if (contextualReputation !== 'false') {
+    throw new Error('fly.toml must keep CONTEXTUAL_REPUTATION_ENABLED="false" until a production cohort gate exists.');
   }
   if (publicReputationProjection !== 'true') {
     throw new Error(
@@ -2211,7 +2211,7 @@ export function buildMachineDeployArgs({
   sha,
   onlyMachine,
   excludeMachine,
-  contextualReputationEnabled = true,
+  contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
 }) {
   if (typeof contextualReputationEnabled !== 'boolean') {
@@ -2250,7 +2250,7 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
-  const contextualReputationEnabled = options.contextualReputationEnabled ?? true;
+  const contextualReputationEnabled = options.contextualReputationEnabled ?? false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;

@@ -46,7 +46,7 @@ const productionProfile = Object.freeze({
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
-  CONTEXTUAL_REPUTATION_ENABLED: 'true',
+  CONTEXTUAL_REPUTATION_ENABLED: 'false',
   REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
   REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
   REPUTATION_AGGREGATION_MODE: 'simulation',
@@ -876,7 +876,7 @@ async function executeRelease(context) {
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
-      contextualReputationEnabled: true,
+      contextualReputationEnabled: false,
       publicReputationProjectionEnabled: canaryProjectionGate,
       onlyMachine: canary.id,
     }));
@@ -897,7 +897,7 @@ async function executeRelease(context) {
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
-        contextualReputationEnabled: true,
+        contextualReputationEnabled: false,
         publicReputationProjectionEnabled: projectionGate,
         onlyMachine: machine.id,
       }));
