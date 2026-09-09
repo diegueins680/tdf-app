@@ -584,16 +584,6 @@
       "reviewed": true
     },
     {
-      "id": "1467b26fe9075c13f2f7",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "8329724479f986db020e",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -621,16 +611,6 @@
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "2245e57c3a5e6500548e",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true
     },
     {
@@ -6074,16 +6054,6 @@
       "reviewed": true
     },
     {
-      "id": "3916642c4d54d32e3205",
-      "classification": "security-system-registry",
-      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
-      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_default_state, workflow_state_capability",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "Persisted workflow-state capability rows own assignments. Code recognizes only the two executable behavior boundaries, startup rejects unknown enabled capabilities, and missing rows deny access by default.",
-      "reviewed": true
-    },
-    {
       "id": "926784680c048565b6b4",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -6301,16 +6271,6 @@
       "priority": "P0-cutover",
       "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
       "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "dbd19df5feca0af20a2c",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
       "reviewed": true
     },
     {
@@ -8494,16 +8454,6 @@
       "reviewed": true
     },
     {
-      "id": "3f00137f715a55f77dc3",
-      "classification": "governed-reference-data",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing reference constants could break parsing, transport, or implementation dispatch.",
-      "justification": "These reference constants form closed unions used for validation and dispatch mechanics and are not governed business catalog data.",
-      "reviewed": true
-    },
-    {
       "id": "1ba8101b3e8ed105d23b",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -8531,16 +8481,6 @@
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "b98598fcc3a39ba88a8d",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
       "reviewed": true
     },
     {
@@ -8611,16 +8551,6 @@
       "priority": "P3-retain",
       "risk": "Changing UI constants could break rendering or user experience.",
       "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "d90f041a4536a12b8bdd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
       "reviewed": true
     },
     {
@@ -9541,6 +9471,126 @@
       "priority": "P1-cross-platform",
       "risk": "Unknown audit actions could conceal event transitions or make DLQ recovery and incident reconstruction incomplete.",
       "justification": "Event actions are immutable audit protocol identifiers emitted only by fenced database functions; changes require coordinated code and schema review.",
+      "reviewed": true
+    },
+    {
+      "id": "9f4bd75d43cac2910708",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "event_rsvp_preview_contract",
+      "priority": "P3-consumer",
+      "risk": "A stale preview fixture could conceal unsafe metadata, visibility, or crawler rendering behavior.",
+      "justification": "This object is test data only and remains a consumer of the public event preview contract; it does not define production event fields or values.",
+      "reviewed": true
+    },
+    {
+      "id": "ae79271475e99c819b11",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the ordered manifest can omit or reorder production schema changes.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "91952765f2d528c2a6c6",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "Cross-client RSVP status drift could create invalid writes, contradictory labels, or incorrect profile visibility.",
+      "justification": "The web union is a strict consumer mirror of the canonical RSVP wire vocabulary; it is not an independent authority and must evolve through the coordinated domain contract.",
+      "reviewed": true
+    },
+    {
+      "id": "74f76e178df15df54768",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the client method registry could break typed request dispatch without changing any domain data.",
+      "justification": "Typed API-client method names are implementation mechanics; they are not selectable, displayable, or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "79e7466c1f722b842262",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Cache namespace drift could mix RSVP subjects or merge RSVP state with invitation state.",
+      "justification": "These names partition React Query caches by subject and domain; they are client cache mechanics rather than configurable business values.",
+      "reviewed": true
+    },
+    {
+      "id": "a36272e80e7d7145a46b",
+      "classification": "dynamic-business-catalog",
+      "disposition": "persisted-registry-with-parser-adapter-mirror",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P1-cross-platform",
+      "risk": "OpenAPI status drift could generate clients that send or accept values rejected by the authoritative RSVP domain boundary.",
+      "justification": "OpenAPI mirrors the single canonical RSVP vocabulary enforced by the server and database; it supplies generated adapters and is not an independent state authority.",
+      "reviewed": true
+    },
+    {
+      "id": "d3d44acab2b7f88cec12",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing evidence reason codes could make deterministic migration and incident reconstruction ambiguous.",
+      "justification": "These immutable reason codes classify rows quarantined by one migration; they are audit protocol constants and are never offered as business choices.",
+      "reviewed": true
+    },
+    {
+      "id": "d2df22e8c9f29c516d07",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition",
+      "priority": "P2-schema-history",
+      "risk": "Changing historical RSVP constraints could invalidate deduplication evidence or allow contradictory persisted states.",
+      "justification": "This immutable migration records the canonical RSVP states at introduction; any later vocabulary change requires a coordinated forward migration and contract regeneration.",
+      "reviewed": true
+    },
+    {
+      "id": "2a1f5ad58ef7b8fc4bf3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An incorrect decoder allowlist could accept authority-bearing unknown fields or reject valid contract fields.",
+      "justification": "The list is a strict wire-payload field allowlist used to reject unknown JSON keys; it does not enumerate selectable domain data.",
+      "reviewed": true
+    },
+    {
+      "id": "0eb0488703525594608c",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "workflow_definition, workflow_state, workflow_transition, workflow_default_state, workflow_state_capability",
+      "priority": "P0-security",
+      "risk": "Capability drift could expose private events, permit ineligible RSVPs, or enable ticket actions in an invalid workflow state.",
+      "justification": "Persisted workflow-state capability rows own assignments. Code recognizes only the three executable behavior boundaries, rejects unknown enabled capabilities, and denies missing capabilities by default.",
+      "reviewed": true
+    },
+    {
+      "id": "068d6f3f0c164631ab35",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the client method registry could break typed mobile request dispatch without changing any domain data.",
+      "justification": "Typed API-client method names are implementation mechanics; they are not selectable, displayable, or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "ffb84e8fd3972fd0730d",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Feature registry drift could expose unauthorized navigation or hide required authenticated boundaries.",
+      "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
       "reviewed": true
     }
   ]
