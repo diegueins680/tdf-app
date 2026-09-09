@@ -5451,6 +5451,18 @@ export interface components {
             salesEnd?: string | null;
             transfersAllowed: boolean;
         };
+        PublicEventTicketPolicy: {
+            policyVersion: string;
+            currency: string;
+            buyerFeeBps: number;
+            organizerFeeBps: number;
+            taxBps: number;
+            holdMinutes: number;
+            termsVersion: string;
+            termsSummary: string;
+            refundPolicy: string;
+            transferAllowed: boolean;
+        };
         PublicEventTicketStorefront: {
             /** Format: int64 */
             eventId: number;
@@ -5464,6 +5476,7 @@ export interface components {
             venueName?: string | null;
             venueAddress?: string | null;
             tiers: components["schemas"]["PublicEventTicketTier"][];
+            policy: components["schemas"]["PublicEventTicketPolicy"] | null;
             checkoutAvailable: boolean;
             unavailableReason?: string | null;
         };
