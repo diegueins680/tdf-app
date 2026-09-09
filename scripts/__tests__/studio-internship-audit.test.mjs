@@ -13,6 +13,34 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const fixtureDir = path.join(repo, 'test/internships/studio-audit');
 const readJson = async (name) => JSON.parse(await readFile(path.join(fixtureDir, name), 'utf8'));
 
+test('staging Fly config pins the isolated volume and disables background side effects', async () => {
+  const config = await readFile(path.join(repo, 'fly.studio-audit-staging.toml'), 'utf8');
+  const deployment = await readFile(path.join(repo, 'docs/internships/studio-audit/DEPLOYMENT.md'), 'utf8');
+
+  assert.match(config, /^  CONTEXTUAL_REPUTATION_ENABLED = "false"$/mu);
+  assert.match(config, /^  REPUTATION_AGGREGATION_ENVIRONMENT = "staging"$/mu);
+  assert.match(config, /^  REPUTATION_AGGREGATION_MODE = "simulation"$/mu);
+  assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"$/mu);
+  assert.match(config, /^  AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"$/mu);
+  assert.match(
+    config,
+    /^  release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true \/app\/production-entrypoint\.sh"$/mu,
+  );
+  assert.match(config, /^  ALLOWED_ORIGINS = "https:\/\/tdf-studio-audit-staging-web\.fly\.dev"$/mu);
+  assert.match(config, /^  CORS_DISABLE_DEFAULTS = "true"$/mu);
+  assert.match(config, /^  source = "tdf_staging_clean_20260908"$/mu);
+  assert.match(config, /^  auto_stop_machines = false$/mu);
+  assert.match(config, /^  min_machines_running = 1$/mu);
+  assert.doesNotMatch(config, /tdf_studio_audit_staging_data/u);
+  const requiredConfig = deployment.match(/Required safe configuration:\n\n```text\n(?<body>[\s\S]*?)\n```/u);
+  assert.ok(requiredConfig?.groups?.body, 'missing required safe configuration block');
+  assert.match(requiredConfig.groups.body, /^AUTO_APPLY_PRODUCTION_MIGRATIONS=false$/mu);
+  assert.match(
+    deployment,
+    /release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true \/app\/production-entrypoint\.sh"/u,
+  );
+});
+
 test('draft preparation sends credentials only to exact approved API hosts', () => {
   assert.equal(isAllowedDraftApiBase('http://localhost:3000'), true);
   assert.equal(isAllowedDraftApiBase('https://tdf-hq-studio-audit-staging.fly.dev'), true);

@@ -484,7 +484,7 @@
       "reviewed": true
     },
     {
-      "id": "3bdc685e910942bfc6d5",
+      "id": "ae6095a8859bcaac62af",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -7668,7 +7668,7 @@
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
       "specializedModel": "content_category, tag",
-      "priority": "P2-schema-history",
+      "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
       "reviewed": true
