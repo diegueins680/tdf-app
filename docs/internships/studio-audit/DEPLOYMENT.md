@@ -52,7 +52,7 @@ Required safe configuration:
 ```text
 APP_ENV=staging
 RUN_MIGRATIONS=false
-AUTO_APPLY_PRODUCTION_MIGRATIONS=true
+AUTO_APPLY_PRODUCTION_MIGRATIONS=false
 RESET_DB=false
 SEED_DB=false
 EVENT_DISCOVERY_ENABLED=false
@@ -74,6 +74,12 @@ SMTP_* unset or directed to an isolated sink
 WhatsApp/calendar/social credentials unset or fake
 TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT=/data/audit-evidence
 ```
+
+Every API deployment must retain the manifest's explicit release gate:
+`release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true /app/production-entrypoint.sh"`.
+That temporary release Machine applies the checksum-pinned bundle and completes
+schema verification before Fly starts the new release. The long-running API
+Machine keeps both migration flags disabled during ordinary starts and restarts.
 
 Secrets and the runtime-only persona password are installed through the staging secret manager and never committed. Because application seeding intentionally refuses hosted runtimes, initialize the empty staging database through an authenticated private Fly proxy while running the already-tested backend locally with `APP_ENV=test`, `RESET_DB=false`, `SEED_DB=true`, and the deterministic persona file. Stop that local process immediately after health succeeds, verify the expected synthetic rows, close the proxy, and deploy with the committed `RESET_DB=false` and `SEED_DB=false` values. Never bypass or disable the hosted-runtime seed guard.
 
