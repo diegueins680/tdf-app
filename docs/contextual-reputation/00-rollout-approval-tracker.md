@@ -103,3 +103,12 @@ política, aprobadores, enlaces a dashboards/evidencia, grupo afectado, decisió
   para G0. Siguen obligatorios los plazos por jurisdicción, copy publicado,
   pruebas auditadas de derechos y el resto del checklist; tampoco sustituye las
   puertas técnicas y de seguridad restantes.
+
+### 2026-09-08 — Validación técnica de esquema en staging
+
+- **Decisión:** `aprobar` únicamente la evidencia de compatibilidad de esquema
+  y arranque controlado en staging.
+- **Evidencia:** [validación técnica de staging](rollout-evidence/2026-09-08-staging-schema-validation.md).
+- **Límite:** no cierra G0 ni ninguna casilla de Operaciones, Moderación,
+  Producto/Legal o QA. Las banderas de reputación pública y worker continúan
+  desactivadas.

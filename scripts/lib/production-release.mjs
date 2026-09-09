@@ -678,7 +678,20 @@ BEGIN
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
   END IF;
-  IF NOT EXISTS (
+  -- A named allowlist must include the access-request events. The pre-ledger
+  -- notification baseline had no allowlist at all, which is also valid: it
+  -- persists types produced by independently released notification features.
+  -- Do not mistake that supported unconstrained form for an incomplete
+  -- allowlist.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.notification'::regclass
+      AND (
+        conname = 'notification_notif_type_check'
+        OR (contype = 'c' AND 3 = ANY (conkey))
+      )
+  ) AND NOT EXISTS (
     SELECT 1
     FROM pg_constraint
     WHERE conrelid = 'public.notification'::regclass

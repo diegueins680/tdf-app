@@ -23,7 +23,7 @@ CI regenerates and diff-checks the audit artifacts in repository quality, rehear
 
 Use the production architecture versions but a dedicated database/tenant, private evidence storage prefix, isolated provider configuration, and synthetic identities. Never seed a shared or production database. `TDF.Seed` already refuses hosted/production marker combinations; retain those controls.
 
-The reviewed Fly configurations are `fly.studio-audit-staging.toml` for the API and `fly.studio-audit-staging-web.toml` for the web client. They name only isolated staging apps. The API uses an app-scoped one-gigabyte data volume, disables production research workers, keeps payment providers in sandbox mode, stores evidence outside the served asset directory, and accepts browser requests only from the staging web origin. The web image compiles `VITE_API_BASE` to that staging API and serves the SPA with a dedicated health check. The web machine may stop when idle. The single API machine remains running because every cold start deliberately verifies the complete reviewed migration bundle; an auto-stopped API produced multi-minute startup latency that is unsuitable for supervised testing. The database is a separate minimum-size staging cluster and must never be forked from production.
+The reviewed Fly configurations are `fly.studio-audit-staging.toml` for the API and `fly.studio-audit-staging-web.toml` for the web client. They name only isolated staging apps. The API uses an app-scoped one-gigabyte data volume, disables production research workers, keeps payment providers in sandbox mode, stores evidence outside the served asset directory, and accepts browser requests only from the staging web origin. The web image compiles `VITE_API_BASE` to that staging API and serves the SPA with a dedicated health check. The web machine may stop when idle. The API keeps automatic migration work disabled during ordinary cold starts. Before each API deploy, Fly runs the explicit `release_command` preflight with the checksum-pinned migration bundle and complete schema verification; a failed preflight prevents the new release from starting. The single API machine remains running to avoid supervised-test cold-start latency. The database is a separate minimum-size staging cluster and must never be forked from production.
 
 The deterministic data contract is `test/internships/studio-audit/staging-fixtures.json`. The existing idempotent base seed supplies service catalog, rooms/resources, availability, parties, inventory, and sample sessions. The reserved persona seed supplies synthetic roles. Scenario setup uses the `AUDIT-2026` identifiers. Cleanup is destroying and recreating the dedicated database/tenant and clearing its private storage, test inbox/outbox, browser state, and provider mocks; broad row deletion in shared staging is prohibited.
 
@@ -35,11 +35,13 @@ The authorized deployment uses only the following isolated applications:
 - Web: `https://tdf-studio-audit-staging-web.fly.dev`
 - Database: `tdf-hq-studio-audit-staging-db`, with a dedicated application database and least-privilege application user
 
-The database was initialized from the reviewed migration manifest and deterministic synthetic seeds. It contains no production clone or provider credentials. The application secret inventory contains only the dedicated `DATABASE_URL`; email, WhatsApp, calendar, social, Datafast, and PayPal credentials are absent. All 65 reviewed migrations are recorded, including the base audit migration, completion-exception control, and historical-failure completion gate. Spanish is the default locale and `de`, `en`, `es`, `fr`, and `pt` remain enabled.
+The database was initialized from the reviewed migration manifest and deterministic synthetic seeds. It contains no production clone or provider credentials. The application secret inventory contains only the dedicated `DATABASE_URL`; email, WhatsApp, calendar, social, Datafast, and PayPal credentials are absent. As of 2026-09-08, the checksum ledger contains 88 reviewed migrations, including the base audit migration, completion-exception control, historical-failure completion gate, and notification compatibility repairs. Spanish is the default locale and `de`, `en`, `es`, `fr`, and `pt` remain enabled.
 
 The web staging image was built with `npm ci --legacy-peer-deps` because the repository lockfile's root peer resolution otherwise selects React 19 while this workspace supports React 18. It also copies the canonical backend feature registry required by web type checking. These are image-build reproducibility fixes; the deployed bundle still resolves its API base to the isolated staging API.
 
-The observed API release is Fly release 6 at source commit `aa86367560b98399115a1aa75b6dddd2def22547`, image digest `sha256:687b487665fa2ec838f74915a2fa06e3abf315cfcc45987e672bb4ede5c0b74b`. Its health response is `{"db":"ok","status":"ok"}` and `/version` reports that exact commit. The observed web release is Fly release 1, image digest `sha256:7c1400dbc4fad5d6bba0b5658e5aea9edae98a5779b3552ad51aaf63de453632`, with HTTP 200 from its health endpoint. CORS accepts the exact staging web origin and rejects an unrelated origin.
+The observed API release is Fly release 18 (`l8w0PB4QQoOwMTBXMJk9j9B0`) at source commit `7f60f6ec03171a1b6e558bf8247f59e5914ea8f0` and build time `2026-09-09T01:12:01Z`. CI published immutable multi-platform image digest `sha256:9165e11128a7adfe8794ed1fb8089e1fe05e6c588f84ed89570518913fd7ff9a`; Fly selected amd64 manifest digest `sha256:32df7500d4868dfe6c66cd04cde67fb8fd5c48204c0f8696b73da1335bda4017`. The release-command Machine reported every reviewed migration already applied, passed the schema verifier, completed its precheck, and exited successfully before the API Machine was updated. Ordinary API startup then kept `AUTO_APPLY_PRODUCTION_MIGRATIONS=false` and `RUN_MIGRATIONS=false`. Its health response is `{"db":"ok","status":"ok"}`, and `/version` reports that exact commit and build time. The active encrypted volume is `vol_vdej5owg087momw4` (`tdf_staging_clean_20260908`); its 13 existing asset files remained intact and the evidence table remained empty. The single API Machine is kept started with auto-stop disabled and minimum one Machine.
+
+Before release 18, fresh rollback snapshots were created for the API volume (`vs_91lMXgA2jawwCj0w4l7RZ`, digest `42b7c3a0ce571ba9d0234526c0208fe53638b4d98409bee1022d4c1afc684760`) and database volume (`vs_a496agR5OG9tMLyAM9m3NkK`, digest `49892605b0d9de22879af874296070afa37f25d4a7fc39ade11dbd7d35feff74`). The release 17 rollback points, earlier detached API volume, and available snapshots remain preserved. The observed web release remains Fly release 1, image digest `sha256:7c1400dbc4fad5d6bba0b5658e5aea9edae98a5779b3552ad51aaf63de453632`, with HTTP 200 from its health endpoint. CORS accepts only the exact staging web origin and rejects an unrelated origin with HTTP 400 and no allow-origin header.
 
 The original 256 MB Postgres machine exhibited internal monitor/proxy timeouts under PostgreSQL 18. The API was stopped, the encrypted database volume was preserved, and only the isolated database VM was resized to 512 MB. All three database checks and the API health check then passed. Keep 512 MB as the reviewed minimum for this staging topology.
 
@@ -49,18 +51,35 @@ Required safe configuration:
 
 ```text
 APP_ENV=staging
+RUN_MIGRATIONS=false
+AUTO_APPLY_PRODUCTION_MIGRATIONS=false
 RESET_DB=false
 SEED_DB=false
+EVENT_DISCOVERY_ENABLED=false
+ARTIST_ENRICHMENT_ENABLED=false
+EVENT_LOGISTICS_RECHECK_ENABLED=false
+CONTEXTUAL_REPUTATION_ENABLED=false
+REPUTATION_AGGREGATION_WORKER_ENABLED=false
+REPUTATION_AGGREGATION_ENVIRONMENT=staging
+REPUTATION_AGGREGATION_MODE=simulation
 TDF_ENABLE_SYNTHETIC_PERSONAS=1
 TDF_SYNTHETIC_PERSONA_FILE=../test/personas/personas.json
 PAYPAL_ENV=sandbox
 COMMERCE_CHECKOUT_ENV=sandbox
 DATAFAST_ENV=sandbox
 DATAFAST_BASE_URL=https://test.oppwa.com
+ALLOWED_ORIGINS=https://tdf-studio-audit-staging-web.fly.dev
+CORS_DISABLE_DEFAULTS=true
 SMTP_* unset or directed to an isolated sink
 WhatsApp/calendar/social credentials unset or fake
 TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT=/data/audit-evidence
 ```
+
+Every API deployment must retain the manifest's explicit release gate:
+`release_command = "env AUTO_APPLY_PRODUCTION_MIGRATIONS=true TDF_MIGRATION_PRECHECK_ONLY=true /app/production-entrypoint.sh"`.
+That temporary release Machine applies the checksum-pinned bundle and completes
+schema verification before Fly starts the new release. The long-running API
+Machine keeps both migration flags disabled during ordinary starts and restarts.
 
 Secrets and the runtime-only persona password are installed through the staging secret manager and never committed. Because application seeding intentionally refuses hosted runtimes, initialize the empty staging database through an authenticated private Fly proxy while running the already-tested backend locally with `APP_ENV=test`, `RESET_DB=false`, `SEED_DB=true`, and the deterministic persona file. Stop that local process immediately after health succeeds, verify the expected synthetic rows, close the proxy, and deploy with the committed `RESET_DB=false` and `SEED_DB=false` values. Never bypass or disable the hosted-runtime seed guard.
 

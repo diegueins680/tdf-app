@@ -5,6 +5,7 @@ server_bin="${TDF_SERVER_BIN:-/app/tdf-hq-exe}"
 migration_sql="${TDF_PRODUCTION_MIGRATIONS_SQL:-/app/production-migrations.sql}"
 auto_apply="${AUTO_APPLY_PRODUCTION_MIGRATIONS:-false}"
 persistent_migrations="${RUN_MIGRATIONS:-false}"
+precheck_only="${TDF_MIGRATION_PRECHECK_ONLY:-false}"
 
 case "${auto_apply}" in
   true|false) ;;
@@ -21,6 +22,19 @@ case "${persistent_migrations}" in
     exit 64
     ;;
 esac
+
+case "${precheck_only}" in
+  true|false) ;;
+  *)
+    echo "TDF_MIGRATION_PRECHECK_ONLY must be true or false" >&2
+    exit 64
+    ;;
+esac
+
+if [ "${precheck_only}" = "true" ] && [ "${auto_apply}" != "true" ]; then
+  echo "Migration precheck requires AUTO_APPLY_PRODUCTION_MIGRATIONS=true" >&2
+  exit 64
+fi
 
 packaged_assets="${TDF_PACKAGED_ASSETS_DIR:-/app/assets}"
 served_assets="${HQ_ASSETS_DIR:-}"
@@ -70,6 +84,11 @@ if [ "${auto_apply}" = "true" ]; then
     psql -X -v ON_ERROR_STOP=1 -f "${migration_sql}"
   fi
   echo "Reviewed production migrations are applied and schema verification passed"
+fi
+
+if [ "${precheck_only}" = "true" ]; then
+  echo "Reviewed production migration precheck completed"
+  exit 0
 fi
 
 # The production image never delegates schema authority to Persistent. Direct
