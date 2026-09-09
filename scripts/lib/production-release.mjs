@@ -2250,7 +2250,7 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
-  const contextualReputationEnabled = options.contextualReputationEnabled ?? false;
+  const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;

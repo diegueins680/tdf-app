@@ -1073,6 +1073,15 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.doesNotMatch(remainingCommand, /--exclude-machines/);
   assert.match(remainingCommand, /--strategy rolling(?:\s|$)/);
   assert.match(remainingCommand, /--max-unavailable 1(?:\s|$)/);
+
+  const attemptedOverride = buildReleaseSteps(releaseOptions({
+    contextualReputationEnabled: true,
+  }));
+  const guardedCanaryCommand = commandText(
+    attemptedOverride.find(({ id }) => id === 'deploy-canary'),
+  );
+  assert.match(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.doesNotMatch(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
 });
 
 test('buildReleaseSteps rolls the canary back to its captured image before any remaining-machine rollout', () => {
