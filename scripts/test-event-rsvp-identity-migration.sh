@@ -69,6 +69,7 @@ CREATE TABLE venue(id BIGINT PRIMARY KEY,name TEXT,city TEXT,city_id UUID,countr
 CREATE TABLE city_reference(id UUID PRIMARY KEY,name_es TEXT,country_id UUID,latitude DOUBLE PRECISION,longitude DOUBLE PRECISION);
 CREATE TABLE country_reference(id UUID PRIMARY KEY,alpha2 TEXT);
 CREATE TABLE social_event(id BIGINT PRIMARY KEY,title TEXT NOT NULL,description TEXT,start_time TIMESTAMPTZ NOT NULL,end_time TIMESTAMPTZ,timezone TEXT,price_cents INTEGER,currency_id UUID,capacity INTEGER,venue_id BIGINT REFERENCES venue(id),workflow_state_id UUID REFERENCES workflow_state(id),metadata TEXT,updated_at TIMESTAMPTZ NOT NULL);
+CREATE TABLE external_event_ref(id BIGSERIAL PRIMARY KEY,event_id BIGINT NOT NULL REFERENCES social_event(id),source_status TEXT NOT NULL);
 CREATE TABLE event_rsvp(id BIGINT PRIMARY KEY,event_id BIGINT NOT NULL REFERENCES social_event(id),party_id VARCHAR NOT NULL,status VARCHAR NOT NULL,metadata VARCHAR,created_at TIMESTAMPTZ NOT NULL,updated_at TIMESTAMPTZ NOT NULL);
 
 INSERT INTO party VALUES (7),(8);
@@ -84,7 +85,9 @@ INSERT INTO social_event VALUES
  (12,'Private event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000232','{"isPublic":false}',now()),
  (13,'Malformed metadata event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000232','{not-json',now()),
  (14,'Cancelled public event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000239','{"isPublic":true}',now()),
- (15,'Unsafe image event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000232','{"isPublic":true,"imageUrl":"javascript:alert(1)"}',now());
+ (15,'Unsafe image event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000232','{"isPublic":true,"imageUrl":"javascript:alert(1)"}',now()),
+ (16,'Suppressed event',NULL,now()+interval '1 day',NULL,'UTC',NULL,NULL,NULL,NULL,'00000000-0000-4000-8000-000000000232','{"isPublic":true}',now());
+INSERT INTO external_event_ref(event_id,source_status) VALUES (16,'suppressed');
 INSERT INTO event_rsvp VALUES
  (101,11,'007','Accepted',NULL,now()-interval '3 days',now()-interval '2 days'),
  (102,11,'7','maybe',NULL,now()-interval '1 day',now()-interval '1 hour'),
@@ -104,11 +107,12 @@ test "$(psql_exec -Atc "SELECT status FROM event_rsvp WHERE event_id=11 AND part
 test "$(psql_exec -Atc "SELECT count(*) FROM event_rsvp_migration_evidence WHERE reason='duplicate';")" = "1"
 test "$(psql_exec -Atc "SELECT count(*) FROM event_rsvp_migration_evidence WHERE reason IN ('invalid_party','invalid_status');")" = "4"
 test "$(psql_exec -Atc "SELECT count(*) FROM event_rsvp WHERE show_on_profile OR visibility_decided_at IS NOT NULL;")" = "0"
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=11;")" = "1"
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=12;")" = "0"
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=13;")" = "0"
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=14 AND NOT rsvp_eligible AND NOT public_share_eligible;")" = "1"
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=15 AND image_url IS NULL;")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=11;")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=12;")" = "0"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=13;")" = "0"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=14 AND NOT rsvp_eligible AND NOT public_share_eligible;")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=15 AND image_url IS NULL;")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_rsvp_event WHERE id=16;")" = "0"
 test "$(psql_exec -Atc "SELECT count(*) FROM workflow_state_capability WHERE capability_code='rsvp' AND enabled;")" = "1"
 
 if psql_exec -c "INSERT INTO event_rsvp(event_id,party_id,status,created_at,updated_at) VALUES (11,'7','accepted',now(),now());" >/dev/null 2>&1; then

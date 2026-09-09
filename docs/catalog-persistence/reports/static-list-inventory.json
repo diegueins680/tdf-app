@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T19:05:23.609Z",
+  "generatedAt": "2026-09-09T19:53:46.571Z",
   "repositoryRoot": ".",
   "filesScanned": 1293,
   "candidateCount": 959,
@@ -10163,11 +10163,12 @@
       "lines": [
         3
       ],
-      "consumerCount": 31,
+      "consumerCount": 32,
       "backendConsumers": [
         "tdf-hq/sql/001_multi_role_migration.sql",
         "tdf-hq/sql/2026-07-15_social_sync_runtime_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
+        "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
         "tdf-hq/sql/init_schema.sql",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",

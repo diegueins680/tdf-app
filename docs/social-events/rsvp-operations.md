@@ -15,7 +15,10 @@ it. The migration:
   `visibility_decided_at IS NULL`);
 - validates canonical status values and enforces one row per `(event_id, party_id)`;
 - creates feed, aggregate, and mutation-rate indexes; and
-- makes anonymous event visibility require explicit `metadata.isPublic = true`.
+- makes anonymous event visibility require explicit `metadata.isPublic = true`;
+- exposes additive RSVP/share fields through `directory_public_rsvp_event`, a separate
+  projection that preserves the later suppressed-event privacy migration and avoids
+  incompatible replacement of the legacy directory/search view; and
 - removes legacy text-linked RSVP and throttle rows during hard Party deletion.
 
 The migration evidence table is the duplicate/invalid-row operational counter and audit

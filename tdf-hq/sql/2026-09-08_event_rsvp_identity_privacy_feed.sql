@@ -183,9 +183,10 @@ WHERE workflow.code='social-event-lifecycle'
 ON CONFLICT (state_id,capability_code)
 DO UPDATE SET enabled=TRUE,updated_at=excluded.updated_at,version=workflow_state_capability.version+1;
 
--- Additive columns are appended to the existing view so dependent views stay
--- valid. Explicit event privacy is now part of the anonymous boundary.
-CREATE OR REPLACE VIEW directory_public_event AS
+-- Keep the RSVP/share projection separate from the legacy directory view.
+-- Later directory privacy migrations can evolve their view without dropping
+-- these additive columns or breaking dependent search views.
+CREATE OR REPLACE VIEW directory_public_rsvp_event AS
 SELECT
   event.id,
   event.title,
@@ -255,6 +256,12 @@ WHERE state.active
         AND public_capability.capability_code='public-listable'
         AND public_capability.enabled
     )
+  )
+  AND NOT EXISTS (
+    SELECT 1
+    FROM external_event_ref reference
+    WHERE reference.event_id=event.id
+      AND lower(btrim(reference.source_status))='suppressed'
   );
 
 DO $$
