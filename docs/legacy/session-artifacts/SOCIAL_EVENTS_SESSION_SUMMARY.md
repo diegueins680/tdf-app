@@ -1,5 +1,8 @@
 # Social Events Feature - Session Summary
 
+> Archived session snapshot. RSVP stub claims below describe the original session only and
+> are superseded by `docs/social-events/rsvp-sharing-profile-feed.md` and the current API.
+
 ## Mission Accomplished ✅
 
 Successfully built a complete, end-to-end **Social Events Platform** for TDF Records spanning backend (Haskell) and mobile (React Native) with proper data model alignment, authentication, and integration testing guide.

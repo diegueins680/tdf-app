@@ -1,5 +1,9 @@
 # Social Events Feature - Quick Testing Guide
 
+> Archived session snapshot. RSVP placeholder/stub notes below are obsolete. Use
+> `docs/social-events/rsvp-sharing-profile-feed.md`, `docs/social-events/rsvp-operations.md`,
+> and the current test suites as the source of truth.
+
 ## Prerequisites
 
 ```bash

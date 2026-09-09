@@ -59,14 +59,34 @@ Stable attribution properties are `attribution_source`,
 `attribution_term`, `referral_code`, `attribution_landing_path`, and
 `attribution_captured_at`.
 
-### "First meaningful action" events
+### Event RSVP and sharing funnel
 
-These are the ones #128 will read. They are NOT emitted by this PR — they land with the implementation PR for #128. Calling them out so the shapes are agreed up front:
+Web and mobile use the same snake-case event names and property keys. `event_id` is the
+public event identifier; it is not a party identifier. `rsvp_status` is always one of
+`accepted`, `maybe`, or `declined`, even though the mobile presentation model uses different
+labels internally.
 
 | Event | Properties |
 |---|---|
-| `rsvp_created` | `eventId`, `artistId`, `isFirstRsvp: boolean`, `experimentId`, `variant` |
-| `rsvp_broadcast_emitted` | `eventId`, `artistId`, `fanCount`, `experimentId`, `variant` |
+| `event_shared_viewed` | `platform`, `event_id`, `attributed: true`, allowlisted `source` |
+| `event_rsvp_started` | `platform`, `event_id`, `rsvp_status`, `origin` |
+| `event_rsvp_auth_redirected` | `platform`, `event_id`, `rsvp_status` where available, `origin` |
+| `signup_completed` / `login_completed` | Existing auth properties; no RSVP payload or identity is added |
+| `event_rsvp_post_auth_resumed` | `platform`, `event_id`, `rsvp_status` where available, `origin` |
+| `event_rsvp_created` / `event_rsvp_updated` / `event_rsvp_deleted` | `platform`, `event_id`, `rsvp_status` for writes, `origin` where available |
+| `event_share_prompt_shown` | `platform`, `event_id`, `rsvp_status` |
+| `event_share_started` | `platform`, `event_id`, `method` (`native`, `copy`, or `whatsapp`) |
+| `event_share_completed` / `event_share_cancelled` / `event_share_failed` | `platform`, `event_id`, `method` |
+| `event_link_copied` | `platform`, `event_id`, `method: copy` |
+| `event_shared_visit_to_signup` | `platform`, `event_id`, auth `method` |
+| `event_shared_visit_to_rsvp` | `platform`, `event_id`, `rsvp_status` |
+
+Shared conversion is attributed only when the canonical URL contains the reviewed
+`utm_campaign=event_rsvp` plus `utm_source=tdf_web|tdf_mobile`. The expiring auth intent
+stores only a boolean result of that validation; it does not persist arbitrary campaign
+values. Native share sheets normally reveal neither the selected destination nor actual
+delivery, so `event_share_completed` means that the operating-system sheet completed its
+observable action. No referral rewards or inferred destinations are implemented.
 
 ## Adding a new event
 

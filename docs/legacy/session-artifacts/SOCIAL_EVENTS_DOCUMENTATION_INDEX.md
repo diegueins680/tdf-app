@@ -1,5 +1,8 @@
 # Social Events Feature - Documentation Index
 
+> Archived session snapshot. RSVP stub status in the linked historical artifacts is obsolete.
+> Current behavior is documented in `docs/social-events/rsvp-sharing-profile-feed.md`.
+
 ## Quick Links by Role
 
 ### For the Next Developer (Starting Integration Testing)
