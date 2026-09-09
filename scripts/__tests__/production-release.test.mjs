@@ -38,6 +38,7 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   CONTEXTUAL_REPUTATION_ENABLED = "false"
+  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
   REPUTATION_AGGREGATION_MODE = "simulation"
@@ -611,6 +612,18 @@ test('validateFlyConfig fails closed when contextual reputation would start duri
   );
 });
 
+test('validateFlyConfig requires the separately authorized public projection gate', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"',
+        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "false"',
+      ),
+    ),
+    /PUBLIC_REPUTATION_PROJECTION_ENABLED|public-read gate/i,
+  );
+});
+
 test('validateFlyConfig rejects the staging-only reputation worker in production', () => {
   assert.throws(
     () => validateFlyConfig(
@@ -985,6 +998,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);

@@ -1,6 +1,6 @@
 # Tiendas de merch para artistas — diagnóstico y alcance
 
-Estado del corte: 2026-09-08. Rama base `main`, SHA inicial `269f3784121b8bdca378ec516d5cb446cc818e39`; integración final sobre `714060ffcc1db56448f6d3cb82e055e0085af4e7`.
+Estado del corte: 2026-09-09. Rama base `main`, SHA inicial `269f3784121b8bdca378ec516d5cb446cc818e39`; integración final sobre `849444cdcce0254c3091293edce8a4cc5f8175fa`.
 
 ## Diagnóstico inicial verificado
 
@@ -20,8 +20,8 @@ La solución amplía esas fuentes de verdad. No convierte `asset`, equipos del e
 | Finanzas | Evidencia y conciliación canónicas | 10%, override por vendedor, ledger de settlement manual | Implementado en datos/API admin; pago real deshabilitado |
 | Archivos | Servicio durable `/assets/serve` | Reencode JPEG, tamaños responsive, checksum, alt y moderación | Implementado; revisión humana sigue requerida |
 | Clientes | OpenAPI y generadores existentes | Tipos y APIs web/móvil regenerados | Verificado por typecheck |
-| UX web | React, MUI, routing y analítica existentes | Descubrimiento, storefront, producto, carrito, tracking, seller y admin | Implementado; runtime local visual pendiente |
-| UX móvil | Expo Router y feature registry existentes | Compra completa hasta orden pendiente y fulfillment esencial | Implementado; dispositivo/emulador pendiente |
+| UX web | React, MUI, routing y analítica existentes | Descubrimiento, storefront, producto, carrito, tracking, seller y admin | Implementado; runtime visual responsive verificado, staging pendiente |
+| UX móvil | Expo Router y feature registry existentes | Compra completa hasta orden pendiente y fulfillment esencial | Implementado; Android API 36.1 verificado, iOS/dispositivo físico pendiente |
 | Pagos | Adaptadores canónicos de otros dominios | Flags y vínculo de la orden de merch al checkout canónico | La iniciación específica por proveedor se mantiene cerrada |
 | Posventa | Estados financieros canónicos | Cancelación inmediata sin pagar, issues y triage vendedor/staff | Cancelación y soporte implementados/verificados; ejecución refund/dispute por proveedor diferida |
 

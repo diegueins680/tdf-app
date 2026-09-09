@@ -15,6 +15,9 @@ primary_region = "gru"
   # Keep contextual reputation dark until the staged schema, backfill, consent,
   # and controlled pilot have been reviewed.
   CONTEXTUAL_REPUTATION_ENABLED = "false"
+  # Public reads retain an independently controlled privacy gate. It is staged
+  # open while the contextual workflow remains disabled.
+  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   # The aggregation worker is staging/test simulation infrastructure only.
   # Production is rejected independently by both process and database gates.
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"

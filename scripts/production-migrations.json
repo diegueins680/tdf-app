@@ -460,6 +460,11 @@
       "id": "2026-09-08_merch_reputation",
       "path": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
       "introducedBy": "ec790e9c352bd085c07b66a6fa00d8df1c45d747"
+    },
+    {
+      "id": "2026-09-09_music_directory_suppressed_event_privacy",
+      "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
+      "introducedBy": "ef13d7531123b097985385eb7474b35efe8e7e2d"
     }
   ]
 }

@@ -529,6 +529,14 @@ createTicketCheckoutTransaction
     createNew = do
       lockedEvents <- (rawSql "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
         [toPersistValue eventKey] :: SqlPersistT IO [Entity SM.SocialEvent])
+      lockedEventEligibility <- case lockedEvents of
+        [Entity _ lockedEvent] -> do
+          purchaseEnabled <- SocialEvents.eventTicketPurchaseEnabledFor lockedEvent
+          pure $ case SocialEvents.validateTicketPurchaseEventEligibility
+              (SM.socialEventMetadata lockedEvent) purchaseEnabled of
+            Left _ -> Left err404
+            Right () -> Right ()
+        _ -> pure (Left err404)
       -- Expire this event's old holds while the event lock is authoritative,
       -- before taking tier or promotion locks. This keeps checkout -> runtime
       -- -> tier trigger locking consistent with concurrent status polling.
@@ -554,8 +562,9 @@ createTicketCheckoutTransaction
               | otherwise -> Left (conflict
                   "Promotion changed or became unavailable while ticket inventory was being held")
             _ -> Left (conflict "Promotion is no longer available")
-      case (lockedEvents, lockedTiers, lockedPromo) of
-        ([_], [Entity _ lockedTier], Right transactionPromo)
+      case (lockedEventEligibility, lockedTiers, lockedPromo) of
+        (Left eventError, _, _) -> pure (Left eventError)
+        (Right (), [Entity _ lockedTier], Right transactionPromo)
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
           , SocialEvents.isTicketTierSaleOpen now lockedTier ->
