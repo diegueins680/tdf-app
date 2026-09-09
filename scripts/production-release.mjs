@@ -454,7 +454,6 @@ async function remotePreflight(context) {
   const blockers = runtimeEnvBlockers(runtimeEnv, {
     allowUnavailableAutomaticRunner: true,
     allowUnavailableReputationWorker: true,
-    contextualReputationEnabled,
   });
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);

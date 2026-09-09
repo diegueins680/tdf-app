@@ -735,6 +735,12 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
     runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
     /CONTEXTUAL_REPUTATION_ENABLED/,
   );
+  const enabledRows = rows.map(({ machineId, values: rowValues }) => ({
+    machineId,
+    values: { ...rowValues, CONTEXTUAL_REPUTATION_ENABLED: 'true' },
+  }));
+  assert.equal(captureContextualReputationGate(enabledRows), true);
+  assert.match(runtimeEnvBlockers(enabledRows)[0], /CONTEXTUAL_REPUTATION_ENABLED/);
   assert.throws(
     () => captureContextualReputationGate([
       rows[0],
