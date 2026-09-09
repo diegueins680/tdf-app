@@ -2022,26 +2022,12 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
             ]
           pure suppressedDiscoverySyncStats
     _ -> do
-      initialMergeCandidate <-
+      mergeCandidate <-
         case existingRef of
-          Nothing -> findCanonicalEventCandidate event
+          Nothing -> findAndLockCanonicalEventCandidate event
           Just _ -> pure Nothing
-      (mergeCandidate, canonicalDeletionSuppressed) <-
-        case initialMergeCandidate of
-          Nothing -> pure (Nothing, False)
-          Just candidateKey -> do
-            lockedCandidate <- lockDiscoveredSocialEvent candidateKey
-            -- The candidate may have changed while this transaction waited
-            -- for its event lock, so rerun every canonical identity predicate.
-            stillMatches <-
-              case lockedCandidate of
-                Nothing -> pure False
-                Just _ -> canonicalEventCandidateMatches event candidateKey
-            if stillMatches
-              then do
-                deletionSuppressed <- eventHasSuppressedReference candidateKey
-                pure (Just candidateKey, deletionSuppressed)
-              else pure (Nothing, False)
+      canonicalDeletionSuppressed <-
+        maybe (pure False) eventHasSuppressedReference mergeCandidate
       case mergeCandidate of
         Just candidateKey
           | canonicalDeletionSuppressed -> do
@@ -2094,6 +2080,34 @@ lockDiscoveredSocialEvent eventKey = do
                 :: SqlPersistT IO [Entity Social.SocialEvent]
             )
     else fmap (Entity eventKey) <$> get eventKey
+
+findAndLockCanonicalEventCandidate ::
+  DiscoveredEvent ->
+  SqlPersistT IO (Maybe Social.SocialEventId)
+findAndLockCanonicalEventCandidate discovered = go []
+  where
+    go rejectedCandidates = do
+      candidates <- findCanonicalEventCandidates discovered
+      case
+          listToMaybe
+            [ candidateKey
+            | candidateKey <- candidates
+            , candidateKey `notElem` rejectedCandidates
+            ] of
+        Nothing -> pure Nothing
+        Just candidateKey -> do
+          lockedCandidate <- lockDiscoveredSocialEvent candidateKey
+          stillMatches <-
+            case lockedCandidate of
+              Nothing -> pure False
+              Just _ -> canonicalEventCandidateMatches discovered candidateKey
+          if stillMatches
+            then pure (Just candidateKey)
+            else
+              -- The first snapshot candidate may have changed while this
+              -- transaction waited. Search again so another valid canonical
+              -- event is used instead of creating a duplicate.
+              go (candidateKey : rejectedCandidates)
 
 syncUnsuppressedDiscoveredEventDb ::
   Bool ->
@@ -2276,7 +2290,13 @@ eventHasSuppressedReference eventKey =
 findCanonicalEventCandidate ::
   DiscoveredEvent ->
   SqlPersistT IO (Maybe Social.SocialEventId)
-findCanonicalEventCandidate discovered = do
+findCanonicalEventCandidate discovered =
+  listToMaybe <$> findCanonicalEventCandidates discovered
+
+findCanonicalEventCandidates ::
+  DiscoveredEvent ->
+  SqlPersistT IO [Social.SocialEventId]
+findCanonicalEventCandidates discovered = do
   let startTime = discoveredEventStart discovered
       matchWindow = 90 * 60
   refs <-
@@ -2290,8 +2310,7 @@ findCanonicalEventCandidate discovered = do
           [ Social.externalEventRefEventId ref
           | Entity _ ref <- refs
           ]
-  matches <- filterM (canonicalEventCandidateMatches discovered) candidateKeys
-  pure (listToMaybe matches)
+  filterM (canonicalEventCandidateMatches discovered) candidateKeys
 
 canonicalEventCandidateMatches ::
   DiscoveredEvent ->

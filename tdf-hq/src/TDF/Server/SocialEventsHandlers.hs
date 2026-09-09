@@ -2746,7 +2746,7 @@ socialEventsServer user =
                 validateEventImageUploadForm rawUploadForm
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, eventRow) <- requireManagedEvent rawId
+        eventKey <- parseVisibleEventKey rawId
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
             fallbackName = nonEmptyText (fdFileName eiuFile)
             requestedName = eiuName >>= nonEmptyText
@@ -2760,9 +2760,6 @@ socialEventsServer user =
                     }
 
         uuid <- liftIO UUIDV4.nextRandom
-        existingMeta <-
-            either (throwError . storedEventMetadataServerError) pure $
-                decodeStoredEventMetadata (socialEventMetadata eventRow)
         let eventIdTxt = renderKeyText eventKey
             storedName = UUID.toText uuid <> "-" <> safeName
             relPath = T.intercalate "/" ["social-events", "events", eventIdTxt, storedName]
@@ -2770,20 +2767,50 @@ socialEventsServer user =
             targetPath = targetDir </> T.unpack storedName
             assetsBase = resolveConfiguredAssetsBase envConfig
             publicUrl = buildUploadAssetUrl assetsBase relPath
-            updatedMeta = existingMeta{emImageUrl = Just publicUrl}
         fileSize <- liftIO (getFileSize (fdPayload eiuFile))
         either throwError pure (validateEventImageUploadSize fileSize)
-        liftIO $ createDirectoryIfMissing True targetDir
-        liftIO $ copyFile (fdPayload eiuFile) targetPath
-        liftIO $
+        uploadResult <- liftIO $
             runSqlPool
-                ( update
-                    eventKey
-                    [ SocialEventMetadata =. encodeEventMetadata updatedMeta
-                    , SocialEventUpdatedAt =. now
-                    ]
+                ( do
+                    lockedEvent <- lockSocialEventForMutation eventKey
+                    case lockedEvent of
+                        Nothing -> pure (Left err404{errBody = "Event not found"})
+                        Just (Entity _ eventRow) -> do
+                            refs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                            if any (externalEventRefIsSuppressed . entityVal) refs
+                                then pure (Left err404{errBody = "Event not found"})
+                                else
+                                    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+                                        Just owner
+                                            | owner /= currentPartyId ->
+                                                pure (Left err403{errBody = "Only the event organizer can manage this event"})
+                                        owner ->
+                                            case decodeStoredEventMetadata (socialEventMetadata eventRow) of
+                                                Left message -> pure (Left (storedEventMetadataServerError message))
+                                                Right existingMeta -> do
+                                                    when (isNothing owner) $
+                                                        update
+                                                            eventKey
+                                                            [ SocialEventOrganizerPartyId =. Just currentPartyId
+                                                            , SocialEventUpdatedAt =. now
+                                                            ]
+                                                    -- Keep file creation and metadata publication inside
+                                                    -- the event lock. Deletion either waits and removes this
+                                                    -- file afterward, or commits first and makes this branch
+                                                    -- fail before the directory can be recreated.
+                                                    liftIO $ createDirectoryIfMissing True targetDir
+                                                    liftIO $ copyFile (fdPayload eiuFile) targetPath
+                                                    update
+                                                        eventKey
+                                                        [ SocialEventMetadata =.
+                                                            encodeEventMetadata
+                                                                existingMeta{emImageUrl = Just publicUrl}
+                                                        , SocialEventUpdatedAt =. now
+                                                        ]
+                                                    pure (Right ())
                 )
                 envPool
+        either throwError pure uploadResult
         pure
             EventImageUploadDTO
                 { eiuEventId = eventIdTxt
@@ -2792,6 +2819,21 @@ socialEventsServer user =
                 , eiuPublicUrl = publicUrl
                 , eiuImageUrl = publicUrl
                 }
+
+    lockSocialEventForMutation ::
+        SocialEventId ->
+        SqlPersistT IO (Maybe (Entity SocialEvent))
+    lockSocialEventForMutation eventKey = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        if "postgres" `T.isInfixOf` backendName
+            then
+                listToMaybe
+                    <$> ( rawSql
+                            "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                            [toPersistValue eventKey]
+                            :: SqlPersistT IO [Entity SocialEvent]
+                        )
+            else fmap (Entity eventKey) <$> get eventKey
 
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
@@ -2816,16 +2858,7 @@ socialEventsServer user =
                     runSqlPool
                         ( do
                             backendName <- T.toCaseFold <$> getRDBMS
-                            lockedEvent <-
-                                if "postgres" `T.isInfixOf` backendName
-                                    then
-                                        listToMaybe
-                                            <$> ( rawSql
-                                                    "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
-                                                    [toPersistValue eventKey]
-                                                    :: SqlPersistT IO [Entity SocialEvent]
-                                                )
-                                    else fmap (Entity eventKey) <$> get eventKey
+                            lockedEvent <- lockSocialEventForMutation eventKey
                             case lockedEvent of
                                 Nothing -> pure (Right ())
                                 Just (Entity _ currentEvent) ->

@@ -31,7 +31,8 @@ import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
 
 import TDF.API.SocialEventsAPI
-    ( EventImageUploadForm (..)
+    ( EventImageUploadDTO (..)
+    , EventImageUploadForm (..)
     , validateEventImageUploadForm
     )
 import TDF.DTO.SocialEventsDTO
@@ -187,6 +188,84 @@ spec = describe "social event handler helpers" $ do
                 { eiuFile = mkEventImageUploadFile "camera.jpg"
                 , eiuName = Just "poster.png"
                 }
+
+    it "publishes event images atomically and rejects deletion tombstones" $
+        withSystemTempDirectory "social-event-image-lock" $ \assetsRoot -> do
+            cfg <- Config.loadConfig
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeSocialSchema pool
+            now <- getCurrentTime
+            let visibleEventKey :: SocialEventId
+                visibleEventKey = toSqlKey 29
+                suppressedEventKey :: SocialEventId
+                suppressedEventKey = toSqlKey 30
+                uploadSource = assetsRoot </> "upload.png"
+                uploadForm =
+                    EventImageUploadForm
+                        { eiuFile =
+                            FileData
+                                { fdInputName = "file"
+                                , fdFileName = "upload.png"
+                                , fdFileCType = "image/png"
+                                , fdPayload = uploadSource
+                                }
+                        , eiuName = Just "poster.png"
+                        }
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = cfg{Config.assetsRootDir = assetsRoot}
+                        }
+            writeFile uploadSource "png"
+            _ <- runSqlPool
+                ( do
+                    insertKey visibleEventKey (seedSocialEvent "3" "Visible event" now)
+                    insertKey
+                        suppressedEventKey
+                        (seedSocialEvent "3" "Suppressed event" now)
+                            { socialEventMetadata =
+                                Just "{\"ticketUrl\":null,\"imageUrl\":null,\"isPublic\":false,\"currency\":\"USD\"}"
+                            }
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-upload-suppressed"
+                            , externalEventRefEventId = suppressedEventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Nothing
+                            , externalEventRefPriceCents = Nothing
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 0
+                            , externalEventRefSourceStatus = externalEventRefSuppressedStatus
+                            }
+                )
+                pool
+
+            uploaded <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
+                        env
+            case uploaded of
+                Left err -> expectationFailure ("Expected event image upload to succeed, got: " <> show err)
+                Right response ->
+                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+
+            rejected <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
+                        env
+            case rejected of
+                Left err -> errHTTPCode err `shouldBe` 404
+                Right response ->
+                    expectationFailure
+                        ("Expected tombstoned image upload to fail, got: " <> show response)
+            doesDirectoryExist
+                (assetsRoot </> "social-events" </> "events" </> "30")
+                `shouldReturn` False
 
     it "rejects unsafe social event metadata URLs before storing public links" $ do
         validateEventMetadataUrlField
@@ -1474,6 +1553,23 @@ socialEventDeleteHandlerFor user =
                     :<|> _uploadEventImage
                     :<|> deleteEventHandler ->
                     deleteEventHandler
+
+socialEventImageUploadHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventImageUploadForm
+    -> ReaderT Env Handler EventImageUploadDTO
+socialEventImageUploadHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _ ->
+            case eventsServer of
+                _listEvents
+                    :<|> _createEvent
+                    :<|> _getEvent
+                    :<|> _updateEvent
+                    :<|> uploadEventImageHandler
+                    :<|> _deleteEvent ->
+                    uploadEventImageHandler
 
 socialEventListHandlerFor
     :: AuthedUser
