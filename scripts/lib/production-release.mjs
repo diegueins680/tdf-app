@@ -319,7 +319,7 @@ export function validateFlyConfig(toml) {
     );
   }
   if (contextualReputation !== 'false') {
-    throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+    throw new Error('fly.toml must keep CONTEXTUAL_REPUTATION_ENABLED="false" until a production cohort gate exists.');
   }
   if (publicReputationProjection !== 'true') {
     throw new Error(
@@ -2211,8 +2211,12 @@ export function buildMachineDeployArgs({
   sha,
   onlyMachine,
   excludeMachine,
+  contextualReputationEnabled = false,
   publicReputationProjectionEnabled = false,
 }) {
+  if (typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
   }
@@ -2225,7 +2229,7 @@ export function buildMachineDeployArgs({
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
     '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
@@ -2246,6 +2250,7 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
+  const contextualReputationEnabled = false;
   const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
@@ -2274,6 +2279,18 @@ export function buildReleaseSteps(options = {}) {
   const previousSha = descriptiveOnly && !rawPreviousSha
     ? '<captured-before-canary>'
     : normalizeFullSha(rawPreviousSha);
+  const rawPreviousContextualReputationEnabled =
+    options.priorContextualReputationEnabled?.[canary]
+    ?? options.previousContextualReputationEnabled;
+  if (!descriptiveOnly && typeof rawPreviousContextualReputationEnabled !== 'boolean') {
+    throw new Error(
+      'Executable release steps require the captured contextual-reputation flag for rollback.',
+    );
+  }
+  const previousContextualReputationEnabled =
+    typeof rawPreviousContextualReputationEnabled === 'boolean'
+      ? rawPreviousContextualReputationEnabled
+      : false;
 
   const rollbackCanary = {
     id: 'rollback-canary',
@@ -2283,6 +2300,7 @@ export function buildReleaseSteps(options = {}) {
       app,
       image: previousImage,
       sha: previousSha,
+      contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
       onlyMachine: canary,
     }),
@@ -2293,7 +2311,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2306,7 +2324,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, publicReputationProjectionEnabled, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,
