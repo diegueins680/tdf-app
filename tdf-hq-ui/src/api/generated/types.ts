@@ -438,7 +438,7 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every supplied first-value claim requires Party-bound server evidence created during the signup eligibility window. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing server evidence, and calls from accounts outside the eligibility window return newlyCompleted=false.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every supplied first-value claim requires Party-bound server evidence created during the signup eligibility window; the idempotent handshake may safely be retried after that window. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
         delete?: never;
@@ -7108,18 +7108,24 @@ export interface components {
             /** Format: date-time */
             signupCompletedAt: string | null;
             onboardingIntent: components["schemas"]["OnboardingIntent"] | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Server time when the completion handshake was accepted.
+             */
             completedAt: string | null;
             /** @enum {string|null} */
             firstValue: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction" | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Server evidence time for first useful actions accepted by the current contract; it can precede completedAt when a handshake is retried. Legacy completed rows may retain the earlier handshake-time meaning.
+             */
             firstValueCompletedAt: string | null;
             /** Format: date-time */
             updatedAt: string | null;
         };
         OnboardingCompletionResult: {
             progress: components["schemas"]["OnboardingProgress"];
-            /** @description True only for the single request that changed an eligible account from incomplete to complete. */
+            /** @description True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence. */
             newlyCompleted: boolean;
         };
         SessionResponse: {

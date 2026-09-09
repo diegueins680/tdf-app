@@ -617,26 +617,30 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
     case existing of
       Nothing -> pure (Nothing, False)
       Just entity@(Entity progressId stored)
-        | not (isOnboardingEligible now
+        | isJust (userOnboardingProgressCompletedAt stored) ->
+              pure (Just entity, False)
+        | isNothing firstValueValue
+          && not (isOnboardingEligible now
             (userOnboardingProgressSignupCompletedAt stored)
-            (userOnboardingProgressCompletedAt stored)) ->
+            Nothing) ->
               pure (Just entity, False)
         | otherwise -> do
-            evidenceSatisfied <- onboardingFirstValueEvidenceSatisfied
+            evidenceAt <- onboardingFirstValueEvidenceAt
               (auPartyId user)
               (userOnboardingProgressSignupCompletedAt stored)
               firstValueValue
               now
-            if not evidenceSatisfied
-              then pure (Just entity, False)
-              else do
+            case evidenceAt of
+              Nothing -> pure (Just entity, False)
+              Just occurredAt -> do
                 changed <- updateWhereCount
                   [ UserOnboardingProgressId ==. progressId
                   , UserOnboardingProgressCompletedAt ==. Nothing
                   ]
                   [ UserOnboardingProgressCompletedAt =. Just now
                   , UserOnboardingProgressFirstValue =. firstValueValue
-                  , UserOnboardingProgressFirstValueCompletedAt =. (now <$ firstValueValue)
+                  , UserOnboardingProgressFirstValueCompletedAt =.
+                      (occurredAt <$ firstValueValue)
                   , UserOnboardingProgressUpdatedAt =. now
                   ]
                 refreshed <- get progressId
@@ -649,53 +653,70 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
 -- Keep the client completion handshake so existing web/mobile analytics can emit
 -- exactly once, but require durable server evidence for every supplied first value.
 -- Omitting firstValue remains the explicit exit path for optional onboarding.
-onboardingFirstValueEvidenceSatisfied
+onboardingFirstValueEvidenceAt
   :: PartyId
   -> Maybe UTCTime
   -> Maybe Text
   -> UTCTime
-  -> SqlPersistT IO Bool
-onboardingFirstValueEvidenceSatisfied partyIdValue mSignupAt firstValueValue now =
+  -> SqlPersistT IO (Maybe UTCTime)
+onboardingFirstValueEvidenceAt partyIdValue mSignupAt firstValueValue now =
   case (firstValueValue, mSignupAt) of
-    (Just "artist_followed", Just signupAt) ->
-      isJust <$> selectFirst
+    (Just "artist_followed", Just signupAt) -> do
+      let evidenceDeadline = min now (addUTCTime newUserOnboardingWindow signupAt)
+      result <- selectFirst
         [ EngagementEventActorPartyId ==. Just partyIdValue
         , EngagementEventEntityType ==. "artist"
         , EngagementEventEventType ==. "follow"
         , EngagementEventCreatedAt >=. signupAt
-        , EngagementEventCreatedAt <=. now
+        , EngagementEventCreatedAt <=. evidenceDeadline
         ]
-        []
-    (Just "artist_followed", Nothing) -> pure False
-    (Just "access_requested", Just signupAt) ->
-      isJust <$> selectFirst
+        [Asc EngagementEventCreatedAt]
+      pure (engagementEventCreatedAt . entityVal <$> result)
+    (Just "artist_followed", Nothing) -> pure Nothing
+    (Just "access_requested", Just signupAt) -> do
+      let evidenceDeadline = min now (addUTCTime newUserOnboardingWindow signupAt)
+      result <- selectFirst
         [ ME.FeatureAccessRequestRequesterPartyId ==. partyIdValue
         , ME.FeatureAccessRequestRequestedAt >=. signupAt
-        , ME.FeatureAccessRequestRequestedAt <=. now
+        , ME.FeatureAccessRequestRequestedAt <=. evidenceDeadline
         ]
-        []
-    (Just "access_requested", Nothing) -> pure False
+        [Asc ME.FeatureAccessRequestRequestedAt]
+      pure (ME.featureAccessRequestRequestedAt . entityVal <$> result)
+    (Just "access_requested", Nothing) -> pure Nothing
     (Just "event_saved", Just signupAt) -> do
+      let evidenceDeadline = min now (addUTCTime newUserOnboardingWindow signupAt)
+      -- Decode before comparing: SQLite fixtures can contain both
+      -- CURRENT_TIMESTAMP and Persistent UTCTime text encodings, while the
+      -- production table is PostgreSQL. UTCTime comparison keeps one rule
+      -- across both backends instead of relying on textual SQL ordering.
       evidence <- rawSql
-        "SELECT audit.created_at FROM directory_audit_event audit WHERE audit.actor_party_id=? AND audit.action='favorite.saved' AND audit.entity_kind='event' AND audit.created_at<=CURRENT_TIMESTAMP ORDER BY audit.created_at DESC LIMIT 1"
+        "SELECT audit.created_at FROM directory_audit_event audit WHERE audit.actor_party_id=? AND audit.action='favorite.saved' AND audit.entity_kind='event'"
         [toPersistValue partyIdValue]
         :: SqlPersistT IO [Single UTCTime]
-      pure $ case evidence of
-        Single occurredAt : _ -> occurredAt >= signupAt
-        [] -> False
-    (Just "event_saved", Nothing) -> pure False
-    (Just "moment_reaction", Just signupAt) ->
-      isJust <$> selectFirst
+      let inWindowTimes =
+            [ occurredAt
+            | Single occurredAt <- evidence
+            , occurredAt >= signupAt
+            , occurredAt <= evidenceDeadline
+            ]
+      pure $ case inWindowTimes of
+        [] -> Nothing
+        timestamps -> Just (minimum timestamps)
+    (Just "event_saved", Nothing) -> pure Nothing
+    (Just "moment_reaction", Just signupAt) -> do
+      let evidenceDeadline = min now (addUTCTime newUserOnboardingWindow signupAt)
+      result <- selectFirst
         [ EngagementEventActorPartyId ==. Just partyIdValue
         , EngagementEventEntityType ==. "event_moment"
         , EngagementEventEventType ==. "reaction_added"
         , EngagementEventCreatedAt >=. signupAt
-        , EngagementEventCreatedAt <=. now
+        , EngagementEventCreatedAt <=. evidenceDeadline
         ]
-        []
-    (Just "moment_reaction", Nothing) -> pure False
-    (Nothing, _) -> pure True
-    _ -> pure False
+        [Asc EngagementEventCreatedAt]
+      pure (engagementEventCreatedAt . entityVal <$> result)
+    (Just "moment_reaction", Nothing) -> pure Nothing
+    (Nothing, _) -> pure (Just now)
+    _ -> pure Nothing
 
 authV1Server :: ServerT Api.AuthV1API AppM
 authV1Server = signup :<|> passwordReset :<|> passwordResetConfirm :<|> changePassword

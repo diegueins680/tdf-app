@@ -5113,6 +5113,103 @@ spec = describe "TDF.Server helpers" $ do
                     newlyCompletedValue `shouldBe` False
                 Left serverErr -> expectationFailure ("Expected repeated onboarding completion, got: " <> show serverErr)
 
+        it "reconciles in-window first-value evidence after expiry without allowing a late explicit exit" $ do
+            (lateFirstValueResult, repeatedResult, postWindowEvidenceResult, lateExitResult, evidenceAt) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (lateExitPartyId, firstValuePartyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-(25 * 60 * 60)) now
+                        actionAt = addUTCTime (23 * 60 * 60) signupAt
+                        postWindowActionAt = addUTCTime ((24 * 60 * 60) + 60) signupAt
+                        progressFor partyIdValue =
+                            M.UserOnboardingProgress
+                                { M.userOnboardingProgressPartyId = partyIdValue
+                                , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                                , M.userOnboardingProgressIntent = Just "events"
+                                , M.userOnboardingProgressCompletedAt = Nothing
+                                , M.userOnboardingProgressFirstValue = Nothing
+                                , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                , M.userOnboardingProgressUpdatedAt = signupAt
+                                }
+                    liftIO $ flip runSqlPool pool $ do
+                        insert_ (progressFor firstValuePartyId)
+                        insert_ (progressFor lateExitPartyId)
+                        insert_
+                            M.EngagementEvent
+                                { M.engagementEventActorPartyId = Just firstValuePartyId
+                                , M.engagementEventTargetArtistId = Nothing
+                                , M.engagementEventEntityType = "event_moment"
+                                , M.engagementEventEntityId = Just 42
+                                , M.engagementEventEventType = "reaction_added"
+                                , M.engagementEventMetadata = Nothing
+                                , M.engagementEventCreatedAt = actionAt
+                                }
+                        insert_
+                            M.EngagementEvent
+                                { M.engagementEventActorPartyId = Just lateExitPartyId
+                                , M.engagementEventTargetArtistId = Nothing
+                                , M.engagementEventEntityType = "event_moment"
+                                , M.engagementEventEntityId = Just 43
+                                , M.engagementEventEventType = "reaction_added"
+                                , M.engagementEventMetadata = Nothing
+                                , M.engagementEventCreatedAt = postWindowActionAt
+                                }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        completeWith tokenValue request =
+                            liftIO $ runHandler $ runReaderT
+                                (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
+                                env
+                    first <- completeWith
+                        "google-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    repeated <- completeWith
+                        "google-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    postWindowEvidence <- completeWith
+                        "ambiguous-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    lateExit <- completeWith
+                        "ambiguous-token"
+                        (DTO.OnboardingCompletionRequest Nothing)
+                    pure (first, repeated, postWindowEvidence, lateExit, actionAt)
+
+            case lateFirstValueResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "moment_reaction", Just evidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected late retry with in-window evidence to complete, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult _ newlyCompletedValue) ->
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated late retry to remain idempotent, got: " <> show serverErr)
+            case postWindowEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                    (eligibleValue, completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, Nothing, Nothing, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected post-window evidence to remain ineligible, got: " <> show serverErr)
+            case lateExitResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                    (eligibleValue, completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, Nothing, Nothing, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected late explicit exit to remain ineligible, got: " <> show serverErr)
+
         it "requires Party-bound, in-window access-request evidence and stays idempotent" $ do
             ( missingEvidenceResult
                 , otherPartyEvidenceResult
