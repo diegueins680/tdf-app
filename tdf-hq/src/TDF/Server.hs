@@ -191,6 +191,7 @@ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
+import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.Reviews as ReviewsServer
 import           TDF.ServerFeedback (feedbackServer, internalFeedbackServer)
 import qualified TDF.Contracts.Server as Contracts
@@ -739,6 +740,7 @@ server env =
   :<|> feedbackServer
   :<|> CatalogServer.publicCatalogServer
   :<|> DirectoryServer.directoryPublicServer
+  :<|> MerchServer.merchPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
   :<|> MerchReputationServer.merchReputationPublicServer
@@ -3798,6 +3800,7 @@ protectedServer user =
   :<|> accessRequestsServer user
   :<|> navigationPreferencesServer user
   :<|> DirectoryServer.directoryProtectedServer user
+  :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user

@@ -27,6 +27,11 @@ const LoginPage = lazy(() => import('../pages/LoginPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
 const MerchReputationPage = lazy(() => import('../pages/MerchReputationPage'));
+const MerchCartPage = lazy(() => import('../pages/MerchCartPage'));
+const MerchDiscoveryPage = lazy(() => import('../pages/MerchDiscoveryPage'));
+const MerchOrderTrackingPage = lazy(() => import('../pages/MerchOrderTrackingPage'));
+const MerchProductPage = lazy(() => import('../pages/MerchProductPage'));
+const MerchStorefrontPage = lazy(() => import('../pages/MerchStorefrontPage'));
 const MixingMasteringPage = lazy(() => import('../pages/MixingMasteringPage'));
 const ServiceDatafastReturnPage = lazy(() => import('../pages/ServiceDatafastReturnPage'));
 const ServiceOrderTrackingPage = lazy(() => import('../pages/ServiceOrderTrackingPage'));
@@ -82,6 +87,11 @@ export function renderPublicRoutes() {
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
       <Route path="/merch/tiendas/:storeId" element={<PublicBranding><MerchReputationPage kind="store" /></PublicBranding>} />
       <Route path="/merch/productos/:productId" element={<PublicBranding><MerchReputationPage kind="product" /></PublicBranding>} />
+      <Route path="/tiendas" element={<PublicBranding><MerchDiscoveryPage /></PublicBranding>} />
+      <Route path="/tienda/:storeSlug" element={<PublicBranding><MerchStorefrontPage /></PublicBranding>} />
+      <Route path="/tienda/:storeSlug/producto/:productSlug" element={<PublicBranding><MerchProductPage /></PublicBranding>} />
+      <Route path="/tienda/:storeSlug/carrito" element={<PublicBranding><MerchCartPage /></PublicBranding>} />
+      <Route path="/tienda/orden/:orderId" element={<PublicBranding><MerchOrderTrackingPage /></PublicBranding>} />
       <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
       <Route path="/mezcla-mastering" element={<PublicBranding><MixingMasteringPage /></PublicBranding>} />
       <Route path="/mezcla-mastering/pago-datafast" element={<PublicBranding><ServiceDatafastReturnPage /></PublicBranding>} />

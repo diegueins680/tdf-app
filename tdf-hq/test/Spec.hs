@@ -121,6 +121,7 @@ import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
 import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
 import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
+import qualified TDF.Commerce.Merch as Merch
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
@@ -138,6 +139,7 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
 import qualified TDF.DTO as DTO
@@ -883,6 +885,68 @@ main = hspec $ do
                 [VerifiedRating 1 0, VerifiedRating 5 0]
                 `shouldBe` bayesianRating initialCommercialFormula
                     [VerifiedRating 5 0, VerifiedRating 1 0]
+    describe "artist merch commerce rules" $ do
+        it "charges the default commission only on discounted product value" $ do
+            Merch.calculateMerchMoney 10000 1000 1350 500 400 1000
+                `shouldBe` Right Merch.MerchMoney
+                    { Merch.merchProductSubtotalMinor = 10000
+                    , Merch.merchDiscountMinor = 1000
+                    , Merch.merchTaxMinor = 1350
+                    , Merch.merchShippingMinor = 500
+                    , Merch.merchProcessorFeeMinor = 400
+                    , Merch.merchCommissionBps = 1000
+                    , Merch.merchCommissionMinor = 900
+                    , Merch.merchSellerNetMinor = 9550
+                    , Merch.merchTotalMinor = 10850
+                    }
+
+        it "supports an audited zero-percent pilot override without changing buyer totals" $ do
+            let defaultResult = Merch.calculateMerchMoney 10000 1000 1350 500 400 1000
+                pilotResult = Merch.calculateMerchMoney 10000 1000 1350 500 400 0
+            fmap Merch.merchTotalMinor pilotResult `shouldBe` fmap Merch.merchTotalMinor defaultResult
+            fmap Merch.merchCommissionMinor pilotResult `shouldBe` Right 0
+            fmap Merch.merchSellerNetMinor pilotResult `shouldBe` Right 10450
+
+        it "rejects negative money, excessive discounts, and invalid commission rates" $ do
+            Merch.calculateMerchMoney 0 0 0 0 0 1000 `shouldSatisfy` isLeft
+            Merch.calculateMerchMoney 1000 1001 0 0 0 1000 `shouldSatisfy` isLeft
+            Merch.calculateMerchMoney 1000 0 0 0 0 10001 `shouldSatisfy` isLeft
+
+        it "keeps product and fulfillment state machines separate" $ do
+            Merch.validProductTransition "draft" "pending_review" `shouldBe` True
+            Merch.validProductTransition "draft" "published" `shouldBe` False
+            Merch.validProductTransition "archived" "published" `shouldBe` False
+            Merch.validFulfillmentTransition "pending" "preparing" `shouldBe` True
+            Merch.validFulfillmentTransition "pending" "delivered" `shouldBe` False
+            Merch.validFulfillmentTransition "shipped" "return_requested" `shouldBe` True
+
+        it "allows immediate cancellation only before payment processing and fulfillment" $ do
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "holding" `shouldBe` True
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "awaiting_payment" `shouldBe` True
+            Merch.isUnpaidOrderCancellable "created" "pending" "pending" "processing" `shouldBe` False
+            Merch.isUnpaidOrderCancellable "confirmed" "paid" "pending" "paid" `shouldBe` False
+            Merch.isUnpaidOrderCancellable "created" "pending" "preparing" "holding" `shouldBe` False
+
+        it "keeps financial issue decisions with staff while sellers can resolve operational cases" $ do
+            Merch.validSellerIssueTransition "shipping" "open" "seller_review" `shouldBe` True
+            Merch.validSellerIssueTransition "shipping" "seller_review" "resolved" `shouldBe` True
+            Merch.validSellerIssueTransition "refund" "open" "staff_review" `shouldBe` True
+            Merch.validSellerIssueTransition "refund" "seller_review" "resolved" `shouldBe` False
+            Merch.validSellerIssueTransition "refund" "staff_review" "seller_review" `shouldBe` False
+            Merch.validStaffIssueTransition "staff_review" "resolved" `shouldBe` True
+            Merch.validStaffIssueTransition "resolved" "staff_review" `shouldBe` False
+
+        it "validates public slugs, scoped SKUs, quantities, and safe checkout text" $ do
+            Merch.validateMerchSlug "cementerio-de-elefantes" `shouldBe` Right "cementerio-de-elefantes"
+            Merch.validateMerchSlug "Cementerio" `shouldSatisfy` isLeft
+            Merch.validateSku "CDE-TEE/BLACK-M" `shouldBe` Right "CDE-TEE/BLACK-M"
+            Merch.validateSku "bad<script>" `shouldSatisfy` isLeft
+            Merch.validateQuantity 100 `shouldBe` Right 100
+            Merch.validateQuantity 101 `shouldSatisfy` isLeft
+            Merch.validateCheckoutText "recipient.name" 80 "  Paola  " `shouldBe` Right "Paola"
+            Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
+
+    MerchRuntimeSpec.spec
 
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do

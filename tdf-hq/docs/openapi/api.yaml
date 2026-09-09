@@ -6121,6 +6121,403 @@ paths:
       responses:
         '200': { description: Audited appeal result; a reversal restores the prior visibility }
         '403': { description: Strict Admin or independent-review requirement not met }
+  /merch/capabilities:
+    get:
+      tags: [Artist merch]
+      operationId: getMerchCapabilities
+      summary: Report the server-verified merch rollout and provider capabilities
+      security: []
+      responses:
+        '200':
+          description: Capability matrix; a false value must not be presented as available by clients.
+          content: { application/json: { schema: { $ref: '#/components/schemas/MerchCapabilities' } } }
+  /merch/storefronts:
+    get:
+      tags: [Artist merch]
+      operationId: listMerchStorefronts
+      summary: Discover published artist merch storefronts
+      security: []
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 160 } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/MerchProductCategory' } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 24 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: Published storefronts only
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchStorefront' } } } }
+  /merch/storefronts/{storeSlug}:
+    get:
+      tags: [Artist merch]
+      operationId: getMerchStorefront
+      summary: Read one public storefront integrated with its artist profile
+      security: []
+      parameters:
+        - { name: storeSlug, in: path, required: true, schema: { type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' } }
+      responses:
+        '200': { description: Storefront, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStorefront' } } } }
+        '404': { description: Storefront is not public or does not exist }
+  /merch/storefronts/{storeSlug}/products/{productSlug}:
+    get:
+      tags: [Artist merch]
+      operationId: getMerchProduct
+      summary: Read a public merch product and its available variants
+      security: []
+      parameters:
+        - { name: storeSlug, in: path, required: true, schema: { type: string } }
+        - { name: productSlug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Published product, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } }
+        '404': { description: Product is not public or does not exist }
+  /merch/carts:
+    post:
+      tags: [Artist merch checkout]
+      operationId: createMerchCart
+      summary: Create a single-seller guest cart
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCartCreateRequest' } } } }
+      responses:
+        '201': { description: Cart with a lookup token returned only to the caller, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCart' } } } }
+        '409': { description: Storefront or merch checkout is unavailable }
+  /merch/carts/{cartId}:
+    get:
+      tags: [Artist merch checkout]
+      operationId: getMerchCart
+      summary: Resume an unexpired guest cart
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchCartId'
+        - $ref: '#/components/parameters/MerchCartLookupToken'
+      responses:
+        '200': { description: Current server-priced cart, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCart' } } } }
+        '404': { description: Cart or lookup token not found }
+  /merch/carts/{cartId}/items:
+    put:
+      tags: [Artist merch checkout]
+      operationId: putMerchCartItem
+      summary: Set a variant quantity in a single-seller cart
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchCartId'
+        - $ref: '#/components/parameters/MerchCartLookupToken'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCartItemRequest' } } } }
+      responses:
+        '200': { description: Repriced cart, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCart' } } } }
+        '409': { description: Variant, price, buyer limit, or stock changed }
+  /merch/carts/{cartId}/items/{variantId}:
+    delete:
+      tags: [Artist merch checkout]
+      operationId: deleteMerchCartItem
+      summary: Remove a variant from a guest cart
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchCartId'
+        - { name: variantId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/MerchCartLookupToken'
+      responses:
+        '200': { description: Repriced cart, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCart' } } } }
+  /merch/carts/{cartId}/checkout:
+    post:
+      tags: [Artist merch checkout]
+      operationId: checkoutMerchCart
+      summary: Atomically reserve stock and create one idempotent single-seller order
+      description: The server recalculates every amount. This operation creates a pending order; a browser return can never confirm payment.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchCartId'
+        - $ref: '#/components/parameters/MerchCartLookupToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCheckoutRequest' } } } }
+      responses:
+        '200': { description: Existing idempotent order or newly created pending order, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOrder' } } } }
+        '409': { description: Cart, price, shipping zone, or stock changed }
+  /merch/orders/{orderId}:
+    get:
+      tags: [Artist merch checkout]
+      operationId: getMerchOrder
+      summary: Track a guest merch order without exposing enumerable customer data
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200': { description: Privacy-minimized order timeline, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOrder' } } } }
+        '404': { description: Order or lookup token not found }
+  /merch/orders/{orderId}/issues:
+    post:
+      tags: [Artist merch checkout]
+      operationId: createMerchOrderIssue
+      summary: Report a delivery, return, cancellation, refund, or product problem
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueRequest' } } } }
+      responses:
+        '201': { description: Issue received without changing payment, fulfillment, or refund state, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+  /merch/orders/{orderId}/cancel:
+    post:
+      tags: [Artist merch checkout]
+      operationId: cancelUnpaidMerchOrder
+      summary: Cancel an unpaid order before payment processing or fulfillment starts
+      description: This idempotent operation releases active inventory reservations and records an immutable issue, fulfillment timeline, and audit entry. Paid or processing orders must use the independently reviewed issue and refund workflow.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCancellationRequest' } } } }
+      responses:
+        '200': { description: Cancelled order with its independent commercial, payment, and fulfillment states, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOrder' } } } }
+        '404': { description: Order or lookup token not found }
+        '409': { description: Payment processing or fulfillment already began, or the idempotency key conflicts }
+  /merch/favorites/{productId}:
+    put:
+      tags: [Artist merch]
+      operationId: addMerchFavorite
+      parameters:
+        - $ref: '#/components/parameters/MerchProductId'
+      responses: { '204': { description: Favorite stored } }
+    delete:
+      tags: [Artist merch]
+      operationId: deleteMerchFavorite
+      parameters:
+        - $ref: '#/components/parameters/MerchProductId'
+      responses: { '204': { description: Favorite removed } }
+  /merch/seller/stores:
+    get:
+      tags: [Artist merch seller]
+      operationId: listSellerMerchStores
+      responses:
+        '200': { description: Stores scoped to accepted memberships, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchStorefront' } } } } }
+  /merch/seller/applications:
+    post:
+      tags: [Artist merch seller]
+      operationId: createMerchStoreApplication
+      summary: Apply using a claimed or verified artist or band profile managed by the caller
+      parameters: [ { $ref: '#/components/parameters/IdempotencyKey' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStoreApplicationRequest' } } } }
+      responses:
+        '201': { description: Pending application; not an activated store, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStorefront' } } } }
+        '409': { description: Profile is ineligible, already used, or key was reused with a different request }
+  /merch/seller/stores/{storeId}:
+    put:
+      tags: [Artist merch seller]
+      operationId: updateSellerMerchStore
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStoreUpdateRequest' } } } }
+      responses: { '200': { description: Updated store, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStorefront' } } } }, '403': { description: Settings permission required } }
+  /merch/seller/stores/{storeId}/members:
+    get:
+      tags: [Artist merch seller]
+      operationId: listMerchStoreMembers
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      responses: { '200': { description: Scoped members, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchStoreMember' } } } } }, '403': { description: Settings permission required } }
+    post:
+      tags: [Artist merch seller]
+      operationId: inviteMerchStoreMember
+      description: Clients select the party through name, artist name, or username search; the user never types a Party ID.
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchMemberInviteRequest' } } } }
+      responses: { '201': { description: Pending scoped invitation, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStoreMember' } } } }, '403': { description: Settings permission required } }
+  /merch/seller/stores/{storeId}/members/{memberId}:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateMerchStoreMember
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - { name: memberId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchMemberUpdateRequest' } } } }
+      responses: { '200': { description: Updated member, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStoreMember' } } } }, '409': { description: Primary owner protections or invalid transition } }
+  /merch/seller/stores/{storeId}/policies:
+    post:
+      tags: [Artist merch seller]
+      operationId: createMerchStorePolicy
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchPolicyRequest' } } } }
+      responses: { '201': { description: New versioned policy; order snapshots do not change retroactively, content: { application/json: { schema: { type: object, additionalProperties: true } } } } }
+  /merch/seller/stores/{storeId}/shipping-zones:
+    post:
+      tags: [Artist merch seller]
+      operationId: createMerchShippingZone
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchShippingZoneRequest' } } } }
+      responses: { '201': { description: Seller shipping rate, content: { application/json: { schema: { $ref: '#/components/schemas/MerchShippingZone' } } } } }
+  /merch/seller/stores/{storeId}/products:
+    get:
+      tags: [Artist merch seller]
+      operationId: listSellerMerchProducts
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      responses: { '200': { description: All seller product states, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchProduct' } } } } } }
+    post:
+      tags: [Artist merch seller]
+      operationId: createMerchProduct
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProductRequest' } } } }
+      responses: { '201': { description: Draft product and variants, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } } }
+  /merch/seller/stores/{storeId}/products/{productId}:
+    put:
+      tags: [Artist merch seller]
+      operationId: updateMerchProduct
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchProductId'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProductRequest' } } } }
+      responses: { '200': { description: Updated draft, paused, or rejected product, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } }, '409': { description: Product is locked by review or archived } }
+  /merch/seller/stores/{storeId}/products/{productId}/status:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateSellerMerchProductStatus
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchProductId'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStatusRequest' } } } }
+      responses: { '200': { description: Product in its new explicit state, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } }, '409': { description: Invalid transition or missing policy, variant, or validated image } }
+  /merch/seller/stores/{storeId}/products/{productId}/images:
+    post:
+      tags: [Artist merch seller]
+      operationId: uploadMerchProductImage
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchProductId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file, altText, sortOrder]
+              properties:
+                file: { type: string, format: binary, description: JPEG or PNG; maximum 10 MiB and 40 megapixels }
+                altText: { type: string, minLength: 1, maxLength: 500 }
+                sortOrder: { type: integer, minimum: 0 }
+      responses: { '201': { description: Durable responsive image reference pending moderation, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProductImage' } } } }, '400': { description: MIME, extension, bytes, dimensions, or metadata are invalid } }
+  /merch/seller/stores/{storeId}/variants/{variantId}/stock:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateMerchVariantStock
+      summary: Update stock with optimistic concurrency and no access to catalog, order, or finance fields
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - name: variantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStockRequest' } } } }
+      responses:
+        '200': { description: Updated stock projection, content: { application/json: { schema: { $ref: '#/components/schemas/MerchVariant' } } } }
+        '409': { description: Version changed, variant is archived, or requested stock is below sold and reserved units }
+  /merch/seller/stores/{storeId}/orders:
+    get:
+      tags: [Artist merch seller]
+      operationId: listSellerMerchOrders
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/MerchFulfillmentStatus' } }
+      responses: { '200': { description: Orders scoped to this seller, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOrder' } } } } } }
+  /merch/seller/stores/{storeId}/issues:
+    get:
+      tags: [Artist merch seller]
+      operationId: listSellerMerchIssues
+      summary: List the store's support cases without exposing another seller's orders
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/MerchIssueStatus' } }
+      responses:
+        '200': { description: Store-scoped operational issue queue; orders permission required, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOperationalIssue' } } } } }
+        '403': { description: Orders permission required }
+  /merch/seller/stores/{storeId}/issues/{issueId}:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateSellerMerchIssue
+      summary: Triage an operational case or escalate a financial case to staff
+      description: Sellers cannot resolve or reject cancellation, refund, dispute, or fraud cases. This operation never changes payment, refund, dispute, fulfillment, or settlement state.
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchIssueId'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueTriageRequest' } } } }
+      responses:
+        '200': { description: Updated issue with immutable audit evidence, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
+        '403': { description: Orders permission required }
+        '404': { description: Issue does not belong to the selected store }
+        '409': { description: Invalid role-specific transition or concurrent update }
+  /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateMerchOrderFulfillment
+      summary: Advance fulfillment without implicitly changing payment or refund status
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchOrderId'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchFulfillmentRequest' } } } }
+      responses: { '200': { description: Updated operational timeline, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOrder' } } } }, '409': { description: Invalid fulfillment transition or missing tracking fields } }
+  /merch/admin/stores:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchStores
+      parameters: [ { name: status, in: query, schema: { type: string } } ]
+      responses: { '200': { description: Review queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchStorefront' } } } } } }
+  /merch/admin/stores/{storeId}/review:
+    post:
+      tags: [Artist merch administration]
+      operationId: reviewMerchStore
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStoreReviewRequest' } } } }
+      responses: { '200': { description: Approved, rejected, suspended, or reactivated store with audited commission policy, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStorefront' } } } } }
+  /merch/admin/products:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchProducts
+      parameters: [ { name: status, in: query, schema: { $ref: '#/components/schemas/MerchProductStatus' } } ]
+      responses: { '200': { description: Product moderation queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchProduct' } } } } } }
+  /merch/admin/products/{productId}/review:
+    post:
+      tags: [Artist merch administration]
+      operationId: reviewMerchProduct
+      parameters: [ { $ref: '#/components/parameters/MerchProductId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStatusRequest' } } } }
+      responses: { '200': { description: Reviewed product, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } }, '409': { description: Invalid moderation transition } }
+  /merch/admin/issues:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchIssues
+      summary: List support cases across the closed pilot
+      parameters: [ { name: status, in: query, schema: { $ref: '#/components/schemas/MerchIssueStatus' } } ]
+      responses:
+        '200': { description: Strict-admin issue queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOperationalIssue' } } } } }
+        '403': { description: Strict administrator permission required }
+  /merch/admin/issues/{issueId}:
+    patch:
+      tags: [Artist merch administration]
+      operationId: updateAdminMerchIssue
+      summary: Progress or close an independently reviewed support case
+      description: Closing a case records a public resolution and audit evidence but never executes or implies a provider refund, chargeback result, or settlement adjustment.
+      parameters: [ { $ref: '#/components/parameters/MerchIssueId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueTriageRequest' } } } }
+      responses:
+        '200': { description: Updated issue, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
+        '409': { description: Terminal case or concurrent update }
+  /merch/admin/settlements:
+    post:
+      tags: [Artist merch administration]
+      operationId: createMerchSettlement
+      summary: Prepare an auditable manual seller settlement
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlementRequest' } } } }
+      responses: { '201': { description: Prepared settlement; no payout was executed, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '409': { description: Orders are ineligible or already assigned } }
+  /merch/admin/settlements/{settlementId}/status:
+    patch:
+      tags: [Artist merch administration]
+      operationId: updateMerchSettlementStatus
+      description: Approval and paid confirmation require separation of duties; this endpoint never triggers an automatic payout.
+      parameters: [ { $ref: '#/components/parameters/MerchSettlementId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStatusRequest' } } } }
+      responses: { '200': { description: Updated manual settlement evidence, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '409': { description: Invalid transition or dual-control violation } }
 
 security:
   - bearerAuth: [ ]
@@ -6136,6 +6533,42 @@ components:
       in: cookie
       name: tdf_session
   parameters:
+    MerchCartId:
+      name: cartId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchCartLookupToken:
+      name: X-Cart-Lookup-Token
+      in: header
+      required: true
+      description: Unguessable token returned once when a guest cart is created.
+      schema: { type: string, minLength: 32, writeOnly: true }
+    MerchStoreId:
+      name: storeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchProductId:
+      name: productId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchOrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchIssueId:
+      name: issueId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchSettlementId:
+      name: settlementId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     PublicEventId:
       name: eventId
       in: path
@@ -6498,6 +6931,467 @@ components:
         evidenceRequest: { type: boolean, default: false }
         appealResult: { type: boolean, default: false }
         badgeChange: { type: boolean, default: false }
+    MerchCapabilities:
+      type: object
+      additionalProperties: false
+      required: [environment, market, features, paymentMethods, automaticPayouts, message]
+      properties:
+        environment: { type: string, enum: [sandbox, staging, production] }
+        market:
+          type: object
+          additionalProperties: false
+          required: [countryCode, currency]
+          properties:
+            countryCode: { type: string, enum: [EC] }
+            currency: { type: string, enum: [USD] }
+        features:
+          type: object
+          additionalProperties: false
+          required: [storefronts, sellerApplications, publicCatalog, checkout, reviews, notifications, experimental]
+          properties:
+            storefronts: { type: boolean }
+            sellerApplications: { type: boolean }
+            publicCatalog: { type: boolean }
+            checkout: { type: boolean, description: True only when at least one payment method is enabled and fully configured. }
+            reviews: { type: boolean }
+            notifications: { type: boolean }
+            experimental: { type: boolean }
+        paymentMethods:
+          type: object
+          additionalProperties: false
+          required: [datafast, paypal, bankTransfer]
+          properties:
+            datafast: { type: boolean, description: True only with an enabled flag and complete server credentials. }
+            paypal: { type: boolean, description: True only with an enabled flag and complete server credentials. }
+            bankTransfer: { type: boolean, description: True only when independent receipt review is operational. }
+        automaticPayouts: { type: boolean, enum: [false] }
+        message: { type: string }
+    MerchProductCategory:
+      type: string
+      enum: [apparel, vinyl, cd, cassette, poster, accessory, limited_edition, bundle, other]
+    MerchProductStatus:
+      type: string
+      enum: [draft, pending_review, published, sold_out, paused, rejected, archived]
+    MerchFulfillmentStatus:
+      type: string
+      enum: [pending, preparing, ready_for_pickup, shipped, delivered, return_requested, returned, problem, cancelled]
+    MerchPermissions:
+      type: object
+      additionalProperties: false
+      required: [catalog, stock, orders, fulfillment, finance, settings]
+      properties:
+        catalog: { type: boolean }
+        stock: { type: boolean }
+        orders: { type: boolean }
+        fulfillment: { type: boolean }
+        finance: { type: boolean }
+        settings: { type: boolean }
+    MerchStorefront:
+      type: object
+      additionalProperties: true
+      required: [id, slug, displayName, currency]
+      properties:
+        id: { type: string, format: uuid }
+        profileId: { type: string, format: uuid }
+        slug: { type: string }
+        displayName: { type: string }
+        description: { type: string, nullable: true }
+        coverImageUrl: { type: string, nullable: true }
+        logoImageUrl: { type: string, nullable: true }
+        countryCode: { type: string, enum: [EC] }
+        currency: { type: string, enum: [USD] }
+        applicationStatus: { type: string, enum: [requested, under_review, approved, rejected, withdrawn] }
+        operationalStatus: { type: string, enum: [inactive, active, suspended, closed] }
+        permissions: { $ref: '#/components/schemas/MerchPermissions' }
+        products: { type: array, items: { $ref: '#/components/schemas/MerchProduct' } }
+        policies: { type: object, additionalProperties: true }
+        shippingZones: { type: array, items: { $ref: '#/components/schemas/MerchShippingZone' } }
+    MerchStoreApplicationRequest:
+      type: object
+      additionalProperties: false
+      required: [profileId, slug, displayName, applicationNote]
+      properties:
+        profileId: { type: string, format: uuid }
+        slug: { type: string, minLength: 2, maxLength: 120, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        displayName: { type: string, minLength: 1, maxLength: 160 }
+        description: { type: string, maxLength: 2000, nullable: true }
+        applicationNote: { type: string, minLength: 10, maxLength: 2000 }
+    MerchStoreUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [displayName]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 160 }
+        description: { type: string, maxLength: 2000, nullable: true }
+        coverImageUrl: { type: string, nullable: true }
+        logoImageUrl: { type: string, nullable: true }
+    MerchStoreReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [decision, reviewerNotes]
+      properties:
+        decision: { type: string, enum: [approve, reject, suspend, reactivate] }
+        reviewerNotes: { type: string, minLength: 1, maxLength: 2000 }
+        commissionBps: { type: integer, minimum: 0, maximum: 10000, nullable: true, description: 1000 is 10%; 0 may be used for an audited pilot override. }
+        commissionReason: { type: string, minLength: 1, maxLength: 500, nullable: true }
+    MerchStoreMember:
+      type: object
+      additionalProperties: false
+      required: [id, partyId, displayName, role, status, permissions]
+      properties:
+        id: { type: string, format: uuid }
+        partyId: { type: integer, format: int64 }
+        displayName: { type: string }
+        username: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        role: { type: string, enum: [owner, collaborator] }
+        status: { type: string, enum: [pending, accepted, revoked, expired] }
+        permissions: { $ref: '#/components/schemas/MerchPermissions' }
+        expiresAt: { type: string, format: date-time, nullable: true }
+    MerchMemberInviteRequest:
+      type: object
+      additionalProperties: false
+      required: [partyId, permissions]
+      properties:
+        partyId: { type: integer, format: int64, description: Selected by PartySelector search; never entered manually. }
+        permissions: { $ref: '#/components/schemas/MerchPermissions' }
+    MerchMemberUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, enum: [accepted, revoked] }
+        permissions: { $ref: '#/components/schemas/MerchPermissions' }
+        reason: { type: string, maxLength: 500, nullable: true }
+    MerchPolicyRequest:
+      type: object
+      additionalProperties: false
+      required: [shippingPolicy, returnPolicy]
+      properties:
+        shippingPolicy: { type: string, minLength: 1, maxLength: 10000 }
+        returnPolicy: { type: string, minLength: 1, maxLength: 10000 }
+        preorderPolicy: { type: string, maxLength: 10000, nullable: true }
+        supportEmail: { type: string, format: email, maxLength: 254, nullable: true }
+    MerchShippingZoneRequest:
+      type: object
+      additionalProperties: false
+      required: [name, countryCode, subdivisionCodes, deliveryMethod, rateMinor, active]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        countryCode: { type: string, enum: [EC] }
+        subdivisionCodes: { type: array, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 20 } }
+        deliveryMethod: { type: string, enum: [national_shipping, coordinated_pickup] }
+        rateMinor: { type: integer, format: int64, minimum: 0 }
+        freeShippingMinMinor: { type: integer, format: int64, minimum: 0, nullable: true }
+        estimatedMinDays: { type: integer, minimum: 0, nullable: true }
+        estimatedMaxDays: { type: integer, minimum: 0, nullable: true }
+        active: { type: boolean }
+    MerchShippingZone:
+      allOf:
+        - $ref: '#/components/schemas/MerchShippingZoneRequest'
+        - type: object
+          required: [id]
+          properties: { id: { type: string, format: uuid } }
+    MerchVariantRequest:
+      type: object
+      additionalProperties: false
+      required: [sku, name, optionValues, priceMinor, currency, weightGrams, stockMode, stockOnHand, reorderThreshold, active]
+      properties:
+        id: { type: string, format: uuid, nullable: true }
+        sku: { type: string, minLength: 1, maxLength: 120 }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        optionValues: { type: object, additionalProperties: { type: string } }
+        priceMinor: { type: integer, format: int64, minimum: 1 }
+        compareAtPriceMinor: { type: integer, format: int64, minimum: 1, nullable: true }
+        currency: { type: string, enum: [USD] }
+        weightGrams: { type: integer, minimum: 0 }
+        customsDescription: { type: string, maxLength: 500, nullable: true }
+        stockMode: { type: string, enum: [finite, made_to_order] }
+        stockOnHand: { type: integer, minimum: 0 }
+        reorderThreshold: { type: integer, minimum: 0 }
+        active: { type: boolean }
+    MerchStockRequest:
+      type: object
+      additionalProperties: false
+      required: [stockOnHand, reorderThreshold, active, version]
+      properties:
+        stockOnHand: { type: integer, minimum: 0 }
+        reorderThreshold: { type: integer, minimum: 0 }
+        active: { type: boolean }
+        version: { type: integer, format: int64, minimum: 1 }
+    MerchProductRequest:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, category, visibility, availabilityMode, variants]
+      properties:
+        slug: { type: string, minLength: 2, maxLength: 120, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+        name: { type: string, minLength: 1, maxLength: 180 }
+        description: { type: string, minLength: 1, maxLength: 10000 }
+        category: { $ref: '#/components/schemas/MerchProductCategory' }
+        visibility: { type: string, enum: [public, unlisted, hidden] }
+        availabilityMode: { type: string, enum: [in_stock, preorder, made_to_order] }
+        preorderReleaseAt: { type: string, format: date-time, nullable: true }
+        publishAt: { type: string, format: date-time, nullable: true }
+        unpublishAt: { type: string, format: date-time, nullable: true }
+        buyerLimit: { type: integer, minimum: 1, maximum: 100, nullable: true }
+        policyId: { type: string, format: uuid, nullable: true }
+        variants: { type: array, minItems: 1, maxItems: 100, items: { $ref: '#/components/schemas/MerchVariantRequest' } }
+    MerchProduct:
+      type: object
+      additionalProperties: true
+      required: [id, storeId, slug, name, category, status, availabilityMode]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        storeSlug: { type: string }
+        storeName: { type: string }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        category: { $ref: '#/components/schemas/MerchProductCategory' }
+        status: { $ref: '#/components/schemas/MerchProductStatus' }
+        visibility: { type: string, enum: [public, unlisted, hidden] }
+        availabilityMode: { type: string, enum: [in_stock, preorder, made_to_order] }
+        preorderReleaseAt: { type: string, format: date-time, nullable: true }
+        publishAt: { type: string, format: date-time, nullable: true }
+        unpublishAt: { type: string, format: date-time, nullable: true }
+        buyerLimit: { type: integer, minimum: 1, maximum: 100, nullable: true }
+        policyId: { type: string, format: uuid, nullable: true }
+        priceFromMinor: { type: integer, format: int64, minimum: 0 }
+        currency: { type: string, enum: [USD] }
+        available: { type: boolean }
+        imageUrl: { type: string, nullable: true }
+        canonicalUrl: { type: string }
+        rejectionReason: { type: string, nullable: true }
+        variants: { type: array, items: { $ref: '#/components/schemas/MerchVariant' } }
+        images: { type: array, items: { $ref: '#/components/schemas/MerchProductImage' } }
+        related: { type: array, items: { type: object, additionalProperties: true } }
+        reviewsEnabled: { type: boolean }
+        reviews: { type: array, items: { type: object, additionalProperties: true } }
+    MerchVariant:
+      type: object
+      additionalProperties: true
+      required: [id, sku, name, optionValues, priceMinor, currency, weightGrams, stockMode, active, version]
+      properties:
+        id: { type: string, format: uuid }
+        sku: { type: string }
+        name: { type: string }
+        optionValues: { type: object, additionalProperties: { type: string } }
+        priceMinor: { type: integer, format: int64 }
+        compareAtPriceMinor: { type: integer, format: int64, nullable: true }
+        currency: { type: string, enum: [USD] }
+        weightGrams: { type: integer }
+        stockMode: { type: string, enum: [finite, made_to_order] }
+        stockOnHand: { type: integer, minimum: 0 }
+        stockReserved: { type: integer, minimum: 0 }
+        stockSold: { type: integer, minimum: 0 }
+        availableQuantity: { type: integer, minimum: 0, nullable: true }
+        available: { type: boolean }
+        version: { type: integer, format: int64, minimum: 1 }
+        reorderThreshold: { type: integer, minimum: 0 }
+        active: { type: boolean }
+    MerchProductImage:
+      type: object
+      additionalProperties: false
+      required: [id, url, variants, altText, sortOrder]
+      properties:
+        id: { type: string, format: uuid }
+        url: { type: string }
+        variants: { type: object, additionalProperties: { type: object, additionalProperties: true } }
+        altText: { type: string, minLength: 1, maxLength: 500 }
+        sortOrder: { type: integer, minimum: 0 }
+        scanStatus: { type: string, enum: [pending, clean, rejected] }
+        moderationStatus: { type: string, enum: [pending, allowed, blocked] }
+        width: { type: integer, minimum: 1 }
+        height: { type: integer, minimum: 1 }
+    MerchCartCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [storeSlug]
+      properties: { storeSlug: { type: string, minLength: 2, maxLength: 120 } }
+    MerchCartItemRequest:
+      type: object
+      additionalProperties: false
+      required: [variantId, quantity]
+      properties:
+        variantId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1, maximum: 100 }
+    MerchCart:
+      type: object
+      additionalProperties: true
+      required: [id, storeId, currency, status, items, productSubtotalMinor, totalMinor]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        lookupToken: { type: string, minLength: 32, writeOnly: true, description: Present only on creation. }
+        currency: { type: string, enum: [USD] }
+        status: { type: string, enum: [active, checkout_started, converted, expired, abandoned] }
+        expiresAt: { type: string, format: date-time }
+        productSubtotalMinor: { type: integer, format: int64, minimum: 0 }
+        totalMinor: { type: integer, format: int64, minimum: 0 }
+        items: { type: array, items: { type: object, additionalProperties: true } }
+    MerchRecipientRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, countryCode, city, addressLine1]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 160 }
+        email: { type: string, format: email, maxLength: 254 }
+        phone: { type: string, maxLength: 40, nullable: true }
+        countryCode: { type: string, enum: [EC] }
+        subdivision: { type: string, maxLength: 120, nullable: true }
+        city: { type: string, minLength: 1, maxLength: 120 }
+        addressLine1: { type: string, minLength: 1, maxLength: 240 }
+        addressLine2: { type: string, maxLength: 240, nullable: true }
+        postalCode: { type: string, maxLength: 40, nullable: true }
+        deliveryNote: { type: string, maxLength: 1000, nullable: true }
+    MerchCheckoutRequest:
+      type: object
+      additionalProperties: false
+      required: [recipient, shippingZoneId]
+      properties:
+        recipient: { $ref: '#/components/schemas/MerchRecipientRequest' }
+        shippingZoneId: { type: string, format: uuid }
+        createAccount: { type: boolean, nullable: true }
+        locale: { type: string, enum: [es, en], nullable: true }
+    MerchOrder:
+      type: object
+      additionalProperties: true
+      required: [id, orderNumber, currency, productSubtotalMinor, shippingMinor, taxMinor, totalMinor, commercialStatus, paymentStatus, fulfillmentStatus, refundStatus, disputeStatus, lines]
+      properties:
+        id: { type: string, format: uuid }
+        orderNumber: { type: string }
+        lookupToken: { type: string, minLength: 32, writeOnly: true, description: Present only on creation. }
+        currency: { type: string, enum: [USD] }
+        productSubtotalMinor: { type: integer, format: int64 }
+        discountMinor: { type: integer, format: int64 }
+        taxMinor: { type: integer, format: int64 }
+        shippingMinor: { type: integer, format: int64 }
+        processorFeeMinor: { type: integer, format: int64 }
+        tdfCommissionMinor: { type: integer, format: int64 }
+        sellerNetMinor: { type: integer, format: int64 }
+        totalMinor: { type: integer, format: int64 }
+        commercialStatus: { type: string }
+        paymentStatus: { type: string }
+        fulfillmentStatus: { $ref: '#/components/schemas/MerchFulfillmentStatus' }
+        refundStatus: { type: string }
+        disputeStatus: { type: string }
+        settlementStatus: { type: string }
+        lines: { type: array, items: { type: object, additionalProperties: true } }
+        timeline: { type: array, items: { type: object, additionalProperties: true } }
+        issues: { type: array, items: { $ref: '#/components/schemas/MerchOrderIssue' } }
+    MerchIssueRequest:
+      type: object
+      additionalProperties: false
+      required: [issueType, message]
+      properties:
+        issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute] }
+        message: { type: string, minLength: 10, maxLength: 4000 }
+    MerchCancellationRequest:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 2000 }
+    MerchOrderIssue:
+      type: object
+      additionalProperties: false
+      required: [id, issueType, status, message, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute, fraud] }
+        status: { type: string, enum: [open, seller_review, staff_review, awaiting_buyer, resolved, rejected, cancelled] }
+        message: { type: string }
+        resolution: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MerchIssueStatus:
+      type: string
+      enum: [open, seller_review, staff_review, awaiting_buyer, resolved, rejected, cancelled]
+    MerchOperationalIssue:
+      type: object
+      additionalProperties: false
+      required: [id, storeId, orderId, orderNumber, storeName, customerName, customerEmail, issueType, status, message, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        orderNumber: { type: string }
+        storeName: { type: string }
+        customerName: { type: string }
+        customerEmail: { type: string, format: email }
+        issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute, fraud] }
+        status: { $ref: '#/components/schemas/MerchIssueStatus' }
+        message: { type: string }
+        resolution: { type: string, nullable: true }
+        internalNotes: { type: string, nullable: true, description: Visible only to an authorized seller or strict administrator. }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time, nullable: true }
+    MerchIssueTriageRequest:
+      type: object
+      additionalProperties: false
+      description: For terminal statuses, publicResponse must contain at least 10 characters. Seller financial cases may only be escalated to staff review.
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/MerchIssueStatus' }
+        publicResponse: { type: string, minLength: 1, maxLength: 5000, nullable: true }
+        internalNotes: { type: string, minLength: 1, maxLength: 5000, nullable: true }
+    MerchStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { type: string, minLength: 1, maxLength: 80 }
+        reason: { type: string, minLength: 1, maxLength: 2000, nullable: true }
+    MerchFulfillmentRequest:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/MerchFulfillmentStatus' }
+        publicNote: { type: string, maxLength: 1000, nullable: true }
+        privateNote: { type: string, maxLength: 2000, nullable: true }
+        carrier: { type: string, maxLength: 160, nullable: true }
+        trackingNumber: { type: string, maxLength: 200, nullable: true }
+        trackingUrl: { type: string, format: uri, maxLength: 2000, nullable: true }
+    MerchSettlementRequest:
+      type: object
+      additionalProperties: false
+      required: [storeId, periodStart, periodEnd, orderIds]
+      properties:
+        storeId: { type: string, format: uuid }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        orderIds: { type: array, minItems: 1, uniqueItems: true, items: { type: string, format: uuid } }
+        reviewNotes: { type: string, maxLength: 2000, nullable: true }
+    MerchSettlement:
+      type: object
+      additionalProperties: true
+      required: [id, storeId, periodStart, periodEnd, currency, status, grossProductMinor, discountsMinor, taxesMinor, shippingMinor, processorFeesMinor, tdfCommissionMinor, refundsMinor, adjustmentsMinor, sellerNetMinor, preparedBy, orderCount]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        periodStart: { type: string, format: date-time }
+        periodEnd: { type: string, format: date-time }
+        currency: { type: string, enum: [USD] }
+        status: { type: string, enum: [draft, under_review, approved, paid, held, reversed] }
+        grossProductMinor: { type: integer, format: int64 }
+        discountsMinor: { type: integer, format: int64 }
+        taxesMinor: { type: integer, format: int64 }
+        shippingMinor: { type: integer, format: int64 }
+        processorFeesMinor: { type: integer, format: int64 }
+        tdfCommissionMinor: { type: integer, format: int64 }
+        refundsMinor: { type: integer, format: int64 }
+        adjustmentsMinor: { type: integer, format: int64 }
+        sellerNetMinor: { type: integer, format: int64 }
+        preparedBy: { type: integer, format: int64 }
+        approvedBy: { type: integer, format: int64, nullable: true }
+        paidBy: { type: integer, format: int64, nullable: true }
+        approvedAt: { type: string, format: date-time, nullable: true }
+        paidAt: { type: string, format: date-time, nullable: true }
+        evidenceObjectKey: { type: string, nullable: true }
+        orderCount: { type: integer, format: int64 }
     PublicDomoStorefront:
       type: object
       additionalProperties: false

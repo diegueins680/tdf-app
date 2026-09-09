@@ -29,6 +29,7 @@ executable tdf-hq-exe
     TDF.API.Proposals
     TDF.API.Calendar
     TDF.API.Marketplace
+    TDF.API.Merch
     TDF.API.Label
     TDF.API.Drive
     TDF.API.Rooms
@@ -64,6 +65,7 @@ executable tdf-hq-exe
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.Merch
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
@@ -132,6 +134,7 @@ executable tdf-hq-exe
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.Merch
     TDF.Server.Reviews
     TDF.Server.MerchReputation
     TDF.Server.Catalog
@@ -239,6 +242,7 @@ executable tdf-hq-exe
     , tagged
     , crypton
     , memory
+    , JuicyPixels
 
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
@@ -269,6 +273,7 @@ test-suite tdf-hq-test
     TDF.Contracts.Server
     TDF.Contracts.Types
     TDF.API.Marketplace
+    TDF.API.Merch
     TDF.API.LiveSessions
     TDF.API.Radio
     TDF.API.Drive
@@ -297,6 +302,7 @@ test-suite tdf-hq-test
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
+    TDF.Commerce.Merch
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
@@ -357,6 +363,8 @@ test-suite tdf-hq-test
     TDF.Server.DDEX
     TDF.Server.Directory
     TDF.Server.MerchReputation
+    TDF.Server.Merch
+    TDF.Server.MerchRuntimeSpec
     TDF.Server.ServiceStorefront
     TDF.ServerAuth
     TDF.ServerAuthSpec
@@ -475,3 +483,4 @@ test-suite tdf-hq-test
     , smtp-mail
     , crypton
     , memory
+    , JuicyPixels

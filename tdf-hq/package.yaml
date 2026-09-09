@@ -23,6 +23,7 @@ dependencies:
   - http-media
   - http-types
   - http2
+  - JuicyPixels
   - mime-mail
   - monad-logger
   - mtl

@@ -452,6 +452,11 @@
       "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
     },
     {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f"
+    },
+    {
       "id": "2026-09-08_merch_reputation",
       "path": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
       "introducedBy": "ec790e9c352bd085c07b66a6fa00d8df1c45d747"

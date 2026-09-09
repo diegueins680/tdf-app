@@ -59,6 +59,8 @@ const MerchOrderReviewPage = lazy(() => import('../pages/MerchOrderReviewPage'))
 const MerchSellerReputationPage = lazy(() => import('../pages/MerchSellerReputationPage'));
 const MerchReputationModerationPage = lazy(() => import('../pages/MerchReputationModerationPage'));
 const MerchReputationPreferencesPage = lazy(() => import('../pages/MerchReputationPreferencesPage'));
+const MerchAdminPage = lazy(() => import('../pages/MerchAdminPage'));
+const MerchSellerPage = lazy(() => import('../pages/MerchSellerPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const OrdersPage = lazy(() => import('../pages/OrdersPage'));
 const OperationsControlCenterPage = lazy(() => import('../pages/OperationsControlCenterPage'));
@@ -151,6 +153,7 @@ export function renderProtectedRoutes() {
         <Route path="/feedback/interno/:reportId" element={<InternalFeedbackPage />} />
         <Route path="/admin/diagnosticos" element={<AdminDiagnosticsPage />} />
         <Route path="/admin/commerce/provider-events" element={<CommerceProviderEventsPage />} />
+        <Route path="/admin/merch" element={<MerchAdminPage />} />
         <Route path="/admin/artistas-enriquecimiento" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/admin/artists/enrichment" element={<ArtistEnrichmentReviewPage />} />
         <Route path="/herramientas/chatkit" element={<ChatKitPage />} />
@@ -210,6 +213,8 @@ export function renderProtectedRoutes() {
           <Route path="reservas-equipo" element={<ReservasEquipoPage />} />
           <Route index element={<Navigate to="inventario" replace />} />
         </Route>
+
+        <Route path="/mi-tienda" element={<MerchSellerPage />} />
 
         <Route path="/configuracion" element={<Outlet />}>
           <Route path="catalogos" element={<CatalogsPage />} />
