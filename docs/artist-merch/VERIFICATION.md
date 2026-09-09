@@ -21,7 +21,7 @@
 - `./scripts/test-artist-merch-runtime.sh`: PASS, 1/1 sobre PostgreSQL 16 temporal mediante su modo de base externa vacía y desechable; también queda conectado como paso obligatorio de `backend-quality`. El escenario ejecuta primero los handlers críticos y luego la aplicación Servant real por HTTP. Cubre autenticación bearer, solicitud y aprobación administrativa de una banda piloto con override de 0%, storefront/producto público, carrito y checkout invitado, cálculo server-side, recuperación idempotente después de convertir el carrito, rechazo de payload conflictivo, capability de orden no enumerable, falso retorno de navegador, cero intentos de pago, liberación exacta de stock, estados independientes, redacción financiera, aislamiento entre vendedores, incidencia operativa y colas seller/admin. Docker Desktop no pudo iniciar localmente, pero el wrapper conserva ese modo autónomo además del modo externo verificado.
 - Web `tsc --noEmit -p tdf-hq-ui/tsconfig.app.json`: PASS.
 - Móvil `tsc --noEmit -p tdf-mobile/tsconfig.json`: PASS.
-- Backend `stack test --fast`: PASS, 2.476/2.476 ejemplos (incluye siete reglas unitarias de merch).
+- Backend `stack test --fast`: PASS, 2.477/2.477 ejemplos sobre la integración final con `main` (incluye siete reglas unitarias de merch).
 - Build web de producción: PASS; presupuesto inicial de JavaScript PASS (413.750 bytes gzip).
 - Reglas Haskell focalizadas `stack test --fast --test-arguments=--match=merch`: PASS, 8/8 (siete de merch y una coincidencia preexistente de storefront).
 - Jest web `tdf-hq-ui/src/api/merch.test.ts`: PASS, 7/7.
