@@ -349,6 +349,11 @@ spec = do
           reconciledRef <- runSqlPool (get refId) pool
           Social.externalEventRefSourceStatus <$> reconciledRef
             `shouldBe` Just Social.externalEventRefSuppressedStatus
+          _ <-
+            reconcileImportedEvents
+              pool
+              (fixtureTime 10 9)
+              [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
 
           refreshStats <-
             syncDiscoveredEvent
