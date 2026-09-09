@@ -28,7 +28,7 @@ Estados relevantes:
 - Evaluación: `published`, `hidden`, `limited`, `removed`. Moderación cambia visibilidad, no borra revisiones.
 - Publicación del agregado: `new_store`, `unrated`, `published`.
 - Confianza: `new`, `limited`, `moderate`, `strong`.
-- Caso de moderación: `open`, `awaiting_evidence`, `provisionally_hidden`, `decided`, `appealed`, `closed`.
+- Caso de moderación: `open`, `in_review`, `awaiting_evidence`, `provisionally_hidden`, `decided`, `appealed`, `closed`.
 - Apelación: `open`, `awaiting_evidence`, `upheld`, `reversed`, `closed`.
 
 ## Invariantes de elegibilidad
