@@ -1,6 +1,26 @@
 const fr = {
   common: { save: 'Enregistrer', saving: 'Enregistrement…', saved: 'Préférences enregistrées.', error: 'Une erreur est survenue.' },
-  contextualRanking: { saveDraft: 'Enregistrer le brouillon' },
+  contextualRanking: {
+    saveDraft: 'Enregistrer le brouillon', title: 'Classer par : {{category}}',
+    instructions: 'Glissez ou utilisez Monter/Descendre. Ceci est une préférence personnelle et ne modifie pas la réputation publique.',
+    comparabilityHint: 'N’incluez que des personnes comparables. Sélectionnez « Je n’ai pas assez d’informations » si nécessaire.',
+    empty: 'Il n’y a personne à classer dans cette interaction.', listLabel: 'Classement de {{category}}',
+    position: 'Position {{position}}', excludedPosition: '{{name}}, exclu', verified: 'Vérifié',
+    moveUp: 'Monter {{name}}', moveDown: 'Descendre {{name}}',
+    insufficientInformation: 'Je n’ai pas assez d’informations', include: 'Inclure', undo: 'Annuler',
+    restored: 'Ordre précédent restauré.', moved: '{{name}} est maintenant en position {{position}}.',
+    excluded: '{{name}} a été exclu faute d’informations suffisantes.', included: '{{name}} est de nouveau dans la comparaison.',
+    saved: 'Brouillon enregistré. Vous pourrez continuer plus tard.',
+    saveError: 'Impossible d’enregistrer. Votre ordre local est conservé ; réessayez.',
+  },
+  publicReputation: {
+    loading: 'Chargement de la réputation…',
+    forming: 'Réputation en cours. Il n’y a pas encore assez d’interactions vérifiées pour afficher un score public.',
+    heading: 'Réputation vérifiée', subtitle: 'Agrégée à partir d’interactions vérifiées ; elle ne reflète pas les préférences personnelles.',
+    interactions: '{{count}} interactions vérifiées', confidence: 'Confiance {{confidence}}',
+    emptyCategories: 'Aucune catégorie ne compte encore assez d’interactions vérifiées.',
+    categoryScore: '{{category}} : {{score}} sur 100',
+  },
   internships: { taskDetail: { instructions: 'Instructions' } },
   pagination: {
     items: 'éléments', rowsPerPage: 'Par page', loading: 'Chargement des résultats…', updating: 'Mise à jour des résultats…',

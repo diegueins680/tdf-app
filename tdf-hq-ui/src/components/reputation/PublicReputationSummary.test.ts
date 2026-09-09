@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PublicReputation } from '../../api/reputation';
 import { expectNoSeriousAccessibilityViolations } from '../../test/accessibility';
+import i18n from '../../i18n';
 
 const getPublicMock = jest.fn<() => Promise<PublicReputation>>();
 
@@ -27,7 +28,8 @@ const publishedReputation: PublicReputation = {
 };
 
 describe('PublicReputationSummary', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
     getPublicMock.mockReset().mockResolvedValue(publishedReputation);
   });
 
@@ -48,6 +50,26 @@ describe('PublicReputationSummary', () => {
     } finally {
       view.unmount();
       queryClient.clear();
+    }
+  });
+
+  it('renders public aggregate labels in English', async () => {
+    await i18n.changeLanguage('en');
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      createElement(PublicReputationSummary, { partyId: 42 }),
+    ));
+
+    try {
+      await screen.findByRole('heading', { name: 'Verified reputation' });
+      expect(screen.getByText('12 verified interactions')).toBeTruthy();
+      expect(screen.getByLabelText('communication: 84 out of 100')).toBeTruthy();
+    } finally {
+      view.unmount();
+      queryClient.clear();
+      await i18n.changeLanguage('es');
     }
   });
 });

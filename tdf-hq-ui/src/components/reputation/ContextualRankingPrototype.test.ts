@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expectNoSeriousAccessibilityViolations } from '../../test/accessibility';
+import i18n from '../../i18n';
 import ContextualRankingPrototype, { type RankingPerson } from './ContextualRankingPrototype';
 
 const people: RankingPerson[] = [
@@ -10,6 +11,10 @@ const people: RankingPerson[] = [
 ];
 
 describe('ContextualRankingPrototype', () => {
+  beforeEach(async () => {
+    await i18n.changeLanguage('es');
+  });
+
   it('offers keyboard alternatives, announces exclusions, and has no serious accessibility violations', async () => {
     const view = render(createElement(ContextualRankingPrototype, {
       category: 'Comunicación',
@@ -30,6 +35,23 @@ describe('ContextualRankingPrototype', () => {
       await expectNoSeriousAccessibilityViolations(view.container);
     } finally {
       view.unmount();
+    }
+  });
+
+  it('renders its accessible alternatives in English', async () => {
+    await i18n.changeLanguage('en');
+    const view = render(createElement(ContextualRankingPrototype, {
+      category: 'Communication',
+      people,
+    }));
+
+    try {
+      expect(screen.getByRole('list', { name: 'Ranking for Communication' })).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Move Maya Torres up' })).toBeTruthy();
+      expect(screen.getAllByRole('button', { name: 'I do not have enough information' })).toHaveLength(3);
+    } finally {
+      view.unmount();
+      await i18n.changeLanguage('es');
     }
   });
 });
