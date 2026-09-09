@@ -1722,14 +1722,18 @@ reconcileImportedEvents pool now activeCities =
                   ]
               )
       changes <- forM eventKeys $ \eventKey -> do
-        maybeEvent <- get eventKey
-        case maybeEvent of
+        -- Subscription reconciliation is another event/metadata writer. Keep
+        -- it in the same event-first lock domain as provider refreshes and
+        -- administrator deletion, then derive coverage from fresh references.
+        lockedEvent <- lockDiscoveredSocialEvent eventKey
+        eventRefs <- selectList [Social.ExternalEventRefEventId ==. eventKey] []
+        case lockedEvent of
           Nothing -> pure 0
-          Just eventRow
+          Just (Entity _ eventRow)
             | maybe False (< now) (Social.socialEventEndTime eventRow) -> do
                 updateImportedLifecycle eventKey eventRow "completed" False
                 pure 1
-            | not (eventCoveredBySubscription eventKey refs) -> do
+            | not (eventCoveredBySubscription eventRefs) -> do
                 updateImportedLifecycle eventKey eventRow "out_of_scope" False
                 pure 1
             | otherwise -> do
@@ -1737,13 +1741,10 @@ reconcileImportedEvents pool now activeCities =
                 pure 0
       pure (sum changes)
 
-    eventCoveredBySubscription eventKey refs =
+    eventCoveredBySubscription refs =
       any
-        ( \ref ->
-            Social.externalEventRefEventId ref == eventKey
-              && refCityIsActive ref
-        )
-        (map entityVal refs)
+        (refCityIsActive . entityVal)
+        refs
 
     refCityIsActive ref =
       let cityKey = normalizeCityKey (Social.externalEventRefCity ref)
