@@ -97,6 +97,7 @@ module TDF.Server.SocialEventsHandlers (
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
     validateEventDeletionCheckoutHistory,
+    suppressImportedEventMetadata,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
@@ -453,6 +454,17 @@ validateEventDeletionCheckoutHistory hasTicketOrders
                     "Events with ticket orders cannot be deleted; unpublish the event instead to preserve checkout history"
                 }
     | otherwise = Right ()
+
+suppressImportedEventMetadata :: Maybe T.Text -> Maybe T.Text
+suppressImportedEventMetadata storedMetadata =
+    encodeEventMetadata
+        metadata
+            { emTicketUrl = Nothing
+            , emIsPublic = Just False
+            }
+  where
+    metadata =
+        either (const emptyEventMetadata) id (decodeStoredEventMetadata storedMetadata)
 
 parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
 parseStripePaymentIntentResponse paymentIntent =
@@ -2207,7 +2219,17 @@ socialEventsServer user =
             liftIO $
                 runSqlPool
                     ( if hasStrictAdminAccess user
-                        then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
+                        then do
+                            suppressedRefs <-
+                                selectList
+                                    [ExternalEventRefSourceStatus ==. externalEventRefSuppressedStatus]
+                                    []
+                            let suppressedEventIds =
+                                    nub (map (externalEventRefEventId . entityVal) suppressedRefs)
+                                adminFilters
+                                    | null suppressedEventIds = filters
+                                    | otherwise = (SocialEventId /<-. suppressedEventIds) : filters
+                            selectList adminFilters [dateOrder, LimitTo limit, OffsetBy offset]
                         else selectVisibleSocialEvents filters dateOrder limit offset
                     )
                     envPool
@@ -2781,70 +2803,89 @@ socialEventsServer user =
         deletionResult <- liftIO $
             runSqlPool
                 ( do
-                    -- Checkout runtime and fulfillment rows are rooted in an event ticket order.
-                    -- Preserve that full audit chain by refusing to hard-delete any event with orders.
-                    hasTicketOrders <- isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
-                    case validateEventDeletionCheckoutHistory hasTicketOrders of
-                        Left err -> pure (Left err)
-                        Right () -> do
+                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                    if null importedRefs
+                        then hardDeleteEventGraph now eventKey
+                        else do
                             updateWhere
-                                [EventResearchCandidateEventId ==. Just eventKey]
-                                [EventResearchCandidateEventId =. Nothing]
-                            updateWhere
-                                [EventResearchChangeEventId ==. Just eventKey]
-                                [EventResearchChangeEventId =. Nothing]
-                            deleteWhere [EventArtistEventId ==. eventKey]
-                            deleteWhere [EventRsvpEventId ==. eventKey]
-                            deleteWhere [EventInvitationEventId ==. eventKey]
-                            momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
-                            unless (null momentKeys) $ do
-                                deleteWhere [EventMomentReactionMomentId <-. momentKeys]
-                                deleteWhere [EventMomentCommentMomentId <-. momentKeys]
-                            deleteWhere [EventMomentEventId ==. eventKey]
-                            deleteWhere [EventLiveBroadcastEventId ==. eventKey]
-                            deleteWhere [EventWaitlistEventId ==. eventKey]
-                            ticketKeys <- selectKeysList [EventTicketEventId ==. eventKey] []
-                            unless (null ticketKeys) $ do
-                                deleteWhere [TicketQRCodeTicketId <-. ticketKeys]
-                                deleteWhere [TicketTransferTicketId <-. ticketKeys]
-                            deleteWhere [EventTicketEventId ==. eventKey]
-                            backendName <- T.toCaseFold <$> getRDBMS
-                            -- SQLite tests do not install the production-only checkout policy table.
-                            when ("postgres" `T.isInfixOf` backendName) $
-                                rawExecute
-                                    "DELETE FROM event_ticket_checkout_policy WHERE event_id = ?"
-                                    [PersistInt64 (fromSqlKey eventKey)]
-                            updateWhere
-                                [PromoCodeEventId ==. Just eventKey]
-                                [ PromoCodeEventId =. Nothing
-                                , PromoCodeIsActive =. False
-                                , PromoCodeUpdatedAt =. now
+                                [ExternalEventRefEventId ==. eventKey]
+                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
+                                , ExternalEventRefMissingRuns =. 0
                                 ]
-                            deleteWhere [EventTicketTierEventId ==. eventKey]
-                            deleteWhere [EventFinanceEntryEventId ==. eventKey]
-                            deleteWhere [EventBudgetLineEventId ==. eventKey]
-                            logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
-                            unless (null logisticsActivityKeys) $ do
-                                deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
-                                deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
-                                deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
-                                deleteWhere
-                                    [ FilterOr
-                                        [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
-                                        , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
-                                        ]
-                                    ]
-                            deleteWhere [EventLogisticsActivityEventId ==. eventKey]
-                            deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
-                            deleteWhere [EventLogisticsMemberEventId ==. eventKey]
-                            deleteWhere [EventLogisticsPlanEventId ==. eventKey]
-                            deleteWhere [ExternalEventRefEventId ==. eventKey]
-                            delete eventKey
+                            update
+                                eventKey
+                                [ SocialEventMetadata =.
+                                    suppressImportedEventMetadata (socialEventMetadata existing)
+                                , SocialEventUpdatedAt =. now
+                                ]
                             pure (Right ())
                 )
                 envPool
         either throwError pure deletionResult
         pure NoContent
+
+    hardDeleteEventGraph :: UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError ())
+    hardDeleteEventGraph now eventKey = do
+        -- Checkout runtime and fulfillment rows are rooted in an event ticket order.
+        -- Preserve that full audit chain by refusing to hard-delete any event with orders.
+        hasTicketOrders <- isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+        case validateEventDeletionCheckoutHistory hasTicketOrders of
+            Left err -> pure (Left err)
+            Right () -> do
+                updateWhere
+                    [EventResearchCandidateEventId ==. Just eventKey]
+                    [EventResearchCandidateEventId =. Nothing]
+                updateWhere
+                    [EventResearchChangeEventId ==. Just eventKey]
+                    [EventResearchChangeEventId =. Nothing]
+                deleteWhere [EventArtistEventId ==. eventKey]
+                deleteWhere [EventRsvpEventId ==. eventKey]
+                deleteWhere [EventInvitationEventId ==. eventKey]
+                momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
+                unless (null momentKeys) $ do
+                    deleteWhere [EventMomentReactionMomentId <-. momentKeys]
+                    deleteWhere [EventMomentCommentMomentId <-. momentKeys]
+                deleteWhere [EventMomentEventId ==. eventKey]
+                deleteWhere [EventLiveBroadcastEventId ==. eventKey]
+                deleteWhere [EventWaitlistEventId ==. eventKey]
+                ticketKeys <- selectKeysList [EventTicketEventId ==. eventKey] []
+                unless (null ticketKeys) $ do
+                    deleteWhere [TicketQRCodeTicketId <-. ticketKeys]
+                    deleteWhere [TicketTransferTicketId <-. ticketKeys]
+                deleteWhere [EventTicketEventId ==. eventKey]
+                backendName <- T.toCaseFold <$> getRDBMS
+                -- SQLite tests do not install the production-only checkout policy table.
+                when ("postgres" `T.isInfixOf` backendName) $
+                    rawExecute
+                        "DELETE FROM event_ticket_checkout_policy WHERE event_id = ?"
+                        [PersistInt64 (fromSqlKey eventKey)]
+                updateWhere
+                    [PromoCodeEventId ==. Just eventKey]
+                    [ PromoCodeEventId =. Nothing
+                    , PromoCodeIsActive =. False
+                    , PromoCodeUpdatedAt =. now
+                    ]
+                deleteWhere [EventTicketTierEventId ==. eventKey]
+                deleteWhere [EventFinanceEntryEventId ==. eventKey]
+                deleteWhere [EventBudgetLineEventId ==. eventKey]
+                logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
+                unless (null logisticsActivityKeys) $ do
+                    deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
+                    deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
+                    deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
+                    deleteWhere
+                        [ FilterOr
+                            [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
+                            , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
+                            ]
+                        ]
+                deleteWhere [EventLogisticsActivityEventId ==. eventKey]
+                deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
+                deleteWhere [EventLogisticsMemberEventId ==. eventKey]
+                deleteWhere [EventLogisticsPlanEventId ==. eventKey]
+                deleteWhere [ExternalEventRefEventId ==. eventKey]
+                delete eventKey
+                pure (Right ())
 
     -- Venues
     venuesServer :: ServerT VenuesRoutes AppM

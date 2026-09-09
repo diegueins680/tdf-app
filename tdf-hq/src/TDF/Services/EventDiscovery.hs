@@ -1685,8 +1685,8 @@ countImportedDiscoveryEventsDb :: SqlPersistT IO Int
 countImportedDiscoveryEventsDb = do
   rows <-
     rawSql
-      "SELECT COUNT(DISTINCT event_id) FROM external_event_ref"
-      []
+      "SELECT COUNT(DISTINCT event_id) FROM external_event_ref WHERE lower(trim(source_status))<>?"
+      [toPersistValue Social.externalEventRefSuppressedStatus]
   pure $ case rows of
     [Single total] -> total
     _ -> 0
@@ -1799,7 +1799,8 @@ reconcileProviderEvents pool now provider targetCities seenExternalIds =
           else do
             let nextMissing = Social.externalEventRefMissingRuns ref + 1
                 nextStatus =
-                  if isMaterializationDraftSourceStatus (Social.externalEventRefSourceStatus ref)
+                  if Social.externalEventRefIsSuppressed ref
+                    || isMaterializationDraftSourceStatus (Social.externalEventRefSourceStatus ref)
                     then Social.externalEventRefSourceStatus ref
                     else
                       if nextMissing >= 2
@@ -1939,6 +1940,7 @@ sourceRefIsActive ref =
         , "completed"
         , "missing"
         , "removed"
+        , Social.externalEventRefSuppressedStatus
         , "unavailable"
         ]
   where
@@ -1995,7 +1997,10 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               . entityVal
           )
           existingRef
-      effectiveAutoPublish = autoPublish && not materializationPublicationHeld
+      deletionSuppressed =
+        maybe False (Social.externalEventRefIsSuppressed . entityVal) existingRef
+      effectiveAutoPublish =
+        autoPublish && not materializationPublicationHeld && not deletionSuppressed
   desiredWorkflowStateId <-
     EventLifecycle.resolveActiveSocialEventStateId
       (if effectiveAutoPublish then discoveredEventStatus else "planning")
@@ -2017,6 +2022,14 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               else "draft:" <> discoveredEventStatus
   (eventKey, eventCreated) <-
     case existingRef of
+      Just (Entity refKey ref)
+        | deletionSuppressed -> do
+            update
+              refKey
+              [ Social.ExternalEventRefLastSeenAt =. now
+              , Social.ExternalEventRefMissingRuns =. 0
+              ]
+            pure (Social.externalEventRefEventId ref, False)
       Just (Entity refKey ref) -> do
         let existingEventKey = Social.externalEventRefEventId ref
         shouldReplace <-
@@ -2131,7 +2144,7 @@ syncDiscoveredEventDb autoPublish now DiscoveredEvent{..} = do
               , Social.externalEventRefSourceStatus = sourceStatus
               }
         pure (newEventKey, created)
-  unless materializationPublicationHeld $
+  unless (materializationPublicationHeld || deletionSuppressed) $
     forM_ artistKeys $ \artistKey -> do
       _ <- insertUnique (Social.EventArtist eventKey artistKey Nothing)
       pure ()

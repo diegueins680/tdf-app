@@ -842,9 +842,20 @@ existingEventCanSatisfy
     :: EventResearchMaterializationRequestDTO
     -> SocialEventId
     -> SqlPersistT IO Bool
-existingEventCanSatisfy request eventId
-    | not request.erMaterializationPublish = isJust <$> get eventId
-    | otherwise = materializedEventIsPublished eventId
+existingEventCanSatisfy request eventId = do
+    deletionSuppressed <-
+        isJust
+            <$> selectFirst
+                [ ExternalEventRefEventId ==. eventId
+                , ExternalEventRefSourceStatus ==. externalEventRefSuppressedStatus
+                ]
+                []
+    if deletionSuppressed
+        then pure False
+        else
+            if not request.erMaterializationPublish
+                then isJust <$> get eventId
+                else materializedEventIsPublished eventId
 
 materializedEventIsPublished :: SocialEventId -> SqlPersistT IO Bool
 materializedEventIsPublished eventId = do

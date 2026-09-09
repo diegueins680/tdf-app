@@ -15,7 +15,7 @@ import qualified Data.UUID as UUID
 import Database.Persist (Entity (..), get, insert, insertKey)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant (Handler, NoContent, ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -63,6 +63,7 @@ import TDF.Server.SocialEventsHandlers
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
     , socialEventsServer
+    , suppressImportedEventMetadata
     , validateEventImageUploadSize
     , validateEventDeleteAccess
     , validateEventDeletionCheckoutHistory
@@ -1097,6 +1098,69 @@ spec = describe "social event handler helpers" $ do
                 BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
             Right () -> expectationFailure "Expected ticket-order history to block event deletion"
 
+    it "turns an imported event deletion into a private tombstone" $ do
+        let suppressed =
+                suppressImportedEventMetadata
+                    (Just "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"ticketUrl\":null")
+
+    it "retains a suppressed provider reference when an admin deletes an imported event" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 24
+            importedEvent =
+                (seedSocialEvent "1" "Imported event" now)
+                    { socialEventMetadata =
+                        Just
+                            "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}"
+                    }
+        refKey <-
+            runSqlPool
+                ( do
+                    insertKey eventKey importedEvent
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-delete-1"
+                            , externalEventRefEventId = eventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Just "https://tickets.example/event"
+                            , externalEventRefPriceCents = Just 1000
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 1
+                            , externalEventRefSourceStatus = "on_sale"
+                            }
+                )
+                pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by imported event deletion"
+                    }
+        result <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "24")
+                    env
+
+        case result of
+            Left err ->
+                expectationFailure
+                    ("Expected imported event deletion to succeed, got: " <> show err)
+            Right _ -> pure ()
+        storedEvent <- runSqlPool (get eventKey) pool
+        storedRef <- runSqlPool (get refKey) pool
+        fmap socialEventMetadata storedEvent
+            `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+        fmap externalEventRefSourceStatus storedRef `shouldBe` Just externalEventRefSuppressedStatus
+        fmap externalEventRefMissingRuns storedRef `shouldBe` Just 0
+
     it "rejects spoofed invitation senders before inserting social event invitations" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -1192,6 +1256,22 @@ socialEventUpdateHandlerFor user =
                     :<|> _uploadEventImage
                     :<|> _deleteEvent ->
                     updateEventHandler
+
+socialEventDeleteHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler NoContent
+socialEventDeleteHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _ ->
+            case eventsServer of
+                _listEvents
+                    :<|> _createEvent
+                    :<|> _getEvent
+                    :<|> _updateEvent
+                    :<|> _uploadEventImage
+                    :<|> deleteEventHandler ->
+                    deleteEventHandler
 
 socialEventListHandlerFor
     :: AuthedUser

@@ -305,6 +305,56 @@ spec = do
       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
 
+    it "preserves an administrator suppression marker across provider refreshes" $ do
+      event <- case eitherDecode ticketmasterFixture of
+        Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+        Right response ->
+          case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
+            [normalized] -> pure normalized
+            other -> expectationFailure ("Expected one normalized event, got " <> show other) >> fail "invalid normalized fixture"
+      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+      runSqlPool initializeEventDiscoverySchema pool
+
+      _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
+      importedRef <-
+        runSqlPool
+          (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1"))
+          pool
+      case importedRef of
+        Nothing -> expectationFailure "Expected a persisted provider event reference"
+        Just (Entity refId ref) -> do
+          runSqlPool
+            ( do
+                update
+                  refId
+                  [ Social.ExternalEventRefSourceStatus =.
+                      Social.externalEventRefSuppressedStatus
+                  ]
+                update
+                  (Social.externalEventRefEventId ref)
+                  [ Social.SocialEventMetadata =.
+                      Just "{\"ticketUrl\":null,\"isPublic\":false,\"currency\":\"USD\"}"
+                  ]
+            )
+            pool
+          countImportedDiscoveryEvents pool `shouldReturn` 0
+
+          refreshStats <-
+            syncDiscoveredEvent
+              pool
+              (fixtureTime 10 10)
+              event{discoveredEventTitle = "Provider tried to restore this event"}
+          discoveryEventsCreated refreshStats `shouldBe` 0
+
+          refreshedRef <- runSqlPool (get refId) pool
+          Social.externalEventRefSourceStatus <$> refreshedRef
+            `shouldBe` Just Social.externalEventRefSuppressedStatus
+          refreshedEvent <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
+          Social.socialEventTitle <$> refreshedEvent `shouldBe` Just "Festival Sonoro"
+          fmap Social.socialEventMetadata refreshedEvent
+            `shouldSatisfy`
+              maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+
     it "reconciles materialization synthetic entity refs with real provider IDs" $ do
       event <- case eitherDecode ticketmasterFixture of
         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
