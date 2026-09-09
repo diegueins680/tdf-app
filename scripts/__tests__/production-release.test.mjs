@@ -998,7 +998,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
-  assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=true/);
+  assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);

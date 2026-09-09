@@ -47,7 +47,6 @@ const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
   CONTEXTUAL_REPUTATION_ENABLED: 'false',
-  PUBLIC_REPUTATION_PROJECTION_ENABLED: 'true',
   REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
   REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
   REPUTATION_AGGREGATION_MODE: 'simulation',
@@ -334,6 +333,14 @@ function runtimeEnvBlockers(rows, options = {}) {
     }));
 }
 
+function capturePublicReputationProjectionGate(rows) {
+  const values = new Set(rows.map(({ values: runtime }) => runtime.PUBLIC_REPUTATION_PROJECTION_ENABLED));
+  if (values.size !== 1 || !['true', 'false'].includes([...values][0])) {
+    throw new Error('Every production Machine must report the same boolean PUBLIC_REPUTATION_PROJECTION_ENABLED value.');
+  }
+  return [...values][0] === 'true';
+}
+
 async function readSecretNames(app) {
   const { stdout } = await run(['flyctl', 'secrets', 'list', '--app', app, '--json']);
   const rows = JSON.parse(stdout);
@@ -572,6 +579,7 @@ async function rollbackMachine(context, machine) {
     app: context.app,
     image,
     sha,
+    publicReputationProjectionEnabled: context.publicReputationProjectionEnabled,
     onlyMachine: machine.id,
   }));
   const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
@@ -770,6 +778,7 @@ async function executeRelease(context) {
 
   const startedAt = new Date().toISOString();
   const preflight = await remotePreflight(context);
+  context.publicReputationProjectionEnabled = capturePublicReputationProjectionGate(preflight.runtimeEnv);
   const originalMachines = preflight.machines;
   const canary = originalMachines[0];
   const remaining = originalMachines.slice(1);
@@ -815,6 +824,7 @@ async function executeRelease(context) {
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
+      publicReputationProjectionEnabled: context.publicReputationProjectionEnabled,
       onlyMachine: canary.id,
     }));
     try {
@@ -833,6 +843,7 @@ async function executeRelease(context) {
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
+        publicReputationProjectionEnabled: context.publicReputationProjectionEnabled,
         onlyMachine: machine.id,
       }));
       report.rollout.push(await verifyTargetMachine(context, machine.id));
