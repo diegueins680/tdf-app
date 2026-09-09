@@ -5,7 +5,6 @@
 module TDF.Server.Reviews
   ( reviewsPublicServer
   , reviewsProtectedServer
-  , getPublicReputation
   , publicReviewTargetStatement
   , eligibilitySql
   , reputationCategoriesSql

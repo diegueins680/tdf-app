@@ -365,7 +365,7 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
-import TDF.Server.Reviews (eligibilitySql, getPublicReputation, publicReviewTargetStatement, reputationCategoriesSql)
+import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement, reputationCategoriesSql, reviewsPublicServer)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -890,7 +890,8 @@ main = hspec $ do
                             { envPool = error "envPool should be unused when public reputation is disabled"
                             , envConfig = cfg
                             }
-                result <- runHandler (runReaderT (getPublicReputation 1) disabledEnv)
+                    _listCategories :<|> publicReputationHandler :<|> _listReviews = reviewsPublicServer
+                result <- runHandler (runReaderT (publicReputationHandler 1) disabledEnv)
                 case result of
                     Left serverErr -> do
                         errHTTPCode serverErr `shouldBe` 404
