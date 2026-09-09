@@ -12,7 +12,8 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, insert, insertKey)
+import qualified Data.UUID.V4 as UUIDV4
+import Database.Persist (Entity (..), get, insert, insertKey, toPersistValue)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
 import Servant (Handler, NoContent, ServerError (errBody, errHTTPCode), (:<|>) (..))
@@ -24,7 +25,7 @@ import Servant.Multipart
     , Tmp
     )
 import Servant.Server.Internal.Handler (runHandler)
-import System.Directory (createDirectoryIfMissing, doesDirectoryExist, doesFileExist)
+import System.Directory (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getTemporaryDirectory)
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
@@ -1121,6 +1122,33 @@ spec = describe "social event handler helpers" $ do
             removeSocialEventAssets assetsRoot deletedEventKey
             doesFileExist retainedPoster `shouldReturn` True
 
+    it "makes committed event deletion retryable for orphaned media cleanup" $
+        withSystemTempDirectory "social-event-delete-retry" $ \assetsRoot -> do
+            cfg <- Config.loadConfig
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeSocialSchema pool
+            let orphanedEventDir = assetsRoot </> "social-events" </> "events" </> "28"
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = cfg{Config.assetsRootDir = assetsRoot}
+                        }
+            createDirectoryIfMissing True orphanedEventDir
+            writeFile (orphanedEventDir </> "poster.png") "orphaned"
+
+            result <-
+                runHandler $
+                    runReaderT
+                        (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "28")
+                        env
+
+            case result of
+                Right _ -> pure ()
+                Left err ->
+                    expectationFailure
+                        ("Expected retry cleanup for a committed deletion, got: " <> show err)
+            doesDirectoryExist orphanedEventDir `shouldReturn` False
+
     it "excludes suppressed imports inside strict-admin pagination" $ do
         cfg <- Config.loadConfig
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -1187,6 +1215,9 @@ spec = describe "social event handler helpers" $ do
         suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"imageUrl\":null")
 
     it "tombstones imported events while respecting lifecycle transitions" $ do
+        cfg <- Config.loadConfig
+        temporaryRoot <- getTemporaryDirectory
+        testRunId <- UUIDV4.nextRandom
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
         now <- getCurrentTime
@@ -1223,8 +1254,35 @@ spec = describe "social event handler helpers" $ do
         let env =
                 Env
                     { envPool = pool
-                    , envConfig = error "envConfig should be unused by imported event deletion"
+                    , envConfig =
+                        cfg
+                            { Config.assetsRootDir =
+                                temporaryRoot
+                                    </> ("tdf-imported-event-delete-" <> UUID.toString testRunId)
+                            }
                     }
+        runSqlPool
+            ( rawExecute
+                "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (61,24,999,1,1000,'USD','paid',?,?,?)"
+                (replicate 3 (toPersistValue now))
+            )
+            pool
+        blockedResult <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "24")
+                    env
+        case blockedResult of
+            Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
+            Right _ -> expectationFailure "Expected ticket history to block imported event deletion"
+        storedBlockedRef <- runSqlPool (get refKey) pool
+        fmap externalEventRefSourceStatus storedBlockedRef `shouldBe` Just "on_sale"
+        runSqlPool
+            (rawExecute "DELETE FROM event_ticket_order WHERE event_id = 24" [])
+            pool
+
         result <-
             runHandler $
                 runReaderT

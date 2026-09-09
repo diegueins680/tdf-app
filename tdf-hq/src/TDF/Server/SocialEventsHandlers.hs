@@ -2797,51 +2797,66 @@ socialEventsServer user =
     deleteEvent rawId = do
         Env{..} <- ask
         requireFeatureAction "social.events" "delete"
-        eventKey <- parseVisibleEventKey rawId
+        eventKey <- parseKeyOr400 "event" rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
-        existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
-        either throwError pure (validateEventDeleteAccess user currentPartyId existing)
-        now <- liftIO getCurrentTime
-        deletionResult <- liftIO $
-            runSqlPool
-                ( do
-                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
-                    if null importedRefs
-                        then hardDeleteEventGraph now eventKey
-                        else do
-                            cancelledStateId <-
-                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
-                            cancellationAllowed <-
-                                case socialEventWorkflowStateId existing of
-                                    Nothing -> pure False
-                                    Just currentStateId ->
-                                        EventLifecycle.socialEventTransitionAllowed
-                                            currentStateId
-                                            cancelledStateId
-                            let workflowStateUpdates =
-                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
-                                    | cancellationAllowed
-                                    ]
-                            updateWhere
-                                [ExternalEventRefEventId ==. eventKey]
-                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
-                                , ExternalEventRefMissingRuns =. 0
-                                ]
-                            update
-                                eventKey
-                                ( [ SocialEventMetadata =.
-                                        suppressImportedEventMetadata (socialEventMetadata existing)
-                                  , SocialEventUpdatedAt =. now
-                                  ]
-                                    <> workflowStateUpdates
-                                )
-                            withdrawEventDirectorySearch eventKey
-                            pure (Right ())
-                )
-                envPool
-        either throwError pure deletionResult
-        liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
-        pure NoContent
+        case mExisting of
+            Nothing -> do
+                -- DELETE remains retryable if database removal committed but
+                -- the following filesystem cleanup failed on the first call.
+                liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
+                pure NoContent
+            Just existing -> do
+                case validateEventDeleteAccess user currentPartyId existing of
+                    Left accessError -> do
+                        requireEventVisibleToUser eventKey
+                        throwError accessError
+                    Right () -> pure ()
+                now <- liftIO getCurrentTime
+                deletionResult <- liftIO $
+                    runSqlPool
+                        ( do
+                            hasTicketOrders <-
+                                isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+                            case validateEventDeletionCheckoutHistory hasTicketOrders of
+                                Left err -> pure (Left err)
+                                Right () -> do
+                                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                                    if null importedRefs
+                                        then hardDeleteEventGraph now eventKey
+                                        else do
+                                            cancelledStateId <-
+                                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
+                                            cancellationAllowed <-
+                                                case socialEventWorkflowStateId existing of
+                                                    Nothing -> pure False
+                                                    Just currentStateId ->
+                                                        EventLifecycle.socialEventTransitionAllowed
+                                                            currentStateId
+                                                            cancelledStateId
+                                            let workflowStateUpdates =
+                                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
+                                                    | cancellationAllowed
+                                                    ]
+                                            updateWhere
+                                                [ExternalEventRefEventId ==. eventKey]
+                                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
+                                                , ExternalEventRefMissingRuns =. 0
+                                                ]
+                                            update
+                                                eventKey
+                                                ( [ SocialEventMetadata =.
+                                                        suppressImportedEventMetadata (socialEventMetadata existing)
+                                                  , SocialEventUpdatedAt =. now
+                                                  ]
+                                                    <> workflowStateUpdates
+                                                )
+                                            withdrawEventDirectorySearch eventKey
+                                            pure (Right ())
+                        )
+                        envPool
+                either throwError pure deletionResult
+                liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
+                pure NoContent
 
     withdrawEventDirectorySearch :: SocialEventId -> SqlPersistT IO ()
     withdrawEventDirectorySearch eventKey = do
