@@ -24,6 +24,7 @@ import TDF.DTO.SocialEventsDTO (DiscoverySourceWriteDTO (..))
 import TDF.Models.SocialEventsModels
     ( EventResearchCandidateId
     , SocialEventId
+    , externalEventRefSuppressedStatus
     )
 import TDF.Models (RoleEnum (Customer))
 import TDF.Server.EventResearch
@@ -166,6 +167,8 @@ spec = do
             materializationEventRefSourceStatus False False "on_sale" `shouldBe` "materialization_draft:on_sale"
             materializationEventRefSourceStatus False False "draft:on_sale" `shouldBe` "materialization_draft:on_sale"
             materializationPublicationHoldSourceStatus "materialization_draft:on_sale" `shouldBe` "materialization_draft:on_sale"
+            materializationPublicationHoldSourceStatus externalEventRefSuppressedStatus
+                `shouldBe` externalEventRefSuppressedStatus
             materializationEventRefSourceStatus False True "on_sale" `shouldBe` "on_sale"
             materializationEventRefSourceStatus True False "on_sale" `shouldBe` "on_sale"
 
