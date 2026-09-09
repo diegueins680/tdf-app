@@ -58,7 +58,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
 - Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos clasificados; prueba determinista PASS.
-- Última corrida remota completa anterior a este incremento: PASS 17/17, incluidos backend, migraciones, contratos, UI, móvil, E2E y auditoría de listas. Los checks del nuevo SHA se registrarán después del push; los previews automáticos no se consideran staging ni producción.
+- Gate remoto del PR: PASS 17/17 en la corrida que incluyó explícitamente el runtime HTTP autenticado dentro de `backend-quality`, además de migraciones, contratos, UI, móvil, E2E y auditoría de listas. El estado del HEAD vigente debe consultarse en GitHub; los previews automáticos no se consideran staging ni producción.
 
 No se ejecutó runtime iOS/dispositivo físico ni integración real con proveedor de pagos.
 
