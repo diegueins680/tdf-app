@@ -142,6 +142,22 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
 });
 
+test('suppressed-event privacy migration is anchored to its released squash commit', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const migration = manifest.migrations.find(
+    ({ id }) => id === '2026-09-09_music_directory_suppressed_event_privacy',
+  );
+
+  assert.deepEqual(migration, {
+    id: '2026-09-09_music_directory_suppressed_event_privacy',
+    path: 'tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+    introducedBy: '849444cdcce0254c3091293edce8a4cc5f8175fa',
+  });
+});
+
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
@@ -179,6 +195,10 @@ test('already-applied production migrations retain their recorded checksums', ()
     [
       '../../tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql',
       'e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+      '33f89f61c2552cacc6c4842ac8513d6b518a7b342115a9b1cde3f01a76926712',
     ],
   ]);
 
