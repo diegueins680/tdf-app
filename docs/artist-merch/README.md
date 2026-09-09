@@ -21,7 +21,7 @@ La solución amplía esas fuentes de verdad. No convierte `asset`, equipos del e
 | Archivos | Servicio durable `/assets/serve` | Reencode JPEG, tamaños responsive, checksum, alt y moderación | Implementado; revisión humana sigue requerida |
 | Clientes | OpenAPI y generadores existentes | Tipos y APIs web/móvil regenerados | Verificado por typecheck |
 | UX web | React, MUI, routing y analítica existentes | Descubrimiento, storefront, producto, carrito, tracking, seller y admin | Implementado; runtime visual responsive verificado, staging pendiente |
-| UX móvil | Expo Router y feature registry existentes | Compra completa hasta orden pendiente y fulfillment esencial | Implementado; Android API 36.1 verificado, iOS/dispositivo físico pendiente |
+| UX móvil | Expo Router y feature registry existentes | Compra completa hasta orden pendiente y fulfillment esencial | Implementado; runtime público verificado en Android API 36.1 e iOS 18.3 Simulator; dispositivo físico pendiente |
 | Pagos | Adaptadores canónicos de otros dominios | Flags y vínculo de la orden de merch al checkout canónico | La iniciación específica por proveedor se mantiene cerrada |
 | Posventa | Estados financieros canónicos | Cancelación inmediata sin pagar, issues y triage vendedor/staff | Cancelación y soporte implementados/verificados; ejecución refund/dispute por proveedor diferida |
 

@@ -49,7 +49,8 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Web y móvil typecheck: PASS.
 - Jest web merch API: PASS 7/7.
 - Jest móvil deep links: PASS 2/2.
-- Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente. Xcode 16.2 está instalado, pero `xcrun simctl list devices available` no pudo conectarse a `CoreSimulatorService` ni descubrir runtimes; por ello iOS/dispositivo físico no se declaran verificados.
+- Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente.
+- iOS nativo: Xcode 16.2 / iOS 18.3 Simulator / iPhone 16 `x86_64`. CocoaPods quedó sincronizado con las dependencias Expo declaradas; `pod install --deployment` y el build Release sin firma terminaron PASS. El `.app` se instaló y verificaron deep links de catálogo, storefront y producto contra fixture local read-only; el CTA de compra permaneció deshabilitado, solo se registraron GET y no hubo logs `error`/`fault` de TDF. Expo Updates se apagó solo en el artefacto de prueba para fijar el bundle local. Capturas reales versionadas en `docs/artist-merch/media/`. Dispositivo físico no ejecutado.
 - Playwright Chromium desktop/Pixel 7: PASS 4/4, con capturas de runtime adjuntas al reporte.
 - Axe en recorridos públicos: PASS, sin impactos serios/críticos.
 - Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
@@ -60,7 +61,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos clasificados; prueba determinista PASS.
 - Gate remoto del PR: PASS 17/17 en la corrida que incluyó explícitamente el runtime HTTP autenticado dentro de `backend-quality`, además de migraciones, contratos, UI, móvil, E2E y auditoría de listas. El estado del HEAD vigente debe consultarse en GitHub; los previews automáticos no se consideran staging ni producción.
 
-No se ejecutó runtime iOS/dispositivo físico ni integración real con proveedor de pagos. El bloqueo iOS observado es de infraestructura local (`CoreSimulatorService`/`simdiskimaged` no disponible), no evidencia de éxito o fallo de la aplicación.
+No se ejecutó dispositivo físico ni integración real con proveedor de pagos. La verificación iOS realizada corresponde exclusivamente a un Simulator local con API sintética; no equivale a TestFlight, staging o producción.
 
 ## Configuración y staging
 
