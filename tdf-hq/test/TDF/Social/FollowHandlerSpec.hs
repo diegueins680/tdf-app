@@ -189,7 +189,7 @@ spec = describe "social event handler helpers" $ do
                 , eiuName = Just "poster.png"
                 }
 
-    it "publishes event images atomically and rejects deletion tombstones" $
+    it "publishes event and moment images atomically and rejects deletion tombstones" $
         withSystemTempDirectory "social-event-image-lock" $ \assetsRoot -> do
             cfg <- Config.loadConfig
             pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -263,6 +263,31 @@ spec = describe "social event handler helpers" $ do
                 Right response ->
                     expectationFailure
                         ("Expected tombstoned image upload to fail, got: " <> show response)
+            doesDirectoryExist
+                (assetsRoot </> "social-events" </> "events" </> "30")
+                `shouldReturn` False
+
+            uploadedMoment <-
+                runHandler $
+                    runReaderT
+                        (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
+                        env
+            case uploadedMoment of
+                Left err -> expectationFailure ("Expected moment image upload to succeed, got: " <> show err)
+                Right response -> do
+                    eiuPath response `shouldSatisfy` T.isInfixOf "/moments/"
+                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+
+            rejectedMoment <-
+                runHandler $
+                    runReaderT
+                        (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
+                        env
+            case rejectedMoment of
+                Left err -> errHTTPCode err `shouldBe` 404
+                Right response ->
+                    expectationFailure
+                        ("Expected tombstoned moment image upload to fail, got: " <> show response)
             doesDirectoryExist
                 (assetsRoot </> "social-events" </> "events" </> "30")
                 `shouldReturn` False
@@ -1570,6 +1595,31 @@ socialEventImageUploadHandlerFor user =
                     :<|> uploadEventImageHandler
                     :<|> _deleteEvent ->
                     uploadEventImageHandler
+
+socialEventMomentImageUploadHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventImageUploadForm
+    -> ReaderT Env Handler EventImageUploadDTO
+socialEventMomentImageUploadHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> momentsServer
+            :<|> _ ->
+            case momentsServer of
+                _listMoments
+                    :<|> _createMoment
+                    :<|> uploadMomentImageHandler
+                    :<|> _reactToMoment
+                    :<|> _commentOnMoment ->
+                    uploadMomentImageHandler
 
 socialEventListHandlerFor
     :: AuthedUser

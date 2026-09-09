@@ -3716,7 +3716,6 @@ socialEventsServer user =
                 validateEventImageUploadForm rawUploadForm
         Env{..} <- ask
         eventKey <- parseVisibleEventKey rawId
-        _ <- requireExistingEvent envPool eventKey
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
             fallbackName = nonEmptyText (fdFileName eiuFile)
             requestedName = eiuName >>= nonEmptyText
@@ -3733,8 +3732,27 @@ socialEventsServer user =
             targetDir = assetsRootDir envConfig </> "social-events" </> "events" </> T.unpack eventIdTxt </> "moments"
             targetPath = targetDir </> T.unpack storedName
             publicUrl = buildUploadAssetUrl (resolveConfiguredAssetsBase envConfig) relPath
-        liftIO $ createDirectoryIfMissing True targetDir
-        liftIO $ copyFile (fdPayload eiuFile) targetPath
+        uploadResult <- liftIO $
+            runSqlPool
+                ( do
+                    lockedEvent <- lockSocialEventForMutation eventKey
+                    case lockedEvent of
+                        Nothing -> pure (Left err404{errBody = "Event not found"})
+                        Just _ -> do
+                            refs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                            if any (externalEventRefIsSuppressed . entityVal) refs
+                                then pure (Left err404{errBody = "Event not found"})
+                                else do
+                                    -- Deletion uses the same event lock before removing
+                                    -- this directory. It therefore either removes a
+                                    -- completed upload or makes this path fail before
+                                    -- any deleted-event media can be recreated.
+                                    liftIO $ createDirectoryIfMissing True targetDir
+                                    liftIO $ copyFile (fdPayload eiuFile) targetPath
+                                    pure (Right ())
+                )
+                envPool
+        either throwError pure uploadResult
         pure EventImageUploadDTO
             { eiuEventId = eventIdTxt
             , eiuFileName = storedName
