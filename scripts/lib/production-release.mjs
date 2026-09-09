@@ -318,8 +318,8 @@ export function validateFlyConfig(toml) {
       'fly.toml must set AUTO_APPLY_PRODUCTION_MIGRATIONS="true" for reviewed SQL migrations.',
     );
   }
-  if (contextualReputation !== 'false') {
-    throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+  if (contextualReputation !== 'true') {
+    throw new Error('fly.toml must set CONTEXTUAL_REPUTATION_ENABLED="true" for the authorized private rollout.');
   }
   if (publicReputationProjection !== 'true') {
     throw new Error(
@@ -2200,7 +2200,7 @@ export function buildMachineDeployArgs({
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=true',
     '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',

@@ -46,7 +46,7 @@ const productionProfile = Object.freeze({
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
-  CONTEXTUAL_REPUTATION_ENABLED: 'false',
+  CONTEXTUAL_REPUTATION_ENABLED: 'true',
   REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
   REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
   REPUTATION_AGGREGATION_MODE: 'simulation',

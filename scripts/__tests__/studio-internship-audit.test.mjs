@@ -13,15 +13,15 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const fixtureDir = path.join(repo, 'test/internships/studio-audit');
 const readJson = async (name) => JSON.parse(await readFile(path.join(fixtureDir, name), 'utf8'));
 
-test('staging Fly config pins the isolated volume and disables background side effects', async () => {
+test('staging Fly config pins the isolated volume and bounds reputation work to simulation', async () => {
   const config = await readFile(path.join(repo, 'fly.studio-audit-staging.toml'), 'utf8');
   const deployment = await readFile(path.join(repo, 'docs/internships/studio-audit/DEPLOYMENT.md'), 'utf8');
 
-  assert.match(config, /^  CONTEXTUAL_REPUTATION_ENABLED = "false"$/mu);
+  assert.match(config, /^  CONTEXTUAL_REPUTATION_ENABLED = "true"$/mu);
   assert.match(config, /^  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_ENVIRONMENT = "staging"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_MODE = "simulation"$/mu);
-  assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"$/mu);
+  assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "true"$/mu);
   assert.match(config, /^  AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"$/mu);
   assert.match(
     config,

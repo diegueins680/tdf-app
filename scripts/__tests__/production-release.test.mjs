@@ -37,7 +37,7 @@ primary_region = "gru"
   DEFAULT_LOCALE = "es"
   RUN_MIGRATIONS = "false"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
-  CONTEXTUAL_REPUTATION_ENABLED = "false"
+  CONTEXTUAL_REPUTATION_ENABLED = "true"
   PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
@@ -600,12 +600,12 @@ test('validateFlyConfig fails closed when event discovery would start during the
   );
 });
 
-test('validateFlyConfig fails closed when contextual reputation would start during the initial release', () => {
+test('validateFlyConfig requires the explicitly authorized contextual reputation rollout', () => {
   assert.throws(
     () => validateFlyConfig(
       safeFlyConfig.replace(
-        'CONTEXTUAL_REPUTATION_ENABLED = "false"',
         'CONTEXTUAL_REPUTATION_ENABLED = "true"',
+        'CONTEXTUAL_REPUTATION_ENABLED = "false"',
       ),
     ),
     /CONTEXTUAL_REPUTATION_ENABLED|contextual reputation/i,
@@ -997,7 +997,7 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, new RegExp(`--image ${releaseImage}`));
   assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
-  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
   assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
   assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
