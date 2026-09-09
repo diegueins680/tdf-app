@@ -450,6 +450,11 @@
       "id": "2026-09-07_service_storefront_package_bounds_repair",
       "path": "tdf-hq/sql/2026-09-07_service_storefront_package_bounds_repair.sql",
       "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
+    },
+    {
+      "id": "2026-09-09_music_directory_suppressed_event_privacy",
+      "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
+      "introducedBy": "ef13d7531123b097985385eb7474b35efe8e7e2d"
     }
   ]
 }

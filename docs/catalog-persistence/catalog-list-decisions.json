@@ -624,13 +624,33 @@
       "reviewed": true
     },
     {
-      "id": "ac1d43fea60bbc54a939",
+      "id": "2245e57c3a5e6500548e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "be74b101363c9d782b7d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the fixture shape could weaken API-contract coverage or conceal a ticket-sharing regression.",
+      "justification": "Synthetic SocialEventDTO fixture fields exercise the ticket-sharing API contract; they are not selectable or reportable business values.",
+      "reviewed": true
+    },
+    {
+      "id": "021a0a0b2670206f8f16",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "This exhaustive role-scope mirror must remain deny-by-default and match the backend authorization predicate; persisted security-role records remain authoritative for assignments and grants.",
       "reviewed": true
     },
     {
@@ -8594,7 +8614,7 @@
       "reviewed": true
     },
     {
-      "id": "cbd8cbe648effcaa12c3",
+      "id": "d90f041a4536a12b8bdd",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
