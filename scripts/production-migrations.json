@@ -419,7 +419,12 @@
     {
       "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
       "path": "tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql",
-      "introducedBy": "dfea3d01484395c62b080a4adee270308d0ed912"
+      "introducedBy": "7e2a82debb321c5cc50e0cfa03361113a5ff554c"
+    },
+    {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "path": "tdf-hq/sql/2026-09-09_public_booking_tentative_idempotency.sql",
+      "introducedBy": "2da5c939baca7cdeec8aba623a83e9b42440f2e3"
     }
   ]
 }
