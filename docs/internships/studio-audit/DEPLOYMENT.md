@@ -35,11 +35,13 @@ The authorized deployment uses only the following isolated applications:
 - Web: `https://tdf-studio-audit-staging-web.fly.dev`
 - Database: `tdf-hq-studio-audit-staging-db`, with a dedicated application database and least-privilege application user
 
-The database was initialized from the reviewed migration manifest and deterministic synthetic seeds. It contains no production clone or provider credentials. The application secret inventory contains only the dedicated `DATABASE_URL`; email, WhatsApp, calendar, social, Datafast, and PayPal credentials are absent. All 65 reviewed migrations are recorded, including the base audit migration, completion-exception control, and historical-failure completion gate. Spanish is the default locale and `de`, `en`, `es`, `fr`, and `pt` remain enabled.
+The database was initialized from the reviewed migration manifest and deterministic synthetic seeds. It contains no production clone or provider credentials. The application secret inventory contains only the dedicated `DATABASE_URL`; email, WhatsApp, calendar, social, Datafast, and PayPal credentials are absent. As of 2026-09-08, the checksum ledger contains 88 reviewed migrations, including the base audit migration, completion-exception control, historical-failure completion gate, and notification compatibility repairs. Spanish is the default locale and `de`, `en`, `es`, `fr`, and `pt` remain enabled.
 
 The web staging image was built with `npm ci --legacy-peer-deps` because the repository lockfile's root peer resolution otherwise selects React 19 while this workspace supports React 18. It also copies the canonical backend feature registry required by web type checking. These are image-build reproducibility fixes; the deployed bundle still resolves its API base to the isolated staging API.
 
-The observed API release is Fly release 6 at source commit `aa86367560b98399115a1aa75b6dddd2def22547`, image digest `sha256:687b487665fa2ec838f74915a2fa06e3abf315cfcc45987e672bb4ede5c0b74b`. Its health response is `{"db":"ok","status":"ok"}` and `/version` reports that exact commit. The observed web release is Fly release 1, image digest `sha256:7c1400dbc4fad5d6bba0b5658e5aea9edae98a5779b3552ad51aaf63de453632`, with HTTP 200 from its health endpoint. CORS accepts the exact staging web origin and rejects an unrelated origin.
+The observed API release is Fly release 17 (`VRl7314XXwvlkH3omPlby76Q`) at source commit `714060ffcc1db56448f6d3cb82e055e0085af4e7`, build time `2026-09-08T23:35:06Z`, and amd64 image digest `sha256:38318e0b6c1c6d64748de83715b25a16214f5006f62f6beab0808ff5e712f99f`. Its health response is `{"db":"ok","status":"ok"}`, `/version` reports that exact commit and build time, and startup logs report every reviewed migration already applied plus a passing schema verifier. The active encrypted volume is `vol_vdej5owg087momw4` (`tdf_staging_clean_20260908`); its 13 existing asset files remained intact and the evidence table remained empty. The single API Machine is kept started with auto-stop disabled and minimum one Machine.
+
+Before release 17, fresh rollback snapshots were created for the API volume (`vs_YnmGJkoMzALLUxQKXzoK`) and database volume (`vs_oZ7ywx8JY17fnxN975LJVvO`). The earlier detached API volume and its snapshots remain preserved. The observed web release remains Fly release 1, image digest `sha256:7c1400dbc4fad5d6bba0b5658e5aea9edae98a5779b3552ad51aaf63de453632`, with HTTP 200 from its health endpoint. CORS accepts only the exact staging web origin and rejects an unrelated origin with HTTP 400 and no allow-origin header.
 
 The original 256 MB Postgres machine exhibited internal monitor/proxy timeouts under PostgreSQL 18. The API was stopped, the encrypted database volume was preserved, and only the isolated database VM was resized to 512 MB. All three database checks and the API health check then passed. Keep 512 MB as the reviewed minimum for this staging topology.
 
@@ -49,14 +51,25 @@ Required safe configuration:
 
 ```text
 APP_ENV=staging
+RUN_MIGRATIONS=false
+AUTO_APPLY_PRODUCTION_MIGRATIONS=true
 RESET_DB=false
 SEED_DB=false
+EVENT_DISCOVERY_ENABLED=false
+ARTIST_ENRICHMENT_ENABLED=false
+EVENT_LOGISTICS_RECHECK_ENABLED=false
+CONTEXTUAL_REPUTATION_ENABLED=false
+REPUTATION_AGGREGATION_WORKER_ENABLED=false
+REPUTATION_AGGREGATION_ENVIRONMENT=staging
+REPUTATION_AGGREGATION_MODE=simulation
 TDF_ENABLE_SYNTHETIC_PERSONAS=1
 TDF_SYNTHETIC_PERSONA_FILE=../test/personas/personas.json
 PAYPAL_ENV=sandbox
 COMMERCE_CHECKOUT_ENV=sandbox
 DATAFAST_ENV=sandbox
 DATAFAST_BASE_URL=https://test.oppwa.com
+ALLOWED_ORIGINS=https://tdf-studio-audit-staging-web.fly.dev
+CORS_DISABLE_DEFAULTS=true
 SMTP_* unset or directed to an isolated sink
 WhatsApp/calendar/social credentials unset or fake
 TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT=/data/audit-evidence
