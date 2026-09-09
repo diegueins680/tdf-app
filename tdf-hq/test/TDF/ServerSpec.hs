@@ -299,6 +299,7 @@ import TDF.Server
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
     , selectUniquePartyByPrimaryPhone
+    , ensurePartyRecord
     , ensurePartyForInquiry
     , ensurePartyForCourseRegistrationDb
     , findExistingRegistration
@@ -11880,6 +11881,44 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "not-an-email" Nothing "email inválido"
             assertInvalid "user()@example.com" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
+
+    describe "ensurePartyRecord" $
+        it "keeps guest-commerce identity Party-only and reuses the same contact" $ do
+            (firstResult, secondResult, credentialCount, partyCount) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        ensureGuestParty displayName phoneNumber =
+                            liftIO $
+                                runHandler $
+                                    runReaderT
+                                        (ensurePartyRecord displayName "guest-booking@example.com" phoneNumber)
+                                        env
+                    first <- ensureGuestParty (Just "Guest Booking") Nothing
+                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
+                    let firstPartyId = case first of
+                            Left serverErr -> error ("Guest Party creation failed: " <> show serverErr)
+                            Right partyId -> partyId
+                    counts <- liftIO $ flip runSqlPool pool $
+                        (,)
+                            <$> count [M.UserCredentialPartyId ==. firstPartyId]
+                            <*> count [M.PartyPrimaryEmail ==. Just "guest-booking@example.com"]
+                    pure (first, second, fst counts, snd counts)
+
+            case (firstResult, secondResult) of
+                (Right firstPartyId, Right secondPartyId) ->
+                    secondPartyId `shouldBe` firstPartyId
+                (Left serverErr, _) ->
+                    expectationFailure ("Expected first guest Party creation to succeed, got: " <> show serverErr)
+                (_, Left serverErr) ->
+                    expectationFailure ("Expected repeated guest Party lookup to succeed, got: " <> show serverErr)
+            credentialCount `shouldBe` 0
+            partyCount `shouldBe` 1
 
     describe "validatePublicBookingNotes" $ do
         it "trims optional public-booking notes and keeps multiline intent" $ do

@@ -1,0 +1,235 @@
+{
+  "config": {
+    "configFile": "/private/tmp/tdf-event-save-publish-20260907/playwright.config.mjs",
+    "rootDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/tdf-event-save-publish-20260907/artifacts/public-booking-guest-continuity-2026-09-09/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-desktop",
+        "name": "chromium-desktop",
+        "testDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-event-save-publish-20260907/artifacts/public-booking-guest-continuity-2026-09-09/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-phone",
+        "name": "chromium-phone",
+        "testDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-event-save-publish-20260907/artifacts/public-booking-guest-continuity-2026-09-09/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium-tablet",
+        "name": "chromium-tablet",
+        "testDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-event-save-publish-20260907/artifacts/public-booking-guest-continuity-2026-09-09/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-critical",
+        "name": "firefox-critical",
+        "testDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/private/tmp/tdf-event-save-publish-20260907/artifacts/public-booking-guest-continuity-2026-09-09/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit-critical",
+        "name": "webkit-critical",
+        "testDir": "/private/tmp/tdf-event-save-publish-20260907/e2e/web",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/public-booking-guest-continuity-2026-09-09/results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "artifacts/public-booking-guest-continuity-2026-09-09/html",
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run dev --workspace=tdf-hq-ui -- --host 127.0.0.1 --port 4173",
+      "url": "http://127.0.0.1:4173/inicio",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "persona-public.spec.mjs",
+      "file": "persona-public.spec.mjs",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-desktop",
+              "projectName": "chromium-desktop",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 39242,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-09T15:48:20.694Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-a921463df4e93652326b",
+          "file": "persona-public.spec.mjs",
+          "line": 310,
+          "column": 1
+        },
+        {
+          "title": "PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium-phone",
+              "projectName": "chromium-phone",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19865,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-09T15:49:17.161Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "axe-serious-critical.json",
+                      "contentType": "application/json",
+                      "body": "W10="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "bce6dd3d622d1ae9fbad-dfd281b0c41f41810fdd",
+          "file": "persona-public.spec.mjs",
+          "line": 310,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-09T15:47:48.793Z",
+    "duration": 112031.689,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

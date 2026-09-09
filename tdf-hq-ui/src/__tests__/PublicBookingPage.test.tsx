@@ -356,6 +356,29 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('preserves booking acquisition context through optional login and signup', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const route = '/reservar?service=dj-booth-practice&utm_source=campaign#horario';
+    const { cleanup } = await renderPage(container, { route });
+
+    const loginLink = Array.from(container.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (link) => link.textContent?.trim() === 'Iniciar sesión',
+    );
+    const signupLink = Array.from(container.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (link) => link.textContent?.trim() === 'Crear cuenta',
+    );
+    const expectedRedirect = encodeURIComponent(route);
+
+    expect(loginLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}`);
+    expect(signupLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}&signup=1`);
+    expect(container.textContent).toContain('Crear una cuenta es opcional.');
+    expect(container.textContent).not.toContain('crearemos tu acceso automáticamente');
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('computes quick schedule shortcuts using studio-timezone opening hours', () => {
     const now = DateTime.fromISO('2030-01-01T06:30:00.000Z');
 
@@ -428,6 +451,9 @@ describe('PublicBookingPage', () => {
       pbResourceIds: null,
     });
     expect(container.textContent).toContain('Reserva enviada');
+    expect(container.textContent).toContain('Solicitud registrada');
+    expect(container.textContent).toContain('Guarda el ID de reserva.');
+    expect(container.textContent).not.toContain('Revisa tu correo para la confirmación.');
     expect(container.textContent).not.toContain('Ver mi reserva');
     expect(container.querySelector('a[href*="/estudio/calendario"]')).toBeNull();
 
@@ -676,7 +702,7 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    expect(container.textContent).toContain('Ingresa un correo válido para enviarte la confirmación.');
+    expect(container.textContent).toContain('Ingresa un correo válido para identificar tu reserva.');
     const dateLabel = Array.from(container.querySelectorAll('label')).find(
       (label) => (label.textContent ?? '').replace('*', '').trim() === 'Fecha y hora',
     );

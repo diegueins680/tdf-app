@@ -11871,7 +11871,7 @@ createPublicBooking PublicBookingReq{..} = do
   notesClean <-
     either throwError pure $
       validatePublicBookingNotes pbNotes
-  (partyId, _) <- ensurePartyWithAccount (Just fullNameClean) emailClean phoneClean
+  partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
   resourceKeys <- runDB $
     resolveResourcesForBooking (Just serviceOffering) (fromMaybe [] pbResourceIds) startsAtClean endsAt
   let resolvedEngineerName =

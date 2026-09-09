@@ -351,8 +351,20 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   const engineersReady = page.waitForResponse((response) =>
     new URL(response.url()).pathname === '/engineers',
   );
-  await page.goto('/reservar');
+  const bookingEntry = '/reservar?service=synthetic-studio-session&utm_source=persona-booking#horario';
+  await page.goto(bookingEntry);
   await Promise.all([catalogReady, engineersReady]);
+  const encodedBookingEntry = encodeURIComponent(bookingEntry);
+  await expect(page.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+    'href',
+    `/login?redirect=${encodedBookingEntry}`,
+  );
+  await expect(page.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+    'href',
+    `/login?redirect=${encodedBookingEntry}&signup=1`,
+  );
+  await expect(page.getByText(/crear una cuenta es opcional/i).first()).toBeVisible();
+  await expect(page.getByText(/crearemos tu acceso automáticamente/i)).toHaveCount(0);
   const fullNameInput = page.getByLabel('Nombre completo');
   await expect(fullNameInput).toBeVisible();
   await fullNameInput.fill('Elena Paredes');
@@ -363,7 +375,9 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   await page.getByRole('button', { name: 'Confirmar reserva' }).click();
 
   await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible();
-  await expect(page.getByText('Reserva creada')).toBeVisible();
+  await expect(page.getByText('Solicitud registrada')).toBeVisible();
+  await expect(page.getByText(/Guarda el ID de reserva\./).first()).toBeVisible();
+  await expect(page.getByText(/Revisa tu correo para la confirmación/)).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Ver mi reserva' })).toHaveCount(0);
   await expect(page.locator('a[href*="/estudio/calendario"]')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Agregar a Google Calendar' })).toBeVisible();
