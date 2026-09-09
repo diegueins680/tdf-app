@@ -49,6 +49,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Web y móvil typecheck: PASS.
 - Jest web merch API: PASS 7/7.
 - Jest móvil deep links: PASS 2/2.
+- Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente; iOS/dispositivo físico no ejecutados.
 - Playwright Chromium desktop/Pixel 7: PASS 4/4, con capturas de runtime adjuntas al reporte.
 - Axe en recorridos públicos: PASS, sin impactos serios/críticos.
 - Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
@@ -57,8 +58,9 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
 - Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos clasificados; prueba determinista PASS.
+- Checks del draft PR raíz: PASS 17/17 en el SHA de implementación `5860288cf`, incluidos backend, migraciones, contratos, UI, móvil, E2E y auditoría de listas. Los previews automáticos no se consideran staging ni producción.
 
-No se ejecutó runtime en dispositivo/emulador móvil ni integración real con proveedor de pagos.
+No se ejecutó runtime iOS/dispositivo físico ni integración real con proveedor de pagos.
 
 ## Configuración y staging
 
