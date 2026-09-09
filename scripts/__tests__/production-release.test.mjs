@@ -740,6 +740,21 @@ test('runtime preflight accepts a coherent pre-activation contextual reputation 
   );
 });
 
+test('buildMachineDeployArgs can restore a captured contextual-reputation gate', () => {
+  const args = buildMachineDeployArgs({
+    app: 'tdf-hq',
+    image: releaseImage,
+    sha: normalizedReleaseSha,
+    onlyMachine: 'canary-machine',
+    contextualReputationEnabled: false,
+  });
+
+  assert.equal(
+    args[args.indexOf('CONTEXTUAL_REPUTATION_ENABLED=false')],
+    'CONTEXTUAL_REPUTATION_ENABLED=false',
+  );
+});
+
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {
   const withoutHealthCheck = safeFlyConfig.replace(/\n  \[\[services\.http_checks\]\][\s\S]*$/, '\n');
 

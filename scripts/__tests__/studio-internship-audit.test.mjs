@@ -13,7 +13,7 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const fixtureDir = path.join(repo, 'test/internships/studio-audit');
 const readJson = async (name) => JSON.parse(await readFile(path.join(fixtureDir, name), 'utf8'));
 
-test('staging Fly config pins the isolated volume and bounds reputation work to simulation', async () => {
+test('staging Fly config pins the isolated volume and keeps the worker dark until its database gate is verified', async () => {
   const config = await readFile(path.join(repo, 'fly.studio-audit-staging.toml'), 'utf8');
   const deployment = await readFile(path.join(repo, 'docs/internships/studio-audit/DEPLOYMENT.md'), 'utf8');
 

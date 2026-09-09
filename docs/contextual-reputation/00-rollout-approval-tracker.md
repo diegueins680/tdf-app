@@ -15,7 +15,7 @@ sin enlace a evidencia no cuenta como aprobación.
 | Área | Estado | Evidencia requerida | Responsable |
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
-| Gates de activación | Activación autorizada; verificación pendiente | Flujo contextual `true` en staging/producción; gate DB antes del worker de staging en `simulation` | Operaciones |
+| Gates de activación | Activación autorizada; verificación pendiente | Flujo contextual `true` en staging/producción; worker de staging queda para el segundo rollout, tras validar su compuerta DB de `simulation` | Operaciones |
 | Producto/Legal | Aprobación registrada; cierre pendiente | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) + checklist completo | Producto + Legal |
 | Worker/observabilidad | Pendiente (infraestructura preparada) | Migración/worker en simulación; aún faltan staging, dashboards, alertas, DLQ y on-call aprobados | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |

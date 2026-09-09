@@ -354,6 +354,14 @@ export function captureContextualReputationGate(rows) {
   return [...values][0] === 'true';
 }
 
+function capturedContextualReputationGate(machine) {
+  const value = machine.releaseSnapshot?.runtimeEnv?.CONTEXTUAL_REPUTATION_ENABLED;
+  if (!['true', 'false'].includes(value)) {
+    throw new Error(`Machine ${machine.id} has no boolean contextual-reputation rollback gate.`);
+  }
+  return value === 'true';
+}
+
 function capturePublicReputationProjectionGate(rows) {
   const values = new Set(rows.map(({ values: runtime }) => runtime.PUBLIC_REPUTATION_PROJECTION_ENABLED));
   if (values.size !== 1 || !['true', 'false', '__UNSET__', undefined].includes([...values][0])) {
@@ -487,6 +495,7 @@ async function remotePreflight(context) {
   return {
     machines,
     runtimeEnv,
+    contextualReputationEnabled,
     publicReputationProjectionEnabled,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
@@ -608,15 +617,8 @@ async function rollbackMachine(context, machine) {
   const image = machine.releaseSnapshot?.image ?? previousImage(machine);
   const sha = previousSha(machine);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
+  const contextualReputationEnabled = capturedContextualReputationGate(machine);
   const projectionGate = await currentPublicReputationProjectionGate(context, machine);
-  const previousContextualReputationEnabled =
-    machine.releaseSnapshot?.runtimeEnv?.CONTEXTUAL_REPUTATION_ENABLED;
-  if (!['true', 'false'].includes(previousContextualReputationEnabled)) {
-    throw new Error(
-      `Machine ${machine.id} has no captured contextual-reputation rollback flag.`,
-    );
-  }
-  const contextualReputationEnabled = previousContextualReputationEnabled === 'true';
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
   await run(buildMachineDeployArgs({
@@ -874,6 +876,7 @@ async function executeRelease(context) {
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
+      contextualReputationEnabled: true,
       publicReputationProjectionEnabled: canaryProjectionGate,
       onlyMachine: canary.id,
     }));
@@ -894,6 +897,7 @@ async function executeRelease(context) {
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
+        contextualReputationEnabled: true,
         publicReputationProjectionEnabled: projectionGate,
         onlyMachine: machine.id,
       }));
