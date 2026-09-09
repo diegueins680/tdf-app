@@ -7819,44 +7819,52 @@ ensurePartyWithAccount mName emailAddr mPhone = do
 ensurePartyRecord :: Maybe Text -> Text -> Maybe Text -> AppM (Key Party)
 ensurePartyRecord mName emailAddr mPhone = do
   now <- liftIO getCurrentTime
+  partyResult <- runDB (ensurePartyRecordDb now mName emailAddr mPhone)
+  either throwError pure partyResult
+
+ensurePartyRecordDb
+  :: UTCTime
+  -> Maybe Text
+  -> Text
+  -> Maybe Text
+  -> SqlPersistT IO (Either ServerError (Key Party))
+ensurePartyRecordDb now mName emailAddr mPhone = do
   let display = case fmap T.strip mName of
         Just nameTxt | not (T.null nameTxt) -> nameTxt
         _                                   -> emailAddr
       phoneClean = mPhone >>= normalizePhone
-  partyResult <- runDB $ do
-    mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
-    case mPartyOrErr of
-      Left serverErr -> pure (Left serverErr)
-      Right mParty -> fmap Right $ case mParty of
-        Just (Entity pid party) -> do
-          let updates = catMaybes
-                [ if not (T.null (M.partyDisplayName party)) || T.null display
-                    then Nothing
-                    else Just (PartyDisplayName =. display)
-                , case phoneClean of
-                    Just phone | isNothing (partyPrimaryPhone party) ->
-                      Just (PartyPrimaryPhone =. Just phone)
-                    _ -> Nothing
-                ]
-          unless (null updates) (update pid updates)
-          pure pid
-        Nothing -> insert Party
-          { partyLegalName = Nothing
-          , partyDisplayName = display
-          , partyIsOrg = False
-          , partyTaxId = Nothing
-          , partyPrimaryEmail = Just emailAddr
-          , partyPrimaryPhone = phoneClean
-          , partyWhatsapp = Nothing
-          , partyInstagram = Nothing
-          , partyEmergencyContact = Nothing
-          , partyNotes = Nothing
-          , partyStripeCustomerId = Nothing
-          , partyCountryCode = Nothing
-          , partyCountryId = Nothing
-          , partyCreatedAt = now
-          }
-  either throwError pure partyResult
+  mPartyOrErr <- selectUniquePartyByPrimaryEmail emailAddr
+  case mPartyOrErr of
+    Left serverErr -> pure (Left serverErr)
+    Right mParty -> fmap Right $ case mParty of
+      Just (Entity pid party) -> do
+        let updates = catMaybes
+              [ if not (T.null (M.partyDisplayName party)) || T.null display
+                  then Nothing
+                  else Just (PartyDisplayName =. display)
+              , case phoneClean of
+                  Just phone | isNothing (partyPrimaryPhone party) ->
+                    Just (PartyPrimaryPhone =. Just phone)
+                  _ -> Nothing
+              ]
+        unless (null updates) (update pid updates)
+        pure pid
+      Nothing -> insert Party
+        { partyLegalName = Nothing
+        , partyDisplayName = display
+        , partyIsOrg = False
+        , partyTaxId = Nothing
+        , partyPrimaryEmail = Just emailAddr
+        , partyPrimaryPhone = phoneClean
+        , partyWhatsapp = Nothing
+        , partyInstagram = Nothing
+        , partyEmergencyContact = Nothing
+        , partyNotes = Nothing
+        , partyStripeCustomerId = Nothing
+        , partyCountryCode = Nothing
+        , partyCountryId = Nothing
+        , partyCreatedAt = now
+        }
 
 selectUniquePartyByPrimaryEmail
   :: Text
@@ -11840,8 +11848,10 @@ createServiceBookingCheckoutTransaction
         [toPersistValue bookingKey]
       pure (Right bookingKey)
 
-createPublicBooking :: PublicBookingReq -> AppM BookingDTO
-createPublicBooking PublicBookingReq{..} = do
+createPublicBooking :: Maybe Text -> PublicBookingReq -> AppM BookingDTO
+createPublicBooking mIdempotency PublicBookingReq{..} = do
+  idempotencyKey <- either (throwError . marketplaceCheckoutBadRequest) pure $
+    ServiceStorefront.validateIdempotencyKey mIdempotency
   fullNameClean <- either throwError pure (validatePublicBookingFullName pbFullName)
   Env pool _ <- ask
   now <- liftIO getCurrentTime
@@ -11871,12 +11881,24 @@ createPublicBooking PublicBookingReq{..} = do
   notesClean <-
     either throwError pure $
       validatePublicBookingNotes pbNotes
-  partyId <- ensurePartyRecord (Just fullNameClean) emailClean phoneClean
+  let requestedResourceIds = fromMaybe [] pbResourceIds
+      requestHash = marketplaceSha256Text . TE.decodeUtf8 . BL.toStrict . encode $ object
+        [ "full_name" .= fullNameClean
+        , "email" .= emailClean
+        , "phone" .= phoneClean
+        , "service_offering_id" .= UUID.toText pbServiceOfferingId
+        , "starts_at" .= startsAtClean
+        , "duration_minutes" .= durationMins
+        , "notes" .= notesClean
+        , "engineer_party_id" .= engineerIdClean
+        , "engineer_name" .= engineerNameClean
+        , "resource_ids" .= requestedResourceIds
+        ]
   resourceKeys <- runDB $
-    resolveResourcesForBooking (Just serviceOffering) (fromMaybe [] pbResourceIds) startsAtClean endsAt
+    resolveResourcesForBooking (Just serviceOffering) requestedResourceIds startsAtClean endsAt
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
-  let bookingRecord = Booking
+  let bookingRecord partyId = Booking
         { bookingTitle          = serviceTypeLabel <> " · " <> fullNameClean
         , bookingServiceOrderId = Nothing
         , bookingPartyId        = Just partyId
@@ -11893,21 +11915,87 @@ createPublicBooking PublicBookingReq{..} = do
         , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
+  creation <- createPublicTentativeBookingTransaction
+    idempotencyKey requestHash now (Just fullNameClean) emailClean phoneClean
+    bookingRecord resourceKeys
+  (bookingId, createdNow) <- either throwError pure creation
   dtoResult <- liftIO $ flip runSqlPool pool $ do
-    bookingId <- insert bookingRecord
-    let uniqueResources = nub resourceKeys
-    forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
-      insert_ BookingResource
-        { bookingResourceBookingId = bookingId
-        , bookingResourceResourceId = key
-        , bookingResourceRole = if idx == 0 then "primary" else "secondary"
-        }
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
   dto <- either throwError pure dtoResult
-  notifyEngineerIfNeeded dto
+  when createdNow (notifyEngineerIfNeeded dto)
   pure dto
+
+createPublicTentativeBookingTransaction
+  :: Text
+  -> Text
+  -> UTCTime
+  -> Maybe Text
+  -> Text
+  -> Maybe Text
+  -> (Key Party -> Booking)
+  -> [Key Resource]
+  -> AppM (Either ServerError (Key Booking, Bool))
+createPublicTentativeBookingTransaction
+    idempotencyKey requestHash now partyName emailClean phoneClean buildBooking resourceKeys = do
+  Env{ envPool } <- ask
+  result <- liftIO $
+    (try (flip runSqlPool envPool transactionBody)
+      :: IO (Either SomeException (Either ServerError (Key Booking, Bool))))
+  case result of
+    Right value -> pure value
+    Left exception -> case fromException exception :: Maybe SomeAsyncException of
+      Just _ -> liftIO (throwIO exception)
+      Nothing -> case fromException exception :: Maybe SqlError of
+        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
+          { errBody = "The selected room or resource was reserved by another request" })
+        _ -> liftIO (throwIO exception)
+  where
+    transactionBody = do
+      _ <- (rawSql
+        "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+        [PersistText ("public-tentative-booking:" <> idempotencyKey)]
+        :: SqlPersistT IO [Single Int64])
+      existing <- (rawSql
+        "SELECT booking_id, request_sha256\
+        \ FROM service_booking_tentative_request WHERE idempotency_key = ?"
+        [PersistText idempotencyKey]
+        :: SqlPersistT IO [(Single Int64, Single Text)])
+      case existing of
+        [(Single existingBookingId, Single storedHash)]
+          | storedHash == requestHash ->
+              pure (Right (toSqlKey existingBookingId, False))
+          | otherwise -> pure (Left err409
+              { errBody = "Idempotency key was already used for a different tentative booking" })
+        [] -> createNew
+        _ -> pure (Left err500
+          { errBody = "Tentative booking idempotency lookup was ambiguous" })
+    createNew = do
+      forM_ (sortOn fromSqlKey (nub resourceKeys)) $ \resourceKey -> do
+        _ <- (rawSql "SELECT id FROM resource WHERE id = ? FOR UPDATE"
+          [toPersistValue resourceKey] :: SqlPersistT IO [Single Int64])
+        pure ()
+      partyResult <- ensurePartyRecordDb now partyName emailClean phoneClean
+      case partyResult of
+        Left serverErr -> pure (Left serverErr)
+        Right partyId -> do
+          bookingId <- insert (buildBooking partyId)
+          forM_ (zip [0 :: Int ..] (nub resourceKeys)) $ \(idx, key) ->
+            insert_ BookingResource
+              { bookingResourceBookingId = bookingId
+              , bookingResourceResourceId = key
+              , bookingResourceRole = if idx == 0 then "primary" else "secondary"
+              }
+          rawExecute
+            "INSERT INTO service_booking_tentative_request(\
+            \ idempotency_key, request_sha256, booking_id\
+            \) VALUES (?, ?, ?)"
+            [ PersistText idempotencyKey
+            , PersistText requestHash
+            , toPersistValue bookingId
+            ]
+          pure (Right (bookingId, True))
 
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do

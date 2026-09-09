@@ -4250,7 +4250,7 @@ export interface paths {
         put?: never;
         /**
          * Create an honest unpaid tentative booking
-         * @description Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+         * @description Compatibility path used when no approved payable-booking policy is active. The Idempotency-Key durably returns the original booking for an identical replay and rejects changed payloads. It never reports payment or confirmation.
          */
         post: operations["createPublicTentativeBooking"];
         delete?: never;
@@ -18871,7 +18871,10 @@ export interface operations {
     createPublicTentativeBooking: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -18881,7 +18884,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Tentative booking created */
+            /** @description Tentative booking created or replayed from the same request */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -18890,7 +18893,14 @@ export interface operations {
                     "application/json": components["schemas"]["Booking"];
                 };
             };
-            /** @description Resource was reserved by another request */
+            /** @description Missing or invalid idempotency key or booking input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency-key payload conflict or resource was reserved by another request */
             409: {
                 headers: {
                     [name: string]: unknown;

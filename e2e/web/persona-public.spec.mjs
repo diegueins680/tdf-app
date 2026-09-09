@@ -308,6 +308,8 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
 });
 
 test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions', async ({ page }, testInfo) => {
+  const bookingIdempotencyKeys = [];
+  let bookingAttempts = 0;
   await page.route('**/services/catalog/public*', (route) => route.fulfill({
     json: {
       sceSchemaVersion: 1,
@@ -331,6 +333,16 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   }));
   await page.route('**/bookings/public', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
+    bookingAttempts += 1;
+    bookingIdempotencyKeys.push(route.request().headers()['idempotency-key']);
+    if (bookingAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Synthetic ambiguous upstream response' }),
+      });
+      return;
+    }
     await route.fulfill({
       json: {
         bookingId: 123,
@@ -372,9 +384,20 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Fecha y hora').fill('2030-01-01T12:00');
   await page.getByRole('button', { name: 'Revisar reserva' }).click();
-  await page.getByRole('button', { name: 'Confirmar reserva' }).click();
+  const confirmBookingButton = page.getByRole('button', { name: 'Confirmar reserva' });
+  const failedAttempt = page.waitForResponse((response) =>
+    response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/bookings/public',
+  );
+  await confirmBookingButton.click();
+  expect((await failedAttempt).status()).toBe(503);
+  await expect(confirmBookingButton).toBeEnabled();
+  await confirmBookingButton.click();
 
   await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible();
+  expect(bookingIdempotencyKeys).toHaveLength(2);
+  expect(bookingIdempotencyKeys[0]).toMatch(/^service-booking-/);
+  expect(bookingIdempotencyKeys[1]).toBe(bookingIdempotencyKeys[0]);
   await expect(page.getByText('Solicitud registrada')).toBeVisible();
   await expect(page.getByText(/Guarda el ID de reserva\./).first()).toBeVisible();
   await expect(page.getByText(/Revisa tu correo para la confirmación/)).toHaveCount(0);

@@ -8,6 +8,11 @@ const createQuoteMock = jest.fn();
 const getStorefrontMock = jest.fn();
 jest.unstable_mockModule('../api/bookings', () => ({
   Bookings: { createPublic: createPublicMock },
+  getOrCreatePublicBookingIdempotency: async (
+    _scope: string,
+    payload: unknown,
+    current?: { fingerprint: string; key: string } | null,
+  ) => current ?? ({ fingerprint: JSON.stringify(payload), key: 'service-booking-test-idempotency' }),
 }));
 jest.unstable_mockModule('../api/domoQuotes', () => ({
   DomoQuotes: {

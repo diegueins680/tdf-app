@@ -5366,9 +5366,11 @@ paths:
     post:
       tags: [Public bookings]
       summary: Create an honest unpaid tentative booking
-      description: Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+      description: Compatibility path used when no approved payable-booking policy is active. The Idempotency-Key durably returns the original booking for an identical replay and rejects changed payloads. It never reports payment or confirmation.
       operationId: createPublicTentativeBooking
       security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -5376,11 +5378,12 @@ paths:
             schema: { $ref: '#/components/schemas/PublicBookingCreate' }
       responses:
         '200':
-          description: Tentative booking created
+          description: Tentative booking created or replayed from the same request
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Booking' }
-        '409': { description: Resource was reserved by another request }
+        '400': { description: Missing or invalid idempotency key or booking input }
+        '409': { description: Idempotency-key payload conflict or resource was reserved by another request }
         '422': { description: Invalid service relationship }
   /bookings/public/checkout:
     post:

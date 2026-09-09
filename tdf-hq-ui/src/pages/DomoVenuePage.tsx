@@ -34,7 +34,7 @@ import SpaIcon from '@mui/icons-material/Spa';
 import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { DateTime } from 'luxon';
-import { Bookings } from '../api/bookings';
+import { Bookings, getOrCreatePublicBookingIdempotency } from '../api/bookings';
 import { DomoQuotes, type PublicDomoQuoteCreateRequest } from '../api/domoQuotes';
 import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
@@ -355,7 +355,7 @@ export default function DomoVenuePage() {
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
-  const quoteIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const submissionIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const domoStorefrontQuery = useQuery({
     queryKey: ['public-domo-storefront'],
     queryFn: DomoQuotes.getStorefront,
@@ -436,10 +436,10 @@ export default function DomoVenuePage() {
           ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
         };
         const fingerprint = JSON.stringify(payload);
-        if (quoteIdempotency.current?.fingerprint !== fingerprint) {
-          quoteIdempotency.current = { fingerprint, key: makeDomoQuoteIdempotencyKey() };
+        if (submissionIdempotency.current?.fingerprint !== fingerprint) {
+          submissionIdempotency.current = { fingerprint, key: makeDomoQuoteIdempotencyKey() };
         }
-        const quote = await DomoQuotes.createQuote(payload, quoteIdempotency.current.key);
+        const quote = await DomoQuotes.createQuote(payload, submissionIdempotency.current.key);
         if (!quote.lookupToken) throw new Error('Secure quote lookup token missing');
         saveDomoQuoteLookupToken(quote.quoteId, quote.lookupToken);
         navigate(`/domo-del-pululahua/cotizaciones/${quote.quoteId}`);
@@ -448,7 +448,7 @@ export default function DomoVenuePage() {
       if (!eventProductionOffering) {
         throw new Error('El servicio de producción de eventos no está publicado.');
       }
-      await Bookings.createPublic({
+      const payload = {
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
@@ -456,7 +456,13 @@ export default function DomoVenuePage() {
         pbStartsAt: bookingIso,
         pbDurationMinutes: requestSummary.durationHours * 60,
         pbNotes: buildBookingNotes(form, requestSummary),
-      });
+      };
+      submissionIdempotency.current = await getOrCreatePublicBookingIdempotency(
+        'tentative',
+        payload,
+        submissionIdempotency.current,
+      );
+      await Bookings.createPublic(payload, submissionIdempotency.current.key);
       setStatus({
         severity: 'success',
         message: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago; el equipo revisará disponibilidad y te contactará.',

@@ -19,7 +19,7 @@ const { Parties } = await import('./parties');
 const { Internships } = await import('./internships');
 const { RadioAPI } = await import('./radio');
 const { Trials } = await import('./trials');
-const { Bookings } = await import('./bookings');
+const { Bookings, getOrCreatePublicBookingIdempotency } = await import('./bookings');
 const { encodeLegacyServiceOfferingId } = await import('./services');
 const { ChatAPI } = await import('./chat');
 const { Label } = await import('./label');
@@ -28,6 +28,7 @@ const { SocialAPI } = await import('./social');
 
 describe('API query/id validation', () => {
   beforeEach(() => {
+    window.sessionStorage.clear();
     getMock.mockReset();
     postMock.mockReset();
     patchMock.mockReset();
@@ -38,6 +39,38 @@ describe('API query/id validation', () => {
     patchMock.mockResolvedValue({});
     putMock.mockResolvedValue({});
     delMock.mockResolvedValue(undefined);
+  });
+
+  it('reuses a payload-scoped public booking key without storing contact details', async () => {
+    const originalCrypto = globalThis.crypto;
+    const digestMock = jest.fn().mockResolvedValue(
+      Uint8Array.from({ length: 32 }, (_, index) => index).buffer,
+    );
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: {
+        randomUUID: () => '00000000-0000-4000-8000-000000000000',
+        subtle: { digest: digestMock },
+      },
+    });
+    const payload = { pbFullName: 'Synthetic Guest', pbEmail: 'synthetic@example.test' };
+    try {
+      const first = await getOrCreatePublicBookingIdempotency('tentative', payload);
+      const afterReload = await getOrCreatePublicBookingIdempotency('tentative', payload);
+
+      expect(afterReload.key).toBe(first.key);
+      expect(afterReload.fingerprint).toBe(JSON.stringify(payload));
+      expect(Object.keys(window.sessionStorage)).toEqual([
+        `tdf-public-booking-idempotency:tentative:${Array.from(
+          { length: 32 },
+          (_, index) => index.toString(16).padStart(2, '0'),
+        ).join('')}`,
+      ]);
+      expect(JSON.stringify(window.sessionStorage)).not.toContain('synthetic@example.test');
+      expect(digestMock).toHaveBeenCalledTimes(2);
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', { configurable: true, value: originalCrypto });
+    }
   });
 
   it('keeps optional payment and internship filters explicit and validated', async () => {
@@ -208,13 +241,15 @@ describe('API query/id validation', () => {
       pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
-    });
+    }, 'service-booking-tentative-0001');
     expect(postMock).toHaveBeenCalledWith('/bookings/public', {
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
       pbServiceOfferingId: serviceOfferingId,
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: 10,
+    }, {
+      headers: { 'Idempotency-Key': 'service-booking-tentative-0001' },
     });
 
     await Bookings.createPublic({
@@ -222,13 +257,15 @@ describe('API query/id validation', () => {
       pbEmail: 'ana@example.com',
       pbServiceOfferingId: encodeLegacyServiceOfferingId('Producción de eventos'),
       pbStartsAt: '2026-03-01T10:00:00Z',
-    });
+    }, 'service-booking-tentative-0002');
     expect(postMock).toHaveBeenCalledWith('/bookings/public', {
       pbFullName: 'Ana Perez',
       pbEmail: 'ana@example.com',
       pbServiceType: 'Producción de eventos',
       pbStartsAt: '2026-03-01T10:00:00Z',
       pbEngineerPartyId: undefined,
+    }, {
+      headers: { 'Idempotency-Key': 'service-booking-tentative-0002' },
     });
 
     expect(() =>
@@ -249,7 +286,7 @@ describe('API query/id validation', () => {
         pbServiceOfferingId: serviceOfferingId,
         pbStartsAt: '2026-03-01T10:00:00Z',
         pbEngineerPartyId: -3,
-      }),
+      }, 'service-booking-tentative-invalid'),
     ).toThrow('pbEngineerPartyId debe ser un entero positivo.');
   });
 

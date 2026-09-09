@@ -42,6 +42,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import {
   Bookings,
+  getOrCreatePublicBookingIdempotency,
   loadPublicBookingLookupToken,
   storePublicBookingLookupToken,
   type PublicBookingCheckoutDTO,
@@ -97,13 +98,6 @@ const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
-
-const createBookingIdempotencyKey = (): string => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `service-booking-${crypto.randomUUID()}`;
-  }
-  return `service-booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
 
 const formatMinorAmount = (currency: string, amountMinor: number): string =>
   `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
@@ -430,7 +424,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [manualReference, setManualReference] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const bookingIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
@@ -597,7 +591,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setManualDialogOpen(false);
     setManualReference('');
     setTermsAccepted(false);
-    checkoutIdempotency.current = null;
+    bookingIdempotency.current = null;
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
@@ -637,7 +631,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
     setTermsAccepted(false);
-    checkoutIdempotency.current = null;
+    bookingIdempotency.current = null;
     const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
     fetch(url, { signal: controller.signal })
       .then(async (res) => {
@@ -793,19 +787,20 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           pbcResourceIds: null,
           pbcTermsAccepted: true,
         };
-        const fingerprint = JSON.stringify(checkoutPayload);
-        if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
-          checkoutIdempotency.current = { fingerprint, key: createBookingIdempotencyKey() };
-        }
+        bookingIdempotency.current = await getOrCreatePublicBookingIdempotency(
+          'checkout',
+          checkoutPayload,
+          bookingIdempotency.current,
+        );
         const checkout = await Bookings.createPublicCheckout(
           checkoutPayload,
-          checkoutIdempotency.current.key,
+          bookingIdempotency.current.key,
         );
         storePublicBookingLookupToken(checkout.booking.bookingId, checkout.lookupToken);
         setCheckoutSuccess(checkout);
         setSuccess(checkout.booking);
       } else {
-        const dto = await Bookings.createPublic({
+        const bookingPayload = {
           pbFullName: form.fullName.trim(),
           pbEmail: form.email.trim(),
           pbPhone: form.phone.trim() || null,
@@ -816,7 +811,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           pbEngineerPartyId: engineerPartyId,
           pbEngineerName: engineerName,
           pbResourceIds: null,
-        });
+        };
+        bookingIdempotency.current = await getOrCreatePublicBookingIdempotency(
+          'tentative',
+          bookingPayload,
+          bookingIdempotency.current,
+        );
+        const dto = await Bookings.createPublic(
+          bookingPayload,
+          bookingIdempotency.current.key,
+        );
         setSuccess(dto);
       }
     } catch (err) {

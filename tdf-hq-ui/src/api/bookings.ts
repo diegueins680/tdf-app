@@ -123,6 +123,71 @@ export interface PublicBookingCheckoutPayload {
 const publicBookingLookupStorageKey = (bookingId: number): string =>
   `tdf-service-booking-order-lookup:${requirePositiveInteger(bookingId, 'bookingId')}`;
 
+export const createPublicBookingIdempotencyKey = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `service-booking-${crypto.randomUUID()}`;
+  }
+  return `service-booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+export interface PublicBookingIdempotencyEntry {
+  fingerprint: string;
+  key: string;
+}
+
+const publicBookingIdempotencyStorageKey = async (
+  scope: 'checkout' | 'tentative',
+  fingerprint: string,
+): Promise<string | null> => {
+  if (
+    typeof window === 'undefined'
+    || typeof crypto === 'undefined'
+    || !crypto.subtle
+    || typeof TextEncoder === 'undefined'
+  ) {
+    return null;
+  }
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprint));
+    const digestHex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `tdf-public-booking-idempotency:${scope}:${digestHex}`;
+  } catch {
+    return null;
+  }
+};
+
+const isReusablePublicBookingIdempotencyKey = (value: string | null): value is string =>
+  value != null
+  && value.length >= 16
+  && value.length <= 128
+  && /^[\x21-\x7e]+$/.test(value);
+
+export const getOrCreatePublicBookingIdempotency = async (
+  scope: 'checkout' | 'tentative',
+  payload: unknown,
+  current?: PublicBookingIdempotencyEntry | null,
+): Promise<PublicBookingIdempotencyEntry> => {
+  const fingerprint = JSON.stringify(payload);
+  if (current?.fingerprint === fingerprint) return current;
+
+  const storageKey = await publicBookingIdempotencyStorageKey(scope, fingerprint);
+  if (storageKey) {
+    try {
+      const storedKey = window.sessionStorage.getItem(storageKey);
+      if (isReusablePublicBookingIdempotencyKey(storedKey)) {
+        return { fingerprint, key: storedKey };
+      }
+      const key = createPublicBookingIdempotencyKey();
+      window.sessionStorage.setItem(storageKey, key);
+      return { fingerprint, key };
+    } catch {
+      // A blocked/full sessionStorage must not prevent a booking attempt.
+    }
+  }
+
+  return { fingerprint, key: createPublicBookingIdempotencyKey() };
+};
+
 export const storePublicBookingLookupToken = (
   bookingId: number,
   lookupToken?: string | null,
@@ -190,7 +255,7 @@ export const Bookings = {
     pbEngineerPartyId?: number | null;
     pbEngineerName?: string | null;
     pbResourceIds?: string[] | null;
-  }) => {
+  }, idempotencyKey: string) => {
     const { pbServiceOfferingId, ...rest } = body;
     const legacyServiceType = decodeLegacyServiceOfferingId(pbServiceOfferingId);
     return post<BookingDTO>('/bookings/public', {
@@ -199,6 +264,8 @@ export const Bookings = {
         ? { pbServiceType: legacyServiceType }
         : { pbServiceOfferingId }),
       pbEngineerPartyId: normalizeOptionalPositiveInteger(body.pbEngineerPartyId, 'pbEngineerPartyId'),
+    }, {
+      headers: { 'Idempotency-Key': idempotencyKey },
     });
   },
   createPublicCheckout: (body: PublicBookingCheckoutPayload, idempotencyKey: string) =>

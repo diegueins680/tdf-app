@@ -100,7 +100,9 @@ const defaultPublicServices: PublicServiceCatalogItem[] = [
   },
 ];
 
-const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
+const createPublicMock = jest.fn<
+  (payload: CreatePublicPayload, idempotencyKey: string) => Promise<{ bookingId: number }>
+>(
   () => Promise.resolve({ bookingId: 123 }),
 );
 const createPublicCheckoutMock = jest.fn<
@@ -185,6 +187,11 @@ const listPublicRoomsMock = jest.fn<() => Promise<PublicRoomItem[]>>(
 );
 
 jest.unstable_mockModule('../api/bookings', () => ({
+  getOrCreatePublicBookingIdempotency: async (
+    _scope: string,
+    payload: unknown,
+    current?: { fingerprint: string; key: string } | null,
+  ) => current ?? ({ fingerprint: JSON.stringify(payload), key: 'service-booking-test-idempotency' }),
   loadPublicBookingLookupToken: () => 'lookup-secret',
   storePublicBookingLookupToken: storePublicBookingLookupTokenMock,
   Bookings: {
@@ -446,10 +453,12 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
+    const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+    expect(idempotencyKey).toMatch(/^service-booking-/);
     expect(container.textContent).toContain('Reserva enviada');
     expect(container.textContent).toContain('Solicitud registrada');
     expect(container.textContent).toContain('Guarda el ID de reserva.');
@@ -602,6 +611,7 @@ describe('PublicBookingPage', () => {
         pbServiceOfferingId: DJ_PRACTICE_ID,
         pbResourceIds: null,
       }),
+      expect.stringMatching(/^service-booking-/),
     );
 
     await cleanup();
@@ -681,10 +691,12 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
+    const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+    expect(idempotencyKey).toMatch(/^service-booking-/);
 
     await cleanup();
     document.body.removeChild(container);
@@ -868,6 +880,7 @@ describe('PublicBookingPage', () => {
           pbEngineerPartyId: null,
           pbEngineerName: 'Ana',
         }),
+        expect.stringMatching(/^service-booking-/),
       );
       expect(
         consoleErrorSpy.mock.calls.some(([message]) =>

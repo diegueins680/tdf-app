@@ -348,7 +348,10 @@ type BookingPublicAPI =
          :> QueryParam' '[Required] "startsAt" UTCTime
          :> QueryParam' '[Required] "durationMinutes" Int
          :> Get '[JSON] PublicBookingAvailabilityDTO
-  :<|> "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+  :<|> "bookings" :> "public"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] PublicBookingReq
+         :> Post '[JSON] BookingDTO
   :<|> "bookings" :> "public" :> "checkout"
          :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] PublicBookingCheckoutReq

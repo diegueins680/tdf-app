@@ -347,6 +347,9 @@ jobs:
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
 
+      - name: Rehearse public tentative booking idempotency migration
+        run: ./scripts/test-public-booking-tentative-idempotency-migration.sh
+
       - name: Rehearse course checkout runtime migration
         run: ./scripts/test-course-checkout-runtime-migration.sh
 
