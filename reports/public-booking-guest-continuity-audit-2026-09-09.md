@@ -24,12 +24,12 @@ The booking remains available without authentication. No price, deposit, cancell
 | Native mobile workspace | Available but unaffected | Submodule remains at published commit `f487de478939b3c19a62b5f54aa876d96a4eb32c`; source search found only generated web-route registry entries for `/reservar` | There is no native public-booking screen to change in this batch; the mobile pointer remains untouched |
 | Local/staging configuration | Partial | Local UI ran with synthetic route fixtures; no staging backend, sandbox payment provider, SMTP sink, or synthetic authenticated customer was configured for this batch | HTTP assertions do not prove staging persistence, mail delivery, or payment behavior |
 | Analytics access | Unavailable | `docs/analytics.md` and emitters were inspected; no booking funnel emitter exists and no PostHog project access was available | Booking conversion remains “not yet measured”; no uplift is claimed |
-| Network/GitHub | Partial | Repository remotes exist, but `gh auth status` currently reports an invalid CLI token | Git transport and draft-PR creation must be verified after committing; no push/PR is claimed yet |
+| Network/GitHub | Available for requested operations | `gh auth status` initially reported an invalid stored CLI token, but the actual SSH branch push and authorized `gh pr create --draft` both succeeded | Branch and draft PR are published; the contradictory status check remains documented rather than treated as proof of failure |
 | Production access | Not used | No production URL, database, provider, communication, deployment, or live account was invoked | Findings and verification are local/source-based only |
 
 The Playwright server initially failed to bind `127.0.0.1:4173` inside the filesystem sandbox (`EPERM`). The same scoped command was rerun with approved local-server permission and passed. An earlier invocation used the nonexistent project name `chromium-des`; it ran zero tests and is a command-shape error, not a product failure or pass.
 
-The documented `npm run ai:doctor` preflight completed with **14 OK, 4 warnings, 0 errors**. Warnings accurately reported absent dated memory-note files in this isolated worktree, the expected task-owned dirty state, and invalid GitHub CLI authentication.
+The documented `npm run ai:doctor` preflight completed with **14 OK, 4 warnings, 0 errors**. Warnings reported absent dated memory-note files in this isolated worktree, the expected task-owned dirty state, and invalid stored GitHub CLI authentication. The later push and draft-PR operation nevertheless succeeded; both observations are retained.
 
 ## Baseline and method
 
@@ -202,4 +202,6 @@ Changed implementation/test files:
 
 Branch: `feature/public-booking-truthful-guest-continuity-20260909`.
 
-Commit, push, and draft PR have not yet been performed at the time of this report section. The intended stacked PR base is `feature/onboarding-cross-device-reconciliation-20260909`; no merge or deployment is authorized.
+Implementation, tests, artifacts, and initial report commit: `e0dc4f2e6a517cd7472471d5ab3a90d3523f4a74`.
+
+The feature branch was pushed to `origin`. Draft PR: https://github.com/diegueins680/tdf-app/pull/309, stacked on `feature/onboarding-cross-device-reconciliation-20260909`. This documentation-only handoff update follows the implementation commit. No merge or deployment was performed or authorized.
