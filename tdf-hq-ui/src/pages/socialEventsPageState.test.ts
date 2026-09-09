@@ -14,6 +14,7 @@ describe('removeDeletedSocialEventQueries', () => {
     queryClient.setQueryData(['social-event-moments', '121'], [{ momentId: 'one' }]);
     queryClient.setQueryData(['social-event-ticket-tiers', '121'], [{ ticketTierId: 'general' }]);
     queryClient.setQueryData(['public-event-ticket-storefront', '121'], { checkoutAvailable: true });
+    queryClient.setQueryData(['public-event-ticket-storefront', 121], { checkoutAvailable: true });
     queryClient.setQueryData(['event-logistics', '121'], { eventId: '121' });
     queryClient.setQueryData(['social-invitations', '121'], [{ invitationId: 'invite-one' }]);
     queryClient.setQueryData(['social-ticket-tiers', '121'], [{ ticketTierId: 'general' }]);
@@ -29,6 +30,7 @@ describe('removeDeletedSocialEventQueries', () => {
     expect(queryClient.getQueryData(['social-event-moments', '121'])).toBeUndefined();
     expect(queryClient.getQueryData(['social-event-ticket-tiers', '121'])).toBeUndefined();
     expect(queryClient.getQueryData(['public-event-ticket-storefront', '121'])).toBeUndefined();
+    expect(queryClient.getQueryData(['public-event-ticket-storefront', 121])).toBeUndefined();
     expect(queryClient.getQueryData(['event-logistics', '121'])).toBeUndefined();
     expect(queryClient.getQueryData(['social-invitations', '121'])).toBeUndefined();
     expect(queryClient.getQueryData(['social-ticket-tiers', '121'])).toBeUndefined();

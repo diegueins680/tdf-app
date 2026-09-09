@@ -452,6 +452,11 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/search?entityType=
     if (value.items.some((item) => String(item.id) === "990001")) throw new Error("suppressed event escaped through directory search");
     if (value.sponsoredItems.some((item) => String(item.id) === "990001")) throw new Error("suppressed event escaped through sponsored directory search");
   '
+curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/suggestions?q=Suppressed" |
+  node -e '
+    const value = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (value.some((item) => String(item.entityId) === "990001")) throw new Error("suppressed event escaped through directory suggestions");
+  '
 
 # Legacy portfolio/link keys are projected through the closed modern DTO without
 # mutating the stored historical source/provenance fields.

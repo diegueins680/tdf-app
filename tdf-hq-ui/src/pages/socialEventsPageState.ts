@@ -83,10 +83,14 @@ const ZERO_FINANCE_DETAILS_SUMMARY =
   'Los detalles financieros en cero se omiten hasta que tengan movimiento.';
 
 export function removeDeletedSocialEventQueries(queryClient: QueryClient, eventId: string): void {
+  const numericEventId = Number(eventId);
   queryClient.removeQueries({ queryKey: ['social-event', eventId] });
   queryClient.removeQueries({ queryKey: ['social-event-moments', eventId] });
   queryClient.removeQueries({ queryKey: ['social-event-ticket-tiers', eventId] });
   queryClient.removeQueries({ queryKey: ['public-event-ticket-storefront', eventId] });
+  if (Number.isSafeInteger(numericEventId) && numericEventId > 0) {
+    queryClient.removeQueries({ queryKey: ['public-event-ticket-storefront', numericEventId] });
+  }
   queryClient.removeQueries({ queryKey: ['event-logistics', eventId] });
   queryClient.removeQueries({ queryKey: ['social-invitations', eventId] });
   queryClient.removeQueries({ queryKey: ['social-ticket-tiers', eventId] });
