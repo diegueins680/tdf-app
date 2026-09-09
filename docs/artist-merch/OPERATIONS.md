@@ -9,7 +9,8 @@
 5. Envía a revisión. Solo staff puede publicar; luego puedes pausar o archivar.
 6. Invita al manager por nombre, nombre artístico o username y entrega únicamente los permisos necesarios.
 7. En pedidos, prepara solo cuando el pago figure `paid`. Para envío nacional registra transportista y tracking; para retiro usa “listo para retirar”.
-8. No exportes ni compartas más datos del destinatario que los necesarios para despachar. Reporta incidentes desde la orden.
+8. En `Solicitudes e incidencias`, responde al comprador y resuelve únicamente problemas operativos. Escala a TDF cancelaciones pagadas, reembolsos, disputas y fraude; cerrar un caso nunca significa que el dinero ya se movió.
+9. No exportes ni compartas más datos del destinatario que los necesarios para despachar.
 
 ## Soporte y conciliación
 
@@ -17,7 +18,8 @@
 - `pending` no es pagado. Revisar checkout, intento, evidencia y provider event antes de cualquier corrección.
 - Ante stock cambiado: pedir refrescar; no ajustar contadores manualmente. Ejecutar expirador de reservas y conciliar.
 - Ante envío: conservar tracking, timeline y comunicación pública; notas internas nunca se muestran al comprador.
-- Reembolso/disputa: mantener estado financiero separado de cancelación, devolución, fulfillment y settlement.
+- Cancelación sin pagar: el comprador puede cancelarla solo antes de procesamiento de pago/preparación; el backend libera la reserva y audita el cambio de forma idempotente.
+- Reembolso/disputa: mantener estado financiero separado de la incidencia, cancelación, devolución, fulfillment y settlement. El vendedor escala; staff solo cierra el caso después de verificar evidencia y ejecutar el flujo financiero independiente correspondiente.
 - Settlement: preparador y aprobador deben ser distintos. Pago manual final exige referencia/evidencia durable y conciliación; el handler final está diferido.
 - Incidente grave: apagar el flag más específico; para cualquier pago apagar primero `merch.checkout.runtime_ready` y `merch.checkout`.
 

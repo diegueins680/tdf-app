@@ -14,7 +14,7 @@ Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Dataf
 - Reutilización de `party`, `directory_profile`, permisos/PartySelector, `/assets/serve` y `commerce_checkout_*`.
 - Tokens opacos hasheados para carrito/orden y snapshots inmutables.
 - API Servant/OpenAPI y clientes TypeScript regenerados.
-- UI web completa para comprador/vendedor/staff; móvil para compra y operación esencial.
+- UI web completa para comprador/vendedor/staff, incluida cancelación sin pagar y triage de incidencias; móvil para compra, seguimiento, soporte y operación esencial.
 - Dependencia móvil revisable: [TDF-mobile#49](https://github.com/diegueins680/TDF-mobile/pull/49).
 
 ## UX
@@ -24,6 +24,8 @@ Storefront integrado al perfil y marketplace; mensajes explícitos para revisió
 ## Datos y estados
 
 Producto: `draft → pending_review → published/sold_out/paused/rejected/archived`. Pago, orden, reserva, fulfillment, shipment, refund, disputa y settlement permanecen separados. Comisión general 1000 bps sobre producto después de descuento; override auditable, incluido 0%.
+
+Incidencias: vendedor puede revisar/responder/resolver casos operativos; cancelación pagada, refund, disputa y fraude solo se escalan a staff. Cerrar el caso nunca muta por implicación pago, refund o settlement.
 
 ## Seguridad y privacidad
 
@@ -40,10 +42,12 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
-- Backend Haskell: PASS, 2.474/2.474 ejemplos.
+- Runtime de handlers + PostgreSQL 16 efímero: PASS 1/1; capability privada, cancelación/idempotencia, liberación de stock, permisos/finanzas, aislamiento de vendedor y triage/escalamiento posventa.
+- Backend Haskell: PASS, 2.476/2.476 ejemplos.
+- Reglas focalizadas posteriores: PASS 8/8 coincidencias `merch`.
 - Build web: PASS; presupuesto inicial JS PASS (413.750 bytes gzip).
 - Web y móvil typecheck: PASS.
-- Jest web merch API: PASS 5/5.
+- Jest web merch API: PASS 7/7.
 - Jest móvil deep links: PASS 2/2.
 - Playwright Chromium desktop/Pixel 7: PASS 4/4, con capturas de runtime adjuntas al reporte.
 - Axe en recorridos públicos: PASS, sin impactos serios/críticos.
@@ -64,7 +68,7 @@ Todos los flags permanecen `false`. Staging debe configurar de forma independien
 
 - Los adapters específicos de pago/refund de merch todavía no están expuestos.
 - Falta validar workers/outbox y rate limiting en staging.
-- Falta runtime HTTP cross-tenant, E2E autenticado vendedor/staff y validación manual con lector/zoom.
+- Falta E2E HTTP completo autenticado vendedor/staff y validación manual con lector/zoom; el aislamiento y handlers críticos ya se probaron directamente con PostgreSQL real.
 - Definición fiscal, contractual y de protección al consumidor pendiente.
 
 ## Rollout y rollback

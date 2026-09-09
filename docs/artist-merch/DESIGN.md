@@ -10,7 +10,8 @@
 6. El invitado proporciona destinatario y entrega. El servidor vuelve a calcular todo, bloquea variante, comprueba límite por comprador y crea una orden pendiente con reserva.
 7. Un adapter verificado —no el retorno del navegador— debe confirmar el pago. Hasta entonces la UI dice “pendiente”.
 8. El vendedor prepara, marca retiro listo o registra transportista/tracking. El comprador consulta mediante ID UUID más token privado no incluido en la URL.
-9. Staff prepara una liquidación manual; otra persona debe aprobarla. Marcarla pagada exige un flujo de evidencia separado aún no expuesto.
+9. Antes de que inicie pago o preparación, el comprador puede cancelar idempotentemente y liberar su reserva. Después, abre una incidencia; el vendedor resuelve solo casos operativos y escala cancelaciones pagadas, refunds, disputas o fraude a staff.
+10. Staff prepara una liquidación manual; otra persona debe aprobarla. Marcarla pagada exige un flujo de evidencia separado aún no expuesto.
 
 ## Modelo de datos
 
@@ -41,6 +42,17 @@ pending -> preparing -> ready_for_pickup -> delivered
 
 `problem` puede interrumpir la operación y volver solo a una transición admitida; `cancelled` y `returned` son terminales para fulfillment. Checkout, intento, evidencia de pago, orden comercial, inventario, fulfillment, refund, disputa y settlement tienen columnas/filas distintas.
 
+Incidencias:
+
+```text
+open -> seller_review -> awaiting_buyer -> seller_review
+  |          |                 |
+  +----------+-----------------+-> staff_review -> resolved | rejected | cancelled
+             +-------------------> resolved | rejected   (solo casos operativos)
+```
+
+Los estados terminales no se reabren. Cancelación, refund, disputa y fraude nunca pueden cerrarse desde el rol vendedor. El estado de la incidencia es evidencia de soporte y no modifica por implicación pago, refund, disputa, fulfillment ni settlement.
+
 ## Invariantes
 
 - Tienda activa implica solicitud aprobada y fecha de activación.
@@ -62,9 +74,9 @@ pending -> preparing -> ready_for_pickup -> delivered
 
 El contrato fuente está en `tdf-hq/docs/openapi/api.yaml`; los tipos generados no se editan manualmente.
 
-- Público: capabilities, storefronts, producto, carrito, checkout/orden pendiente, tracking e incidencias.
-- Autenticado vendedor: solicitud, tienda, miembros, políticas, zonas, catálogo, imágenes, órdenes y fulfillment.
-- Staff: revisión de tiendas/productos y settlements.
+- Público: capabilities, storefronts, producto, carrito, checkout/orden pendiente, tracking, cancelación sin pagar e incidencias.
+- Autenticado vendedor: solicitud, tienda, miembros, políticas, zonas, catálogo, imágenes, órdenes, fulfillment y triage de incidencias operativas.
+- Staff: revisión de tiendas/productos, cola de incidencias y settlements.
 
 Errores significativos usan 400 para input, 403 para alcance, 404 para evitar enumeración, 409 para carrera/idempotencia/estado y 503 para capability no habilitada.
 
