@@ -62,7 +62,7 @@ Después de integrar la base vigente `7e3379e0…`, se repitieron los controles 
 - auditoría canónica de catálogos: PASS, 1.051 candidatos, cero faltantes y cero decisiones obsoletas;
 - pruebas de entrypoint, release y auditoría de staging: PASS, 66/66.
 
-La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. El head que contiene la integración con `7e3379e0…` necesita su propia ejecución alojada antes de considerarse nuevamente verde.
+La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. Para considerar verde cualquier head que integre `7e3379e0…`, se exige una ejecución alojada propia sobre ese commit exacto.
 
 ## Gates externos pendientes
 
