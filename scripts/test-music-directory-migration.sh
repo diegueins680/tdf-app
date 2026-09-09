@@ -450,7 +450,7 @@ INSERT INTO directory_interaction(id,interaction_kind,external_id,profile_a_id,p
 VALUES ('d2000000-0000-4000-8000-000000000006','confirmed_collaboration','synthetic-runtime-review-source','d2000000-0000-4000-8000-000000000001','d2000000-0000-4000-8000-000000000002','completed',now());
 
 -- Keep the lifecycle state public-listable and retain a stale search row so
--- the runtime handlers themselves must honor the imported-event tombstone.
+-- both anonymous SQL projections and runtime handlers honor the tombstone.
 INSERT INTO social_event(
   id,organizer_party_id,title,description,event_type_id,workflow_state_id,start_time,end_time,
   metadata,created_at,updated_at
@@ -484,7 +484,7 @@ INSERT INTO directory_search_document(
   'event','990001','evento-990001','Suppressed directory tombstone',
   'This stale public search row must be ignored.',
   'suppressed directory tombstone',to_tsvector('simple','suppressed directory tombstone'),
-  'published','public','allowed',now()+interval '10 days',now()+interval '10 days 2 hours',
+  'published','public','allowed',now()-interval '1 hour',now()+interval '10 days 2 hours',
   now(),1,FALSE
 );
 SQL
@@ -559,7 +559,7 @@ curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/taxonomies?locale=
     });
   '
 
-test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=990001;")" = "1"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_public_event WHERE id=990001;")" = "0"
 suppressed_event_status=$(curl -sS -o /dev/null -w '%{http_code}' \
   "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/directory/events/990001")
 test "$suppressed_event_status" = "404"
