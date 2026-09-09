@@ -1,6 +1,6 @@
 # Matriz de aceptación: reputación de merch
 
-Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; base canónica integrada y revalidada: `159cc2a659c47025b5a10cae39d315de8455b707`; cliente móvil: `77dc27a29d2f2765b827c2c6d61905ca190a4ee3`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
+Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; head vigente del PR base integrado y revalidado: `7e3379e0dfbcb25a2fb658a12959eb15c3f3f0ce` (incluye la implementación merch `159cc2a659c47025b5a10cae39d315de8455b707` y `main` `97254b9b918852254a230281150f5d5d8d9d76bb`); cliente móvil: `77dc27a29d2f2765b827c2c6d61905ca190a4ee3`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
 
 ## Estados de evidencia
 
@@ -51,7 +51,7 @@ Sobre el código de implementación `d847accab…`:
 
 Todas estas pruebas usan identidades, tiendas, productos, órdenes y evaluaciones sintéticas. Los previews automáticos de los draft PR no son despliegues de producción ni validación con comercios reales.
 
-Después de integrar la base exacta `159cc2a…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
+Después de integrar la base vigente `7e3379e0…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
 
 - migración PostgreSQL de reputación: PASS;
 - backend focalizado: PASS, 20 ejemplos;
@@ -60,9 +60,9 @@ Después de integrar la base exacta `159cc2a…`, se repitieron los controles se
 - typecheck web y móvil: PASS;
 - generación OpenAPI: PASS, sin cambios en los clientes generados;
 - auditoría canónica de catálogos: PASS, 1.051 candidatos, cero faltantes y cero decisiones obsoletas;
-- pruebas de entrypoint, release y auditoría de staging: PASS.
+- pruebas de entrypoint, release y auditoría de staging: PASS, 66/66.
 
-La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. El head que contiene la integración con `159cc2a…` necesita su propia ejecución alojada antes de considerarse nuevamente verde.
+La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. El head que contiene la integración con `7e3379e0…` necesita su propia ejecución alojada antes de considerarse nuevamente verde.
 
 ## Gates externos pendientes
 
