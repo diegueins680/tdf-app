@@ -2807,6 +2807,8 @@ socialEventsServer user =
                     if null importedRefs
                         then hardDeleteEventGraph now eventKey
                         else do
+                            cancelledStateId <-
+                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
                             updateWhere
                                 [ExternalEventRefEventId ==. eventKey]
                                 [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
@@ -2816,13 +2818,29 @@ socialEventsServer user =
                                 eventKey
                                 [ SocialEventMetadata =.
                                     suppressImportedEventMetadata (socialEventMetadata existing)
+                                , SocialEventWorkflowStateId =. Just cancelledStateId
                                 , SocialEventUpdatedAt =. now
                                 ]
+                            withdrawEventDirectorySearch eventKey
                             pure (Right ())
                 )
                 envPool
         either throwError pure deletionResult
         pure NoContent
+
+    withdrawEventDirectorySearch :: SocialEventId -> SqlPersistT IO ()
+    withdrawEventDirectorySearch eventKey = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        when ("postgres" `T.isInfixOf` backendName) $ do
+            directoryTableRows <-
+                rawSql
+                    "SELECT to_regclass('directory_search_document') IS NOT NULL"
+                    []
+                    :: SqlPersistT IO [Single Bool]
+            when (directoryTableRows == [Single True]) $
+                rawExecute
+                    "DELETE FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = ?"
+                    [PersistText (renderKeyText eventKey)]
 
     hardDeleteEventGraph :: UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError ())
     hardDeleteEventGraph now eventKey = do
@@ -2832,6 +2850,7 @@ socialEventsServer user =
         case validateEventDeletionCheckoutHistory hasTicketOrders of
             Left err -> pure (Left err)
             Right () -> do
+                withdrawEventDirectorySearch eventKey
                 updateWhere
                     [EventResearchCandidateEventId ==. Just eventKey]
                     [EventResearchCandidateEventId =. Nothing]
