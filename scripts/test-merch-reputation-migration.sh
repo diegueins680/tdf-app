@@ -91,6 +91,29 @@ SQL
 apply_file tdf-hq/sql/2026-09-08_merch_reputation.sql
 apply_file tdf-hq/sql/2026-09-08_merch_reputation.sql
 
+concurrent_suggestion_sql="BEGIN;
+SELECT merch_reputation_submit_category_suggestion(
+  3::BIGINT,'store','Synthetic concurrency category',
+  'Synthetic category used only to verify concurrent idempotent retries.',
+  'category-concurrency-0001','development'
+);
+SELECT pg_sleep(0.5);
+COMMIT;"
+psql_exec -Atqc "$concurrent_suggestion_sql" >/dev/null &
+first_concurrent_pid=$!
+psql_exec -Atqc "$concurrent_suggestion_sql" >/dev/null &
+second_concurrent_pid=$!
+wait "$first_concurrent_pid"
+wait "$second_concurrent_pid"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM merch_reputation_category_suggestion WHERE normalized_key='synthetic-concurrency-category';")" \
+  "1" \
+  "Concurrent category suggestion created once"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM merch_reputation_idempotency WHERE idempotency_key='category-concurrency-0001';")" \
+  "1" \
+  "Concurrent retry recorded one idempotency result"
+
 psql_exec <<'SQL' >/dev/null
 DO $$
 DECLARE disabled_count INTEGER;
