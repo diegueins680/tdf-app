@@ -217,6 +217,8 @@ Alertas mínimas: evento sin proyección, tres fallos de proyección, divergenci
 
 ## Validación y pendientes de salida
 
+La correspondencia uno a uno entre los 22 criterios de aceptación, sus controles y su evidencia está en [`merch-reputation-acceptance.md`](./merch-reputation-acceptance.md). Esa matriz distingue pruebas automatizadas, controles inspeccionados y resultados que sólo pueden validarse en staging o durante un piloto autorizado.
+
 La prueba de migración usa exclusivamente actores, tiendas, productos, órdenes y evaluaciones sintéticas. Aplica primero el esquema canónico y luego reputación, ambos dos veces. Comprueba reclamo privado de checkout invitado, reejecución, flags oscuros, umbral sin cuentas relacionadas, coherencia, autoevaluación, historial, devolución/reembolso, exclusión reversible por fraude, media segura, courier, captura automática de estados confiables, reconstrucción, versión de fórmula, prioridades, sugerencias gobernadas, moderación por etapas, apelación, alcance vendedor y revisión financiera independiente.
 
 Antes de un piloto quedan como validaciones externas, no autorizadas por este cambio:
