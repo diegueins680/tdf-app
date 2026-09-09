@@ -18,6 +18,7 @@ test('staging Fly config pins the isolated volume and disables background side e
   const deployment = await readFile(path.join(repo, 'docs/internships/studio-audit/DEPLOYMENT.md'), 'utf8');
 
   assert.match(config, /^  CONTEXTUAL_REPUTATION_ENABLED = "false"$/mu);
+  assert.match(config, /^  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_ENVIRONMENT = "staging"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_MODE = "simulation"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"$/mu);

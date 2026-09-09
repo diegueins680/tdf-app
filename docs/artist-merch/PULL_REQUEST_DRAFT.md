@@ -42,13 +42,14 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
-- Runtime de handlers + PostgreSQL 16 efímero: PASS 1/1; capability privada, cancelación/idempotencia, liberación de stock, permisos/finanzas, aislamiento de vendedor y triage/escalamiento posventa.
-- Backend Haskell: PASS, 2.476/2.476 ejemplos.
+- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor y triage seller/admin.
+- Backend Haskell: PASS, 2.487/2.487 ejemplos sobre la integración final con `main`.
 - Reglas focalizadas posteriores: PASS 8/8 coincidencias `merch`.
 - Build web: PASS; presupuesto inicial JS PASS (413.750 bytes gzip).
 - Web y móvil typecheck: PASS.
 - Jest web merch API: PASS 7/7.
 - Jest móvil deep links: PASS 2/2.
+- Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente. Xcode 16.2 está instalado, pero `xcrun simctl list devices available` no pudo conectarse a `CoreSimulatorService` ni descubrir runtimes; por ello iOS/dispositivo físico no se declaran verificados.
 - Playwright Chromium desktop/Pixel 7: PASS 4/4, con capturas de runtime adjuntas al reporte.
 - Axe en recorridos públicos: PASS, sin impactos serios/críticos.
 - Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
@@ -57,8 +58,9 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
 - Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos clasificados; prueba determinista PASS.
+- Gate remoto del PR: PASS 17/17 en la corrida que incluyó explícitamente el runtime HTTP autenticado dentro de `backend-quality`, además de migraciones, contratos, UI, móvil, E2E y auditoría de listas. El estado del HEAD vigente debe consultarse en GitHub; los previews automáticos no se consideran staging ni producción.
 
-No se ejecutó runtime en dispositivo/emulador móvil ni integración real con proveedor de pagos.
+No se ejecutó runtime iOS/dispositivo físico ni integración real con proveedor de pagos. El bloqueo iOS observado es de infraestructura local (`CoreSimulatorService`/`simdiskimaged` no disponible), no evidencia de éxito o fallo de la aplicación.
 
 ## Configuración y staging
 
@@ -68,7 +70,7 @@ Todos los flags permanecen `false`. Staging debe configurar de forma independien
 
 - Los adapters específicos de pago/refund de merch todavía no están expuestos.
 - Falta validar workers/outbox y rate limiting en staging.
-- Falta E2E HTTP completo autenticado vendedor/staff y validación manual con lector/zoom; el aislamiento y handlers críticos ya se probaron directamente con PostgreSQL real.
+- Falta repetir en staging el E2E HTTP autenticado que ya pasó localmente y completar validación manual con lector/zoom.
 - Definición fiscal, contractual y de protección al consumidor pendiente.
 
 ## Rollout y rollback
@@ -78,7 +80,8 @@ Local sintético → staging → prueba interna con dos adultos/roles → piloto
 ## Checklist bloqueante
 
 - [ ] Adapters de pago/refund/reconcile verificados en sandbox.
-- [ ] E2E comprador/vendedor/staff y cross-tenant.
+- [x] E2E HTTP local de comprador invitado/vendedor/staff y cross-tenant con PostgreSQL 16 temporal.
+- [ ] Repetición E2E en staging con observabilidad y personas/roles separados.
 - [ ] Responsive/WCAG/teclado/lector/zoom con evidencia.
 - [ ] Observabilidad y soporte on-call.
 - [ ] Vendedor formal, facturación, impuestos/retenciones.

@@ -433,7 +433,8 @@ checkoutCart cartId rawToken rawIdempotency request@MerchCheckoutRequest{..} = d
       [PersistText (uuidText cartId),PersistText (hashText token)]
       :: SqlPersistT IO [(Single Text,Single Text,Single Text)])
     case cartRows of
-      [(Single storeId,Single currency,Single cartStatus)] | cartStatus `elem` ["active","checkout_started"] -> do
+      [(Single storeId,Single currency,Single cartStatus)]
+        | cartStatus `elem` ["active","checkout_started","converted"] -> do
         existing <- (rawSql
           "SELECT id::text,create_request_sha256 FROM merch_order WHERE store_id=?::uuid AND create_idempotency_key=?"
           [PersistText storeId,PersistText idempotencyKey]
@@ -442,7 +443,9 @@ checkoutCart cartId rawToken rawIdempotency request@MerchCheckoutRequest{..} = d
           [(Single existingId,Single existingHash)]
             | existingHash == requestHash -> pure (Right existingId)
             | otherwise -> pure (Left "Idempotency-Key conflicts with another checkout request")
-          [] -> createCheckoutRows now expiresAt environment cartId token mcoShippingZoneId orderId checkoutId storeId currency recipient requestHash idempotencyKey
+          []
+            | cartStatus == "converted" -> pure (Left "Cart is missing, expired, or no longer editable")
+            | otherwise -> createCheckoutRows now expiresAt environment cartId token mcoShippingZoneId orderId checkoutId storeId currency recipient requestHash idempotencyKey
           _ -> pure (Left "Checkout idempotency state is ambiguous")
       _ -> pure (Left "Cart is missing, expired, or no longer editable")
   orderIdText <- either (throwError . conflict) pure result

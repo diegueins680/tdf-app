@@ -10,7 +10,7 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 
 | Amenaza | Control implementado | Riesgo/acción restante |
 |---|---|---|
-| Takeover o acceso entre vendedores | Perfil reclamado/verificado, autorización backend por store+acción, owner y permisos delimitados, pruebas negativas SQL | Probar handlers E2E con dos cuentas en staging |
+| Takeover o acceso entre vendedores | Perfil reclamado/verificado, autorización backend por store+acción, owner y permisos delimitados, pruebas negativas SQL y HTTP local con dos vendedores | Repetir E2E con dos cuentas en staging y alertas activas |
 | Manipulación de precio | Payload de checkout no acepta precios; joins server-side y snapshots inmutables | Revisión externa del adapter antes de activar |
 | Sobreventa/carrera | Locks de variante, constraint de contadores, reserva atómica y prueba concurrente | Alertar reservas atascadas/expirador |
 | Doble orden/cargo | Idempotencia con fingerprint en solicitud/producto/invitación/checkout/issue; checkout canónico | Cada adapter debe reutilizar intento y clave en reintentos |
@@ -38,5 +38,5 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 - DAST, CSP/CORS/cookies/CSRF y rate-limit en un deployment de staging real.
 - Pruebas de replay/firma y consulta autoritativa con sandbox Datafast/PayPal.
 - Revisión manual independiente de comprobantes y evidencias de settlement.
-- E2E cross-tenant con vendedor A, vendedor B, comprador invitado y staff.
+- Repetición en staging del E2E cross-tenant local ya aprobado con vendedor A, vendedor B, comprador invitado y staff.
 - Revisión WCAG con lector de pantalla, zoom 200/400% y teclado sobre build servido.

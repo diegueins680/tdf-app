@@ -55,10 +55,11 @@ const stagedRuntimeEnv = Object.freeze({
 });
 const readRuntimeEnvCommand = [
   "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
+  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nPUBLIC_REPUTATION_PROJECTION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
   '"${RUN_MIGRATIONS-__UNSET__}" ',
   '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
   '"${CONTEXTUAL_REPUTATION_ENABLED-__UNSET__}" ',
+  '"${PUBLIC_REPUTATION_PROJECTION_ENABLED-__UNSET__}" ',
   '"${REPUTATION_AGGREGATION_WORKER_ENABLED-__UNSET__}" ',
   '"${REPUTATION_AGGREGATION_ENVIRONMENT-__UNSET__}" ',
   '"${REPUTATION_AGGREGATION_MODE-__UNSET__}" ',
@@ -332,6 +333,24 @@ function runtimeEnvBlockers(rows, options = {}) {
     }));
 }
 
+function capturePublicReputationProjectionGate(rows) {
+  const values = new Set(rows.map(({ values: runtime }) => runtime.PUBLIC_REPUTATION_PROJECTION_ENABLED));
+  if (values.size !== 1 || !['true', 'false', '__UNSET__', undefined].includes([...values][0])) {
+    throw new Error('Every production Machine must report the same boolean PUBLIC_REPUTATION_PROJECTION_ENABLED value.');
+  }
+  // A uniformly unset fleet is the first-rollout upgrade state. The reviewed
+  // manifest deliberately introduces the gate as true; mixed states remain a
+  // hard failure so an incident rollback cannot be silently overwritten.
+  const value = [...values][0];
+  return value === '__UNSET__' || value === undefined || value === 'true';
+}
+
+async function currentPublicReputationProjectionGate(context, machine) {
+  return capturePublicReputationProjectionGate(
+    await readEffectiveRuntimeEnv(context.app, [machine]),
+  );
+}
+
 async function readSecretNames(app) {
   const { stdout } = await run(['flyctl', 'secrets', 'list', '--app', app, '--json']);
   const rows = JSON.parse(stdout);
@@ -400,6 +419,7 @@ async function remotePreflight(context) {
   await run(['flyctl', 'auth', 'whoami']);
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
+  const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
   const secrets = await readSecretNames(context.app);
   const blockers = runtimeEnvBlockers(runtimeEnv, {
     allowUnavailableAutomaticRunner: true,
@@ -444,6 +464,7 @@ async function remotePreflight(context) {
   return {
     machines,
     runtimeEnv,
+    publicReputationProjectionEnabled,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
     securityEmergencyReadiness,
@@ -564,12 +585,14 @@ async function rollbackMachine(context, machine) {
   const image = machine.releaseSnapshot?.image ?? previousImage(machine);
   const sha = previousSha(machine);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
+  const projectionGate = await currentPublicReputationProjectionGate(context, machine);
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
   await run(buildMachineDeployArgs({
     app: context.app,
     image,
     sha,
+    publicReputationProjectionEnabled: projectionGate,
     onlyMachine: machine.id,
   }));
   const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
@@ -768,6 +791,8 @@ async function executeRelease(context) {
 
   const startedAt = new Date().toISOString();
   const preflight = await remotePreflight(context);
+  // Preflight validated fleet coherence, including the uniformly unset upgrade
+  // state. Each mutation still re-reads its target below.
   const originalMachines = preflight.machines;
   const canary = originalMachines[0];
   const remaining = originalMachines.slice(1);
@@ -809,10 +834,12 @@ async function executeRelease(context) {
 
     await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
     touchedMachines.add(canary.id);
+    const canaryProjectionGate = await currentPublicReputationProjectionGate(context, canary);
     await run(buildMachineDeployArgs({
       app: context.app,
       image: context.resolvedImage,
       sha: context.sha,
+      publicReputationProjectionEnabled: canaryProjectionGate,
       onlyMachine: canary.id,
     }));
     try {
@@ -827,10 +854,12 @@ async function executeRelease(context) {
       await heartbeatReleaseLease(context, leaseToken);
       await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
       touchedMachines.add(machine.id);
+      const projectionGate = await currentPublicReputationProjectionGate(context, machine);
       await run(buildMachineDeployArgs({
         app: context.app,
         image: context.resolvedImage,
         sha: context.sha,
+        publicReputationProjectionEnabled: projectionGate,
         onlyMachine: machine.id,
       }));
       report.rollout.push(await verifyTargetMachine(context, machine.id));
