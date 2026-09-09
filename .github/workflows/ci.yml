@@ -210,6 +210,14 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify authenticated artist merch HTTP runtime
+        env:
+          PGPASSWORD: postgres
+          TDF_MERCH_RUNTIME_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_merch_runtime_test
+        run: |
+          createdb -h postgres -U postgres tdf_hq_merch_runtime_test
+          ./scripts/test-artist-merch-runtime.sh
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
