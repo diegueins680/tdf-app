@@ -419,6 +419,7 @@ async function remotePreflight(context) {
   await run(['flyctl', 'auth', 'whoami']);
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
+  const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
   const secrets = await readSecretNames(context.app);
   const blockers = runtimeEnvBlockers(runtimeEnv, {
     allowUnavailableAutomaticRunner: true,
@@ -463,6 +464,7 @@ async function remotePreflight(context) {
   return {
     machines,
     runtimeEnv,
+    publicReputationProjectionEnabled,
     ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
     databasePreflight: stdout.trim().split('\n').slice(-3),
     securityEmergencyReadiness,
@@ -789,9 +791,8 @@ async function executeRelease(context) {
 
   const startedAt = new Date().toISOString();
   const preflight = await remotePreflight(context);
-  // Validate that pre-existing Machines agree, including the uniformly unset
-  // upgrade state. Each mutation re-reads its target below.
-  capturePublicReputationProjectionGate(preflight.runtimeEnv);
+  // Preflight validated fleet coherence, including the uniformly unset upgrade
+  // state. Each mutation still re-reads its target below.
   const originalMachines = preflight.machines;
   const canary = originalMachines[0];
   const remaining = originalMachines.slice(1);
