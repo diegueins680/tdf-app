@@ -1,6 +1,6 @@
 # Matriz de aceptación: reputación de merch
 
-Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; head vigente del PR base integrado y revalidado: `bd4678ce071baa792c205f0485ef25039eee5e2a` (incluye la implementación merch `159cc2a659c47025b5a10cae39d315de8455b707` y `main` `32d618a6e8704d82105c00c584d94f9c28ad13ea`); cliente móvil integrado y probado: `880f9668872c78cb83d863b39723b3c691cda14b`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
+Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; head vigente del PR base integrado y revalidado: `3bd4ae60386ff549255a87c108b0fa0051c8e388` (incluye la implementación merch `159cc2a659c47025b5a10cae39d315de8455b707` y `main` `32d618a6e8704d82105c00c584d94f9c28ad13ea`); cliente móvil integrado y probado: `880f9668872c78cb83d863b39723b3c691cda14b`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
 
 ## Estados de evidencia
 
@@ -51,7 +51,7 @@ Sobre el código de implementación `d847accab…`:
 
 Todas estas pruebas usan identidades, tiendas, productos, órdenes y evaluaciones sintéticas. Los previews automáticos de los draft PR no son despliegues de producción ni validación con comercios reales.
 
-Después de integrar la base vigente `bd4678ce0…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
+Después de integrar la base vigente `3bd4ae603…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
 
 - migración PostgreSQL de reputación: PASS;
 - backend focalizado: PASS, 20 ejemplos;
@@ -62,7 +62,7 @@ Después de integrar la base vigente `bd4678ce0…`, se repitieron los controles
 - auditoría canónica de catálogos: PASS, 1.052 candidatos, cero faltantes y cero decisiones obsoletas;
 - pruebas de entrypoint, release y auditoría de staging: PASS, 67/67.
 
-La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. Para considerar verde cualquier head que integre `bd4678ce0…`, se exige una ejecución alojada propia sobre ese commit exacto.
+La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. Para considerar verde cualquier head que integre `3bd4ae603…`, se exige una ejecución alojada propia sobre ese commit exacto.
 
 ## Gates externos pendientes
 
