@@ -33,7 +33,7 @@
 - OpenAPI: YAML parseado y tipos generados para ambos clientes.
 - Manifiesto/mecanismo de release: PASS, 47/47 pruebas; migración anclada al SHA de introducción.
 - Feature registry: generación PASS. Auditoría reporta solo el destino preexistente no relacionado `/reputation/consents`.
-- Auditoría de listas/catálogos: PASS, 1.000/1.000 candidatos con decisión vigente; prueba determinista PASS. Se conservaron las decisiones revisadas preexistentes, se retiraron 2 huellas obsoletas y se clasificaron 50 candidatos nuevos.
+- Auditoría de listas/catálogos: PASS, 1.004/1.004 candidatos con decisión vigente; prueba determinista PASS. Se conservaron las decisiones revisadas preexistentes, se retiraron 2 huellas obsoletas y se clasificaron 54 candidatos nuevos.
 
 ## Pendiente antes de recomendar lanzamiento
 
