@@ -31,15 +31,17 @@ import MapIcon from '@mui/icons-material/Map';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ShareIcon from '@mui/icons-material/Share';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import LoginIcon from '@mui/icons-material/Login';
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
 import {
   Directory,
   type DirectoryEntityType,
+  type DirectoryFavorite,
   type DirectorySearchItem,
   type DirectorySearchQuery,
 } from '../api/directory';
@@ -159,6 +161,19 @@ export default function DirectorySearchPage() {
   const items = pages.flatMap((page) => page.items);
   const sponsored = pages[0]?.sponsoredItems ?? [];
   const facets = pages[0]?.facets;
+  const favoritePartyId = session?.partyId;
+  const favorites = useQuery({
+    queryKey: ['directory', 'favorites', favoritePartyId],
+    queryFn: () => Directory.favorites(),
+    enabled: favoritePartyId != null,
+    staleTime: 30_000,
+  });
+  const favoriteKeys = useMemo(
+    () => new Set((favorites.data ?? []).map((favorite) => `${favorite.targetKind}:${favorite.targetId}`)),
+    [favorites.data],
+  );
+  const favoriteStateReady = favoritePartyId != null && favorites.isSuccess;
+  const loginReturnPath = `${location.pathname}${location.search}`;
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -250,6 +265,14 @@ export default function DirectorySearchPage() {
 
       <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Stack spacing={3}>
+          {session && (favoritePartyId == null || favorites.isError) ? (
+            <Alert
+              severity="warning"
+              action={favoritePartyId != null ? <Button onClick={() => { void favorites.refetch(); }}>Reintentar</Button> : undefined}
+            >
+              No pudimos cargar tus guardados. Puedes seguir explorando el directorio.
+            </Alert>
+          ) : null}
           <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
               <FormControl size="small" sx={{ minWidth: 190 }}>
@@ -303,7 +326,18 @@ export default function DirectorySearchPage() {
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">Patrocinados</Typography>
-              <Stack spacing={1}>{sponsored.map((item) => <ResultCard key={`sponsored-${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout="list" />)}</Stack>
+              <Stack spacing={1}>{sponsored.map((item) => (
+                <DirectoryResultCard
+                  key={`sponsored-${item.type}-${item.id}`}
+                  item={item}
+                  sessionActive={Boolean(session)}
+                  partyId={favoritePartyId}
+                  isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)}
+                  favoriteStateReady={favoriteStateReady}
+                  loginReturnPath={loginReturnPath}
+                  layout="list"
+                />
+              ))}</Stack>
             </Box>
           )}
 
@@ -324,7 +358,18 @@ export default function DirectorySearchPage() {
           {view === 'map' && items.length > 0 ? <OpenStreetMapResults items={items} /> : null}
           {view !== 'map' && items.length > 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: view === 'grid' ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 2 }}>
-              {items.map((item) => <ResultCard key={`${item.type}-${item.id}`} item={item} sessionActive={Boolean(session)} layout={view === 'grid' ? 'grid' : 'list'} />)}
+              {items.map((item) => (
+                <DirectoryResultCard
+                  key={`${item.type}-${item.id}`}
+                  item={item}
+                  sessionActive={Boolean(session)}
+                  partyId={favoritePartyId}
+                  isFavorite={favoriteKeys.has(`${item.type}:${item.id}`)}
+                  favoriteStateReady={favoriteStateReady}
+                  loginReturnPath={loginReturnPath}
+                  layout={view === 'grid' ? 'grid' : 'list'}
+                />
+              ))}
             </Box>
           ) : null}
           {results.hasNextPage && <Button variant="outlined" size="large" onClick={() => { void results.fetchNextPage(); }} disabled={results.isFetchingNextPage} sx={{ alignSelf: 'center' }}>{results.isFetchingNextPage ? 'Cargando…' : 'Ver más resultados'}</Button>}
@@ -334,12 +379,40 @@ export default function DirectorySearchPage() {
   );
 }
 
-function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem; sessionActive: boolean; layout: 'list' | 'grid' }) {
+export function DirectoryResultCard({
+  item,
+  sessionActive,
+  partyId,
+  isFavorite,
+  favoriteStateReady,
+  loginReturnPath,
+  layout,
+}: {
+  item: DirectorySearchItem;
+  sessionActive: boolean;
+  partyId: number | undefined;
+  isFavorite: boolean;
+  favoriteStateReady: boolean;
+  loginReturnPath: string;
+  layout: 'list' | 'grid';
+}) {
   const path = resultPath(item);
   const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
   const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
+  const queryClient = useQueryClient();
   const favorite = useMutation({
-    mutationFn: () => Directory.addFavorite(item.type, item.id),
+    mutationFn: (nextFavorite: boolean) => nextFavorite
+      ? Directory.addFavorite(item.type, item.id)
+      : Directory.removeFavorite(item.type, item.id),
+    onSuccess: (_data, nextFavorite) => {
+      if (partyId == null) return;
+      queryClient.setQueryData<DirectoryFavorite[]>(['directory', 'favorites', partyId], (current = []) => {
+        const withoutTarget = current.filter((entry) => entry.targetKind !== item.type || entry.targetId !== item.id);
+        if (!nextFavorite) return withoutTarget;
+        return [{ targetKind: item.type, targetId: item.id, createdAt: new Date().toISOString(), result: item }, ...withoutTarget];
+      });
+      void queryClient.invalidateQueries({ queryKey: ['directory', 'favorites', partyId] });
+    },
   });
   const share = async () => {
     const url = `${window.location.origin}${path}`;
@@ -402,13 +475,20 @@ function ResultCard({ item, sessionActive, layout }: { item: DirectorySearchItem
           <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>Ver detalle</Button>
           <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
           {sessionActive ? (
-            <Button onClick={() => favorite.mutate()} disabled={favorite.isPending || favorite.isSuccess} startIcon={<BookmarkBorderIcon />}>
-              {favorite.isSuccess ? 'Guardado' : 'Guardar'}
+            <Button
+              onClick={() => favorite.mutate(!isFavorite)}
+              disabled={!favoriteStateReady || favorite.isPending}
+              aria-label={`${isFavorite ? 'Quitar de guardados' : 'Guardar'} ${item.title}`}
+              aria-pressed={isFavorite}
+              startIcon={isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+            >
+              {!favoriteStateReady ? 'Consultando guardados…' : isFavorite ? 'Guardado' : 'Guardar'}
             </Button>
           ) : (
-            <Button component={RouterLink} to={buildLoginRedirectPath(path)} startIcon={<LoginIcon />}>Ingresar para contactar</Button>
+            <Button component={RouterLink} to={buildLoginRedirectPath(loginReturnPath)} startIcon={<LoginIcon />}>Ingresar para guardar</Button>
           )}
         </CardActions>
+        {favorite.isError ? <Alert severity="error" sx={{ mx: 2, mb: 2 }}>No se pudo actualizar este guardado. Intenta de nuevo.</Alert> : null}
       </Box>
     </Card>
   );

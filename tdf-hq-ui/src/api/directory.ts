@@ -17,6 +17,7 @@ export type DirectoryInvitation = components['schemas']['DirectoryInvitation'];
 export type DirectoryReviewPage = components['schemas']['DirectoryReviewPage'];
 export type DirectoryReviewEligibility = components['schemas']['DirectoryReviewEligibility'];
 export type DirectoryReview = components['schemas']['DirectoryReview'];
+export type DirectoryFavorite = components['schemas']['DirectoryFavorite'];
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 
