@@ -452,6 +452,11 @@
       "introducedBy": "48992e37f83ac6c6f45d4f1a2a4888c6bf41bd2f"
     },
     {
+      "id": "2026-09-08_event_rsvp_identity_privacy_feed",
+      "path": "tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql",
+      "introducedBy": "5a9b1fcf5aa3bdda9feb3889a46212bdea7ce2c1"
+    },
+    {
       "id": "2026-09-09_music_directory_suppressed_event_privacy",
       "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
       "introducedBy": "849444cdcce0254c3091293edce8a4cc5f8175fa"
