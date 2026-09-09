@@ -1,6 +1,6 @@
 # Matriz de aceptación: reputación de merch
 
-Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; head vigente del PR base integrado y revalidado: `776107b2d488eee5b97a11a444c5c14f3e241c3d` (incluye la implementación merch `159cc2a659c47025b5a10cae39d315de8455b707` y `main` `32d618a6e8704d82105c00c584d94f9c28ad13ea`); cliente móvil integrado y probado: `7f3565921f0bea88458b55788ff404be7bb8122e`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
+Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab07c294c8e43c1255cd2025e41bedf34`; head vigente del PR base integrado y revalidado: `bd4678ce071baa792c205f0485ef25039eee5e2a` (incluye la implementación merch `159cc2a659c47025b5a10cae39d315de8455b707` y `main` `32d618a6e8704d82105c00c584d94f9c28ad13ea`); cliente móvil integrado y probado: `880f9668872c78cb83d863b39723b3c691cda14b`. Esta matriz no certifica producción: registra evidencia sintética local/CI y separa los controles implementados de las validaciones que necesitan staging, revisión humana o un piloto autorizado.
 
 ## Estados de evidencia
 
@@ -32,7 +32,7 @@ Fecha de auditoría: 2026-09-09. Código de implementación evaluado: `d847accab
 | 18 | No se exponen órdenes ni datos personales públicamente. | Automatizado + implementado | `MerchReviewPublic` no contiene orden, email, teléfono, dirección, pago, tracking ni despacho. `publicReviewsSql` construye una lista positiva de campos y respeta la preferencia de nombre/avatar; el claim marca `orderId` como `writeOnly`. SQL verifica redacción del token de capacidad (líneas 290–299) y el outbox rechaza claves sensibles. Falta un recorrido autenticado con servicios de staging para verificar la serialización completa. |
 | 19 | La reputación influye de forma limitada y auditable en descubrimiento. | Automatizado | `merch_reputation_search_contribution` exige ambiente y flag, usa la versión activa y limita el aporte a 12 % del score base. SQL prueba fail-closed, aporte positivo acotado y neutralidad de tienda nueva (líneas 606–617); Haskell prueba el cap (líneas 857–868). |
 | 20 | Las tiendas nuevas conservan oportunidades reales de exposición. | Implementado; pendiente externo | El ranking base combina relevancia, disponibilidad, categoría y novedad/exploración antes de reputación; tiendas nuevas/recientes reciben exploración acotada y contribución reputacional neutral. `merch_reputation_exposure_daily` guarda impresiones/conversiones y contribuciones agregadas. La oportunidad efectiva y la concentración sólo pueden demostrarse durante un piloto autorizado con dashboards activos. |
-| 21 | Backend, web, móvil, OpenAPI, migraciones y clientes permanecen coherentes. | Automatizado | Generación OpenAPI deja clientes web/móvil sin diff; typecheck, pruebas focalizadas/completas, build web, E2E responsive, migración PostgreSQL, feature registry, catálogo y release checks pasaron. El submódulo raíz apunta a `7f3565921…`, que integra la reputación móvil con la base vigente del storefront. |
+| 21 | Backend, web, móvil, OpenAPI, migraciones y clientes permanecen coherentes. | Automatizado | Generación OpenAPI deja clientes web/móvil sin diff; typecheck, pruebas focalizadas/completas, build web, E2E responsive, migración PostgreSQL, feature registry, catálogo y release checks pasaron. El submódulo raíz apunta a `880f96688…`, que integra la reputación móvil con la base vigente del storefront y su sincronización nativa iOS. |
 | 22 | Las pruebas relevantes pasan o sus bloqueos quedan identificados con precisión. | Automatizado + pendientes externos | La evidencia reproducible aparece abajo. Permanecen explícitamente fuera de la certificación: staging con tres identidades, runtime nativo asistido, AV/CDR y storage firmado, WCAG asistido, revisión de sesgo/copy/retención/legal, wiring de dashboards y piloto. |
 
 ## Ejecuciones reproducibles
@@ -51,7 +51,7 @@ Sobre el código de implementación `d847accab…`:
 
 Todas estas pruebas usan identidades, tiendas, productos, órdenes y evaluaciones sintéticas. Los previews automáticos de los draft PR no son despliegues de producción ni validación con comercios reales.
 
-Después de integrar la base vigente `776107b2d…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
+Después de integrar la base vigente `bd4678ce0…`, se repitieron los controles sensibles a la integración antes de publicar el nuevo head:
 
 - migración PostgreSQL de reputación: PASS;
 - backend focalizado: PASS, 20 ejemplos;
@@ -59,10 +59,10 @@ Después de integrar la base vigente `776107b2d…`, se repitieron los controles
 - Jest móvil: PASS, 3 suites / 5 pruebas;
 - typecheck web y móvil: PASS;
 - generación OpenAPI: PASS, sin cambios en los clientes generados;
-- auditoría canónica de catálogos: PASS, 1.051 candidatos, cero faltantes y cero decisiones obsoletas;
+- auditoría canónica de catálogos: PASS, 1.052 candidatos, cero faltantes y cero decisiones obsoletas;
 - pruebas de entrypoint, release y auditoría de staging: PASS, 67/67.
 
-La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. Para considerar verde cualquier head que integre `776107b2d…`, se exige una ejecución alojada propia sobre ese commit exacto.
+La ejecución alojada citada arriba corresponde al baseline funcional exacto `d847accab…`. Para considerar verde cualquier head que integre `bd4678ce0…`, se exige una ejecución alojada propia sobre ese commit exacto.
 
 ## Gates externos pendientes
 
