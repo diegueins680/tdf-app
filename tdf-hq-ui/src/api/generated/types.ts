@@ -5534,6 +5534,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/merch/orders/{orderId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an unpaid order before payment processing or fulfillment starts
+         * @description This idempotent operation releases active inventory reservations and records an immutable issue, fulfillment timeline, and audit entry. Paid or processing orders must use the independently reviewed issue and refund workflow.
+         */
+        post: operations["cancelUnpaidMerchOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/merch/favorites/{productId}": {
         parameters: {
             query?: never;
@@ -5761,6 +5781,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/merch/seller/stores/{storeId}/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the store's support cases without exposing another seller's orders */
+        get: operations["listSellerMerchIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/issues/{issueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Triage an operational case or escalate a financial case to staff
+         * @description Sellers cannot resolve or reject cancellation, refund, dispute, or fraud cases. This operation never changes payment, refund, dispute, fulfillment, or settlement state.
+         */
+        patch: operations["updateSellerMerchIssue"];
+        trace?: never;
+    };
     "/merch/seller/stores/{storeId}/orders/{orderId}/fulfillment": {
         parameters: {
             query?: never;
@@ -5840,6 +5897,43 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List support cases across the closed pilot */
+        get: operations["listAdminMerchIssues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/issues/{issueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Progress or close an independently reviewed support case
+         * @description Closing a case records a public resolution and audit evidence but never executes or implies a provider refund, chargeback result, or settlement adjustment.
+         */
+        patch: operations["updateAdminMerchIssue"];
         trace?: never;
     };
     "/merch/admin/settlements": {
@@ -6260,6 +6354,7 @@ export interface components {
             timeline?: {
                 [key: string]: unknown;
             }[];
+            issues?: components["schemas"]["MerchOrderIssue"][];
         } & {
             [key: string]: unknown;
         };
@@ -6267,6 +6362,57 @@ export interface components {
             /** @enum {string} */
             issueType: "general" | "address" | "stock" | "shipping" | "damaged" | "missing" | "cancellation" | "return" | "refund" | "dispute";
             message: string;
+        };
+        MerchCancellationRequest: {
+            reason: string;
+        };
+        MerchOrderIssue: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            issueType: "general" | "address" | "stock" | "shipping" | "damaged" | "missing" | "cancellation" | "return" | "refund" | "dispute" | "fraud";
+            /** @enum {string} */
+            status: "open" | "seller_review" | "staff_review" | "awaiting_buyer" | "resolved" | "rejected" | "cancelled";
+            message: string;
+            resolution?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        MerchIssueStatus: "open" | "seller_review" | "staff_review" | "awaiting_buyer" | "resolved" | "rejected" | "cancelled";
+        MerchOperationalIssue: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            storeName: string;
+            customerName: string;
+            /** Format: email */
+            customerEmail: string;
+            /** @enum {string} */
+            issueType: "general" | "address" | "stock" | "shipping" | "damaged" | "missing" | "cancellation" | "return" | "refund" | "dispute" | "fraud";
+            status: components["schemas"]["MerchIssueStatus"];
+            message: string;
+            resolution?: string | null;
+            /** @description Visible only to an authorized seller or strict administrator. */
+            internalNotes?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            closedAt?: string | null;
+        };
+        /** @description For terminal statuses, publicResponse must contain at least 10 characters. Seller financial cases may only be escalated to staff review. */
+        MerchIssueTriageRequest: {
+            status: components["schemas"]["MerchIssueStatus"];
+            publicResponse?: string | null;
+            internalNotes?: string | null;
         };
         MerchStatusRequest: {
             status: string;
@@ -11322,6 +11468,7 @@ export interface components {
         MerchStoreId: string;
         MerchProductId: string;
         MerchOrderId: string;
+        MerchIssueId: string;
         MerchSettlementId: string;
         PublicEventId: number;
         PublicEventTicketOrderId: number;
@@ -22329,6 +22476,51 @@ export interface operations {
             };
         };
     };
+    cancelUnpaidMerchOrder: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["PublicOrderLookupToken"];
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                orderId: components["parameters"]["MerchOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description Cancelled order with its independent commercial */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOrder"];
+                };
+            };
+            /** @description Order or lookup token not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment processing or fulfillment already began */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     addMerchFavorite: {
         parameters: {
             query?: never;
@@ -22828,6 +23020,85 @@ export interface operations {
             };
         };
     };
+    listSellerMerchIssues: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchIssueStatus"];
+            };
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Store-scoped operational issue queue; orders permission required */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOperationalIssue"][];
+                };
+            };
+            /** @description Orders permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateSellerMerchIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+                issueId: components["parameters"]["MerchIssueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchIssueTriageRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated issue with immutable audit evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOperationalIssue"];
+                };
+            };
+            /** @description Orders permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Issue does not belong to the selected store */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid role-specific transition or concurrent update */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     updateMerchOrderFulfillment: {
         parameters: {
             query?: never;
@@ -22957,6 +23228,68 @@ export interface operations {
                 };
             };
             /** @description Invalid moderation transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminMerchIssues: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchIssueStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Strict-admin issue queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOperationalIssue"][];
+                };
+            };
+            /** @description Strict administrator permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateAdminMerchIssue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                issueId: components["parameters"]["MerchIssueId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchIssueTriageRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated issue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchOperationalIssue"];
+                };
+            };
+            /** @description Terminal case or concurrent update */
             409: {
                 headers: {
                     [name: string]: unknown;

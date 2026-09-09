@@ -5,6 +5,9 @@ module TDF.Commerce.Merch
   , calculateMerchMoney
   , validProductTransition
   , validFulfillmentTransition
+  , isUnpaidOrderCancellable
+  , validSellerIssueTransition
+  , validStaffIssueTransition
   , validateMerchSlug
   , validateSku
   , validateQuantity
@@ -93,6 +96,42 @@ validFulfillmentTransition fromStatus toStatus
       , ("cancelled", Set.empty)
       ]
     fromMaybeEmpty key = maybe Set.empty id . lookup key
+
+-- | Buyer cancellation is deliberately narrow: it is only available while
+-- neither payment processing nor seller fulfillment has begun. Paid orders
+-- use the independently reviewed issue/refund lifecycle instead.
+isUnpaidOrderCancellable :: Text -> Text -> Text -> Text -> Bool
+isUnpaidOrderCancellable commercial payment fulfillment checkout =
+  commercial == "created"
+    && payment == "pending"
+    && fulfillment == "pending"
+    && checkout `elem` ["holding", "awaiting_payment"]
+
+-- | Sellers may triage operational cases, but financial, fraud, and dispute
+-- decisions always move to staff review. Terminal cases cannot be reopened.
+validSellerIssueTransition :: Text -> Text -> Text -> Bool
+validSellerIssueTransition issueType fromStatus toStatus
+  | fromStatus `Set.member` terminalIssueStatuses = False
+  | fromStatus == "staff_review" = False
+  | toStatus == fromStatus = False
+  | issueType `Set.member` staffOnlyIssueTypes =
+      toStatus `Set.member` Set.fromList ["seller_review", "awaiting_buyer", "staff_review"]
+  | otherwise = toStatus `Set.member` Set.fromList
+      ["seller_review", "awaiting_buyer", "staff_review", "resolved", "rejected"]
+
+-- | Staff can progress or close a case, but terminal evidence remains final.
+validStaffIssueTransition :: Text -> Text -> Bool
+validStaffIssueTransition fromStatus toStatus =
+  fromStatus `Set.notMember` terminalIssueStatuses
+    && toStatus /= fromStatus
+    && toStatus `Set.member` Set.fromList
+      ["staff_review", "awaiting_buyer", "resolved", "rejected", "cancelled"]
+
+terminalIssueStatuses :: Set Text
+terminalIssueStatuses = Set.fromList ["resolved", "rejected", "cancelled"]
+
+staffOnlyIssueTypes :: Set Text
+staffOnlyIssueTypes = Set.fromList ["cancellation", "refund", "dispute", "fraud"]
 
 validateMerchSlug :: Text -> Either Text Text
 validateMerchSlug raw

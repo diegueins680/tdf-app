@@ -18,6 +18,8 @@ export type MerchMemberInviteRequest = components['schemas']['MerchMemberInviteR
 export type MerchPolicyRequest = components['schemas']['MerchPolicyRequest'];
 export type MerchShippingZoneRequest = components['schemas']['MerchShippingZoneRequest'];
 export type MerchFulfillmentRequest = components['schemas']['MerchFulfillmentRequest'];
+export type MerchOperationalIssue = components['schemas']['MerchOperationalIssue'];
+export type MerchIssueTriageRequest = components['schemas']['MerchIssueTriageRequest'];
 
 const CART_KEY_PREFIX = 'tdf-merch-cart:';
 const ORDER_KEY_PREFIX = 'tdf-merch-order:';
@@ -97,6 +99,10 @@ export const Merch = {
     post<Record<string, unknown>>(`/merch/orders/${encodeURIComponent(orderId)}/issues`, { issueType, message }, {
       headers: { ...orderHeaders(token), 'Idempotency-Key': idempotencyKey },
     }),
+  cancelUnpaidOrder: (orderId: string, token: string, reason: string, idempotencyKey: string) =>
+    post<MerchOrder>(`/merch/orders/${encodeURIComponent(orderId)}/cancel`, { reason }, {
+      headers: { ...orderHeaders(token), 'Idempotency-Key': idempotencyKey },
+    }),
   favorite: (productId: string) => put<void>(`/merch/favorites/${encodeURIComponent(productId)}`, {}),
   unfavorite: (productId: string) => del<void>(`/merch/favorites/${encodeURIComponent(productId)}`),
   sellerStores: () => get<MerchStorefront[]>('/merch/seller/stores'),
@@ -133,6 +139,10 @@ export const Merch = {
     patch<components['schemas']['MerchVariant']>(`/merch/seller/stores/${encodeURIComponent(storeId)}/variants/${encodeURIComponent(variantId)}/stock`, payload),
   sellerOrders: (storeId: string, status?: string) =>
     get<MerchOrder[]>(`/merch/seller/stores/${encodeURIComponent(storeId)}/orders${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  sellerIssues: (storeId: string, status?: string) =>
+    get<MerchOperationalIssue[]>(`/merch/seller/stores/${encodeURIComponent(storeId)}/issues${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  updateSellerIssue: (storeId: string, issueId: string, payload: MerchIssueTriageRequest) =>
+    patch<MerchOperationalIssue>(`/merch/seller/stores/${encodeURIComponent(storeId)}/issues/${encodeURIComponent(issueId)}`, payload),
   updateFulfillment: (storeId: string, orderId: string, payload: MerchFulfillmentRequest) =>
     patch<MerchOrder>(`/merch/seller/stores/${encodeURIComponent(storeId)}/orders/${encodeURIComponent(orderId)}/fulfillment`, payload),
   adminStores: (status?: string) =>
@@ -143,4 +153,8 @@ export const Merch = {
     get<MerchProduct[]>(`/merch/admin/products${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   reviewProduct: (productId: string, status: 'published' | 'rejected', reason?: string) =>
     post<MerchProduct>(`/merch/admin/products/${encodeURIComponent(productId)}/review`, { status, reason }),
+  adminIssues: (status?: string) =>
+    get<MerchOperationalIssue[]>(`/merch/admin/issues${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  updateAdminIssue: (issueId: string, payload: MerchIssueTriageRequest) =>
+    patch<MerchOperationalIssue>(`/merch/admin/issues/${encodeURIComponent(issueId)}`, payload),
 };

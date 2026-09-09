@@ -204,6 +204,20 @@ data MerchIssueRequest = MerchIssueRequest
 instance FromJSON MerchIssueRequest where parseJSON = genericParseJSON (merchOptions 3)
 instance ToJSON MerchIssueRequest where toJSON = genericToJSON (merchOptions 3)
 
+data MerchCancellationRequest = MerchCancellationRequest
+  { mcrReason :: Text
+  } deriving (Show, Generic)
+instance FromJSON MerchCancellationRequest where parseJSON = genericParseJSON (merchOptions 3)
+instance ToJSON MerchCancellationRequest where toJSON = genericToJSON (merchOptions 3)
+
+data MerchIssueTriageRequest = MerchIssueTriageRequest
+  { mitStatus         :: Text
+  , mitPublicResponse :: Maybe Text
+  , mitInternalNotes  :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON MerchIssueTriageRequest where parseJSON = genericParseJSON (merchOptions 3)
+instance ToJSON MerchIssueTriageRequest where toJSON = genericToJSON (merchOptions 3)
+
 data MerchFulfillmentRequest = MerchFulfillmentRequest
   { mfrStatus         :: Text
   , mfrPublicNote     :: Maybe Text
@@ -289,6 +303,9 @@ type MerchPublicAPI =
   :<|> "merch" :> "orders" :> Capture "orderId" UUID :> "issues"
          :> Header "X-Order-Lookup-Token" Text :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] MerchIssueRequest :> PostCreated '[JSON] Value
+  :<|> "merch" :> "orders" :> Capture "orderId" UUID :> "cancel"
+         :> Header "X-Order-Lookup-Token" Text :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] MerchCancellationRequest :> Post '[JSON] Value
 
 type MerchProtectedAPI = "merch" :>
   (    "favorites" :> Capture "productId" UUID :> Put '[JSON] NoContent
@@ -320,6 +337,10 @@ type MerchProtectedAPI = "merch" :>
          :> "stock" :> ReqBody '[JSON] MerchStockRequest :> Patch '[JSON] Value
   :<|> "seller" :> "stores" :> Capture "storeId" UUID :> "orders"
          :> QueryParam "status" Text :> Get '[JSON] [Value]
+  :<|> "seller" :> "stores" :> Capture "storeId" UUID :> "issues"
+         :> QueryParam "status" Text :> Get '[JSON] [Value]
+  :<|> "seller" :> "stores" :> Capture "storeId" UUID :> "issues" :> Capture "issueId" UUID
+         :> ReqBody '[JSON] MerchIssueTriageRequest :> Patch '[JSON] Value
   :<|> "seller" :> "stores" :> Capture "storeId" UUID :> "orders" :> Capture "orderId" UUID
          :> "fulfillment" :> ReqBody '[JSON] MerchFulfillmentRequest :> Patch '[JSON] Value
   :<|> "admin" :> "stores" :> QueryParam "status" Text :> Get '[JSON] [Value]
@@ -328,6 +349,9 @@ type MerchProtectedAPI = "merch" :>
   :<|> "admin" :> "products" :> QueryParam "status" Text :> Get '[JSON] [Value]
   :<|> "admin" :> "products" :> Capture "productId" UUID :> "review"
          :> ReqBody '[JSON] MerchStatusRequest :> Post '[JSON] Value
+  :<|> "admin" :> "issues" :> QueryParam "status" Text :> Get '[JSON] [Value]
+  :<|> "admin" :> "issues" :> Capture "issueId" UUID
+         :> ReqBody '[JSON] MerchIssueTriageRequest :> Patch '[JSON] Value
   :<|> "admin" :> "settlements" :> ReqBody '[JSON] MerchSettlementRequest :> PostCreated '[JSON] Value
   :<|> "admin" :> "settlements" :> Capture "settlementId" UUID :> "status"
          :> ReqBody '[JSON] MerchStatusRequest :> Patch '[JSON] Value

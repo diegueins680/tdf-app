@@ -76,6 +76,18 @@ describe('merch API capabilities and idempotency', () => {
     });
   });
 
+  it('cancels an unpaid order with both the private capability and a retry key', async () => {
+    postMock.mockResolvedValueOnce({ id: 'order-id', commercialStatus: 'cancelled' });
+
+    await Merch.cancelUnpaidOrder('order/id', 'order-secret', 'Changed my mind', 'cancel-key-123');
+
+    expect(postMock).toHaveBeenCalledWith(
+      '/merch/orders/order%2Fid/cancel',
+      { reason: 'Changed my mind' },
+      { headers: { 'X-Order-Lookup-Token': 'order-secret', 'Idempotency-Key': 'cancel-key-123' } },
+    );
+  });
+
   it('creates distinct, scoped idempotency keys', () => {
     const first = createMerchIdempotencyKey('product');
     const second = createMerchIdempotencyKey('product');
@@ -96,5 +108,16 @@ describe('merch API capabilities and idempotency', () => {
       '/merch/seller/stores/store%2Fid/variants/variant%2Fid/stock',
       { stockOnHand: 12, reorderThreshold: 3, active: true, version: 7 },
     );
+  });
+
+  it('keeps seller and staff issue triage on distinct scoped endpoints', async () => {
+    patchMock.mockResolvedValue({ id: 'issue-id', status: 'staff_review' });
+    const body = { status: 'staff_review' as const, publicResponse: null, internalNotes: 'Synthetic escalation' };
+
+    await Merch.updateSellerIssue('store/id', 'issue/id', body);
+    await Merch.updateAdminIssue('issue/id', body);
+
+    expect(patchMock).toHaveBeenNthCalledWith(1, '/merch/seller/stores/store%2Fid/issues/issue%2Fid', body);
+    expect(patchMock).toHaveBeenNthCalledWith(2, '/merch/admin/issues/issue%2Fid', body);
   });
 });

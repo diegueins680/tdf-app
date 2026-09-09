@@ -234,6 +234,7 @@ merchPublicServer =
   :<|> checkoutCart
   :<|> getPublicOrder
   :<|> createPublicIssue
+  :<|> cancelPublicOrder
 
 listPublicStorefronts :: Maybe Text -> Maybe Text -> Maybe Int -> Maybe Int -> AppM [Value]
 listPublicStorefronts rawQuery rawCategory rawLimit rawOffset = do
@@ -559,7 +560,8 @@ loadOrder orderId token exposedToken =
     \ 'lookupToken',?::text,'createdAt',order_record.created_at,'updatedAt',order_record.updated_at,\
     \ 'lines',(SELECT jsonb_agg(jsonb_build_object('id',line.id,'quantity',line.quantity,'unitPriceMinor',line.unit_price_minor,'subtotalMinor',line.subtotal_minor,'totalMinor',line.total_minor,'product',line.product_snapshot,'variant',line.variant_snapshot) ORDER BY line.line_number) FROM merch_order_line line WHERE line.order_id=order_record.id),\
     \ 'shipment',(SELECT jsonb_build_object('carrier',shipment.carrier,'trackingNumber',shipment.tracking_number,'trackingUrl',shipment.tracking_url,'status',shipment.status,'shippedAt',shipment.shipped_at,'deliveredAt',shipment.delivered_at) FROM merch_shipment shipment WHERE shipment.order_id=order_record.id ORDER BY shipment.created_at DESC LIMIT 1),\
-    \ 'timeline',(SELECT coalesce(jsonb_agg(jsonb_build_object('eventType',event.event_type,'fromStatus',event.from_status,'toStatus',event.to_status,'publicNote',event.public_note,'createdAt',event.created_at) ORDER BY event.created_at,event.id),'[]'::jsonb) FROM merch_fulfillment_event event WHERE event.order_id=order_record.id)\
+    \ 'timeline',(SELECT coalesce(jsonb_agg(jsonb_build_object('eventType',event.event_type,'fromStatus',event.from_status,'toStatus',event.to_status,'publicNote',event.public_note,'createdAt',event.created_at) ORDER BY event.created_at,event.id),'[]'::jsonb) FROM merch_fulfillment_event event WHERE event.order_id=order_record.id),\
+    \ 'issues',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',issue.id,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'createdAt',issue.created_at,'updatedAt',issue.updated_at) ORDER BY issue.created_at,issue.id),'[]'::jsonb) FROM merch_order_issue issue WHERE issue.order_id=order_record.id)\
     \) FROM merch_order order_record JOIN merch_store store ON store.id=order_record.store_id\
     \ WHERE order_record.id=?::uuid AND order_record.lookup_token_hash=?"
     [optionalText exposedToken,PersistText (uuidText orderId),PersistText (hashText token)]
@@ -594,6 +596,61 @@ createPublicIssue orderId rawToken rawIdempotency MerchIssueRequest{..} = do
         [PersistText (uuidText orderId), PersistText (hashText token)] :: SqlPersistT IO [Single Bool])
       if null authorized then throwError err404 else throwError (conflict "Idempotency-Key conflicts with another issue request")
 
+cancelPublicOrder :: UUID -> Maybe Text -> Maybe Text -> MerchCancellationRequest -> AppM Value
+cancelPublicOrder orderId rawToken rawIdempotency MerchCancellationRequest{..} = do
+  token <- requireLookupToken "X-Order-Lookup-Token" rawToken
+  idempotency <- requireIdempotencyKey rawIdempotency
+  reason <- requiredSafeText "reason" 2000 mcrReason
+  when (T.length reason < 10) $ throwError (badRequest "reason must contain at least 10 characters")
+  let fingerprint = hashText ("cancellation:" <> reason)
+  outcome <- (runDB $ do
+    orderRows <- (rawSql
+      "SELECT checkout.id::text,order_record.commercial_status,order_record.payment_status,order_record.fulfillment_status,checkout.status FROM merch_order order_record JOIN commerce_checkout_session checkout ON checkout.id=order_record.checkout_id WHERE order_record.id=?::uuid AND order_record.lookup_token_hash=? FOR UPDATE OF order_record,checkout"
+      [PersistText (uuidText orderId),PersistText (hashText token)]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Text,Single Text,Single Text)])
+    case orderRows of
+      [] -> pure (Left "not_found")
+      [(Single checkoutId,Single commercial,Single payment,Single fulfillment,Single checkoutStatus)] -> do
+        existing <- (rawSql
+          "SELECT request_sha256 FROM merch_order_issue WHERE order_id=?::uuid AND idempotency_key=?"
+          [PersistText (uuidText orderId),PersistText idempotency]
+          :: SqlPersistT IO [Single Text])
+        case existing of
+          [Single existingFingerprint]
+            | existingFingerprint == fingerprint && commercial == "cancelled" -> pure (Right ())
+            | otherwise -> pure (Left "idempotency_conflict")
+          []
+            | not (isUnpaidOrderCancellable commercial payment fulfillment checkoutStatus) ->
+                pure (Left "not_cancellable")
+            | otherwise -> do
+                issueId <- liftIO nextRandom
+                rawExecute
+                  "INSERT INTO merch_order_issue(id,order_id,opened_by_type,issue_type,status,public_message,resolution,idempotency_key,request_sha256,closed_at) VALUES(?::uuid,?::uuid,'buyer','cancellation','resolved',?,'Cancelled by the buyer before payment processing began',?,?,now())"
+                  [PersistText (uuidText issueId),PersistText (uuidText orderId),PersistText reason,PersistText idempotency,PersistText fingerprint]
+                rawExecute
+                  "UPDATE commerce_checkout_session SET status='cancelled',updated_at=now() WHERE id=?::uuid AND status IN ('holding','awaiting_payment')"
+                  [PersistText checkoutId]
+                rawExecute
+                  "UPDATE merch_order SET commercial_status='cancelled',fulfillment_status='cancelled',cancelled_at=now(),updated_at=now() WHERE id=?::uuid"
+                  [PersistText (uuidText orderId)]
+                rawExecute
+                  "INSERT INTO merch_fulfillment_event(order_id,event_type,from_status,to_status,public_note) VALUES(?::uuid,'cancellation_requested',?,'cancelled',?), (?::uuid,'cancelled',?,'cancelled','Cancelled before payment processing began')"
+                  [ PersistText (uuidText orderId),PersistText fulfillment,PersistText reason
+                  , PersistText (uuidText orderId),PersistText fulfillment
+                  ]
+                rawExecute
+                  "INSERT INTO merch_audit_event(store_id,actor_type,action,entity_type,entity_id,correlation_id,after_state) SELECT store_id,'buyer','order.cancelled_before_payment','order',id::text,?::text,jsonb_build_object('commercialStatus','cancelled','paymentStatus','cancelled','fulfillmentStatus','cancelled') FROM merch_order WHERE id=?::uuid"
+                  [PersistText idempotency,PersistText (uuidText orderId)]
+                pure (Right ())
+          _ -> pure (Left "idempotency_conflict")
+      _ -> pure (Left "invalid_state")) :: AppM (Either Text ())
+  case outcome of
+    Left "not_found" -> throwError err404
+    Left "idempotency_conflict" -> throwError (conflict "Idempotency-Key conflicts with another cancellation request")
+    Left "not_cancellable" -> throwError (conflict "Only an unpaid order can be cancelled before payment processing or fulfillment begins; request help for every other case")
+    Left _ -> throwError err500 { errBody = "Order cancellation invariant violated" }
+    Right () -> loadOrder orderId token Nothing
+
 merchProtectedServer :: AuthedUser -> ServerT MerchProtectedAPI AppM
 merchProtectedServer user =
        addFavorite user
@@ -613,11 +670,15 @@ merchProtectedServer user =
   :<|> uploadProductImage user
   :<|> updateVariantStock user
   :<|> listSellerOrders user
+  :<|> listSellerIssues user
+  :<|> updateSellerIssue user
   :<|> updateFulfillment user
   :<|> listAdminStores user
   :<|> reviewStore user
   :<|> listAdminProducts user
   :<|> reviewProduct user
+  :<|> listAdminIssues user
+  :<|> updateAdminIssue user
   :<|> createSettlement user
   :<|> updateSettlementStatus user
 
@@ -1037,6 +1098,81 @@ listSellerOrders user storeId rawStatus = do
   jsonRows
     "SELECT jsonb_strip_nulls(jsonb_build_object('id',order_record.id,'orderNumber',order_record.order_number,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'customerPhone',order_record.customer_phone,'recipient',order_record.recipient_snapshot,'shippingMethod',order_record.shipping_method,'currency',order_record.currency,'productSubtotalMinor',order_record.product_subtotal_minor,'taxMinor',order_record.tax_minor,'shippingMinor',order_record.shipping_minor,'totalMinor',order_record.total_minor,'tdfCommissionMinor',CASE WHEN ?::boolean THEN order_record.tdf_commission_minor ELSE NULL END,'sellerNetMinor',CASE WHEN ?::boolean THEN order_record.seller_net_minor ELSE NULL END,'commercialStatus',order_record.commercial_status,'paymentStatus',order_record.payment_status,'fulfillmentStatus',order_record.fulfillment_status,'refundStatus',order_record.refund_status,'disputeStatus',order_record.dispute_status,'settlementStatus',order_record.settlement_status,'createdAt',order_record.created_at,'lines',(SELECT jsonb_agg(jsonb_build_object('quantity',line.quantity,'product',line.product_snapshot,'variant',line.variant_snapshot) ORDER BY line.line_number) FROM merch_order_line line WHERE line.order_id=order_record.id))) FROM merch_order order_record WHERE order_record.store_id=?::uuid AND (?::text IS NULL OR order_record.fulfillment_status=?::text) ORDER BY order_record.created_at DESC,order_record.id"
     [PersistBool financeAllowed,PersistBool financeAllowed,PersistText (uuidText storeId),optionalText rawStatus,optionalText rawStatus]
+
+issueStatuses :: [Text]
+issueStatuses = ["open","seller_review","staff_review","awaiting_buyer","resolved","rejected","cancelled"]
+
+validatedIssueStatus :: Maybe Text -> AppM (Maybe Text)
+validatedIssueStatus Nothing = pure Nothing
+validatedIssueStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+  unless (status `elem` issueStatuses) $ throwError (badRequest "Unsupported issue status")
+  pure (Just status)
+
+issueOperationalSql :: Text
+issueOperationalSql =
+  "SELECT jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at)) FROM merch_order_issue issue JOIN merch_order order_record ON order_record.id=issue.order_id JOIN merch_store store ON store.id=order_record.store_id"
+
+listSellerIssues :: AuthedUser -> UUID -> Maybe Text -> AppM [Value]
+listSellerIssues user storeId rawStatus = do
+  requireStorePermission user storeId "orders"
+  status <- validatedIssueStatus rawStatus
+  jsonRows
+    (issueOperationalSql <> " WHERE order_record.store_id=?::uuid AND (?::text IS NULL OR issue.status=?::text) ORDER BY CASE WHEN issue.status IN ('open','seller_review','staff_review','awaiting_buyer') THEN 0 ELSE 1 END,issue.updated_at,issue.id")
+    [PersistText (uuidText storeId),optionalText status,optionalText status]
+
+updateSellerIssue :: AuthedUser -> UUID -> UUID -> MerchIssueTriageRequest -> AppM Value
+updateSellerIssue user storeId issueId request = do
+  requireStorePermission user storeId "orders"
+  updateIssue user "seller" (Just storeId) issueId request
+
+listAdminIssues :: AuthedUser -> Maybe Text -> AppM [Value]
+listAdminIssues user rawStatus = do
+  requireAdmin user
+  status <- validatedIssueStatus rawStatus
+  jsonRows
+    (issueOperationalSql <> " WHERE (?::text IS NULL OR issue.status=?::text) ORDER BY CASE WHEN issue.status IN ('open','seller_review','staff_review','awaiting_buyer') THEN 0 ELSE 1 END,issue.updated_at,issue.id")
+    [optionalText status,optionalText status]
+
+updateAdminIssue :: AuthedUser -> UUID -> MerchIssueTriageRequest -> AppM Value
+updateAdminIssue user issueId request = do
+  requireAdmin user
+  updateIssue user "staff" Nothing issueId request
+
+updateIssue :: AuthedUser -> Text -> Maybe UUID -> UUID -> MerchIssueTriageRequest -> AppM Value
+updateIssue user actorType expectedStore issueId MerchIssueTriageRequest{..} = do
+  let target = T.toLower (T.strip mitStatus)
+      isTerminal = target `elem` ["resolved","rejected","cancelled"]
+  unless (target `elem` issueStatuses) $ throwError (badRequest "Unsupported issue status")
+  publicResponse <- traverse (requiredSafeText "publicResponse" 5000) mitPublicResponse
+  internalNotes <- traverse (requiredSafeText "internalNotes" 5000) mitInternalNotes
+  when (isTerminal && maybe True ((<10) . T.length) publicResponse) $
+    throwError (badRequest "A public response of at least 10 characters is required to close an issue")
+  current <- runDB (rawSql
+    "SELECT issue.issue_type,issue.status,order_record.store_id::text FROM merch_order_issue issue JOIN merch_order order_record ON order_record.id=issue.order_id WHERE issue.id=?::uuid AND (?::uuid IS NULL OR order_record.store_id=?::uuid)"
+    [PersistText (uuidText issueId),optionalUuid expectedStore,optionalUuid expectedStore]
+    :: SqlPersistT IO [(Single Text,Single Text,Single Text)])
+  (issueType,fromStatus,storeId) <- case current of
+    [(Single kind,Single status,Single rawStore)] -> case UUID.fromText rawStore of
+      Just parsed -> pure (kind,status,parsed)
+      Nothing -> throwError err500 { errBody = "Issue store invariant violated" }
+    _ -> throwError err404
+  let allowed = if actorType == "staff"
+        then validStaffIssueTransition fromStatus target
+        else validSellerIssueTransition issueType fromStatus target
+  unless allowed $ throwError (conflict "Issue transition is not allowed for this role or issue type")
+  updated <- runDB $ do
+    rows <- (rawSql
+      "UPDATE merch_order_issue issue SET status=?,resolution=coalesce(?,resolution),internal_notes=coalesce(?,internal_notes),closed_at=CASE WHEN ? IN ('resolved','rejected','cancelled') THEN now() ELSE NULL END,updated_at=now() FROM merch_order order_record,merch_store store WHERE issue.id=?::uuid AND issue.status=? AND order_record.id=issue.order_id AND order_record.store_id=?::uuid AND store.id=order_record.store_id RETURNING jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at))"
+      [PersistText target,optionalText publicResponse,optionalText internalNotes,PersistText target,PersistText (uuidText issueId),PersistText fromStatus,PersistText (uuidText storeId)]
+      :: SqlPersistT IO [Single CMS.AesonValue])
+    case rows of
+      [Single value] -> do
+        appendMerchAudit user actorType (Just storeId) "order_issue.status_changed" "order_issue" (uuidText issueId)
+          (object ["from" .= fromStatus, "to" .= target, "issueType" .= issueType, "hasPublicResponse" .= (publicResponse /= Nothing), "hasInternalNotes" .= (internalNotes /= Nothing)])
+        pure (Just (CMS.unAesonValue value))
+      _ -> pure Nothing
+  maybe (throwError (conflict "Issue changed concurrently; reload and retry")) pure updated
 
 updateFulfillment :: AuthedUser -> UUID -> UUID -> MerchFulfillmentRequest -> AppM Value
 updateFulfillment user storeId orderId MerchFulfillmentRequest{..} = do

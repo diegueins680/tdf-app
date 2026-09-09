@@ -5953,6 +5953,22 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueRequest' } } } }
       responses:
         '201': { description: Issue received without changing payment, fulfillment, or refund state, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+  /merch/orders/{orderId}/cancel:
+    post:
+      tags: [Artist merch checkout]
+      operationId: cancelUnpaidMerchOrder
+      summary: Cancel an unpaid order before payment processing or fulfillment starts
+      description: This idempotent operation releases active inventory reservations and records an immutable issue, fulfillment timeline, and audit entry. Paid or processing orders must use the independently reviewed issue and refund workflow.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/MerchOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchCancellationRequest' } } } }
+      responses:
+        '200': { description: Cancelled order with its independent commercial, payment, and fulfillment states, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOrder' } } } }
+        '404': { description: Order or lookup token not found }
+        '409': { description: Payment processing or fulfillment already began, or the idempotency key conflicts }
   /merch/favorites/{productId}:
     put:
       tags: [Artist merch]
@@ -6102,6 +6118,32 @@ paths:
         - $ref: '#/components/parameters/MerchStoreId'
         - { name: status, in: query, schema: { $ref: '#/components/schemas/MerchFulfillmentStatus' } }
       responses: { '200': { description: Orders scoped to this seller, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOrder' } } } } } }
+  /merch/seller/stores/{storeId}/issues:
+    get:
+      tags: [Artist merch seller]
+      operationId: listSellerMerchIssues
+      summary: List the store's support cases without exposing another seller's orders
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/MerchIssueStatus' } }
+      responses:
+        '200': { description: Store-scoped operational issue queue; orders permission required, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOperationalIssue' } } } } }
+        '403': { description: Orders permission required }
+  /merch/seller/stores/{storeId}/issues/{issueId}:
+    patch:
+      tags: [Artist merch seller]
+      operationId: updateSellerMerchIssue
+      summary: Triage an operational case or escalate a financial case to staff
+      description: Sellers cannot resolve or reject cancellation, refund, dispute, or fraud cases. This operation never changes payment, refund, dispute, fulfillment, or settlement state.
+      parameters:
+        - $ref: '#/components/parameters/MerchStoreId'
+        - $ref: '#/components/parameters/MerchIssueId'
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueTriageRequest' } } } }
+      responses:
+        '200': { description: Updated issue with immutable audit evidence, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
+        '403': { description: Orders permission required }
+        '404': { description: Issue does not belong to the selected store }
+        '409': { description: Invalid role-specific transition or concurrent update }
   /merch/seller/stores/{storeId}/orders/{orderId}/fulfillment:
     patch:
       tags: [Artist merch seller]
@@ -6138,6 +6180,26 @@ paths:
       parameters: [ { $ref: '#/components/parameters/MerchProductId' } ]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStatusRequest' } } } }
       responses: { '200': { description: Reviewed product, content: { application/json: { schema: { $ref: '#/components/schemas/MerchProduct' } } } }, '409': { description: Invalid moderation transition } }
+  /merch/admin/issues:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchIssues
+      summary: List support cases across the closed pilot
+      parameters: [ { name: status, in: query, schema: { $ref: '#/components/schemas/MerchIssueStatus' } } ]
+      responses:
+        '200': { description: Strict-admin issue queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchOperationalIssue' } } } } }
+        '403': { description: Strict administrator permission required }
+  /merch/admin/issues/{issueId}:
+    patch:
+      tags: [Artist merch administration]
+      operationId: updateAdminMerchIssue
+      summary: Progress or close an independently reviewed support case
+      description: Closing a case records a public resolution and audit evidence but never executes or implies a provider refund, chargeback result, or settlement adjustment.
+      parameters: [ { $ref: '#/components/parameters/MerchIssueId' } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchIssueTriageRequest' } } } }
+      responses:
+        '200': { description: Updated issue, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
+        '409': { description: Terminal case or concurrent update }
   /merch/admin/settlements:
     post:
       tags: [Artist merch administration]
@@ -6191,6 +6253,11 @@ components:
       schema: { type: string, format: uuid }
     MerchOrderId:
       name: orderId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    MerchIssueId:
+      name: issueId
       in: path
       required: true
       schema: { type: string, format: uuid }
@@ -6677,6 +6744,7 @@ components:
         settlementStatus: { type: string }
         lines: { type: array, items: { type: object, additionalProperties: true } }
         timeline: { type: array, items: { type: object, additionalProperties: true } }
+        issues: { type: array, items: { $ref: '#/components/schemas/MerchOrderIssue' } }
     MerchIssueRequest:
       type: object
       additionalProperties: false
@@ -6684,6 +6752,56 @@ components:
       properties:
         issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute] }
         message: { type: string, minLength: 10, maxLength: 4000 }
+    MerchCancellationRequest:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 10, maxLength: 2000 }
+    MerchOrderIssue:
+      type: object
+      additionalProperties: false
+      required: [id, issueType, status, message, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute, fraud] }
+        status: { type: string, enum: [open, seller_review, staff_review, awaiting_buyer, resolved, rejected, cancelled] }
+        message: { type: string }
+        resolution: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MerchIssueStatus:
+      type: string
+      enum: [open, seller_review, staff_review, awaiting_buyer, resolved, rejected, cancelled]
+    MerchOperationalIssue:
+      type: object
+      additionalProperties: false
+      required: [id, storeId, orderId, orderNumber, storeName, customerName, customerEmail, issueType, status, message, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        orderNumber: { type: string }
+        storeName: { type: string }
+        customerName: { type: string }
+        customerEmail: { type: string, format: email }
+        issueType: { type: string, enum: [general, address, stock, shipping, damaged, missing, cancellation, return, refund, dispute, fraud] }
+        status: { $ref: '#/components/schemas/MerchIssueStatus' }
+        message: { type: string }
+        resolution: { type: string, nullable: true }
+        internalNotes: { type: string, nullable: true, description: Visible only to an authorized seller or strict administrator. }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time, nullable: true }
+    MerchIssueTriageRequest:
+      type: object
+      additionalProperties: false
+      description: For terminal statuses, publicResponse must contain at least 10 characters. Seller financial cases may only be escalated to staff review.
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/MerchIssueStatus' }
+        publicResponse: { type: string, minLength: 1, maxLength: 5000, nullable: true }
+        internalNotes: { type: string, minLength: 1, maxLength: 5000, nullable: true }
     MerchStatusRequest:
       type: object
       additionalProperties: false
