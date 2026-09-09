@@ -100,6 +100,7 @@ import           TDF.Contracts.API (ContractsAPI)
 import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
+import qualified TDF.Server.MerchReputation as MerchReputationServer
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -740,6 +741,7 @@ server env =
   :<|> DirectoryServer.directoryPublicServer
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
+  :<|> MerchReputationServer.merchReputationPublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3799,6 +3801,7 @@ protectedServer user =
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
+  :<|> MerchReputationServer.merchReputationProtectedServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =

@@ -26,6 +26,7 @@ const LiveSessionPublicPage = lazy(() => import('../pages/LiveSessionPublicPage'
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
+const MerchReputationPage = lazy(() => import('../pages/MerchReputationPage'));
 const MixingMasteringPage = lazy(() => import('../pages/MixingMasteringPage'));
 const ServiceDatafastReturnPage = lazy(() => import('../pages/ServiceDatafastReturnPage'));
 const ServiceOrderTrackingPage = lazy(() => import('../pages/ServiceOrderTrackingPage'));
@@ -79,6 +80,8 @@ export function renderPublicRoutes() {
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/a/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
+      <Route path="/merch/tiendas/:storeId" element={<PublicBranding><MerchReputationPage kind="store" /></PublicBranding>} />
+      <Route path="/merch/productos/:productId" element={<PublicBranding><MerchReputationPage kind="product" /></PublicBranding>} />
       <Route path="/marketplace/orden/:orderId" element={<PublicBranding><MarketplaceOrderTrackingPage /></PublicBranding>} />
       <Route path="/mezcla-mastering" element={<PublicBranding><MixingMasteringPage /></PublicBranding>} />
       <Route path="/mezcla-mastering/pago-datafast" element={<PublicBranding><ServiceDatafastReturnPage /></PublicBranding>} />

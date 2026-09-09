@@ -70,6 +70,8 @@ import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceS
 import           TDF.API.CommerceOperations (CommerceOperationsAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
+import           TDF.API.MerchReputation
+  ( MerchReputationPublicAPI, MerchReputationProtectedAPI )
 import           TDF.Operations.API (OperationsAPI)
 
 type InventoryItem = ME.Asset
@@ -615,6 +617,7 @@ type ProtectedAPI =
   :<|> OperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
+  :<|> MerchReputationProtectedAPI
 
 type API =
        VersionAPI
@@ -648,6 +651,7 @@ type API =
   :<|> DirectoryPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
+  :<|> MerchReputationPublicAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI

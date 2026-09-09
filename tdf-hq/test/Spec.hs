@@ -90,6 +90,13 @@ import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
 import TDF.Reputation.Worker
     ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
+import TDF.Merch.Reputation
+    ( CommercialConfidence (..), CommercialFormula (..),
+      OperationalObservation (..), OperationalResponsibility (..),
+      VerifiedRating (..), bayesianRating,
+      boundedReputationRankingContribution, commercialConfidence,
+      commercialStoreScore, initialCommercialFormula, roundPublicRating, temporalWeight,
+      validateCommercialFormula )
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
@@ -790,6 +797,93 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    describe "merch commercial reputation formula v1" $ do
+        it "publishes only after five evaluable orders and at least one review" $ do
+            commercialStoreScore initialCommercialFormula 4
+                [VerifiedRating 5 0] [] `shouldBe` Nothing
+            commercialStoreScore initialCommercialFormula 5 [] [] `shouldBe` Nothing
+            commercialStoreScore initialCommercialFormula 5
+                [VerifiedRating 5 0] [] `shouldSatisfy` (/= Nothing)
+
+        it "keeps buyer reviews dominant and formula changes auditable" $ do
+            validateCommercialFormula initialCommercialFormula
+                `shouldBe` Right initialCommercialFormula
+            validateCommercialFormula
+                initialCommercialFormula {
+                    operationalWeight = 0.3,
+                    reviewWeight = 0.7
+                } `shouldSatisfy` isLeft
+
+        it "does not accept purchase value as a weighting input" $ do
+            let ratings = [VerifiedRating 5 0, VerifiedRating 1 0]
+            bayesianRating initialCommercialFormula ratings
+                `shouldBe` bayesianRating initialCommercialFormula (reverse ratings)
+
+        it "does not attribute evidenced courier delay to the seller" $ do
+            let ratings = replicate 8 (VerifiedRating 4 0)
+                courierDelay = OperationalObservation 0 1 0 CourierResponsible
+            commercialStoreScore initialCommercialFormula 8 ratings [courierDelay]
+                `shouldBe` commercialStoreScore initialCommercialFormula 8 ratings []
+
+        it "limits even strong seller operational evidence to fifteen percent" $ do
+            let ratings = replicate 8 (VerifiedRating 4 0)
+                poorOps = [OperationalObservation 0 1 0 SellerResponsible]
+                reviewOnly = commercialStoreScore initialCommercialFormula 8 ratings []
+                withOps = commercialStoreScore initialCommercialFormula 8 ratings poorOps
+            abs (maybe 0 id reviewOnly - maybe 0 id withOps)
+                `shouldSatisfy` (<= 0.6)
+
+        it "uses moderate decay and prioritizes recent evidence" $ do
+            temporalWeight initialCommercialFormula 0 `shouldBe` 1
+            temporalWeight initialCommercialFormula
+                (halfLifeDays initialCommercialFormula) `shouldBe` 0.5
+            bayesianRating initialCommercialFormula
+                [VerifiedRating 1 0, VerifiedRating 5 730]
+                `shouldSatisfy` (< bayesianRating initialCommercialFormula
+                    [VerifiedRating 1 730, VerifiedRating 5 0])
+
+        it "reduces prior influence as verified evidence grows" $ do
+            commercialStoreScore initialCommercialFormula 5
+                (replicate 5 (VerifiedRating 5 0)) [] `shouldBe` Just 4.3
+            commercialStoreScore initialCommercialFormula 20
+                (replicate 20 (VerifiedRating 5 0)) [] `shouldBe` Just 4.7
+
+        it "rounds public half-points consistently with the SQL projection" $ do
+            roundPublicRating 3.25 `shouldBe` 3.3
+            roundPublicRating 4.24 `shouldBe` 4.2
+
+        it "reports understandable confidence and caps discovery influence" $ do
+            commercialConfidence initialCommercialFormula 4 100 `shouldBe` NewStore
+            commercialConfidence initialCommercialFormula 5 3 `shouldBe` LimitedEvidence
+            commercialConfidence initialCommercialFormula 5 15 `shouldBe` ModerateEvidence
+            commercialConfidence initialCommercialFormula 5 30 `shouldBe` StrongEvidence
+            boundedReputationRankingContribution initialCommercialFormula 10
+                `shouldBe` rankingContributionCap initialCommercialFormula
+
+        it "rejects formula versions that could let operations eclipse buyers" $ do
+            validateCommercialFormula initialCommercialFormula `shouldSatisfy` either (const False) (const True)
+            validateCommercialFormula initialCommercialFormula
+                { reviewWeight = 0.7, operationalWeight = 0.3 } `shouldSatisfy` isLeft
+            validateCommercialFormula initialCommercialFormula
+                { limitedEvidenceReviewCount = 30, strongEvidenceReviewCount = 10 }
+                `shouldSatisfy` isLeft
+
+        it "does not count courier-attributed delays against a store" $ do
+            let ratings = [VerifiedRating 4 0, VerifiedRating 4 0]
+                sellerDelay = OperationalObservation 0 1 0 SellerResponsible
+                courierDelay = OperationalObservation 0 1 0 CourierResponsible
+                baseline = commercialStoreScore initialCommercialFormula 5 ratings []
+            commercialStoreScore initialCommercialFormula 5 ratings [courierDelay]
+                `shouldBe` baseline
+            commercialStoreScore initialCommercialFormula 5 ratings [sellerDelay]
+                `shouldSatisfy` (< baseline)
+
+        it "never accepts order value as a rating input" $ do
+            bayesianRating initialCommercialFormula
+                [VerifiedRating 1 0, VerifiedRating 5 0]
+                `shouldBe` bayesianRating initialCommercialFormula
+                    [VerifiedRating 5 0, VerifiedRating 1 0]
+
     describe "contextual reputation formula v1" $ do
         it "uses deterministic ROC weights that total exactly 100" $ do
             let weights = rankOrderCentroid 5
