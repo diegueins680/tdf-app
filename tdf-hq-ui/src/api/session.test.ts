@@ -13,6 +13,7 @@ const {
   loadOnboardingProgress,
   loadSessionSnapshot,
   persistOnboardingIntent,
+  reconcileOnboardingProgress,
 } = await import('./session');
 
 const progressPayload = {
@@ -118,6 +119,34 @@ describe('session api', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/session/onboarding'),
       { credentials: 'include' },
+    );
+  });
+
+  it('reconciles onboarding without sending client evidence or Party fields', async () => {
+    const reconciliation = {
+      progress: {
+        ...progressPayload,
+        eligible: false,
+        completedAt: '2026-09-09T12:00:00Z',
+        firstValue: 'event_saved',
+        firstValueCompletedAt: '2026-09-07T12:00:00Z',
+      },
+      newlyCompleted: true,
+    };
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: jest.fn<() => Promise<unknown>>().mockResolvedValue(reconciliation),
+    } as unknown as Response);
+
+    await expect(reconcileOnboardingProgress('session-token')).resolves.toEqual(reconciliation);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/session/onboarding/reconcile'),
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { Authorization: 'Bearer session-token' },
+      },
     );
   });
 

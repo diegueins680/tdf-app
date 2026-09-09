@@ -438,9 +438,29 @@ export interface paths {
         put?: never;
         /**
          * Complete eligible onboarding idempotently
-         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every supplied first-value claim requires Party-bound server evidence created during the signup eligibility window; the idempotent handshake may safely be retried after that window. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits return newlyCompleted=false.
+         * @description Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. A supplied first value is a validated observation only; the server selects the earliest Party-bound supported evidence created during the signup eligibility window, using the same stable tie order as reconciliation. The idempotent handshake may safely be retried after that window, and verified action evidence takes precedence over an exit request. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits without valid evidence return newlyCompleted=false.
          */
         post: operations["completeOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/onboarding/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reconcile onboarding from authoritative evidence
+         * @description Completes an incomplete signup onboarding record by inferring the earliest Party-bound first useful action created during the signup eligibility window. This supports recovery on another device without accepting a client-supplied action, role, module, or permission. Exact-timestamp ties use the stable order artist_followed, access_requested, event_saved, then moment_reaction. The mutation is idempotent; completed accounts, accounts without a signup marker, and accounts without in-window evidence return newlyCompleted=false.
+         */
+        post: operations["reconcileOnboarding"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7097,7 +7117,7 @@ export interface components {
         };
         OnboardingCompletionRequest: {
             /**
-             * @description Optional successful first useful action. Every supplied value requires Party-bound server evidence created during the signup eligibility window; artist_followed requires a server-recorded artist follow, event_saved requires a validated event-favorite audit, and moment_reaction requires a server-recorded canonical addition on a persisted event moment. Omit when the user explicitly exits optional onboarding.
+             * @description Optional observation of a successful first useful action. The server requires Party-bound evidence during the signup eligibility window and persists the earliest supported evidence across all categories, independent of this hint. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event_saved uses a validated event-favorite audit. Omit when the user explicitly exits optional onboarding; existing verified evidence still takes precedence.
              * @enum {string}
              */
             firstValue?: "artist_followed" | "access_requested" | "event_saved" | "moment_reaction";
@@ -11367,6 +11387,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reconcileOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconciliation result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingCompletionResult"];
+                };
             };
             /** @description Authentication required */
             401: {

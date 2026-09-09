@@ -528,7 +528,7 @@ paths:
   /session/onboarding/complete:
     post:
       summary: Complete eligible onboarding idempotently
-      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. Every supplied first-value claim requires Party-bound server evidence created during the signup eligibility window; the idempotent handshake may safely be retried after that window. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits return newlyCompleted=false.
+      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. A supplied first value is a validated observation only; the server selects the earliest Party-bound supported evidence created during the signup eligibility window, using the same stable tie order as reconciliation. The idempotent handshake may safely be retried after that window, and verified action evidence takes precedence over an exit request. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits without valid evidence return newlyCompleted=false.
       operationId: completeOnboarding
       security:
         - bearerAuth: [ ]
@@ -548,6 +548,23 @@ paths:
                 $ref: '#/components/schemas/OnboardingCompletionResult'
         '400':
           description: Unsupported first useful action
+        '401':
+          description: Authentication required
+  /session/onboarding/reconcile:
+    post:
+      summary: Reconcile onboarding from authoritative evidence
+      description: Completes an incomplete signup onboarding record by inferring the earliest Party-bound first useful action created during the signup eligibility window. This supports recovery on another device without accepting a client-supplied action, role, module, or permission. Exact-timestamp ties use the stable order artist_followed, access_requested, event_saved, then moment_reaction. The mutation is idempotent; completed accounts, accounts without a signup marker, and accounts without in-window evidence return newlyCompleted=false.
+      operationId: reconcileOnboarding
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Reconciliation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingCompletionResult'
         '401':
           description: Authentication required
   /public/courses/{slug}:
@@ -8066,7 +8083,7 @@ components:
         firstValue:
           type: string
           enum: [artist_followed, access_requested, event_saved, moment_reaction]
-          description: Optional successful first useful action. Every supplied value requires Party-bound server evidence created during the signup eligibility window; artist_followed requires a server-recorded artist follow, event_saved requires a validated event-favorite audit, and moment_reaction requires a server-recorded canonical addition on a persisted event moment. Omit when the user explicitly exits optional onboarding.
+          description: Optional observation of a successful first useful action. The server requires Party-bound evidence during the signup eligibility window and persists the earliest supported evidence across all categories, independent of this hint. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event_saved uses a validated event-favorite audit. Omit when the user explicitly exits optional onboarding; existing verified evidence still takes precedence.
     OnboardingProgress:
       type: object
       required: [eligible, signupCompletedAt, onboardingIntent, completedAt, firstValue, firstValueCompletedAt, updatedAt]

@@ -52,7 +52,7 @@ module TDF.ServerAuth
 import Control.Applicative ((<|>))
 import Control.Exception (SomeException, displayException, try)
 import Control.Exception.Safe (catch, throwM)
-import Control.Monad (forM_, join, unless, void, when)
+import Control.Monad (forM, forM_, join, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
 import Crypto.BCrypt (hashPasswordUsingPolicy, slowerBcryptHashingPolicy, validatePassword)
@@ -73,7 +73,7 @@ import Data.Foldable (for_)
 import Data.Int (Int64)
 import GHC.Generics (Generic)
 import Data.List (nub)
-import Data.Maybe (fromMaybe, isJust, isNothing, mapMaybe)
+import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -461,6 +461,7 @@ sessionServer =
   :<|> currentOnboardingProgress
   :<|> updateOnboardingIntent
   :<|> completeOnboarding
+  :<|> reconcileOnboarding
 
 onboardingIntentValues :: Set.Set Text
 onboardingIntentValues = Set.fromList
@@ -473,7 +474,13 @@ onboardingIntentValues = Set.fromList
   ]
 
 onboardingFirstValueValues :: Set.Set Text
-onboardingFirstValueValues = Set.fromList
+onboardingFirstValueValues = Set.fromList onboardingFirstValuePriority
+
+-- This order resolves the extremely rare case where two authoritative actions
+-- have the same server timestamp. It is contract stability only: intent never
+-- influences the choice and none of these values grants a role or permission.
+onboardingFirstValuePriority :: [Text]
+onboardingFirstValuePriority =
   [ "artist_followed"
   , "access_requested"
   , "event_saved"
@@ -616,43 +623,99 @@ completeOnboarding mAuthorizationHeader mCookieHeader OnboardingCompletionReques
     existing <- getBy (UniqueUserOnboardingProgress (auPartyId user))
     case existing of
       Nothing -> pure (Nothing, False)
-      Just entity@(Entity progressId stored)
+      Just entity@(Entity _ stored)
         | isJust (userOnboardingProgressCompletedAt stored) ->
               pure (Just entity, False)
-        | isNothing firstValueValue
-          && not (isOnboardingEligible now
-            (userOnboardingProgressSignupCompletedAt stored)
-            Nothing) ->
-              pure (Just entity, False)
         | otherwise -> do
-            evidenceAt <- onboardingFirstValueEvidenceAt
+            inferred <- inferOnboardingFirstValueEvidence
               (auPartyId user)
               (userOnboardingProgressSignupCompletedAt stored)
-              firstValueValue
               now
-            case evidenceAt of
-              Nothing -> pure (Just entity, False)
-              Just occurredAt -> do
-                changed <- updateWhereCount
-                  [ UserOnboardingProgressId ==. progressId
-                  , UserOnboardingProgressCompletedAt ==. Nothing
-                  ]
-                  [ UserOnboardingProgressCompletedAt =. Just now
-                  , UserOnboardingProgressFirstValue =. firstValueValue
-                  , UserOnboardingProgressFirstValueCompletedAt =.
-                      (occurredAt <$ firstValueValue)
-                  , UserOnboardingProgressUpdatedAt =. now
-                  ]
-                refreshed <- get progressId
-                pure (Entity progressId <$> refreshed, changed == 1)
+            case inferred of
+              Just evidence -> finishOnboardingProgress now entity (Just evidence)
+              Nothing
+                | isNothing firstValueValue
+                  && isOnboardingEligible now
+                    (userOnboardingProgressSignupCompletedAt stored)
+                    Nothing ->
+                      finishOnboardingProgress now entity Nothing
+                | otherwise -> pure (Just entity, False)
   pure OnboardingCompletionResult
     { progress = onboardingProgressToDTO now mProgress
     , newlyCompleted = newlyCompletedValue
     }
 
--- Keep the client completion handshake so existing web/mobile analytics can emit
--- exactly once, but require durable server evidence for every supplied first value.
--- Omitting firstValue remains the explicit exit path for optional onboarding.
+reconcileOnboarding
+  :: Maybe Text
+  -> Maybe Text
+  -> AppM OnboardingCompletionResult
+reconcileOnboarding mAuthorizationHeader mCookieHeader = do
+  Env pool cfg <- ask
+  user <- requireSessionUser cfg pool mAuthorizationHeader mCookieHeader
+  now <- liftIO getCurrentTime
+  (mProgress, newlyCompletedValue) <- liftIO $ flip runSqlPool pool $ do
+    existing <- getBy (UniqueUserOnboardingProgress (auPartyId user))
+    case existing of
+      Nothing -> pure (Nothing, False)
+      Just entity@(Entity _ stored)
+        | isJust (userOnboardingProgressCompletedAt stored) ->
+            pure (Just entity, False)
+        | otherwise -> do
+            inferred <- inferOnboardingFirstValueEvidence
+              (auPartyId user)
+              (userOnboardingProgressSignupCompletedAt stored)
+              now
+            case inferred of
+              Nothing -> pure (Just entity, False)
+              Just evidence -> finishOnboardingProgress now entity (Just evidence)
+  pure OnboardingCompletionResult
+    { progress = onboardingProgressToDTO now mProgress
+    , newlyCompleted = newlyCompletedValue
+    }
+
+finishOnboardingProgress
+  :: UTCTime
+  -> Entity UserOnboardingProgress
+  -> Maybe (Text, UTCTime)
+  -> SqlPersistT IO (Maybe (Entity UserOnboardingProgress), Bool)
+finishOnboardingProgress now (Entity progressId _) mFirstValueEvidence = do
+  changed <- updateWhereCount
+    [ UserOnboardingProgressId ==. progressId
+    , UserOnboardingProgressCompletedAt ==. Nothing
+    ]
+    [ UserOnboardingProgressCompletedAt =. Just now
+    , UserOnboardingProgressFirstValue =. (fst <$> mFirstValueEvidence)
+    , UserOnboardingProgressFirstValueCompletedAt =. (snd <$> mFirstValueEvidence)
+    , UserOnboardingProgressUpdatedAt =. now
+    ]
+  refreshed <- get progressId
+  pure (Entity progressId <$> refreshed, changed == 1)
+
+inferOnboardingFirstValueEvidence
+  :: PartyId
+  -> Maybe UTCTime
+  -> UTCTime
+  -> SqlPersistT IO (Maybe (Text, UTCTime))
+inferOnboardingFirstValueEvidence partyIdValue mSignupAt now = do
+  candidates <- forM (zip [0 :: Int ..] onboardingFirstValuePriority) $
+    \(priority, value) -> do
+      occurredAt <- onboardingFirstValueEvidenceAt
+        partyIdValue
+        mSignupAt
+        (Just value)
+        now
+      pure ((\timestamp -> (timestamp, priority, value)) <$> occurredAt)
+  pure $ case catMaybes candidates of
+    [] -> Nothing
+    found ->
+      let (occurredAt, _, value) = minimum found
+      in Just (value, occurredAt)
+
+-- Keep the client completion handshake so existing web/mobile analytics only emit
+-- for the request that wins the transition. The supplied value is a validated
+-- observation, not authority: all evidence is scanned so the earliest server value
+-- wins races and takes precedence over an explicit exit. Delivery remains at-most-
+-- once when a successful response is lost; a durable receipt is a separate contract.
 onboardingFirstValueEvidenceAt
   :: PartyId
   -> Maybe UTCTime

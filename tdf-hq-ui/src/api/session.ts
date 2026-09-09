@@ -65,6 +65,22 @@ export async function completeOnboardingProgress(
   return response.json() as Promise<OnboardingCompletionResultDTO>;
 }
 
+export async function reconcileOnboardingProgress(
+  apiToken?: string,
+): Promise<OnboardingCompletionResultDTO> {
+  const response = await fetch(sessionUrl('/session/onboarding/reconcile'), {
+    method: 'POST',
+    credentials: 'include',
+    ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<OnboardingCompletionResultDTO>;
+}
+
 export async function loadOnboardingProgress(): Promise<OnboardingProgressDTO> {
   const response = await fetch(sessionUrl('/session/onboarding'), {
     credentials: 'include',

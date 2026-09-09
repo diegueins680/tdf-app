@@ -2,7 +2,8 @@ import { logger } from '../utils/logger';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { loadSessionSnapshot, logoutSessionRequest } from '../api/session';
+import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
+import { captureReconciledFirstValue } from '../analytics/onboardingProgress';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
@@ -324,6 +325,36 @@ export function SessionProvider({ children }: SessionProviderProps) {
       analytics.reset();
     }
   }, [session]);
+
+  useEffect(() => {
+    const partyId = session?.partyId;
+    if (partyId == null) return undefined;
+    const apiToken = session?.apiToken ?? undefined;
+    const versionAtStart = sessionVersionRef.current;
+    let cancelled = false;
+
+    void reconcileOnboardingProgress(apiToken)
+      .then((result) => {
+        if (
+          cancelled
+          || versionAtStart !== sessionVersionRef.current
+          || currentSession?.partyId !== partyId
+        ) return;
+        captureReconciledFirstValue(getAnalyticsClient(), partyId, result);
+      })
+      .catch((error) => {
+        if (
+          cancelled
+          || versionAtStart !== sessionVersionRef.current
+          || currentSession?.partyId !== partyId
+        ) return;
+        logger.warn('Failed to reconcile onboarding progress', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.apiToken, session?.partyId]);
 
   const value = useMemo<SessionContextValue>(
     () => ({ session, loading, login, logout, setApiToken }),

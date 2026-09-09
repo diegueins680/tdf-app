@@ -4931,7 +4931,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -4970,7 +4970,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5042,7 +5042,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
                         runSessionAction action =
                             liftIO $ runHandler $ runReaderT action env
                     current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
@@ -5162,7 +5162,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
                         completeWith tokenValue request =
                             liftIO $ runHandler $ runReaderT
                                 (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
@@ -5209,6 +5209,141 @@ spec = describe "TDF.Server helpers" $ do
                 Left serverErr ->
                     expectationFailure
                         ("Expected late explicit exit to remain ineligible, got: " <> show serverErr)
+
+        it "reconciles cross-device evidence without a client assertion and selects the earliest stable value" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , missingSignupResult
+                , explicitExitEvidenceResult
+                , postWindowEvidenceResult
+                , reconciledResult
+                , repeatedResult
+                , unauthenticatedResult
+                , expectedEvidenceAt
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-(25 * 60 * 60)) now
+                        earliestAt = addUTCTime (2 * 60 * 60) signupAt
+                        laterAt = addUTCTime (3 * 60 * 60) signupAt
+                        postWindowAt = addUTCTime ((24 * 60 * 60) + 60) signupAt
+                        progressFor partyIdValue signupValue =
+                            M.UserOnboardingProgress
+                                { M.userOnboardingProgressPartyId = partyIdValue
+                                , M.userOnboardingProgressSignupCompletedAt = signupValue
+                                , M.userOnboardingProgressIntent = Just "events"
+                                , M.userOnboardingProgressCompletedAt = Nothing
+                                , M.userOnboardingProgressFirstValue = Nothing
+                                , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                , M.userOnboardingProgressUpdatedAt = maybe now id signupValue
+                                }
+                        insertEngagement actorPartyId entityTypeValue eventTypeValue occurredAtValue entityIdValue =
+                            insert_
+                                M.EngagementEvent
+                                    { M.engagementEventActorPartyId = Just actorPartyId
+                                    , M.engagementEventTargetArtistId = Nothing
+                                    , M.engagementEventEntityType = entityTypeValue
+                                    , M.engagementEventEntityId = Just entityIdValue
+                                    , M.engagementEventEventType = eventTypeValue
+                                    , M.engagementEventMetadata = Nothing
+                                    , M.engagementEventCreatedAt = occurredAtValue
+                                    }
+                    liftIO $ flip runSqlPool pool $ do
+                        insert_ (progressFor partyId (Just signupAt))
+                        insert_ (progressFor otherPartyId Nothing)
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress = sessionServer
+                        reconcileWith mToken =
+                            liftIO $ runHandler $ runReaderT
+                                (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
+                                env
+                        completeExitWith tokenValue =
+                            liftIO $ runHandler $ runReaderT
+                                (completeProgress
+                                    (Just ("Bearer " <> tokenValue))
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest Nothing))
+                                env
+                    missing <- reconcileWith (Just "google-token")
+                    liftIO $ flip runSqlPool pool $
+                        insertEngagement otherPartyId "event_moment" "reaction_added" earliestAt 40
+                    otherPartyEvidence <- reconcileWith (Just "google-token")
+                    missingSignup <- reconcileWith (Just "ambiguous-token")
+                    liftIO $ flip runSqlPool pool $
+                        rawExecute
+                            "UPDATE user_onboarding_progress SET signup_completed_at = ? WHERE party_id = ?"
+                            [toPersistValue signupAt, toPersistValue otherPartyId]
+                    explicitExitEvidence <- completeExitWith "ambiguous-token"
+                    liftIO $ flip runSqlPool pool $
+                        insertEngagement partyId "event_moment" "reaction_added" postWindowAt 41
+                    postWindowEvidence <- reconcileWith (Just "google-token")
+                    liftIO $ flip runSqlPool pool $ do
+                        insertEngagement partyId "artist" "follow" laterAt 42
+                        insertEngagement partyId "event_moment" "reaction_added" earliestAt 43
+                        rawExecute
+                            "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved','event','42','cross-device-save','{}',?)"
+                            [toPersistValue partyId, toPersistValue earliestAt]
+                    reconciled <- reconcileWith (Just "google-token")
+                    repeated <- reconcileWith (Just "google-token")
+                    unauthenticated <- reconcileWith Nothing
+                    pure
+                        ( missing
+                        , otherPartyEvidence
+                        , missingSignup
+                        , explicitExitEvidence
+                        , postWindowEvidence
+                        , reconciled
+                        , repeated
+                        , unauthenticated
+                        , earliestAt
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                            (completedValue, firstValueValue, newlyCompletedValue)
+                                `shouldBe` (Nothing, Nothing, False)
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " to leave reconciliation pending, got: " <> show serverErr)
+            assertPending "missing evidence" missingEvidenceResult
+            assertPending "other-Party evidence" otherPartyEvidenceResult
+            assertPending "missing signup marker" missingSignupResult
+            case explicitExitEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "moment_reaction", Just expectedEvidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected authoritative evidence to win over an explicit exit, got: " <> show serverErr)
+            assertPending "post-window evidence" postWindowEvidenceResult
+            case reconciledResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "event_saved", Just expectedEvidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected server-inferred cross-device evidence to complete, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue firstValueAt _) newlyCompletedValue) ->
+                    (firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (Just "event_saved", Just expectedEvidenceAt, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated reconciliation to remain idempotent, got: " <> show serverErr)
+            case unauthenticatedResult of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 401
+                Right _ -> expectationFailure "Expected reconciliation without a session to return 401"
 
         it "requires Party-bound, in-window access-request evidence and stays idempotent" $ do
             ( missingEvidenceResult
@@ -5259,7 +5394,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
                         completeAccessRequest =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5371,7 +5506,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
                         completeEventSave =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
@@ -5485,7 +5620,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
                         completeMomentReaction =
                             liftIO $ runHandler $ runReaderT
                                 ( completeProgress
