@@ -6,7 +6,8 @@ Esta entrega introduce el núcleo seguro y auditable para evolucionar las
 reseñas verificadas existentes. La experiencia interactiva se gobierna con el
 flag de despliegue `CONTEXTUAL_REPUTATION_ENABLED`, expuesto a clientes
 autenticados con el mismo nombre. La activación privada fue autorizada para el
-rollout controlado; el worker solo opera en staging y exclusivamente en modo
+rollout controlado. El proceso del worker permanece apagado hasta abrir primero
+su gate de base de datos en staging; después solo puede operar allí y en modo
 `simulation`. Las lecturas
 de agregados públicos además exigen el gate independiente, por defecto apagado,
 `PUBLIC_REPUTATION_PROJECTION_ENABLED`; nunca basta con habilitar el flujo

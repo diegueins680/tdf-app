@@ -4,6 +4,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import {
+  captureContextualReputationGate,
+  runtimeEnvBlockers,
+} from '../production-release.mjs';
+import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMachineDeployArgs,
@@ -83,6 +87,10 @@ function releaseOptions(overrides = {}) {
     priorShas: {
       'canary-machine': '1111111111111111111111111111111111111111',
       'remaining-machine': '2222222222222222222222222222222222222222',
+    },
+    priorContextualReputationEnabled: {
+      'canary-machine': false,
+      'remaining-machine': false,
     },
     remainingMachineIds: ['remaining-machine'],
     sha: releaseSha,
@@ -689,6 +697,7 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
     app: 'tdf-hq',
     image,
     sha: normalizedReleaseSha,
+    contextualReputationEnabled: false,
     onlyMachine: 'canary-machine',
   });
 
@@ -700,6 +709,35 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
   assert.ok(args.includes('--update-only'));
   assert.ok(!args.includes('machine'));
   assert.ok(!args.includes('update'));
+  assert.ok(args.includes('CONTEXTUAL_REPUTATION_ENABLED=false'));
+});
+
+test('runtime preflight accepts a coherent pre-activation contextual reputation gate', () => {
+  const values = {
+    RUN_MIGRATIONS: 'false',
+    AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+    CONTEXTUAL_REPUTATION_ENABLED: 'false',
+    REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+    REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
+    REPUTATION_AGGREGATION_MODE: 'simulation',
+    EVENT_DISCOVERY_ENABLED: 'false',
+    DEFAULT_LOCALE: 'es',
+  };
+  const rows = [
+    { machineId: 'machine-a', values },
+    { machineId: 'machine-b', values: { ...values } },
+  ];
+
+  assert.equal(captureContextualReputationGate(rows), false);
+  assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
+  assert.match(runtimeEnvBlockers(rows)[0], /CONTEXTUAL_REPUTATION_ENABLED/);
+  assert.throws(
+    () => captureContextualReputationGate([
+      rows[0],
+      { machineId: 'machine-b', values: { ...values, CONTEXTUAL_REPUTATION_ENABLED: 'true' } },
+    ]),
+    /same boolean CONTEXTUAL_REPUTATION_ENABLED/i,
+  );
 });
 
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {
@@ -1029,6 +1067,7 @@ test('buildReleaseSteps rolls the canary back to its captured image before any r
   const rollbackCommand = commandText(rollback);
   assert.match(rollbackCommand, /--only-machines canary-machine(?:\s|$)/);
   assert.match(rollbackCommand, /--image registry\.fly\.io\/tdf-hq:deployment-old-canary(?:\s|$)/);
+  assert.match(rollbackCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.doesNotMatch(rollbackCommand, new RegExp(releaseImage));
 });
 

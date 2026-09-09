@@ -21,7 +21,7 @@ test('staging Fly config pins the isolated volume and bounds reputation work to 
   assert.match(config, /^  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_ENVIRONMENT = "staging"$/mu);
   assert.match(config, /^  REPUTATION_AGGREGATION_MODE = "simulation"$/mu);
-  assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "true"$/mu);
+  assert.match(config, /^  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"$/mu);
   assert.match(config, /^  AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"$/mu);
   assert.match(
     config,

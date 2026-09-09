@@ -2211,8 +2211,12 @@ export function buildMachineDeployArgs({
   sha,
   onlyMachine,
   excludeMachine,
+  contextualReputationEnabled = true,
   publicReputationProjectionEnabled = false,
 }) {
+  if (typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
   if (typeof publicReputationProjectionEnabled !== 'boolean') {
     throw new Error('publicReputationProjectionEnabled must be a boolean.');
   }
@@ -2225,7 +2229,7 @@ export function buildMachineDeployArgs({
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=true',
+    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
     '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
     '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
@@ -2274,6 +2278,18 @@ export function buildReleaseSteps(options = {}) {
   const previousSha = descriptiveOnly && !rawPreviousSha
     ? '<captured-before-canary>'
     : normalizeFullSha(rawPreviousSha);
+  const rawPreviousContextualReputationEnabled =
+    options.priorContextualReputationEnabled?.[canary]
+    ?? options.previousContextualReputationEnabled;
+  if (!descriptiveOnly && typeof rawPreviousContextualReputationEnabled !== 'boolean') {
+    throw new Error(
+      'Executable release steps require the captured contextual-reputation flag for rollback.',
+    );
+  }
+  const previousContextualReputationEnabled =
+    typeof rawPreviousContextualReputationEnabled === 'boolean'
+      ? rawPreviousContextualReputationEnabled
+      : false;
 
   const rollbackCanary = {
     id: 'rollback-canary',
@@ -2283,6 +2299,7 @@ export function buildReleaseSteps(options = {}) {
       app,
       image: previousImage,
       sha: previousSha,
+      contextualReputationEnabled: previousContextualReputationEnabled,
       publicReputationProjectionEnabled,
       onlyMachine: canary,
     }),

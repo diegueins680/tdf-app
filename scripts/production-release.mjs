@@ -313,8 +313,19 @@ async function readEffectiveRuntimeEnv(app, machines) {
   }));
 }
 
-function runtimeEnvBlockers(rows, options = {}) {
-  return rows.flatMap(({ machineId, values }) => Object.entries(stagedRuntimeEnv)
+export function runtimeEnvBlockers(rows, options = {}) {
+  const contextualReputationEnabled = options.contextualReputationEnabled;
+  if (contextualReputationEnabled !== undefined
+      && typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
+  const expectedRuntimeEnv = {
+    ...stagedRuntimeEnv,
+    ...(contextualReputationEnabled === undefined
+      ? {}
+      : { CONTEXTUAL_REPUTATION_ENABLED: String(contextualReputationEnabled) }),
+  };
+  return rows.flatMap(({ machineId, values }) => Object.entries(expectedRuntimeEnv)
     .filter(([name]) => !(
       options.allowUnavailableAutomaticRunner === true
       && name === 'AUTO_APPLY_PRODUCTION_MIGRATIONS'
@@ -331,6 +342,16 @@ function runtimeEnvBlockers(rows, options = {}) {
         : JSON.stringify(values[name]);
       return `Machine ${machineId} effective ${name} is ${actual}; expected ${expected}.`;
     }));
+}
+
+export function captureContextualReputationGate(rows) {
+  const values = new Set(rows.map(({ values: runtime }) => runtime.CONTEXTUAL_REPUTATION_ENABLED));
+  if (values.size !== 1 || !['true', 'false'].includes([...values][0])) {
+    throw new Error(
+      'Every production Machine must report the same boolean CONTEXTUAL_REPUTATION_ENABLED value.',
+    );
+  }
+  return [...values][0] === 'true';
 }
 
 function capturePublicReputationProjectionGate(rows) {
@@ -419,11 +440,13 @@ async function remotePreflight(context) {
   await run(['flyctl', 'auth', 'whoami']);
   const machines = await readMachines(context.app);
   const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
+  const contextualReputationEnabled = captureContextualReputationGate(runtimeEnv);
   const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
   const secrets = await readSecretNames(context.app);
   const blockers = runtimeEnvBlockers(runtimeEnv, {
     allowUnavailableAutomaticRunner: true,
     allowUnavailableReputationWorker: true,
+    contextualReputationEnabled,
   });
   for (const machine of machines) {
     const check = await smokeMachine(context, machine.id, null);
@@ -586,12 +609,21 @@ async function rollbackMachine(context, machine) {
   const sha = previousSha(machine);
   if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
   const projectionGate = await currentPublicReputationProjectionGate(context, machine);
+  const previousContextualReputationEnabled =
+    machine.releaseSnapshot?.runtimeEnv?.CONTEXTUAL_REPUTATION_ENABLED;
+  if (!['true', 'false'].includes(previousContextualReputationEnabled)) {
+    throw new Error(
+      `Machine ${machine.id} has no captured contextual-reputation rollback flag.`,
+    );
+  }
+  const contextualReputationEnabled = previousContextualReputationEnabled === 'true';
   // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
   // duplicates Docker Hub digest references as repo@digest@digest before the API call.
   await run(buildMachineDeployArgs({
     app: context.app,
     image,
     sha,
+    contextualReputationEnabled,
     publicReputationProjectionEnabled: projectionGate,
     onlyMachine: machine.id,
   }));
@@ -600,7 +632,10 @@ async function rollbackMachine(context, machine) {
   if (restored.image_ref?.digest !== machine.releaseSnapshot?.imageDigest) {
     throw new Error(`Machine ${machine.id} rollback digest does not match its snapshot.`);
   }
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [restored]));
+  const envBlockers = runtimeEnvBlockers(
+    await readEffectiveRuntimeEnv(context.app, [restored]),
+    { contextualReputationEnabled },
+  );
   if (envBlockers.length > 0) {
     throw new Error(`Machine ${machine.id} rollback environment is unsafe: ${envBlockers.join(' ')}`);
   }
