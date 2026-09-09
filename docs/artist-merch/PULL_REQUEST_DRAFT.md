@@ -52,6 +52,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - OpenAPI YAML + regeneración web/móvil: PASS.
 - Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
+- Auditoría de listas/catálogos: PASS, 1.000/1.000 candidatos clasificados; prueba determinista PASS.
 
 No se ejecutó runtime en dispositivo/emulador móvil ni integración real con proveedor de pagos.
 

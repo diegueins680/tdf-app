@@ -13,7 +13,7 @@
 | Web | Typecheck/Jest/build y Playwright disponibles; Chromium desktop/teléfono verificado con datos sintéticos |
 | Móvil | Typecheck/Jest disponibles; runtime nativo/emulador pendiente |
 | Pagos sandbox | Credenciales Datafast/PayPal/manual no disponibles; no se llamaron proveedores |
-| GitHub | SSH fetch disponible; token `gh` inválido al inicio; push/PR no se afirmarán hasta intentarlos |
+| GitHub | Push disponible; draft PR raíz `#274` y draft PR móvil `#49` creados, sin merge ni despliegue |
 
 ## Ejecutado con resultado verificable
 
@@ -31,6 +31,7 @@
 - OpenAPI: YAML parseado y tipos generados para ambos clientes.
 - Manifiesto/mecanismo de release: PASS, 47/47 pruebas; migración anclada al SHA de introducción.
 - Feature registry: generación PASS. Auditoría reporta solo el destino preexistente no relacionado `/reputation/consents`.
+- Auditoría de listas/catálogos: PASS, 1.000/1.000 candidatos con decisión vigente; prueba determinista PASS. Se conservaron las decisiones revisadas preexistentes, se retiraron 2 huellas obsoletas y se clasificaron 50 candidatos nuevos.
 
 ## Pendiente antes de recomendar lanzamiento
 
