@@ -8,6 +8,7 @@ module TDF.Server.Reviews
   , publicReviewTargetStatement
   , eligibilitySql
   , reputationCategoriesSql
+  , reputationPilotMembershipSql
   ) where
 
 import Control.Exception (SomeException, fromException, throwIO, try)
@@ -101,6 +102,8 @@ getPublicReputation partyId = do
     throwError err404 {errBody = "public reputation is unavailable"}
   exists <- jsonRows "SELECT to_jsonb(TRUE) FROM party WHERE id=?" [PersistInt64 partyId]
   when (null exists) (throwError err404 {errBody = "profile not found"})
+  pilotMember <- jsonRows reputationPilotMembershipSql [PersistInt64 partyId]
+  when (null pilotMember) (throwError err404 {errBody = "public reputation is unavailable"})
   visible <- jsonRows "SELECT to_jsonb(TRUE) FROM reputation_consent_state WHERE party_id=? AND consent_kind IN ('pilot_participation','public_visibility') AND granted GROUP BY party_id HAVING count(*)=2" [PersistInt64 partyId]
   when (null visible) (throwError err404 {errBody = "public reputation is unavailable"})
   result <- jsonRows
@@ -132,9 +135,7 @@ listReputationCategories rawLocale = do
 -- The feature flag keeps the new surface dark through schema/backfill rollout.
 getPersonalReputationPreference :: AuthedUser -> Maybe Text -> AppM Value
 getPersonalReputationPreference user rawContextKind = do
-  cfg <- asks envConfig
-  unless (contextualReputationEnabled cfg) $
-    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  requireContextualReputationPilot user
   contextKind <- validatePreferenceContextKind rawContextKind
   result <- jsonRows personalPreferenceSql
     [PersistInt64 (fromSqlKey (auPartyId user)), PersistText contextKind]
@@ -174,9 +175,7 @@ savePersonalReputationPreference
   -> ReputationPreferenceSaveRequest
   -> AppM Value
 savePersonalReputationPreference user idempotencyKey request = do
-  cfg <- asks envConfig
-  unless (contextualReputationEnabled cfg) $
-    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  requireContextualReputationPilot user
   contextKind <- validatePreferenceContextKind (Just (contextKind request))
   validatePreferenceSaveRequest idempotencyKey request
   pool <- asks envPool
@@ -216,9 +215,7 @@ updateReputationConsents :: AuthedUser -> [ReputationConsentUpdate] -> AppM [Rep
 updateReputationConsents user updates = do
   when (null updates || length updates /= length (nub (map consentKind updates)) || any (\update -> consentKind update `notElem` reputationConsentKinds) updates) $
     throwError err400 { errBody = "Invalid reputation consent update" }
-  cfg <- asks envConfig
-  when (any granted updates && not (contextualReputationEnabled cfg)) $
-    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  when (any granted updates) $ requireContextualReputationPilot user
   when (any granted updates) $ do
     requireReputationConsentGrantEligibility user
     unless (all hasCurrentConsentDisclosure (filter granted updates)) $
@@ -231,6 +228,24 @@ updateReputationConsents user updates = do
       consentCopyVersion == Just "reputation-consent-v0.1" && consentLocale `elem` [Just "es", Just "en"]
     persistConsent partyId ReputationConsentUpdate{consentKind, granted, consentCopyVersion, consentLocale} =
       persistReputationConsent partyId consentKind granted consentCopyVersion consentLocale
+
+-- The rollout flag controls whether this feature family exists at all. Once it
+-- is on, membership is still decided by the server from an audited database
+-- record; a client, token claim, or URL can never opt somebody into the pilot.
+requireContextualReputationPilot :: AuthedUser -> AppM ()
+requireContextualReputationPilot user = do
+  cfg <- asks envConfig
+  unless (contextualReputationEnabled cfg) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+  members <- jsonRows reputationPilotMembershipSql [PersistInt64 (fromSqlKey (auPartyId user))]
+  when (null members) $
+    throwError err404 { errBody = "Contextual reputation is unavailable" }
+
+reputationPilotMembershipSql :: Text
+reputationPilotMembershipSql =
+  "SELECT to_jsonb(TRUE) FROM reputation_pilot_cohort_membership "
+  <> "WHERE party_id=? AND status='active' "
+  <> "AND (expires_at IS NULL OR expires_at > now())"
 
 requireReputationConsentGrantEligibility :: AuthedUser -> AppM ()
 requireReputationConsentGrantEligibility user = do

@@ -81,6 +81,24 @@ evaluación individual estructurada; con más de diez, se segmenta por rol,
 servicio, ciudad o página. La lista inicial se aleatoriza por borrador y se
 persiste para permitir reanudarla sin cambiar el orden durante el flujo.
 
+### Cohorte piloto aplicada por servidor
+
+Incluso cuando `CONTEXTUAL_REPUTATION_ENABLED=true`, el servidor sólo permite
+preferencias contextuales y nuevos consentimientos a personas con una fila
+`active`, no vencida, en `reputation_pilot_cohort_membership`. La pertenencia
+no procede de un claim de sesión ni de una preferencia del cliente: se gestiona
+en PostgreSQL con motivo, responsable, caducidad opcional y una entrada
+automática en `reputation_audit_log` para cada alta, retiro, suspensión o
+modificación. La proyección pública exige además la membresía activa y los dos
+consentimientos ya establecidos. Retirar o vencer la fila oculta de inmediato
+las superficies contextuales; no borra evidencia histórica ni consentimientos.
+
+La cohorte se debe poblar únicamente mediante el procedimiento administrativo
+aprobado, después de verificar edad/representación, consentimiento informado y
+el motivo de inclusión. No se debe usar para segmentar por atributos sensibles,
+ni se debe activar una cohorte mediante una lista publicada o una bandera de
+cliente.
+
 ## Modelo y explicabilidad
 
 Las preferencias de categorías usan **rank-order centroid (ROC)**. Para una
@@ -158,10 +176,15 @@ español e inglés y `prefers-reduced-motion`.
    dirección válida. Emitir reporte de omitidos/ambiguos.
 3. Activar solamente lectura interna, validar conteos, duplicados y que ningún
    agregado contiene ranking privado o señal no verificada.
-4. Piloto consentido y controlado; pausar ante >1% de errores de write, una
+4. Aplicar `2026-09-10_contextual_reputation_pilot_cohort.sql`, verificar que
+   no contiene miembros activos por defecto, y registrar cada alta del piloto
+   con responsable, motivo y vencimiento. Sólo entonces puede habilitarse el
+   flag para staging, donde seguirá limitado por la tabla.
+5. Piloto consentido y controlado; pausar ante >1% de errores de write, una
    fuga de identidad, variación inexplicable >10 puntos o alerta de fraude sin
    cola de revisión. Expandir gradualmente tras dos semanas estables.
-5. Rollback: apagar el flag y lectores/escritores; aplicar el rollback sólo si
+6. Rollback: retirar/suspender los miembros de cohorte y apagar el flag y
+   lectores/escritores; aplicar el rollback sólo si
    es necesario tras preservar una exportación auditada. Las reseñas heredadas
    no se eliminan.
 

@@ -78,6 +78,38 @@ apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
 apply_file tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql
 apply_file tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql
 apply_file tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql
+apply_file tdf-hq/sql/2026-09-10_contextual_reputation_pilot_cohort.sql
+apply_file tdf-hq/sql/2026-09-10_contextual_reputation_pilot_cohort.sql
+
+psql_exec -c "
+  INSERT INTO reputation_pilot_cohort_membership(
+    party_id, status, enrolled_by_party_id, changed_by_party_id, change_reason
+  ) VALUES (101, 'active', 102, 102, 'Approved controlled pilot');
+  INSERT INTO reputation_pilot_cohort_membership(
+    party_id, status, enrolled_by_party_id, changed_by_party_id, change_reason,
+    enrolled_at, expires_at
+  ) VALUES (
+    103, 'active', 102, 102, 'Expired pilot enrollment',
+    now() - interval '2 hours', now() - interval '1 hour'
+  );
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_pilot_cohort_membership WHERE status='active' AND (expires_at IS NULL OR expires_at > now());")" \
+  "1" \
+  "Active unexpired pilot membership"
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_audit_log WHERE action='reputation.pilot-cohort.enrolled' AND resource_id='101';")" \
+  "1" \
+  "Pilot enrollment audit"
+psql_exec -c "
+  UPDATE reputation_pilot_cohort_membership
+  SET status='withdrawn', changed_by_party_id=101, change_reason='Participant withdrew consent'
+  WHERE party_id=101;
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM reputation_audit_log WHERE action='reputation.pilot-cohort.status-changed' AND resource_id='101';")" \
+  "1" \
+  "Pilot withdrawal audit"
 
 assert_equal \
   "$(psql_exec -Atc "SELECT enabled::text || ':' || simulation_only::text FROM reputation_worker_control WHERE environment='production';")" \
