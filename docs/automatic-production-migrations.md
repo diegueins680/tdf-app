@@ -58,6 +58,13 @@ fails closed on drift.
    bash scripts/test-automatic-migrations-production-schema.sh
    ```
 
+`introducedBy` must be an ancestor of the release and must identify a commit
+whose released tree contains the registered SQL. A feature-branch commit stops
+being an ancestor when GitHub squash-merges the branch. After such a merge,
+replace the entry with the full squash-merge SHA in a follow-up image before
+using the guarded release lane. Never point it at an earlier branch commit that
+does not contain the migration, and never disable the ancestry check.
+
 The PostgreSQL integration test restores the production-shaped fixture, starts
 the real entrypoint, verifies the complete ledger and schema, starts it again,
 and requires an identical schema fingerprint after the second run.
