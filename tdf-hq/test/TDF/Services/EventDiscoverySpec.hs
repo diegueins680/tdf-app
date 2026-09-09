@@ -365,6 +365,23 @@ spec = do
       pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
       runSqlPool initializeEventDiscoverySchema pool
 
+      let distractorStart = addUTCTime (24 * 60 * 60) (discoveredEventStart event)
+          distractorEnd = addUTCTime (2 * 60 * 60) distractorStart
+      runSqlPool
+        ( do
+            rawExecute
+              "WITH digits(value) AS (VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)), numbers(value) AS (SELECT ones.value+10*tens.value+100*hundreds.value+1000*thousands.value+1 FROM digits ones CROSS JOIN digits tens CROSS JOIN digits hundreds CROSS JOIN digits thousands) INSERT INTO social_event(id,organizer_party_id,title,description,venue_id,event_type_id,workflow_state_id,timezone,start_time,end_time,price_cents,currency_id,capacity,metadata,created_at,updated_at) SELECT 10000+value,'system:event-discovery','Canonical-match distractor',NULL,NULL,NULL,NULL,NULL,?,?,NULL,NULL,NULL,NULL,?,? FROM numbers WHERE value<=5001"
+              [ toPersistValue distractorStart
+              , toPersistValue distractorEnd
+              , toPersistValue (fixtureTime 10 1)
+              , toPersistValue (fixtureTime 10 1)
+              ]
+            rawExecute
+              "INSERT INTO external_event_ref(provider,external_id,event_id,city,country_code,source_url,price_cents,currency,last_seen_at,missing_runs,source_status) SELECT 'distractor','distractor-'||id,id,'Guayaquil','EC',NULL,NULL,'USD',?,0,'on_sale' FROM social_event WHERE id BETWEEN 10001 AND 15001"
+              [toPersistValue (fixtureTime 10 1)]
+        )
+        pool
+
       _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
       importedRef <-
         runSqlPool
@@ -400,8 +417,8 @@ spec = do
           replacementStats <-
             syncDiscoveredEvent pool (fixtureTime 10 10) replacementIdentity
           discoveryEventsCreated replacementStats `shouldBe` 0
-          runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 1
-          runSqlPool (count ([] :: [Filter Social.ExternalEventRef])) pool `shouldReturn` 2
+          runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 5002
+          runSqlPool (count ([] :: [Filter Social.ExternalEventRef])) pool `shouldReturn` 5003
 
           replacementRef <-
             runSqlPool

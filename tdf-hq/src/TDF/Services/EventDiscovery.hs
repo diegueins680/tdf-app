@@ -74,7 +74,6 @@ import Data.UUID (UUID)
 import Database.Persist
   ( Entity(..)
   , PersistValue
-  , SelectOpt(LimitTo)
   , deleteWhere
   , get
   , getBy
@@ -2183,7 +2182,14 @@ findCanonicalEventCandidate ::
   DiscoveredEvent ->
   SqlPersistT IO (Maybe Social.SocialEventId)
 findCanonicalEventCandidate discovered = do
-  refs <- selectList [] [LimitTo 5000]
+  let startTime = discoveredEventStart discovered
+      matchWindow = 90 * 60
+  refs <-
+    rawSql
+      "SELECT ?? FROM external_event_ref JOIN social_event ON social_event.id=external_event_ref.event_id WHERE social_event.start_time>=? AND social_event.start_time<=? ORDER BY social_event.start_time,external_event_ref.event_id,external_event_ref.id"
+      [ toPersistValue (addUTCTime (-matchWindow) startTime)
+      , toPersistValue (addUTCTime matchWindow startTime)
+      ]
   matches <- fmap catMaybes . forM refs $ \(Entity _ ref) -> do
     eventRow <- get (Social.externalEventRefEventId ref)
     case eventRow of
