@@ -62,4 +62,4 @@ Root and mobile branch: `feature/onboarding-cross-device-reconciliation-20260909
 
 Local implementation commits: root `08dacddc0f6eab7e50e94dff3272df491380c6a9`; mobile `f487de478939b3c19a62b5f54aa876d96a4eb32c`.
 
-GitHub authentication was invalid at handoff, so these commits were not pushed and no draft PR URL exists. Publish the mobile commit before the root submodule pointer. The stack is behind current `origin/main` in both repositories and must be reconciled and fully revalidated before merge. Do not merge or deploy this stacked batch independently of its base.
+The mobile commit was published before the root submodule pointer. Draft reviews: root https://github.com/diegueins680/tdf-app/pull/302 and mobile https://github.com/diegueins680/TDF-mobile/pull/61. The stack is behind current `origin/main` in both repositories and must be reconciled and fully revalidated before merge. Do not merge or deploy this stacked batch independently of its base.

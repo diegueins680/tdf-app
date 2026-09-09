@@ -22,14 +22,14 @@ Both clients emit completion analytics only from `newlyCompleted=true` and the c
 | Browser and screenshot tooling | Available, not used | Earlier audit capability check found Playwright 1.59.1; this batch changes no rendered pixels | No screenshot was fabricated; visual before/after evidence is not material to this state/API change |
 | Native device tooling | Partial, not exercised | Earlier capability check found Android/iOS tooling but no connected device and only shut-down simulators | Jest covers provider lifecycle; real device foreground, offline, and cross-device behavior remain unverified |
 | Test runners | Available | Focused/full Jest, typecheck, lint, generated-contract, Stack/Hspec, and repository gates are configured | Automated verification can cover the selected batch |
-| Network access | Partial | Cached/local package and Stack work proceeded; no production application request was made | Local work is independent; staging and production behavior are not claimed |
+| Network access | Available for repository publication; product runtime not exercised | Both feature branches were pushed and two draft PRs were created; no production application request was made | Review publication succeeded; staging and production behavior are not claimed |
 | Local/staging configuration | Partial | Local no-op analytics and synthetic SQLite fixtures are available; no authenticated staging fixture was supplied | No live cross-device walkthrough or external-service verification was possible |
 | Synthetic test accounts | Unavailable | No synthetic staging credentials were present in the audited environment | Signup-on-A/sign-in-on-B runtime acceptance remains blocked |
 | Analytics access | Unavailable | Mobile test output explicitly reports PostHog disabled because `EXPO_PUBLIC_POSTHOG_KEY` is unset | Event semantics are code/test verified; ingestion, p75 funnels, and uplift remain “not yet measured” |
-| GitHub authentication | Unavailable in the current environment | `npm run ai:doctor` exited 0 but `gh auth status` reported the active credential invalid | Local commits remain possible; push and draft-PR creation must not be claimed unless a later authenticated check succeeds |
+| GitHub authentication | Available after keyring verification | The isolated doctor warned when checking a cleared-token context; a later direct `gh auth status` succeeded, both branches pushed, and draft PRs #302 and #61 were created | Commits and review links are available; no merge or deployment occurred |
 | Production access | Not used | No deploy, migration, real transaction, production write, or communication command was run | This report contains no production-validation claim |
 
-`npm run ai:doctor` was inspected before execution and returned 14 OK, four warnings, and zero errors. The warnings were the two dated memory files absent from the isolated worktree, expected task changes, and invalid GitHub authentication. Root `AGENTS.md`, `SOUL.md`, `USER.md`, `MEMORY.md`, `AI_WORKFLOW.md`, `CONTRIBUTING.md`, and relevant package scripts were read. No `BOOTSTRAP.md` exists.
+`npm run ai:doctor` was inspected before execution and returned 14 OK, four warnings, and zero errors. The warnings were the two dated memory files absent from the isolated worktree, expected task changes, and a GitHub credential warning in the doctor's isolated context. Direct keyring authentication later succeeded. Root `AGENTS.md`, `SOUL.md`, `USER.md`, `MEMORY.md`, `AI_WORKFLOW.md`, `CONTRIBUTING.md`, and relevant package scripts were read. No `BOOTSTRAP.md` exists.
 
 ## Method and baseline
 
@@ -243,4 +243,9 @@ Focused local implementation commits:
 - root/backend/web plus mobile pointer: `08dacddc0f6eab7e50e94dff3272df491380c6a9`
 - mobile: `f487de478939b3c19a62b5f54aa876d96a4eb32c`
 
-GitHub authentication remained invalid at commit time, so neither branch was pushed and no draft PR was created. The checked workflows do not deploy a feature-branch push automatically: root image publication targets `main`/manual invocation, root pull requests run CI/previews, mobile validation targets pull requests/`main`, and mobile EAS release requires manual dispatch with its build input enabled. Publication can therefore resume after authentication, but the mobile commit must be made remotely available before publishing the root pointer. No merge or deployment is authorized by this report.
+The mobile branch was pushed before the root branch so the parent pointer references a remotely available commit. Draft review links:
+
+- root: https://github.com/diegueins680/tdf-app/pull/302
+- mobile: https://github.com/diegueins680/TDF-mobile/pull/61
+
+The checked workflows do not deploy a feature-branch push automatically: root image publication targets `main`/manual invocation, root pull requests run CI/previews, mobile validation targets pull requests/`main`, and mobile EAS release requires manual dispatch with its build input enabled. No merge or deployment was performed or is authorized by this report.
