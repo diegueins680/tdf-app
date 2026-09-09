@@ -276,6 +276,9 @@ export function validateFlyConfig(toml) {
     env.get('REPUTATION_AGGREGATION_MODE') ?? '',
   ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
+  const eventDiscoveryAutoPublish = String(
+    env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
+  ).trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
   const internalFeedbackUploadRoot = String(
@@ -342,6 +345,11 @@ export function validateFlyConfig(toml) {
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
   }
+  if (eventDiscoveryAutoPublish !== 'false') {
+    throw new Error(
+      'fly.toml must stage EVENT_DISCOVERY_AUTO_PUBLISH="false" during rollout.',
+    );
+  }
   if (defaultLocale !== 'es') {
     throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
   }
@@ -364,6 +372,7 @@ export function validateFlyConfig(toml) {
     reputationAggregationEnvironment: 'production',
     reputationAggregationMode: 'simulation',
     eventDiscoveryEnabled: false,
+    eventDiscoveryAutoPublish: false,
     defaultLocale: 'es',
     internalFeedbackUploadRoot: normalizedUploadRoot,
     healthCheckPath: '/health',
@@ -2235,6 +2244,7 @@ export function buildMachineDeployArgs({
     '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
     '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
+    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',

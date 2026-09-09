@@ -23,8 +23,10 @@ primary_region = "gru"
   REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
   REPUTATION_AGGREGATION_ENVIRONMENT = "production"
   REPUTATION_AGGREGATION_MODE = "simulation"
-  # Enable only after the discovery schema and release have been verified.
+  # Keep discovery and its publication path quiesced during rollout. Discovery
+  # may resume after verification; auto-publication requires separate approval.
   EVENT_DISCOVERY_ENABLED = "false"
+  EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   # Daily full-platform artist discovery. External research/media is scheduled
   # separately with the same API-level lock and idempotency keys.
   ARTIST_ENRICHMENT_ENABLED = "true"

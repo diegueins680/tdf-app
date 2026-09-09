@@ -11,8 +11,10 @@ from Persistent models.
   DDL from becoming a second source of truth.
 - `CONTEXTUAL_REPUTATION_ENABLED` is staged as `false` until its additive
   schema, backfill, consent copy, and controlled pilot are approved.
-- `EVENT_DISCOVERY_ENABLED` is staged as `false` during a backend rollout and
-  is re-enabled only after the schema, fleet and discovery preflight pass.
+- `EVENT_DISCOVERY_ENABLED` and `EVENT_DISCOVERY_AUTO_PUBLISH` are both staged
+  as `false` during a backend rollout. Discovery may resume after the schema,
+  fleet and discovery preflight pass; auto-publication remains `false` unless
+  it receives separate content/moderation approval.
 
 The image build renders `scripts/production-migrations.json` and every SQL file
 it references into `/app/production-migrations.sql`. The rendered bundle embeds
