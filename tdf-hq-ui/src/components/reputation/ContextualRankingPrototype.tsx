@@ -60,7 +60,7 @@ function RankingRow({
   person, position, isExcluded, isFirst, isLast, actionDisabled, onMove, onToggleExcluded, registerButton,
 }: RankingRowProps) {
   return (
-    <Box component="li" draggable={!isExcluded} sx={{
+    <Box sx={{
       opacity: isExcluded ? 0.6 : 1, border: 1, borderColor: 'divider', borderRadius: 2, p: 1.25, bgcolor: 'background.paper',
     }}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -196,7 +196,9 @@ export default function ContextualRankingPrototype({ category, people, onSave }:
             const isExcluded = state.excluded.has(person.id);
             return (
               <Box
+                component="li"
                 key={person.id}
+                draggable={!isExcluded}
                 onDragStart={() => dispatch({ type: 'drag', id: person.id })}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => dropAt(index)}
