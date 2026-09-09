@@ -548,11 +548,20 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                                     if not suitable
                                         then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
                                         else do
-                                            attachMaterializationArtists eventId artistIds
-                                            insertedRef <- insertMaterializationEventRef candidate request validated eventId now
-                                            if insertedRef
-                                                then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                                                else pure (Left (conflict "the provider event was materialized concurrently"))
+                                            identityStillMatches <-
+                                                materializationEventMatchesCandidate
+                                                    candidate
+                                                    validated
+                                                    venueId
+                                                    eventId
+                                            if not identityStillMatches
+                                                then pure (Left (conflict "the matching event changed while materialization was starting"))
+                                                else do
+                                                    attachMaterializationArtists eventId artistIds
+                                                    insertedRef <- insertMaterializationEventRef candidate request validated eventId now
+                                                    if insertedRef
+                                                        then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                                        else pure (Left (conflict "the provider event was materialized concurrently"))
                                 Right Nothing -> do
                                     let metadata = materializationEventMetadata candidate request validated
                                     eventId <-
@@ -737,24 +746,40 @@ findMaterializationDuplicate candidate validated venueId = do
             , SocialEventStartTime <=. addUTCTime 900 validated.vmStartTime
             ]
             []
-    matches <- filterM matchesCandidate events
+    matches <-
+        filterM
+            (\(Entity eventId _) -> materializationEventMatchesCandidate candidate validated venueId eventId)
+            events
     pure $ case matches of
         [] -> Right Nothing
         [Entity eventId _] -> Right (Just eventId)
         _ -> Left (conflict "event identity is ambiguous")
-  where
-    lineupNames = map normalizeEntityText validated.vmLineup
-    matchesCandidate (Entity eventId event) =
-        if normalizeEntityText (socialEventTitle event) /= normalizeEntityText (eventResearchCandidateTitle candidate)
-            || abs (diffUTCTime (socialEventStartTime event) validated.vmStartTime) > 900
-            then pure False
-            else do
+
+materializationEventMatchesCandidate
+    :: EventResearchCandidate
+    -> ValidatedMaterialization
+    -> VenueId
+    -> SocialEventId
+    -> SqlPersistT IO Bool
+materializationEventMatchesCandidate candidate validated venueId eventId = do
+    event <- get eventId
+    case event of
+        Nothing -> pure False
+        Just eventRow
+            | socialEventVenueId eventRow /= Just venueId
+                || normalizeEntityText (socialEventTitle eventRow)
+                    /= normalizeEntityText (eventResearchCandidateTitle candidate)
+                || abs (diffUTCTime (socialEventStartTime eventRow) validated.vmStartTime) > 900 ->
+                pure False
+            | otherwise -> do
                 links <- selectList [EventArtistEventId ==. eventId] []
                 names <-
                     mapMaybeM
                         (\link -> fmap artistProfileName <$> get (eventArtistArtistId (entityVal link)))
                         links
                 pure (null names || any (`elem` lineupNames) (map normalizeEntityText names))
+  where
+    lineupNames = map normalizeEntityText validated.vmLineup
 
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM action values = mapMaybe id <$> traverse action values
