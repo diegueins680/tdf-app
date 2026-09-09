@@ -62,6 +62,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/rsvp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        /** Get the authenticated user's RSVP for an event */
+        get: operations["getMyEventRsvp"];
+        /** Atomically create or update the authenticated user's RSVP */
+        put: operations["upsertMyEventRsvp"];
+        post?: never;
+        /** Delete the authenticated user's RSVP */
+        delete: operations["deleteMyEventRsvp"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/rsvp-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get privacy-safe aggregate RSVP counts */
+        get: operations["getEventRsvpSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/rsvps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List RSVPs for an authorized organizer */
+        get: operations["listEventRsvpsForOrganizer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/profiles/{partyId}/rsvp-feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the privacy-filtered event RSVP profile feed */
+        get: operations["getEventRsvpProfileFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/directory-profiles/{slug}/rsvp-feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get RSVP activity for an unambiguously person-linked public directory profile */
+        get: operations["getDirectoryProfileEventRsvpFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/moments/{momentId}/reactions": {
         parameters: {
             query?: never;
@@ -6838,6 +6927,70 @@ export interface components {
             /** Format: date-time */
             erChangeCreatedAt: string;
         };
+        /**
+         * @description Canonical persisted vocabulary. Clients localize these values at the presentation boundary.
+         * @enum {string}
+         */
+        EventRsvpStatus: "accepted" | "maybe" | "declined";
+        EventRsvp: {
+            readonly rsvpEventId: string;
+            rsvpStatus: components["schemas"]["EventRsvpStatus"];
+            rsvpShowOnProfile: boolean;
+            /** Format: date-time */
+            readonly rsvpCreatedAt?: string | null;
+            /** Format: date-time */
+            readonly rsvpUpdatedAt?: string | null;
+        };
+        EventRsvpWrite: {
+            rsvpStatus: components["schemas"]["EventRsvpStatus"];
+            /** @description Explicit decision for this RSVP. Declined RSVPs are never published regardless of this value. */
+            rsvpShowOnProfile: boolean;
+        };
+        EventRsvpSummary: {
+            rsvpAcceptedCount: number;
+            rsvpMaybeCount: number;
+        };
+        EventRsvpAdmin: {
+            adminRsvpId: string;
+            adminRsvpPartyId: string;
+            adminRsvpStatus: components["schemas"]["EventRsvpStatus"];
+            adminRsvpShowOnProfile: boolean;
+            /** Format: date-time */
+            adminRsvpCreatedAt: string;
+            /** Format: date-time */
+            adminRsvpUpdatedAt: string;
+        };
+        EventRsvpAdminPage: {
+            adminRsvpItems: components["schemas"]["EventRsvpAdmin"][];
+            adminRsvpNextCursor?: string | null;
+        };
+        EventRsvpFeedItem: {
+            /** @enum {string} */
+            feedItemType: "event_rsvp";
+            feedEventId: string;
+            /** @enum {string} */
+            feedStatus: "accepted" | "maybe";
+            /** @enum {boolean} */
+            feedShowOnProfile: true;
+            feedEventTitle: string;
+            /** Format: date-time */
+            feedEventStart: string;
+            feedEventTimezone?: string | null;
+            /** Format: uri */
+            feedEventImageUrl?: string | null;
+            feedVenueName?: string | null;
+            feedCity?: string | null;
+            feedWorkflowStateCode: string;
+            /** Format: date-time */
+            feedActionAt: string;
+            feedCanonicalUrl: string;
+            feedCanEdit: boolean;
+            feedCanShare: boolean;
+        };
+        EventRsvpFeedPage: {
+            feedItems: components["schemas"]["EventRsvpFeedItem"][];
+            feedNextCursor?: string | null;
+        };
         SocialEvent: {
             eventId?: string | null;
             eventOrganizerPartyId?: string | null;
@@ -6869,6 +7022,7 @@ export interface components {
             readonly eventWorkflowStateNameEs?: string | null;
             readonly eventWorkflowStateNameEn?: string | null;
             readonly eventPublicListable?: boolean | null;
+            readonly eventRsvpEligible?: boolean | null;
             readonly eventTicketPurchaseEnabled?: boolean | null;
             eventCurrency?: string | null;
             eventBudgetCents?: number | null;
@@ -7004,6 +7158,8 @@ export interface components {
             countryId?: string | null;
             /** @description Presentation and external-wire code resolved from countryId; legacy rows may use preserved migration evidence until backfilled. */
             readonly countryCode?: string | null;
+            /** @description Default presented for new public-event RSVPs. Every RSVP still records an explicit per-action decision. */
+            showEventRsvpsOnProfile: boolean;
         };
         LocalePreferencesUpdate: {
             /**
@@ -7022,6 +7178,8 @@ export interface components {
              * @description Canonical active country identity. Null explicitly clears the preference.
              */
             countryId?: string | null;
+            /** @description Optional new default for subsequent RSVP decisions. */
+            showEventRsvpsOnProfile?: boolean;
         };
         CurrencyConversionAuditCreate: {
             sourceCurrency: string;
@@ -10500,6 +10658,318 @@ export interface operations {
             };
             /** @description Event type is unknown, inactive, ineffective, deprecated, or unpublished */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyEventRsvp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current RSVP or null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvp"] | null;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertMyEventRsvp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventRsvpWrite"];
+            };
+        };
+        responses: {
+            /** @description Authoritative current RSVP */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvp"];
+                };
+            };
+            /** @description Unknown status or unknown request field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event no longer accepts RSVPs */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteMyEventRsvp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description RSVP absent after the idempotent operation */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mutation rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventRsvpSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Separate accepted and interested counts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvpSummary"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event is missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listEventRsvpsForOrganizer: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized administrative list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvpAdminPage"];
+                };
+            };
+            /** @description Cursor is malformed or limit is outside 1 through 50 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Organizer permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEventRsvpProfileFeed: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                partyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stable cursor page with accepted and interested RSVPs only */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvpFeedPage"];
+                };
+            };
+            /** @description Cursor is malformed or limit is outside 1 through 50 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profile is missing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getDirectoryProfileEventRsvpFeed: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Privacy-filtered cursor page; organization and ambiguous profiles fail closed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventRsvpFeedPage"];
+                };
+            };
+            /** @description Cursor is malformed or limit is outside 1 through 50 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Profile is missing */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

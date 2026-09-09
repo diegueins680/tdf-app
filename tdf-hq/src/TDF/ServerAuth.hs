@@ -515,6 +515,11 @@ updateLocalePreferences mAuthorizationHeader mCookieHeader LocalePreferencesUpda
   ((localeIdValue, _), (currencyIdValue, _), countryValue) <- either throwError pure regionalValidation
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool pool $ do
+    mExistingPreferences <- getBy (UniqueUserLocalePreference (auPartyId user))
+    let showEventRsvpsOnProfile =
+          fromMaybe
+            (maybe True (userLocalePreferenceShowEventRsvpsOnProfile . entityVal) mExistingPreferences)
+            lpuShowEventRsvpsOnProfile
     _ <- upsert
       UserLocalePreference
         { userLocalePreferenceUserId = auPartyId user
@@ -525,6 +530,7 @@ updateLocalePreferences mAuthorizationHeader mCookieHeader LocalePreferencesUpda
         , userLocalePreferenceLocaleId = Just localeIdValue
         , userLocalePreferenceCurrencyId = Just currencyIdValue
         , userLocalePreferenceCountryId = countryValue
+        , userLocalePreferenceShowEventRsvpsOnProfile = showEventRsvpsOnProfile
         , userLocalePreferenceUpdatedAt = now
         }
       [ UserLocalePreferenceLocale =. Nothing
@@ -534,6 +540,7 @@ updateLocalePreferences mAuthorizationHeader mCookieHeader LocalePreferencesUpda
       , UserLocalePreferenceLocaleId =. Just localeIdValue
       , UserLocalePreferenceCurrencyId =. Just currencyIdValue
       , UserLocalePreferenceCountryId =. countryValue
+      , UserLocalePreferenceShowEventRsvpsOnProfile =. showEventRsvpsOnProfile
       , UserLocalePreferenceUpdatedAt =. now
       ]
     loadLocalePreferences cfg (auPartyId user)
@@ -600,6 +607,7 @@ loadLocalePreferences cfg partyIdValue = do
         , lpTimezone = userLocalePreferenceTimezone stored
         , lpCountryId = userLocalePreferenceCountryId stored
         , lpCountryCode = canonicalCountryCode <|> userLocalePreferenceCountryCode stored
+        , lpShowEventRsvpsOnProfile = userLocalePreferenceShowEventRsvpsOnProfile stored
         }
   where
     resolveStoredLocale stored =
@@ -632,6 +640,7 @@ localePreferencesFromConfig cfg = do
     , lpTimezone = defaultTimezone cfg
     , lpCountryId = Nothing
     , lpCountryCode = Nothing
+    , lpShowEventRsvpsOnProfile = True
     }
   where
     invalidDefault kind = liftIO . ioError . userError $

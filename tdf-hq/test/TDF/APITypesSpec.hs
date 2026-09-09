@@ -2811,33 +2811,31 @@ spec = do
                 `shouldSatisfy` isLeft
 
     describe "social event RSVP request FromJSON" $ do
-        it "accepts canonical RSVP create payloads and rejects server-managed RSVP fields" $ do
-            case decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\"}" of
+        it "accepts the self-scoped RSVP payload and rejects all client identity fields" $ do
+            case decodeRsvpCreate "{\"rsvpStatus\":\"Accepted\",\"rsvpShowOnProfile\":true}" of
                 Left err ->
                     expectationFailure
                         ("Expected canonical RSVP create payload to decode, got: " <> err)
-                Right (SocialEvents.RsvpCreateDTO partyIdVal statusVal) -> do
-                    partyIdVal `shouldBe` "42"
+                Right (SocialEvents.RsvpCreateDTO statusVal showOnProfileVal) -> do
                     statusVal `shouldBe` "accepted"
+                    showOnProfileVal `shouldBe` True
 
             decodeRsvpCreate
-                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpEventId\":\"99\"}"
+                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpShowOnProfile\":true}"
                 `shouldSatisfy` isLeft
             decodeRsvpCreate
-                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpId\":\"7\"}"
+                "{\"rsvpStatus\":\"Accepted\",\"rsvpShowOnProfile\":true,\"rsvpEventId\":\"99\"}"
                 `shouldSatisfy` isLeft
             decodeRsvpCreate
-                "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"Accepted\",\"rsvpCreatedAt\":\"2026-01-01T00:00:00Z\"}"
+                "{\"rsvpStatus\":\"Accepted\",\"rsvpShowOnProfile\":true,\"rsvpId\":\"7\"}"
                 `shouldSatisfy` isLeft
 
-        it "rejects malformed RSVP party ids and statuses before DB fallback lookup" $ do
-            decodeRsvpCreate "{\"rsvpPartyId\":\"   \",\"rsvpStatus\":\"Accepted\"}"
+        it "rejects missing visibility decisions and unknown RSVP statuses" $ do
+            decodeRsvpCreate "{\"rsvpStatus\":\"Accepted\"}"
                 `shouldSatisfy` isLeft
-            decodeRsvpCreate "{\"rsvpPartyId\":\"0\",\"rsvpStatus\":\"Accepted\"}"
+            decodeRsvpCreate "{\"rsvpStatus\":\"   \",\"rsvpShowOnProfile\":true}"
                 `shouldSatisfy` isLeft
-            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"   \"}"
-                `shouldSatisfy` isLeft
-            decodeRsvpCreate "{\"rsvpPartyId\":\"42\",\"rsvpStatus\":\"waitlist\"}"
+            decodeRsvpCreate "{\"rsvpStatus\":\"waitlist\",\"rsvpShowOnProfile\":true}"
                 `shouldSatisfy` isLeft
 
     describe "social event finance entry request FromJSON" $ do

@@ -249,9 +249,20 @@ EventRsvp
     eventId SocialEventId
     partyId Text
     status Text
+    showOnProfile Bool default=FALSE
+    visibilityDecidedAt UTCTime Maybe
     metadata Text Maybe
     createdAt UTCTime default=now()
     updatedAt UTCTime default=now()
+    UniqueEventRsvp eventId partyId
+    deriving Show Generic
+
+EventRsvpMutationRate sql=event_rsvp_mutation_rate_limit
+    partyId Text
+    windowStart UTCTime
+    mutationCount Int default=1
+    updatedAt UTCTime default=now()
+    UniqueEventRsvpMutationWindow partyId windowStart
     deriving Show Generic
 
 EventInvitation

@@ -24,6 +24,11 @@ module TDF.DTO.SocialEventsDTO (
     EventUpdateDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
+    RsvpSummaryDTO (..),
+    RsvpFeedItemDTO (..),
+    RsvpFeedPageDTO (..),
+    RsvpAdminDTO (..),
+    RsvpAdminPageDTO (..),
     InvitationDTO (..),
     InvitationUpdateDTO (..),
     EventMomentDTO (..),
@@ -474,6 +479,7 @@ data EventDTO = EventDTO
     , eventWorkflowStateNameEs :: Maybe Text
     , eventWorkflowStateNameEn :: Maybe Text
     , eventPublicListable :: Maybe Bool
+    , eventRsvpEligible :: Maybe Bool
     , eventTicketPurchaseEnabled :: Maybe Bool
     , eventCurrency :: Maybe Text
     , eventBudgetCents :: Maybe Int
@@ -563,6 +569,7 @@ eventUpdateAllowedKeys =
     , "eventWorkflowStateNameEs"
     , "eventWorkflowStateNameEn"
     , "eventPublicListable"
+    , "eventRsvpEligible"
     , "eventTicketPurchaseEnabled"
     , "eventCurrency"
     , "eventBudgetCents"
@@ -572,10 +579,9 @@ eventUpdateAllowedKeys =
     ]
 
 data RsvpDTO = RsvpDTO
-    { rsvpId :: Maybe Text
-    , rsvpEventId :: Text
-    , rsvpPartyId :: Text
-    , rsvpStatus :: Text -- "Accepted", "Declined", "Maybe"
+    { rsvpEventId :: Text
+    , rsvpStatus :: Text -- accepted | maybe | declined
+    , rsvpShowOnProfile :: Bool
     , rsvpCreatedAt :: Maybe UTCTime
     , rsvpUpdatedAt :: Maybe UTCTime
     }
@@ -583,21 +589,21 @@ data RsvpDTO = RsvpDTO
 instance ToJSON RsvpDTO
 
 data RsvpCreateDTO = RsvpCreateDTO
-    { rsvpPartyId :: Text
-    , rsvpStatus :: Text -- "Accepted", "Declined", "Maybe"
+    { rsvpStatus :: Text -- accepted | maybe | declined
+    , rsvpShowOnProfile :: Bool
     }
     deriving (Show, Eq, Generic)
 instance FromJSON RsvpCreateDTO where
     parseJSON = withObject "RsvpCreateDTO" $ \o -> do
         rejectUnknownObjectFields
             "RsvpCreateDTO"
-            [ "rsvpPartyId"
-            , "rsvpStatus"
+            [ "rsvpStatus"
+            , "rsvpShowOnProfile"
             ]
             o
-        partyId <- o .: "rsvpPartyId" >>= normalizePositiveIdText "rsvpPartyId"
         status <- o .: "rsvpStatus" >>= normalizeRsvpStatusText
-        pure (RsvpCreateDTO partyId status)
+        showOnProfile <- o .: "rsvpShowOnProfile"
+        pure (RsvpCreateDTO status showOnProfile)
 
 instance FromJSON RsvpDTO
 
@@ -608,6 +614,58 @@ normalizeRsvpStatusText rawStatus =
         "declined" -> pure "declined"
         "maybe" -> pure "maybe"
         _ -> fail "rsvpStatus must be one of: accepted, declined, maybe"
+
+data RsvpSummaryDTO = RsvpSummaryDTO
+    { rsvpAcceptedCount :: Int
+    , rsvpMaybeCount :: Int
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON RsvpSummaryDTO
+
+data RsvpFeedItemDTO = RsvpFeedItemDTO
+    { feedItemType :: Text
+    , feedEventId :: Text
+    , feedStatus :: Text
+    , feedShowOnProfile :: Bool
+    , feedEventTitle :: Text
+    , feedEventStart :: UTCTime
+    , feedEventTimezone :: Maybe Text
+    , feedEventImageUrl :: Maybe Text
+    , feedVenueName :: Maybe Text
+    , feedCity :: Maybe Text
+    , feedWorkflowStateCode :: Text
+    , feedActionAt :: UTCTime
+    , feedCanonicalUrl :: Text
+    , feedCanEdit :: Bool
+    , feedCanShare :: Bool
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON RsvpFeedItemDTO
+
+data RsvpFeedPageDTO = RsvpFeedPageDTO
+    { feedItems :: [RsvpFeedItemDTO]
+    , feedNextCursor :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON RsvpFeedPageDTO
+
+data RsvpAdminDTO = RsvpAdminDTO
+    { adminRsvpId :: Text
+    , adminRsvpPartyId :: Text
+    , adminRsvpStatus :: Text
+    , adminRsvpShowOnProfile :: Bool
+    , adminRsvpCreatedAt :: UTCTime
+    , adminRsvpUpdatedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON RsvpAdminDTO
+
+data RsvpAdminPageDTO = RsvpAdminPageDTO
+    { adminRsvpItems :: [RsvpAdminDTO]
+    , adminRsvpNextCursor :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON RsvpAdminPageDTO
 
 data InvitationDTO = InvitationDTO
     { invitationId :: Maybe Text

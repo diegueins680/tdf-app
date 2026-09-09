@@ -1171,6 +1171,7 @@ data LocalePreferencesDTO = LocalePreferencesDTO
   , lpTimezone :: Text
   , lpCountryId :: Maybe UUID
   , lpCountryCode :: Maybe Text
+  , lpShowEventRsvpsOnProfile :: Bool
   } deriving (Eq, Show, Generic)
 
 instance ToJSON LocalePreferencesDTO where
@@ -1181,6 +1182,7 @@ data LocalePreferencesUpdate = LocalePreferencesUpdate
   , lpuCurrencyId :: UUID
   , lpuTimezone :: Text
   , lpuCountryId :: Maybe UUID
+  , lpuShowEventRsvpsOnProfile :: Maybe Bool
   } deriving (Eq, Show, Generic)
 
 instance FromJSON LocalePreferencesUpdate where

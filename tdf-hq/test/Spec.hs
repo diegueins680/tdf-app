@@ -455,7 +455,6 @@ import TDF.Server.SocialEventsHandlers (
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
-    validateRsvpStatus,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
     validateTicketCheckInOrderStatus,
@@ -9378,22 +9377,6 @@ main = hspec $ do
             assertInvalid "invitationToPartyId is required" "   "
             assertInvalid "invitationToPartyId must be a positive integer" "abc"
             assertInvalid "invitationToPartyId must be a positive integer" "0"
-
-    describe "validateRsvpStatus" $ do
-        it "trims and canonicalizes supported RSVP states" $ do
-            validateRsvpStatus " Accepted " `shouldBe` Right "accepted"
-            validateRsvpStatus "DECLINED" `shouldBe` Right "declined"
-            validateRsvpStatus "maybe" `shouldBe` Right "maybe"
-
-        it "rejects blank or unknown RSVP states instead of persisting arbitrary labels" $ do
-            let assertInvalid raw = case validateRsvpStatus raw of
-                    Left err -> do
-                        errHTTPCode err `shouldBe` 400
-                        BL.unpack (errBody err) `shouldContain` "accepted, declined, maybe"
-                    Right value ->
-                        expectationFailure ("Expected invalid RSVP status to be rejected, got " <> show value)
-            assertInvalid "   "
-            assertInvalid "interested"
 
     describe "normalizeArtistGenres" $ do
         it "trims genres, drops blanks, and deduplicates case-insensitively" $ do

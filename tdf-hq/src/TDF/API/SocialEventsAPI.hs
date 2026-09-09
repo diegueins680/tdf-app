@@ -93,6 +93,9 @@ import TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO,
     RsvpCreateDTO,
     RsvpDTO,
+    RsvpSummaryDTO,
+    RsvpFeedPageDTO,
+    RsvpAdminPageDTO,
     StripePaymentIntentDTO,
     TicketCheckInRequestDTO,
     TicketDTO,
@@ -427,8 +430,13 @@ type ArtistsRoutes =
         :<|> "artists" :> Capture "artistId" Text :> "follow" :> QueryParam "follower" Text :> DeleteNoContent
 
 type RsvpRoutes =
-    "events" :> Capture "eventId" Text :> "rsvps" :> Get '[JSON] [RsvpDTO]
-        :<|> "events" :> Capture "eventId" Text :> "rsvps" :> ReqBody '[JSON] RsvpCreateDTO :> Post '[JSON] RsvpDTO
+    "events" :> Capture "eventId" Text :> "rsvp" :> Get '[JSON] (Maybe RsvpDTO)
+        :<|> "events" :> Capture "eventId" Text :> "rsvp" :> ReqBody '[JSON] RsvpCreateDTO :> Put '[JSON] RsvpDTO
+        :<|> "events" :> Capture "eventId" Text :> "rsvp" :> DeleteNoContent
+        :<|> "events" :> Capture "eventId" Text :> "rsvp-summary" :> Get '[JSON] RsvpSummaryDTO
+        :<|> "events" :> Capture "eventId" Text :> "rsvps" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpAdminPageDTO
+        :<|> "profiles" :> Capture "partyId" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO
+        :<|> "directory-profiles" :> Capture "slug" Text :> "rsvp-feed" :> QueryParam "cursor" Text :> QueryParam "limit" Int :> Get '[JSON] RsvpFeedPageDTO
 
 type InvitationsRoutes =
     "events"
