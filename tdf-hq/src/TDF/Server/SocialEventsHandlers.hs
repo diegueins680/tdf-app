@@ -97,6 +97,7 @@ module TDF.Server.SocialEventsHandlers (
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
     validateEventDeletionCheckoutHistory,
+    removeSocialEventAssets,
     suppressImportedEventMetadata,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
@@ -152,7 +153,7 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
-import System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
+import System.Directory (copyFile, createDirectoryIfMissing, doesDirectoryExist, getFileSize, removePathForcibly)
 import System.Environment (lookupEnv)
 import System.FilePath (takeExtension, takeFileName, (</>))
 import System.IO (hPutStrLn, stderr)
@@ -455,11 +456,22 @@ validateEventDeletionCheckoutHistory hasTicketOrders
                 }
     | otherwise = Right ()
 
+removeSocialEventAssets :: FilePath -> SocialEventId -> IO ()
+removeSocialEventAssets assetsRoot eventKey = do
+    let eventAssetsDir =
+            assetsRoot
+                </> "social-events"
+                </> "events"
+                </> T.unpack (renderKeyText eventKey)
+    exists <- doesDirectoryExist eventAssetsDir
+    when exists (removePathForcibly eventAssetsDir)
+
 suppressImportedEventMetadata :: Maybe T.Text -> Maybe T.Text
 suppressImportedEventMetadata storedMetadata =
     encodeEventMetadata
         metadata
             { emTicketUrl = Nothing
+            , emImageUrl = Nothing
             , emIsPublic = Just False
             }
   where
@@ -2219,17 +2231,7 @@ socialEventsServer user =
             liftIO $
                 runSqlPool
                     ( if hasStrictAdminAccess user
-                        then do
-                            suppressedRefs <-
-                                selectList
-                                    [ExternalEventRefSourceStatus ==. externalEventRefSuppressedStatus]
-                                    []
-                            let suppressedEventIds =
-                                    nub (map (externalEventRefEventId . entityVal) suppressedRefs)
-                                adminFilters
-                                    | null suppressedEventIds = filters
-                                    | otherwise = (SocialEventId /<-. suppressedEventIds) : filters
-                            selectList adminFilters [dateOrder, LimitTo limit, OffsetBy offset]
+                        then selectUnsuppressedSocialEvents filters dateOrder limit offset
                         else selectVisibleSocialEvents filters dateOrder limit offset
                     )
                     envPool
@@ -2838,6 +2840,7 @@ socialEventsServer user =
                 )
                 envPool
         either throwError pure deletionResult
+        liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
         pure NoContent
 
     withdrawEventDirectorySearch :: SocialEventId -> SqlPersistT IO ()
@@ -9017,6 +9020,47 @@ loadExternalEventSources pool eventKey =
             pure (map snd (sortOn (negate . fst) ranked))
         )
         pool
+
+selectUnsuppressedSocialEvents ::
+    [Filter SocialEvent] ->
+    SelectOpt SocialEvent ->
+    Int ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectUnsuppressedSocialEvents filters dateOrder limit offset = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    externalRefTable <- getEscapedRawName "external_event_ref"
+    eventIdField <- getEscapedRawName "id"
+    externalRefEventIdField <- getEscapedRawName "event_id"
+    externalRefSourceStatusField <- getEscapedRawName "source_status"
+    let (baseFilterClause, filterValues) =
+            filterClauseWithVals (Just PrefixTableName) backend filters
+        eventIdColumn = eventTable <> "." <> eventIdField
+        externalRefEventIdColumn =
+            externalRefTable <> "." <> externalRefEventIdField
+        externalRefSourceStatusColumn =
+            externalRefTable <> "." <> externalRefSourceStatusField
+        suppressionClause =
+            "NOT EXISTS (SELECT 1 FROM "
+                <> externalRefTable
+                <> " WHERE "
+                <> externalRefEventIdColumn
+                <> "="
+                <> eventIdColumn
+                <> " AND lower(trim("
+                <> externalRefSourceStatusColumn
+                <> "))=?)"
+        combinedFilterClause
+            | T.null baseFilterClause = " WHERE " <> suppressionClause
+            | otherwise = baseFilterClause <> " AND " <> suppressionClause
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> combinedFilterClause
+                <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
+    query <- getConnLimitOffset (limit, offset) orderedQuery
+    rawSql query (filterValues <> [PersistText externalEventRefSuppressedStatus])
 
 selectVisibleSocialEvents ::
     [Filter SocialEvent] ->
