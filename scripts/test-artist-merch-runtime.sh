@@ -38,6 +38,7 @@ apply_file() {
 }
 
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/init_schema.sql"
+apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
 docker exec -i "$TDF_MERCH_RUNTIME_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d "$TDF_MERCH_RUNTIME_DATABASE" <<'SQL' >/dev/null
 CREATE TABLE directory_profile (
@@ -76,4 +77,10 @@ fi
 
 cd "$TDF_MERCH_RUNTIME_ROOT/tdf-hq"
 TDF_MERCH_RUNTIME_DATABASE_URL="postgresql://postgres@127.0.0.1:$published_port/$TDF_MERCH_RUNTIME_DATABASE" \
+DATABASE_URL="postgresql://postgres@127.0.0.1:$published_port/$TDF_MERCH_RUNTIME_DATABASE" \
+APP_ENV=sandbox \
+RUN_MIGRATIONS=false \
+RESET_DB=false \
+SEED_DB=false \
+MERCH_BANK_TRANSFER_INSTRUCTIONS="Synthetic runtime instructions; no funds or provider are involved." \
   stack test --fast --test-arguments=--match=artist-merch-runtime

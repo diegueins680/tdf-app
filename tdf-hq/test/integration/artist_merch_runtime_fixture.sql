@@ -1,19 +1,55 @@
 \set ON_ERROR_STOP on
 
+-- Minimal canonical security registry needed to exercise the real Servant
+-- bearer-token AuthHandler. These deterministic rows are synthetic and avoid
+-- importing unrelated production catalog seed data into the runtime fixture.
+INSERT INTO workflow_definition(id,code,name_es,name_en) VALUES
+  ('8a000000-0000-4000-8000-000000000001','runtime-security','Seguridad sintética','Synthetic security');
+INSERT INTO workflow_state(id,workflow_id,code,name_es,name_en) VALUES
+  ('8a000000-0000-4000-8000-000000000002','8a000000-0000-4000-8000-000000000001','published','Publicado','Published');
+INSERT INTO security_module(id,code,name_es,name_en) VALUES
+  ('8a000000-0000-4000-8000-000000000003','admin','Administración','Administration');
+INSERT INTO security_action(id,code,name_es,name_en) VALUES
+  ('8a000000-0000-4000-8000-000000000004','access','Acceder','Access');
+INSERT INTO security_permission(id,code,module_id,action_id,resource_scope,name_es,name_en) VALUES
+  ('8a000000-0000-4000-8000-000000000005','admin.access',
+   '8a000000-0000-4000-8000-000000000003','8a000000-0000-4000-8000-000000000004',
+   'module','Acceder a administración','Access administration');
+INSERT INTO security_role(id,code,name_es,name_en,system_role,workflow_state_id) VALUES
+  ('8a000000-0000-4000-8000-000000000006','admin','Administrador sintético','Synthetic administrator',TRUE,
+   '8a000000-0000-4000-8000-000000000002');
+INSERT INTO role_permission(id,role_id,permission_id,approval_mode,active) VALUES
+  ('8a000000-0000-4000-8000-000000000007','8a000000-0000-4000-8000-000000000006',
+   '8a000000-0000-4000-8000-000000000005','bootstrap',TRUE);
+
 INSERT INTO party(id,display_name,is_org,created_at) VALUES
   (900001,'Runtime Band',TRUE,now()),
   (900002,'Runtime Owner',FALSE,now()),
   (900003,'Runtime Collaborator',FALSE,now()),
   (900004,'Runtime Other Seller',FALSE,now()),
-  (900005,'Runtime Strict Admin',FALSE,now());
+  (900005,'Runtime Strict Admin',FALSE,now()),
+  (900006,'Runtime Pilot Applicant',FALSE,now()),
+  (900007,'Runtime Applicant Band',TRUE,now());
 SELECT setval(pg_get_serial_sequence('party','id'), 900100, TRUE);
+
+INSERT INTO api_token(token,party_id,label,active) VALUES
+  ('runtime-owner-token',900002,'Synthetic merch HTTP owner',TRUE),
+  ('runtime-collaborator-token',900003,'Synthetic merch HTTP collaborator',TRUE),
+  ('runtime-other-seller-token',900004,'Synthetic merch HTTP other seller',TRUE),
+  ('runtime-admin-token',900005,'Synthetic merch HTTP strict administrator',TRUE),
+  ('runtime-applicant-token',900006,'Synthetic merch HTTP pilot applicant',TRUE);
+
+INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
+SELECT 900005,id,'bootstrap',TRUE FROM security_role WHERE code='admin' AND active;
 
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status) VALUES
   ('91000000-0000-4000-8000-000000000001',900001,'band','Runtime Band','runtime-band','published','public','allowed'),
-  ('91000000-0000-4000-8000-000000000002',900004,'band','Runtime Other Seller','runtime-other-seller','published','public','allowed');
+  ('91000000-0000-4000-8000-000000000002',900004,'band','Runtime Other Seller','runtime-other-seller','published','public','allowed'),
+  ('91000000-0000-4000-8000-000000000003',900007,'band','Runtime Applicant Band','runtime-applicant-band','published','public','allowed');
 INSERT INTO directory_profile_manager(profile_id,account_party_id,active,can_manage,source_claim_id) VALUES
   ('91000000-0000-4000-8000-000000000001',900002,TRUE,TRUE,'91000000-0000-4000-8000-000000000091'),
-  ('91000000-0000-4000-8000-000000000002',900004,TRUE,TRUE,'91000000-0000-4000-8000-000000000092');
+  ('91000000-0000-4000-8000-000000000002',900004,TRUE,TRUE,'91000000-0000-4000-8000-000000000092'),
+  ('91000000-0000-4000-8000-000000000003',900006,TRUE,TRUE,'91000000-0000-4000-8000-000000000093');
 
 INSERT INTO merch_store(
   id,directory_profile_id,seller_party_id,primary_owner_party_id,slug,display_name,application_note,
@@ -41,6 +77,13 @@ VALUES(
   'Synthetic national shipping policy for runtime verification.',
   'Synthetic return policy for runtime verification and support.',
   'active',now(),900002
+);
+INSERT INTO merch_shipping_zone(
+  id,store_id,name,country_code,subdivision_codes,delivery_method,rate_minor,
+  free_shipping_min_minor,estimated_min_days,estimated_max_days,active
+) VALUES(
+  '93000000-0000-4000-8000-000000000002','92000000-0000-4000-8000-000000000001',
+  'Synthetic Ecuador shipping','EC','{}','national_shipping',500,20000,2,5,TRUE
 );
 INSERT INTO merch_product(
   id,store_id,slug,name,description,category,status,availability_mode,policy_id,
@@ -120,3 +163,20 @@ INSERT INTO merch_order_issue(
    'Synthetic operational issue for seller triage verification.','runtime-issue-shipping-001',encode(digest('runtime-issue-shipping-request-001','sha256'),'hex')),
   ('94000000-0000-4000-8000-000000000002','98000000-0000-4000-8000-000000000004','buyer','refund',
    'Synthetic financial issue that must remain under staff control.','runtime-issue-refund-001',encode(digest('runtime-issue-refund-request-001','sha256'),'hex'));
+
+-- These flags are enabled only inside the disposable sandbox database used by
+-- this test. The repository defaults and every staging/production row remain
+-- disabled. Manual checkout creates a pending order but never records funds.
+UPDATE revenue_feature_flag
+SET enabled=TRUE,
+    reason='Synthetic isolated HTTP runtime verification; no provider or funds involved',
+    updated_at=now()
+WHERE environment='sandbox'
+  AND flag_key IN (
+    'merch.storefronts',
+    'merch.seller_applications',
+    'merch.public_catalog',
+    'merch.checkout',
+    'merch.checkout.runtime_ready',
+    'merch.checkout.manual'
+  );

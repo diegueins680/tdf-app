@@ -8,21 +8,29 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.Lazy as BL
+import           Data.Foldable (toList)
 import           Data.Int (Int64)
 import           Data.Set (empty)
 import           Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.UUID as UUID
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool, toSqlKey)
+import qualified Network.HTTP.Client as HTTP
+import qualified Network.HTTP.Types as HTTPTypes
+import qualified Network.Wai.Handler.Warp as Warp
 import           Servant (ServerError(..), (:<|>)(..))
 import           Servant.Server (runHandler)
-import           System.Environment (lookupEnv)
+import           System.Environment (lookupEnv, setEnv)
 import           Test.Hspec (Spec, describe, it, runIO)
 
 import           TDF.API.Merch (MerchCancellationRequest(..), MerchIssueTriageRequest(..))
 import           TDF.Auth (AuthedUser(..), modulesForRoles)
+import           TDF.Config (loadConfig)
 import           TDF.DB (Env(..), makePool)
 import           TDF.Models (RoleEnum(..))
+import           TDF.Server (mkApp)
 import           TDF.Server.Merch (merchProtectedServer, merchPublicServer)
 
 assert :: Bool -> String -> IO ()
@@ -36,9 +44,259 @@ spec = do
   databaseUrl <- runIO (lookupEnv "TDF_MERCH_RUNTIME_DATABASE_URL")
   case databaseUrl of
     Nothing -> pure ()
-    Just value -> describe "artist-merch-runtime PostgreSQL handlers" $
-      it "enforces private capabilities, cancellation idempotency, finance redaction, seller isolation, and issue triage" $
+    Just value -> describe "artist-merch-runtime PostgreSQL handlers and HTTP API" $
+      it "enforces buyer, seller, administrator, idempotency, payment, and tenant boundaries" $ do
         runChecks value
+        runHttpChecks value
+
+type HttpResponse = (Int, Aeson.Value, BL.ByteString)
+
+httpJson
+  :: HTTP.Manager
+  -> Int
+  -> BS8.ByteString
+  -> String
+  -> [HTTPTypes.Header]
+  -> Maybe Aeson.Value
+  -> IO HttpResponse
+httpJson manager port requestMethod path headers body = do
+  base <- HTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+  let request = base
+        { HTTP.method = requestMethod
+        , HTTP.requestHeaders =
+            [("Accept","application/json"),("Content-Type","application/json")] <> headers
+        , HTTP.requestBody = HTTP.RequestBodyLBS (maybe "" Aeson.encode body)
+        , HTTP.checkResponse = \_ _ -> pure ()
+        }
+  response <- HTTP.httpLbs request manager
+  let raw = HTTP.responseBody response
+      decoded = either (const Aeson.Null) id (Aeson.eitherDecode raw)
+  pure (HTTPTypes.statusCode (HTTP.responseStatus response), decoded, raw)
+
+expectStatus :: Int -> String -> HttpResponse -> IO Aeson.Value
+expectStatus expected label (actual, value, raw) = do
+  assert (actual == expected)
+    (label <> " returned HTTP " <> show actual <> " instead of " <> show expected
+      <> "; response=" <> show raw)
+  pure value
+
+field :: Text -> Aeson.Value -> Maybe Aeson.Value
+field key (Aeson.Object value) = KeyMap.lookup (AesonKey.fromText key) value
+field _ _ = Nothing
+
+textField :: Text -> Aeson.Value -> Maybe Text
+textField key value = case field key value of
+  Just (Aeson.String result) -> Just result
+  _ -> Nothing
+
+arrayField :: Text -> Aeson.Value -> [Aeson.Value]
+arrayField key value = case field key value of
+  Just (Aeson.Array result) -> toList result
+  _ -> []
+
+auth :: BS8.ByteString -> [HTTPTypes.Header]
+auth token = [("Authorization", "Bearer " <> token)]
+
+runHttpChecks :: String -> IO ()
+runHttpChecks databaseUrl = do
+  -- loadConfig supplies the real session-cookie/auth parser used by mkApp.
+  -- The database and feature flags remain isolated to the disposable runtime.
+  setEnv "DATABASE_URL" databaseUrl
+  setEnv "APP_ENV" "sandbox"
+  cfg <- loadConfig
+  pool <- makePool (BS8.pack databaseUrl)
+  let app = mkApp Env { envPool = pool, envConfig = cfg }
+      storeId = "92000000-0000-4000-8000-000000000001"
+      variantId = "96000000-0000-4000-8000-000000000001" :: Text
+      shippingZoneId = "93000000-0000-4000-8000-000000000002" :: Text
+      applicantProfileId = "91000000-0000-4000-8000-000000000003" :: Text
+      ownerHeaders = auth "runtime-owner-token"
+      collaboratorHeaders = auth "runtime-collaborator-token"
+      outsiderHeaders = auth "runtime-other-seller-token"
+      adminHeaders = auth "runtime-admin-token"
+      applicantHeaders = auth "runtime-applicant-token"
+  Warp.testWithApplication (pure app) $ \port -> do
+    manager <- HTTP.newManager HTTP.defaultManagerSettings
+
+    capabilities <- httpJson manager port "GET" "/merch/capabilities" [] Nothing
+      >>= expectStatus 200 "Merch capabilities"
+    assert (field "environment" capabilities == Just (Aeson.String "sandbox"))
+      "HTTP capabilities did not remain in sandbox"
+    assert ((field "checkout" =<< field "features" capabilities) == Just (Aeson.Bool True))
+      "Synthetic manual checkout was not available inside the isolated runtime"
+    assert ((field "datafast" =<< field "paymentMethods" capabilities) == Just (Aeson.Bool False))
+      "Datafast became available without credentials"
+    assert ((field "paypal" =<< field "paymentMethods" capabilities) == Just (Aeson.Bool False))
+      "PayPal became available without credentials"
+    assert ((field "bankTransfer" =<< field "paymentMethods" capabilities) == Just (Aeson.Bool True))
+      "Synthetic manual checkout capability was not gated as expected"
+
+    _ <- httpJson manager port "GET" "/merch/seller/stores" [] Nothing
+      >>= expectStatus 401 "Unauthenticated seller request"
+    _ <- httpJson manager port "GET" "/merch/seller/stores" (auth "invalid-runtime-token") Nothing
+      >>= expectStatus 401 "Invalid seller token"
+    _ <- httpJson manager port "GET" "/merch/storefronts/runtime-band" [] Nothing
+      >>= expectStatus 200 "Public storefront"
+    productResponse <- httpJson manager port "GET" "/merch/storefronts/runtime-band/products/runtime-shirt" [] Nothing
+      >>= expectStatus 200 "Public product"
+    assert (textField "name" productResponse == Just "Runtime Shirt")
+      "Public product response was not serialized through the HTTP API"
+
+    ownerStores <- httpJson manager port "GET" "/merch/seller/stores" ownerHeaders Nothing
+      >>= expectStatus 200 "Owner stores"
+    assert (not (null (case ownerStores of Aeson.Array rows -> toList rows; _ -> [])))
+      "Authenticated primary owner did not receive a managed store"
+    _ <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders") outsiderHeaders Nothing
+      >>= expectStatus 403 "Cross-seller order request"
+    collaboratorOrders <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders") collaboratorHeaders Nothing
+      >>= expectStatus 200 "Collaborator order queue"
+    let leaksFinance (Aeson.Object row) =
+          KeyMap.member (AesonKey.fromText "sellerNetMinor") row
+            || KeyMap.member (AesonKey.fromText "tdfCommissionMinor") row
+        leaksFinance _ = True
+    assert (not (any leaksFinance (case collaboratorOrders of Aeson.Array rows -> toList rows; _ -> [Aeson.Null])))
+      "Orders-only collaborator received finance-only fields over HTTP"
+
+    let applicationBody = Aeson.object
+          [ "profileId" Aeson..= applicantProfileId
+          , "slug" Aeson..= ("runtime-applicant-band-store" :: Text)
+          , "displayName" Aeson..= ("Runtime Applicant Band" :: Text)
+          , "description" Aeson..= ("Synthetic pilot applicant used only by the isolated HTTP test." :: Text)
+          , "applicationNote" Aeson..= ("We want to validate the pilot workflow with synthetic catalog data." :: Text)
+          ]
+        applicationRequestHeaders = ("Idempotency-Key","runtime-http-application-001") : applicantHeaders
+    application <- httpJson manager port "POST" "/merch/seller/applications" applicationRequestHeaders (Just applicationBody)
+      >>= expectStatus 201 "Seller application"
+    applicationRetry <- httpJson manager port "POST" "/merch/seller/applications" applicationRequestHeaders (Just applicationBody)
+      >>= expectStatus 201 "Seller application retry"
+    let applicationId = textField "id" application
+    assert (applicationId /= Nothing && applicationId == textField "id" applicationRetry)
+      "Seller application retry did not return the same store"
+    let reviewPath = "/merch/admin/stores/" <> maybe "missing" T.unpack applicationId <> "/review"
+        reviewBody = Aeson.object
+          [ "decision" Aeson..= ("approve" :: Text)
+          , "reviewerNotes" Aeson..= ("Approved only for the synthetic isolated pilot runtime." :: Text)
+          , "commissionBps" Aeson..= (0 :: Int)
+          , "commissionReason" Aeson..= ("Synthetic pilot override; no commercial activity." :: Text)
+          ]
+    approved <- httpJson manager port "POST" reviewPath adminHeaders (Just reviewBody)
+      >>= expectStatus 200 "Administrator store approval"
+    assert (textField "applicationStatus" approved == Just "approved"
+      && textField "operationalStatus" approved == Just "active")
+      "Administrator approval did not activate the synthetic applicant store"
+
+    cart <- httpJson manager port "POST" "/merch/carts" []
+      (Just (Aeson.object ["storeSlug" Aeson..= ("runtime-band" :: Text)]))
+      >>= expectStatus 201 "Guest cart creation"
+    cartId <- maybe (fail "Cart HTTP response omitted id") pure (textField "id" cart)
+    cartToken <- maybe (fail "Cart HTTP response omitted lookupToken") pure (textField "lookupToken" cart)
+    let cartHeaders = [("X-Cart-Lookup-Token",BS8.pack (T.unpack cartToken))]
+        cartPath suffix = "/merch/carts/" <> T.unpack cartId <> suffix
+    updatedCart <- httpJson manager port "PUT" (cartPath "/items") cartHeaders
+      (Just (Aeson.object ["variantId" Aeson..= variantId,"quantity" Aeson..= (1 :: Int)]))
+      >>= expectStatus 200 "Guest cart item"
+    assert (length (arrayField "items" updatedCart) == 1)
+      "Guest cart did not retain its selected variant"
+
+    let checkoutBody = Aeson.object
+          [ "recipient" Aeson..= Aeson.object
+              [ "name" Aeson..= ("Synthetic HTTP Buyer" :: Text)
+              , "email" Aeson..= ("synthetic.http.buyer@example.test" :: Text)
+              , "phone" Aeson..= Aeson.Null
+              , "countryCode" Aeson..= ("EC" :: Text)
+              , "subdivision" Aeson..= ("Pichincha" :: Text)
+              , "city" Aeson..= ("Quito" :: Text)
+              , "addressLine1" Aeson..= ("Synthetic address 100" :: Text)
+              , "addressLine2" Aeson..= Aeson.Null
+              , "postalCode" Aeson..= Aeson.Null
+              , "deliveryNote" Aeson..= ("Synthetic data; do not dispatch." :: Text)
+              ]
+          , "shippingZoneId" Aeson..= shippingZoneId
+          , "createAccount" Aeson..= False
+          , "locale" Aeson..= ("es" :: Text)
+          ]
+        checkoutHeaders = ("Idempotency-Key","runtime-http-checkout-001") : cartHeaders
+    order <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just checkoutBody)
+      >>= expectStatus 200 "Guest checkout"
+    orderRetry <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just checkoutBody)
+      >>= expectStatus 200 "Guest checkout retry"
+    orderId <- maybe (fail "Checkout HTTP response omitted order id") pure (textField "id" order)
+    orderToken <- maybe (fail "Checkout HTTP response omitted order lookupToken") pure (textField "lookupToken" order)
+    assert (textField "id" orderRetry == Just orderId)
+      "Checkout retry created or returned a different order"
+    assert (textField "paymentStatus" order == Just "pending"
+      && textField "fulfillmentStatus" order == Just "pending")
+      "Checkout conflated pending payment with fulfillment"
+    assert (field "productSubtotalMinor" order == Just (Aeson.Number 5000)
+      && field "shippingMinor" order == Just (Aeson.Number 500)
+      && field "totalMinor" order == Just (Aeson.Number 5500))
+      "Server-calculated HTTP checkout totals were incorrect"
+
+    let conflictingCheckout = case checkoutBody of
+          Aeson.Object value -> Aeson.Object (KeyMap.insert (AesonKey.fromText "locale") (Aeson.String "en") value)
+          value -> value
+    _ <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just conflictingCheckout)
+      >>= expectStatus 409 "Conflicting checkout retry"
+    let orderHeaders = [("X-Order-Lookup-Token",BS8.pack (T.unpack orderToken))]
+        orderPath suffix = "/merch/orders/" <> T.unpack orderId <> suffix
+    _ <- httpJson manager port "GET" (orderPath "") [("X-Order-Lookup-Token","wrong-runtime-token")] Nothing
+      >>= expectStatus 404 "Wrong private order capability"
+    browserReturn <- httpJson manager port "GET" (orderPath "?payment=success&status=paid") orderHeaders Nothing
+      >>= expectStatus 200 "Forged browser return"
+    assert (textField "paymentStatus" browserReturn == Just "pending")
+      "A forged browser return changed the payment status"
+
+    issue <- httpJson manager port "POST" (orderPath "/issues")
+      (("Idempotency-Key","runtime-http-issue-001") : orderHeaders)
+      (Just (Aeson.object
+        [ "issueType" Aeson..= ("shipping" :: Text)
+        , "message" Aeson..= ("Synthetic buyer asks for a harmless shipping clarification." :: Text)
+        ]))
+      >>= expectStatus 201 "Buyer issue creation"
+    issueId <- maybe (fail "Issue HTTP response omitted id") pure (textField "id" issue)
+    let issueTriagePath = "/merch/seller/stores/" <> storeId <> "/issues/" <> T.unpack issueId
+    resolved <- httpJson manager port "PATCH" issueTriagePath collaboratorHeaders
+      (Just (Aeson.object
+        [ "status" Aeson..= ("resolved" :: Text)
+        , "publicResponse" Aeson..= ("Synthetic shipping question resolved without exposing private notes." :: Text)
+        , "internalNotes" Aeson..= Aeson.Null
+        ]))
+      >>= expectStatus 200 "Seller issue triage"
+    assert (textField "status" resolved == Just "resolved")
+      "Orders collaborator did not resolve the operational issue over HTTP"
+    _ <- httpJson manager port "GET" "/merch/admin/issues" adminHeaders Nothing
+      >>= expectStatus 200 "Administrator issue queue"
+
+    let cancellationBody = Aeson.object
+          ["reason" Aeson..= ("Synthetic buyer cancels before any payment attempt." :: Text)]
+        cancellationHeaders = ("Idempotency-Key","runtime-http-cancel-001") : orderHeaders
+    cancelled <- httpJson manager port "POST" (orderPath "/cancel") cancellationHeaders (Just cancellationBody)
+      >>= expectStatus 200 "Guest cancellation"
+    cancellationRetry <- httpJson manager port "POST" (orderPath "/cancel") cancellationHeaders (Just cancellationBody)
+      >>= expectStatus 200 "Guest cancellation retry"
+    assert (textField "commercialStatus" cancelled == Just "cancelled"
+      && textField "paymentStatus" cancellationRetry == Just "cancelled"
+      && textField "fulfillmentStatus" cancellationRetry == Just "cancelled")
+      "HTTP cancellation did not preserve independent terminal states"
+
+    persisted <- runSqlPool (rawSql
+      "SELECT order_record.payment_status,order_record.fulfillment_status,checkout.status,reservation.status,variant.stock_reserved,(SELECT count(*) FROM merch_order duplicate WHERE duplicate.store_id=order_record.store_id AND duplicate.create_idempotency_key='runtime-http-checkout-001'),(SELECT count(*) FROM commerce_payment_attempt attempt WHERE attempt.checkout_id=checkout.id) FROM merch_order order_record JOIN commerce_checkout_session checkout ON checkout.id=order_record.checkout_id JOIN merch_inventory_reservation reservation ON reservation.order_id=order_record.id JOIN merch_product_variant variant ON variant.id=reservation.variant_id WHERE order_record.id=?::uuid"
+      [PersistText orderId]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Text,Single Text,Single Int,Single Int64,Single Int64)]) pool
+    case persisted of
+      [(Single payment,Single fulfillment,Single checkoutStatus,Single reservationStatus,Single reserved,Single duplicateCount,Single paymentAttemptCount)] -> do
+        assert (payment == "cancelled" && fulfillment == "cancelled" && checkoutStatus == "cancelled")
+          "Persisted HTTP order states were not independently cancelled"
+        assert (reservationStatus == "released" && reserved == 0)
+          "HTTP cancellation did not release its stock reservation exactly once"
+        assert (duplicateCount == 1) "HTTP checkout idempotency created a duplicate order"
+        assert (paymentAttemptCount == 0) "Synthetic HTTP checkout unexpectedly created a payment attempt"
+      _ -> fail "HTTP checkout persistence evidence was missing or ambiguous"
+    pilotCommission <- runSqlPool (rawSql
+      "SELECT commission_bps FROM merch_commission_policy WHERE store_id=?::uuid AND effective_until IS NULL"
+      [PersistText (maybe "" id applicationId)] :: SqlPersistT IO [Single Int]) pool
+    assert (pilotCommission == [Single 0])
+      "Administrator pilot approval did not persist the audited 0% commission override"
 
 runChecks :: String -> IO ()
 runChecks databaseUrl = do
