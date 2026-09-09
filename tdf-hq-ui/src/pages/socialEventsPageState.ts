@@ -1,3 +1,5 @@
+import type { QueryClient } from '@tanstack/react-query';
+
 interface SocialEventsOverviewUiStateInput {
   canCreateEvent: boolean;
   eventCount: number;
@@ -79,6 +81,20 @@ const FOLLOW_UP_EVENT_CREATE_DESCRIPTION =
   'Crea otro evento con un borrador guiado y acceso inmediato para tu equipo.';
 const ZERO_FINANCE_DETAILS_SUMMARY =
   'Los detalles financieros en cero se omiten hasta que tengan movimiento.';
+
+export function removeDeletedSocialEventQueries(queryClient: QueryClient, eventId: string): void {
+  queryClient.removeQueries({ queryKey: ['social-event', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-event-moments', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-event-ticket-tiers', eventId] });
+  queryClient.removeQueries({ queryKey: ['public-event-ticket-storefront', eventId] });
+  queryClient.removeQueries({ queryKey: ['event-logistics', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-invitations', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-ticket-tiers', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-ticket-orders', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-budget-lines', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-finance-entries', eventId] });
+  queryClient.removeQueries({ queryKey: ['social-finance-summary', eventId] });
+}
 
 export function getSocialEventsOverviewUiState({
   canCreateEvent,
