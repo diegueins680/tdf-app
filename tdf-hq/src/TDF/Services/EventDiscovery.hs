@@ -86,6 +86,7 @@ import Database.Persist
   , (==.)
   )
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
+import Database.Persist.SqlBackend (getRDBMS)
 import Network.HTTP.Client
   ( HttpException
   , Request
@@ -1984,9 +1985,15 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =
 
 syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats
 syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
-  existingRef <-
+  initialExistingRef <-
     getBy
       (Social.UniqueExternalEventRef discoveredEventProvider discoveredEventExternalId)
+  existingRef <-
+    case initialExistingRef of
+      Nothing -> pure Nothing
+      Just (Entity refKey ref) -> do
+        _ <- lockDiscoveredSocialEvent (Social.externalEventRefEventId ref)
+        fmap (Entity refKey) <$> get refKey
   case existingRef of
     Just (Entity refKey ref)
       | Social.externalEventRefIsSuppressed ref -> do
@@ -2002,7 +2009,11 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
           Nothing -> findCanonicalEventCandidate event
           Just _ -> pure Nothing
       canonicalDeletionSuppressed <-
-        maybe (pure False) eventHasSuppressedReference mergeCandidate
+        case mergeCandidate of
+          Nothing -> pure False
+          Just candidateKey -> do
+            _ <- lockDiscoveredSocialEvent candidateKey
+            eventHasSuppressedReference candidateKey
       case mergeCandidate of
         Just candidateKey
           | canonicalDeletionSuppressed -> do
@@ -2040,6 +2051,21 @@ syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do
         { discoveryEventsSeen = 1
         , discoveryEventsUpdated = 1
         }
+
+lockDiscoveredSocialEvent ::
+  Social.SocialEventId ->
+  SqlPersistT IO (Maybe (Entity Social.SocialEvent))
+lockDiscoveredSocialEvent eventKey = do
+  backendName <- T.toCaseFold <$> getRDBMS
+  if "postgres" `T.isInfixOf` backendName
+    then
+      listToMaybe
+        <$> ( rawSql
+                "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                [toPersistValue eventKey]
+                :: SqlPersistT IO [Entity Social.SocialEvent]
+            )
+    else fmap (Entity eventKey) <$> get eventKey
 
 syncUnsuppressedDiscoveredEventDb ::
   Bool ->
