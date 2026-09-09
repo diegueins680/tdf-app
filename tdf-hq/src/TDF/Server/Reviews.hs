@@ -38,7 +38,7 @@ import Text.Read (readMaybe)
 import TDF.API.Reviews
 import TDF.Auth (AuthedUser(..))
 import qualified TDF.CMS.Models as CMS
-import TDF.Config (contextualReputationEnabled)
+import TDF.Config (contextualReputationEnabled, publicReputationProjectionEnabled)
 import TDF.DB (Env(..))
 import TDF.DB.ReputationConsent (listReputationConsents, persistReputationConsent)
 import TDF.DTO.ReputationConsent (ReputationConsentDTO, ReputationConsentUpdate(..))
@@ -96,6 +96,9 @@ listPublicReviews rawTargetKind rawTargetId cursor requestedLimit = do
 -- evaluation, ranking or private interaction evidence.
 getPublicReputation :: Int64 -> AppM Value
 getPublicReputation partyId = do
+  cfg <- asks envConfig
+  unless (publicReputationProjectionEnabled cfg) $
+    throwError err404 {errBody = "public reputation is unavailable"}
   exists <- jsonRows "SELECT to_jsonb(TRUE) FROM party WHERE id=?" [PersistInt64 partyId]
   when (null exists) (throwError err404 {errBody = "profile not found"})
   visible <- jsonRows "SELECT to_jsonb(TRUE) FROM reputation_consent_state WHERE party_id=? AND consent_kind IN ('pilot_participation','public_visibility') AND granted GROUP BY party_id HAVING count(*)=2" [PersistInt64 partyId]
