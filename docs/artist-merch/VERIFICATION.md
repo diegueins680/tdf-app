@@ -5,7 +5,7 @@
 | Capacidad | Resultado |
 |---|---|
 | Leer/modificar repositorio | Disponible; trabajo en worktree aislado |
-| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `a4b1f497c38efae6286566f8d2c72718089fb695` |
+| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `849444cdcce0254c3091293edce8a4cc5f8175fa` |
 | Backend Haskell | Build/test local disponible; resultado final se registra abajo |
 | PostgreSQL aislado | Disponible; PostgreSQL 16 temporal verificado. Docker Desktop no arrancó en la última corrida, por lo que el mismo fixture se ejecutó contra un clúster local desechable |
 | Migraciones | Aplicación, reejecución, rollback guardado/limpio y reapply disponibles |
@@ -21,7 +21,7 @@
 - `./scripts/test-artist-merch-runtime.sh`: PASS, 1/1 sobre PostgreSQL 16 temporal mediante su modo de base externa vacía y desechable; también queda conectado como paso obligatorio de `backend-quality`. El escenario ejecuta primero los handlers críticos y luego la aplicación Servant real por HTTP. Cubre autenticación bearer, solicitud y aprobación administrativa de una banda piloto con override de 0%, storefront/producto público, carrito y checkout invitado, cálculo server-side, recuperación idempotente después de convertir el carrito, rechazo de payload conflictivo, capability de orden no enumerable, falso retorno de navegador, cero intentos de pago, liberación exacta de stock, estados independientes, redacción financiera, aislamiento entre vendedores, incidencia operativa y colas seller/admin. Docker Desktop no pudo iniciar localmente, pero el wrapper conserva ese modo autónomo además del modo externo verificado.
 - Web `tsc --noEmit -p tdf-hq-ui/tsconfig.app.json`: PASS.
 - Móvil `tsc --noEmit -p tdf-mobile/tsconfig.json`: PASS.
-- Backend `stack test --fast`: PASS, 2.477/2.477 ejemplos sobre la integración final con `main` (incluye siete reglas unitarias de merch).
+- Backend `stack test --fast`: PASS, 2.487/2.487 ejemplos sobre la integración final con `main` (incluye siete reglas unitarias de merch).
 - Build web de producción: PASS; presupuesto inicial de JavaScript PASS (413.750 bytes gzip).
 - Reglas Haskell focalizadas `stack test --fast --test-arguments=--match=merch`: PASS, 8/8 (siete de merch y una coincidencia preexistente de storefront).
 - Jest web `tdf-hq-ui/src/api/merch.test.ts`: PASS, 7/7.
