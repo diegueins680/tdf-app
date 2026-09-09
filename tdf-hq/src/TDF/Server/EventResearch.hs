@@ -413,13 +413,10 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
     case controls :: [Entity EventResearchPilotControl] of
         [] -> pure (Left err500{errBody = "Event research pilot control is not initialized"})
         [Entity _ control] -> do
-            candidates <-
-                rawSql
-                    "SELECT ?? FROM event_research_candidate WHERE id=? FOR UPDATE"
-                    [toPersistValue candidateId]
-            case candidates :: [Entity EventResearchCandidate] of
-                [] -> pure (Left err404{errBody = "Event research candidate not found"})
-                [candidateEntity@(Entity _ lockedCandidate)] ->
+            lockedCandidateResult <- lockCandidateForMaterialization candidateId
+            case lockedCandidateResult of
+                Left serverError -> pure (Left serverError)
+                Right candidateEntity@(Entity _ lockedCandidate) ->
                     case eventResearchCandidateEventId lockedCandidate of
                         Just eventId -> do
                             suitable <- existingEventCanSatisfy request eventId
@@ -429,8 +426,41 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
                                     linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                 else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
                         Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
-                _ -> pure (Left err500{errBody = "Event research candidate identity is ambiguous"})
         _ -> pure (Left err500{errBody = "Event research pilot control identity is ambiguous"})
+
+lockCandidateForMaterialization
+    :: EventResearchCandidateId
+    -> SqlPersistT IO (Either ServerError (Entity EventResearchCandidate))
+lockCandidateForMaterialization candidateId = do
+    candidateSnapshot <- get candidateId
+    case candidateSnapshot of
+        Nothing -> pure (Left err404{errBody = "Event research candidate not found"})
+        Just snapshot -> do
+            let snapshotEventId = eventResearchCandidateEventId snapshot
+            eventStillExists <-
+                case snapshotEventId of
+                    Nothing -> pure True
+                    Just eventId -> do
+                        lockedEvents <-
+                            rawSql
+                                "SELECT ?? FROM social_event WHERE id=? FOR UPDATE"
+                                [toPersistValue eventId]
+                        pure (not (null (lockedEvents :: [Entity SocialEvent])))
+            if not eventStillExists
+                then pure (Left (conflict "the linked event changed while materialization was starting"))
+                else do
+                    candidates <-
+                        rawSql
+                            "SELECT ?? FROM event_research_candidate WHERE id=? FOR UPDATE"
+                            [toPersistValue candidateId]
+                    pure $ case candidates :: [Entity EventResearchCandidate] of
+                        [] -> Left err404{errBody = "Event research candidate not found"}
+                        [candidateEntity@(Entity _ lockedCandidate)]
+                            | eventResearchCandidateEventId lockedCandidate == snapshotEventId ->
+                                Right candidateEntity
+                            | otherwise ->
+                                Left (conflict "the candidate link changed while materialization was starting")
+                        _ -> Left err500{errBody = "Event research candidate identity is ambiguous"}
 
 materializeUnlinkedCandidate
     :: T.Text
