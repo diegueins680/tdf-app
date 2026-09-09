@@ -1223,6 +1223,8 @@ spec = describe "social event handler helpers" $ do
         now <- getCurrentTime
         let eventKey :: SocialEventId
             eventKey = toSqlKey 24
+            tierKey :: EventTicketTierId
+            tierKey = toSqlKey 62
             importedEvent =
                 (seedSocialEvent "1" "Imported event" now)
                     { socialEventMetadata =
@@ -1263,7 +1265,13 @@ spec = describe "social event handler helpers" $ do
                     }
         runSqlPool
             ( rawExecute
-                "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (61,24,999,1,1000,'USD','paid',?,?,?)"
+                "INSERT INTO event_ticket_tier (id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,enable_waitlist,allow_transfers,refund_policy,created_at,updated_at) VALUES (62,24,'general','General',1000,'USD',100,0,1,0,1,'full',?,?)"
+                (replicate 2 (toPersistValue now))
+            )
+            pool
+        runSqlPool
+            ( rawExecute
+                "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (61,24,62,1,1000,'USD','paid',?,?,?)"
                 (replicate 3 (toPersistValue now))
             )
             pool
@@ -1296,12 +1304,14 @@ spec = describe "social event handler helpers" $ do
             Right _ -> pure ()
         storedEvent <- runSqlPool (get eventKey) pool
         storedRef <- runSqlPool (get refKey) pool
+        storedTier <- runSqlPool (get tierKey) pool
         fmap socialEventMetadata storedEvent
             `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
         fmap socialEventWorkflowStateId storedEvent
             `shouldBe` Just (Just socialEventCancelledWorkflowStateFixtureId)
         fmap externalEventRefSourceStatus storedRef `shouldBe` Just externalEventRefSuppressedStatus
         fmap externalEventRefMissingRuns storedRef `shouldBe` Just 0
+        fmap eventTicketTierIsActive storedTier `shouldBe` Just False
 
         let unavailableEventKey :: SocialEventId
             unavailableEventKey = toSqlKey 25

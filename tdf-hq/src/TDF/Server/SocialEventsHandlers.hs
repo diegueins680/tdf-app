@@ -2815,43 +2815,71 @@ socialEventsServer user =
                 deletionResult <- liftIO $
                     runSqlPool
                         ( do
-                            hasTicketOrders <-
-                                isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
-                            case validateEventDeletionCheckoutHistory hasTicketOrders of
-                                Left err -> pure (Left err)
-                                Right () -> do
-                                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
-                                    if null importedRefs
-                                        then hardDeleteEventGraph now eventKey
-                                        else do
-                                            cancelledStateId <-
-                                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
-                                            cancellationAllowed <-
-                                                case socialEventWorkflowStateId existing of
-                                                    Nothing -> pure False
-                                                    Just currentStateId ->
-                                                        EventLifecycle.socialEventTransitionAllowed
-                                                            currentStateId
-                                                            cancelledStateId
-                                            let workflowStateUpdates =
-                                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
-                                                    | cancellationAllowed
-                                                    ]
-                                            updateWhere
-                                                [ExternalEventRefEventId ==. eventKey]
-                                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
-                                                , ExternalEventRefMissingRuns =. 0
-                                                ]
-                                            update
-                                                eventKey
-                                                ( [ SocialEventMetadata =.
-                                                        suppressImportedEventMetadata (socialEventMetadata existing)
-                                                  , SocialEventUpdatedAt =. now
-                                                  ]
-                                                    <> workflowStateUpdates
+                            backendName <- T.toCaseFold <$> getRDBMS
+                            lockedEvent <-
+                                if "postgres" `T.isInfixOf` backendName
+                                    then
+                                        listToMaybe
+                                            <$> ( rawSql
+                                                    "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                                                    [toPersistValue eventKey]
+                                                    :: SqlPersistT IO [Entity SocialEvent]
                                                 )
-                                            withdrawEventDirectorySearch eventKey
-                                            pure (Right ())
+                                    else fmap (Entity eventKey) <$> get eventKey
+                            case lockedEvent of
+                                Nothing -> pure (Right ())
+                                Just (Entity _ currentEvent) ->
+                                    case validateEventDeleteAccess user currentPartyId currentEvent of
+                                        Left err -> pure (Left err)
+                                        Right () -> do
+                                            hasTicketOrders <-
+                                                isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+                                            case validateEventDeletionCheckoutHistory hasTicketOrders of
+                                                Left err -> pure (Left err)
+                                                Right () -> do
+                                                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                                                    if null importedRefs
+                                                        then hardDeleteEventGraph now eventKey
+                                                        else do
+                                                            cancelledStateId <-
+                                                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
+                                                            cancellationAllowed <-
+                                                                case socialEventWorkflowStateId currentEvent of
+                                                                    Nothing -> pure False
+                                                                    Just currentStateId ->
+                                                                        EventLifecycle.socialEventTransitionAllowed
+                                                                            currentStateId
+                                                                            cancelledStateId
+                                                            let workflowStateUpdates =
+                                                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
+                                                                    | cancellationAllowed
+                                                                    ]
+                                                            when ("postgres" `T.isInfixOf` backendName) $
+                                                                rawExecute
+                                                                    "UPDATE event_ticket_checkout_policy SET active = FALSE, updated_at = ? WHERE event_id = ?"
+                                                                    [ PersistUTCTime now
+                                                                    , toPersistValue eventKey
+                                                                    ]
+                                                            updateWhere
+                                                                [EventTicketTierEventId ==. eventKey]
+                                                                [ EventTicketTierIsActive =. False
+                                                                , EventTicketTierUpdatedAt =. now
+                                                                ]
+                                                            updateWhere
+                                                                [ExternalEventRefEventId ==. eventKey]
+                                                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
+                                                                , ExternalEventRefMissingRuns =. 0
+                                                                ]
+                                                            update
+                                                                eventKey
+                                                                ( [ SocialEventMetadata =.
+                                                                        suppressImportedEventMetadata (socialEventMetadata currentEvent)
+                                                                  , SocialEventUpdatedAt =. now
+                                                                  ]
+                                                                    <> workflowStateUpdates
+                                                                )
+                                                            withdrawEventDirectorySearch eventKey
+                                                            pure (Right ())
                         )
                         envPool
                 either throwError pure deletionResult
