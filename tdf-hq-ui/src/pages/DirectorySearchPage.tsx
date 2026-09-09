@@ -46,6 +46,7 @@ import {
   type DirectorySearchQuery,
 } from '../api/directory';
 import OpenStreetMapResults from '../components/directory/OpenStreetMapResults';
+import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
@@ -412,6 +413,9 @@ export function DirectoryResultCard({
         return [{ targetKind: item.type, targetId: item.id, createdAt: new Date().toISOString(), result: item }, ...withoutTarget];
       });
       void queryClient.invalidateQueries({ queryKey: ['directory', 'favorites', partyId] });
+      if (nextFavorite && item.type === 'event') {
+        void captureFirstValueOnce(getAnalyticsClient(), partyId, 'event_saved');
+      }
     },
   });
   const share = async () => {

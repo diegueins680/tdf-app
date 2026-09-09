@@ -5,7 +5,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 
-import type { DirectoryFavorite } from '../api/directory';
+import type { DirectoryFavorite, DirectorySearchItem } from '../api/directory';
 import type { SessionUser } from '../session/SessionContext';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
@@ -29,7 +29,11 @@ const searchResponse = {
 const favoritesMock = jest.fn<() => Promise<DirectoryFavorite[]>>();
 const addFavoriteMock = jest.fn<(targetKind: string, targetId: string) => Promise<void>>();
 const removeFavoriteMock = jest.fn<(targetKind: string, targetId: string) => Promise<void>>();
+const captureFirstValueMock = jest.fn(async () => true);
+const analyticsClientMock = { capture: jest.fn() };
 let currentSession: SessionUser | null = null;
+
+const eventItem = { ...searchResponse.items[0], type: 'event' as const } as DirectorySearchItem;
 
 jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
@@ -50,7 +54,8 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/directory/OpenStreetMapResults', () => ({ default: () => <div>Mapa OSM aproximado</div> }));
-jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => ({ capture: jest.fn() }) }));
+jest.unstable_mockModule('../analytics/posthog', () => ({ getAnalyticsClient: () => analyticsClientMock }));
+jest.unstable_mockModule('../analytics/onboardingProgress', () => ({ captureFirstValueOnce: captureFirstValueMock }));
 jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.fly.dev' }));
 
 const { default: DirectorySearchPage, DirectoryResultCard } = await import('./DirectorySearchPage');
@@ -65,6 +70,8 @@ describe('DirectorySearchPage', () => {
     favoritesMock.mockReset().mockResolvedValue([]);
     addFavoriteMock.mockReset().mockResolvedValue(undefined);
     removeFavoriteMock.mockReset().mockResolvedValue(undefined);
+    captureFirstValueMock.mockReset().mockResolvedValue(true);
+    analyticsClientMock.capture.mockReset();
   }, 15_000);
 
   it('renders the public Quito-first search as the dominant accessible experience', async () => {
@@ -178,6 +185,60 @@ describe('DirectorySearchPage', () => {
       );
       await waitFor(() => expect(queryClient.getQueryData(['directory', 'favorites', 42])).toEqual([]));
       expect(addFavoriteMock).not.toHaveBeenCalled();
+      expect(captureFirstValueMock).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+    }
+  }, 15_000);
+
+  it('completes event-saved onboarding only after a public event is saved', async () => {
+    let resolveAddFavorite: (() => void) | undefined;
+    addFavoriteMock.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveAddFavorite = resolve;
+    }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    try {
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/buscar?entityType=event']}>
+              <DirectoryResultCard
+                item={eventItem}
+                sessionActive
+                partyId={42}
+                isFavorite={false}
+                favoriteStateReady
+                loginReturnPath="/buscar?entityType=event"
+                layout="list"
+              />
+            </MemoryRouter>
+          </QueryClientProvider>,
+        );
+      });
+
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Bassist"]')?.click();
+        await Promise.resolve();
+      });
+
+      await waitFor(() => expect(addFavoriteMock).toHaveBeenCalledWith('event', eventItem.id));
+      expect(captureFirstValueMock).not.toHaveBeenCalled();
+      await act(async () => {
+        resolveAddFavorite?.();
+        await Promise.resolve();
+      });
+      await waitFor(() => expect(captureFirstValueMock).toHaveBeenCalledWith(
+        analyticsClientMock,
+        42,
+        'event_saved',
+      ));
+      expect(queryClient.getQueryData<DirectoryFavorite[]>(['directory', 'favorites', 42]))
+        .toEqual([expect.objectContaining({ targetKind: 'event', targetId: eventItem.id })]);
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -261,6 +322,14 @@ describe('DirectorySearchPage', () => {
         { timeout: 5_000 },
       );
       expect(container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Bassist"]')?.disabled).toBe(false);
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>('[aria-label="Guardar Synthetic Bassist"]')?.click();
+        await Promise.resolve();
+      });
+      await waitFor(() => expect(addFavoriteMock).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(queryClient.getQueryData<DirectoryFavorite[]>(['directory', 'favorites', 42]))
+        .toEqual([expect.objectContaining({ targetKind: 'profile', targetId: searchResponse.items[0].id })]));
+      expect(captureFirstValueMock).not.toHaveBeenCalled();
     } finally {
       await act(async () => root.unmount());
       container.remove();
