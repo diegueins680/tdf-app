@@ -413,13 +413,10 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
     case controls :: [Entity EventResearchPilotControl] of
         [] -> pure (Left err500{errBody = "Event research pilot control is not initialized"})
         [Entity _ control] -> do
-            candidates <-
-                rawSql
-                    "SELECT ?? FROM event_research_candidate WHERE id=? FOR UPDATE"
-                    [toPersistValue candidateId]
-            case candidates :: [Entity EventResearchCandidate] of
-                [] -> pure (Left err404{errBody = "Event research candidate not found"})
-                [candidateEntity@(Entity _ lockedCandidate)] ->
+            lockedCandidateResult <- lockCandidateForMaterialization candidateId
+            case lockedCandidateResult of
+                Left serverError -> pure (Left serverError)
+                Right candidateEntity@(Entity _ lockedCandidate) ->
                     case eventResearchCandidateEventId lockedCandidate of
                         Just eventId -> do
                             suitable <- existingEventCanSatisfy request eventId
@@ -429,8 +426,41 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
                                     linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                 else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
                         Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
-                _ -> pure (Left err500{errBody = "Event research candidate identity is ambiguous"})
         _ -> pure (Left err500{errBody = "Event research pilot control identity is ambiguous"})
+
+lockCandidateForMaterialization
+    :: EventResearchCandidateId
+    -> SqlPersistT IO (Either ServerError (Entity EventResearchCandidate))
+lockCandidateForMaterialization candidateId = do
+    candidateSnapshot <- get candidateId
+    case candidateSnapshot of
+        Nothing -> pure (Left err404{errBody = "Event research candidate not found"})
+        Just snapshot -> do
+            let snapshotEventId = eventResearchCandidateEventId snapshot
+            eventStillExists <-
+                case snapshotEventId of
+                    Nothing -> pure True
+                    Just eventId -> do
+                        lockedEvents <-
+                            rawSql
+                                "SELECT ?? FROM social_event WHERE id=? FOR UPDATE"
+                                [toPersistValue eventId]
+                        pure (not (null (lockedEvents :: [Entity SocialEvent])))
+            if not eventStillExists
+                then pure (Left (conflict "the linked event changed while materialization was starting"))
+                else do
+                    candidates <-
+                        rawSql
+                            "SELECT ?? FROM event_research_candidate WHERE id=? FOR UPDATE"
+                            [toPersistValue candidateId]
+                    pure $ case candidates :: [Entity EventResearchCandidate] of
+                        [] -> Left err404{errBody = "Event research candidate not found"}
+                        [candidateEntity@(Entity _ lockedCandidate)]
+                            | eventResearchCandidateEventId lockedCandidate == snapshotEventId ->
+                                Right candidateEntity
+                            | otherwise ->
+                                Left (conflict "the candidate link changed while materialization was starting")
+                        _ -> Left err500{errBody = "Event research candidate identity is ambiguous"}
 
 materializeUnlinkedCandidate
     :: T.Text
@@ -518,11 +548,20 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                                     if not suitable
                                         then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
                                         else do
-                                            attachMaterializationArtists eventId artistIds
-                                            insertedRef <- insertMaterializationEventRef candidate request validated eventId now
-                                            if insertedRef
-                                                then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                                                else pure (Left (conflict "the provider event was materialized concurrently"))
+                                            identityStillMatches <-
+                                                materializationEventMatchesCandidate
+                                                    candidate
+                                                    validated
+                                                    venueId
+                                                    eventId
+                                            if not identityStillMatches
+                                                then pure (Left (conflict "the matching event changed while materialization was starting"))
+                                                else do
+                                                    attachMaterializationArtists eventId artistIds
+                                                    insertedRef <- insertMaterializationEventRef candidate request validated eventId now
+                                                    if insertedRef
+                                                        then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                                        else pure (Left (conflict "the provider event was materialized concurrently"))
                                 Right Nothing -> do
                                     let metadata = materializationEventMetadata candidate request validated
                                     eventId <-
@@ -707,24 +746,40 @@ findMaterializationDuplicate candidate validated venueId = do
             , SocialEventStartTime <=. addUTCTime 900 validated.vmStartTime
             ]
             []
-    matches <- filterM matchesCandidate events
+    matches <-
+        filterM
+            (\(Entity eventId _) -> materializationEventMatchesCandidate candidate validated venueId eventId)
+            events
     pure $ case matches of
         [] -> Right Nothing
         [Entity eventId _] -> Right (Just eventId)
         _ -> Left (conflict "event identity is ambiguous")
-  where
-    lineupNames = map normalizeEntityText validated.vmLineup
-    matchesCandidate (Entity eventId event) =
-        if normalizeEntityText (socialEventTitle event) /= normalizeEntityText (eventResearchCandidateTitle candidate)
-            || abs (diffUTCTime (socialEventStartTime event) validated.vmStartTime) > 900
-            then pure False
-            else do
+
+materializationEventMatchesCandidate
+    :: EventResearchCandidate
+    -> ValidatedMaterialization
+    -> VenueId
+    -> SocialEventId
+    -> SqlPersistT IO Bool
+materializationEventMatchesCandidate candidate validated venueId eventId = do
+    event <- get eventId
+    case event of
+        Nothing -> pure False
+        Just eventRow
+            | socialEventVenueId eventRow /= Just venueId
+                || normalizeEntityText (socialEventTitle eventRow)
+                    /= normalizeEntityText (eventResearchCandidateTitle candidate)
+                || abs (diffUTCTime (socialEventStartTime eventRow) validated.vmStartTime) > 900 ->
+                pure False
+            | otherwise -> do
                 links <- selectList [EventArtistEventId ==. eventId] []
                 names <-
                     mapMaybeM
                         (\link -> fmap artistProfileName <$> get (eventArtistArtistId (entityVal link)))
                         links
                 pure (null names || any (`elem` lineupNames) (map normalizeEntityText names))
+  where
+    lineupNames = map normalizeEntityText validated.vmLineup
 
 mapMaybeM :: Monad m => (a -> m (Maybe b)) -> [a] -> m [b]
 mapMaybeM action values = mapMaybe id <$> traverse action values
@@ -765,6 +820,8 @@ materializationEventRefSourceStatus publish eventAlreadyPublished sourceStatus
 
 materializationPublicationHoldSourceStatus :: T.Text -> T.Text
 materializationPublicationHoldSourceStatus rawStatus
+    | normalized == externalEventRefSuppressedStatus =
+        externalEventRefSuppressedStatus
     | Just sourceStatus <- T.stripPrefix "materialization_draft:" normalized =
         "materialization_draft:" <> sourceStatus
     | Just sourceStatus <- T.stripPrefix "draft:" normalized =
@@ -792,7 +849,8 @@ applyMaterializationPublicationIntent candidate request eventId
                     )
             case existingRef of
                 Just (Entity refId ref)
-                    | externalEventRefEventId ref == eventId ->
+                    | externalEventRefEventId ref == eventId
+                    , not (externalEventRefIsSuppressed ref) ->
                         update
                             refId
                             [ ExternalEventRefSourceStatus =.
@@ -842,20 +900,41 @@ existingEventCanSatisfy
     :: EventResearchMaterializationRequestDTO
     -> SocialEventId
     -> SqlPersistT IO Bool
-existingEventCanSatisfy request eventId
-    | not request.erMaterializationPublish = isJust <$> get eventId
-    | otherwise = materializedEventIsPublished eventId
+existingEventCanSatisfy request eventId = do
+    -- Admin deletion locks the event before reading or suppressing its source
+    -- references. Use the same order and make every suitability decision from
+    -- rows read after the event lock is held.
+    lockedEvents <-
+        rawSql
+            "SELECT ?? FROM social_event WHERE id=? FOR UPDATE"
+            [toPersistValue eventId]
+    case lockedEvents :: [Entity SocialEvent] of
+        [Entity _ eventRow] -> do
+            refs <- selectList [ExternalEventRefEventId ==. eventId] []
+            let deletionSuppressed =
+                    any (externalEventRefIsSuppressed . entityVal) refs
+            if deletionSuppressed
+                then pure False
+                else
+                    if not request.erMaterializationPublish
+                        then pure True
+                        else materializedEventRowIsPublished eventRow
+        _ -> pure False
 
 materializedEventIsPublished :: SocialEventId -> SqlPersistT IO Bool
 materializedEventIsPublished eventId = do
     event <- get eventId
     case event of
         Nothing -> pure False
-        Just row -> case socialEventWorkflowStateId row of
-            Nothing -> pure False
-            Just workflowStateId -> do
-                listable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
-                pure (listable && storedEventIsPublic (socialEventMetadata row))
+        Just row -> materializedEventRowIsPublished row
+
+materializedEventRowIsPublished :: SocialEvent -> SqlPersistT IO Bool
+materializedEventRowIsPublished row =
+    case socialEventWorkflowStateId row of
+        Nothing -> pure False
+        Just workflowStateId -> do
+            listable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            pure (listable && storedEventIsPublic (socialEventMetadata row))
 
 storedEventIsPublic :: Maybe T.Text -> Bool
 storedEventIsPublic Nothing = True

@@ -522,6 +522,8 @@ export const SocialEventsAPI = {
     await postUnknown('/social-events/events', payload) as SocialEventDTO,
   updateEvent: async (eventId: string, payload: SocialEventDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}`, payload) as SocialEventDTO,
+  deleteEvent: async (eventId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}`),
   uploadEventImage: async (eventId: string, file: File, name?: string) => {
     const form = new FormData();
     form.append('file', file);

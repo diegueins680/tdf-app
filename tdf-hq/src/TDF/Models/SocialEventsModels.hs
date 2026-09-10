@@ -16,6 +16,7 @@
 module TDF.Models.SocialEventsModels where
 
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time (Day, UTCTime)
 import Data.UUID (UUID)
 import Database.Persist.TH
@@ -637,3 +638,12 @@ TicketQRCode sql=ticket_qr_code
     UniqueTicketQRCode ticketId
     deriving Show Generic
 |]
+
+externalEventRefSuppressedStatus :: Text
+externalEventRefSuppressedStatus = "suppressed"
+
+externalEventRefIsSuppressed :: ExternalEventRef -> Bool
+externalEventRefIsSuppressed =
+    (== externalEventRefSuppressedStatus) . normalizeSourceStatus . externalEventRefSourceStatus
+  where
+    normalizeSourceStatus = T.toCaseFold . T.strip

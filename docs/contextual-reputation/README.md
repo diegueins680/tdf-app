@@ -5,9 +5,14 @@
 Esta entrega introduce el núcleo seguro y auditable para evolucionar las
 reseñas verificadas existentes. La experiencia interactiva se gobierna con el
 flag de despliegue `CONTEXTUAL_REPUTATION_ENABLED`, expuesto a clientes
-autenticados con el mismo nombre. Debe mantenerse apagado hasta completar la
-aplicación de migración, el backfill y el piloto descritos abajo. Las lecturas
-públicas ya publicadas siguen siendo compatibles durante la transición. No
+autenticados con el mismo nombre. Debe permanecer apagado en staging y
+producción hasta aprobar G0 con evidencia, y antes de producción debe existir
+una cohorte piloto aplicada por el servidor. El worker solo podrá habilitarse
+en un rollout posterior de staging, después de abrir y verificar su compuerta
+de base y exclusivamente en modo `simulation`. Las lecturas
+de agregados públicos además exigen el gate independiente, por defecto apagado,
+`PUBLIC_REPUTATION_PROJECTION_ENABLED`; nunca basta con habilitar el flujo
+contextual privado. No
 altera `experience_review`, `directory_review` ni convierte estrellas
 históricas en rankings que nunca sucedieron.
 

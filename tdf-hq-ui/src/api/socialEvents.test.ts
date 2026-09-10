@@ -88,6 +88,12 @@ describe('SocialEventsAPI', () => {
     );
   });
 
+  it('deletes events through an encoded event path', async () => {
+    await SocialEventsAPI.deleteEvent('event 7/quito');
+
+    expect(delMock).toHaveBeenCalledWith('/social-events/events/event%207%2Fquito');
+  });
+
   it('removes waitlist entries through the shared API client', async () => {
     await SocialEventsAPI.removeFromWaitlist(WAITLIST_EVENT_ID_WITH_SPACE, WAITLIST_ENTRY_ID_WITH_SLASH);
 
