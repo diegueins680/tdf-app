@@ -357,7 +357,7 @@ eligibilitySql =
   "'event_ticket_order'::text source_kind,orders.id::text source_id," <>
   "coalesce(event.end_time,event.start_time) completed_at " <>
   "FROM event_ticket_order orders JOIN social_event event ON event.id=orders.event_id " <>
-  "WHERE orders.buyer_party_id=?::bigint AND experience_review_source_is_eligible(" <>
+  "WHERE orders.buyer_party_id=(?::bigint)::text AND experience_review_source_is_eligible(" <>
   "'event',event.id::text,'event_ticket_order',orders.id::text,?::bigint) AND (" <>
   "NOT EXISTS (SELECT 1 FROM external_event_ref source WHERE source.event_id=event.id) OR " <>
   postgresVisibleImportedMetadataClause "event.metadata" <> ") " <>

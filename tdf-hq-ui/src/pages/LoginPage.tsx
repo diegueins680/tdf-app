@@ -55,8 +55,17 @@ import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
 import { markWebSignupCompleted } from '../analytics/onboardingProgress';
 import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
+import { env } from '../utils/env';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
+const GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR =
+  'Accept the terms and privacy policy through the signup flow before creating a Google account';
+const GOOGLE_SIGNUP_CONSENT_PROMPT =
+  'Esta cuenta de Google todavía no está registrada en TDF. Revisa y acepta los términos y la política de privacidad; después vuelve a continuar con Google para crearla.';
+
+export const isGoogleSignupConsentRequiredError = (error: unknown): boolean =>
+  error instanceof Error && error.message.trim() === GOOGLE_SIGNUP_CONSENT_REQUIRED_ERROR;
+
 const ONBOARDING_INTENT_LABELS: Record<OnboardingIntent, string> = {
   events: 'descubrir eventos',
   follow_artists: 'seguir artistas',
@@ -165,13 +174,13 @@ export default function LoginPage() {
   const [signupIntent, setSignupIntent] = useState<OnboardingIntent | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [claimArtistId, setClaimArtistId] = useState<number | null>(null);
-  const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [signupFeedback, setSignupFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const { session, loading, login } = useSession();
   const navigate = useNavigate();
   const location = useLocation();
   const analytics = useAnalytics();
   const passwordHint = AUTH_PASSWORD_REQUIREMENTS_ES;
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+  const googleClientId = env.read('VITE_GOOGLE_CLIENT_ID') ?? '';
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
@@ -401,6 +410,45 @@ export default function LoginPage() {
     }
   };
 
+  const openSignupDialog = useCallback((
+    intent: OnboardingIntent | null = requestedIntent,
+    entry = 'quick_route',
+  ) => {
+    const signupParams = new URLSearchParams(window.location.search);
+    signupParams.set('signup', '1');
+    if (intent) signupParams.set('intent', intent);
+    else signupParams.delete('intent');
+    signupParams.delete('claimArtistId');
+    signupParams.delete('claim');
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${window.location.pathname}?${signupParams.toString()}${window.location.hash}`,
+    );
+    setSignupDialogOpen(true);
+    setSignupFeedback(null);
+    setGoogleError(null);
+    setFormError(null);
+    setShowSignupPassword(false);
+    setSignupForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      password: '',
+    });
+    setClaimArtistId(null);
+    setSignupIntent(intent);
+    setTermsAccepted(false);
+    captureGrowthEvent(analytics, 'signup_started', {
+      route: '/login',
+      entry,
+      intent: intent ?? 'general',
+    });
+    if (intent) captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent });
+    signupMutation.reset();
+  }, [analytics, requestedIntent, signupMutation]);
+
   const handleGoogleCredential = useCallback(
     async (credentialResponse: { credential?: string }) => {
       if (servicePreparing) {
@@ -464,6 +512,11 @@ export default function LoginPage() {
         setSignupFeedback(null);
         navigate(googleTargetPath, { replace: true });
       } catch (err) {
+        if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
+          openSignupDialog(requestedIntent, 'google_login_handoff');
+          setSignupFeedback({ type: 'info', message: GOOGLE_SIGNUP_CONSENT_PROMPT });
+          return;
+        }
         const message = err instanceof Error ? err.message : 'No pudimos iniciar sesión con Google.';
         captureGrowthEvent(analytics, signupDialogOpen ? 'signup_failed' : 'login_failed', {
           route: '/login',
@@ -480,7 +533,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, buildResolvedSession, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
+    [analytics, buildResolvedSession, googleLoginMutation, login, navigate, openSignupDialog, redirectPath, rememberDevice, requestedIntent, servicePreparing, signupDialogOpen, signupIntent, termsAccepted],
   );
 
   useEffect(() => {
@@ -622,40 +675,6 @@ export default function LoginPage() {
         message: 'No pudimos solicitar el enlace. Revisa tu conexión e inténtalo de nuevo.',
       });
     }
-  };
-
-  const openSignupDialog = (intent: OnboardingIntent | null = requestedIntent) => {
-    const signupParams = new URLSearchParams(window.location.search);
-    signupParams.set('signup', '1');
-    if (intent) signupParams.set('intent', intent);
-    else signupParams.delete('intent');
-    signupParams.delete('claimArtistId');
-    signupParams.delete('claim');
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${window.location.pathname}?${signupParams.toString()}${window.location.hash}`,
-    );
-    setSignupDialogOpen(true);
-    setSignupFeedback(null);
-    setShowSignupPassword(false);
-    setSignupForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      password: '',
-    });
-    setClaimArtistId(null);
-    setSignupIntent(intent);
-    setTermsAccepted(false);
-    captureGrowthEvent(analytics, 'signup_started', {
-      route: '/login',
-      entry: 'quick_route',
-      intent: intent ?? 'general',
-    });
-    if (intent) captureGrowthEvent(analytics, 'onboarding_intent_selected', { route: '/login', intent });
-    signupMutation.reset();
   };
 
   const closeSignupDialog = () => {
@@ -922,6 +941,15 @@ export default function LoginPage() {
                       ref={googleButtonRef}
                       sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
                     />
+                    <Button
+                      type="button"
+                      variant="text"
+                      size="small"
+                      onClick={() => openSignupDialog(requestedIntent, 'google_signup_cta')}
+                      sx={{ color: '#bfdbfe', textTransform: 'none' }}
+                    >
+                      ¿Primera vez? Crear cuenta con Google
+                    </Button>
                     {googleStatus && (
                       <Typography variant="caption" color="text.secondary">
                         {googleStatus}
@@ -1299,6 +1327,47 @@ export default function LoginPage() {
                 Al terminar, continuarás con “{ONBOARDING_INTENT_LABELS[signupIntent]}”. Si la tarea requiere acceso especial, podrás solicitarlo para revisión.
               </Alert>
             )}
+            {signupFeedback?.type === 'info' && (
+              <Alert severity="info">{signupFeedback.message}</Alert>
+            )}
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
+                />
+              )}
+              label={(
+                <Typography variant="body2">
+                  Acepto los{' '}
+                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
+                  {' '}y la{' '}
+                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
+                </Typography>
+              )}
+            />
+            {googleClientId && termsAccepted && (
+              <Stack spacing={1} alignItems="center">
+                <Typography variant="body2" color="text.secondary">
+                  Crear e ingresar con Google
+                </Typography>
+                <Box
+                  ref={googleSignupButtonRef}
+                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
+                />
+                {googleStatus && (
+                  <Typography variant="caption" color="text.secondary">
+                    {googleStatus}
+                  </Typography>
+                )}
+                {googleError && (
+                  <Alert severity="warning" sx={{ width: '100%' }}>
+                    {googleError}
+                  </Alert>
+                )}
+              </Stack>
+            )}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Nombre"
@@ -1395,46 +1464,8 @@ export default function LoginPage() {
               }}
               sx={dialogFieldSx}
             />
-            <FormControlLabel
-              control={(
-                <Checkbox
-                  checked={termsAccepted}
-                  onChange={(event) => setTermsAccepted(event.target.checked)}
-                  inputProps={{ 'aria-label': 'Acepto los términos y la política de privacidad' }}
-                />
-              )}
-              label={(
-                <Typography variant="body2">
-                  Acepto los{' '}
-                  <Link href="/account/terms.html" target="_blank" rel="noreferrer">términos de la cuenta</Link>
-                  {' '}y la{' '}
-                  <Link href="/account/privacy.html" target="_blank" rel="noreferrer">política de privacidad de la cuenta</Link>.
-                </Typography>
-              )}
-            />
-            {googleClientId && termsAccepted && (
-              <Stack spacing={1} alignItems="center">
-                <Typography variant="body2" color="text.secondary">
-                  O crea tu cuenta con Google
-                </Typography>
-                <Box
-                  ref={googleSignupButtonRef}
-                  sx={{ display: 'flex', justifyContent: 'center', minHeight: 44, width: '100%' }}
-                />
-                {googleStatus && (
-                  <Typography variant="caption" color="text.secondary">
-                    {googleStatus}
-                  </Typography>
-                )}
-                {googleError && (
-                  <Alert severity="warning" sx={{ width: '100%' }}>
-                    {googleError}
-                  </Alert>
-                )}
-              </Stack>
-            )}
-            {signupFeedback && (
-              <Alert severity={signupFeedback.type === 'success' ? 'success' : 'error'}>
+            {signupFeedback && signupFeedback.type !== 'info' && (
+              <Alert severity={signupFeedback.type}>
                 {signupFeedback.message}
               </Alert>
             )}

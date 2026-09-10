@@ -14,6 +14,7 @@ module TDF.Commerce.ProviderEventStore
   , storeVerifiedProviderEvent
   , listProviderEvents
   , listDueProviderEventReferences
+  , providerEventStaleBefore
   , loadProviderEventPayload
   , requeueDeadLetterProviderEvent
   , claimProviderEvent
@@ -224,6 +225,7 @@ listDueProviderEventReferences
   -> Int
   -> SqlPersistT IO [ProviderEventReference]
 listDueProviderEventReferences now requestedLimit = do
+  let staleBefore = providerEventStaleBefore now
   rows <- rawSql
     "SELECT event.id::text FROM commerce_provider_event_inbox event\
     \ WHERE event.signature_verified = TRUE\
@@ -234,15 +236,18 @@ listDueProviderEventReferences now requestedLimit = do
     \   event.processing_status = 'pending'\
     \   OR (event.processing_status = 'retry' AND COALESCE(event.next_attempt_at, ?) <= ?)\
     \   OR (event.processing_status = 'processing'\
-    \       AND event.processing_started_at < ? - INTERVAL '15 minutes')\
+    \       AND event.processing_started_at < ?)\
     \ ) ORDER BY COALESCE(event.next_attempt_at, event.received_at), event.received_at\
     \ LIMIT ?"
     [ PersistUTCTime now
     , PersistUTCTime now
-    , PersistUTCTime now
+    , PersistUTCTime staleBefore
     , PersistInt64 (fromIntegral (min 100 (max 1 requestedLimit)))
     ] :: SqlPersistT IO [Single Text]
   pure [ProviderEventReference eventId | Single eventId <- rows]
+
+providerEventStaleBefore :: UTCTime -> UTCTime
+providerEventStaleBefore = addUTCTime (negate (15 * 60))
 
 loadProviderEventPayload
   :: ProviderEventReference
@@ -324,6 +329,7 @@ claimProviderEvent
   -> UTCTime
   -> SqlPersistT IO ProviderEventClaim
 claimProviderEvent eventRef now = do
+  let staleBefore = providerEventStaleBefore now
   claimed <- (rawSql
     "UPDATE commerce_provider_event_inbox\
     \ SET processing_status = 'processing', attempt_count = attempt_count + 1,\
@@ -333,14 +339,14 @@ claimProviderEvent eventRef now = do
     \   processing_status = 'pending'\
     \   OR (processing_status = 'retry' AND COALESCE(next_attempt_at, ?) <= ?)\
     \   OR (processing_status = 'processing'\
-    \       AND processing_started_at < ? - INTERVAL '15 minutes')\
+    \       AND processing_started_at < ?)\
     \ ) RETURNING attempt_count"
     [ PersistUTCTime now
     , PersistUTCTime now
     , PersistText (providerEventReferenceId eventRef)
     , PersistUTCTime now
     , PersistUTCTime now
-    , PersistUTCTime now
+    , PersistUTCTime staleBefore
     ] :: SqlPersistT IO [Single Int])
   case claimed of
     [Single attemptCount] -> pure (ProviderEventClaimed attemptCount)
