@@ -23,7 +23,7 @@ The final HTTP test verifies concurrent equal requests, a post-commit replay, ch
 | External communications | Disabled | The test starts the server with `env -i`, no provider credentials, no required engineer, and discovery/enrichment/logistics workers disabled | No email, WhatsApp, payment-provider, or customer communication is attempted |
 | Test-target guard | Available | The harness accepts loopback or the CI `postgres` service only and refuses a database name without `_test` | The script is not a production mutation path |
 | Browser/native device | Not needed for this batch | No user-visible surface or native implementation changed | Earlier desktop/phone evidence remains applicable; no new screenshot is claimed |
-| GitHub | Available | Implementation commit `2c6b8f39b7df2a98cf32b57acc52c14f416e30d3` was pushed before this report | Draft review and exact-head CI are supported |
+| GitHub | Available | Implementation commit `2c6b8f39b4252634c42b22d6401ece2e8dc4866b` was pushed before this report | Draft review and exact-head CI are supported |
 | Production | Not used | Only synthetic loopback requests and disposable database writes occurred | No production or staging validation is claimed |
 
 ## Baseline and methodology
@@ -121,7 +121,7 @@ No screenshot was created because the change has no visible state; the earlier d
 
 - Branch: `feature/public-booking-http-concurrency-20260909`.
 - Base: `feature/public-booking-idempotency-conflicts-20260909` at `f3454a9ce857eae8b7658d322fa3790d1617a176`.
-- Implementation commit: `2c6b8f39b7df2a98cf32b57acc52c14f416e30d3` (pushed).
+- Implementation commit: `2c6b8f39b4252634c42b22d6401ece2e8dc4866b` (pushed).
 - Draft PR: https://github.com/diegueins680/tdf-app/pull/324.
 - Hosted exact-head checks: running at report commit; final status is recorded in the execution handoff.
 
