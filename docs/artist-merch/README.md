@@ -1,6 +1,6 @@
 # Tiendas de merch para artistas — diagnóstico y alcance
 
-Estado del corte: 2026-09-10. Rama base `main`, SHA inicial `269f3784121b8bdca378ec516d5cb446cc818e39`; integración final sobre `32d618a6e8704d82105c00c584d94f9c28ad13ea`.
+Estado del corte: 2026-09-10. Rama base `main`, SHA inicial `269f3784121b8bdca378ec516d5cb446cc818e39`; integración final sobre `1157258b6a6551d49708fa9eb21ab893b6a051f1`.
 
 ## Diagnóstico inicial verificado
 
