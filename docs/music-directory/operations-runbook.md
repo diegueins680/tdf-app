@@ -73,4 +73,8 @@ Logs estructurados usan correlation ID y nunca incluyen consulta libre, PII, evi
   `2026-08-16_music_directory_verified_reviews_rollback.sql` retira triggers, funciones e índices,
   pero conserva filas y discriminantes aditivos. No ejecutar el rollback de la migración base.
 - Usar rollback SQL destructivo solo en un entorno sin writes confirmados y después de backup.
+- No revertir la barrera de privacidad de eventos importados suprimidos. Al volver a una versión
+  anterior del backend, conservar aplicada
+  `2026-09-09_music_directory_suppressed_event_privacy.sql`; restaurar las vistas permisivas
+  reexpondría tombstones y no es un rollback seguro. Los registros fuente permanecen intactos.
 - Investigar y reconciliar antes de reactivar; no reintentar jobs idempotentes con payload distinto.

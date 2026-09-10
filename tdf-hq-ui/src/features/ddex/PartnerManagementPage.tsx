@@ -32,6 +32,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
 import type { DdexPartnerCreateRequest } from '../../api/ddex';
+import { firstNonEmptyString } from '../../utils/stringValues';
 
 const PartnerManagementPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -94,7 +95,7 @@ const PartnerManagementPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading DDEX partner configuration: {(error || referencesError)?.message}
+          Error loading DDEX partner configuration: {(error ?? referencesError)?.message}
         </Alert>
       </Box>
     );
@@ -128,7 +129,7 @@ const PartnerManagementPage: React.FC = () => {
                 <TableCell>{partner.ddexPartnerName}</TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {partner.ddexPartnerDpid || '-'}
+                    {firstNonEmptyString(partner.ddexPartnerDpid, '-')}
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -174,7 +175,7 @@ const PartnerManagementPage: React.FC = () => {
             />
             <TextField
               label="DPID"
-              value={formData.partnerDpid || ''}
+              value={formData.partnerDpid ?? ''}
               onChange={(e) => setFormData({ ...formData, partnerDpid: e.target.value || null })}
               fullWidth
               placeholder="DPID:XXXXXXXX"

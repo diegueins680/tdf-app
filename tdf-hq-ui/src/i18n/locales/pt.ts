@@ -1,6 +1,26 @@
 const pt = {
   common: { save: 'Salvar', saving: 'Salvando…', saved: 'Preferências salvas.', error: 'Ocorreu um erro.' },
-  contextualRanking: { saveDraft: 'Salvar rascunho' },
+  contextualRanking: {
+    saveDraft: 'Salvar rascunho', title: 'Ordenar por: {{category}}',
+    instructions: 'Arraste ou use Subir/Descer. Esta é uma preferência pessoal e não altera a reputação pública.',
+    comparabilityHint: 'Inclua apenas pessoas comparáveis. Selecione « Não tenho informações suficientes » quando necessário.',
+    empty: 'Não há pessoas para ordenar nesta interação.', listLabel: 'Classificação de {{category}}',
+    position: 'Posição {{position}}', excludedPosition: '{{name}}, excluído', verified: 'Verificado',
+    moveUp: 'Subir {{name}}', moveDown: 'Descer {{name}}',
+    insufficientInformation: 'Não tenho informações suficientes', include: 'Incluir', undo: 'Desfazer',
+    restored: 'Ordem anterior restaurada.', moved: '{{name}} está agora na posição {{position}}.',
+    excluded: '{{name}} foi excluído por falta de informações.', included: '{{name}} voltou à comparação.',
+    saved: 'Rascunho salvo. Você pode continuar mais tarde.',
+    saveError: 'Não foi possível salvar. Sua ordem local foi preservada; tente novamente.',
+  },
+  publicReputation: {
+    loading: 'Carregando reputação…',
+    forming: 'Reputação em formação. Ainda não há interações verificadas suficientes para mostrar uma pontuação pública.',
+    heading: 'Reputação verificada', subtitle: 'Agregada de interações verificadas; não reflete preferências pessoais.',
+    interactions: '{{count}} interações verificadas', confidence: 'Confiança {{confidence}}',
+    emptyCategories: 'Ainda não há categorias com interações verificadas suficientes.',
+    categoryScore: '{{category}}: {{score}} de 100',
+  },
   internships: { taskDetail: { instructions: 'Instruções' } },
   pagination: {
     items: 'itens', rowsPerPage: 'Por página', loading: 'Carregando resultados…', updating: 'Atualizando resultados…',

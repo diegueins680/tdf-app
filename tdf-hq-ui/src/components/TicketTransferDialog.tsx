@@ -20,6 +20,7 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import { SocialEventsAPI, type SocialTicketDTO } from '../api/socialEvents';
 import { emailSchema, requiredString } from '../lib/schemas';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 type TicketWithRequiredId = SocialTicketDTO & { ticketId: string };
 
@@ -130,7 +131,10 @@ export function TicketTransferDialog({ open, onClose, eventId, ticket, onSuccess
             required
             margin="normal"
             error={Boolean(errors.email)}
-            helperText={errors.email?.message || t('ticketTransfer.recipientEmailHelper')}
+            helperText={firstNonEmptyString(
+              errors.email?.message,
+              t('ticketTransfer.recipientEmailHelper'),
+            )}
           />
           <TextField
             {...register('name')}

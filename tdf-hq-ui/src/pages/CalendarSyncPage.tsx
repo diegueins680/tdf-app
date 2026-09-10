@@ -291,7 +291,7 @@ export default function CalendarSyncPage() {
     const fromLabel = fromInput ? displayDateTime(fromInput) : 'Sin fecha inicio';
     const toLabel = toInput ? displayDateTime(toInput) : 'Sin fecha fin';
     return `${formatted} · Rango: ${fromLabel} → ${toLabel}`;
-  }, [fromInput, lastSyncAt, toInput]);
+  }, [displayDateTime, fromInput, lastSyncAt, toInput]);
 
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
   const eventsErrorMessage = eventsQuery.isError
