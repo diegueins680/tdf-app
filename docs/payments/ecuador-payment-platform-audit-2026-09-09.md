@@ -22,7 +22,7 @@ No TDF-managed “escrow,” pooled seller funds, or improvised split settlement
 
 | Capability | Result | Evidence / limitation |
 |---|---|---|
-| Repository and default branch | Available | GitHub repository is visible; default branch `main`; inspected commit `32d618a6e8704d82105c00c584d94f9c28ad13ea`. |
+| Repository and default branch | Available | GitHub repository is visible; default branch `main`; implementation was rebased onto inspected commit `1157258b6a6551d49708fa9eb21ab893b6a051f1`. |
 | Commit history and relevant remote branches | Available | Fetched origin/tags and searched all refs for payment, checkout, refund, settlement, payout, Stripe, PayPal and Datafast work. |
 | Issues, PRs and CI | Available | GitHub CLI authenticated as repository administrator. Branch protection requires one approval, stale-review dismissal and resolved conversations. |
 | Branch/worktree changes | Available | Work is isolated in `/private/tmp/tdf-payment-platform-20260909` on `feat/canonical-payment-platform-20260909`; the human's dirty primary checkout was not modified. |
@@ -271,9 +271,14 @@ BCE authorizes payment-system administrators, gateways and aggregators and expec
 | same | `npm run quality:ui` | local automated baseline | 1,769/1,769 plus lint/typecheck/build passed. |
 | same | sequential `REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile` | local automated baseline | 318/318 plus lint/typecheck passed after one separately documented concurrent timeout. |
 | same | existing payment migration scripts | disposable PostgreSQL integration | all listed suites passed. |
-| working tree, uncommitted | `stack test --test-arguments=--match=provider-neutral` | local unit/property | 18 examples, 0 failures. First invocation used an invalid spaced Hspec argument and is not counted; one compile typo was repaired before this pass. |
-| working tree, uncommitted | `npm run test:canonical-payment-lifecycle-migration` | disposable PostgreSQL 16 integration | passed reapply, clean rollback, gates, money constraints, immutability, custody, commission, payout, and evidence-preserving rollback tests. |
-| working tree, uncommitted | `npm run generate:api:ui` / `:mobile` | contract generation | completed successfully. |
+| 2026-09-09 local / pre-rebase equivalent tree `e7a071b` | `stack test --test-arguments=--match=provider-neutral` | local unit/property | 19 examples, 0 failures. Earlier invalid test arguments and compile errors are not counted; both were repaired before this pass. |
+| 2026-09-10 local / post-rebase `b01ab3c` | `stack test --test-arguments='--format=progress'` | local full backend | 2,494/2,494 passed on GHC 9.10.3. Existing Cabal/module and linker warnings remain. |
+| 2026-09-09 local / pre-rebase equivalent tree `e7a071b` | `npm run quality:ui` | local web regression | lint/typecheck/build passed; 188 suites and 1,769 tests passed. Existing React/MUI and chunk-size warnings remain. |
+| 2026-09-09 local / mobile `b08f0c6` | `REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile` | local mobile regression | lint/typecheck passed; 64 suites and 318 tests passed. |
+| 2026-09-09 local / pre-rebase equivalent tree `e7a071b` | `npm run quality:repo` | local repository policy/formal/CI | passed; 8,972 findings: 0 critical, 0 errors, 322 warnings, 8,650 informational; all supporting suites passed. |
+| 2026-09-10 local / post-rebase `b01ab3c` | `npm run test:production-release` | local release-manifest tests | 60/60 passed, including immutable introduction-commit anchoring for the canonical migration. |
+| 2026-09-10 local / post-rebase `b01ab3c` | `npm run test:canonical-payment-lifecycle-migration` | disposable PostgreSQL 16 integration | passed reapply, clean rollback, gates, money constraints, immutability, provider-managed funds, commission, dual-control payout, and evidence-preserving rollback tests. |
+| 2026-09-09 local / generated from the versioned OpenAPI contract | `npm run generate:api` | contract generation | web and mobile generation completed successfully; regenerated files had no uncommitted drift. |
 | none | Datafast/PayPal/PlaceToPay/PayPhone sandbox | provider sandbox | not executed—credentials/contracts missing. |
 | none | staging checkout | staging | not executed—provider credential names absent. |
 
@@ -356,4 +361,3 @@ Every source below was accessed 2026-09-09. Confidence is **high** for the state
 - **High:** [PayPhone QR/wallet](https://payphone.app/para-negocios) and [PeiGo merchant QR](https://www.peigo.com.ec/comercios-cobrar-con-billetera-virtual-peigo) for market existence; PeiGo lacks the public integration evidence required by the gate.
 - **High:** [Stripe global availability](https://stripe.com/global) and [Mercado Pago country availability](https://www.mercadopago.com.br/developers/en/docs/getting-started) — Ecuador is not listed for direct merchant availability.
 - **High consumer availability / medium merchant-acquiring applicability:** Apple [country availability](https://support.apple.com/en-eg/102775) and [participating Latin American banks](https://support.apple.com/es-la/109524); Google [web/app country availability](https://support.google.com/googlepay/answer/12429287) and [Ecuador supported cards/banks](https://support.google.com/wallet/answer/12059326?co=GENIE.CountryCode%3DEC).
-
