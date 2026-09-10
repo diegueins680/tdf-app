@@ -45,7 +45,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Además del recorrido previo, cubre refund con replay exacto/conflicto, aprobación independiente sin proveedor, cancelación pre-ejecución, acceso negativo y disputa read-only sin cambiar pago/settlement.
 - Backend Haskell: PASS, 2.489/2.489 ejemplos sobre la integración final con `main`.
 - Reglas focalizadas posteriores: PASS 9/9 coincidencias `merch`.
-- Build web: PASS; presupuesto inicial JS PASS (416.043 bytes gzip).
+- Build web: PASS; presupuesto inicial JS PASS (416.059 bytes gzip).
 - Web y móvil typecheck: PASS.
 - Jest web admin merch + API + exportación CSV: PASS 15/15; incluye contrato idempotente, Axe sin impactos serios/críticos sobre settlement, refund sin ejecución y disputas read-only.
 - Jest móvil deep links: PASS 2/2.
@@ -58,7 +58,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - OpenAPI YAML + regeneración web/móvil: PASS; clientes generados byte-idénticos (`aacf791d…`).
 - Verificador del manifiesto de release: PASS 59/59 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
-- Auditoría de listas/catálogos: PASS, 954/954 candidatos clasificados; estados refund revisados como límites financieros cerrados y no como configuración editable.
+- Auditoría de listas/catálogos: PASS, 1.011/1.011 candidatos clasificados; estados refund revisados como límites financieros cerrados y no como configuración editable.
 - Gate remoto del PR: PASS 17/17 en la corrida que incluyó explícitamente el runtime HTTP autenticado dentro de `backend-quality`, además de migraciones, contratos, UI, móvil, E2E y auditoría de listas. El estado del HEAD vigente debe consultarse en GitHub; los previews automáticos no se consideran staging ni producción.
 
 No se ejecutó dispositivo físico ni integración real con proveedor de pagos. La verificación iOS realizada corresponde exclusivamente a un Simulator local con API sintética; no equivale a TestFlight, staging o producción.
