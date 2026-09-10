@@ -37,6 +37,14 @@ existe una foto. La operación conserva la imagen histórica, evita enviar su `d
 cada búsqueda, refresca la proyección inmediatamente y es idempotente. El rollback retira solo la
 entrada marcada con procedencia `packaged-profile-media` y vuelve a refrescar la búsqueda.
 
+## Privacidad de eventos importados suprimidos (2026-09-09)
+
+La migración forward-only `2026-09-09_music_directory_suppressed_event_privacy.sql` retira de las
+proyecciones anónimas cualquier evento con una referencia externa marcada `suppressed`. La vista de
+búsqueda vuelve a comprobar la elegibilidad viva de eventos y venues, por lo que una fila
+materializada obsoleta tampoco puede publicar el evento ni su venue después de una supresión. La
+migración no borra el evento, sus referencias ni los documentos de búsqueda internos.
+
 ## Etapas
 
 1. **Expand:** extensiones opcionales seguras (`unaccent`, `pg_trgm`), catálogos nuevos, perfiles,

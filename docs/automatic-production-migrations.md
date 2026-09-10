@@ -11,8 +11,10 @@ from Persistent models.
   DDL from becoming a second source of truth.
 - `CONTEXTUAL_REPUTATION_ENABLED` is staged as `false` until its additive
   schema, backfill, consent copy, and controlled pilot are approved.
-- `EVENT_DISCOVERY_ENABLED` is staged as `false` during a backend rollout and
-  is re-enabled only after the schema, fleet and discovery preflight pass.
+- `EVENT_DISCOVERY_ENABLED` and `EVENT_DISCOVERY_AUTO_PUBLISH` are both staged
+  as `false` during a backend rollout. Discovery may resume after the schema,
+  fleet and discovery preflight pass; auto-publication remains `false` unless
+  it receives separate content/moderation approval.
 
 The image build renders `scripts/production-migrations.json` and every SQL file
 it references into `/app/production-migrations.sql`. The rendered bundle embeds
@@ -57,6 +59,13 @@ fails closed on drift.
    npm run audit:catalog-lists
    bash scripts/test-automatic-migrations-production-schema.sh
    ```
+
+`introducedBy` must be an ancestor of the release and must identify a commit
+whose released tree contains the registered SQL. A feature-branch commit stops
+being an ancestor when GitHub squash-merges the branch. After such a merge,
+replace the entry with the full squash-merge SHA in a follow-up image before
+using the guarded release lane. Never point it at an earlier branch commit that
+does not contain the migration, and never disable the ancestry check.
 
 The PostgreSQL integration test restores the production-shaped fixture, starts
 the real entrypoint, verifies the complete ledger and schema, starts it again,

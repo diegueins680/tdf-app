@@ -49,4 +49,5 @@ describe('public routes', () => {
       document.body.removeChild(container);
     }
   });
+
 });

@@ -33,6 +33,7 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { useSession } from '../session/SessionContext';
 import { hasInternshipsAdminAccess } from '../utils/accessControl';
+import { firstNonEmptyString } from '../utils/stringValues';
 import {
   internalReportAdminTransitions,
   internalReportContextDefaults,
@@ -140,8 +141,8 @@ function NewInternalReport() {
     ifcCategoryId: '',
     ifcProposedSeverityId: '',
     ifcReportType: 'error',
-    ifcModuleName: searchParams.get('module') || '',
-    ifcFeatureName: searchParams.get('feature') || '',
+    ifcModuleName: searchParams.get('module') ?? '',
+    ifcFeatureName: searchParams.get('feature') ?? '',
     ifcEnvironment: reportContext.environment,
     ifcUrlOrScreen: '',
     ifcPlatform: 'web',
@@ -362,9 +363,9 @@ function ReportDetail({ reportId }: { reportId: string }) {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}><Card variant="outlined"><CardContent><Stack spacing={2}>
             <Typography variant="h6">Evidencia</Typography>
-            {report.ifrEvidence.map((item) => <Box key={item.ifeId}>{item.ifeExternalUrl ? <Link href={item.ifeExternalUrl} target="_blank" rel="noreferrer">{item.ifeCaption || item.ifeExternalUrl}</Link> : <Button size="small" startIcon={<DownloadIcon />} onClick={() => action.mutate(async () => { const blob = await InternalFeedback.downloadEvidence(reportId, item.ifeId); saveBlob(blob, item.ifeOriginalFileName || 'evidencia', item.ifeContentType || 'application/octet-stream'); })}>{item.ifeOriginalFileName}</Button>}</Box>)}
+            {report.ifrEvidence.map((item) => <Box key={item.ifeId}>{item.ifeExternalUrl ? <Link href={item.ifeExternalUrl} target="_blank" rel="noreferrer">{firstNonEmptyString(item.ifeCaption, item.ifeExternalUrl)}</Link> : <Button size="small" startIcon={<DownloadIcon />} onClick={() => action.mutate(async () => { const blob = await InternalFeedback.downloadEvidence(reportId, item.ifeId); saveBlob(blob, firstNonEmptyString(item.ifeOriginalFileName, 'evidencia'), firstNonEmptyString(item.ifeContentType, 'application/octet-stream')); })}>{item.ifeOriginalFileName}</Button>}</Box>)}
             {reportIsMutable && <>
-              <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">{attachment?.name || 'Elegir captura o documento'}<input hidden type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" onChange={(event) => setAttachment(event.target.files?.[0] || null)} /></Button>
+              <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">{firstNonEmptyString(attachment?.name, 'Elegir captura o documento')}<input hidden type="file" accept="image/png,image/jpeg,image/webp,application/pdf,text/plain" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} /></Button>
               <Button disabled={!attachment} onClick={() => attachment && action.mutate(() => InternalFeedback.uploadEvidence(reportId, attachment))}>Adjuntar archivo</Button>
               <TextField label="Enlace HTTPS de video" value={evidenceUrl} onChange={(event) => setEvidenceUrl(event.target.value)} />
               <Button disabled={!evidenceUrl.trim()} onClick={() => action.mutate(() => InternalFeedback.linkEvidence(reportId, evidenceUrl))}>Agregar enlace</Button>
@@ -398,7 +399,7 @@ function ReportDetail({ reportId }: { reportId: string }) {
             <Grid item xs={12} md={6}><TextField label="Motivo de cierre" value={adminUpdate.ifuClosureReason ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuClosureReason: event.target.value || null }))} fullWidth /></Grid>
             <Grid item xs={12} md={6}><TextField label="ID de reporte canónico si es duplicado" value={adminUpdate.ifuDuplicateOf ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuDuplicateOf: event.target.value || null }))} fullWidth /></Grid>
             <Grid item xs={12} md={6}><UserSelector value={assignee} onChange={(party) => { setAssignee(party); setAdminUpdate((current) => ({ ...current, ifuAssignedTo: party?.partyId ?? null })); }} field={{ label: 'Responsable', helperText: report.ifrAssignedTo && !assignee ? 'La asignación actual se conserva hasta elegir un reemplazo.' : 'Busca una persona por nombre o @username.' }} search={{ context: 'internal_feedback' }} /></Grid>
-            <Grid item xs={12} md={6}><TextField label="Issue de GitHub confirmado" value={adminUpdate.ifuGithubIssueUrl ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuGithubIssueUrl: event.target.value || null }))} helperText={report.ifrGithubIssueUrl || 'Sólo https://github.com/owner/repo/issues/número'} fullWidth /></Grid>
+            <Grid item xs={12} md={6}><TextField label="Issue de GitHub confirmado" value={adminUpdate.ifuGithubIssueUrl ?? ''} onChange={(event) => setAdminUpdate((current) => ({ ...current, ifuGithubIssueUrl: event.target.value || null }))} helperText={firstNonEmptyString(report.ifrGithubIssueUrl, 'Sólo https://github.com/owner/repo/issues/número')} fullWidth /></Grid>
           </Grid>
           <Button variant="contained" onClick={() => action.mutate(() => InternalFeedback.update(reportId, adminUpdate))}>Guardar triage</Button>
         </Stack></CardContent></Card>}
