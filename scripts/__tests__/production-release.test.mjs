@@ -167,6 +167,22 @@ test('suppressed-event privacy migration is anchored to its released squash comm
   });
 });
 
+test('Party selector rate-limit compatibility is anchored to its migration commit', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const migration = manifest.migrations.find(
+    ({ id }) => id === '2026-09-10_party_selector_rate_limit_scopes',
+  );
+
+  assert.deepEqual(migration, {
+    id: '2026-09-10_party_selector_rate_limit_scopes',
+    path: 'tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql',
+    introducedBy: '565ed7d0a1c5381719538c6e2bcae83ac30c3a92',
+  });
+});
+
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
