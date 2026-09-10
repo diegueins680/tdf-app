@@ -41,6 +41,7 @@ import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import PreviewIcon from '@mui/icons-material/Preview';
 import StopCircleOutlinedIcon from '@mui/icons-material/StopCircleOutlined';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 import {
   CampaignAutomations,
@@ -322,7 +323,7 @@ export default function CampaignAutomationsPage() {
   });
 
   const templates = templatesQuery.data ?? [];
-  const automations = automationsQuery.data ?? [];
+  const automations = useMemo(() => automationsQuery.data ?? [], [automationsQuery.data]);
   const automationByTemplate = useMemo(
     () => new Map(automations.map((automation) => [automation.templateKey, automation])),
     [automations],
@@ -764,7 +765,7 @@ export default function CampaignAutomationsPage() {
                           {enrollment.partyName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {enrollment.phoneE164 || 'Sin teléfono'}
+                          {firstNonEmptyString(enrollment.phoneE164, 'Sin teléfono')}
                         </Typography>
                       </TableCell>
                       <TableCell>

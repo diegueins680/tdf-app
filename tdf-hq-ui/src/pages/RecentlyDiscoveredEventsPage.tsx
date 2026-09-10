@@ -26,6 +26,7 @@ import {
   type SocialDiscoveryPost,
 } from '../api/socialDiscovery';
 import { formatDateTimeForUser } from '../utils/formatters';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 const reviewLabels: Record<DiscoveryReviewStatus, string> = {
   pending: 'Pendiente',
@@ -143,7 +144,7 @@ export default function RecentlyDiscoveredEventsPage() {
                       {post.detectedTerms.map((term) => <Chip key={term} size="small" label={term} variant="outlined" />)}
                     </Stack>
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {post.caption?.trim() || 'La publicación no incluye texto.'}
+                      {firstNonEmptyString(post.caption?.trim(), 'La publicación no incluye texto.')}
                     </Typography>
                     {post.permalink && (
                       <Button component="a" href={post.permalink} target="_blank" rel="noreferrer" size="small" startIcon={<OpenInNewIcon />} sx={{ alignSelf: 'flex-start' }}>

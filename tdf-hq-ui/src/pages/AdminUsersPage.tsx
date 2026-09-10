@@ -1619,11 +1619,10 @@ export default function AdminUsersPage() {
     sharedAccessGuidance,
   ].filter(Boolean);
   const pageGuidance = pageGuidanceParts.join(' ');
-  const hasExpandedGuidanceTitle = Boolean(
-    singleUserAccessSummary.title
-    || singleSearchResultAccessSummary.title
-    || sharedAccessGuidanceCopy.title,
-  );
+  const hasExpandedGuidanceTitle =
+    Boolean(singleUserAccessSummary.title)
+    || Boolean(singleSearchResultAccessSummary.title)
+    || Boolean(sharedAccessGuidanceCopy.title);
   const pageGuidanceTitle = hasExpandedGuidanceTitle
     ? [
         primaryGuidance,

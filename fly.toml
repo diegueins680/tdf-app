@@ -12,13 +12,23 @@ primary_region = "gru"
   RUN_MIGRATIONS = "false"
   # Apply only checksum-pinned SQL from production-migrations.json at startup.
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
-  # Keep contextual reputation dark until the staged schema, backfill, consent,
-  # and controlled pilot have been reviewed.
+  # Keep contextual reputation dark until a server-enforced pilot cohort and
+  # the remaining approval gates have been verified.
   CONTEXTUAL_REPUTATION_ENABLED = "false"
   # Assignment/exposure are durable, but activation still requires explicit approval.
   SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
-  # Enable only after the discovery schema and release have been verified.
+  # Public reads retain an independently controlled privacy gate. It is staged
+  # open while the contextual workflow remains disabled.
+  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
+  # The aggregation worker is staging/test simulation infrastructure only.
+  # Production is rejected independently by both process and database gates.
+  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
+  REPUTATION_AGGREGATION_ENVIRONMENT = "production"
+  REPUTATION_AGGREGATION_MODE = "simulation"
+  # Keep discovery and its publication path quiesced during rollout. Discovery
+  # may resume after verification; auto-publication requires separate approval.
   EVENT_DISCOVERY_ENABLED = "false"
+  EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   # Daily full-platform artist discovery. External research/media is scheduled
   # separately with the same API-level lock and idempotency keys.
   ARTIST_ENRICHMENT_ENABLED = "true"
