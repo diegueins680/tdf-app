@@ -19981,7 +19981,15 @@ data DatafastEnv = DatafastEnv
   , dfTestMode     :: Maybe Text
   , dfExtraParams  :: [(ByteString, ByteString)]
   , dfEnvironment  :: Checkout.CheckoutEnvironment
-  } deriving (Show)
+  }
+
+instance Show DatafastEnv where
+  show environment =
+    "DatafastEnv {dfEntityId = <redacted>, dfBearerToken = <redacted>, "
+      <> "dfBaseUrl = " <> show (dfBaseUrl environment)
+      <> ", dfTestMode = " <> show (dfTestMode environment)
+      <> ", dfExtraParams = <redacted>, dfEnvironment = "
+      <> show (dfEnvironment environment) <> "}"
 
 loadDatafastEnv :: AppM DatafastEnv
 loadDatafastEnv = do
@@ -20179,7 +20187,12 @@ instance FromJSON PayPalCreateResponse where
 data PayPalToken = PayPalToken
   { payPalAccessToken :: Maybe Text
   , payPalTokenType :: Maybe Text
-  } deriving (Show, Generic)
+  } deriving (Generic)
+
+instance Show PayPalToken where
+  show token =
+    "PayPalToken {payPalAccessToken = <redacted>, payPalTokenType = "
+      <> show (payPalTokenType token) <> "}"
 instance FromJSON PayPalToken where
   parseJSON = withObject "PayPalToken" $ \o ->
     PayPalToken

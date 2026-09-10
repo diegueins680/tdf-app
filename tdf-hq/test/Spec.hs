@@ -9,13 +9,14 @@ import Control.Monad.Except (ExceptT, runExceptT)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
+import Crypto.Hash (Digest, hash)
 import Crypto.Hash.Algorithms (SHA256)
 import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Data.ByteString as BS
 import Data.Aeson (eitherDecode, (.=))
 import qualified Data.Aeson as A
-import Data.Either (isLeft, isRight)
+import Data.Either (fromRight, isLeft, isRight)
 import Data.Int (Int64)
 import Data.List (isInfixOf, nub)
 import qualified Data.Map.Strict as Map
@@ -119,6 +120,9 @@ import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
+import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
+import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhoneAdapter
+import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPayAdapter
 import qualified TDF.Commerce.RefundStore as RefundStore
 import qualified TDF.Commerce.StateMachine as Commerce
 import qualified TDF.Routes.EventTickets as EventTicketRoutes
@@ -1905,6 +1909,11 @@ main = hspec $ do
               , ProviderCapabilities.paContractApproved = True
               , ProviderCapabilities.paVerifiedMethods = [minBound .. maxBound]
               , ProviderCapabilities.paVerifiedCapabilities = [minBound .. maxBound]
+              , ProviderCapabilities.paVerifiedMethodCapabilities =
+                  [ (method, capability)
+                  | method <- [minBound .. maxBound]
+                  , capability <- [minBound .. maxBound]
+                  ]
               }
             cardRequest = ProviderCapabilities.PaymentRouteRequest
               { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutSandbox
@@ -1928,7 +1937,6 @@ main = hspec $ do
             providerOrder `shouldBe`
               [ CheckoutStore.ProviderDatafast
               , CheckoutStore.ProviderPlaceToPay
-              , CheckoutStore.ProviderPayPhone
               ]
 
         it "does not route a documented capability until every runtime gate is true" $ do
@@ -1943,12 +1951,43 @@ main = hspec $ do
                   { ProviderCapabilities.paVerifiedMethods = [ProviderCapabilities.MethodCard]
                   , ProviderCapabilities.paVerifiedCapabilities =
                       [ProviderCapabilities.CapabilityOneTime]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ ( ProviderCapabilities.MethodCard
+                        , ProviderCapabilities.CapabilityOneTime
+                        )
+                      ]
                   }
                 request = cardRequest
                   { ProviderCapabilities.prRequiredCapabilities =
                       [ProviderCapabilities.CapabilityPartialRefund]
                   }
             ProviderCapabilities.routePayments [methodOnly] request `shouldBe` []
+
+        it "never combines a capability verified for one method with another method" $ do
+            let mismatched = (active CheckoutStore.ProviderPlaceToPay)
+                  { ProviderCapabilities.paVerifiedMethods =
+                      [ ProviderCapabilities.MethodCard
+                      , ProviderCapabilities.MethodBankRedirect
+                      ]
+                  , ProviderCapabilities.paVerifiedCapabilities =
+                      [ ProviderCapabilities.CapabilityOneTime
+                      , ProviderCapabilities.CapabilityPartialRefund
+                      ]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ ( ProviderCapabilities.MethodCard
+                        , ProviderCapabilities.CapabilityPartialRefund
+                        )
+                      , ( ProviderCapabilities.MethodBankRedirect
+                        , ProviderCapabilities.CapabilityOneTime
+                        )
+                      ]
+                  }
+                request = cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodBankRedirect
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityPartialRefund]
+                  }
+            ProviderCapabilities.routePayments [mismatched] request `shouldBe` []
 
         it "filters providers by operation capability instead of exposing impossible UI actions" $ do
             let request = cardRequest
@@ -1963,7 +2002,7 @@ main = hspec $ do
                 , active CheckoutStore.ProviderPlaceToPay
                 , active CheckoutStore.ProviderPayPhone
                 ] request)
-              `shouldBe` [CheckoutStore.ProviderPlaceToPay]
+              `shouldBe` []
 
         it "routes marketplace funds only through a contract-approved connected-account rail" $ do
             let marketplaceRequest = cardRequest
@@ -2003,6 +2042,251 @@ main = hspec $ do
             PaymentCapabilitiesServer.parsePaymentCapability "partial_refund"
               `shouldBe` Right ProviderCapabilities.CapabilityPartialRefund
             PaymentCapabilitiesServer.parsePaymentMethod "crypto" `shouldSatisfy` isLeft
+
+    describe "provider adapter contracts" $ do
+        let now = UTCTime (fromGregorian 2026 9 10)
+              (secondsToDiffTime (22 * 60 * 60))
+            adapterContext = ProviderAdapter.AdapterContext
+              { ProviderAdapter.acNow = now
+              , ProviderAdapter.acRawNonce = BS.replicate 16 7
+              }
+            money = ProviderAdapter.MoneyBreakdown
+              { ProviderAdapter.mbCurrency = "USD"
+              , ProviderAdapter.mbTotalMinor = 12515
+              , ProviderAdapter.mbWithoutTaxMinor = 10000
+              , ProviderAdapter.mbTaxableBaseMinor = 2200
+              , ProviderAdapter.mbTaxMinor = 315
+              , ProviderAdapter.mbServiceMinor = 0
+              , ProviderAdapter.mbTipMinor = 0
+              }
+            createPayment = ProviderAdapter.CreatePayment
+              { ProviderAdapter.cpReference = "TDF-payment-001"
+              , ProviderAdapter.cpDescription = "TDF order payment"
+              , ProviderAdapter.cpMoney = money
+              , ProviderAdapter.cpReturnUrl = "https://app.tdfrecords.com/payments/return"
+              , ProviderAdapter.cpNotificationUrl =
+                  Just "https://api.tdfrecords.com/payments/webhooks/placetopay"
+              , ProviderAdapter.cpBuyerPhone = Just "984111222"
+              , ProviderAdapter.cpBuyerCountryCode = Just "593"
+              , ProviderAdapter.cpIpAddress = "192.0.2.10"
+              , ProviderAdapter.cpUserAgent = "TDF contract test"
+              }
+            expected = ProviderAdapter.ExpectedPayment
+              { ProviderAdapter.epReference = "TDF-payment-001"
+              , ProviderAdapter.epAmountMinor = 12515
+              , ProviderAdapter.epCurrency = "USD"
+              }
+            locator = ProviderAdapter.PaymentLocator
+              { ProviderAdapter.plExternalId = "45441137"
+              , ProviderAdapter.plExpected = expected
+              }
+            ptp = fromRight (error "valid PlaceToPay fixture config")
+              (PlaceToPayAdapter.placeToPayAdapter PlaceToPayAdapter.PlaceToPayConfig
+                { PlaceToPayAdapter.ptpEnvironment = CheckoutStore.CheckoutSandbox
+                , PlaceToPayAdapter.ptpLogin = "test-login"
+                , PlaceToPayAdapter.ptpSecretKey = "test-secret"
+                })
+            payPhone = fromRight (error "valid PayPhone fixture config")
+              (PayPhoneAdapter.payPhoneAdapter PayPhoneAdapter.PayPhoneConfig
+                { PayPhoneAdapter.payPhoneToken = "test-token"
+                , PayPhoneAdapter.payPhoneStoreId = "test-store"
+                })
+
+        it "uses exact minor-unit arithmetic and rejects unbalanced components" $ do
+            ProviderAdapter.decimalToMinor (ProviderAdapter.minorToDecimal 12515)
+              `shouldBe` Just 12515
+            ProviderAdapter.validateUsdMoney money `shouldBe` Right ()
+            ProviderAdapter.validateUsdMoney
+              money { ProviderAdapter.mbTaxMinor = 314 }
+              `shouldSatisfy` isLeft
+
+        it "builds a fixed-host PlaceToPay session with a stable retry reference" $ do
+            let request = fromRight (error "valid PlaceToPay create fixture")
+                  (ProviderAdapter.adapterBuildCreate ptp adapterContext createPayment)
+                summary = ProviderAdapter.safeRequestSummary request
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://checkout-test.placetopay.ec/api/session"
+            ProviderAdapter.arRetryPolicy request
+              `shouldBe` ProviderAdapter.ReuseStableReference
+            show summary `shouldNotContain` "test-login"
+            show summary `shouldNotContain` "test-secret"
+            Data.Text.length (PlaceToPayAdapter.placeToPayReference
+              "c07196fb-aedf-4a8d-ac50-0f97291c29f9") `shouldBe` 32
+
+        it "accepts only a PlaceToPay create redirect on the configured Ecuador host" $ do
+            let good = A.object
+                  [ "status" .= A.object ["status" .= ("OK" :: Text)]
+                  , "requestId" .= (9911 :: Int)
+                  , "processUrl" .=
+                      ("https://checkout-test.placetopay.ec/session/9911/token" :: Text)
+                  ]
+                spoofed = A.object
+                  [ "status" .= A.object ["status" .= ("OK" :: Text)]
+                  , "requestId" .= (9911 :: Int)
+                  , "processUrl" .=
+                      ("https://checkout-test.placetopay.ec.attacker.example/session/9911" :: Text)
+                  ]
+            ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCreate locator good
+              `shouldSatisfy` isRight
+            ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCreate locator spoofed
+              `shouldSatisfy` isLeft
+
+        it "requires an approved PlaceToPay attempt and exact order binding" $ do
+            let ptpLocator = locator { ProviderAdapter.plExternalId = "9911" }
+                approved amount reference currency = A.object
+                  [ "requestId" .= (9911 :: Int)
+                  , "status" .= A.object ["status" .= ("APPROVED" :: Text)]
+                  , "request" .= A.object
+                      [ "payment" .= A.object
+                          [ "reference" .= (reference :: Text)
+                          , "amount" .= A.object
+                              [ "currency" .= (currency :: Text)
+                              , "total" .= (amount :: A.Value)
+                              ]
+                          ]
+                      ]
+                  , "payment" .=
+                      [ A.object
+                          [ "status" .= A.object
+                              ["status" .= ("APPROVED" :: Text)]
+                          ]
+                      ]
+                  ]
+                good = approved (A.Number 125.15) "TDF-payment-001" "USD"
+                changedAmount = approved (A.Number 125.16) "TDF-payment-001" "USD"
+                changedReference = approved (A.Number 125.15) "other-order" "USD"
+            ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator good
+              `shouldSatisfy` isRight
+            ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator changedAmount
+              `shouldSatisfy` isLeft
+            ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterQuery ptpLocator changedReference
+              `shouldSatisfy` isLeft
+
+        it "verifies PlaceToPay SHA-256 notifications but still requires reconciliation" $ do
+            let status = "APPROVED"
+                date = "2026-09-10T17:00:00-05:00"
+                signatureInput = "9911" <> status <> date <> "test-secret"
+                signature = "sha256:" <> Data.Text.pack
+                  (show (hash (TE.encodeUtf8 signatureInput) :: Digest SHA256))
+                notification suppliedSignature = A.object
+                  [ "requestId" .= (9911 :: Int)
+                  , "status" .= A.object
+                      [ "status" .= (status :: Text)
+                      , "date" .= (date :: Text)
+                      ]
+                  , "signature" .= (suppliedSignature :: Text)
+                  ]
+                verified = ProviderAdapter.adapterAssessNotification ptp
+                  (notification signature)
+            fmap ProviderAdapter.notificationAuthenticated verified `shouldBe` Right True
+            fmap ProviderAdapter.notificationRequiresQuery verified `shouldBe` Right True
+            ProviderAdapter.adapterAssessNotification ptp (notification (signature <> "00"))
+              `shouldSatisfy` isLeft
+
+        it "builds PayPhone API Sale with integer cents and query-before-retry" $ do
+            let request = fromRight (error "valid PayPhone create fixture")
+                  (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+                encodedBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
+                summary = ProviderAdapter.safeRequestSummary request
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/Sale"
+            ProviderAdapter.arRetryPolicy request `shouldBe` ProviderAdapter.QueryBeforeRetry
+            encodedBody `shouldContain` "\"amount\":12515"
+            encodedBody `shouldContain` "\"tax\":315"
+            show summary `shouldNotContain` "test-token"
+
+        it "trusts PayPhone success only after an authenticated exact-binding query" $ do
+            let response amount reference currency statusCode = A.object
+                  [ "amount" .= (amount :: Int)
+                  , "clientTransactionId" .= (reference :: Text)
+                  , "currency" .= (currency :: Text)
+                  , "statusCode" .= (statusCode :: Int)
+                  , "transactionId" .= (45441137 :: Int)
+                  ]
+                good = response 12515 "TDF-payment-001" "USD" 3
+                tampered = response 12516 "TDF-payment-001" "USD" 3
+                parsed = ProviderAdapter.adapterParseResponse
+                  payPhone ProviderAdapter.AdapterQuery locator good
+            fmap ProviderAdapter.adapterResultState parsed
+              `shouldBe` Right ProviderAdapter.AdapterSucceeded
+            fmap ProviderAdapter.adapterResultCertainty parsed
+              `shouldBe` Right ProviderCapabilities.ProviderSucceeded
+            ProviderAdapter.adapterParseResponse
+              payPhone ProviderAdapter.AdapterQuery locator tampered
+              `shouldSatisfy` isLeft
+
+        it "never treats an unsigned PayPhone browser callback as payment evidence" $ do
+            let callback = A.object
+                  [ "id" .= (45441137 :: Int)
+                  , "clientTransactionID" .= ("TDF-payment-001" :: Text)
+                  ]
+                assessed = ProviderAdapter.adapterAssessNotification payPhone callback
+            fmap ProviderAdapter.notificationAuthenticated assessed `shouldBe` Right False
+            fmap ProviderAdapter.notificationRequiresQuery assessed `shouldBe` Right True
+
+        it "enforces PayPhone's full-only same-day 20:00 Ecuador reversal cutoff" $ do
+            let actionAt = UTCTime (fromGregorian 2026 9 10)
+                  (secondsToDiffTime (20 * 60 * 60))
+                mutation = ProviderAdapter.PaymentMutation
+                  { ProviderAdapter.pmLocator = locator
+                  , ProviderAdapter.pmAmountMinor = 12515
+                  , ProviderAdapter.pmProviderActionAt = actionAt
+                  }
+                afterCutoff = adapterContext
+                  { ProviderAdapter.acNow = UTCTime (fromGregorian 2026 9 11)
+                      (secondsToDiffTime (90 * 60))
+                  }
+            isRight (ProviderAdapter.adapterBuildSameDayReverse payPhone adapterContext mutation)
+              `shouldBe` True
+            isLeft (ProviderAdapter.adapterBuildSameDayReverse payPhone adapterContext
+              mutation { ProviderAdapter.pmAmountMinor = 10000 })
+              `shouldBe` True
+            isLeft (ProviderAdapter.adapterBuildSameDayReverse payPhone afterCutoff mutation)
+              `shouldBe` True
+
+        it "does not advertise PayPhone tokenization or post-settlement refunds" $ do
+            let capabilities = ProviderCapabilities.providerCapabilities
+                  CheckoutStore.ProviderPayPhone
+            capabilities `shouldNotContain` [ProviderCapabilities.CapabilityTokenization]
+            capabilities `shouldNotContain` [ProviderCapabilities.CapabilityFullRefund]
+
+        it "advertises only adapter-backed methods and operations" $ do
+            let activePayPhone = ProviderCapabilities.ProviderActivation
+                  { ProviderCapabilities.paProvider = CheckoutStore.ProviderPayPhone
+                  , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
+                  , ProviderCapabilities.paFeatureEnabled = True
+                  , ProviderCapabilities.paCredentialsValidated = True
+                  , ProviderCapabilities.paContractApproved = True
+                  , ProviderCapabilities.paVerifiedMethods = [minBound .. maxBound]
+                  , ProviderCapabilities.paVerifiedCapabilities = [minBound .. maxBound]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ (method, capability)
+                      | method <- [minBound .. maxBound]
+                      , capability <- [minBound .. maxBound]
+                      ]
+                  }
+                requestFor method = ProviderCapabilities.PaymentRouteRequest
+                  { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutSandbox
+                  , ProviderCapabilities.prBuyerCountry = "EC"
+                  , ProviderCapabilities.prCurrency = "USD"
+                  , ProviderCapabilities.prAmountMinor = 12515
+                  , ProviderCapabilities.prMethod = method
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMerchandise
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityOneTime]
+                  }
+                placeToPayCapabilities = ProviderCapabilities.providerCapabilities
+                  CheckoutStore.ProviderPlaceToPay
+            ProviderCapabilities.routePayments [activePayPhone]
+              (requestFor ProviderCapabilities.MethodCard) `shouldBe` []
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [activePayPhone]
+                (requestFor ProviderCapabilities.MethodPayPhoneWallet))
+              `shouldBe` [CheckoutStore.ProviderPayPhone]
+            placeToPayCapabilities
+              `shouldNotContain` [ProviderCapabilities.CapabilityCapture]
+            placeToPayCapabilities
+              `shouldNotContain` [ProviderCapabilities.CapabilityPartialRefund]
 
     describe "provider-neutral payment lifecycle" $ do
         let created = Commerce.PaymentLifecycle
