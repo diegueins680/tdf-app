@@ -10,7 +10,7 @@ Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Dataf
 
 ## Arquitectura
 
-- Entidades `merch_*` para vendedor, catálogo, imágenes, inventario, orden, fulfillment, vínculo de casos refund, issues, reviews, settlement, outbox, analítica y auditoría.
+- Entidades `merch_*` para vendedor, catálogo, imágenes, inventario, orden, fulfillment, vínculo de casos refund, issues, reviews, settlement, outbox, analítica y auditoría; worker de expiración conectado al arranque.
 - Reutilización de `party`, `directory_profile`, permisos/PartySelector, `/assets/serve`, `commerce_checkout_*`, `commerce_refund*` y `commerce_dispute`.
 - Tokens opacos hasheados para carrito/orden y snapshots inmutables.
 - API Servant/OpenAPI y clientes TypeScript regenerados.
@@ -29,7 +29,7 @@ Incidencias: vendedor puede revisar/responder/resolver casos operativos; cancela
 
 ## Seguridad y privacidad
 
-Autorización backend por store/acción; elegibilidad reclamada/verificada; locks/constraints contra sobreventa y doble refund; idempotencia exacta con fingerprint/asignaciones; `paid` solo por evidencia server-side; refund con caso staff y aprobador independiente; disputa sin mutaciones desde merch; archivos decodificados/reencodados y object keys generados; referencias HTTPS/durables; analítica sin PII; auditoría append-only; settlement con doble control, evidencia privada e identidad independiente del preparador; flags cerrados y kill switches separados.
+Autorización backend por store/acción; elegibilidad reclamada/verificada; locks/constraints contra sobreventa y doble refund; edición de producto condicionada atómicamente por estado; idempotencia exacta con fingerprint/asignaciones; `paid` solo por evidencia server-side; expiración canónica periódica; zona ligada a país/provincia; tracking invitado sin destinatario/contacto; refund con caso staff y aprobador independiente; disputa sin mutaciones desde merch; archivos decodificados/reencodados con checksum del objeto persistido y object keys generados; referencias HTTPS/durables; analítica sin PII; auditoría append-only; settlement con doble control, evidencia privada e identidad independiente del preparador; flags cerrados y kill switches separados.
 
 ## Migración
 
@@ -42,7 +42,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión, dos refunds parciales canónicos/asignados/aprobados/confirmados, reverso acumulado exacto de comisión, disputa, ajuste de settlement y rollback.
-- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Además del recorrido previo, cubre refund con replay exacto/conflicto, aprobación independiente sin proveedor, cancelación pre-ejecución, acceso negativo y disputa read-only sin cambiar pago/settlement.
+- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Además del recorrido previo, cubre rechazo de provincia fuera de zona, redacción de PII en tracking, imagen reencodificada con metadatos íntegros, producto bloqueado durante revisión, expiración idempotente desde el worker, refund con replay exacto/conflicto, aprobación independiente sin proveedor, cancelación pre-ejecución, acceso negativo y disputa read-only sin cambiar pago/settlement.
 - Backend Haskell: PASS, 2.489/2.489 ejemplos sobre la integración final con `main`.
 - Reglas focalizadas posteriores: PASS 9/9 coincidencias `merch`.
 - Build web: PASS; presupuesto inicial JS PASS (416.059 bytes gzip).
@@ -70,7 +70,7 @@ Todos los flags permanecen `false`. Staging debe configurar de forma independien
 ## Riesgos
 
 - Los adapters específicos de pago/ejecución de refund e ingestión de disputas de merch todavía no están expuestos; el panel solo autoriza o lee evidencia.
-- Falta validar workers/outbox y rate limiting en staging.
+- Falta validar en staging el worker de expiración ya conectado, además del outbox de notificaciones y rate limiting.
 - Falta repetir en staging el E2E HTTP autenticado que ya pasó localmente y completar validación manual con lector/zoom.
 - Definición fiscal, contractual y de protección al consumidor pendiente.
 

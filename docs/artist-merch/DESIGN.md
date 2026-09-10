@@ -74,6 +74,10 @@ Solo el adapter verificado puede avanzar de `approved` a `processing` y luego re
 - Propietario implica membresía aceptada con todos los permisos.
 - SKU es único dentro de la tienda, no global.
 - Producto publicado requiere revisión staff; la solicitud de revisión requiere variante, imagen decodificada y política activa.
+- Edición de producto y variantes comparte una transacción y una condición de estado; `pending_review` y `archived` no pueden cruzarse por una carrera.
+- La zona de envío debe coincidir con país y, cuando se configura, provincia del destinatario antes de capturar la tarifa.
+- El expirador cambia primero el checkout canónico a `expired`; el trigger libera inventario y alinea pago en esa misma transacción. El worker lo ejecuta al arrancar y cada 30 segundos.
+- El tracking por capability omite `recipient_snapshot` y campos directos de contacto; solo las rutas seller autorizadas acceden a los datos operativos de despacho.
 - Un cart y todos sus items pertenecen al mismo vendedor.
 - Precio, impuestos, envío, comisión y totales los determina PostgreSQL/backend; el cliente no puede fijarlos.
 - `stock_reserved + stock_sold <= stock_on_hand` para stock finito; las reservas se toman bajo locks y expiran.

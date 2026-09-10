@@ -454,7 +454,7 @@
     {
       "id": "2026-09-07_artist_merch_storefronts",
       "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
-      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f"
+      "introducedBy": "8bca78e512577e74a6404290188742a226430856"
     },
     {
       "id": "2026-09-09_music_directory_suppressed_event_privacy",

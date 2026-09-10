@@ -12,23 +12,24 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 |---|---|---|
 | Takeover o acceso entre vendedores | Perfil reclamado/verificado, autorización backend por store+acción, owner y permisos delimitados, pruebas negativas SQL y HTTP local con dos vendedores | Repetir E2E con dos cuentas en staging y alertas activas |
 | Manipulación de precio | Payload de checkout no acepta precios; joins server-side y snapshots inmutables | Revisión externa del adapter antes de activar |
-| Sobreventa/carrera | Locks de variante, constraint de contadores, reserva atómica y prueba concurrente | Alertar reservas atascadas/expirador |
+| Sobreventa/carrera | Locks de variante, constraint de contadores, reserva atómica, prueba concurrente y worker idempotente que expira el checkout canónico cada 30 s | Alertar reservas atascadas y ticks fallidos en staging |
 | Doble orden/cargo | Idempotencia con fingerprint en solicitud/producto/invitación/checkout/issue; checkout canónico | Cada adapter debe reutilizar intento y clave en reintentos |
 | Falso retorno de navegador | Trigger rechaza `paid` sin intento exitoso y evidencia server-side verificada | Verificar firma/replay de cada webhook en staging |
 | Replay o webhook forjado | Infraestructura canónica de provider events y evidencia; provider flags cerrados | Merch aún no expone adapters específicos; no habilitar runtime |
-| Enumeración de órdenes/PII | UUID + lookup token hasheado en header; 404 uniforme; snapshots no aparecen en analítica | Añadir rate limits de borde y rotación/revocación operativa |
+| Enumeración de órdenes/PII | UUID + lookup token hasheado en header; 404 uniforme; el tracking invitado omite destinatario/contacto y los snapshots no aparecen en analítica | Añadir rate limits de borde y rotación/revocación operativa |
 | Insider/refund/settlement fraud | Refund canónico ligado a caso staff, asignaciones/saldo bajo lock, idempotencia exacta, aprobación por otra identidad, auditoría append-only, órdenes elegibles sin PII y evidencia privada de settlement; aprobar no ejecuta dinero | Adapter refund sandbox, revisión humana y conciliación contable en staging siguen pendientes |
 | Disputa o chargeback inventado | La API de merch solo lee `commerce_dispute`; no ofrece creación ni decisión, y la proyección no muta pago/fulfillment/settlement | Verificar firma, replay e ingestión real de cada proveedor en staging |
-| Archivo malicioso | MIME/extensión coincidentes, límite 10 MB/40 MP, decode+reencode, nombre generado, rutas server-side, moderación previa a publicación | Integrar scanner/moderación operativa y retención/borrado |
+| Archivo malicioso | MIME/extensión coincidentes, límite 10 MB/40 MP, decode+reencode, nombre generado, rutas server-side, checksum/tamaño del JPEG persistido y moderación previa a publicación | Integrar scanner/moderación operativa y retención/borrado |
 | XSS/SSRF/path traversal | Texto controlado, React escaping, slugs/SKU validados, object keys generados, URLs de tienda limitadas a `/assets/serve/merch/`, tracking solo HTTPS | CSP y proxy/CDN se validan en staging |
 | Spam/abuso | Directorio usa consentimiento, follow/contacto y reporte/bloqueo existentes; sin chat nuevo | Rate limits y revisión de abuso E2E pendientes |
 | Fuga en logs/analítica | Tabla analítica rechaza email/teléfono/dirección/tarjeta/token/tracking; eventos cliente usan IDs y estados | Auditar configuración real de PostHog/retención/consentimiento |
-| País/moneda falsamente soportados | Backend rechaza fuera de EC/USD y capability lo declara | Validación legal/tributaria antes de ampliar |
+| País/moneda/zona falsamente soportados | Backend rechaza fuera de EC/USD y exige que país/provincia del destinatario pertenezcan a la zona elegida; capability lo declara | Usar códigos territoriales canónicos antes de ampliar países |
 
 ## Controles de despliegue
 
 - Todos los flags se insertan `false` por entorno.
 - `merch.checkout.runtime_ready` es un kill switch adicional; nunca se activa solo por existir credenciales.
+- El worker de expiración permanece activo aunque se cierre el checkout: no crea órdenes ni pagos, únicamente lleva checkouts vencidos a `expired` y libera sus holds mediante el trigger canónico.
 - Datafast, PayPal y transferencia tienen flags separados y requieren configuración completa.
 - `merch.refunds` y `merch.disputes` son flags independientes y también nacen en `false`. Habilitar el primero solo permite preparar/aprobar evidencia; no habilita ejecución de proveedor.
 - Payouts automáticos permanecen `false` y no existe ruta para activarlos.

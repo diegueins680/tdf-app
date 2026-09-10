@@ -17,7 +17,7 @@
 
 - Primero identificar entorno, store/order UUID interno y correlation ID; nunca solicitar tarjeta, contraseña o token privado.
 - `pending` no es pagado. Revisar checkout, intento, evidencia y provider event antes de cualquier corrección.
-- Ante stock cambiado: pedir refrescar; no ajustar contadores manualmente. Ejecutar expirador de reservas y conciliar.
+- Ante stock cambiado: pedir refrescar; no ajustar contadores manualmente. El worker `merch-reservation-worker` ejecuta el expirador canónico al iniciar y cada 30 segundos, incluso si el checkout se apaga para un incidente. Si aumenta el atraso, revisar sus logs y conciliar checkout, reserva y stock antes de intervenir.
 - Ante envío: conservar tracking, timeline y comunicación pública; notas internas nunca se muestran al comprador.
 - Cancelación sin pagar: el comprador puede cancelarla solo antes de procesamiento de pago/preparación; el backend libera la reserva y audita el cambio de forma idempotente.
 - Reembolso: mantenerlo separado de incidencia, cancelación, devolución, fulfillment y settlement. Solo desde un caso financiero en `staff_review`, staff registra una solicitud contra un pago exitoso; monto vacío significa saldo completo. Otra persona revisa y puede dejarla `approved` o cancelarla. `approved` reserva saldo y autoriza, pero no devuelve dinero. No cerrar el caso ni comunicar devolución hasta que un adapter verificado registre `succeeded` y la conciliación coincida.
@@ -31,7 +31,7 @@
 
 ## Observabilidad mínima antes del piloto
 
-Alertas: errores 5xx/409 anómalos, reserva expirada atrasada, stock negativo (debe ser imposible), intento pagado sin transición, webhook fallido/replay, outbox fallido, órdenes pagadas sin avance, reembolso/chargeback, settlement sin doble control y subida rechazada.
+Alertas: errores 5xx/409 anómalos, tick fallido de `merch-reservation-worker`, reserva expirada atrasada, stock negativo (debe ser imposible), intento pagado sin transición, webhook fallido/replay, outbox fallido, órdenes pagadas sin avance, reembolso/chargeback, settlement sin doble control y subida rechazada. Un tick con `expiredCheckouts > 0` es informativo; la ausencia prolongada de ticks junto con holds vencidos es accionable.
 
 Dashboard de producto con consentimiento: solicitudes/activaciones, tiempo a primer producto, publicados, storefront/product view, add-to-cart, checkout start/complete/abandon, conversión, gross/net, recompra, agotados, refund/disputa y conexión originada desde tienda. Nunca enviar PII, token o datos de pago.
 
