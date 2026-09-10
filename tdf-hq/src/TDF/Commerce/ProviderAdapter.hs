@@ -104,7 +104,8 @@ revealSensitiveText (SensitiveText value) = value
 -- | The request has no 'Show' instance because its JSON body can contain PII
 -- and derived authentication material. Use 'safeRequestSummary' for logs.
 data AdapterRequest = AdapterRequest
-  { arOperation   :: AdapterOperation
+  { arProvider    :: PaymentProvider
+  , arOperation   :: AdapterOperation
   , arMethod      :: AdapterHttpMethod
   , arUrl         :: Text
   , arHeaders     :: [(Text, SensitiveText)]
@@ -113,7 +114,8 @@ data AdapterRequest = AdapterRequest
   }
 
 data AdapterRequestSummary = AdapterRequestSummary
-  { arsOperation   :: AdapterOperation
+  { arsProvider    :: PaymentProvider
+  , arsOperation   :: AdapterOperation
   , arsMethod      :: AdapterHttpMethod
   , arsUrl         :: Text
   , arsHeaderNames :: [Text]
@@ -123,7 +125,8 @@ data AdapterRequestSummary = AdapterRequestSummary
 
 safeRequestSummary :: AdapterRequest -> AdapterRequestSummary
 safeRequestSummary request = AdapterRequestSummary
-  { arsOperation = arOperation request
+  { arsProvider = arProvider request
+  , arsOperation = arOperation request
   , arsMethod = arMethod request
   , arsUrl = arUrl request
   , arsHeaderNames = map fst (arHeaders request)
@@ -134,7 +137,7 @@ safeRequestSummary request = AdapterRequestSummary
 data AdapterContext = AdapterContext
   { acNow      :: UTCTime
   , acRawNonce :: ByteString
-  } deriving (Eq, Show)
+  } deriving (Eq)
 
 -- | All fields are integer minor units. The total must equal the component
 -- sum, even for providers that accept the components independently.
@@ -158,7 +161,7 @@ data CreatePayment = CreatePayment
   , cpBuyerCountryCode :: Maybe Text
   , cpIpAddress        :: Text
   , cpUserAgent        :: Text
-  } deriving (Eq, Show)
+  } deriving (Eq)
 
 data ExpectedPayment = ExpectedPayment
   { epReference   :: Text

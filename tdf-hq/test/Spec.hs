@@ -121,6 +121,7 @@ import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
+import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhoneAdapter
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPayAdapter
 import qualified TDF.Commerce.RefundStore as RefundStore
@@ -2130,6 +2131,18 @@ main = hspec $ do
               `shouldSatisfy` isRight
             ProviderAdapter.adapterParseResponse ptp ProviderAdapter.AdapterCreate locator spoofed
               `shouldSatisfy` isLeft
+
+        it "blocks credential-bearing transport requests from redirects or cross-provider hosts" $ do
+            let request = fromRight (error "valid PlaceToPay create fixture")
+                  (ProviderAdapter.adapterBuildCreate ptp adapterContext createPayment)
+            ProviderAdapterHttp.adapterRequestDestinationAllowed request `shouldBe` True
+            ProviderAdapterHttp.adapterRequestDestinationAllowed request
+              { ProviderAdapter.arUrl =
+                  "https://checkout-test.placetopay.ec.attacker.example/api/session"
+              } `shouldBe` False
+            ProviderAdapterHttp.adapterRequestDestinationAllowed request
+              { ProviderAdapter.arProvider = CheckoutStore.ProviderPayPhone
+              } `shouldBe` False
 
         it "requires an approved PlaceToPay attempt and exact order binding" $ do
             let ptpLocator = locator { ProviderAdapter.plExternalId = "9911" }

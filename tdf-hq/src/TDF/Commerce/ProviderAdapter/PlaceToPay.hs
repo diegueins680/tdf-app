@@ -72,7 +72,8 @@ buildCreate config context payment = do
   validateCreate payment
   validateUsdMoney (cpMoney payment)
   pure AdapterRequest
-    { arOperation = AdapterCreate
+    { arProvider = ProviderPlaceToPay
+    , arOperation = AdapterCreate
     , arMethod = AdapterPost
     , arUrl = placeToPayBaseUrl config <> "/api/session"
     , arHeaders = jsonHeaders
@@ -119,7 +120,8 @@ authenticatedRequest
   -> AdapterRetryPolicy
   -> AdapterRequest
 authenticatedRequest config context operation path retryPolicy = AdapterRequest
-  { arOperation = operation
+  { arProvider = ProviderPlaceToPay
+  , arOperation = operation
   , arMethod = AdapterPost
   , arUrl = placeToPayBaseUrl config <> path
   , arHeaders = jsonHeaders

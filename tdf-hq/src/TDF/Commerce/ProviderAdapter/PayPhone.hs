@@ -71,7 +71,8 @@ buildCreate config _ payment = do
     (Left (AdapterError "PayPhone country code is invalid."))
   let money = cpMoney payment
   pure AdapterRequest
-    { arOperation = AdapterCreate
+    { arProvider = ProviderPayPhone
+    , arOperation = AdapterCreate
     , arMethod = AdapterPost
     , arUrl = payPhoneBaseUrl <> "/api/Sale"
     , arHeaders = payPhoneHeaders config
@@ -101,7 +102,8 @@ buildQuery
 buildQuery config _ locator = do
   validateClientReference (epReference (plExpected locator))
   pure AdapterRequest
-    { arOperation = AdapterQuery
+    { arProvider = ProviderPayPhone
+    , arOperation = AdapterQuery
     , arMethod = AdapterGet
     , arUrl = payPhoneBaseUrl <> "/api/Sale/client/" <> epReference (plExpected locator)
     , arHeaders = payPhoneHeaders config
@@ -140,7 +142,8 @@ clientMutationRequest
   -> PaymentLocator
   -> AdapterRequest
 clientMutationRequest config operation path locator = AdapterRequest
-  { arOperation = operation
+  { arProvider = ProviderPayPhone
+  , arOperation = operation
   , arMethod = AdapterPost
   , arUrl = payPhoneBaseUrl <> path
   , arHeaders = payPhoneHeaders config

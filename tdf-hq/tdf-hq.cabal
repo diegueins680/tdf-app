@@ -70,6 +70,7 @@ executable tdf-hq-exe
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.ProviderAdapter
+    TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
     TDF.Commerce.RefundStore
@@ -307,6 +308,7 @@ test-suite tdf-hq-test
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.ProviderAdapter
+    TDF.Commerce.ProviderAdapter.Http
     TDF.Commerce.ProviderAdapter.PlaceToPay
     TDF.Commerce.ProviderAdapter.PayPhone
     TDF.Commerce.RefundStore
