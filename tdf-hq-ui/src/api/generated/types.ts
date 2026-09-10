@@ -5107,6 +5107,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reputation/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the authenticated viewer's independent reputation consents */
+        get: operations["getMyReputationConsents"];
+        /**
+         * Grant or withdraw independent reputation consents
+         * @description Withdrawals take effect immediately and remain available while contextual reputation is disabled.
+         */
+        put: operations["updateMyReputationConsents"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reviews/eligibility": {
         parameters: {
             query?: never;
@@ -5614,6 +5635,18 @@ export interface components {
             salesEnd?: string | null;
             transfersAllowed: boolean;
         };
+        PublicEventTicketPolicy: {
+            policyVersion: string;
+            currency: string;
+            buyerFeeBps: number;
+            organizerFeeBps: number;
+            taxBps: number;
+            holdMinutes: number;
+            termsVersion: string;
+            termsSummary: string;
+            refundPolicy: string;
+            transferAllowed: boolean;
+        };
         PublicEventTicketStorefront: {
             /** Format: int64 */
             eventId: number;
@@ -5627,6 +5660,7 @@ export interface components {
             venueName?: string | null;
             venueAddress?: string | null;
             tiers: components["schemas"]["PublicEventTicketTier"][];
+            policy: components["schemas"]["PublicEventTicketPolicy"] | null;
             checkoutAvailable: boolean;
             unavailableReason?: string | null;
         };
@@ -10487,6 +10521,26 @@ export interface components {
                 weight: number;
                 notApplicable: boolean;
             }[];
+        };
+        ReputationConsent: {
+            /** @enum {string} */
+            consentKind: "pilot_participation" | "public_visibility" | "public_rankings" | "rating_reminders";
+            granted: boolean;
+            version: number;
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        ReputationConsentUpdate: {
+            /** @enum {string} */
+            consentKind: "pilot_participation" | "public_visibility" | "public_rankings" | "rating_reminders";
+            granted: boolean;
+            /** @description Required for grants; identifies the disclosure accepted. */
+            consentCopyVersion?: string | null;
+            /**
+             * @description Required for grants; language of the disclosure accepted.
+             * @enum {string|null}
+             */
+            consentLocale?: "es" | "en" | null;
         };
         ExperienceReviewEligibility: {
             targetKind: components["schemas"]["ExperienceReviewTargetKind"];
@@ -20566,6 +20620,85 @@ export interface operations {
             };
             /** @description Preference revision conflict or idempotency key conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMyReputationConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current consent state, including revoked consents, without evaluator data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReputationConsent"][];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateMyReputationConsents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReputationConsentUpdate"][];
+            };
+        };
+        responses: {
+            /** @description Updated current consent state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReputationConsent"][];
+                };
+            };
+            /** @description Invalid or duplicate consent kind */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Age assurance or currently approved */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description New grants unavailable while the feature is disabled */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

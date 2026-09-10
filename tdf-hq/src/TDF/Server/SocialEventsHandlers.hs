@@ -95,6 +95,10 @@ module TDF.Server.SocialEventsHandlers (
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
+    validateEventDeleteAccess,
+    validateEventDeletionCheckoutHistory,
+    removeSocialEventAssets,
+    suppressImportedEventMetadata,
     parseStripePaymentIntentResponse,
     parseStripeWebhookEventEnvelope,
     verifyAndDecodeStripeWebhook,
@@ -149,7 +153,7 @@ import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
-import System.Directory (copyFile, createDirectoryIfMissing, getFileSize)
+import System.Directory (copyFile, createDirectoryIfMissing, doesDirectoryExist, getFileSize, removePathForcibly)
 import System.Environment (lookupEnv)
 import System.FilePath (takeExtension, takeFileName, (</>))
 import System.IO (hPutStrLn, stderr)
@@ -435,6 +439,44 @@ validateAuthenticatedPartyReference :: AuthedUser -> T.Text -> Either ServerErro
 validateAuthenticatedPartyReference user referencedPartyId
     | normalizePositivePartyIdText referencedPartyId == Just (renderPartyId user) = Right ()
     | otherwise = Left err403{errBody = "Followers can only be changed for the authenticated party"}
+
+validateEventDeleteAccess :: AuthedUser -> T.Text -> SocialEvent -> Either ServerError ()
+validateEventDeleteAccess user currentParty eventRow
+    | hasStrictAdminAccess user || isEventManager currentParty eventRow = Right ()
+    | otherwise =
+        Left err403{errBody = "Only the event organizer or an administrator can delete this event"}
+
+validateEventDeletionCheckoutHistory :: Bool -> Either ServerError ()
+validateEventDeletionCheckoutHistory hasTicketOrders
+    | hasTicketOrders =
+        Left
+            err409
+                { errBody =
+                    "Events with ticket orders cannot be deleted; unpublish the event instead to preserve checkout history"
+                }
+    | otherwise = Right ()
+
+removeSocialEventAssets :: FilePath -> SocialEventId -> IO ()
+removeSocialEventAssets assetsRoot eventKey = do
+    let eventAssetsDir =
+            assetsRoot
+                </> "social-events"
+                </> "events"
+                </> T.unpack (renderKeyText eventKey)
+    exists <- doesDirectoryExist eventAssetsDir
+    when exists (removePathForcibly eventAssetsDir)
+
+suppressImportedEventMetadata :: Maybe T.Text -> Maybe T.Text
+suppressImportedEventMetadata storedMetadata =
+    encodeEventMetadata
+        metadata
+            { emTicketUrl = Nothing
+            , emImageUrl = Nothing
+            , emIsPublic = Just False
+            }
+  where
+    metadata =
+        either (const emptyEventMetadata) id (decodeStoredEventMetadata storedMetadata)
 
 parseStripePaymentIntentResponse :: Aeson.Value -> Either T.Text (T.Text, T.Text)
 parseStripePaymentIntentResponse paymentIntent =
@@ -2189,7 +2231,7 @@ socialEventsServer user =
             liftIO $
                 runSqlPool
                     ( if hasStrictAdminAccess user
-                        then selectList filters [dateOrder, LimitTo limit, OffsetBy offset]
+                        then selectUnsuppressedSocialEvents filters dateOrder limit offset
                         else selectVisibleSocialEvents filters dateOrder limit offset
                     )
                     envPool
@@ -2704,7 +2746,7 @@ socialEventsServer user =
                 validateEventImageUploadForm rawUploadForm
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, eventRow) <- requireManagedEvent rawId
+        eventKey <- parseVisibleEventKey rawId
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
             fallbackName = nonEmptyText (fdFileName eiuFile)
             requestedName = eiuName >>= nonEmptyText
@@ -2718,9 +2760,6 @@ socialEventsServer user =
                     }
 
         uuid <- liftIO UUIDV4.nextRandom
-        existingMeta <-
-            either (throwError . storedEventMetadataServerError) pure $
-                decodeStoredEventMetadata (socialEventMetadata eventRow)
         let eventIdTxt = renderKeyText eventKey
             storedName = UUID.toText uuid <> "-" <> safeName
             relPath = T.intercalate "/" ["social-events", "events", eventIdTxt, storedName]
@@ -2728,20 +2767,50 @@ socialEventsServer user =
             targetPath = targetDir </> T.unpack storedName
             assetsBase = resolveConfiguredAssetsBase envConfig
             publicUrl = buildUploadAssetUrl assetsBase relPath
-            updatedMeta = existingMeta{emImageUrl = Just publicUrl}
         fileSize <- liftIO (getFileSize (fdPayload eiuFile))
         either throwError pure (validateEventImageUploadSize fileSize)
-        liftIO $ createDirectoryIfMissing True targetDir
-        liftIO $ copyFile (fdPayload eiuFile) targetPath
-        liftIO $
+        uploadResult <- liftIO $
             runSqlPool
-                ( update
-                    eventKey
-                    [ SocialEventMetadata =. encodeEventMetadata updatedMeta
-                    , SocialEventUpdatedAt =. now
-                    ]
+                ( do
+                    lockedEvent <- lockSocialEventForMutation eventKey
+                    case lockedEvent of
+                        Nothing -> pure (Left err404{errBody = "Event not found"})
+                        Just (Entity _ eventRow) -> do
+                            refs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                            if any (externalEventRefIsSuppressed . entityVal) refs
+                                then pure (Left err404{errBody = "Event not found"})
+                                else
+                                    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+                                        Just owner
+                                            | owner /= currentPartyId ->
+                                                pure (Left err403{errBody = "Only the event organizer can manage this event"})
+                                        owner ->
+                                            case decodeStoredEventMetadata (socialEventMetadata eventRow) of
+                                                Left message -> pure (Left (storedEventMetadataServerError message))
+                                                Right existingMeta -> do
+                                                    when (isNothing owner) $
+                                                        update
+                                                            eventKey
+                                                            [ SocialEventOrganizerPartyId =. Just currentPartyId
+                                                            , SocialEventUpdatedAt =. now
+                                                            ]
+                                                    -- Keep file creation and metadata publication inside
+                                                    -- the event lock. Deletion either waits and removes this
+                                                    -- file afterward, or commits first and makes this branch
+                                                    -- fail before the directory can be recreated.
+                                                    liftIO $ createDirectoryIfMissing True targetDir
+                                                    liftIO $ copyFile (fdPayload eiuFile) targetPath
+                                                    update
+                                                        eventKey
+                                                        [ SocialEventMetadata =.
+                                                            encodeEventMetadata
+                                                                existingMeta{emImageUrl = Just publicUrl}
+                                                        , SocialEventUpdatedAt =. now
+                                                        ]
+                                                    pure (Right ())
                 )
                 envPool
+        either throwError pure uploadResult
         pure
             EventImageUploadDTO
                 { eiuEventId = eventIdTxt
@@ -2751,49 +2820,182 @@ socialEventsServer user =
                 , eiuImageUrl = publicUrl
                 }
 
+    lockSocialEventForMutation ::
+        SocialEventId ->
+        SqlPersistT IO (Maybe (Entity SocialEvent))
+    lockSocialEventForMutation eventKey = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        if "postgres" `T.isInfixOf` backendName
+            then
+                listToMaybe
+                    <$> ( rawSql
+                            "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
+                            [toPersistValue eventKey]
+                            :: SqlPersistT IO [Entity SocialEvent]
+                        )
+            else fmap (Entity eventKey) <$> get eventKey
+
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
-        eventKey <- parseVisibleEventKey rawId
+        requireFeatureAction "social.events" "delete"
+        eventKey <- parseKeyOr400 "event" rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
-        existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey existing
-        liftIO $
-            runSqlPool
-                ( do
-                    deleteWhere [EventArtistEventId ==. eventKey]
-                    deleteWhere [EventRsvpEventId ==. eventKey]
-                    deleteWhere [EventInvitationEventId ==. eventKey]
-                    momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
-                    unless (null momentKeys) $ do
-                        deleteWhere [EventMomentReactionMomentId <-. momentKeys]
-                        deleteWhere [EventMomentCommentMomentId <-. momentKeys]
-                    deleteWhere [EventMomentEventId ==. eventKey]
-                    deleteWhere [EventTicketEventId ==. eventKey]
-                    deleteWhere [EventTicketOrderEventId ==. eventKey]
-                    deleteWhere [EventTicketTierEventId ==. eventKey]
-                    deleteWhere [EventFinanceEntryEventId ==. eventKey]
-                    deleteWhere [EventBudgetLineEventId ==. eventKey]
-                    logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
-                    unless (null logisticsActivityKeys) $ do
-                        deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
-                        deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
-                        deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
-                        deleteWhere
-                            [ FilterOr
-                                [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
-                                , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
-                                ]
+        case mExisting of
+            Nothing -> do
+                -- DELETE remains retryable if database removal committed but
+                -- the following filesystem cleanup failed on the first call.
+                liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
+                pure NoContent
+            Just existing -> do
+                case validateEventDeleteAccess user currentPartyId existing of
+                    Left accessError -> do
+                        requireEventVisibleToUser eventKey
+                        throwError accessError
+                    Right () -> pure ()
+                now <- liftIO getCurrentTime
+                deletionResult <- liftIO $
+                    runSqlPool
+                        ( do
+                            backendName <- T.toCaseFold <$> getRDBMS
+                            lockedEvent <- lockSocialEventForMutation eventKey
+                            case lockedEvent of
+                                Nothing -> pure (Right ())
+                                Just (Entity _ currentEvent) ->
+                                    case validateEventDeleteAccess user currentPartyId currentEvent of
+                                        Left err -> pure (Left err)
+                                        Right () -> do
+                                            hasTicketOrders <-
+                                                isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+                                            case validateEventDeletionCheckoutHistory hasTicketOrders of
+                                                Left err -> pure (Left err)
+                                                Right () -> do
+                                                    importedRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                                                    if null importedRefs
+                                                        then hardDeleteEventGraph now eventKey
+                                                        else do
+                                                            cancelledStateId <-
+                                                                EventLifecycle.resolveActiveSocialEventStateId "cancelled"
+                                                            cancellationAllowed <-
+                                                                case socialEventWorkflowStateId currentEvent of
+                                                                    Nothing -> pure False
+                                                                    Just currentStateId ->
+                                                                        EventLifecycle.socialEventTransitionAllowed
+                                                                            currentStateId
+                                                                            cancelledStateId
+                                                            let workflowStateUpdates =
+                                                                    [ SocialEventWorkflowStateId =. Just cancelledStateId
+                                                                    | cancellationAllowed
+                                                                    ]
+                                                            when ("postgres" `T.isInfixOf` backendName) $
+                                                                rawExecute
+                                                                    "UPDATE event_ticket_checkout_policy SET active = FALSE, updated_at = ? WHERE event_id = ?"
+                                                                    [ PersistUTCTime now
+                                                                    , toPersistValue eventKey
+                                                                    ]
+                                                            updateWhere
+                                                                [EventTicketTierEventId ==. eventKey]
+                                                                [ EventTicketTierIsActive =. False
+                                                                , EventTicketTierUpdatedAt =. now
+                                                                ]
+                                                            updateWhere
+                                                                [ExternalEventRefEventId ==. eventKey]
+                                                                [ ExternalEventRefSourceStatus =. externalEventRefSuppressedStatus
+                                                                , ExternalEventRefMissingRuns =. 0
+                                                                ]
+                                                            update
+                                                                eventKey
+                                                                ( [ SocialEventMetadata =.
+                                                                        suppressImportedEventMetadata (socialEventMetadata currentEvent)
+                                                                  , SocialEventUpdatedAt =. now
+                                                                  ]
+                                                                    <> workflowStateUpdates
+                                                                )
+                                                            withdrawEventDirectorySearch eventKey
+                                                            pure (Right ())
+                        )
+                        envPool
+                either throwError pure deletionResult
+                liftIO $ removeSocialEventAssets (assetsRootDir envConfig) eventKey
+                pure NoContent
+
+    withdrawEventDirectorySearch :: SocialEventId -> SqlPersistT IO ()
+    withdrawEventDirectorySearch eventKey = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        when ("postgres" `T.isInfixOf` backendName) $ do
+            directoryTableRows <-
+                rawSql
+                    "SELECT to_regclass('directory_search_document') IS NOT NULL"
+                    []
+                    :: SqlPersistT IO [Single Bool]
+            when (directoryTableRows == [Single True]) $
+                rawExecute
+                    "DELETE FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = ?"
+                    [PersistText (renderKeyText eventKey)]
+
+    hardDeleteEventGraph :: UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError ())
+    hardDeleteEventGraph now eventKey = do
+        -- Checkout runtime and fulfillment rows are rooted in an event ticket order.
+        -- Preserve that full audit chain by refusing to hard-delete any event with orders.
+        hasTicketOrders <- isJust <$> selectFirst [EventTicketOrderEventId ==. eventKey] []
+        case validateEventDeletionCheckoutHistory hasTicketOrders of
+            Left err -> pure (Left err)
+            Right () -> do
+                withdrawEventDirectorySearch eventKey
+                updateWhere
+                    [EventResearchCandidateEventId ==. Just eventKey]
+                    [EventResearchCandidateEventId =. Nothing]
+                updateWhere
+                    [EventResearchChangeEventId ==. Just eventKey]
+                    [EventResearchChangeEventId =. Nothing]
+                deleteWhere [EventArtistEventId ==. eventKey]
+                deleteWhere [EventRsvpEventId ==. eventKey]
+                deleteWhere [EventInvitationEventId ==. eventKey]
+                momentKeys <- selectKeysList [EventMomentEventId ==. eventKey] []
+                unless (null momentKeys) $ do
+                    deleteWhere [EventMomentReactionMomentId <-. momentKeys]
+                    deleteWhere [EventMomentCommentMomentId <-. momentKeys]
+                deleteWhere [EventMomentEventId ==. eventKey]
+                deleteWhere [EventLiveBroadcastEventId ==. eventKey]
+                deleteWhere [EventWaitlistEventId ==. eventKey]
+                ticketKeys <- selectKeysList [EventTicketEventId ==. eventKey] []
+                unless (null ticketKeys) $ do
+                    deleteWhere [TicketQRCodeTicketId <-. ticketKeys]
+                    deleteWhere [TicketTransferTicketId <-. ticketKeys]
+                deleteWhere [EventTicketEventId ==. eventKey]
+                backendName <- T.toCaseFold <$> getRDBMS
+                -- SQLite tests do not install the production-only checkout policy table.
+                when ("postgres" `T.isInfixOf` backendName) $
+                    rawExecute
+                        "DELETE FROM event_ticket_checkout_policy WHERE event_id = ?"
+                        [PersistInt64 (fromSqlKey eventKey)]
+                updateWhere
+                    [PromoCodeEventId ==. Just eventKey]
+                    [ PromoCodeEventId =. Nothing
+                    , PromoCodeIsActive =. False
+                    , PromoCodeUpdatedAt =. now
+                    ]
+                deleteWhere [EventTicketTierEventId ==. eventKey]
+                deleteWhere [EventFinanceEntryEventId ==. eventKey]
+                deleteWhere [EventBudgetLineEventId ==. eventKey]
+                logisticsActivityKeys <- selectKeysList [EventLogisticsActivityEventId ==. eventKey] []
+                unless (null logisticsActivityKeys) $ do
+                    deleteWhere [EventLogisticsAlertDeliveryActivityId <-. logisticsActivityKeys]
+                    deleteWhere [EventRouteVerificationActivityId <-. logisticsActivityKeys]
+                    deleteWhere [EventLogisticsAssignmentActivityId <-. logisticsActivityKeys]
+                    deleteWhere
+                        [ FilterOr
+                            [ EventLogisticsDependencyActivityId <-. logisticsActivityKeys
+                            , EventLogisticsDependencyDependsOnActivityId <-. logisticsActivityKeys
                             ]
-                    deleteWhere [EventLogisticsActivityEventId ==. eventKey]
-                    deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
-                    deleteWhere [EventLogisticsMemberEventId ==. eventKey]
-                    deleteWhere [EventLogisticsPlanEventId ==. eventKey]
-                    deleteWhere [ExternalEventRefEventId ==. eventKey]
-                    delete eventKey
-                )
-                envPool
-        pure NoContent
+                        ]
+                deleteWhere [EventLogisticsActivityEventId ==. eventKey]
+                deleteWhere [EventLogisticsPlaceEventId ==. eventKey]
+                deleteWhere [EventLogisticsMemberEventId ==. eventKey]
+                deleteWhere [EventLogisticsPlanEventId ==. eventKey]
+                deleteWhere [ExternalEventRefEventId ==. eventKey]
+                delete eventKey
+                pure (Right ())
 
     -- Venues
     venuesServer :: ServerT VenuesRoutes AppM
@@ -3514,7 +3716,6 @@ socialEventsServer user =
                 validateEventImageUploadForm rawUploadForm
         Env{..} <- ask
         eventKey <- parseVisibleEventKey rawId
-        _ <- requireExistingEvent envPool eventKey
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
             fallbackName = nonEmptyText (fdFileName eiuFile)
             requestedName = eiuName >>= nonEmptyText
@@ -3531,8 +3732,27 @@ socialEventsServer user =
             targetDir = assetsRootDir envConfig </> "social-events" </> "events" </> T.unpack eventIdTxt </> "moments"
             targetPath = targetDir </> T.unpack storedName
             publicUrl = buildUploadAssetUrl (resolveConfiguredAssetsBase envConfig) relPath
-        liftIO $ createDirectoryIfMissing True targetDir
-        liftIO $ copyFile (fdPayload eiuFile) targetPath
+        uploadResult <- liftIO $
+            runSqlPool
+                ( do
+                    lockedEvent <- lockSocialEventForMutation eventKey
+                    case lockedEvent of
+                        Nothing -> pure (Left err404{errBody = "Event not found"})
+                        Just _ -> do
+                            refs <- selectList [ExternalEventRefEventId ==. eventKey] []
+                            if any (externalEventRefIsSuppressed . entityVal) refs
+                                then pure (Left err404{errBody = "Event not found"})
+                                else do
+                                    -- Deletion uses the same event lock before removing
+                                    -- this directory. It therefore either removes a
+                                    -- completed upload or makes this path fail before
+                                    -- any deleted-event media can be recreated.
+                                    liftIO $ createDirectoryIfMissing True targetDir
+                                    liftIO $ copyFile (fdPayload eiuFile) targetPath
+                                    pure (Right ())
+                )
+                envPool
+        either throwError pure uploadResult
         pure EventImageUploadDTO
             { eiuEventId = eventIdTxt
             , eiuFileName = storedName
@@ -8894,6 +9114,47 @@ loadExternalEventSources pool eventKey =
             pure (map snd (sortOn (negate . fst) ranked))
         )
         pool
+
+selectUnsuppressedSocialEvents ::
+    [Filter SocialEvent] ->
+    SelectOpt SocialEvent ->
+    Int ->
+    Int ->
+    SqlPersistT IO [Entity SocialEvent]
+selectUnsuppressedSocialEvents filters dateOrder limit offset = do
+    backend <- ask :: SqlPersistT IO SqlBackend
+    eventTable <- getEscapedRawName "social_event"
+    externalRefTable <- getEscapedRawName "external_event_ref"
+    eventIdField <- getEscapedRawName "id"
+    externalRefEventIdField <- getEscapedRawName "event_id"
+    externalRefSourceStatusField <- getEscapedRawName "source_status"
+    let (baseFilterClause, filterValues) =
+            filterClauseWithVals (Just PrefixTableName) backend filters
+        eventIdColumn = eventTable <> "." <> eventIdField
+        externalRefEventIdColumn =
+            externalRefTable <> "." <> externalRefEventIdField
+        externalRefSourceStatusColumn =
+            externalRefTable <> "." <> externalRefSourceStatusField
+        suppressionClause =
+            "NOT EXISTS (SELECT 1 FROM "
+                <> externalRefTable
+                <> " WHERE "
+                <> externalRefEventIdColumn
+                <> "="
+                <> eventIdColumn
+                <> " AND lower(trim("
+                <> externalRefSourceStatusColumn
+                <> "))=?)"
+        combinedFilterClause
+            | T.null baseFilterClause = " WHERE " <> suppressionClause
+            | otherwise = baseFilterClause <> " AND " <> suppressionClause
+        orderedQuery =
+            "SELECT ?? FROM "
+                <> eventTable
+                <> combinedFilterClause
+                <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
+    query <- getConnLimitOffset (limit, offset) orderedQuery
+    rawSql query (filterValues <> [PersistText externalEventRefSuppressedStatus])
 
 selectVisibleSocialEvents ::
     [Filter SocialEvent] ->

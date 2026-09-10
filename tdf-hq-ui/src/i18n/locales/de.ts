@@ -1,6 +1,26 @@
 const de = {
   common: { save: 'Speichern', saving: 'Wird gespeichert…', saved: 'Einstellungen gespeichert.', error: 'Ein Fehler ist aufgetreten.' },
-  contextualRanking: { saveDraft: 'Entwurf speichern' },
+  contextualRanking: {
+    saveDraft: 'Entwurf speichern', title: 'Sortieren nach: {{category}}',
+    instructions: 'Ziehen Sie oder verwenden Sie Nach oben/Nach unten. Dies ist eine persönliche Präferenz und ändert die öffentliche Reputation nicht.',
+    comparabilityHint: 'Nehmen Sie nur vergleichbare Personen auf. Wählen Sie bei Bedarf „Ich habe nicht genügend Informationen“.',
+    empty: 'In dieser Interaktion gibt es keine Personen zum Sortieren.', listLabel: 'Rangfolge für {{category}}',
+    position: 'Position {{position}}', excludedPosition: '{{name}}, ausgeschlossen', verified: 'Verifiziert',
+    moveUp: '{{name}} nach oben verschieben', moveDown: '{{name}} nach unten verschieben',
+    insufficientInformation: 'Ich habe nicht genügend Informationen', include: 'Aufnehmen', undo: 'Rückgängig',
+    restored: 'Vorherige Reihenfolge wiederhergestellt.', moved: '{{name}} ist jetzt auf Position {{position}}.',
+    excluded: '{{name}} wurde wegen unzureichender Informationen ausgeschlossen.', included: '{{name}} ist wieder im Vergleich.',
+    saved: 'Entwurf gespeichert. Sie können später fortfahren.',
+    saveError: 'Speichern nicht möglich. Ihre lokale Reihenfolge bleibt erhalten; versuchen Sie es erneut.',
+  },
+  publicReputation: {
+    loading: 'Reputation wird geladen…',
+    forming: 'Reputation im Aufbau. Es gibt noch nicht genügend verifizierte Interaktionen für eine öffentliche Bewertung.',
+    heading: 'Verifizierte Reputation', subtitle: 'Aus verifizierten Interaktionen aggregiert; persönliche Präferenzen sind nicht enthalten.',
+    interactions: '{{count}} verifizierte Interaktionen', confidence: 'Vertrauen {{confidence}}',
+    emptyCategories: 'Es gibt noch keine Kategorien mit genügend verifizierten Interaktionen.',
+    categoryScore: '{{category}}: {{score}} von 100',
+  },
   internships: { taskDetail: { instructions: 'Anweisungen' } },
   pagination: {
     items: 'Einträge', rowsPerPage: 'Pro Seite', loading: 'Ergebnisse werden geladen…', updating: 'Ergebnisse werden aktualisiert…',

@@ -12,10 +12,11 @@ import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
-import Database.Persist (Entity (..), get, insert, insertKey)
+import qualified Data.UUID.V4 as UUIDV4
+import Database.Persist (Entity (..), get, insert, insertKey, toPersistValue)
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (Handler, ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant (Handler, NoContent, ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -24,10 +25,14 @@ import Servant.Multipart
     , Tmp
     )
 import Servant.Server.Internal.Handler (runHandler)
+import System.Directory (createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getTemporaryDirectory)
+import System.FilePath ((</>))
+import System.IO.Temp (withSystemTempDirectory)
 import Test.Hspec
 
 import TDF.API.SocialEventsAPI
-    ( EventImageUploadForm (..)
+    ( EventImageUploadDTO (..)
+    , EventImageUploadForm (..)
     , validateEventImageUploadForm
     )
 import TDF.DTO.SocialEventsDTO
@@ -60,10 +65,14 @@ import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
     ( decodeStoredPromoCodeTierIds
     , followArtistDb
+    , removeSocialEventAssets
     , resolveExistingPartyIdText
     , resolveUniqueRsvpRow
     , socialEventsServer
+    , suppressImportedEventMetadata
     , validateEventImageUploadSize
+    , validateEventDeleteAccess
+    , validateEventDeletionCheckoutHistory
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
@@ -179,6 +188,109 @@ spec = describe "social event handler helpers" $ do
                 { eiuFile = mkEventImageUploadFile "camera.jpg"
                 , eiuName = Just "poster.png"
                 }
+
+    it "publishes event and moment images atomically and rejects deletion tombstones" $
+        withSystemTempDirectory "social-event-image-lock" $ \assetsRoot -> do
+            cfg <- Config.loadConfig
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeSocialSchema pool
+            now <- getCurrentTime
+            let visibleEventKey :: SocialEventId
+                visibleEventKey = toSqlKey 29
+                suppressedEventKey :: SocialEventId
+                suppressedEventKey = toSqlKey 30
+                uploadSource = assetsRoot </> "upload.png"
+                uploadForm =
+                    EventImageUploadForm
+                        { eiuFile =
+                            FileData
+                                { fdInputName = "file"
+                                , fdFileName = "upload.png"
+                                , fdFileCType = "image/png"
+                                , fdPayload = uploadSource
+                                }
+                        , eiuName = Just "poster.png"
+                        }
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = cfg{Config.assetsRootDir = assetsRoot}
+                        }
+            writeFile uploadSource "png"
+            _ <- runSqlPool
+                ( do
+                    insertKey visibleEventKey (seedSocialEvent "3" "Visible event" now)
+                    insertKey
+                        suppressedEventKey
+                        (seedSocialEvent "3" "Suppressed event" now)
+                            { socialEventMetadata =
+                                Just "{\"ticketUrl\":null,\"imageUrl\":null,\"isPublic\":false,\"currency\":\"USD\"}"
+                            }
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-upload-suppressed"
+                            , externalEventRefEventId = suppressedEventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Nothing
+                            , externalEventRefPriceCents = Nothing
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 0
+                            , externalEventRefSourceStatus = externalEventRefSuppressedStatus
+                            }
+                )
+                pool
+
+            uploaded <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
+                        env
+            case uploaded of
+                Left err -> expectationFailure ("Expected event image upload to succeed, got: " <> show err)
+                Right response ->
+                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+
+            rejected <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
+                        env
+            case rejected of
+                Left err -> errHTTPCode err `shouldBe` 404
+                Right response ->
+                    expectationFailure
+                        ("Expected tombstoned image upload to fail, got: " <> show response)
+            doesDirectoryExist
+                (assetsRoot </> "social-events" </> "events" </> "30")
+                `shouldReturn` False
+
+            uploadedMoment <-
+                runHandler $
+                    runReaderT
+                        (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
+                        env
+            case uploadedMoment of
+                Left err -> expectationFailure ("Expected moment image upload to succeed, got: " <> show err)
+                Right response -> do
+                    eiuPath response `shouldSatisfy` T.isInfixOf "/moments/"
+                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+
+            rejectedMoment <-
+                runHandler $
+                    runReaderT
+                        (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
+                        env
+            case rejectedMoment of
+                Left err -> errHTTPCode err `shouldBe` 404
+                Right response ->
+                    expectationFailure
+                        ("Expected tombstoned moment image upload to fail, got: " <> show response)
+            doesDirectoryExist
+                (assetsRoot </> "social-events" </> "events" </> "30")
+                `shouldReturn` False
 
     it "rejects unsafe social event metadata URLs before storing public links" $ do
         validateEventMetadataUrlField
@@ -1071,6 +1183,290 @@ spec = describe "social event handler helpers" $ do
         stored <- runSqlPool (get eventKey) pool
         fmap socialEventTitle stored `shouldBe` Just "Original event"
 
+    it "allows strict admins, but not unrelated users, to delete another organizer's event" $ do
+        now <- getCurrentTime
+        let event = seedSocialEvent "1" "Admin-managed event" now
+        case validateEventDeleteAccess (socialEventUser 2) "2" event of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err)
+                    `shouldContain` "Only the event organizer or an administrator"
+            Right _ -> expectationFailure "Expected unrelated event deletion access to fail"
+        case validateEventDeleteAccess (socialEventUser 1) "1" event of
+            Left err -> expectationFailure ("Expected organizer deletion access, got: " <> show err)
+            Right () -> pure ()
+        case validateEventDeleteAccess (strictAdminSocialEventUser 3) "3" event of
+            Left err -> expectationFailure ("Expected strict admin deletion access, got: " <> show err)
+            Right () -> pure ()
+
+    it "preserves ticket checkout history instead of hard-deleting its event" $ do
+        validateEventDeletionCheckoutHistory False `shouldBe` Right ()
+        case validateEventDeletionCheckoutHistory True of
+            Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
+            Right () -> expectationFailure "Expected ticket-order history to block event deletion"
+
+    it "removes only the deleted event's uploaded media directory" $
+        withSystemTempDirectory "social-event-delete-assets" $ \assetsRoot -> do
+            let deletedEventKey :: SocialEventId
+                deletedEventKey = toSqlKey 24
+                deletedEventDir = assetsRoot </> "social-events" </> "events" </> "24"
+                retainedPoster = assetsRoot </> "social-events" </> "events" </> "25" </> "poster.png"
+            createDirectoryIfMissing True (deletedEventDir </> "moments")
+            createDirectoryIfMissing True (assetsRoot </> "social-events" </> "events" </> "25")
+            writeFile (deletedEventDir </> "poster.png") "poster"
+            writeFile (deletedEventDir </> "moments" </> "moment.png") "moment"
+            writeFile retainedPoster "retained"
+
+            removeSocialEventAssets assetsRoot deletedEventKey
+
+            doesDirectoryExist deletedEventDir `shouldReturn` False
+            doesFileExist retainedPoster `shouldReturn` True
+            removeSocialEventAssets assetsRoot deletedEventKey
+            doesFileExist retainedPoster `shouldReturn` True
+
+    it "makes committed event deletion retryable for orphaned media cleanup" $
+        withSystemTempDirectory "social-event-delete-retry" $ \assetsRoot -> do
+            cfg <- Config.loadConfig
+            pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+            runSqlPool initializeSocialSchema pool
+            let orphanedEventDir = assetsRoot </> "social-events" </> "events" </> "28"
+                env =
+                    Env
+                        { envPool = pool
+                        , envConfig = cfg{Config.assetsRootDir = assetsRoot}
+                        }
+            createDirectoryIfMissing True orphanedEventDir
+            writeFile (orphanedEventDir </> "poster.png") "orphaned"
+
+            result <-
+                runHandler $
+                    runReaderT
+                        (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "28")
+                        env
+
+            case result of
+                Right _ -> pure ()
+                Left err ->
+                    expectationFailure
+                        ("Expected retry cleanup for a committed deletion, got: " <> show err)
+            doesDirectoryExist orphanedEventDir `shouldReturn` False
+
+    it "excludes suppressed imports inside strict-admin pagination" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let suppressedEventKey :: SocialEventId
+            suppressedEventKey = toSqlKey 26
+            visibleEventKey :: SocialEventId
+            visibleEventKey = toSqlKey 27
+            eventRow owner title =
+                (seedSocialEvent owner title now)
+                    { socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                    }
+        runSqlPool
+            ( do
+                insertKey suppressedEventKey (eventRow "system:event-discovery" "Suppressed import")
+                insertKey visibleEventKey (eventRow "1" "Visible managed event")
+                insert
+                    ExternalEventRef
+                        { externalEventRefProvider = "ticketmaster"
+                        , externalEventRefExternalId = "tm-suppressed-admin-list"
+                        , externalEventRefEventId = suppressedEventKey
+                        , externalEventRefCity = "Quito"
+                        , externalEventRefCountryCode = Just "EC"
+                        , externalEventRefSourceUrl = Just "https://tickets.example/suppressed"
+                        , externalEventRefPriceCents = Just 1000
+                        , externalEventRefCurrency = Just "USD"
+                        , externalEventRefLastSeenAt = now
+                        , externalEventRefMissingRuns = 0
+                        , externalEventRefSourceStatus = "  SuPpReSsEd  "
+                        }
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = cfg}
+        result <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        (strictAdminSocialEventUser 1)
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        (Just 1)
+                        (Just 0)
+                    )
+                    env
+
+        case result of
+            Right events -> map eventId events `shouldBe` [Just "27"]
+            Left err ->
+                expectationFailure
+                    ("Expected strict-admin event list to succeed, got: " <> show err)
+
+    it "turns an imported event deletion into a private tombstone" $ do
+        let suppressed =
+                suppressImportedEventMetadata
+                    (Just "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":\"https://cdn.example/poster.png\",\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"isPublic\":false")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"ticketUrl\":null")
+        suppressed `shouldSatisfy` maybe False (T.isInfixOf "\"imageUrl\":null")
+
+    it "tombstones imported events while respecting lifecycle transitions" $ do
+        cfg <- Config.loadConfig
+        temporaryRoot <- getTemporaryDirectory
+        testRunId <- UUIDV4.nextRandom
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 24
+            tierKey :: EventTicketTierId
+            tierKey = toSqlKey 62
+            importedEvent =
+                (seedSocialEvent "1" "Imported event" now)
+                    { socialEventMetadata =
+                        Just
+                            "{\"ticketUrl\":\"https://tickets.example/event\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}"
+                    , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                    }
+        refKey <-
+            runSqlPool
+                ( do
+                    insertKey eventKey importedEvent
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-delete-1"
+                            , externalEventRefEventId = eventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Just "https://tickets.example/event"
+                            , externalEventRefPriceCents = Just 1000
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 1
+                            , externalEventRefSourceStatus = "on_sale"
+                            }
+                )
+                pool
+
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig =
+                        cfg
+                            { Config.assetsRootDir =
+                                temporaryRoot
+                                    </> ("tdf-imported-event-delete-" <> UUID.toString testRunId)
+                            }
+                    }
+        runSqlPool
+            ( rawExecute
+                "INSERT INTO event_ticket_tier (id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,enable_waitlist,allow_transfers,refund_policy,created_at,updated_at) VALUES (62,24,'general','General',1000,'USD',100,0,1,0,1,'full',?,?)"
+                (replicate 2 (toPersistValue now))
+            )
+            pool
+        runSqlPool
+            ( rawExecute
+                "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (61,24,62,1,1000,'USD','paid',?,?,?)"
+                (replicate 3 (toPersistValue now))
+            )
+            pool
+        blockedResult <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "24")
+                    env
+        case blockedResult of
+            Left err -> do
+                errHTTPCode err `shouldBe` 409
+                BL8.unpack (errBody err) `shouldContain` "preserve checkout history"
+            Right _ -> expectationFailure "Expected ticket history to block imported event deletion"
+        storedBlockedRef <- runSqlPool (get refKey) pool
+        fmap externalEventRefSourceStatus storedBlockedRef `shouldBe` Just "on_sale"
+        runSqlPool
+            (rawExecute "DELETE FROM event_ticket_order WHERE event_id = 24" [])
+            pool
+
+        result <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "24")
+                    env
+
+        case result of
+            Left err ->
+                expectationFailure
+                    ("Expected imported event deletion to succeed, got: " <> show err)
+            Right _ -> pure ()
+        storedEvent <- runSqlPool (get eventKey) pool
+        storedRef <- runSqlPool (get refKey) pool
+        storedTier <- runSqlPool (get tierKey) pool
+        fmap socialEventMetadata storedEvent
+            `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+        fmap socialEventWorkflowStateId storedEvent
+            `shouldBe` Just (Just socialEventCancelledWorkflowStateFixtureId)
+        fmap externalEventRefSourceStatus storedRef `shouldBe` Just externalEventRefSuppressedStatus
+        fmap externalEventRefMissingRuns storedRef `shouldBe` Just 0
+        fmap eventTicketTierIsActive storedTier `shouldBe` Just False
+
+        let unavailableEventKey :: SocialEventId
+            unavailableEventKey = toSqlKey 25
+            unavailableEvent =
+                (seedSocialEvent "1" "Unavailable imported event" now)
+                    { socialEventMetadata =
+                        Just
+                            "{\"ticketUrl\":\"https://tickets.example/unavailable\",\"imageUrl\":null,\"isPublic\":true,\"currency\":\"USD\",\"budgetCents\":null}"
+                    , socialEventWorkflowStateId = Just socialEventUnavailableWorkflowStateFixtureId
+                    }
+        unavailableRefKey <-
+            runSqlPool
+                ( do
+                    insertKey unavailableEventKey unavailableEvent
+                    insert
+                        ExternalEventRef
+                            { externalEventRefProvider = "ticketmaster"
+                            , externalEventRefExternalId = "tm-delete-unavailable"
+                            , externalEventRefEventId = unavailableEventKey
+                            , externalEventRefCity = "Quito"
+                            , externalEventRefCountryCode = Just "EC"
+                            , externalEventRefSourceUrl = Just "https://tickets.example/unavailable"
+                            , externalEventRefPriceCents = Just 1000
+                            , externalEventRefCurrency = Just "USD"
+                            , externalEventRefLastSeenAt = now
+                            , externalEventRefMissingRuns = 1
+                            , externalEventRefSourceStatus = "unavailable"
+                            }
+                )
+                pool
+
+        unavailableResult <-
+            runHandler $
+                runReaderT
+                    (socialEventDeleteHandlerFor (strictAdminSocialEventUser 3) "25")
+                    env
+
+        case unavailableResult of
+            Left err ->
+                expectationFailure
+                    ("Expected unavailable imported event deletion to succeed, got: " <> show err)
+            Right _ -> pure ()
+        storedUnavailableEvent <- runSqlPool (get unavailableEventKey) pool
+        storedUnavailableRef <- runSqlPool (get unavailableRefKey) pool
+        fmap socialEventMetadata storedUnavailableEvent
+            `shouldSatisfy` maybe False (maybe False (T.isInfixOf "\"isPublic\":false"))
+        fmap socialEventWorkflowStateId storedUnavailableEvent
+            `shouldBe` Just (Just socialEventUnavailableWorkflowStateFixtureId)
+        fmap externalEventRefSourceStatus storedUnavailableRef `shouldBe` Just externalEventRefSuppressedStatus
+        fmap externalEventRefMissingRuns storedUnavailableRef `shouldBe` Just 0
+
     it "rejects spoofed invitation senders before inserting social event invitations" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -1166,6 +1562,64 @@ socialEventUpdateHandlerFor user =
                     :<|> _uploadEventImage
                     :<|> _deleteEvent ->
                     updateEventHandler
+
+socialEventDeleteHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler NoContent
+socialEventDeleteHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _ ->
+            case eventsServer of
+                _listEvents
+                    :<|> _createEvent
+                    :<|> _getEvent
+                    :<|> _updateEvent
+                    :<|> _uploadEventImage
+                    :<|> deleteEventHandler ->
+                    deleteEventHandler
+
+socialEventImageUploadHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventImageUploadForm
+    -> ReaderT Env Handler EventImageUploadDTO
+socialEventImageUploadHandlerFor user =
+    case socialEventsServer user of
+        eventsServer :<|> _ ->
+            case eventsServer of
+                _listEvents
+                    :<|> _createEvent
+                    :<|> _getEvent
+                    :<|> _updateEvent
+                    :<|> uploadEventImageHandler
+                    :<|> _deleteEvent ->
+                    uploadEventImageHandler
+
+socialEventMomentImageUploadHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> EventImageUploadForm
+    -> ReaderT Env Handler EventImageUploadDTO
+socialEventMomentImageUploadHandlerFor user =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> momentsServer
+            :<|> _ ->
+            case momentsServer of
+                _listMoments
+                    :<|> _createMoment
+                    :<|> uploadMomentImageHandler
+                    :<|> _reactToMoment
+                    :<|> _commentOnMoment ->
+                    uploadMomentImageHandler
 
 socialEventListHandlerFor
     :: AuthedUser
@@ -1400,6 +1854,18 @@ socialEventWorkflowStateFixtureId =
         Just workflowStateId -> workflowStateId
         Nothing -> error "Invalid social-event workflow-state fixture UUID"
 
+socialEventCancelledWorkflowStateFixtureId :: UUID.UUID
+socialEventCancelledWorkflowStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000239" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid cancelled social-event workflow-state fixture UUID"
+
+socialEventUnavailableWorkflowStateFixtureId :: UUID.UUID
+socialEventUnavailableWorkflowStateFixtureId =
+    case UUID.fromString "00000000-0000-4000-8000-000000000236" of
+        Just workflowStateId -> workflowStateId
+        Nothing -> error "Invalid unavailable social-event workflow-state fixture UUID"
+
 seedSocialEvent :: T.Text -> T.Text -> UTCTime -> SocialEvent
 seedSocialEvent owner title now =
     SocialEvent
@@ -1581,6 +2047,9 @@ initializeSocialSchema = do
         "CREATE TABLE IF NOT EXISTS \"workflow_state\" (\"id\" VARCHAR PRIMARY KEY,\"workflow_id\" VARCHAR NOT NULL,\"code\" VARCHAR NOT NULL,\"name_es\" VARCHAR NOT NULL,\"name_en\" VARCHAR NOT NULL,\"active\" BOOLEAN NOT NULL)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"workflow_transition\" (\"workflow_id\" VARCHAR NOT NULL,\"from_state_id\" VARCHAR NOT NULL,\"to_state_id\" VARCHAR NOT NULL,\"required_permission_id\" VARCHAR NULL,\"requires_review\" BOOLEAN NOT NULL,\"requires_distinct_approver\" BOOLEAN NOT NULL,\"effective_from\" TIMESTAMP NULL,\"effective_until\" TIMESTAMP NULL,\"active\" BOOLEAN NOT NULL)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"workflow_state_capability\" (\"state_id\" VARCHAR NOT NULL,\"capability_code\" VARCHAR NOT NULL,\"enabled\" BOOLEAN NOT NULL,PRIMARY KEY (\"state_id\",\"capability_code\"))"
         []
     rawExecute
@@ -1588,6 +2057,15 @@ initializeSocialSchema = do
         []
     rawExecute
         "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000104','on_sale','En venta','On sale',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000239','00000000-0000-4000-8000-000000000104','cancelled','Cancelado','Cancelled',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_state\" (\"id\",\"workflow_id\",\"code\",\"name_es\",\"name_en\",\"active\") VALUES ('00000000-0000-4000-8000-000000000236','00000000-0000-4000-8000-000000000104','unavailable','No disponible','Unavailable',1)"
+        []
+    rawExecute
+        "INSERT INTO \"workflow_transition\" (\"workflow_id\",\"from_state_id\",\"to_state_id\",\"required_permission_id\",\"requires_review\",\"requires_distinct_approver\",\"effective_from\",\"effective_until\",\"active\") VALUES ('00000000-0000-4000-8000-000000000104','00000000-0000-4000-8000-000000000233','00000000-0000-4000-8000-000000000239',NULL,0,0,NULL,NULL,1)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_discovery_source\" (\"id\" INTEGER PRIMARY KEY,\"source_key\" VARCHAR NOT NULL,\"name\" VARCHAR NOT NULL,\"source_type\" VARCHAR NOT NULL,\"feed_url\" VARCHAR NULL,\"city_id\" INTEGER NULL,\"enabled\" BOOLEAN NOT NULL DEFAULT 1,\"priority\" INTEGER NOT NULL DEFAULT 100,\"configuration\" VARCHAR NULL,\"etag\" VARCHAR NULL,\"last_modified\" VARCHAR NULL,\"consecutive_failures\" INTEGER NOT NULL DEFAULT 0,\"last_success_at\" TIMESTAMP NULL,\"last_error\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE (\"source_key\"))"

@@ -149,7 +149,7 @@ export default function AdminDiagnosticsPage() {
   const lastSyncAt = typeof window !== 'undefined'
     ? normalizeStoredDiagnosticValue(window.localStorage.getItem('calendar-sync.lastSyncAt'))
     : null;
-  const hasCalendarSyncState = Boolean(calendarId || lastSyncAt);
+  const hasCalendarSyncState = Boolean(calendarId) || Boolean(lastSyncAt);
   const instagramQuery = useQuery({
     queryKey: ['social-inbox', 'instagram'],
     queryFn: () => SocialInboxAPI.listInstagramMessages({ direction: 'incoming' }),
