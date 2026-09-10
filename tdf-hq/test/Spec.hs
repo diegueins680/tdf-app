@@ -953,6 +953,8 @@ main = hspec $ do
             statement `shouldSatisfy` Data.Text.isInfixOf "deprecated_at IS NULL"
 
         it "does not offer review creation for hidden targets" $ do
+            eligibilitySql `shouldSatisfy`
+                Data.Text.isInfixOf "orders.buyer_party_id=(?::bigint)::text"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "offering.active AND offering.deprecated_at IS NULL"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "WHERE package.active"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
@@ -1186,6 +1188,12 @@ main = hspec $ do
               Right headers ->
                 ServiceStorefront.buildPaypalWebhookVerificationBody
                   "webhook-1" headers rawEvent `shouldBe` expected
+
+        it "computes the provider-event stale lease before binding the SQL timestamp" $ do
+            let now = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.providerEventStaleBefore now
+              `shouldBe` addUTCTime (negate (15 * 60)) now
 
         it "rejects stale, future, and unsupported PayPal webhook headers" $ do
             let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))
