@@ -241,13 +241,13 @@ export default function LoginPage() {
   const dialogFieldSx = useMemo(
     () => ({
       '& .MuiInputLabel-root': {
-        color: 'rgba(15,23,42,0.72)',
+        color: '#334155',
         '&.MuiInputLabel-shrink': {
-          bgcolor: 'background.paper',
-          color: 'text.primary',
+          bgcolor: '#ffffff',
+          color: '#0f172a',
           px: 0.5,
         },
-        '&.Mui-focused': { color: 'primary.main' },
+        '&.Mui-focused': { color: '#1d4ed8' },
       },
       '& .MuiOutlinedInput-root': {
         bgcolor: '#ffffff',
@@ -259,7 +259,7 @@ export default function LoginPage() {
           boxShadow: '0 0 0 1px rgba(37,99,235,0.35)',
         },
       },
-      '& .MuiFormHelperText-root': { color: 'text.secondary' },
+      '& .MuiFormHelperText-root': { color: '#475569' },
       '& .MuiInputBase-input::placeholder': { color: 'rgba(15,23,42,0.45)', opacity: 1 },
     }),
     [],
