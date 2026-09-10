@@ -935,26 +935,21 @@ END $$;
 CREATE OR REPLACE FUNCTION merch_release_expired_reservations(at_value TIMESTAMPTZ DEFAULT now())
 RETURNS INTEGER LANGUAGE plpgsql AS $$
 DECLARE
-  reservation RECORD;
-  released_count INTEGER := 0;
+  expired_count INTEGER;
 BEGIN
-  FOR reservation IN
-    SELECT * FROM merch_inventory_reservation
-    WHERE status = 'active' AND expires_at <= at_value
-    ORDER BY variant_id, id FOR UPDATE SKIP LOCKED
-  LOOP
-    PERFORM 1 FROM merch_product_variant WHERE id = reservation.variant_id FOR UPDATE;
-    UPDATE merch_product_variant
-      SET stock_reserved = stock_reserved - reservation.quantity, updated_at = now(), version = version + 1
-      WHERE id = reservation.variant_id AND stock_reserved >= reservation.quantity;
-    IF NOT FOUND THEN RAISE EXCEPTION 'Merch reserved stock invariant is broken'; END IF;
-    UPDATE merch_inventory_reservation SET status = 'expired', released_at = at_value
-      WHERE id = reservation.id;
-    UPDATE commerce_reservation_hold SET status = 'expired'
-      WHERE id = reservation.commerce_hold_id AND status = 'active';
-    released_count := released_count + 1;
-  END LOOP;
-  RETURN released_count;
+  -- Expire the canonical checkout and let merch_apply_checkout_status release
+  -- every linked inventory hold in the same transaction. Keeping checkout,
+  -- order, and inventory transitions on one path also prevents a late browser
+  -- return from reviving an order whose stock was already released.
+  WITH expired AS (
+    UPDATE commerce_checkout_session checkout
+      SET status = 'expired', updated_at = at_value
+      WHERE checkout.domain_type = 'merch_order'
+        AND checkout.status IN ('holding','awaiting_payment','processing','failed')
+        AND checkout.expires_at <= at_value
+      RETURNING checkout.id
+  ) SELECT count(*) INTO expired_count FROM expired;
+  RETURN expired_count;
 END $$;
 
 CREATE OR REPLACE FUNCTION merch_guard_paid_checkout()

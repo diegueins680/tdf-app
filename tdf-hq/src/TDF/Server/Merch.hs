@@ -457,7 +457,14 @@ validateRecipient recipient@MerchRecipientRequest{..} = do
   forM_ [mrrPhone,mrrSubdivision,mrrAddressLine2,mrrPostalCode,mrrDeliveryNote] $ \value ->
     forM_ value $ \txt -> when (T.length txt > 500 || T.any isControl txt) $
       throwError (badRequest "Recipient optional fields contain unsupported content")
-  pure recipient { mrrEmail = T.toLower email, mrrCountryCode = "EC" }
+  let subdivision = mrrSubdivision >>= \value ->
+        let normalized = T.strip value
+        in if T.null normalized then Nothing else Just normalized
+  pure recipient
+    { mrrEmail = T.toLower email
+    , mrrCountryCode = "EC"
+    , mrrSubdivision = subdivision
+    }
 
 createCheckoutRows
   :: UTCTime -> UTCTime -> Text -> UUID -> Text -> UUID -> UUID -> UUID -> Text -> Text -> MerchRecipientRequest
@@ -500,8 +507,15 @@ createCheckoutRows now expiresAt environment cartId token shippingZoneId orderId
     let subtotal = sum [price * quantity | (_,_,_,_,_,Single price,Single quantity,_,_,_) <- linesFound]
     zoneRows <- (rawSql
       "SELECT zone.delivery_method,CASE WHEN zone.free_shipping_min_minor IS NOT NULL AND ? >= zone.free_shipping_min_minor THEN 0 ELSE zone.rate_minor END,zone.id::text\
-      \ FROM merch_shipping_zone zone WHERE zone.id=?::uuid AND zone.store_id=?::uuid AND zone.active"
-      [PersistInt64 subtotal,PersistText (uuidText shippingZoneId),PersistText storeId]
+      \ FROM merch_shipping_zone zone WHERE zone.id=?::uuid AND zone.store_id=?::uuid AND zone.active\
+      \ AND upper(zone.country_code)=upper(?)\
+      \ AND (cardinality(zone.subdivision_codes)=0 OR (?::text IS NOT NULL AND EXISTS (\
+      \   SELECT 1 FROM unnest(zone.subdivision_codes) configured(code)\
+      \   WHERE upper(btrim(configured.code))=upper(btrim(?::text)))))"
+      [ PersistInt64 subtotal, PersistText (uuidText shippingZoneId), PersistText storeId
+      , PersistText (mrrCountryCode recipient), optionalText (mrrSubdivision recipient)
+      , optionalText (mrrSubdivision recipient)
+      ]
       :: SqlPersistT IO [(Single Text,Single Int64,Single Text)])
     policyRows <- (rawSql
       "SELECT id::text,version,shipping_policy,return_policy,preorder_policy FROM merch_store_policy WHERE store_id=?::uuid AND status='active'"
@@ -561,6 +575,9 @@ createCheckoutRows now expiresAt environment cartId token shippingZoneId orderId
             pure (Right orderIdText)
       _ -> pure (Left "An active shipping zone, store policy, and commission policy are required")
 
+-- Buyer capability responses intentionally omit recipient_snapshot and direct
+-- contact fields. Sellers load those operational details through separately
+-- authorized store-scoped endpoints.
 loadOrder :: UUID -> Text -> Maybe Text -> AppM Value
 loadOrder orderId token exposedToken =
   jsonOne err404
@@ -572,7 +589,7 @@ loadOrder orderId token exposedToken =
     \ 'commercialStatus',order_record.commercial_status,'paymentStatus',order_record.payment_status,\
     \ 'fulfillmentStatus',order_record.fulfillment_status,'refundStatus',order_record.refund_status,\
     \ 'disputeStatus',order_record.dispute_status,'shippingMethod',order_record.shipping_method,\
-    \ 'recipient',order_record.recipient_snapshot,'policies',order_record.policy_snapshot,\
+    \ 'policies',order_record.policy_snapshot,\
     \ 'lookupToken',?::text,'createdAt',order_record.created_at,'updatedAt',order_record.updated_at,\
     \ 'lines',(SELECT jsonb_agg(jsonb_build_object('id',line.id,'quantity',line.quantity,'unitPriceMinor',line.unit_price_minor,'subtotalMinor',line.subtotal_minor,'totalMinor',line.total_minor,'product',line.product_snapshot,'variant',line.variant_snapshot) ORDER BY line.line_number) FROM merch_order_line line WHERE line.order_id=order_record.id),\
     \ 'shipment',(SELECT jsonb_build_object('carrier',shipment.carrier,'trackingNumber',shipment.tracking_number,'trackingUrl',shipment.tracking_url,'status',shipment.status,'shippedAt',shipment.shipped_at,'deliveredAt',shipment.delivered_at) FROM merch_shipment shipment WHERE shipment.order_id=order_record.id ORDER BY shipment.created_at DESC LIMIT 1),\
@@ -992,15 +1009,27 @@ updateProduct user storeId productId request@MerchProductRequest{..} = do
   requireStorePermission user storeId "catalog"
   requireStorePermission user storeId "stock"
   validateProductRequest request
-  current <- runDB (rawSql "SELECT status FROM merch_product WHERE id=?::uuid AND store_id=?::uuid FOR UPDATE"
-    [PersistText (uuidText productId),PersistText (uuidText storeId)] :: SqlPersistT IO [Single Text])
-  status <- case current of [Single value] -> pure value; _ -> throwError err404
-  when (status `elem` ["pending_review","archived"]) $ throwError (conflict "Product cannot be edited in its current state")
-  runDB $ do
-    rawExecute
-      "UPDATE merch_product SET slug=?,name=?,description=?,category=?,visibility=?,availability_mode=?,preorder_release_at=?::timestamptz,publish_at=?::timestamptz,unpublish_at=?::timestamptz,buyer_limit=?,policy_id=?::uuid,status=CASE WHEN status='rejected' THEN 'draft' ELSE status END,rejection_reason=NULL,updated_at=now(),version=version+1 WHERE id=?::uuid AND store_id=?::uuid"
+  outcome <- runDB $ do
+    updated <- (rawSql
+      "UPDATE merch_product SET slug=?,name=?,description=?,category=?,visibility=?,availability_mode=?,preorder_release_at=?::timestamptz,publish_at=?::timestamptz,unpublish_at=?::timestamptz,buyer_limit=?,policy_id=?::uuid,status=CASE WHEN status='rejected' THEN 'draft' ELSE status END,rejection_reason=NULL,updated_at=now(),version=version+1 WHERE id=?::uuid AND store_id=?::uuid AND status NOT IN ('pending_review','archived') RETURNING TRUE"
       [PersistText mpuSlug,PersistText mpuName,PersistText mpuDescription,PersistText mpuCategory,PersistText mpuVisibility,PersistText mpuAvailabilityMode,optionalText mpuPreorderReleaseAt,optionalText mpuPublishAt,optionalText mpuUnpublishAt,optionalInt mpuBuyerLimit,optionalUuid mpuPolicyId,PersistText (uuidText productId),PersistText (uuidText storeId)]
-    insertOrUpdateVariants storeId productId mpuVariants
+      :: SqlPersistT IO [Single Bool])
+    case updated of
+      [Single True] -> do
+        insertOrUpdateVariants storeId productId mpuVariants
+        appendMerchAudit user "seller" (Just storeId) "product.updated" "product" (uuidText productId)
+          (object ["variantCount" .= length mpuVariants])
+        pure (Right ())
+      [] -> do
+        current <- (rawSql "SELECT status FROM merch_product WHERE id=?::uuid AND store_id=?::uuid"
+          [PersistText (uuidText productId),PersistText (uuidText storeId)]
+          :: SqlPersistT IO [Single Text])
+        pure (Left (case current of [Single status] -> Just status; _ -> Nothing))
+      _ -> pure (Left (Just "ambiguous"))
+  case outcome of
+    Left Nothing -> throwError err404
+    Left (Just _) -> throwError (conflict "Product cannot be edited in its current state")
+    Right () -> pure ()
   loadProduct (uuidText productId)
 
 updateProductStatus :: AuthedUser -> UUID -> UUID -> MerchStatusRequest -> AppM Value
@@ -1059,8 +1088,12 @@ uploadProductImage user storeId productId MerchImageUploadForm{..} = do
       let targetHeight = max 1 (height * targetWidth `div` width)
       saveJpgImage 84 (directory </> baseName<>"-"<>show targetWidth<>".jpg")
         (ImageRGB8 (scaleImageNearest targetWidth targetHeight rgb))
+    storedBytes <- BS.readFile originalPath
+    storedSize <- getFileSize originalPath
+    pure (storedBytes, storedSize)
     ))
-  either (const (throwError err500 { errBody = "Image processing failed" })) pure writeResult
+  (storedBytes, storedSize) <-
+    either (const (throwError err500 { errBody = "Image processing failed" })) pure writeResult
   let variants = object
         [ AesonKey.fromText (T.pack (show targetWidth)) .= object
             [ "objectKey" .= objectKey (baseName<>"-"<>show targetWidth<>".jpg")
@@ -1069,11 +1102,11 @@ uploadProductImage user storeId productId MerchImageUploadForm{..} = do
             ]
         | targetWidth <- responsiveWidths
         ]
-      checksum = T.pack (show (hash bytes :: Digest SHA256))
+      checksum = T.pack (show (hash storedBytes :: Digest SHA256))
   pool <- asks envPool
   inserted <- liftIO $ tryAny $ runSqlPool (rawExecute
     "INSERT INTO merch_product_image(id,product_id,object_key,original_filename,mime_type,byte_size,width_px,height_px,checksum_sha256,variants,alt_text,sort_order,scan_status,moderation_status,created_by) VALUES(?::uuid,?::uuid,?,?,?,?,?,?,?,?::jsonb,?,?,'clean','pending',?)"
-    [PersistText (uuidText imageId),PersistText (uuidText productId),PersistText (objectKey originalFile),PersistText (fdFileName miuFile),PersistText "image/jpeg",PersistInt64 (fromIntegral size),PersistInt64 (fromIntegral width),PersistInt64 (fromIntegral height),PersistText checksum,PersistText (jsonText variants),PersistText miuAltText,PersistInt64 (fromIntegral miuSortOrder),PersistInt64 (currentPartyId user)]) pool
+    [PersistText (uuidText imageId),PersistText (uuidText productId),PersistText (objectKey originalFile),PersistText (fdFileName miuFile),PersistText "image/jpeg",PersistInt64 (fromIntegral storedSize),PersistInt64 (fromIntegral width),PersistInt64 (fromIntegral height),PersistText checksum,PersistText (jsonText variants),PersistText miuAltText,PersistInt64 (fromIntegral miuSortOrder),PersistInt64 (currentPartyId user)]) pool
   case inserted of
     Left _ -> do
       liftIO $ forM_ (originalPath:[directory </> baseName<>"-"<>show w<>".jpg" | w <- responsiveWidths]) $ \path -> do

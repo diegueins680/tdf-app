@@ -5,9 +5,11 @@ module TDF.Server.MerchRuntimeSpec (spec) where
 import           Control.Monad (unless)
 import           Control.Monad.Reader (runReaderT)
 import           Codec.Picture (PixelRGB8(..), encodePng, generateImage)
+import           Crypto.Hash (Digest, SHA256, hash)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KeyMap
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
 import           Data.Foldable (toList)
@@ -27,13 +29,14 @@ import           Servant (ServerError(..), (:<|>)(..))
 import           Servant.Server (runHandler)
 import           System.Environment (lookupEnv, setEnv)
 import           System.FilePath ((</>))
-import           System.Directory (doesFileExist)
+import           System.Directory (createDirectoryIfMissing, doesFileExist)
 import           System.IO.Temp (withSystemTempDirectory)
 import           Test.Hspec (Spec, describe, it, runIO)
 
 import           TDF.API.Merch (MerchCancellationRequest(..), MerchIssueTriageRequest(..))
 import           TDF.Auth (AuthedUser(..), modulesForRoles)
 import           TDF.Config (loadConfig)
+import           TDF.Commerce.MerchReservationWorker (merchReservationWorkerTick)
 import           TDF.DB (Env(..), makePool)
 import           TDF.Models (RoleEnum(..))
 import           TDF.Server (mkApp)
@@ -85,9 +88,11 @@ httpMultipart
   -> String
   -> [HTTPTypes.Header]
   -> [(BS8.ByteString, BS8.ByteString)]
+  -> BS8.ByteString
+  -> BS8.ByteString
   -> BL.ByteString
   -> IO HttpResponse
-httpMultipart manager port path headers fields fileBytes = do
+httpMultipart manager port path headers fields fileName contentType fileBytes = do
   base <- HTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
   let boundary = "----tdf-merch-settlement-runtime"
       line value = BL.fromStrict value <> "\r\n"
@@ -97,8 +102,8 @@ httpMultipart manager port path headers fields fileBytes = do
           <> "\r\n" <> line value
       filePart =
         line ("--" <> boundary)
-          <> line "Content-Disposition: form-data; name=\"file\"; filename=\"synthetic-receipt.png\""
-          <> line "Content-Type: image/png"
+          <> line ("Content-Disposition: form-data; name=\"file\"; filename=\"" <> fileName <> "\"")
+          <> line ("Content-Type: " <> contentType)
           <> "\r\n" <> fileBytes <> "\r\n"
       body = mconcat (map fieldPart fields) <> filePart <> line ("--" <> boundary <> "--")
       request = base
@@ -143,14 +148,20 @@ runHttpChecks databaseUrl =
 
 runHttpChecksWithEvidenceRoot :: String -> FilePath -> IO ()
 runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
+  let publicAssetsRoot = evidenceRoot </> "public-assets"
+      settlementEvidenceRoot = evidenceRoot </> "private-settlement-evidence"
+  createDirectoryIfMissing True publicAssetsRoot
+  createDirectoryIfMissing True settlementEvidenceRoot
   -- loadConfig supplies the real session-cookie/auth parser used by mkApp.
   -- The database and feature flags remain isolated to the disposable runtime.
   setEnv "DATABASE_URL" databaseUrl
   setEnv "APP_ENV" "sandbox"
-  setEnv "MERCH_SETTLEMENT_EVIDENCE_DIR" evidenceRoot
+  setEnv "HQ_ASSETS_DIR" publicAssetsRoot
+  setEnv "MERCH_SETTLEMENT_EVIDENCE_DIR" settlementEvidenceRoot
   cfg <- loadConfig
   pool <- makePool (BS8.pack databaseUrl)
-  let app = mkApp Env { envPool = pool, envConfig = cfg }
+  let runtimeEnv = Env { envPool = pool, envConfig = cfg }
+      app = mkApp runtimeEnv
       storeId = "92000000-0000-4000-8000-000000000001"
       variantId = "96000000-0000-4000-8000-000000000001" :: Text
       shippingZoneId = "93000000-0000-4000-8000-000000000002" :: Text
@@ -194,6 +205,74 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
       >>= expectStatus 200 "Owner stores"
     assert (not (null (case ownerStores of Aeson.Array rows -> toList rows; _ -> [])))
       "Authenticated primary owner did not receive a managed store"
+
+    let productId = "95000000-0000-4000-8000-000000000001" :: Text
+        productImagePath = "/merch/seller/stores/" <> storeId
+          <> "/products/" <> T.unpack productId <> "/images"
+        productImageBytes = encodePng (generateImage (\_ _ -> PixelRGB8 18 52 86) 8 6)
+    uploadedImage <- httpMultipart manager port productImagePath ownerHeaders
+      [("altText","Synthetic blue product image"),("sortOrder","0")]
+      "synthetic-product.png" "image/png" productImageBytes
+      >>= expectStatus 201 "Product image upload"
+    uploadedImageId <- maybe (fail "Product image response omitted id") pure
+      (textField "id" uploadedImage)
+    imageMetadata <- runSqlPool (rawSql
+      "SELECT object_key,byte_size,checksum_sha256 FROM merch_product_image WHERE id=?::uuid"
+      [PersistText uploadedImageId]
+      :: SqlPersistT IO [(Single Text,Single Int64,Single Text)]) pool
+    case imageMetadata of
+      [(Single objectKey,Single byteSize,Single checksum)] -> do
+        storedBytes <- BS.readFile (publicAssetsRoot </> T.unpack objectKey)
+        let storedChecksum = T.pack (show (hash storedBytes :: Digest SHA256))
+        assert (byteSize == fromIntegral (BS.length storedBytes) && checksum == storedChecksum)
+          "Product image metadata did not describe the persisted re-encoded JPEG"
+      _ -> fail "Product image persistence metadata was missing or ambiguous"
+
+    let productUpdateBody = Aeson.object
+          [ "slug" Aeson..= ("runtime-shirt" :: Text)
+          , "name" Aeson..= ("Forbidden concurrent edit" :: Text)
+          , "description" Aeson..= ("This edit must not cross the review lock." :: Text)
+          , "category" Aeson..= ("apparel" :: Text)
+          , "visibility" Aeson..= ("public" :: Text)
+          , "availabilityMode" Aeson..= ("in_stock" :: Text)
+          , "preorderReleaseAt" Aeson..= Aeson.Null
+          , "publishAt" Aeson..= Aeson.Null
+          , "unpublishAt" Aeson..= Aeson.Null
+          , "buyerLimit" Aeson..= Aeson.Null
+          , "policyId" Aeson..= ("93000000-0000-4000-8000-000000000001" :: Text)
+          , "variants" Aeson..= [Aeson.object
+              [ "id" Aeson..= variantId
+              , "sku" Aeson..= ("RUNTIME-TEE-M" :: Text)
+              , "name" Aeson..= ("M" :: Text)
+              , "optionValues" Aeson..= Aeson.object ["size" Aeson..= ("M" :: Text)]
+              , "priceMinor" Aeson..= (5000 :: Int)
+              , "compareAtPriceMinor" Aeson..= Aeson.Null
+              , "currency" Aeson..= ("USD" :: Text)
+              , "weightGrams" Aeson..= (250 :: Int)
+              , "customsDescription" Aeson..= Aeson.Null
+              , "stockMode" Aeson..= ("finite" :: Text)
+              , "stockOnHand" Aeson..= (5 :: Int)
+              , "reorderThreshold" Aeson..= (0 :: Int)
+              , "active" Aeson..= True
+              ]
+            ]
+          ]
+        productUpdatePath = "/merch/seller/stores/" <> storeId
+          <> "/products/" <> T.unpack productId
+    runSqlPool (rawExecute
+      "UPDATE merch_product SET status='pending_review' WHERE id=?::uuid"
+      [PersistText productId]) pool
+    _ <- httpJson manager port "PUT" productUpdatePath ownerHeaders (Just productUpdateBody)
+      >>= expectStatus 409 "Review-locked product update"
+    lockedProduct <- runSqlPool (rawSql
+      "SELECT name,status FROM merch_product WHERE id=?::uuid"
+      [PersistText productId] :: SqlPersistT IO [(Single Text,Single Text)]) pool
+    assert (lockedProduct == [(Single "Runtime Shirt",Single "pending_review")])
+      "A review-locked product or its status was overwritten"
+    runSqlPool (rawExecute
+      "UPDATE merch_product SET status='published' WHERE id=?::uuid"
+      [PersistText productId]) pool
+
     _ <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders") outsiderHeaders Nothing
       >>= expectStatus 403 "Cross-seller order request"
     collaboratorOrders <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders") collaboratorHeaders Nothing
@@ -266,6 +345,42 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
           , "locale" Aeson..= ("es" :: Text)
           ]
         checkoutHeaders = ("Idempotency-Key","runtime-http-checkout-001") : cartHeaders
+
+    wrongZoneCart <- httpJson manager port "POST" "/merch/carts" []
+      (Just (Aeson.object ["storeSlug" Aeson..= ("runtime-band" :: Text)]))
+      >>= expectStatus 201 "Wrong-subdivision cart creation"
+    wrongZoneCartId <- maybe (fail "Wrong-subdivision cart omitted id") pure
+      (textField "id" wrongZoneCart)
+    wrongZoneCartToken <- maybe (fail "Wrong-subdivision cart omitted lookup token") pure
+      (textField "lookupToken" wrongZoneCart)
+    let wrongZoneCartHeaders =
+          [("X-Cart-Lookup-Token",BS8.pack (T.unpack wrongZoneCartToken))]
+        wrongZoneCartPath suffix = "/merch/carts/" <> T.unpack wrongZoneCartId <> suffix
+        wrongZoneCheckoutBody = Aeson.object
+          [ "recipient" Aeson..= Aeson.object
+              [ "name" Aeson..= ("Synthetic Wrong Province" :: Text)
+              , "email" Aeson..= ("wrong.province@example.test" :: Text)
+              , "phone" Aeson..= Aeson.Null
+              , "countryCode" Aeson..= ("EC" :: Text)
+              , "subdivision" Aeson..= ("Guayas" :: Text)
+              , "city" Aeson..= ("Guayaquil" :: Text)
+              , "addressLine1" Aeson..= ("Synthetic address 200" :: Text)
+              , "addressLine2" Aeson..= Aeson.Null
+              , "postalCode" Aeson..= Aeson.Null
+              , "deliveryNote" Aeson..= Aeson.Null
+              ]
+          , "shippingZoneId" Aeson..= shippingZoneId
+          , "createAccount" Aeson..= False
+          , "locale" Aeson..= ("es" :: Text)
+          ]
+    _ <- httpJson manager port "PUT" (wrongZoneCartPath "/items") wrongZoneCartHeaders
+      (Just (Aeson.object ["variantId" Aeson..= variantId,"quantity" Aeson..= (1 :: Int)]))
+      >>= expectStatus 200 "Wrong-subdivision cart item"
+    _ <- httpJson manager port "POST" (wrongZoneCartPath "/checkout")
+      (("Idempotency-Key","runtime-http-wrong-zone-001") : wrongZoneCartHeaders)
+      (Just wrongZoneCheckoutBody)
+      >>= expectStatus 409 "Shipping zone outside recipient subdivision"
+
     order <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just checkoutBody)
       >>= expectStatus 200 "Guest checkout"
     orderRetry <- httpJson manager port "POST" (cartPath "/checkout") checkoutHeaders (Just checkoutBody)
@@ -295,6 +410,45 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
       >>= expectStatus 200 "Forged browser return"
     assert (textField "paymentStatus" browserReturn == Just "pending")
       "A forged browser return changed the payment status"
+    let leaksGuestRecipient (Aeson.Object row) = any (`KeyMap.member` row)
+          (map AesonKey.fromText ["recipient","customerName","customerEmail","customerPhone"])
+        leaksGuestRecipient _ = True
+    assert (not (leaksGuestRecipient order) && not (leaksGuestRecipient browserReturn)
+      && not ("synthetic.http.buyer@example.test" `BS.isInfixOf` BL.toStrict (Aeson.encode browserReturn))
+      && not ("Synthetic address 100" `BS.isInfixOf` BL.toStrict (Aeson.encode browserReturn)))
+      "Guest order capability exposed recipient or direct contact data"
+
+    expiringCart <- httpJson manager port "POST" "/merch/carts" []
+      (Just (Aeson.object ["storeSlug" Aeson..= ("runtime-band" :: Text)]))
+      >>= expectStatus 201 "Expiring cart creation"
+    expiringCartId <- maybe (fail "Expiring cart omitted id") pure (textField "id" expiringCart)
+    expiringCartToken <- maybe (fail "Expiring cart omitted lookup token") pure
+      (textField "lookupToken" expiringCart)
+    let expiringHeaders =
+          [("X-Cart-Lookup-Token",BS8.pack (T.unpack expiringCartToken))]
+        expiringPath suffix = "/merch/carts/" <> T.unpack expiringCartId <> suffix
+    _ <- httpJson manager port "PUT" (expiringPath "/items") expiringHeaders
+      (Just (Aeson.object ["variantId" Aeson..= variantId,"quantity" Aeson..= (1 :: Int)]))
+      >>= expectStatus 200 "Expiring cart item"
+    expiringOrder <- httpJson manager port "POST" (expiringPath "/checkout")
+      (("Idempotency-Key","runtime-http-expiring-checkout-001") : expiringHeaders)
+      (Just checkoutBody)
+      >>= expectStatus 200 "Expiring guest checkout"
+    expiringOrderId <- maybe (fail "Expiring checkout omitted order id") pure
+      (textField "id" expiringOrder)
+    runSqlPool (rawExecute
+      "UPDATE commerce_checkout_session SET expires_at=now()-interval '1 second' WHERE domain_type='merch_order' AND domain_order_id=?"
+      [PersistText expiringOrderId]) pool
+    expiredCount <- merchReservationWorkerTick runtimeEnv
+    repeatedExpiredCount <- merchReservationWorkerTick runtimeEnv
+    assert (expiredCount == 1 && repeatedExpiredCount == 0)
+      "Reservation worker did not expire the checkout exactly once"
+    expiredState <- runSqlPool (rawSql
+      "SELECT checkout.status,order_record.payment_status,reservation.status,variant.stock_reserved FROM commerce_checkout_session checkout JOIN merch_order order_record ON order_record.checkout_id=checkout.id JOIN merch_inventory_reservation reservation ON reservation.checkout_id=checkout.id JOIN merch_product_variant variant ON variant.id=reservation.variant_id WHERE order_record.id=?::uuid"
+      [PersistText expiringOrderId]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Text,Single Int)]) pool
+    assert (expiredState == [(Single "expired",Single "failed",Single "expired",Single 1)])
+      "Reservation worker did not atomically align checkout, payment, hold, and stock state"
 
     issue <- httpJson manager port "POST" (orderPath "/issues")
       (("Idempotency-Key","runtime-http-issue-001") : orderHeaders)
@@ -379,18 +533,22 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
           , ("notes","Synthetic receipt; no real bank transfer or provider was used.")
           ]
         evidencePath = "/merch/admin/settlements/" <> T.unpack settlementId <> "/payment-evidence"
-    paidSettlement <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") evidenceBytes
+    paidSettlement <- httpMultipart manager port evidencePath evidenceHeaders
+      (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") "synthetic-receipt.png" "image/png" evidenceBytes
       >>= expectStatus 200 "Settlement payment evidence"
-    paidSettlementRetry <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") evidenceBytes
+    paidSettlementRetry <- httpMultipart manager port evidencePath evidenceHeaders
+      (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") "synthetic-receipt.png" "image/png" evidenceBytes
       >>= expectStatus 200 "Settlement payment evidence retry"
     assert (textField "status" paidSettlement == Just "paid" && textField "status" paidSettlementRetry == Just "paid")
       "Private payment evidence did not idempotently record the paid settlement"
-    _ <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "DIFFERENT-REFERENCE") evidenceBytes
+    _ <- httpMultipart manager port evidencePath evidenceHeaders
+      (evidenceFields "DIFFERENT-REFERENCE") "synthetic-receipt.png" "image/png" evidenceBytes
       >>= expectStatus 409 "Conflicting settlement payment evidence retry"
     evidenceObjectKey <- maybe (fail "Paid settlement omitted evidence object key") pure (textField "evidenceObjectKey" paidSettlement)
     evidenceFileName <- maybe (fail "Settlement evidence object key was outside its private namespace") pure
       (T.stripPrefix ("merch-settlements/" <> settlementId <> "/") evidenceObjectKey)
-    evidenceExists <- doesFileExist (evidenceRoot </> T.unpack settlementId </> T.unpack evidenceFileName)
+    evidenceExists <- doesFileExist
+      (settlementEvidenceRoot </> T.unpack settlementId </> T.unpack evidenceFileName)
     assert evidenceExists "Re-encoded private settlement evidence was not persisted"
 
     persistedSettlement <- runSqlPool (rawSql

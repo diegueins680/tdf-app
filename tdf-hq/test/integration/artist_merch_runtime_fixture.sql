@@ -87,7 +87,7 @@ INSERT INTO merch_shipping_zone(
   free_shipping_min_minor,estimated_min_days,estimated_max_days,active
 ) VALUES(
   '93000000-0000-4000-8000-000000000002','92000000-0000-4000-8000-000000000001',
-  'Synthetic Ecuador shipping','EC','{}','national_shipping',500,20000,2,5,TRUE
+  'Synthetic Pichincha shipping','EC','{PICHINCHA}','national_shipping',500,20000,2,5,TRUE
 );
 INSERT INTO merch_product(
   id,store_id,slug,name,description,category,status,availability_mode,policy_id,
