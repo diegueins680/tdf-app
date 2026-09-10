@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-09T19:53:46.571Z",
+  "generatedAt": "2026-09-10T06:03:15.124Z",
   "repositoryRoot": ".",
-  "filesScanned": 1293,
+  "filesScanned": 1294,
   "candidateCount": 959,
   "byClassification": {
     "dynamic-business-catalog": 603,
@@ -3687,7 +3687,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -3975,7 +3975,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -4717,7 +4717,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -9575,7 +9575,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 2319,
+      "line": 2329,
       "values": [
         "{id=local-preflight, mutating=false}",
         "{id=remote-preflight, mutating=false}",
@@ -9588,7 +9588,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2319
+        2329
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -10058,7 +10058,7 @@
       "similarCandidateIds": []
     },
     {
-      "id": "ae79271475e99c819b11",
+      "id": "c2f7e615ab60ed8caa2d",
       "file": "scripts/production-migrations.json",
       "sourceKind": "production",
       "surface": "automation",
@@ -10156,9 +10156,10 @@
         "{id=2026-09-06_records_youtube_catalog}",
         "{id=2026-09-07_service_storefront_package_bounds_repair}",
         "{id=2026-09-08_event_rsvp_identity_privacy_feed}",
-        "{id=2026-09-09_music_directory_suppressed_event_privacy}"
+        "{id=2026-09-09_music_directory_suppressed_event_privacy}",
+        "{id=2026-09-09_experience_review_ticket_buyer_type_repair}"
       ],
-      "valueCount": 90,
+      "valueCount": 91,
       "recommendedClassification": "security-system-registry",
       "lines": [
         3
@@ -10223,7 +10224,7 @@
       "domain": "music-catalog-cms",
       "kind": "object-registry",
       "name": "options",
-      "line": 91,
+      "line": 93,
       "values": [
         "app",
         "dbApp",
@@ -10233,7 +10234,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        91
+        93
       ],
       "consumerCount": 126,
       "backendConsumers": [
@@ -11148,7 +11149,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "paymentMethods",
-      "line": 94,
+      "line": 106,
       "values": [
         "datafast",
         "paypal"
@@ -11156,7 +11157,7 @@
       "valueCount": 2,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        94
+        106
       ],
       "consumerCount": 57,
       "backendConsumers": [
@@ -13325,7 +13326,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -13356,6 +13357,7 @@
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/test_admin_operations_control_center.sql",
         "tdf-hq/src/TDF/API/Catalog.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
@@ -13375,8 +13377,7 @@
         "tdf-hq/src/TDF/Operations/Types.hs",
         "tdf-hq/src/TDF/Routes/Courses.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/Catalog.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+        "tdf-hq/src/TDF/Server/Catalog.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -14945,7 +14946,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -14956,6 +14957,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
@@ -15052,7 +15054,7 @@
       "lines": [
         128
       ],
-      "consumerCount": 49,
+      "consumerCount": 50,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -15063,6 +15065,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
@@ -22672,7 +22675,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 29,
+      "consumerCount": 30,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_apply.sql",
@@ -22689,6 +22692,7 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts"
       ],
@@ -34752,7 +34756,7 @@
       "lines": [
         388
       ],
-      "consumerCount": 596,
+      "consumerCount": 597,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37917,7 +37921,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 39,
+      "consumerCount": 40,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -37928,6 +37932,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -38278,7 +38283,7 @@
       "lines": [
         141
       ],
-      "consumerCount": 48,
+      "consumerCount": 49,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -38299,6 +38304,7 @@
         "tdf-hq/sql/2026-08-24_studio_audit_completion_exception_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
@@ -39512,7 +39518,7 @@
         100,
         109
       ],
-      "consumerCount": 213,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41038,7 +41044,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -41050,6 +41056,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -42121,7 +42128,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 600,
+      "consumerCount": 601,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -51799,9 +51806,9 @@
       "recommendedClassification": "governed-reference-data",
       "lines": [
         6177,
-        6295
+        6314
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -51832,6 +51839,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
@@ -51851,8 +51859,7 @@
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -52074,7 +52081,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 6298,
+      "line": 6317,
       "values": [
         "seat_held",
         "issued",
@@ -52088,9 +52095,9 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6298
+        6317
       ],
-      "consumerCount": 58,
+      "consumerCount": 59,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -52103,6 +52110,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -52183,7 +52191,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "moFulfillmentStatus",
-      "line": 6624,
+      "line": 6643,
       "values": [
         "on_hold",
         "ready_to_fulfill",
@@ -52203,9 +52211,9 @@
       "valueCount": 14,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6624
+        6643
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -52216,6 +52224,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
@@ -52288,7 +52297,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "moDepositStatus",
-      "line": 6639,
+      "line": 6658,
       "values": [
         "awaiting_payment",
         "collected",
@@ -52304,7 +52313,7 @@
       "valueCount": 10,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6639
+        6658
       ],
       "consumerCount": 44,
       "backendConsumers": [
@@ -52384,7 +52393,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mcrsRequestType",
-      "line": 6671,
+      "line": 6690,
       "values": [
         "sale_cancellation",
         "sale_return",
@@ -52395,7 +52404,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6671
+        6690
       ],
       "consumerCount": 12,
       "backendConsumers": [
@@ -52449,7 +52458,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mcrRequestType",
-      "line": 6691,
+      "line": 6710,
       "values": [
         "sale_cancellation",
         "sale_return",
@@ -52460,7 +52469,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6691
+        6710
       ],
       "consumerCount": 12,
       "backendConsumers": [
@@ -52514,7 +52523,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mfuStatus",
-      "line": 6782,
+      "line": 6801,
       "values": [
         "on_hold",
         "ready_to_fulfill",
@@ -52534,9 +52543,9 @@
       "valueCount": 14,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6782
+        6801
       ],
-      "consumerCount": 42,
+      "consumerCount": 43,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -52547,6 +52556,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/API/Types.hs",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
@@ -52619,7 +52629,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "mruStatus",
-      "line": 6794,
+      "line": 6813,
       "values": [
         "on_hold",
         "confirmed",
@@ -52640,7 +52650,7 @@
       "valueCount": 15,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6794
+        6813
       ],
       "consumerCount": 47,
       "backendConsumers": [
@@ -52729,7 +52739,7 @@
       "domain": "events-ticketing",
       "kind": "openapi-enum",
       "name": "EventRsvpStatus",
-      "line": 7773,
+      "line": 7792,
       "values": [
         "accepted",
         "maybe",
@@ -52738,7 +52748,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7773
+        7792
       ],
       "consumerCount": 39,
       "backendConsumers": [
@@ -52819,7 +52829,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 7965,
+      "line": 7984,
       "values": [
         "ok",
         "degraded"
@@ -52827,9 +52837,9 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        7965
+        7984
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -53111,7 +53121,7 @@
       "domain": "security-authorization",
       "kind": "openapi-enum",
       "name": "Role",
-      "line": 8182,
+      "line": 8201,
       "values": [
         "Admin",
         "Manager",
@@ -53147,7 +53157,7 @@
       "valueCount": 30,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        8182
+        8201
       ],
       "consumerCount": 231,
       "backendConsumers": [
@@ -53380,7 +53390,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 8238,
+      "line": 8257,
       "values": [
         "Active",
         "Inactive"
@@ -53388,9 +53398,9 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8238
+        8257
       ],
-      "consumerCount": 596,
+      "consumerCount": 597,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -53672,7 +53682,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "sdrSelectionMode",
-      "line": 8973,
+      "line": 8992,
       "values": [
         "all",
         "first-available"
@@ -53680,7 +53690,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        8973
+        8992
       ],
       "consumerCount": 16,
       "backendConsumers": [
@@ -53729,7 +53739,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 9192,
+      "line": 9211,
       "values": [
         "artist",
         "group",
@@ -53739,9 +53749,9 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9192
+        9211
       ],
-      "consumerCount": 229,
+      "consumerCount": 230,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -53949,7 +53959,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 9207,
+      "line": 9226,
       "values": [
         "audio-track",
         "video",
@@ -53959,9 +53969,9 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9207
+        9226
       ],
-      "consumerCount": 215,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54164,7 +54174,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "kind",
-      "line": 9239,
+      "line": 9258,
       "values": [
         "release",
         "recording",
@@ -54173,9 +54183,9 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9239
+        9258
       ],
-      "consumerCount": 218,
+      "consumerCount": 219,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -54377,7 +54387,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "approvalMode",
-      "line": 9453,
+      "line": 9472,
       "values": [
         "normal",
         "emergency",
@@ -54387,7 +54397,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        9453
+        9472
       ],
       "consumerCount": 47,
       "backendConsumers": [
@@ -54468,7 +54478,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "changeKind",
-      "line": 9548,
+      "line": 9567,
       "values": [
         "party-role",
         "role-permission"
@@ -54476,7 +54486,7 @@
       "valueCount": 2,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        9548
+        9567
       ],
       "consumerCount": 10,
       "backendConsumers": [
@@ -54517,7 +54527,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "apReviewStatus",
-      "line": 10118,
+      "line": 10137,
       "values": [
         "unverified",
         "pending",
@@ -54528,7 +54538,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10118
+        10137
       ],
       "consumerCount": 109,
       "backendConsumers": [
@@ -54670,7 +54680,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aerrMode",
-      "line": 10132,
+      "line": 10151,
       "values": [
         "dry_run",
         "production"
@@ -54678,7 +54688,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10132
+        10151
       ],
       "consumerCount": 77,
       "backendConsumers": [
@@ -54796,7 +54806,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "aeruStatus",
-      "line": 10142,
+      "line": 10161,
       "values": [
         "running",
         "completed",
@@ -54807,7 +54817,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10142
+        10161
       ],
       "consumerCount": 53,
       "backendConsumers": [
@@ -54905,7 +54915,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "status",
-      "line": 10667,
+      "line": 10686,
       "values": [
         "pending_payment",
         "paid",
@@ -54914,10 +54924,10 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10667,
-        10719
+        10686,
+        10738
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -55195,7 +55205,7 @@
       "domain": "payments-finance",
       "kind": "openapi-enum",
       "name": "paymentStatus",
-      "line": 10691,
+      "line": 10710,
       "values": [
         "not_started",
         "awaiting_payment",
@@ -55212,9 +55222,9 @@
       "valueCount": 11,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        10691
+        10710
       ],
-      "consumerCount": 102,
+      "consumerCount": 103,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -55245,6 +55255,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
@@ -55264,8 +55275,7 @@
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs"
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -55350,7 +55360,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "fulfillmentStatus",
-      "line": 10694,
+      "line": 10713,
       "values": [
         "lead_received",
         "seat_held",
@@ -55365,15 +55375,16 @@
       "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10694
+        10713
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -55433,7 +55444,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportState",
-      "line": 10757,
+      "line": 10776,
       "values": [
         "draft",
         "submitted",
@@ -55451,7 +55462,7 @@
       "valueCount": 12,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        10757
+        10776
       ],
       "consumerCount": 83,
       "backendConsumers": [
@@ -55595,7 +55606,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "InternalReportType",
-      "line": 10760,
+      "line": 10779,
       "values": [
         "error",
         "suggestion",
@@ -55609,7 +55620,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        10760
+        10779
       ],
       "consumerCount": 17,
       "backendConsumers": [
@@ -55674,7 +55685,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "iapuStatus",
-      "line": 10986,
+      "line": 11005,
       "values": [
         "draft",
         "completed",
@@ -55683,7 +55694,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        10986
+        11005
       ],
       "consumerCount": 8,
       "backendConsumers": [
@@ -55729,7 +55740,7 @@
       "domain": "product-navigation",
       "kind": "openapi-enum",
       "name": "FeatureAccessRequestStatus",
-      "line": 11581,
+      "line": 11600,
       "values": [
         "pending",
         "approved",
@@ -55740,7 +55751,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11581
+        11600
       ],
       "consumerCount": 122,
       "backendConsumers": [
@@ -55891,7 +55902,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "decision",
-      "line": 11696,
+      "line": 11715,
       "values": [
         "approved",
         "rejected"
@@ -55899,7 +55910,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11696
+        11715
       ],
       "consumerCount": 155,
       "backendConsumers": [
@@ -56086,7 +56097,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsStatus",
-      "line": 11748,
+      "line": 11767,
       "values": [
         "new",
         "seen",
@@ -56099,7 +56110,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11748
+        11767
       ],
       "consumerCount": 61,
       "backendConsumers": [
@@ -56211,7 +56222,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsPriority",
-      "line": 11751,
+      "line": 11770,
       "values": [
         "urgent",
         "high",
@@ -56221,7 +56232,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11751
+        11770
       ],
       "consumerCount": 41,
       "backendConsumers": [
@@ -56308,7 +56319,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "openapi-enum",
       "name": "OperationsSlaState",
-      "line": 11754,
+      "line": 11773,
       "values": [
         "on_track",
         "at_risk",
@@ -56319,7 +56330,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        11754
+        11773
       ],
       "consumerCount": 25,
       "backendConsumers": [
@@ -56538,7 +56549,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 54,
+      "consumerCount": 55,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -56547,6 +56558,7 @@
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
@@ -56642,7 +56654,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 33,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
         "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
@@ -56655,6 +56667,7 @@
         "tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
@@ -61646,7 +61659,7 @@
       "lines": [
         301
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -61656,6 +61669,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
@@ -63662,13 +63676,14 @@
       "lines": [
         216
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
@@ -63778,13 +63793,14 @@
       "lines": [
         247
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
@@ -63887,12 +63903,13 @@
       "lines": [
         257
       ],
-      "consumerCount": 21,
+      "consumerCount": 22,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Invoice/SRI.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -65118,7 +65135,7 @@
       "lines": [
         53
       ],
-      "consumerCount": 84,
+      "consumerCount": 85,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -65147,6 +65164,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
@@ -68244,7 +68262,7 @@
         278,
         622
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -68277,6 +68295,7 @@
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
         "tdf-hq-ui/src/pages/internAuditPlanLogic.ts",
         "tdf-hq-ui/src/routes/AppShell.tsx",
@@ -70430,7 +70449,7 @@
         797,
         1036
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -70445,6 +70464,7 @@
         "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
         "tdf-hq/sql/2026-08-18_music_directory_profile_images_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Internships.hs",
@@ -71164,7 +71184,7 @@
       "lines": [
         871
       ],
-      "consumerCount": 27,
+      "consumerCount": 28,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
@@ -71172,6 +71192,7 @@
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -71519,7 +71540,7 @@
       "lines": [
         905
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -71534,6 +71555,7 @@
         "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
         "tdf-hq/sql/2026-08-18_music_directory_profile_images_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Internships.hs",
@@ -72568,7 +72590,7 @@
         44,
         49
       ],
-      "consumerCount": 40,
+      "consumerCount": 41,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -72578,6 +72600,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
@@ -73255,7 +73278,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 72,
+      "consumerCount": 73,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -73270,6 +73293,7 @@
         "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
         "tdf-hq/sql/2026-08-18_music_directory_profile_images_rollback.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/Internships.hs",
@@ -73743,7 +73767,7 @@
       "lines": [
         74
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -73771,6 +73795,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -73882,7 +73907,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 78,
+      "consumerCount": 79,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -73907,6 +73932,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -74388,7 +74414,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -74410,6 +74436,7 @@
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
@@ -74486,7 +74513,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -74514,6 +74541,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -74627,7 +74655,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 78,
+      "consumerCount": 79,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -74652,6 +74680,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility.sql",
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -76162,7 +76191,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 45,
+      "consumerCount": 46,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -76174,6 +76203,7 @@
         "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -76255,7 +76285,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -76283,6 +76313,7 @@
         "tdf-hq/sql/2026-08-25_distribution_trigger_row_binding_compatibility_rollback.sql",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
         "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
@@ -76587,7 +76618,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -76595,6 +76626,7 @@
         "tdf-hq/sql/2026-08-14_music_directory_backfill_rollback.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Catalog/Integrity.hs",
@@ -76687,7 +76719,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 33,
+      "consumerCount": 34,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
         "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
@@ -76699,6 +76731,7 @@
         "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
         "tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
@@ -83873,7 +83906,7 @@
       "lines": [
         1021
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
@@ -83890,6 +83923,7 @@
         "tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -88206,7 +88240,7 @@
       "lines": [
         1178
       ],
-      "consumerCount": 595,
+      "consumerCount": 596,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -88850,7 +88884,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 29,
+      "consumerCount": 30,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_backfill_apply.sql",
@@ -88868,6 +88902,7 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
         "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/routes/AppShell.tsx",
         "tdf-hq-ui/src/utils/accessControl.ts"
       ],
@@ -94312,7 +94347,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -94327,6 +94362,7 @@
         "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
