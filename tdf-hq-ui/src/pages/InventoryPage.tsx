@@ -38,6 +38,7 @@ import { buildInventoryScanUrl } from '../config/appConfig';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { firstNonEmptyString } from '../utils/stringValues';
 import {
   formatCheckoutPaymentSummary,
   formatCheckoutTargetDisplay,
@@ -93,7 +94,8 @@ function getSharedInventoryStatusSummary(assets: readonly AssetDTO[]) {
 
 function normalizeInventoryField(value?: string | null) {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (trimmed === undefined || trimmed === '') return null;
+  return trimmed;
 }
 
 const normalizeInventoryComparisonValue = (value?: string | null) => {
@@ -412,11 +414,10 @@ function InventoryAssetSummaryCard({
     holderEmail: asset.currentCheckoutHolderEmail,
     holderPhone: asset.currentCheckoutHolderPhone,
   });
-  const showCheckoutSummary = Boolean(
-    normalizeInventoryField(asset.currentCheckoutTarget)
-    || checkoutContextSummary
-    || checkoutContactSummary,
-  );
+  const showCheckoutSummary =
+    Boolean(normalizeInventoryField(asset.currentCheckoutTarget))
+    || Boolean(checkoutContextSummary)
+    || Boolean(checkoutContactSummary);
   const showNoMovementGuidance = !movementState.canCheckout && !movementState.canCheckin;
 
   return (
@@ -700,7 +701,10 @@ export default function InventoryPage() {
     setCheckoutPhotoUploading(true);
     try {
       const uploaded = await Inventory.uploadPhoto(file, { name: file.name });
-      setForm((prev) => ({ ...prev, coPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+      setForm((prev) => ({
+        ...prev,
+        coPhotoUrl: firstNonEmptyString(uploaded.publicUrl, uploaded.webContentLink, uploaded.id),
+      }));
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'No se pudo subir la foto de salida.');
     } finally {
@@ -712,7 +716,10 @@ export default function InventoryPage() {
     setCheckinPhotoUploading(true);
     try {
       const uploaded = await Inventory.uploadPhoto(file, { name: file.name });
-      setCheckinForm((prev) => ({ ...prev, ciPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+      setCheckinForm((prev) => ({
+        ...prev,
+        ciPhotoUrl: firstNonEmptyString(uploaded.publicUrl, uploaded.webContentLink, uploaded.id),
+      }));
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'No se pudo subir la foto de retorno.');
     } finally {
@@ -987,15 +994,14 @@ export default function InventoryPage() {
                           asset.currentCheckoutPaymentCurrency,
                           asset.currentCheckoutPaymentOutstandingCents,
                         );
-                        const hasCurrentCheckoutContext = Boolean(
-                          normalizeInventoryField(asset.currentCheckoutTarget)
-                          || asset.currentCheckoutAt
-                          || normalizeInventoryField(asset.currentCheckoutHolderEmail)
-                          || normalizeInventoryField(asset.currentCheckoutHolderPhone)
-                          || asset.currentCheckoutDueAt
-                          || paymentSummary
-                          || normalizeInventoryField(asset.currentCheckoutDisposition),
-                        );
+                        const hasCurrentCheckoutContext =
+                          Boolean(normalizeInventoryField(asset.currentCheckoutTarget))
+                          || Boolean(asset.currentCheckoutAt)
+                          || Boolean(normalizeInventoryField(asset.currentCheckoutHolderEmail))
+                          || Boolean(normalizeInventoryField(asset.currentCheckoutHolderPhone))
+                          || Boolean(asset.currentCheckoutDueAt)
+                          || Boolean(paymentSummary)
+                          || Boolean(normalizeInventoryField(asset.currentCheckoutDisposition));
                         const checkoutContextSummary = buildCurrentCheckoutContextSummary({
                           disposition: asset.currentCheckoutDisposition,
                           checkedOutAt: asset.currentCheckoutAt,
@@ -1233,7 +1239,7 @@ export default function InventoryPage() {
                               roomMap,
                             )}
                           </Typography>
-                          {(h.holderEmail || h.holderPhone) && (
+                          {(Boolean(h.holderEmail) || Boolean(h.holderPhone)) && (
                             <Typography variant="caption" color="text.secondary">
                               {[h.holderEmail, h.holderPhone].filter(Boolean).join(' · ')}
                             </Typography>

@@ -35,6 +35,7 @@ import Network.Wai (defaultRequest)
 import Network.Wai.Internal (Request (..))
 import Servant (ServerError (..), ServerT, err500, err502, (:<|>) (..))
 import Servant.Multipart (FileData (..), FromMultipart (fromMultipart), Input (..), MultipartData (..), Tmp)
+import Servant.Server.Internal.Handler (runHandler)
 import System.Directory (createDirectoryIfMissing, getCurrentDirectory, setCurrentDirectory)
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import System.FilePath ((</>))
@@ -88,6 +89,8 @@ import TDF.API.WhatsApp
       leadCompletionConsumedToken )
 import TDF.App.Boot (validateDatabaseStartupSafety, validateSeedDatabaseStartup)
 import TDF.Reputation (Confidence (..), confidenceFor, normalizeManualWeights, publicScore, rankOrderCentroid)
+import TDF.Reputation.Worker
+    ( ReputationWorkerSettings (..), parseReputationWorkerSettings )
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
@@ -362,7 +365,7 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
-import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement, reputationCategoriesSql)
+import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement, reputationCategoriesSql, reviewsPublicServer)
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -520,6 +523,7 @@ import TDF.Config
       openAiApiKey,
       openAiEmbedModel,
       openAiModel,
+      publicReputationProjectionEnabled,
       ragAvailabilityDays,
       ragAvailabilityPerResource,
       ragChunkOverlap,
@@ -807,6 +811,43 @@ main = hspec $ do
             confidenceFor 8 `shouldBe` Moderate
             confidenceFor 25 `shouldBe` High
 
+    describe "contextual reputation staging worker configuration" $ do
+        it "stays disabled unless explicitly enabled" $
+            parseReputationWorkerSettings [] `shouldBe` Right Nothing
+
+        it "accepts bounded simulation settings for staging" $
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "staging")
+                , ("REPUTATION_AGGREGATION_MODE", "simulation")
+                , ("REPUTATION_AGGREGATION_BATCH_SIZE", "40")
+                , ("REPUTATION_AGGREGATION_POLL_SECONDS", "3")
+                ]
+                `shouldBe` Right (Just (ReputationWorkerSettings "staging" 40 3))
+
+        it "fails closed for production and non-simulation modes" $ do
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "production")
+                ] `shouldSatisfy` isLeft
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "staging")
+                , ("REPUTATION_AGGREGATION_MODE", "publish")
+                ] `shouldSatisfy` isLeft
+
+        it "rejects unsafe batch and polling bounds" $ do
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "test")
+                , ("REPUTATION_AGGREGATION_BATCH_SIZE", "101")
+                ] `shouldSatisfy` isLeft
+            parseReputationWorkerSettings
+                [ ("REPUTATION_AGGREGATION_WORKER_ENABLED", "true")
+                , ("REPUTATION_AGGREGATION_ENVIRONMENT", "test")
+                , ("REPUTATION_AGGREGATION_POLL_SECONDS", "0")
+                ] `shouldSatisfy` isLeft
+
     describe "public upcoming event pagination" $ do
         it "continues past filtered pages until the requested limit is filled" $ do
             let candidates = [1 .. 8 :: Int]
@@ -842,6 +883,27 @@ main = hspec $ do
         it "lists only active database-owned categories" $ do
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "FROM reputation_category WHERE status='active'"
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "ORDER BY default_position,slug"
+
+        it "keeps public aggregates dark until the independent public projection gate is enabled" $
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Just "true")
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "false")
+                ] $ do
+                cfg <- loadConfig
+                let disabledEnv =
+                        Env
+                            { envPool = error "envPool should be unused when public reputation is disabled"
+                            , envConfig = cfg
+                            }
+                    _listCategories :<|> publicReputationHandler :<|> _listReviews = reviewsPublicServer
+                result <- runHandler (runReaderT (publicReputationHandler 1) disabledEnv)
+                case result of
+                    Left serverErr -> do
+                        errHTTPCode serverErr `shouldBe` 404
+                        BL.unpack (errBody serverErr) `shouldContain` "public reputation is unavailable"
+                    Right value ->
+                        expectationFailure
+                            ("Expected disabled public reputation to be hidden, got " <> show value)
 
     describe "DDEX canonical write JSON contracts" $ do
         it "accepts export writes with only a canonical standard-version id" $ do
@@ -2969,18 +3031,31 @@ main = hspec $ do
                     DTO.ccaExchangeRate audit `shouldBe` 150
 
     describe "loadConfig" $ do
-        it "keeps contextual reputation dark by default and validates its rollout flag" $ do
-            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Nothing)] $ do
+        it "keeps contextual reputation and its public projection dark by default" $ do
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Nothing)
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Nothing)
+                ] $ do
                 cfg <- loadConfig
                 contextualReputationEnabled cfg `shouldBe` False
+                publicReputationProjectionEnabled cfg `shouldBe` False
 
-            withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "true")] $ do
+            withEnvOverrides
+                [ ("CONTEXTUAL_REPUTATION_ENABLED", Just "true")
+                , ("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "true")
+                ] $ do
                 cfg <- loadConfig
                 contextualReputationEnabled cfg `shouldBe` True
+                publicReputationProjectionEnabled cfg `shouldBe` True
 
             withEnvOverrides [("CONTEXTUAL_REPUTATION_ENABLED", Just "not-a-boolean")]
                 $ loadConfig `shouldThrow` \err ->
                     "CONTEXTUAL_REPUTATION_ENABLED must be a boolean flag"
+                        `isInfixOf` show (err :: IOException)
+
+            withEnvOverrides [("PUBLIC_REPUTATION_PROJECTION_ENABLED", Just "not-a-boolean")]
+                $ loadConfig `shouldThrow` \err ->
+                    "PUBLIC_REPUTATION_PROJECTION_ENABLED must be a boolean flag"
                         `isInfixOf` show (err :: IOException)
 
         it "keeps single-feature onboarding experiments paused by default and validates activation explicitly" $ do
