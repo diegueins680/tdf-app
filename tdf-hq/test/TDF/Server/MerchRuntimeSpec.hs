@@ -150,6 +150,8 @@ runHttpChecks databaseUrl = do
       >>= expectStatus 403 "Cross-seller order request"
     collaboratorOrders <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders") collaboratorHeaders Nothing
       >>= expectStatus 200 "Collaborator order queue"
+    _ <- httpJson manager port "GET" ("/merch/seller/stores/" <> storeId <> "/orders?status=not-a-real-state") collaboratorHeaders Nothing
+      >>= expectStatus 400 "Invalid seller order filter"
     let leaksFinance (Aeson.Object row) =
           KeyMap.member (AesonKey.fromText "sellerNetMinor") row
             || KeyMap.member (AesonKey.fromText "tdfCommissionMinor") row

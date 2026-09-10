@@ -31,7 +31,7 @@ La solución amplía esas fuentes de verdad. No convierte `asset`, equipos del e
 - Catálogo: prendas, vinilo, CD, cassette, póster, accesorios, ediciones limitadas, bundles y extensión `other`; variantes, stock con versión optimista, preventa, bajo pedido, límites, publicación y revisión.
 - Storefront: URL `/tienda/{slug}`, integración con perfil/directorio y marketplace, SEO/OG, relacionados y favoritos.
 - Compra: carrito de un solo vendedor, invitado, cálculo servidor, snapshots, reserva atómica de veinte minutos, idempotencia y tracking mediante token opaco.
-- Operación: retiro o envío nacional, políticas versionadas, panel de órdenes, preparación, tracking, cancelación segura sin pagar, cola de incidencias con escalamiento y settlements manuales con doble control.
+- Operación: retiro o envío nacional, políticas versionadas, panel de órdenes con filtro/totales/exportación sin PII, preparación, tracking, cancelación segura sin pagar, cola de incidencias con escalamiento y settlements manuales con doble control.
 - Rollout: todos los flags se crean en `false`; `merch.checkout.runtime_ready` funciona como kill switch adicional.
 
 ## Estado honesto

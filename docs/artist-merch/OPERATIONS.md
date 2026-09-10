@@ -8,9 +8,10 @@
 4. Sube JPEG/PNG con texto alternativo. El archivo se reencoda y queda pendiente de moderación.
 5. Envía a revisión. Solo staff puede publicar; luego puedes pausar o archivar.
 6. Invita al manager por nombre, nombre artístico o username y entrega únicamente los permisos necesarios.
-7. En pedidos, prepara solo cuando el pago figure `paid`. Para envío nacional registra transportista y tracking; para retiro usa “listo para retirar”.
-8. En `Solicitudes e incidencias`, responde al comprador y resuelve únicamente problemas operativos. Escala a TDF cancelaciones pagadas, reembolsos, disputas y fraude; cerrar un caso nunca significa que el dinero ya se movió.
-9. No exportes ni compartas más datos del destinatario que los necesarios para despachar.
+7. En pedidos, filtra por estado de entrega y revisa los totales del filtro. Los importes de comisión/neto solo aparecen con permiso `finance`. La exportación CSV reproduce el filtro, omite datos personales y neutraliza fórmulas de hoja de cálculo.
+8. Prepara solo cuando el pago figure `paid`. Para envío nacional registra transportista y tracking; para retiro usa “listo para retirar”.
+9. En `Solicitudes e incidencias`, responde al comprador y resuelve únicamente problemas operativos. Escala a TDF cancelaciones pagadas, reembolsos, disputas y fraude; cerrar un caso nunca significa que el dinero ya se movió.
+10. No copies ni compartas más datos del destinatario que los necesarios para despachar. El CSV operativo deliberadamente no incluye nombre, correo, teléfono ni dirección del comprador.
 
 ## Soporte y conciliación
 

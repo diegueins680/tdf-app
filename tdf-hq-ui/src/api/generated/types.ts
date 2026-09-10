@@ -23031,6 +23031,13 @@ export interface operations {
                     "application/json": components["schemas"]["MerchOrder"][];
                 };
             };
+            /** @description Unsupported fulfillment status filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     listSellerMerchIssues: {

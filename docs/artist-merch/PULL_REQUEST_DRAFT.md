@@ -14,12 +14,12 @@ Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Dataf
 - Reutilización de `party`, `directory_profile`, permisos/PartySelector, `/assets/serve` y `commerce_checkout_*`.
 - Tokens opacos hasheados para carrito/orden y snapshots inmutables.
 - API Servant/OpenAPI y clientes TypeScript regenerados.
-- UI web completa para comprador/vendedor/staff, incluida cancelación sin pagar y triage de incidencias; móvil para compra, seguimiento, soporte y operación esencial.
+- UI web completa para comprador/vendedor/staff, incluida cancelación sin pagar, triage de incidencias y pedidos filtrables con totales/exportación sin PII; móvil para compra, seguimiento, soporte y operación esencial.
 - Dependencia móvil revisable: [TDF-mobile#49](https://github.com/diegueins680/TDF-mobile/pull/49).
 
 ## UX
 
-Storefront integrado al perfil y marketplace; mensajes explícitos para revisión, pago pendiente, proveedor no disponible, stock cambiado y permisos. Diseño responsive, controles táctiles y semántica accesible. Español/inglés en superficies nuevas. El móvil deriva configuración compleja al panel web responsive.
+Storefront integrado al perfil y marketplace; mensajes explícitos para revisión, pago pendiente, proveedor no disponible, stock cambiado y permisos. El panel de pedidos permite filtrar fulfillment, resume solo importes autorizados y exporta CSV operativo sin PII ni fórmulas ejecutables. Diseño responsive, controles táctiles y semántica accesible. Español/inglés en superficies nuevas. El móvil deriva configuración compleja al panel web responsive.
 
 ## Datos y estados
 
@@ -42,12 +42,12 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
-- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor y triage seller/admin.
+- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor, validación del filtro de pedidos y triage seller/admin.
 - Backend Haskell: PASS, 2.487/2.487 ejemplos sobre la integración final con `main`.
 - Reglas focalizadas posteriores: PASS 8/8 coincidencias `merch`.
-- Build web: PASS; presupuesto inicial JS PASS (413.750 bytes gzip).
+- Build web: PASS; presupuesto inicial JS PASS (416.063 bytes gzip).
 - Web y móvil typecheck: PASS.
-- Jest web merch API: PASS 7/7.
+- Jest web merch API + exportación CSV: PASS 10/10.
 - Jest móvil deep links: PASS 2/2.
 - Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente.
 - iOS nativo: Xcode 16.2 / iOS 18.3 Simulator / iPhone 16 `x86_64`. CocoaPods quedó sincronizado con las dependencias Expo declaradas; `pod install --deployment` y el build Release sin firma terminaron PASS. El `.app` se instaló y verificaron deep links de catálogo, storefront y producto contra fixture local read-only; el CTA de compra permaneció deshabilitado, solo se registraron GET y no hubo logs `error`/`fault` de TDF. Expo Updates se apagó solo en el artefacto de prueba para fijar el bundle local. Capturas reales versionadas en `docs/artist-merch/media/`. Dispositivo físico no ejecutado.

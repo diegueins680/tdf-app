@@ -1098,9 +1098,18 @@ listSellerOrders :: AuthedUser -> UUID -> Maybe Text -> AppM [Value]
 listSellerOrders user storeId rawStatus = do
   requireStorePermission user storeId "orders"
   financeAllowed <- hasStorePermission user storeId "finance"
+  status <- validatedSellerOrderStatus rawStatus
   jsonRows
     "SELECT jsonb_strip_nulls(jsonb_build_object('id',order_record.id,'orderNumber',order_record.order_number,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'customerPhone',order_record.customer_phone,'recipient',order_record.recipient_snapshot,'shippingMethod',order_record.shipping_method,'currency',order_record.currency,'productSubtotalMinor',order_record.product_subtotal_minor,'taxMinor',order_record.tax_minor,'shippingMinor',order_record.shipping_minor,'totalMinor',order_record.total_minor,'tdfCommissionMinor',CASE WHEN ?::boolean THEN order_record.tdf_commission_minor ELSE NULL END,'sellerNetMinor',CASE WHEN ?::boolean THEN order_record.seller_net_minor ELSE NULL END,'commercialStatus',order_record.commercial_status,'paymentStatus',order_record.payment_status,'fulfillmentStatus',order_record.fulfillment_status,'refundStatus',order_record.refund_status,'disputeStatus',order_record.dispute_status,'settlementStatus',order_record.settlement_status,'createdAt',order_record.created_at,'lines',(SELECT jsonb_agg(jsonb_build_object('quantity',line.quantity,'product',line.product_snapshot,'variant',line.variant_snapshot) ORDER BY line.line_number) FROM merch_order_line line WHERE line.order_id=order_record.id))) FROM merch_order order_record WHERE order_record.store_id=?::uuid AND (?::text IS NULL OR order_record.fulfillment_status=?::text) ORDER BY order_record.created_at DESC,order_record.id"
-    [PersistBool financeAllowed,PersistBool financeAllowed,PersistText (uuidText storeId),optionalText rawStatus,optionalText rawStatus]
+    [PersistBool financeAllowed,PersistBool financeAllowed,PersistText (uuidText storeId),optionalText status,optionalText status]
+
+validatedSellerOrderStatus :: Maybe Text -> AppM (Maybe Text)
+validatedSellerOrderStatus Nothing = pure Nothing
+validatedSellerOrderStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+      supported = ["pending","preparing","ready_for_pickup","shipped","delivered","return_requested","returned","problem","cancelled"]
+  unless (status `elem` supported) $ throwError (badRequest "Unsupported fulfillment status")
+  pure (Just status)
 
 issueStatuses :: [Text]
 issueStatuses = ["open","seller_review","staff_review","awaiting_buyer","resolved","rejected","cancelled"]
