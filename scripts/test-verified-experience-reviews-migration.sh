@@ -81,7 +81,7 @@ CREATE TABLE social_event (
 CREATE TABLE event_ticket_order (
   id BIGINT PRIMARY KEY,
   event_id BIGINT NOT NULL,
-  buyer_party_id BIGINT,
+  buyer_party_id TEXT,
   status TEXT NOT NULL
 );
 CREATE TABLE event_ticket_checkout_runtime (
@@ -165,6 +165,8 @@ SQL
 
 apply_file tdf-hq/sql/2026-08-20_verified_experience_reviews.sql
 apply_file tdf-hq/sql/2026-08-20_verified_experience_reviews.sql
+apply_file tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql
+apply_file tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql
 
 psql_exec <<'SQL' >/dev/null
 INSERT INTO party VALUES (1,'Verified reviewer','reviewer@example.test');
@@ -256,5 +258,7 @@ assert_equal "$rate_rows" "1" "rollback preserves abuse-control evidence"
 
 apply_file tdf-hq/sql/2026-08-20_verified_experience_reviews.sql
 apply_file tdf-hq/sql/2026-08-20_verified_experience_reviews.sql
+apply_file tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql
+apply_file tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql
 
 echo "Verified experience review migration passed eligibility, integrity, retry, and rollback checks"
