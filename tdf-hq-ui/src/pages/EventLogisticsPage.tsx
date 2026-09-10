@@ -29,6 +29,7 @@ import { DateTime } from 'luxon';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 import PageShell from '../components/PageShell';
 import { GOOGLE_MAPS_BROWSER_API_KEY } from '../config/appConfig';
@@ -208,7 +209,10 @@ function PlacesSection({
               <Box>
                 <Typography fontWeight={700}>{place.elpLabel}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {place.elpAddress || `${place.elpLatitude}, ${place.elpLongitude}`}
+                  {firstNonEmptyString(
+                    place.elpAddress,
+                    `${place.elpLatitude}, ${place.elpLongitude}`,
+                  )}
                 </Typography>
                 {place.elpInstructions && <Typography variant="caption">{place.elpInstructions}</Typography>}
               </Box>
@@ -277,9 +281,9 @@ function PlaceMapPicker({ draft, onChange }: { draft: PlaceDraft; onChange: (nex
         onChange({
           ...draftRef.current,
           venueId: '',
-          label: draftRef.current.label || place.name || '',
-          address: place.formatted_address || draftRef.current.address,
-          googlePlaceId: place.place_id || '',
+          label: firstNonEmptyString(draftRef.current.label, place.name),
+          address: firstNonEmptyString(place.formatted_address, draftRef.current.address),
+          googlePlaceId: firstNonEmptyString(place.place_id),
           latitude: String(next.lat),
           longitude: String(next.lng),
         });
@@ -503,7 +507,7 @@ export default function EventLogisticsPage() {
       </Stack>}
     >
       <Stack spacing={2.5} sx={{ '@media print': { '& .no-print': { display: 'none !important' }, '& .MuiCard-root': { breakInside: 'avoid', boxShadow: 'none' } } }}>
-        {(planQuery.error || mutationError) && <Alert severity="error">{errorText(planQuery.error ?? mutationError)}</Alert>}
+        {(Boolean(planQuery.error) || Boolean(mutationError)) && <Alert severity="error">{errorText(planQuery.error ?? mutationError)}</Alert>}
         {plan?.elgIssues.map((issue, index) => <Alert key={`${issue.esiCode}-${issue.esiActivityId}-${index}`} severity={issue.esiSeverity}>{issue.esiMessage}</Alert>)}
 
         {isOwner && <Card className="no-print" variant="outlined"><CardContent><Stack spacing={1.5}>

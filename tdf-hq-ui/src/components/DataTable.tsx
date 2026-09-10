@@ -189,7 +189,7 @@ export default function DataTable<T>({
   return (
     <Card>
       <CardContent>
-        {(searchSlot || actionsSlot || caption) && (
+        {(Boolean(searchSlot) || Boolean(actionsSlot) || Boolean(caption)) && (
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent="space-between"

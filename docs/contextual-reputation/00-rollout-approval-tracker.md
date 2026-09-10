@@ -15,9 +15,9 @@ sin enlace a evidencia no cuenta como aprobación.
 | Área | Estado | Evidencia requerida | Responsable |
 | --- | --- | --- | --- |
 | Código y CI | Completado | Merge, checks y Build Image verdes | Ingeniería |
-| Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` | Operaciones |
-| Producto/Legal | Aprobación declarada; evidencia enlazada pendiente | Política aprobada, retención y copy ES/EN | Producto + Legal |
-| Worker/observabilidad | Pendiente | Cola, worker, dashboards, DLQ y staging | Infraestructura |
+| Flag por defecto | Completado | `CONTEXTUAL_REPUTATION_ENABLED=false` en staging y producción hasta aprobar G0 | Operaciones |
+| Producto/Legal | Aprobación registrada; cierre pendiente | [Acta interna aprobada](rollout-evidence/2026-09-06-product-legal-approval.md) + checklist completo | Producto + Legal |
+| Worker/observabilidad | Pendiente (infraestructura preparada) | Migración/worker en simulación; aún faltan staging, dashboards, alertas, DLQ y on-call aprobados | Infraestructura |
 | Moderación/RBAC | Pendiente | Roles, taxonomía, apelaciones y auditoría | T&S + Admin |
 | QA/accesibilidad/piloto | Pendiente | Evidencia WCAG, dispositivo físico y staging | QA + Accesibilidad |
 
@@ -25,14 +25,24 @@ sin enlace a evidencia no cuenta como aprobación.
 
 ### Producto, Legal y Privacidad
 
-- [ ] Jurisdicciones y base de tratamiento definidas.
-- [ ] Consentimiento granular, retiro y copy ES/EN aprobados.
+- [ ] Jurisdicciones y base de tratamiento aprobadas para cada territorio. La
+  [matriz de bases](rollout-evidence/2026-09-06-product-legal-approval.md)
+  registra la decisión de producto, pero sigue pendiente la validación local de
+  Ecuador, Colombia, Perú, México y la matriz estatal de Estados Unidos.
+- [ ] Consentimiento granular, retiro y copy ES/EN aprobados y publicados. Copy aprobado: [05-consent-copy-es-en-draft.md](05-consent-copy-es-en-draft.md); pendiente de publicación y enlaces finales.
 - [ ] Retención, exportación, eliminación/anominización y excepciones de
   seguridad aprobadas.
 - [ ] Términos, ayuda y proceso de apelación aprobados.
 - [ ] Política `01-product-legal-policy.md` revisada y versionada.
 
 ### Infraestructura y Operaciones
+
+La implementación preparada incluye la migración
+`2026-09-06_contextual_reputation_staging_worker.sql`, el worker Haskell apagado
+por defecto y el ensayo reproducible
+`npm run test:contextual-reputation-worker-migration`. Esto no marca ninguna
+casilla: aún requiere provisionamiento real en staging, evidencia operativa y
+aprobación de responsables.
 
 - [ ] Outbox, cola durable y worker idempotente disponibles en staging.
 - [ ] `event_id`, `run_id`, correlación, versión de fórmula y deduplicación
@@ -86,14 +96,19 @@ política, aprobadores, enlaces a dashboards/evidencia, grupo afectado, decisió
 
 ### 2026-09-06 — Producto/Legal
 
-- **Decisión declarada:** `aprobar` la política completa
+- **Decisión:** `aprobar` la política completa
   `01-product-legal-policy.md`.
-- **Aprobador declarado:** `tdfestudiodegrabacion@gmail.com`.
-- **Alcance declarado:** consentimiento, copy ES/EN, retención, exportación,
-  eliminación/anominización, apelaciones y jurisdicciones aplicables.
-- **Fuente del registro:** instrucción del responsable del repositorio el
-  2026-09-06.
-- **Condición pendiente para G0:** adjuntar en el sistema de gestión aprobado
-  un enlace o identificador verificable al correo, ticket o acta de aprobación,
-  con fecha/hora y versión de política. Esta atestación no sustituye esa
-  evidencia ni autoriza staging por sí sola.
+- **Evidencia interna:** [acta de aprobación](rollout-evidence/2026-09-06-product-legal-approval.md).
+- **Efecto:** documenta la aprobación declarada, pero no cierra Producto/Legal
+  para G0. Siguen obligatorios los plazos por jurisdicción, copy publicado,
+  pruebas auditadas de derechos y el resto del checklist; tampoco sustituye las
+  puertas técnicas y de seguridad restantes.
+
+### 2026-09-08 — Validación técnica de esquema en staging
+
+- **Decisión:** `aprobar` únicamente la evidencia de compatibilidad de esquema
+  y arranque controlado en staging.
+- **Evidencia:** [validación técnica de staging](rollout-evidence/2026-09-08-staging-schema-validation.md).
+- **Límite:** no cierra G0 ni ninguna casilla de Operaciones, Moderación,
+  Producto/Legal o QA. Las banderas de reputación pública y worker continúan
+  desactivadas.

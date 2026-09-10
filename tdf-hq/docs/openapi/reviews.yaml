@@ -60,6 +60,34 @@ paths:
         '401': { description: Authentication required }
         '404': { description: Contextual reputation is not enabled for this deployment }
         '409': { description: Preference revision conflict or idempotency key conflict }
+  /reputation/consents:
+    get:
+      tags: [Contextual reputation]
+      operationId: getMyReputationConsents
+      summary: Get the authenticated viewer's independent reputation consents
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current consent state, including revoked consents, without evaluator data
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ReputationConsent' } } } }
+        '401': { description: Authentication required }
+    put:
+      tags: [Contextual reputation]
+      operationId: updateMyReputationConsents
+      summary: Grant or withdraw independent reputation consents
+      description: Withdrawals take effect immediately and remain available while contextual reputation is disabled.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: array, minItems: 1, maxItems: 4, items: { $ref: '#/components/schemas/ReputationConsentUpdate' } } } }
+      responses:
+        '200':
+          description: Updated current consent state
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ReputationConsent' } } } }
+        '400': { description: Invalid or duplicate consent kind }
+        '401': { description: Authentication required }
+        '403': { description: Age assurance or currently approved, evidenced guardian authorization is required for grants }
+        '404': { description: New grants unavailable while the feature is disabled }
   /reviews/{targetKind}/{targetId}:
     get:
       tags: [Verified reviews]
@@ -203,6 +231,24 @@ components:
               position: { type: integer, minimum: 1 }
               weight: { type: number, minimum: 0, maximum: 100 }
               notApplicable: { type: boolean }
+    ReputationConsentUpdate:
+      type: object
+      additionalProperties: false
+      required: [consentKind, granted]
+      properties:
+        consentKind: { type: string, enum: [pilot_participation, public_visibility, public_rankings, rating_reminders] }
+        granted: { type: boolean }
+        consentCopyVersion: { type: string, maxLength: 80, nullable: true, description: Required for grants; identifies the disclosure accepted. }
+        consentLocale: { type: string, enum: [es, en], nullable: true, description: Required for grants; language of the disclosure accepted. }
+    ReputationConsent:
+      type: object
+      additionalProperties: false
+      required: [consentKind, granted, version, updatedAt]
+      properties:
+        consentKind: { type: string, enum: [pilot_participation, public_visibility, public_rankings, rating_reminders] }
+        granted: { type: boolean }
+        version: { type: integer, minimum: 0 }
+        updatedAt: { type: string, format: date-time, nullable: true }
     ExperienceReviewTargetKind:
       type: string
       enum: [event, marketplace_listing, service_offering, service_package]
