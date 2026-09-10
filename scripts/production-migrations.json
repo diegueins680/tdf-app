@@ -460,6 +460,11 @@
       "id": "2026-09-09_experience_review_ticket_buyer_type_repair",
       "path": "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
       "introducedBy": "0e76d6ff36bae6b0a9d1b22515b8f60abdcaafd0"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
     }
   ]
 }

@@ -167,6 +167,22 @@ test('suppressed-event privacy migration is anchored to its released squash comm
   });
 });
 
+test('canonical payment lifecycle migration is anchored to its introduction commit', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const migration = manifest.migrations.find(
+    ({ id }) => id === '2026-09-09_canonical_payment_lifecycle',
+  );
+
+  assert.deepEqual(migration, {
+    id: '2026-09-09_canonical_payment_lifecycle',
+    path: 'tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql',
+    introducedBy: 'b3007f580fc51afb03aa73d339e9945232adcc8e',
+  });
+});
+
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
