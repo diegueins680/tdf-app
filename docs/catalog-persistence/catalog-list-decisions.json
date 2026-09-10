@@ -8614,16 +8614,6 @@
       "reviewed": true
     },
     {
-      "id": "e5ce39b6bbdd84f9652a",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "b65c3ecaa729e449a097",
       "classification": "governed-reference-data",
       "disposition": "retain-in-code",
