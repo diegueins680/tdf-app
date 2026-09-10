@@ -2106,6 +2106,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('commerce_payment_attempt', 'payment_intent_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'checkout_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
@@ -2140,6 +2141,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('commerce_payment_attempt', 'fk_commerce_payment_attempt_intent', 'f', 'FOREIGN KEY (payment_intent_id) REFERENCES commerce_payment_intent(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
@@ -2158,7 +2160,8 @@ BEGIN
     RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
   END IF;
 
-  IF to_regclass('public.idx_commerce_provider_event_work') IS NULL
+  IF to_regclass('public.idx_commerce_payment_attempt_intent') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_work') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
      OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
      OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN

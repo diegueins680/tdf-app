@@ -465,6 +465,11 @@
       "id": "2026-09-09_canonical_payment_lifecycle",
       "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
       "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
     }
   ]
 }
