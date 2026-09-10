@@ -121,6 +121,33 @@ describe('merch API capabilities and idempotency', () => {
     expect(patchMock).toHaveBeenNthCalledWith(2, '/merch/admin/issues/issue%2Fid', body);
   });
 
+  it('keeps refund preparation idempotent and dispute monitoring read-only', async () => {
+    postMock.mockResolvedValueOnce({ id: 'refund-id', status: 'requested' });
+    patchMock.mockResolvedValueOnce({ id: 'refund-id', status: 'approved' });
+    getMock.mockResolvedValueOnce([]);
+    const request = {
+      issueId: 'issue-id', amountMinor: null, reasonCode: 'customer_request',
+      note: 'Synthetic refund request for API verification.',
+    };
+
+    await Merch.createAdminRefund('order/id', request, 'refund-key-123456');
+    await Merch.reviewAdminRefund('refund/id', {
+      decision: 'approve', reviewNote: 'Approved by an independent synthetic reviewer.',
+    });
+    await Merch.adminDisputes();
+
+    expect(postMock).toHaveBeenCalledWith(
+      '/merch/admin/orders/order%2Fid/refunds',
+      request,
+      { headers: { 'Idempotency-Key': 'refund-key-123456' } },
+    );
+    expect(patchMock).toHaveBeenCalledWith(
+      '/merch/admin/refunds/refund%2Fid/status',
+      { decision: 'approve', reviewNote: 'Approved by an independent synthetic reviewer.' },
+    );
+    expect(getMock).toHaveBeenCalledWith('/merch/admin/disputes');
+  });
+
   it('records private settlement evidence with multipart idempotency and no payout request', async () => {
     postFormMock.mockResolvedValueOnce({ id: 'settlement-id', status: 'paid' });
     const file = new File(['synthetic-image'], 'receipt.png', { type: 'image/png' });

@@ -5936,6 +5936,83 @@ export interface paths {
         patch: operations["updateAdminMerchIssue"];
         trace?: never;
     };
+    "/merch/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List canonical merch refund requests without buyer personal data */
+        get: operations["listAdminMerchRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepare a canonical full or partial merch refund
+         * @description Requires an eligible support case in staff review and a verified successful payment. Amounts are assigned server-side across immutable checkout lines. This endpoint never calls a payment provider.
+         */
+        post: operations["createAdminMerchRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/refunds/{refundId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Independently approve or cancel a merch refund request
+         * @description Approval requires a different authenticated administrator from the requester. Approved means operationally authorized only; provider execution remains disabled until a merch adapter is verified in sandbox.
+         */
+        patch: operations["reviewAdminMerchRefund"];
+        trace?: never;
+    };
+    "/merch/admin/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Monitor canonical provider dispute records for merch
+         * @description Read-only projection. There is intentionally no API to fabricate a provider dispute or chargeback outcome.
+         */
+        get: operations["listAdminMerchDisputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/merch/admin/settlements": {
         parameters: {
             query?: never;
@@ -6030,6 +6107,10 @@ export interface components {
                 publicCatalog: boolean;
                 /** @description True only when at least one payment method is enabled and fully configured. */
                 checkout: boolean;
+                /** @description Enables preparation and dual-control approval only; provider execution has a separate adapter gate. */
+                refundOperations: boolean;
+                /** @description Enables the read-only canonical provider dispute queue. */
+                disputeMonitoring: boolean;
                 reviews: boolean;
                 notifications: boolean;
                 experimental: boolean;
@@ -6442,6 +6523,16 @@ export interface components {
             resolution?: string | null;
             /** @description Visible only to an authorized seller or strict administrator. */
             internalNotes?: string | null;
+            /** @enum {string} */
+            currency?: "USD";
+            /** Format: int64 */
+            totalMinor?: number;
+            /** Format: int64 */
+            refundedMinor?: number;
+            paymentStatus?: string;
+            refundStatus?: string;
+            disputeStatus?: string;
+            settlementStatus?: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -6454,6 +6545,91 @@ export interface components {
             status: components["schemas"]["MerchIssueStatus"];
             publicResponse?: string | null;
             internalNotes?: string | null;
+        };
+        MerchRefundRequest: {
+            /**
+             * Format: uuid
+             * @description Eligible financial support case currently in staff review.
+             */
+            issueId: string;
+            /**
+             * Format: int64
+             * @description Omit for the remaining unreserved paid balance.
+             */
+            amountMinor?: number | null;
+            reasonCode: string;
+            note?: string | null;
+        };
+        MerchRefundReviewRequest: {
+            /** @enum {string} */
+            decision: "approve" | "cancel";
+            reviewNote: string;
+        };
+        /** @enum {string} */
+        MerchRefundStatus: "requested" | "approved" | "processing" | "succeeded" | "failed" | "cancelled";
+        MerchRefund: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            /** Format: uuid */
+            storeId: string;
+            storeName: string;
+            /** Format: uuid */
+            issueId: string;
+            status: components["schemas"]["MerchRefundStatus"];
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            currency: "USD";
+            reasonCode: string;
+            requestNote?: string | null;
+            /** @enum {string} */
+            provider: "datafast" | "paypal" | "stripe" | "bank_transfer" | "cash" | "pos";
+            /** @description Present only after verified provider evidence is recorded through a future gated adapter. */
+            providerRefundId?: string | null;
+            /** Format: int64 */
+            requestedBy: number;
+            requestedByName: string;
+            /** Format: int64 */
+            approvedBy?: number | null;
+            approvedByName?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            completedAt?: string | null;
+            settlementStatus: string;
+            /** @enum {boolean} */
+            executionAvailable: false;
+            executionMessage: string;
+        };
+        MerchDispute: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            /** Format: uuid */
+            storeId: string;
+            storeName: string;
+            providerDisputeId: string;
+            /** @enum {string} */
+            kind: "inquiry" | "dispute" | "chargeback";
+            status: string;
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            currency: "USD";
+            reasonCode?: string | null;
+            /** Format: date-time */
+            openedAt: string;
+            /** Format: date-time */
+            dueAt?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** @enum {boolean} */
+            readOnly: true;
         };
         MerchStatusRequest: {
             status: string;
@@ -23411,6 +23587,166 @@ export interface operations {
             };
             /** @description Terminal case or concurrent update */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminMerchRefunds: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchRefundStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Strict-admin refund queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchRefund"][];
+                };
+            };
+            /** @description Unsupported refund status filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict administrator permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merch refund operations are feature-gated */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createAdminMerchRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                orderId: components["parameters"]["MerchOrderId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchRefundRequest"];
+            };
+        };
+        responses: {
+            /** @description Requested canonical refund; no provider action occurred */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchRefund"];
+                };
+            };
+            /** @description Invalid reason */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merch refund operations are feature-gated */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewAdminMerchRefund: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                refundId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchRefundReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated canonical refund without provider execution */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchRefund"];
+                };
+            };
+            /** @description Invalid transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAdminMerchDisputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Strict-admin canonical dispute queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchDispute"][];
+                };
+            };
+            /** @description Strict administrator permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Merch dispute monitoring is feature-gated */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

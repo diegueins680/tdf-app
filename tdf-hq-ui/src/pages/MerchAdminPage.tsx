@@ -64,15 +64,34 @@ export default function MerchAdminPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [issueResponses, setIssueResponses] = useState<Record<string, string>>({});
   const [issueNotes, setIssueNotes] = useState<Record<string, string>>({});
+  const [refundAmounts, setRefundAmounts] = useState<Record<string, string>>({});
+  const [refundNotes, setRefundNotes] = useState<Record<string, string>>({});
+  const [refundKeys, setRefundKeys] = useState<Record<string, string>>({});
+  const [refundReviewNotes, setRefundReviewNotes] = useState<Record<string, string>>({});
   const [settlementStoreId, setSettlementStoreId] = useState('');
   const [settlementOrderIds, setSettlementOrderIds] = useState<string[]>([]);
   const [settlementPeriodStart, setSettlementPeriodStart] = useState(() => dateInputValue(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
   const [settlementPeriodEnd, setSettlementPeriodEnd] = useState(() => dateInputValue(new Date(Date.now() + 24 * 60 * 60 * 1000)));
   const [settlementNotes, setSettlementNotes] = useState('');
   const [settlementReviewNotes, setSettlementReviewNotes] = useState<Record<string, string>>({});
+  const capabilities = useQuery({ queryKey: ['merch-capabilities'], queryFn: () => Merch.capabilities(), retry: false });
   const stores = useQuery({ queryKey: ['merch-admin-stores'], queryFn: () => Merch.adminStores(), retry: false });
   const products = useQuery({ queryKey: ['merch-admin-products'], queryFn: () => Merch.adminProducts('pending_review'), retry: false });
   const issues = useQuery({ queryKey: ['merch-admin-issues'], queryFn: () => Merch.adminIssues(), retry: false });
+  const refundOperations = capabilities.data?.features.refundOperations === true;
+  const disputeMonitoring = capabilities.data?.features.disputeMonitoring === true;
+  const refunds = useQuery({
+    queryKey: ['merch-admin-refunds'],
+    queryFn: () => Merch.adminRefunds(),
+    enabled: refundOperations,
+    retry: false,
+  });
+  const disputes = useQuery({
+    queryKey: ['merch-admin-disputes'],
+    queryFn: () => Merch.adminDisputes(),
+    enabled: disputeMonitoring,
+    retry: false,
+  });
   const settlements = useQuery({ queryKey: ['merch-admin-settlements'], queryFn: () => Merch.adminSettlements(), retry: false });
   const eligibleSettlementOrders = useQuery({
     queryKey: ['merch-admin-settlement-orders', settlementStoreId],
@@ -101,6 +120,33 @@ export default function MerchAdminPage() {
     }),
     onSuccess: () => void client.invalidateQueries({ queryKey: ['merch-admin-issues'] }),
   });
+  const createRefund = useMutation({
+    mutationFn: ({ issueId, orderId, key }: { issueId: string; orderId: string; key: string }) => {
+      const rawAmount = refundAmounts[issueId]?.trim();
+      return Merch.createAdminRefund(orderId, {
+        issueId,
+        amountMinor: rawAmount ? Number(rawAmount) : null,
+        reasonCode: 'customer_request',
+        note: optionalTrimmed(refundNotes[issueId]),
+      }, key);
+    },
+    onSuccess: (_, variables) => {
+      setRefundKeys((current) => ({ ...current, [variables.issueId]: createMerchIdempotencyKey('refund') }));
+      void client.invalidateQueries({ queryKey: ['merch-admin-refunds'] });
+      void client.invalidateQueries({ queryKey: ['merch-admin-issues'] });
+      void client.invalidateQueries({ queryKey: ['merch-admin-settlement-orders'] });
+    },
+  });
+  const reviewRefund = useMutation({
+    mutationFn: ({ id, decision }: { id: string; decision: 'approve' | 'cancel' }) => Merch.reviewAdminRefund(id, {
+      decision,
+      reviewNote: refundReviewNotes[id]?.trim() ?? '',
+    }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ['merch-admin-refunds'] });
+      void client.invalidateQueries({ queryKey: ['merch-admin-issues'] });
+    },
+  });
   const createSettlement = useMutation({
     mutationFn: () => Merch.createSettlement({
       storeId: settlementStoreId,
@@ -121,10 +167,10 @@ export default function MerchAdminPage() {
     onSuccess: () => void client.invalidateQueries({ queryKey: ['merch-admin-settlements'] }),
   });
 
-  if (stores.isLoading || products.isLoading || issues.isLoading || settlements.isLoading) {
+  if (capabilities.isLoading || stores.isLoading || products.isLoading || issues.isLoading || settlements.isLoading || (refundOperations && refunds.isLoading) || (disputeMonitoring && disputes.isLoading)) {
     return <Box py={8} textAlign="center"><CircularProgress aria-label={language === 'en' ? 'Loading merch review' : 'Cargando revisión de merch'} /></Box>;
   }
-  if (stores.isError || products.isError || issues.isError || settlements.isError) {
+  if (capabilities.isError || stores.isError || products.isError || issues.isError || settlements.isError || (refundOperations && refunds.isError) || (disputeMonitoring && disputes.isError)) {
     return <Box py={4}><Alert severity="error">{language === 'en' ? 'The moderation queues could not be loaded, or you lack administrator permission.' : 'No se pudieron cargar las colas de moderación o no tienes permiso administrativo.'}</Alert></Box>;
   }
 
@@ -152,6 +198,48 @@ export default function MerchAdminPage() {
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+        <Typography component="h2" variant="h5" fontWeight={800} mb={1}>{language === 'en' ? 'Refund authorization' : 'Autorización de reembolsos'}</Typography>
+        {!refundOperations ? <Alert severity="info">{language === 'en' ? 'Refund operations are disabled in this environment. Support cases remain available, but no financial state can be prepared here.' : 'Las operaciones de reembolso están deshabilitadas en este entorno. Los casos de soporte siguen disponibles, pero aquí no se puede preparar ningún estado financiero.'}</Alert> : <>
+          <Alert severity="warning" sx={{ mb: 2 }}>{language === 'en' ? 'Approval requires a different administrator. “Approved” does not contact the provider; execution stays unavailable until the merch adapter passes sandbox verification.' : 'La aprobación requiere otro administrador. «Aprobado» no contacta al proveedor; la ejecución seguirá bloqueada hasta que el adaptador de merch pase la verificación sandbox.'}</Alert>
+          <Stack spacing={2}>{refunds.data?.map((refund) => {
+            const reviewNote = refundReviewNotes[refund.id] ?? '';
+            return <Paper key={refund.id} variant="outlined" sx={{ p: 2 }}>
+              <Stack spacing={1.5}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+                  <Box><Typography fontWeight={800}>{refund.storeName} · {refund.orderNumber}</Typography><Typography variant="body2">{formatMerchMoney(refund.amountMinor, refund.currency)} · {refund.reasonCode}</Typography></Box>
+                  <Chip label={merchStatusLabel(refund.status, language)} />
+                </Stack>
+                <Typography variant="body2" color="text.secondary">{language === 'en' ? 'Requested by' : 'Solicitado por'} {refund.requestedByName}{refund.approvedByName ? ` · ${language === 'en' ? 'Approved by' : 'Aprobado por'} ${refund.approvedByName}` : ''}</Typography>
+                {refund.requestNote && <Typography>{refund.requestNote}</Typography>}
+                {!refund.executionAvailable && <Alert severity="info">{language === 'en' ? 'Provider execution is unavailable; no money has moved from this workflow.' : 'La ejecución con el proveedor no está disponible; este flujo no ha movido dinero.'}</Alert>}
+                {['requested', 'approved', 'failed'].includes(refund.status) && <>
+                  <TextField multiline minRows={2} required inputProps={{ minLength: 10, maxLength: 2000 }} label={language === 'en' ? 'Independent review note' : 'Nota de revisión independiente'} value={reviewNote} onChange={(event) => setRefundReviewNotes({ ...refundReviewNotes, [refund.id]: event.target.value })} />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    {refund.status === 'requested' && <Button variant="contained" disabled={reviewNote.trim().length < 10 || reviewRefund.isPending} onClick={() => reviewRefund.mutate({ id: refund.id, decision: 'approve' })}>{language === 'en' ? 'Approve request only' : 'Aprobar solo la solicitud'}</Button>}
+                    <Button color="error" disabled={reviewNote.trim().length < 10 || reviewRefund.isPending} onClick={() => reviewRefund.mutate({ id: refund.id, decision: 'cancel' })}>{language === 'en' ? 'Cancel before execution' : 'Cancelar antes de ejecutar'}</Button>
+                  </Stack>
+                </>}
+              </Stack>
+            </Paper>;
+          })}{refunds.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No canonical refund requests.' : 'No hay solicitudes canónicas de reembolso.'}</Typography>}</Stack>
+          {reviewRefund.isError && <Alert severity="error" sx={{ mt: 2 }}>{language === 'en' ? 'The refund review was rejected. Check separation of duties and current state.' : 'La revisión fue rechazada. Comprueba la separación de funciones y el estado actual.'}</Alert>}
+        </>}
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+        <Typography component="h2" variant="h5" fontWeight={800} mb={1}>{language === 'en' ? 'Provider disputes' : 'Disputas del proveedor'}</Typography>
+        {!disputeMonitoring ? <Alert severity="info">{language === 'en' ? 'Dispute monitoring is disabled until verified provider ingestion is operational.' : 'El monitoreo de disputas está deshabilitado hasta que opere la ingestión verificada del proveedor.'}</Alert> : <>
+          <Alert severity="warning" sx={{ mb: 2 }}>{language === 'en' ? 'Read-only evidence. This screen cannot create a dispute or decide a chargeback outcome.' : 'Evidencia de solo lectura. Esta pantalla no puede crear una disputa ni decidir el resultado de un contracargo.'}</Alert>
+          <Stack spacing={2}>{disputes.data?.map((dispute) => <Paper key={dispute.id} variant="outlined" sx={{ p: 2 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+              <Box><Typography fontWeight={800}>{dispute.storeName} · {dispute.orderNumber}</Typography><Typography variant="body2">{dispute.providerDisputeId} · {formatMerchMoney(dispute.amountMinor, dispute.currency)}</Typography></Box>
+              <Stack direction="row" spacing={1}><Chip label={merchStatusLabel(dispute.kind, language)} /><Chip label={merchStatusLabel(dispute.status, language)} /></Stack>
+            </Stack>
+          </Paper>)}{disputes.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No canonical provider disputes.' : 'No hay disputas canónicas del proveedor.'}</Typography>}</Stack>
+        </>}
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
         <Typography component="h2" variant="h5" fontWeight={800} mb={2}>{language === 'en' ? 'Products awaiting review' : 'Productos pendientes de revisión'}</Typography>
         <Stack spacing={2}>{products.data?.map((product) => <Paper key={product.id} variant="outlined" sx={{ p: 2 }}>
           <Stack spacing={1.5}>
@@ -169,11 +257,46 @@ export default function MerchAdminPage() {
         <Stack spacing={2}>{issues.data?.map((item) => {
           const response = issueResponses[item.id] ?? '';
           const terminal = ['resolved', 'rejected', 'cancelled'].includes(item.status);
+          const financial = ['cancellation', 'return', 'refund', 'damaged', 'missing', 'fraud'].includes(item.issueType);
+          const rawRefundAmount = refundAmounts[item.id]?.trim() ?? '';
+          const parsedRefundAmount = rawRefundAmount ? Number(rawRefundAmount) : null;
+          const remainingRefund = Math.max(0, (item.totalMinor ?? 0) - (item.refundedMinor ?? 0));
+          const validRefundAmount = parsedRefundAmount === null || (Number.isInteger(parsedRefundAmount) && parsedRefundAmount > 0 && parsedRefundAmount <= remainingRefund);
+          const linkedRefund = refunds.data?.find((refund) => refund.issueId === item.id && refund.status !== 'cancelled');
           return <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
             <Stack spacing={1.5}>
               <Box><Typography fontWeight={800}>{item.storeName} · {item.orderNumber}</Typography><Typography variant="body2">{merchStatusLabel(item.issueType, language)} · {merchStatusLabel(item.status, language)}</Typography></Box>
               <Typography>{item.message}</Typography>
+              {item.paymentStatus && <Typography variant="body2" color="text.secondary">
+                {language === 'en' ? 'Payment' : 'Pago'}: {merchStatusLabel(item.paymentStatus, language)}
+                {item.totalMinor != null ? ` · ${formatMerchMoney(item.totalMinor, item.currency ?? 'USD')}` : ''}
+                {` · ${language === 'en' ? 'Refund' : 'Reembolso'}: ${merchStatusLabel(item.refundStatus ?? 'none', language)}`}
+              </Typography>}
               {item.resolution && <Alert severity="success">{item.resolution}</Alert>}
+              {refundOperations && financial && item.status === 'staff_review' && ['paid', 'partially_refunded'].includes(item.paymentStatus ?? '') && <Paper variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={1.5}>
+                  <Typography fontWeight={800}>{language === 'en' ? 'Prepare canonical refund' : 'Preparar reembolso canónico'}</Typography>
+                  <Alert severity="warning">{language === 'en' ? 'This records a request only. It never contacts the provider or returns money.' : 'Esto registra únicamente una solicitud. Nunca contacta al proveedor ni devuelve dinero.'}</Alert>
+                  {linkedRefund ? <Alert severity="info">{language === 'en' ? `Linked refund: ${merchStatusLabel(linkedRefund.status, language)}.` : `Reembolso vinculado: ${merchStatusLabel(linkedRefund.status, language)}.`}</Alert> : <>
+                    <TextField
+                      type="number"
+                      inputProps={{ min: 1, max: remainingRefund, step: 1 }}
+                      label={language === 'en' ? 'Amount in cents (blank = full remaining)' : 'Monto en centavos (vacío = saldo completo)'}
+                      value={refundAmounts[item.id] ?? ''}
+                      onChange={(event) => setRefundAmounts({ ...refundAmounts, [item.id]: event.target.value })}
+                      error={!validRefundAmount}
+                      helperText={`${language === 'en' ? 'Remaining verified balance' : 'Saldo verificado restante'}: ${formatMerchMoney(remainingRefund, item.currency ?? 'USD')}`}
+                    />
+                    <TextField multiline minRows={2} inputProps={{ maxLength: 2000 }} label={language === 'en' ? 'Operational note (optional)' : 'Nota operativa (opcional)'} value={refundNotes[item.id] ?? ''} onChange={(event) => setRefundNotes({ ...refundNotes, [item.id]: event.target.value })} />
+                    <Button variant="contained" disabled={!validRefundAmount || remainingRefund < 1 || createRefund.isPending} onClick={() => {
+                      const key = refundKeys[item.id] ?? createMerchIdempotencyKey('refund');
+                      if (!refundKeys[item.id]) setRefundKeys((current) => ({ ...current, [item.id]: key }));
+                      createRefund.mutate({ issueId: item.id, orderId: item.orderId, key });
+                    }}>{language === 'en' ? 'Record refund request' : 'Registrar solicitud de reembolso'}</Button>
+                  </>}
+                  {createRefund.isError && <Alert severity="error">{language === 'en' ? 'The refund request was rejected. Recheck payment, case state, amount, and idempotency.' : 'La solicitud fue rechazada. Revisa pago, estado del caso, monto e idempotencia.'}</Alert>}
+                </Stack>
+              </Paper>}
               {!terminal && <>
                 <TextField multiline minRows={2} inputProps={{ maxLength: 5000 }} label={language === 'en' ? 'Public response to buyer' : 'Respuesta pública para el comprador'} value={response} onChange={(event) => setIssueResponses({ ...issueResponses, [item.id]: event.target.value })} />
                 <TextField multiline minRows={2} inputProps={{ maxLength: 5000 }} label={language === 'en' ? 'Internal note (never shown to buyer)' : 'Nota interna (nunca visible al comprador)'} value={issueNotes[item.id] ?? ''} onChange={(event) => setIssueNotes({ ...issueNotes, [item.id]: event.target.value })} />

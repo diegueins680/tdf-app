@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import type { MerchSettlement, MerchStorefront } from '../api/merch';
+import type { MerchDispute, MerchRefund, MerchSettlement, MerchStorefront } from '../api/merch';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -13,6 +13,50 @@ const updateSettlementStatusMock = jest.fn<(
   reason?: string | null,
 ) => Promise<MerchSettlement>>();
 let settlementStatus: MerchSettlement['status'] = 'held';
+let financialOperationsEnabled = false;
+
+const refund = {
+  id: '9f000000-0000-4000-8000-000000000001',
+  orderId: '94000000-0000-4000-8000-000000000001',
+  orderNumber: 'TDF-SYNTHETIC-0001',
+  storeId: '92000000-0000-4000-8000-000000000001',
+  storeName: 'Synthetic Pilot Band',
+  issueId: '9e000000-0000-4000-8000-000000000001',
+  status: 'requested',
+  amountMinor: 5500,
+  currency: 'USD',
+  reasonCode: 'customer_request',
+  requestNote: 'Synthetic refund request for interface verification.',
+  provider: 'paypal',
+  providerRefundId: null,
+  requestedBy: 900005,
+  requestedByName: 'Synthetic Requester',
+  approvedBy: null,
+  approvedByName: null,
+  createdAt: '2026-09-10T14:00:00Z',
+  completedAt: null,
+  settlementStatus: 'paid',
+  executionAvailable: false,
+  executionMessage: 'Provider execution is not available.',
+} satisfies MerchRefund;
+
+const dispute = {
+  id: '9a000000-0000-4000-8000-000000000001',
+  orderId: refund.orderId,
+  orderNumber: refund.orderNumber,
+  storeId: refund.storeId,
+  storeName: refund.storeName,
+  providerDisputeId: 'synthetic-provider-dispute',
+  kind: 'inquiry',
+  status: 'needs_response',
+  amountMinor: 5500,
+  currency: 'USD',
+  reasonCode: 'product_not_received',
+  openedAt: '2026-09-10T14:05:00Z',
+  dueAt: null,
+  closedAt: null,
+  readOnly: true,
+} satisfies MerchDispute;
 
 const store = {
   id: '92000000-0000-4000-8000-000000000001',
@@ -57,14 +101,19 @@ const buildSettlement = (): MerchSettlement => ({
 jest.unstable_mockModule('../api/merch', () => ({
   createMerchIdempotencyKey: () => 'settlement-payment:synthetic-idempotency-key',
   Merch: {
+    capabilities: () => Promise.resolve({ features: { refundOperations: financialOperationsEnabled, disputeMonitoring: financialOperationsEnabled } }),
     adminStores: () => Promise.resolve([store]),
     adminProducts: () => Promise.resolve([]),
     adminIssues: () => Promise.resolve([]),
+    adminRefunds: () => Promise.resolve(financialOperationsEnabled ? [refund] : []),
+    adminDisputes: () => Promise.resolve(financialOperationsEnabled ? [dispute] : []),
     adminSettlements: () => Promise.resolve([buildSettlement()]),
     settlementEligibleOrders: () => Promise.resolve([]),
     reviewStore: jest.fn(),
     reviewProduct: jest.fn(),
     updateAdminIssue: jest.fn(),
+    createAdminRefund: jest.fn(),
+    reviewAdminRefund: jest.fn(),
     createSettlement: jest.fn(),
     updateSettlementStatus: (
       settlementId: string,
@@ -116,6 +165,7 @@ async function renderPage() {
 describe('merch settlement administration', () => {
   beforeEach(() => {
     settlementStatus = 'held';
+    financialOperationsEnabled = false;
     updateSettlementStatusMock.mockReset();
     updateSettlementStatusMock.mockResolvedValue(buildSettlement());
   });
@@ -149,6 +199,22 @@ describe('merch settlement administration', () => {
       const submit = Array.from(view.container.querySelectorAll<HTMLButtonElement>('button'))
         .find((button) => button.textContent?.includes('Registrar pago verificado'));
       expect(submit?.disabled).toBe(true);
+      await expectNoSeriousAccessibilityViolations(view.container);
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it('keeps refund approval non-executing and provider disputes read-only', async () => {
+    financialOperationsEnabled = true;
+    const view = await renderPage();
+    try {
+      expect(view.container.textContent).toContain('Aprobar solo la solicitud');
+      expect(view.container.textContent).toContain('este flujo no ha movido dinero');
+      expect(view.container.textContent).toContain('Evidencia de solo lectura');
+      expect(view.container.textContent).toContain('Consulta');
+      expect(view.container.textContent).toContain('Requiere respuesta');
+      expect(view.container.textContent).not.toContain('Resolver disputa');
       await expectNoSeriousAccessibilityViolations(view.container);
     } finally {
       await view.cleanup();
