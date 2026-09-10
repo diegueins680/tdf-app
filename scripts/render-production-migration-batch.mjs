@@ -26,6 +26,7 @@ const migrations = await Promise.all(manifest.migrations.map(async (entry) => {
     ...entry,
     content,
     checksum: createHash('sha256').update(content).digest('hex'),
+    compatibleAppliedChecksums: entry.compatibleAppliedChecksums,
   };
 }));
 const sourceCommit = normalizeFullSha(process.env.SOURCE_COMMIT ?? '0'.repeat(40));

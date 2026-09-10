@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -184,8 +184,10 @@ export default function CmsAdminPage() {
     () => new Map((workflowStatesQuery.data ?? []).map((state) => [state.code, state.name] as const)),
     [workflowStatesQuery.data],
   );
-  const statusLabel = (value: string) =>
-    statusLabels.get(normalizeCmsStatus(value)) ?? fallbackCmsStatusLabel(value);
+  const statusLabel = useCallback(
+    (value: string) => statusLabels.get(normalizeCmsStatus(value)) ?? fallbackCmsStatusLabel(value),
+    [statusLabels],
+  );
   const selectedContent = useMemo(
     () => authoredContents.find((content) => content.id === contentIdFilter),
     [authoredContents, contentIdFilter],
@@ -532,7 +534,7 @@ export default function CmsAdminPage() {
     if (sharedVersionLocale) parts.push(`idioma ${localeLabels.get(sharedVersionLocale) ?? sharedVersionLocale}`);
     if (sharedVersionStatus) parts.push(`estado ${statusLabel(sharedVersionStatus)}`);
     return parts.join(' · ');
-  }, [localeLabels, sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle, statusLabels]);
+  }, [localeLabels, sharedVersionLocale, sharedVersionSlug, sharedVersionStatus, sharedVersionTitle, statusLabel]);
   const versionListUiState = useMemo(
     () => getCmsVersionListUiState({
       filteredCount: filteredVersions.length,

@@ -18491,6 +18491,8 @@ describe('CourseRegistrationsAdminPage', () => {
   });
 
   it('strips common form-provider descriptors from first-run cohort copy', async () => {
+    // This matrix renders and unmounts the page once per provider title, so it
+    // needs a dedicated budget when the complete UI suite is under load.
     const titles = [
       'Typeform - Beatmaking 101',
       'Typeform.com - Beatmaking 101',
@@ -18650,7 +18652,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
       await cleanup();
     }
-  });
+  }, 15_000);
 
   it('strips ScoreApp quiz wrappers from first-run cohort copy', async () => {
     const titles = [

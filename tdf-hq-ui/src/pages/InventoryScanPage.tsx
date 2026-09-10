@@ -28,6 +28,7 @@ import {
   formatCheckoutPaymentSummary,
   getCheckoutDispositionLabel,
 } from '../utils/inventoryCheckout';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 const REFRESH_STATE_HELP_TEXT =
   'Si otro operador ya movió este equipo desde otra pantalla, usa Refrescar estado para confirmar qué acción sigue aquí.';
@@ -118,9 +119,15 @@ export default function InventoryScanPage() {
     try {
       const uploaded = await InventoryPublic.uploadPhoto(token, file, { name: file.name });
       if (mode === 'checkout') {
-        setCheckoutForm((prev) => ({ ...prev, coPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+        setCheckoutForm((prev) => ({
+          ...prev,
+          coPhotoUrl: firstNonEmptyString(uploaded.publicUrl, uploaded.webContentLink, uploaded.id),
+        }));
       } else {
-        setCheckinForm((prev) => ({ ...prev, ciPhotoUrl: uploaded.publicUrl || uploaded.webContentLink || uploaded.id }));
+        setCheckinForm((prev) => ({
+          ...prev,
+          ciPhotoUrl: firstNonEmptyString(uploaded.publicUrl, uploaded.webContentLink, uploaded.id),
+        }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo subir la foto.');
