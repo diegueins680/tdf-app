@@ -329,6 +329,7 @@ claimProviderEvent
   -> UTCTime
   -> SqlPersistT IO ProviderEventClaim
 claimProviderEvent eventRef now = do
+  let staleBefore = providerEventStaleBefore now
   claimed <- (rawSql
     "UPDATE commerce_provider_event_inbox\
     \ SET processing_status = 'processing', attempt_count = attempt_count + 1,\
@@ -338,14 +339,14 @@ claimProviderEvent eventRef now = do
     \   processing_status = 'pending'\
     \   OR (processing_status = 'retry' AND COALESCE(next_attempt_at, ?) <= ?)\
     \   OR (processing_status = 'processing'\
-    \       AND processing_started_at < ? - INTERVAL '15 minutes')\
+    \       AND processing_started_at < ?)\
     \ ) RETURNING attempt_count"
     [ PersistUTCTime now
     , PersistUTCTime now
     , PersistText (providerEventReferenceId eventRef)
     , PersistUTCTime now
     , PersistUTCTime now
-    , PersistUTCTime now
+    , PersistUTCTime staleBefore
     ] :: SqlPersistT IO [Single Int])
   case claimed of
     [Single attemptCount] -> pure (ProviderEventClaimed attemptCount)
