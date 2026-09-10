@@ -90,6 +90,7 @@ data AppConfig = AppConfig
   , stripePublishableKey :: Maybe Text
   , stripeWebhookSecret :: Maybe Text
   , contextualReputationEnabled :: Bool
+  , publicReputationProjectionEnabled :: Bool
   , eventDiscoveryEnabled :: Bool
   , eventDiscoveryAutoPublish :: Bool
   , eventDiscoveryPilotLimit :: Int
@@ -782,6 +783,7 @@ loadConfig = do
   stripePublishableKeyEnv <- lookupEnv "STRIPE_PUBLISHABLE_KEY"
   stripeWebhookSecretEnv <- lookupEnv "STRIPE_WEBHOOK_SECRET"
   contextualReputationEnabledEnv <- lookupEnv "CONTEXTUAL_REPUTATION_ENABLED"
+  publicReputationProjectionEnabledEnv <- lookupEnv "PUBLIC_REPUTATION_PROJECTION_ENABLED"
   eventDiscoveryEnabledEnv <- lookupEnv "EVENT_DISCOVERY_ENABLED"
   eventDiscoveryAutoPublishEnv <- lookupEnv "EVENT_DISCOVERY_AUTO_PUBLISH"
   eventDiscoveryPilotLimitEnv <- lookupEnv "EVENT_DISCOVERY_PILOT_LIMIT"
@@ -850,6 +852,11 @@ loadConfig = do
       "CONTEXTUAL_REPUTATION_ENABLED"
       False
       contextualReputationEnabledEnv
+  publicReputationProjectionEnabledVal <-
+    validateStartupBooleanFlag
+      "PUBLIC_REPUTATION_PROJECTION_ENABLED"
+      False
+      publicReputationProjectionEnabledEnv
   eventDiscoveryEnabledVal <-
     validateStartupBooleanFlag
       "EVENT_DISCOVERY_ENABLED"
@@ -1053,6 +1060,7 @@ loadConfig = do
     , stripePublishableKey = fmap T.pack stripePublishableKeyEnv
     , stripeWebhookSecret = fmap T.pack stripeWebhookSecretEnv
     , contextualReputationEnabled = contextualReputationEnabledVal
+    , publicReputationProjectionEnabled = publicReputationProjectionEnabledVal
     , eventDiscoveryEnabled = eventDiscoveryEnabledVal
     , eventDiscoveryAutoPublish = eventDiscoveryAutoPublishVal
     , eventDiscoveryPilotLimit = eventDiscoveryPilotLimitVal

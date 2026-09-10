@@ -46,6 +46,7 @@ import {
   type ManagedClassified,
   type ManagedDirectoryProfile,
 } from '../api/directory';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 const slugify = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 120);
 
@@ -144,7 +145,7 @@ function ApplicationRow({ application, authorProfileId }: { application: Record<
   const message = typeof application['message'] === 'string' ? application['message'] : '';
   const applicationStatus = typeof application['status'] === 'string' ? application['status'] : 'submitted';
   const awaitingDecision = ['submitted', 'viewed', 'shortlisted'].includes(applicationStatus);
-  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(mutation.error || conversation.error) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
+  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{message}</Typography>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(Boolean(mutation.error) || Boolean(conversation.error)) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
 }
 
 function InvitationPanel() {
@@ -187,7 +188,7 @@ function InvitationCard({ invitation }: { invitation: DirectoryInvitation }) {
     </Stack>
     <Typography sx={{ whiteSpace: 'pre-wrap' }}>{invitation.message}</Typography>
     {canConverse && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}
-    {(transition.error || conversation.error) && <Alert severity="error">{(transition.error ?? conversation.error)?.message}</Alert>}
+    {(Boolean(transition.error) || Boolean(conversation.error)) && <Alert severity="error">{(transition.error ?? conversation.error)?.message}</Alert>}
     <Stack direction="row" gap={1} flexWrap="wrap">
       {pendingTarget && <><Button onClick={() => transition.mutate('accepted')}>Aceptar</Button><Button onClick={() => transition.mutate('declined')}>Rechazar</Button><Button color="error" onClick={() => transition.mutate('blocked')}>Bloquear</Button></>}
       {pendingSender && <Button onClick={() => transition.mutate('withdrawn')}>Retirar</Button>}
@@ -452,7 +453,13 @@ function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { 
   const required = taxonomyRequirements(selectedCategory);
   const selectedCompensation = taxonomies?.compensationTypes.find((item) => item.id === compensationTypeId);
   const budgetMode = typeof selectedCompensation?.metadata?.['budget'] === 'string' ? selectedCompensation.metadata['budget'] : undefined;
-  const selectedCurrencyId = currencyId || taxonomies?.currencies.find((item) => item.code === 'USD')?.id || taxonomies?.currencies[0]?.id || '';
+  const preferredCurrencyId = taxonomies?.currencies.find((item) => item.code === 'USD')?.id;
+  const fallbackCurrencyId = taxonomies?.currencies[0]?.id;
+  const selectedCurrencyId = firstNonEmptyString(
+    currencyId,
+    preferredCurrencyId,
+    fallbackCurrencyId,
+  );
   const selectedCurrency = taxonomies?.currencies.find((item) => item.id === selectedCurrencyId);
   const countryIds = useMemo(() => Array.from(new Set(cityIds.flatMap((id) => {
     const countryId = taxonomies?.cities.find((city) => city.id === id)?.countryId;

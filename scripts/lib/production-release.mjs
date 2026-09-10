@@ -263,7 +263,22 @@ export function validateFlyConfig(toml) {
   const contextualReputation = String(
     env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
   ).trim().toLowerCase();
+  const publicReputationProjection = String(
+    env.get('PUBLIC_REPUTATION_PROJECTION_ENABLED') ?? '',
+  ).trim().toLowerCase();
+  const reputationAggregationWorker = String(
+    env.get('REPUTATION_AGGREGATION_WORKER_ENABLED') ?? '',
+  ).trim().toLowerCase();
+  const reputationAggregationEnvironment = String(
+    env.get('REPUTATION_AGGREGATION_ENVIRONMENT') ?? '',
+  ).trim().toLowerCase();
+  const reputationAggregationMode = String(
+    env.get('REPUTATION_AGGREGATION_MODE') ?? '',
+  ).trim().toLowerCase();
   const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
+  const eventDiscoveryAutoPublish = String(
+    env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
+  ).trim().toLowerCase();
   const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
   const internalFeedbackUploadRoot = String(
@@ -307,10 +322,33 @@ export function validateFlyConfig(toml) {
     );
   }
   if (contextualReputation !== 'false') {
-    throw new Error('fly.toml must stage CONTEXTUAL_REPUTATION_ENABLED="false" during rollout.');
+    throw new Error('fly.toml must keep CONTEXTUAL_REPUTATION_ENABLED="false" until a production cohort gate exists.');
+  }
+  if (publicReputationProjection !== 'true') {
+    throw new Error(
+      'fly.toml must set PUBLIC_REPUTATION_PROJECTION_ENABLED="true" for the separately authorized public-read gate.',
+    );
+  }
+  if (reputationAggregationWorker !== 'false') {
+    throw new Error(
+      'fly.toml must keep REPUTATION_AGGREGATION_WORKER_ENABLED="false" in production.',
+    );
+  }
+  if (reputationAggregationEnvironment !== 'production') {
+    throw new Error(
+      'fly.toml must set REPUTATION_AGGREGATION_ENVIRONMENT="production".',
+    );
+  }
+  if (reputationAggregationMode !== 'simulation') {
+    throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
   }
   if (eventDiscovery !== 'false') {
     throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
+  }
+  if (eventDiscoveryAutoPublish !== 'false') {
+    throw new Error(
+      'fly.toml must stage EVENT_DISCOVERY_AUTO_PUBLISH="false" during rollout.',
+    );
   }
   if (defaultLocale !== 'es') {
     throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
@@ -330,7 +368,11 @@ export function validateFlyConfig(toml) {
   return {
     runMigrations: false,
     autoApplyProductionMigrations: true,
+    reputationAggregationWorkerEnabled: false,
+    reputationAggregationEnvironment: 'production',
+    reputationAggregationMode: 'simulation',
     eventDiscoveryEnabled: false,
+    eventDiscoveryAutoPublish: false,
     defaultLocale: 'es',
     internalFeedbackUploadRoot: normalizedUploadRoot,
     healthCheckPath: '/health',
@@ -409,6 +451,13 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       id: String(migration.id ?? path.posix.basename(relativePath, '.sql')),
       path: relativePath,
       checksum,
+      compatibleAppliedChecksums: (migration.compatibleAppliedChecksums ?? []).map((value) => {
+        const normalized = String(value).toLowerCase();
+        if (!/^[0-9a-f]{64}$/.test(normalized)) {
+          throw new Error(`Migration ${relativePath} has an invalid compatible applied checksum.`);
+        }
+        return normalized;
+      }),
       source: migrationSource(migration),
     };
   });
@@ -427,7 +476,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       '  IF EXISTS (',
       '    SELECT 1 FROM public.tdf_schema_migration',
       `    WHERE migration_id = ${sqlLiteral(entry.id)}`,
-      `      AND checksum <> ${sqlLiteral(entry.checksum)}`,
+      `      AND checksum NOT IN (${[entry.checksum, ...(entry.compatibleAppliedChecksums ?? [])].map(sqlLiteral).join(', ')})`,
       '  ) THEN',
       `    RAISE EXCEPTION 'Checksum mismatch for migration ${entry.id}';`,
       '  END IF;',
@@ -646,7 +695,20 @@ BEGIN
   IF to_regclass('public.notification') IS NULL THEN
     RAISE EXCEPTION 'The notification relation is missing';
   END IF;
-  IF NOT EXISTS (
+  -- A named allowlist must include the access-request events. The pre-ledger
+  -- notification baseline had no allowlist at all, which is also valid: it
+  -- persists types produced by independently released notification features.
+  -- Do not mistake that supported unconstrained form for an incomplete
+  -- allowlist.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.notification'::regclass
+      AND (
+        conname = 'notification_notif_type_check'
+        OR (contype = 'c' AND 3 = ANY (conkey))
+      )
+  ) AND NOT EXISTS (
     SELECT 1
     FROM pg_constraint
     WHERE conrelid = 'public.notification'::regclass
@@ -773,6 +835,31 @@ BEGIN
       AND pg_get_constraintdef(oid) ILIKE '%start_time < end_time%'
   ) THEN
     RAISE EXCEPTION 'social_event_time_order is missing or invalid';
+  END IF;
+
+  IF to_regclass('public.directory_public_event') IS NULL
+     OR to_regclass('public.directory_public_search_document') IS NULL THEN
+    RAISE EXCEPTION 'The anonymous directory privacy views are missing';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%external_event_ref%'
+     OR pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%suppressed%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce imported-event tombstones';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_event%'
+     OR pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_venue%' THEN
+    RAISE EXCEPTION 'directory_public_search_document does not recheck live event and venue eligibility';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM directory_public_event event
+    JOIN external_event_ref reference ON reference.event_id = event.id
+    WHERE lower(btrim(reference.source_status)) = 'suppressed'
+  ) THEN
+    RAISE EXCEPTION 'A suppressed imported event remains in the anonymous directory';
   END IF;
 
   IF EXISTS (
@@ -2143,7 +2230,21 @@ END
 $verify$;`;
 }
 
-export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMachine }) {
+export function buildMachineDeployArgs({
+  app,
+  image,
+  sha,
+  onlyMachine,
+  excludeMachine,
+  contextualReputationEnabled = false,
+  publicReputationProjectionEnabled = false,
+}) {
+  if (typeof contextualReputationEnabled !== 'boolean') {
+    throw new Error('contextualReputationEnabled must be a boolean.');
+  }
+  if (typeof publicReputationProjectionEnabled !== 'boolean') {
+    throw new Error('publicReputationProjectionEnabled must be a boolean.');
+  }
   const args = [
     'flyctl', 'deploy', '.',
     '--app', app,
@@ -2153,8 +2254,13 @@ export function buildMachineDeployArgs({ app, image, sha, onlyMachine, excludeMa
     '--env', `GIT_SHA=${sha}`,
     '--env', 'RUN_MIGRATIONS=false',
     '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', 'CONTEXTUAL_REPUTATION_ENABLED=false',
+    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
+    '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
+    '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
+    '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
+    '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
     '--env', 'EVENT_DISCOVERY_ENABLED=false',
+    '--env', 'EVENT_DISCOVERY_AUTO_PUBLISH=false',
     '--strategy', 'rolling',
     '--max-unavailable', '1',
     '--wait-timeout', '10m',
@@ -2170,6 +2276,8 @@ export function buildReleaseSteps(options = {}) {
   if (options.flyConfig) validateFlyConfig(options.flyConfig);
   const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
   const sha = normalizeFullSha(options.sha);
+  const contextualReputationEnabled = false;
+  const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
   const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
   const descriptiveOnly = options.dryRun === true && options.execute !== true;
   const selectedCanary = options.canaryMachineId ?? options.canaryMachine;
@@ -2197,6 +2305,18 @@ export function buildReleaseSteps(options = {}) {
   const previousSha = descriptiveOnly && !rawPreviousSha
     ? '<captured-before-canary>'
     : normalizeFullSha(rawPreviousSha);
+  const rawPreviousContextualReputationEnabled =
+    options.priorContextualReputationEnabled?.[canary]
+    ?? options.previousContextualReputationEnabled;
+  if (!descriptiveOnly && typeof rawPreviousContextualReputationEnabled !== 'boolean') {
+    throw new Error(
+      'Executable release steps require the captured contextual-reputation flag for rollback.',
+    );
+  }
+  const previousContextualReputationEnabled =
+    typeof rawPreviousContextualReputationEnabled === 'boolean'
+      ? rawPreviousContextualReputationEnabled
+      : false;
 
   const rollbackCanary = {
     id: 'rollback-canary',
@@ -2206,6 +2326,8 @@ export function buildReleaseSteps(options = {}) {
       app,
       image: previousImage,
       sha: previousSha,
+      contextualReputationEnabled: previousContextualReputationEnabled,
+      publicReputationProjectionEnabled,
       onlyMachine: canary,
     }),
   };
@@ -2215,7 +2337,7 @@ export function buildReleaseSteps(options = {}) {
       id: `deploy-remaining-${index + 1}`,
       machineId,
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, onlyMachine: machineId }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: machineId }),
     },
     { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
   ]);
@@ -2228,7 +2350,7 @@ export function buildReleaseSteps(options = {}) {
     {
       id: 'deploy-canary',
       mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, onlyMachine: canary }),
+      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, onlyMachine: canary }),
     },
     { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
     ...remainingSteps,

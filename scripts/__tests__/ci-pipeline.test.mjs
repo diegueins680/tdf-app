@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -15,12 +15,12 @@ test('CI splits component checks and preserves Stack build caches', async () => 
   for (const job of ['repo-quality:', 'ui-quality:', 'mobile-quality:', 'backend-quality:', 'quality:']) {
     assert.match(workflow, new RegExp(`^  ${job}`, 'm'));
   }
-  assert.match(workflow, /uses: actions\/cache@v4/);
+  assert.match(workflow, /uses: actions\/cache@v6/);
   assert.match(workflow, /tdf-hq\/\.stack-work/);
   assert.match(workflow, /stack-work-v1-ghc-9\.10\.3/);
   assert.doesNotMatch(workflow, /stack-work[^\n]*github\.sha/);
   assert.match(workflow, /BACKEND_BINARY_OUT:/);
-  assert.match(workflow, /uses: actions\/upload-artifact@v4/);
+  assert.match(workflow, /uses: actions\/upload-artifact@v7/);
   assert.match(workflow, /concurrency:[\s\S]*?cancel-in-progress: true/);
 });
 
@@ -49,7 +49,7 @@ test('change detection includes deleted paths', async () => {
 
 test('backend image packages the tested artifact instead of recompiling Haskell', async () => {
   const workflow = await source('.github/workflows/build.yml');
-  assert.match(workflow, /uses: actions\/download-artifact@v4/);
+  assert.match(workflow, /uses: actions\/download-artifact@v8/);
   assert.match(workflow, /file: \.\/tdf-hq\/Dockerfile\.runtime/);
   assert.match(workflow, /cache-from: type=gha,scope=tdf-hq-backend/);
   assert.match(workflow, /group: build-image-/);
@@ -92,4 +92,36 @@ test('source Dockerfile introduces changing release metadata after compilation',
   const builder = dockerfile.slice(0, dockerfile.indexOf('FROM debian:bookworm-slim'));
   assert.ok(builder.indexOf('build --copy-bins') < builder.indexOf('ARG SOURCE_COMMIT=dev'));
   assert.ok(builder.indexOf('build --copy-bins') < builder.indexOf('ARG BUILD_TIME=unknown'));
+});
+
+test('affected active workflow actions use Node 24 majors', async () => {
+  const workflowDirectory = path.join(root, '.github', 'workflows');
+  const workflowFiles = (await readdir(workflowDirectory))
+    .filter((name) => /\.ya?ml$/u.test(name));
+  const workflows = (await Promise.all(
+    workflowFiles.map((name) => source(path.join('.github', 'workflows', name))),
+  )).join('\n');
+  const requiredPins = new Map([
+    ['actions/checkout', 'v7'],
+    ['actions/setup-node', 'v7'],
+    ['actions/cache', 'v6'],
+    ['actions/upload-artifact', 'v7'],
+    ['actions/download-artifact', 'v8'],
+    ['docker/login-action', 'v4'],
+    ['docker/setup-buildx-action', 'v4'],
+    ['docker/build-push-action', 'v7'],
+  ]);
+
+  for (const [action, expectedRef] of requiredPins) {
+    const escapedAction = action.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+    const references = [...workflows.matchAll(
+      new RegExp(`uses:\\s*${escapedAction}@(\\S+)`, 'gu'),
+    )].map((match) => match[1]);
+    assert.ok(references.length > 0, `${action} must remain covered by the runtime pin guard`);
+    assert.deepEqual(
+      [...new Set(references)],
+      [expectedRef],
+      `${action} must use its Node 24 major`,
+    );
+  }
 });

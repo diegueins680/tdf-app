@@ -4,10 +4,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
 import RouteIcon from '@mui/icons-material/Route';
+import ShareIcon from '@mui/icons-material/Share';
 import { Alert, Avatar, Box, Button, ButtonBase, Card, CardContent, Chip, CircularProgress, Divider, Stack, TextField, Typography } from '@mui/material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import PageShell, { EmptyState } from '../components/PageShell';
 import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTierDTO } from '../api/socialEvents';
+import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -42,6 +44,7 @@ export default function SocialEventDetailPage() {
   const [ticketName, setTicketName] = useState('General');
   const [ticketPrice, setTicketPrice] = useState('');
   const [ticketQuantity, setTicketQuantity] = useState('100');
+  const [shareFeedback, setShareFeedback] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
   const eventQuery = useQuery({
     queryKey: ['social-event', eventId],
     queryFn: () => SocialEventsAPI.getEvent(eventId),
@@ -61,6 +64,18 @@ export default function SocialEventDetailPage() {
     queryKey: ['social-event-ticket-tiers', eventId],
     queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
     enabled: Boolean(eventId),
+  });
+  const numericEventId = Number(eventId);
+  const ticketStorefrontPrerequisitesMet = Number.isSafeInteger(numericEventId)
+    && numericEventId > 0
+    && Boolean(tiersQuery.data?.length)
+    && eventQuery.data?.eventPublicListable === true
+    && eventQuery.data?.eventTicketPurchaseEnabled === true;
+  const storefrontQuery = useQuery({
+    queryKey: ['public-event-ticket-storefront', eventId],
+    queryFn: () => EventTickets.getStorefront(numericEventId),
+    enabled: ticketStorefrontPrerequisitesMet,
+    retry: false,
   });
   const postMutation = useMutation({
     mutationFn: async () => {
@@ -114,7 +129,42 @@ export default function SocialEventDetailPage() {
 
   const event = eventQuery.data;
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
+  const canShareTickets = ticketStorefrontPrerequisitesMet
+    && storefrontQuery.data?.checkoutAvailable === true;
+  const ticketPurchaseUrl = typeof window === 'undefined'
+    ? ''
+    : new URL(`/eventos/${encodeURIComponent(eventId)}/entradas`, window.location.origin).toString();
   const error = eventQuery.error ?? momentsQuery.error ?? postMutation.error;
+
+  const shareTicketPurchaseLink = async () => {
+    if (!event || !ticketPurchaseUrl) return;
+    setShareFeedback(null);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Entradas para ${event.eventTitle}`,
+          text: `Compra tus entradas para ${event.eventTitle}.`,
+          url: ticketPurchaseUrl,
+        });
+        setShareFeedback({ severity: 'success', message: 'Enlace de compra compartido.' });
+        return;
+      } catch (shareError) {
+        if (shareError instanceof Error && shareError.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Este navegador no permite compartir ni copiar el enlace.');
+      await navigator.clipboard.writeText(ticketPurchaseUrl);
+      setShareFeedback({ severity: 'success', message: 'Enlace de compra copiado al portapapeles.' });
+    } catch (clipboardError) {
+      setShareFeedback({
+        severity: 'error',
+        message: clipboardError instanceof Error ? clipboardError.message : 'No se pudo compartir el enlace de compra.',
+      });
+    }
+  };
 
   return (
     <PageShell
@@ -123,11 +173,25 @@ export default function SocialEventDetailPage() {
       loading={eventQuery.isLoading}
       actions={<Stack direction="row" spacing={1}>
         <Button component={RouterLink} to="/social/eventos" startIcon={<ArrowBackIcon />}>Eventos</Button>
+        {canShareTickets && (
+          <Button
+            onClick={() => { void shareTicketPurchaseLink(); }}
+            startIcon={<ShareIcon />}
+            variant="outlined"
+          >
+            Compartir entradas
+          </Button>
+        )}
         {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >
       <Stack spacing={2.5}>
         {error && <Alert severity="error">{error instanceof Error ? error.message : 'No se pudo cargar el evento.'}</Alert>}
+        {shareFeedback && (
+          <Alert severity={shareFeedback.severity} onClose={() => setShareFeedback(null)}>
+            {shareFeedback.message}
+          </Alert>
+        )}
         {event && (
           <Card variant="outlined">
             <CardContent>

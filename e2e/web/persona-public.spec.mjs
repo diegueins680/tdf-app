@@ -32,6 +32,13 @@ const publicTicketStorefront = {
   timezone: 'America/Guayaquil',
   venueName: 'Sala Ficticia Quito',
   venueAddress: null,
+  policy: {
+    policyVersion: 'fictional-policy-v1', currency: 'USD',
+    buyerFeeBps: 200, organizerFeeBps: 200, taxBps: 0, holdMinutes: 15,
+    termsVersion: 'fictional-ticket-terms-v1',
+    termsSummary: 'Aceptas el precio, las tarifas y las condiciones mostradas.',
+    refundPolicy: 'Reembolso total.', transferAllowed: true,
+  },
   checkoutAvailable: true,
   unavailableReason: null,
   tiers: [{
@@ -290,6 +297,8 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await expect(page.locator('main#main-content')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Festival Sintético TDF');
   await expect(page.getByText(/General.*25[,.]00/)).toBeVisible();
+  await expect(page.getByText('Aceptas el precio, las tarifas y las condiciones mostradas.')).toBeVisible();
+  await expect(page.getByText('Política de reembolso: Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
   await page.getByLabel('Email').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();

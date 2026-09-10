@@ -624,13 +624,33 @@
       "reviewed": true
     },
     {
-      "id": "ac1d43fea60bbc54a939",
+      "id": "2245e57c3a5e6500548e",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
       "justification": "Typed API-client method names are implementation mechanics; they are not selectable or reportable domain values.",
+      "reviewed": true
+    },
+    {
+      "id": "be74b101363c9d782b7d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the fixture shape could weaken API-contract coverage or conceal a ticket-sharing regression.",
+      "justification": "Synthetic SocialEventDTO fixture fields exercise the ticket-sharing API contract; they are not selectable or reportable business values.",
+      "reviewed": true
+    },
+    {
+      "id": "021a0a0b2670206f8f16",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "security_role, party_security_role, role_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "This exhaustive role-scope mirror must remain deny-by-default and match the backend authorization predicate; persisted security-role records remain authoritative for assignments and grants.",
       "reviewed": true
     },
     {
@@ -8514,13 +8534,23 @@
       "reviewed": true
     },
     {
-      "id": "9b2d5cc654d9e1fd8ccd",
+      "id": "b98598fcc3a39ba88a8d",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "navigation_item, navigation_item_permission",
       "priority": "P0-security",
       "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
       "justification": "The generated mobile feature registry mirrors the reviewed navigation and permission contract; persisted assignments remain authoritative and backend capabilities remain exhaustive.",
+      "reviewed": true
+    },
+    {
+      "id": "a8c245a50ea4cc27d69a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A malformed route view could show the wrong public rights content or break a shareable destination.",
+      "justification": "This closed union only selects one of three internal render modes for a single public page; it is not user-governed business data.",
       "reviewed": true
     },
     {
@@ -8584,13 +8614,43 @@
       "reviewed": true
     },
     {
-      "id": "23972701952c2373f31a",
+      "id": "f9c42312827b85f45af2",
       "classification": "security-system-registry",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Changing the migration list could break deployment execution or skip required schema changes.",
       "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "b65c3ecaa729e449a097",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unsupported language code could make consent evidence ambiguous during an audit or rights request.",
+      "justification": "The consent-event locale is a closed ISO language-code transport allowlist for the approved ES/EN disclosure, not a user-managed reputation category.",
+      "reviewed": true
+    },
+    {
+      "id": "607b195fbacda1cda7ba",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An ungoverned consent value could bypass the independent-consent boundary or make withdrawal ineffective.",
+      "justification": "The schema allowlist is the persisted enforcement boundary for the four independent reputation consents and must match its versioned API contract.",
+      "reviewed": true
+    },
+    {
+      "id": "45f33e33f834798912c3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Uncontrolled event provenance could weaken the consent audit trail used for disputes and compliance.",
+      "justification": "Consent-event sources are a closed audit-provenance allowlist enforced by the migration, not a user-selectable product catalog.",
       "reviewed": true
     },
     {
@@ -9421,6 +9481,96 @@
       "priority": "P3-retain",
       "risk": "Database drift could persist unsupported completion events and corrupt deduplicated onboarding reporting.",
       "justification": "The SQL constraint is defense in depth for the closed first-value analytics protocol, not a business catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "9051251d4c1c25de6864",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_worker_control",
+      "priority": "P1-cross-platform",
+      "risk": "An unreviewed environment value could bypass the staging-only worker boundary or make production safety checks ambiguous.",
+      "justification": "Worker environments are a closed deployment safety protocol enforced by process configuration, release validation, and database constraints; they are not user-editable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "7cce7e3a3e4e7d66d5f4",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P1-cross-platform",
+      "risk": "Allowing production run records could make staging simulation evidence appear authorized for a production calculation.",
+      "justification": "Run environments deliberately exclude production and form a closed staging/test audit boundary rather than a configurable domain catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "313580681fd31f59e568",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P2-domain",
+      "risk": "Unknown run kinds could evade replay uniqueness, simulation isolation, or the required backfill audit trail.",
+      "justification": "Run kinds are closed worker execution modes with different audit semantics; changes require a reviewed migration and worker update.",
+      "reviewed": true
+    },
+    {
+      "id": "5eaffb26c021fec61715",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_run",
+      "priority": "P2-domain",
+      "risk": "Lifecycle drift could mark incomplete calculations successful or leave completed runs eligible for further mutation.",
+      "justification": "Aggregation run states form a closed operational state machine constrained by the database; they are not labels or workflows editable by end users.",
+      "reviewed": true
+    },
+    {
+      "id": "6d575d3e3eeab1b5737e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the terminal-state subset could permit missing completion timestamps or attach them to unfinished runs.",
+      "justification": "This subset exists only to enforce timestamp consistency within the closed aggregation-run state machine.",
+      "reviewed": true
+    },
+    {
+      "id": "ebe9f37204e5abce60b8",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_outbox",
+      "priority": "P1-cross-platform",
+      "risk": "An unsupported control event could skip required invalidation fan-out or introduce an unaudited path into reputation calculation.",
+      "justification": "Event types are the versioned producer/consumer protocol approved by the operations runbook and enforced by the durable outbox schema.",
+      "reviewed": true
+    },
+    {
+      "id": "e39ba88f270dce3388a3",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_outbox",
+      "priority": "P1-cross-platform",
+      "risk": "Status drift could bypass lease fencing, retry limits, immutable completion evidence, or human-controlled DLQ recovery.",
+      "justification": "Outbox statuses form a closed database-enforced worker state machine; making them editable would weaken concurrency and recovery guarantees.",
+      "reviewed": true
+    },
+    {
+      "id": "f4f997d65f89ce981199",
+      "classification": "dynamic-business-catalog",
+      "disposition": "historical-evidence-replaced-by-forward-migration",
+      "specializedModel": "reputation_aggregate_candidate",
+      "priority": "P2-schema-history",
+      "risk": "Confidence-band drift could make simulation results incomparable with the versioned public reputation contract.",
+      "justification": "The candidate table mirrors the existing immutable confidence-band migration evidence; future policy changes require a new formula version and forward migration.",
+      "reviewed": true
+    },
+    {
+      "id": "8721db553b0c98670a89",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "reputation_aggregation_event_action",
+      "priority": "P1-cross-platform",
+      "risk": "Unknown audit actions could conceal event transitions or make DLQ recovery and incident reconstruction incomplete.",
+      "justification": "Event actions are immutable audit protocol identifiers emitted only by fenced database functions; changes require coordinated code and schema review.",
       "reviewed": true
     }
   ]

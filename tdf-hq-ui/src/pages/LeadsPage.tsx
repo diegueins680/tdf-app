@@ -48,7 +48,8 @@ function normalizeSearch(text: string): string {
 
 const normalizeLeadFieldValue = (value?: string | null) => {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (trimmed === undefined || trimmed === '') return null;
+  return trimmed;
 };
 
 const getLeadContactSummary = (lead: Pick<PartyDTO, 'primaryEmail' | 'primaryPhone'>) => {
