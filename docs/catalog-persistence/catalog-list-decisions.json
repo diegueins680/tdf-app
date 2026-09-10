@@ -9794,16 +9794,6 @@
       "reviewed": true
     },
     {
-      "id": "765a4cc2c83542dd0121",
-      "classification": "dynamic-business-catalog",
-      "disposition": "historical-evidence-replaced-by-forward-migration",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P1-cross-platform",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "Historical migration evidence is immutable; a forward migration removes string authority and adds canonical foreign keys.",
-      "reviewed": true
-    },
-    {
       "id": "e1baff2f41ba83e7af06",
       "classification": "dynamic-business-catalog",
       "disposition": "historical-evidence-replaced-by-forward-migration",
@@ -10091,6 +10081,36 @@
       "priority": "P3-retain",
       "risk": "Changing this fixture shape could conceal drift in the merch capability contract or make a native runtime check appear to expose checkout or payment capabilities that remain disabled.",
       "justification": "These are immutable response-field names in a read-only synthetic mobile fixture, not selectable capabilities or permission authority; production feature and payment availability remains backend-authoritative.",
+      "reviewed": true
+    },
+    {
+      "id": "6e49e1dd9002b9a384f9",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "commerce_refund_status_machine",
+      "priority": "P0-security",
+      "risk": "A transport enum that drifts from the canonical refund ledger can advertise an unsafe transition or misstate whether provider execution completed.",
+      "justification": "The OpenAPI enum is a typed consumer of the canonical, database-guarded refund state machine. It must be regenerated with clients whenever the authoritative ledger changes and is not an administrable presentation catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "0cfb8aa20b474bac72fd",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "merch_order_refund_projection_state_machine",
+      "priority": "P0-security",
+      "risk": "Permitting an unknown projection state could conflate authorization, provider execution, completed evidence, or cancellation on a commercial order.",
+      "justification": "This database constraint is the exhaustive financial-state boundary for the merch order projection. Canonical commerce_refund rows remain authoritative and triggers map only reviewed states; the set must fail closed and is not user-configurable.",
+      "reviewed": true
+    },
+    {
+      "id": "015ddf4475d1e02f496a",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "commerce_refund_status_machine",
+      "priority": "P0-security",
+      "risk": "Accepting an unknown refund filter could hide canonical evidence or blur the distinction between approval and completed provider execution.",
+      "justification": "This exhaustive parser allowlist is a fail-closed API boundary mirrored by the canonical database enum and transition functions. It is not a selectable or administrable business catalog.",
       "reviewed": true
     }
   ]

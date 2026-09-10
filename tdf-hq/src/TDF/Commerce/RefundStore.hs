@@ -3,10 +3,14 @@
 
 module TDF.Commerce.RefundStore
   ( RefundCreation(..)
+  , RefundAllocation(..)
   , RefundReference(..)
   , RefundRecord(..)
   , VerifiedRefund(..)
   , requestSingleLineRefund
+  , requestAllocatedRefund
+  , approveRefundRequest
+  , cancelRefundRequest
   , approveRefundForProcessing
   , recordRefundPending
   , recordRefundFailure
@@ -21,11 +25,13 @@ import           Control.Monad (when)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Char (isAsciiLower, isDigit)
 import           Data.Int (Int64)
+import           Data.List (sortOn)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
+import qualified Data.UUID as UUID
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql)
 
@@ -55,6 +61,11 @@ data RefundCreation = RefundCreation
   , rcRequestedBy    :: Int64
   , rcCreatedAt      :: UTCTime
   }
+
+data RefundAllocation = RefundAllocation
+  { raLineItemId :: Text
+  , raAmountMinor :: Int64
+  } deriving (Eq, Show)
 
 data RefundRecord = RefundRecord
   { rrReference        :: RefundReference
@@ -87,10 +98,30 @@ data VerifiedRefund = VerifiedRefund
 requestSingleLineRefund
   :: RefundCreation
   -> SqlPersistT IO (Either Text RefundRecord)
-requestSingleLineRefund creation@RefundCreation{..}
+requestSingleLineRefund creation@RefundCreation{..} = do
+  lineItems <- (rawSql
+    "SELECT id::text FROM commerce_checkout_line_item\
+    \ WHERE checkout_id = ?::uuid ORDER BY line_number"
+    [PersistText (checkoutReferenceId rcCheckout)]
+    :: SqlPersistT IO [Single Text])
+  case lineItems of
+    [Single lineItemId] -> requestAllocatedRefund creation
+      [RefundAllocation lineItemId rcAmountMinor]
+    _ -> pure (Left "Service refund requires exactly one immutable checkout line")
+
+requestAllocatedRefund
+  :: RefundCreation
+  -> [RefundAllocation]
+  -> SqlPersistT IO (Either Text RefundRecord)
+requestAllocatedRefund creation@RefundCreation{..} allocations
   | rcRequestedBy <= 0 = pure (Left "Refund requester must be an authenticated party")
   | not (validIdempotencyKey rcIdempotencyKey) =
       pure (Left "Refund Idempotency-Key must contain 16 to 128 visible ASCII characters")
+  | null allocations = pure (Left "Refund requires at least one immutable line allocation")
+  | any invalidAllocation allocations =
+      pure (Left "Refund allocations require unique UUID line IDs and positive amounts")
+  | sum (map (toInteger . raAmountMinor) allocations) /= toInteger rcAmountMinor =
+      pure (Left "Refund allocations must equal the requested amount")
   | otherwise = case validateRefundReason rcReasonCode of
       Left message -> pure (Left message)
       Right reason -> do
@@ -119,32 +150,96 @@ requestSingleLineRefund creation@RefundCreation{..}
         ] :: SqlPersistT IO [(Single Int64, Single Int64, Single Text)])
       case paymentRows of
         [(Single paidMinor, Single refundedMinor, Single storedCurrency)] -> do
-          reservedRows <- (rawSql
-            "SELECT COALESCE(SUM(amount_minor), 0) FROM commerce_refund\
-            \ WHERE checkout_id = ?::uuid\
-            \ AND status IN ('requested','approved','processing')"
-            [PersistText (checkoutReferenceId rcCheckout)] :: SqlPersistT IO [Single Int64])
-          let reservedMinor = case reservedRows of
-                [Single amount] -> amount
-                _ -> paidMinor
-              requestedCurrency = normalizeCurrency rcCurrency
-          case validateRefundAmount
-                paidMinor refundedMinor reservedMinor rcAmountMinor
-                storedCurrency requestedCurrency of
+          replay <- loadIdempotentRefund creation { rcReasonCode = reason } allocations
+          case replay of
             Left message -> pure (Left message)
-            Right () -> do
-              lineItems <- (rawSql
-                "SELECT id::text FROM commerce_checkout_line_item\
-                \ WHERE checkout_id = ?::uuid ORDER BY line_number"
-                [PersistText (checkoutReferenceId rcCheckout)]
-                :: SqlPersistT IO [Single Text])
-              case lineItems of
-                [Single lineItemId] ->
-                  insertOrReplay lineItemId creation { rcReasonCode = reason }
-                _ -> pure (Left
-                  "Service refund requires exactly one immutable checkout line")
+            Right (Just record) -> pure (Right record)
+            Right Nothing -> do
+              reservedRows <- (rawSql
+                "SELECT COALESCE(SUM(amount_minor), 0) FROM commerce_refund\
+                \ WHERE checkout_id = ?::uuid\
+                \ AND status IN ('requested','approved','processing')"
+                [PersistText (checkoutReferenceId rcCheckout)] :: SqlPersistT IO [Single Int64])
+              let reservedMinor = case reservedRows of
+                    [Single amount] -> amount
+                    _ -> paidMinor
+                  requestedCurrency = normalizeCurrency rcCurrency
+              case validateRefundAmount
+                    paidMinor refundedMinor reservedMinor rcAmountMinor
+                    storedCurrency requestedCurrency of
+                Left message -> pure (Left message)
+                Right () -> do
+                  allocationResult <- validateLineAllocations rcCheckout allocations
+                  case allocationResult of
+                    Left message -> pure (Left message)
+                    Right () -> insertOrReplay allocations creation { rcReasonCode = reason }
         [] -> pure (Left "Refund does not match a succeeded canonical payment")
         _ -> pure (Left "Refund payment binding is ambiguous")
+    invalidAllocation allocation =
+      raAmountMinor allocation <= 0 || UUID.fromText (raLineItemId allocation) == Nothing
+        || length (filter
+          (\candidate -> raLineItemId candidate == raLineItemId allocation)
+          allocations) /= 1
+
+approveRefundRequest
+  :: RefundReference
+  -> Int64
+  -> UTCTime
+  -> SqlPersistT IO (Either Text (RefundRecord, Bool))
+approveRefundRequest refundRef approver now
+  | approver <= 0 = pure (Left "Refund approver must be an authenticated party")
+  | otherwise = do
+      records <- loadRefundForUpdate refundRef
+      case records of
+        [record]
+          | rrStatus record == "approved" -> pure (Right (record, False))
+          | rrStatus record == "cancelled" -> pure (Left "Cancelled refund cannot be approved")
+          | rrRequestedBy record == approver ->
+              pure (Left "Refund approval requires a different authenticated party")
+          | rrStatus record == "requested" -> do
+              rawExecute
+                "UPDATE commerce_refund SET status = 'approved', approved_by = ?,\
+                \ updated_at = ? WHERE id = ?::uuid AND status = 'requested'"
+                [ PersistInt64 approver
+                , PersistUTCTime now
+                , PersistText (refundReferenceId refundRef)
+                ]
+              updated <- loadRefund refundRef
+              maybe
+                (pure (Left "Approved refund could not be reloaded"))
+                (\value -> pure (Right (value, True)))
+                updated
+          | otherwise -> pure (Left "Refund is not awaiting approval")
+        [] -> pure (Left "Refund was not found")
+        _ -> pure (Left "Refund lookup was ambiguous")
+
+cancelRefundRequest
+  :: RefundReference
+  -> Int64
+  -> UTCTime
+  -> SqlPersistT IO (Either Text (RefundRecord, Bool))
+cancelRefundRequest refundRef actor now
+  | actor <= 0 = pure (Left "Refund cancellation requires an authenticated party")
+  | otherwise = do
+      records <- loadRefundForUpdate refundRef
+      case records of
+        [record]
+          | rrStatus record == "cancelled" -> pure (Right (record, False))
+          | rrStatus record `elem` ["requested", "approved", "failed"] -> do
+              rawExecute
+                "UPDATE commerce_refund SET status='cancelled',updated_at=?\
+                \ WHERE id=?::uuid AND status IN ('requested','approved','failed')"
+                [PersistUTCTime now, PersistText (refundReferenceId refundRef)]
+              updated <- loadRefund refundRef
+              maybe
+                (pure (Left "Cancelled refund could not be reloaded"))
+                (\value -> pure (Right (value, True)))
+                updated
+          | rrStatus record == "succeeded" ->
+              pure (Left "Succeeded refund evidence is immutable")
+          | otherwise -> pure (Left "Refund cannot be cancelled while provider processing is active")
+        [] -> pure (Left "Refund was not found")
+        _ -> pure (Left "Refund lookup was ambiguous")
 
 approveRefundForProcessing
   :: RefundReference
@@ -330,10 +425,10 @@ validateRefundReason rawReason
     reason = T.toLower (T.strip rawReason)
 
 insertOrReplay
-  :: Text
+  :: [RefundAllocation]
   -> RefundCreation
   -> SqlPersistT IO (Either Text RefundRecord)
-insertOrReplay lineItemId RefundCreation{..} = do
+insertOrReplay allocations RefundCreation{..} = do
   refundId <- liftIO (toText <$> nextRandom)
   inserted <- (rawSql
     "INSERT INTO commerce_refund (\
@@ -358,10 +453,7 @@ insertOrReplay lineItemId RefundCreation{..} = do
     ] :: SqlPersistT IO [Single Text])
   resolvedId <- case inserted of
     [Single newId] -> do
-      rawExecute
-        "INSERT INTO commerce_refund_allocation (refund_id, line_item_id, amount_minor)\
-        \ VALUES (?::uuid, ?::uuid, ?)"
-        [PersistText newId, PersistText lineItemId, PersistInt64 rcAmountMinor]
+      mapM_ (insertAllocation newId) allocations
       pure (Right newId)
     [] -> do
       existing <- (rawSql
@@ -381,15 +473,104 @@ insertOrReplay lineItemId RefundCreation{..} = do
         , PersistText rcReasonCode
         , PersistInt64 rcRequestedBy
         ] :: SqlPersistT IO [Single Text])
-      pure $ case existing of
-        [Single existingId] -> Right existingId
-        _ -> Left "Refund idempotency key conflicts with another immutable request"
+      case existing of
+        [Single existingId] -> do
+          matches <- allocationSnapshotMatches existingId allocations
+          pure $ if matches
+            then Right existingId
+            else Left "Refund idempotency key conflicts with another immutable request"
+        _ -> pure (Left "Refund idempotency key conflicts with another immutable request")
     _ -> pure (Left "Refund insert returned an ambiguous result")
   case resolvedId of
     Left message -> pure (Left message)
     Right value -> do
       record <- loadRefund (RefundReference value)
       maybe (pure (Left "Refund could not be loaded")) (pure . Right) record
+  where
+    insertAllocation :: Text -> RefundAllocation -> SqlPersistT IO ()
+    insertAllocation refundId RefundAllocation{..} = rawExecute
+      "INSERT INTO commerce_refund_allocation (refund_id, line_item_id, amount_minor)\
+      \ VALUES (?::uuid, ?::uuid, ?)"
+      [PersistText refundId, PersistText raLineItemId, PersistInt64 raAmountMinor]
+
+loadIdempotentRefund
+  :: RefundCreation
+  -> [RefundAllocation]
+  -> SqlPersistT IO (Either Text (Maybe RefundRecord))
+loadIdempotentRefund RefundCreation{..} allocations = do
+  existing <- (rawSql
+    "SELECT id::text FROM commerce_refund\
+    \ WHERE payment_attempt_id = ?::uuid AND idempotency_key = ?"
+    [ PersistText (paymentAttemptReferenceId rcPaymentAttempt)
+    , PersistText rcIdempotencyKey
+    ] :: SqlPersistT IO [Single Text])
+  case existing of
+    [] -> pure (Right Nothing)
+    [Single existingId] -> do
+      coreMatches <- (rawSql
+        "SELECT EXISTS(SELECT 1 FROM commerce_refund WHERE id=?::uuid\
+        \ AND checkout_id=?::uuid AND provider=? AND environment=?\
+        \ AND merchant_account_ref=? AND amount_minor=? AND currency=?\
+        \ AND reason_code=? AND requested_by=?)"
+        [ PersistText existingId
+        , PersistText (checkoutReferenceId rcCheckout)
+        , PersistText (paymentProviderText rcProvider)
+        , PersistText (checkoutEnvironmentText rcEnvironment)
+        , PersistText rcMerchantRef
+        , PersistInt64 rcAmountMinor
+        , PersistText (normalizeCurrency rcCurrency)
+        , PersistText rcReasonCode
+        , PersistInt64 rcRequestedBy
+        ] :: SqlPersistT IO [Single Bool])
+      allocationMatches <- allocationSnapshotMatches existingId allocations
+      if coreMatches /= [Single True] || not allocationMatches
+        then pure (Left "Refund idempotency key conflicts with another immutable request")
+        else do
+          record <- loadRefund (RefundReference existingId)
+          pure $ maybe
+            (Left "Refund could not be loaded")
+            (Right . Just)
+            record
+    _ -> pure (Left "Refund idempotency state is ambiguous")
+
+allocationSnapshotMatches :: Text -> [RefundAllocation] -> SqlPersistT IO Bool
+allocationSnapshotMatches refundId expected = do
+  rows <- (rawSql
+    "SELECT line_item_id::text,amount_minor FROM commerce_refund_allocation\
+    \ WHERE refund_id=?::uuid ORDER BY line_item_id"
+    [PersistText refundId] :: SqlPersistT IO [(Single Text, Single Int64)])
+  let actual = [RefundAllocation lineId amount | (Single lineId, Single amount) <- rows]
+  pure (sortOn raLineItemId actual == sortOn raLineItemId expected)
+
+validateLineAllocations
+  :: CheckoutReference
+  -> [RefundAllocation]
+  -> SqlPersistT IO (Either Text ())
+validateLineAllocations checkout allocations = do
+  rows <- (rawSql
+    "SELECT item.id::text,item.total_minor,coalesce(sum(allocation.amount_minor)\
+    \ FILTER (WHERE refund.status IN ('requested','approved','processing','succeeded')),0)\
+    \ FROM commerce_checkout_line_item item\
+    \ LEFT JOIN commerce_refund_allocation allocation ON allocation.line_item_id=item.id\
+    \ LEFT JOIN commerce_refund refund ON refund.id=allocation.refund_id\
+    \ WHERE item.checkout_id=?::uuid AND item.id=ANY(?::uuid[])\
+    \ GROUP BY item.id,item.total_minor ORDER BY item.id"
+    [ PersistText (checkoutReferenceId checkout)
+    , PersistArray (map (PersistText . raLineItemId) allocations)
+    ] :: SqlPersistT IO [(Single Text, Single Int64, Single Int64)])
+  let requested = sortOn raLineItemId allocations
+      available = sortOn raLineItemId
+        [RefundAllocation lineId (total - committed)
+        | (Single lineId, Single total, Single committed) <- rows]
+  pure $ if length rows /= length allocations
+    then Left "Refund allocation does not belong to the immutable checkout"
+    else if and (zipWith allocationFits requested available)
+      then Right ()
+      else Left "Refund allocation exceeds an immutable line balance"
+  where
+    allocationFits requested available =
+      raLineItemId requested == raLineItemId available
+        && raAmountMinor requested <= raAmountMinor available
 
 loadRefundForUpdate :: RefundReference -> SqlPersistT IO [RefundRecord]
 loadRefundForUpdate refundRef =

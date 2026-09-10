@@ -6202,6 +6202,53 @@ paths:
       responses:
         '200': { description: Updated issue, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
         '409': { description: Terminal case or concurrent update }
+  /merch/admin/refunds:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchRefunds
+      summary: List canonical merch refund requests without buyer personal data
+      parameters: [ { name: status, in: query, schema: { $ref: '#/components/schemas/MerchRefundStatus' } } ]
+      responses:
+        '200': { description: Strict-admin refund queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchRefund' } } } } }
+        '400': { description: Unsupported refund status filter }
+        '403': { description: Strict administrator permission required }
+        '503': { description: Merch refund operations are feature-gated }
+  /merch/admin/orders/{orderId}/refunds:
+    post:
+      tags: [Artist merch administration]
+      operationId: createAdminMerchRefund
+      summary: Prepare a canonical full or partial merch refund
+      description: Requires an eligible support case in staff review and a verified successful payment. Amounts are assigned server-side across immutable checkout lines. This endpoint never calls a payment provider.
+      parameters:
+        - { $ref: '#/components/parameters/MerchOrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchRefundRequest' } } } }
+      responses:
+        '201': { description: Requested canonical refund; no provider action occurred, content: { application/json: { schema: { $ref: '#/components/schemas/MerchRefund' } } } }
+        '400': { description: Invalid reason, amount, note, or idempotency key }
+        '409': { description: Payment, support case, allocation, balance, or idempotency conflict }
+        '503': { description: Merch refund operations are feature-gated }
+  /merch/admin/refunds/{refundId}/status:
+    patch:
+      tags: [Artist merch administration]
+      operationId: reviewAdminMerchRefund
+      summary: Independently approve or cancel a merch refund request
+      description: Approval requires a different authenticated administrator from the requester. Approved means operationally authorized only; provider execution remains disabled until a merch adapter is verified in sandbox.
+      parameters: [ { name: refundId, in: path, required: true, schema: { type: string, format: uuid } } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchRefundReviewRequest' } } } }
+      responses:
+        '200': { description: Updated canonical refund without provider execution, content: { application/json: { schema: { $ref: '#/components/schemas/MerchRefund' } } } }
+        '409': { description: Invalid transition, self-approval, or concurrent change }
+  /merch/admin/disputes:
+    get:
+      tags: [Artist merch administration]
+      operationId: listAdminMerchDisputes
+      summary: Monitor canonical provider dispute records for merch
+      description: Read-only projection. There is intentionally no API to fabricate a provider dispute or chargeback outcome.
+      responses:
+        '200': { description: Strict-admin canonical dispute queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchDispute' } } } } }
+        '403': { description: Strict administrator permission required }
+        '503': { description: Merch dispute monitoring is feature-gated }
   /merch/admin/settlements:
     get:
       tags: [Artist merch administration]
@@ -6450,12 +6497,14 @@ components:
         features:
           type: object
           additionalProperties: false
-          required: [storefronts, sellerApplications, publicCatalog, checkout, reviews, notifications, experimental]
+          required: [storefronts, sellerApplications, publicCatalog, checkout, refundOperations, disputeMonitoring, reviews, notifications, experimental]
           properties:
             storefronts: { type: boolean }
             sellerApplications: { type: boolean }
             publicCatalog: { type: boolean }
             checkout: { type: boolean, description: True only when at least one payment method is enabled and fully configured. }
+            refundOperations: { type: boolean, description: Enables preparation and dual-control approval only; provider execution has a separate adapter gate. }
+            disputeMonitoring: { type: boolean, description: Enables the read-only canonical provider dispute queue. }
             reviews: { type: boolean }
             notifications: { type: boolean }
             experimental: { type: boolean }
@@ -6828,6 +6877,13 @@ components:
         message: { type: string }
         resolution: { type: string, nullable: true }
         internalNotes: { type: string, nullable: true, description: Visible only to an authorized seller or strict administrator. }
+        currency: { type: string, enum: [USD] }
+        totalMinor: { type: integer, format: int64 }
+        refundedMinor: { type: integer, format: int64 }
+        paymentStatus: { type: string }
+        refundStatus: { type: string }
+        disputeStatus: { type: string }
+        settlementStatus: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         closedAt: { type: string, format: date-time, nullable: true }
@@ -6840,6 +6896,72 @@ components:
         status: { $ref: '#/components/schemas/MerchIssueStatus' }
         publicResponse: { type: string, minLength: 1, maxLength: 5000, nullable: true }
         internalNotes: { type: string, minLength: 1, maxLength: 5000, nullable: true }
+    MerchRefundRequest:
+      type: object
+      additionalProperties: false
+      required: [issueId, reasonCode]
+      properties:
+        issueId: { type: string, format: uuid, description: Eligible financial support case currently in staff review. }
+        amountMinor: { type: integer, format: int64, minimum: 1, nullable: true, description: Omit for the remaining unreserved paid balance. }
+        reasonCode: { type: string, minLength: 2, maxLength: 64, pattern: '^[a-z][a-z0-9_]*$' }
+        note: { type: string, minLength: 10, maxLength: 2000, nullable: true }
+    MerchRefundReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [decision, reviewNote]
+      properties:
+        decision: { type: string, enum: [approve, cancel] }
+        reviewNote: { type: string, minLength: 10, maxLength: 2000 }
+    MerchRefundStatus:
+      type: string
+      enum: [requested, approved, processing, succeeded, failed, cancelled]
+    MerchRefund:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, orderNumber, storeId, storeName, issueId, status, amountMinor, currency, reasonCode, provider, requestedBy, requestedByName, createdAt, settlementStatus, executionAvailable, executionMessage]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        orderNumber: { type: string }
+        storeId: { type: string, format: uuid }
+        storeName: { type: string }
+        issueId: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/MerchRefundStatus' }
+        amountMinor: { type: integer, format: int64 }
+        currency: { type: string, enum: [USD] }
+        reasonCode: { type: string }
+        requestNote: { type: string, nullable: true }
+        provider: { type: string, enum: [datafast, paypal, stripe, bank_transfer, cash, pos] }
+        providerRefundId: { type: string, nullable: true, description: Present only after verified provider evidence is recorded through a future gated adapter. }
+        requestedBy: { type: integer, format: int64 }
+        requestedByName: { type: string }
+        approvedBy: { type: integer, format: int64, nullable: true }
+        approvedByName: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+        settlementStatus: { type: string }
+        executionAvailable: { type: boolean, enum: [false] }
+        executionMessage: { type: string }
+    MerchDispute:
+      type: object
+      additionalProperties: false
+      required: [id, orderId, orderNumber, storeId, storeName, providerDisputeId, kind, status, amountMinor, currency, openedAt, readOnly]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        orderNumber: { type: string }
+        storeId: { type: string, format: uuid }
+        storeName: { type: string }
+        providerDisputeId: { type: string }
+        kind: { type: string, enum: [inquiry, dispute, chargeback] }
+        status: { type: string }
+        amountMinor: { type: integer, format: int64 }
+        currency: { type: string, enum: [USD] }
+        reasonCode: { type: string, nullable: true }
+        openedAt: { type: string, format: date-time }
+        dueAt: { type: string, format: date-time, nullable: true }
+        closedAt: { type: string, format: date-time, nullable: true }
+        readOnly: { type: boolean, enum: [true] }
     MerchStatusRequest:
       type: object
       additionalProperties: false

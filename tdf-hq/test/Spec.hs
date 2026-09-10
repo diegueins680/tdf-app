@@ -133,6 +133,7 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
@@ -853,6 +854,19 @@ main = hspec $ do
             Merch.validateQuantity 100 `shouldBe` Right 100
             Merch.validateQuantity 101 `shouldSatisfy` isLeft
             Merch.validateCheckoutText "recipient.name" 80 "  Paola  " `shouldBe` Right "Paola"
+
+        it "allocates partial refunds deterministically across immutable checkout lines" $ do
+            MerchServer.allocateRefundAcrossLines 5500
+              [ ("9b000000-0000-4000-8000-000000000001",5000)
+              , ("9b000000-0000-4000-8000-000000000002",800)
+              ] `shouldBe` Right
+                [ RefundStore.RefundAllocation "9b000000-0000-4000-8000-000000000001" 5000
+                , RefundStore.RefundAllocation "9b000000-0000-4000-8000-000000000002" 500
+                ]
+            MerchServer.allocateRefundAcrossLines 5801
+              [ ("9b000000-0000-4000-8000-000000000001",5000)
+              , ("9b000000-0000-4000-8000-000000000002",800)
+              ] `shouldSatisfy` isLeft
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec

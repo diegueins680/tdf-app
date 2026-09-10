@@ -218,6 +218,22 @@ data MerchIssueTriageRequest = MerchIssueTriageRequest
 instance FromJSON MerchIssueTriageRequest where parseJSON = genericParseJSON (merchOptions 3)
 instance ToJSON MerchIssueTriageRequest where toJSON = genericToJSON (merchOptions 3)
 
+data MerchRefundRequest = MerchRefundRequest
+  { mreIssueId    :: UUID
+  , mreAmountMinor :: Maybe Int64
+  , mreReasonCode :: Text
+  , mreNote       :: Maybe Text
+  } deriving (Show, Generic)
+instance FromJSON MerchRefundRequest where parseJSON = genericParseJSON (merchOptions 3)
+instance ToJSON MerchRefundRequest where toJSON = genericToJSON (merchOptions 3)
+
+data MerchRefundReviewRequest = MerchRefundReviewRequest
+  { mrvDecision   :: Text
+  , mrvReviewNote :: Text
+  } deriving (Show, Generic)
+instance FromJSON MerchRefundReviewRequest where parseJSON = genericParseJSON (merchOptions 3)
+instance ToJSON MerchRefundReviewRequest where toJSON = genericToJSON (merchOptions 3)
+
 data MerchFulfillmentRequest = MerchFulfillmentRequest
   { mfrStatus         :: Text
   , mfrPublicNote     :: Maybe Text
@@ -401,6 +417,12 @@ type MerchProtectedAPI = "merch" :>
   :<|> "admin" :> "issues" :> QueryParam "status" Text :> Get '[JSON] [Value]
   :<|> "admin" :> "issues" :> Capture "issueId" UUID
          :> ReqBody '[JSON] MerchIssueTriageRequest :> Patch '[JSON] Value
+  :<|> "admin" :> "refunds" :> QueryParam "status" Text :> Get '[JSON] [Value]
+  :<|> "admin" :> "orders" :> Capture "orderId" UUID :> "refunds"
+         :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MerchRefundRequest :> PostCreated '[JSON] Value
+  :<|> "admin" :> "refunds" :> Capture "refundId" UUID :> "status"
+         :> ReqBody '[JSON] MerchRefundReviewRequest :> Patch '[JSON] Value
+  :<|> "admin" :> "disputes" :> Get '[JSON] [Value]
   :<|> "admin" :> "settlements" :> ReqBody '[JSON] MerchSettlementRequest :> PostCreated '[JSON] Value
   :<|> "admin" :> "settlements" :> Capture "settlementId" UUID :> "status"
          :> ReqBody '[JSON] MerchStatusRequest :> Patch '[JSON] Value

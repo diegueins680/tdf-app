@@ -69,6 +69,7 @@ fi
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/init_schema.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/test/integration/artist_merch_runtime_schema_fixture.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
 apply_file "$TDF_MERCH_RUNTIME_ROOT/tdf-hq/test/integration/artist_merch_runtime_fixture.sql"

@@ -152,6 +152,15 @@ INSERT INTO merch_order_line(
   '{"name":"Runtime Shirt"}','{"sku":"RUNTIME-TEE-M","name":"M"}',
   '{"id":"93000000-0000-4000-8000-000000000001","version":1}'
 );
+INSERT INTO merch_order_line(
+  id,order_id,line_number,product_id,variant_id,quantity,unit_price_minor,subtotal_minor,total_minor,
+  product_snapshot,variant_snapshot,policy_snapshot
+) VALUES(
+  '99000000-0000-4000-8000-000000000005','98000000-0000-4000-8000-000000000005',1,
+  '95000000-0000-4000-8000-000000000001','96000000-0000-4000-8000-000000000001',1,5000,5000,5000,
+  '{"name":"Runtime Shirt"}','{"sku":"RUNTIME-TEE-M","name":"M"}',
+  '{"id":"93000000-0000-4000-8000-000000000001","version":1}'
+);
 INSERT INTO commerce_checkout_session(
   id,domain_type,domain_order_id,status,environment,currency,subtotal_minor,total_minor,customer_email,
   lookup_token_hash,idempotency_key,expires_at
@@ -176,6 +185,36 @@ SELECT merch_reserve_stock(
   (SELECT expires_at FROM commerce_checkout_session WHERE id='9a000000-0000-4000-8000-000000000004')
 );
 
+INSERT INTO commerce_checkout_session(
+  id,domain_type,domain_order_id,status,environment,currency,subtotal_minor,fee_minor,total_minor,
+  paid_minor,customer_email,lookup_token_hash,idempotency_key,expires_at,paid_at
+) VALUES(
+  '9a000000-0000-4000-8000-000000000005','merch_order','98000000-0000-4000-8000-000000000005',
+  'paid','sandbox','USD',5000,500,5500,5500,'settlement.buyer@example.test',
+  encode(digest('runtime-settlement-checkout-token','sha256'),'hex'),
+  'runtime-settlement-checkout-005',now()+interval '20 minutes',now()
+);
+UPDATE merch_order SET checkout_id='9a000000-0000-4000-8000-000000000005'
+WHERE id='98000000-0000-4000-8000-000000000005';
+INSERT INTO commerce_checkout_line_item(
+  id,checkout_id,line_number,product_type,product_id,product_version,description,quantity,
+  unit_amount_minor,subtotal_minor,total_minor,snapshot
+) VALUES
+  ('9b000000-0000-4000-8000-000000000005','9a000000-0000-4000-8000-000000000005',1,
+   'merch_variant','96000000-0000-4000-8000-000000000001','1','Runtime Shirt — M',1,5000,5000,5000,
+   '{"storeId":"92000000-0000-4000-8000-000000000001","sku":"RUNTIME-TEE-M"}'),
+  ('9b000000-0000-4000-8000-000000000006','9a000000-0000-4000-8000-000000000005',2,
+   'merch_shipping','93000000-0000-4000-8000-000000000002','1','Synthetic shipping',1,500,500,500,
+   '{"storeId":"92000000-0000-4000-8000-000000000001","deliveryMethod":"national_shipping"}');
+INSERT INTO commerce_payment_attempt(
+  id,checkout_id,provider,environment,operation,status,amount_minor,currency,merchant_account_ref,
+  idempotency_key,created_at,updated_at
+) VALUES(
+  '9c000000-0000-4000-8000-000000000005','9a000000-0000-4000-8000-000000000005',
+  'paypal','sandbox','capture','succeeded',5500,'USD','runtime-merch-merchant',
+  'runtime-settlement-payment-005',now(),now()
+);
+
 INSERT INTO merch_order_issue(
   id,order_id,opened_by_type,issue_type,public_message,idempotency_key,request_sha256
 ) VALUES
@@ -198,5 +237,7 @@ WHERE environment='sandbox'
     'merch.public_catalog',
     'merch.checkout',
     'merch.checkout.runtime_ready',
-    'merch.checkout.manual'
+    'merch.checkout.manual',
+    'merch.refunds',
+    'merch.disputes'
   );

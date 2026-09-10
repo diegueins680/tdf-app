@@ -19,7 +19,7 @@ import           Data.Time (getCurrentTime)
 import           Data.Time.Format.ISO8601 (iso8601Show)
 import qualified Data.UUID as UUID
 import           Database.Persist (PersistValue(..))
-import           Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool, toSqlKey)
+import           Database.Persist.Sql (Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import qualified Network.HTTP.Client as HTTP
 import qualified Network.HTTP.Types as HTTPTypes
 import qualified Network.Wai.Handler.Warp as Warp
@@ -156,6 +156,7 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
       shippingZoneId = "93000000-0000-4000-8000-000000000002" :: Text
       applicantProfileId = "91000000-0000-4000-8000-000000000003" :: Text
       settlementOrderId = "98000000-0000-4000-8000-000000000005" :: Text
+      settlementRefundIssueId = "94000000-0000-4000-8000-000000000003" :: Text
       ownerHeaders = auth "runtime-owner-token"
       collaboratorHeaders = auth "runtime-collaborator-token"
       outsiderHeaders = auth "runtime-other-seller-token"
@@ -398,6 +399,83 @@ runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
       :: SqlPersistT IO [(Single Text,Single Text,Single Int64,Single Int64)]) pool
     assert (persistedSettlement == [(Single "paid",Single "paid",Single 1,Single 1)])
       "Settlement evidence did not preserve one paid ledger state and one audit event"
+
+    runSqlPool (rawExecute
+      "INSERT INTO merch_order_issue(id,order_id,opened_by_type,issue_type,status,public_message,idempotency_key,request_sha256) VALUES(?::uuid,?::uuid,'buyer','refund','staff_review','Synthetic paid-order refund case used to verify canonical finance boundaries.','runtime-issue-refund-002',encode(digest('runtime-issue-refund-request-002','sha256'),'hex'))"
+      [PersistText settlementRefundIssueId,PersistText settlementOrderId]) pool
+    _ <- httpJson manager port "GET" "/merch/admin/refunds" outsiderHeaders Nothing
+      >>= expectStatus 403 "Non-admin refund queue"
+    let refundBody note = Aeson.object
+          [ "issueId" Aeson..= settlementRefundIssueId
+          , "amountMinor" Aeson..= Aeson.Null
+          , "reasonCode" Aeson..= ("customer_request" :: Text)
+          , "note" Aeson..= note
+          ]
+        refundHeaders = ("Idempotency-Key","runtime-merch-refund-0001") : adminHeaders
+        refundPath = "/merch/admin/orders/" <> T.unpack settlementOrderId <> "/refunds"
+    refund <- httpJson manager port "POST" refundPath refundHeaders
+      (Just (refundBody ("Synthetic full refund preparation; no provider call." :: Text)))
+      >>= expectStatus 201 "Canonical merch refund request"
+    refundRetry <- httpJson manager port "POST" refundPath refundHeaders
+      (Just (refundBody ("Synthetic full refund preparation; no provider call." :: Text)))
+      >>= expectStatus 201 "Canonical merch refund request retry"
+    refundId <- maybe (fail "Refund response omitted id") pure (textField "id" refund)
+    assert (textField "id" refundRetry == Just refundId
+      && textField "status" refund == Just "requested"
+      && field "executionAvailable" refund == Just (Aeson.Bool False))
+      "Refund request was not idempotent or implied provider execution"
+    _ <- httpJson manager port "POST" refundPath refundHeaders
+      (Just (refundBody ("Conflicting note for the same immutable request." :: Text)))
+      >>= expectStatus 409 "Conflicting merch refund retry"
+    requestedRefunds <- httpJson manager port "GET" "/merch/admin/refunds?status=requested" adminHeaders Nothing
+      >>= expectStatus 200 "Merch refund review queue"
+    assert (any ((== Just refundId) . textField "id") (case requestedRefunds of Aeson.Array rows -> toList rows; _ -> []))
+      "Requested refund was missing from the strict-admin queue"
+    let refundStatusPath = "/merch/admin/refunds/" <> T.unpack refundId <> "/status"
+        approveRefundBody = Aeson.object
+          [ "decision" Aeson..= ("approve" :: Text)
+          , "reviewNote" Aeson..= ("Independent synthetic approval; execution remains disabled." :: Text)
+          ]
+    _ <- httpJson manager port "PATCH" refundStatusPath adminHeaders (Just approveRefundBody)
+      >>= expectStatus 409 "Refund self-approval"
+    approvedRefund <- httpJson manager port "PATCH" refundStatusPath independentAdminHeaders (Just approveRefundBody)
+      >>= expectStatus 200 "Independent refund approval"
+    assert (textField "status" approvedRefund == Just "approved"
+      && field "executionAvailable" approvedRefund == Just (Aeson.Bool False)
+      && textField "providerRefundId" approvedRefund == Nothing)
+      "Refund approval executed or implied an unverified provider refund"
+    persistedRefund <- runSqlPool (rawSql
+      "SELECT refund.status,order_record.refund_status,checkout.status,checkout.refunded_minor,count(allocation.id),sum(allocation.amount_minor),(SELECT count(*) FROM merch_audit_event audit WHERE audit.entity_type='refund' AND audit.entity_id=refund.id::text) FROM commerce_refund refund JOIN merch_refund_case case_record ON case_record.refund_id=refund.id JOIN merch_order order_record ON order_record.id=case_record.order_id JOIN commerce_checkout_session checkout ON checkout.id=refund.checkout_id JOIN commerce_refund_allocation allocation ON allocation.refund_id=refund.id WHERE refund.id=?::uuid GROUP BY refund.status,order_record.refund_status,checkout.status,checkout.refunded_minor,refund.id"
+      [PersistText refundId]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Text,Single Int64,Single Int64,Single Int64,Single Int64)]) pool
+    assert (persistedRefund == [(Single "approved",Single "approved",Single "paid",Single 0,Single 2,Single 5500,Single 2)])
+      "Refund did not preserve two-line allocation, dual control, audit, and unpaid provider state"
+
+    runSqlPool (rawExecute
+      "INSERT INTO commerce_dispute(id,checkout_id,payment_attempt_id,provider_dispute_id,kind,status,amount_minor,currency,reason_code,opened_at,due_at) VALUES('9d000000-0000-4000-8000-000000000005','9a000000-0000-4000-8000-000000000005','9c000000-0000-4000-8000-000000000005','SYNTHETIC-PROVIDER-DISPUTE-005','inquiry','needs_response',5500,'USD','synthetic_inquiry',now(),now()+interval '7 days')"
+      []) pool
+    _ <- httpJson manager port "GET" "/merch/admin/disputes" outsiderHeaders Nothing
+      >>= expectStatus 403 "Non-admin dispute queue"
+    disputes <- httpJson manager port "GET" "/merch/admin/disputes" adminHeaders Nothing
+      >>= expectStatus 200 "Read-only canonical dispute queue"
+    let disputeRows = case disputes of Aeson.Array rows -> toList rows; _ -> []
+    assert (any ((== Just "SYNTHETIC-PROVIDER-DISPUTE-005") . textField "providerDisputeId") disputeRows
+      && any ((== Just ("inquiry" :: Text)) . textField "kind") disputeRows)
+      "Provider-originated dispute was not exposed read-only to strict administrators"
+    disputeState <- runSqlPool (rawSql
+      "SELECT dispute_status,payment_status,settlement_status FROM merch_order WHERE id=?::uuid"
+      [PersistText settlementOrderId] :: SqlPersistT IO [(Single Text,Single Text,Single Text)]) pool
+    assert (disputeState == [(Single "inquiry",Single "paid",Single "paid")])
+      "Dispute monitoring conflated dispute, payment, or settlement state"
+
+    let cancelRefundBody = Aeson.object
+          [ "decision" Aeson..= ("cancel" :: Text)
+          , "reviewNote" Aeson..= ("Synthetic cancellation before any provider execution." :: Text)
+          ]
+    cancelledRefund <- httpJson manager port "PATCH" refundStatusPath adminHeaders (Just cancelRefundBody)
+      >>= expectStatus 200 "Approved refund cancellation before execution"
+    assert (textField "status" cancelledRefund == Just "cancelled")
+      "Refund cancellation was not retained independently"
 
     let cancellationBody = Aeson.object
           ["reason" Aeson..= ("Synthetic buyer cancels before any payment attempt." :: Text)]
