@@ -76,6 +76,12 @@ existing notification type constraint. Its rollback refuses to proceed once
 any access-request notification exists; retain the compatible constraint or
 restore a database snapshot instead of deleting notification history.
 
+The Party selector rate-limit compatibility migration widens the directory's
+shared scope constraint for event invitations and social connections. Its
+rollback refuses to proceed while either selector has durable counter rows;
+wait for those daily rows to expire or restore a database snapshot instead of
+deleting active abuse-control evidence.
+
 The 2026-08-25 commerce and distribution row-binding compatibility migrations
 are the forward repair for trigger definitions that had previously been edited
 inside applied 2026-08-13 files. Their rollback files restore the historical

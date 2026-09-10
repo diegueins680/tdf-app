@@ -9542,6 +9542,36 @@
       "risk": "Unknown audit actions could conceal event transitions or make DLQ recovery and incident reconstruction incomplete.",
       "justification": "Event actions are immutable audit protocol identifiers emitted only by fenced database functions; changes require coordinated code and schema review.",
       "reviewed": true
+    },
+    {
+      "id": "1af20293af1230e9fbb9",
+      "classification": "security-system-registry",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the migration list could break deployment execution or skip the Party selector compatibility repair.",
+      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "3789c5a9c3209c92ecbb",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the forward allowlist could break abuse-control accounting or restore the production Party search failure.",
+      "justification": "Rate-limit scopes are closed security mechanics validated by the database rather than selectable or displayable business data.",
+      "reviewed": true
+    },
+    {
+      "id": "4c1f11da9f962133eed2",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the rollback allowlist could reject valid historical counters or retain an application scope unsupported by the rolled-back runtime.",
+      "justification": "The rollback constraint is immutable migration evidence for the prior closed rate-limit protocol, not an editable business catalog.",
+      "reviewed": true
     }
   ]
 }

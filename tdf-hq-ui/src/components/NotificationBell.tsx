@@ -11,6 +11,7 @@ import { Fans } from '../api/fans';
 import type { NotificationDTO } from '../api/types';
 import LazyPaginatedList from './LazyPaginatedList';
 import { NOTIFICATION_BELL_CONTRACTS } from './NotificationBell.contracts';
+import { notificationTargetPath } from './notificationTarget';
 
 interface TargetEvent {
   currentTarget: HTMLElement;
@@ -110,13 +111,11 @@ export default function NotificationBell() {
   };
 
   const focusAfterMarkRead = (notification: NotificationDTO, target: HTMLElement) => {
-    const logisticsPath = notification.nTargetType === 'event_logistics' && notification.nTargetId != null
-      ? `/social/eventos/${notification.nTargetId}/logistica`
-      : null;
+    const destinationPath = notificationTargetPath(notification);
     if (notification.nIsRead || markReadMut.isPending) {
-      if (logisticsPath) {
+      if (destinationPath) {
         setAnchorEl(null);
-        navigate(logisticsPath);
+        navigate(destinationPath);
       } else {
         focusSoon(() => target);
       }
@@ -124,9 +123,9 @@ export default function NotificationBell() {
     }
     markReadMut.mutate(notification.nId, {
       onSettled: () => {
-        if (logisticsPath) {
+        if (destinationPath) {
           setAnchorEl(null);
-          navigate(logisticsPath);
+          navigate(destinationPath);
         } else {
           focusSoon(() => target);
         }

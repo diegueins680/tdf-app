@@ -69,6 +69,7 @@
     "generate:feature-audit-reports": "node scripts/generate-feature-audit-reports.mjs",
     "test:feature-migrations": "sh scripts/test-feature-migrations.sh",
     "test:access-request-notification-migration": "sh scripts/test-access-request-notification-migration.sh",
+    "test:party-selector-rate-limit-migration": "sh scripts/test-party-selector-rate-limit-scope-migration.sh",
     "test:records-youtube-catalog-migration": "sh scripts/test-records-youtube-catalog-migration.sh",
     "test:service-checkout-migration": "sh scripts/test-service-storefront-checkout-runtime-migration.sh",
     "test:checkout-event-refund-migration": "sh scripts/test-checkout-event-refund-runtime-migration.sh",

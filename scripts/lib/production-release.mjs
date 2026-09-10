@@ -726,6 +726,19 @@ BEGIN
     RAISE EXCEPTION 'The notification type constraint is missing access-request events';
   END IF;
 
+  IF to_regclass('public.directory_rate_limit') IS NULL OR NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.directory_rate_limit'::regclass
+      AND conname = 'directory_rate_limit_scope_check'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) LIKE '%party_selector:event_invitation%'
+      AND pg_get_constraintdef(oid) LIKE '%party_selector:social_connection%'
+  ) THEN
+    RAISE EXCEPTION 'The directory rate-limit constraint is missing Party selector scopes';
+  END IF;
+
   FOREACH catalog_table IN ARRAY ARRAY[
     'workflow_definition',
     'workflow_state',
