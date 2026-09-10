@@ -216,7 +216,8 @@ For every task, check keyboard-only operation, visible/unobscured focus, 200% te
 - Branch: `feature/domo-fallback-browser-runtime-20260910`.
 - Stacked base: `feature/public-booking-http-concurrency-20260909` at `8ccc3b6d1deedf6547994c2601bbbc438ec54be7`.
 - Implementation commit: `4ca0bdeb4fabbcdb7a280f462ae9ffea87f424f6`.
-- Draft PR: pending automation safety inspection and push at initial report creation.
-- Hosted exact-head CI: not yet run at initial report creation.
+- Initial evidence/report commit: `09b205d820e82f0a1b855aea9547eaad5108dc47`.
+- Draft PR: https://github.com/diegueins680/tdf-app/pull/327.
+- Hosted exact-head CI: triggered by the final handoff update; final status is recorded in the execution handoff.
 
 No merge, deployment, production mutation, real transaction, or customer communication was performed.
