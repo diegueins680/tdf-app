@@ -8614,16 +8614,6 @@
       "reviewed": true
     },
     {
-      "id": "d90f041a4536a12b8bdd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "Migration identifiers and their ordered script paths are deployment execution mechanics; each applied database revision is persisted separately in the migration ledger.",
-      "reviewed": true
-    },
-    {
       "id": "b65c3ecaa729e449a097",
       "classification": "governed-reference-data",
       "disposition": "retain-in-code",
@@ -9541,6 +9531,386 @@
       "priority": "P1-cross-platform",
       "risk": "Unknown audit actions could conceal event transitions or make DLQ recovery and incident reconstruction incomplete.",
       "justification": "Event actions are immutable audit protocol identifiers emitted only by fenced database functions; changes require coordinated code and schema review.",
+      "reviewed": true
+    },
+    {
+      "id": "a7c6ecf9c91c8f70a85f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P0-security",
+      "risk": "Changing migration order or identity can skip, reorder, or duplicate production schema changes.",
+      "justification": "The ordered manifest is the deployment protocol; every immutable migration identity is also recorded in the database migration ledger.",
+      "reviewed": true
+    },
+    {
+      "id": "ceb5b3a4b9c4b225d497",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "commerce_provider_capability_and_payment_state_protocol",
+      "priority": "P0-security",
+      "risk": "API drift could expose an unverified payment method or operation, route funds incorrectly, or break generated clients.",
+      "justification": "These are versioned wire discriminants mirrored by the canonical persisted provider-capability evidence and deny-by-default backend routing; labels and activation are not owned by OpenAPI.",
+      "reviewed": true
+    },
+    {
+      "id": "a236135f85f61b37da0b",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "commerce_provider_capability_and_payment_state_protocol",
+      "priority": "P0-security",
+      "risk": "API drift could expose an unverified payment method or operation, route funds incorrectly, or break generated clients.",
+      "justification": "These are versioned wire discriminants mirrored by the canonical persisted provider-capability evidence and deny-by-default backend routing; labels and activation are not owned by OpenAPI.",
+      "reviewed": true
+    },
+    {
+      "id": "204695f88339a363dbac",
+      "classification": "security-system-registry",
+      "disposition": "persisted-registry-with-deny-by-default-code-mirror",
+      "specializedModel": "commerce_provider_capability_and_payment_state_protocol",
+      "priority": "P0-security",
+      "risk": "API drift could expose an unverified payment method or operation, route funds incorrectly, or break generated clients.",
+      "justification": "These are versioned wire discriminants mirrored by the canonical persisted provider-capability evidence and deny-by-default backend routing; labels and activation are not owned by OpenAPI.",
+      "reviewed": true
+    },
+    {
+      "id": "f5f8a84bb3e6d74a2289",
+      "classification": "security-system-registry",
+      "disposition": "historical-rollback-evidence",
+      "specializedModel": "canonical_payment_domain_rollback",
+      "priority": "P0-security",
+      "risk": "Rollback enum drift can reject historical rows or restore a constraint incompatible with the pre-migration schema.",
+      "justification": "The rollback list is immutable compatibility evidence that restores the exact pre-migration provider constraint and is not a user-editable catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "a958d32adbe9458a74cc",
+      "classification": "security-system-registry",
+      "disposition": "historical-rollback-evidence",
+      "specializedModel": "canonical_payment_domain_rollback",
+      "priority": "P0-security",
+      "risk": "Rollback enum drift can reject historical rows or restore a constraint incompatible with the pre-migration schema.",
+      "justification": "The rollback list is immutable compatibility evidence that restores the exact pre-migration provider constraint and is not a user-editable catalog.",
+      "reviewed": true
+    },
+    {
+      "id": "219ac90c1a8ddb3eb968",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "f37820283e5fde743748",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "3fa60c2203deb710c9a7",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "83c448226d409286e4ed",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "b6c6b968f57294a67687",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "b2e6e3b30f8e01ef9744",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "526e66aa015078238445",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "aaa716ca68fa3cb0b09b",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "65992320958643fcd97a",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "d9b9d4ae8c44ebb790f8",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "6c4dac47f8f0aa7ae2f7",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "e7bcfcc68efa32ce3d27",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "d1ca7432d9f9de9caed3",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "d569b4ccfabf37925d9b",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "a48341434073f8625807",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "6913162f91da54cb7a8c",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "8f2592f6b4bfe541f103",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "44d83aaf9fff45c2c51a",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "29077e72acbf3f417d9e",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "c7c992c00a1accaa7929",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "12effa2c1dd246df4a13",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "51f6801da41e044369cd",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "0029dc2492eba9583fa1",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "96e61b175dc07eb47500",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "b81b2623c22289d666d9",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "3db8e1fd1a9978e8a2fd",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "f681d61ccce73fb3ef26",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "79bf9ae14cd486d2f57d",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "4faa762564aa72f67da8",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "94ef7a0afcd84f143948",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "e2c83a9bd2f76bf304f0",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
+      "reviewed": true
+    },
+    {
+      "id": "90e620b73b0d79de9c09",
+      "classification": "security-system-registry",
+      "disposition": "canonical-persistence-with-deny-by-default-constraint",
+      "specializedModel": "canonical_payment_intent_ledger_settlement_and_payout_domain",
+      "priority": "P0-security",
+      "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
+      "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
       "reviewed": true
     }
   ]

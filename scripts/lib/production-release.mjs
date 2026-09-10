@@ -2143,7 +2143,7 @@ BEGIN
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
-        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
+        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''placetopay''::text, ''payphone''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
         ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
         ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
     ) AS expected(table_name, constraint_name, constraint_type, definition)
