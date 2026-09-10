@@ -189,11 +189,13 @@
     {
       "id": "2026-08-13_unified_checkout_core",
       "path": "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
+      "compatibleAppliedChecksums": ["88cf1d810f96d17ae52895f08914f51aefa4f45c08df7cd314627bf2dca5da8f"],
       "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b"
     },
     {
       "id": "2026-08-13_distribution_accounting_core",
       "path": "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
+      "compatibleAppliedChecksums": ["4d7419295635c826506c1505d1771e2234216e7a8dcb116c35186bd8342f4e18"],
       "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55"
     },
     {
@@ -294,6 +296,7 @@
     {
       "id": "2026-08-18_music_directory_profile_images",
       "path": "tdf-hq/sql/2026-08-18_music_directory_profile_images.sql",
+      "compatibleAppliedChecksums": ["7a7c21f0e30e3233e91602a4dbb69cc51827bab7cb30f74a8224bf173e559807"],
       "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d"
     },
     {
@@ -324,6 +327,12 @@
     {
       "id": "2026-08-24_studio_audit_historical_failure_gate",
       "path": "tdf-hq/sql/2026-08-24_studio_audit_historical_failure_gate.sql",
+      "compatibleAppliedChecksums": ["77a5614724738789d870e7ed5afb3e50b6df19936fd6440b5a3735db3a6285bb"],
+      "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
+    },
+    {
+      "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
+      "path": "tdf-hq/sql/2026-09-08_studio_audit_historical_failure_gate_repair.sql",
       "introducedBy": "dac84b099b18b51032fb94f58273120f5375eb85"
     },
     {
@@ -389,6 +398,22 @@
     {
       "id": "2026-09-04_access_request_notification_types",
       "path": "tdf-hq/sql/2026-09-04_access_request_notification_types.sql",
+      "compatibleAppliedChecksums": [
+        "200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab",
+        "ad04cc74dae4f937932cc50772d8f2bcb0be8f8cf6652c0b6d1162d85fc7c0e9",
+        "90a2e34be1feb89975baa608a6a07a1491e4632fd0dd5bca3ac1edf387c8670c"
+      ],
+      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_not_null_repair",
+      "path": "tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql",
+      "compatibleAppliedChecksums": ["7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347"],
+      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_text_compatibility",
+      "path": "tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql",
       "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3"
     },
     {
@@ -400,6 +425,21 @@
       "id": "2026-09-05_contextual_reputation_preference_rounding",
       "path": "tdf-hq/sql/2026-09-05_contextual_reputation_preference_rounding.sql",
       "introducedBy": "000ef9f0c9be11250eebfbe13e35c373c767512e"
+    },
+    {
+      "id": "2026-09-06_contextual_reputation_staging_worker",
+      "path": "tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql",
+      "introducedBy": "41eb1f3c109c2201a31305775e277abcfe62b383"
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_invalidation_repair",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_invalidation_repair.sql",
+      "introducedBy": "114400d7eac3b4b1b54de1e1e676d75afc76388d"
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_consent",
+      "path": "tdf-hq/sql/2026-09-07_contextual_reputation_consent.sql",
+      "introducedBy": "79d73a25e6d6a74250dc55cd0e888b6eaa34ea3d"
     },
     {
       "id": "2026-09-06_records_youtube_catalog",
@@ -420,6 +460,11 @@
       "id": "2026-09-07_user_experiment_assignment",
       "path": "tdf-hq/sql/2026-09-07_user_experiment_assignment.sql",
       "introducedBy": "8c296087431a191234000311862a4287ef819bd7"
+    },
+    {
+      "id": "2026-09-09_music_directory_suppressed_event_privacy",
+      "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
+      "introducedBy": "849444cdcce0254c3091293edce8a4cc5f8175fa"
     }
   ]
 }

@@ -27,6 +27,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
 import { useLocalePreferences } from '../../contexts/LocalePreferencesContext';
+import { firstNonEmptyString } from '../../utils/stringValues';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,7 +47,7 @@ const DdexDocumentPage: React.FC = () => {
   const { locale } = useLocalePreferences();
   const [tabValue, setTabValue] = React.useState(0);
 
-  const documentId = parseInt(id || '0', 10);
+  const documentId = parseInt(firstNonEmptyString(id, '0'), 10);
 
   const { data: document, isLoading: docLoading, error: docError } = useQuery({
     queryKey: ['ddex-document', documentId],
@@ -73,7 +74,7 @@ const DdexDocumentPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading document: {docError?.message || 'Document not found'}
+          Error loading document: {firstNonEmptyString(docError?.message, 'Document not found')}
         </Alert>
         <Button startIcon={<BackIcon />} onClick={() => navigate('/label/ddex')} sx={{ mt: 2 }}>
           Back to Inbox
@@ -173,7 +174,7 @@ const DdexDocumentPage: React.FC = () => {
                       primary="Message ID"
                       secondary={
                         <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                          {document.ddexDocumentMessageId || '-'}
+                          {firstNonEmptyString(document.ddexDocumentMessageId, '-')}
                         </Typography>
                       }
                     />
@@ -182,14 +183,14 @@ const DdexDocumentPage: React.FC = () => {
                   <ListItem component="div">
                     <ListItemText
                       primary="Sender DPID"
-                      secondary={document.ddexDocumentSenderId || '-'}
+                      secondary={firstNonEmptyString(document.ddexDocumentSenderId, '-')}
                     />
                   </ListItem>
                   <Divider />
                   <ListItem component="div">
                     <ListItemText
                       primary="Recipient DPID"
-                      secondary={document.ddexDocumentRecipientId || '-'}
+                      secondary={firstNonEmptyString(document.ddexDocumentRecipientId, '-')}
                     />
                   </ListItem>
                 </List>

@@ -6,6 +6,7 @@
 
 module TDF.Routes.EventTickets
   ( PublicEventTicketTierDTO(..)
+  , PublicEventTicketPolicyDTO(..)
   , PublicEventTicketStorefrontDTO(..)
   , PublicEventTicketCheckoutRequest(..)
   , PublicEventTicketQuoteDTO(..)
@@ -41,6 +42,21 @@ data PublicEventTicketTierDTO = PublicEventTicketTierDTO
 
 instance ToJSON PublicEventTicketTierDTO
 
+data PublicEventTicketPolicyDTO = PublicEventTicketPolicyDTO
+  { policyVersion     :: Text
+  , currency          :: Text
+  , buyerFeeBps       :: Int
+  , organizerFeeBps   :: Int
+  , taxBps            :: Int
+  , holdMinutes       :: Int
+  , termsVersion      :: Text
+  , termsSummary      :: Text
+  , refundPolicy      :: Text
+  , transferAllowed   :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON PublicEventTicketPolicyDTO
+
 data PublicEventTicketStorefrontDTO = PublicEventTicketStorefrontDTO
   { eventId           :: Int64
   , title             :: Text
@@ -51,6 +67,7 @@ data PublicEventTicketStorefrontDTO = PublicEventTicketStorefrontDTO
   , venueName         :: Maybe Text
   , venueAddress      :: Maybe Text
   , tiers             :: [PublicEventTicketTierDTO]
+  , policy            :: Maybe PublicEventTicketPolicyDTO
   , checkoutAvailable :: Bool
   , unavailableReason :: Maybe Text
   } deriving (Eq, Show, Generic)
