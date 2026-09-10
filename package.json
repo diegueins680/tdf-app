@@ -78,6 +78,7 @@
     "test:marketplace-operations-migration": "sh scripts/test-marketplace-operations-migration.sh",
     "test:service-booking-migration": "sh scripts/test-service-booking-checkout-runtime-migration.sh",
     "test:public-booking-tentative-migration": "sh scripts/test-public-booking-tentative-idempotency-migration.sh",
+    "test:public-booking-http-concurrency": "sh scripts/test-public-booking-http-concurrency.sh",
     "test:course-checkout-migration": "sh scripts/test-course-checkout-runtime-migration.sh",
     "test:public-ticket-checkout-migration": "sh scripts/test-public-ticket-checkout-runtime-migration.sh",
     "test:domo-quote-checkout-migration": "sh scripts/test-domo-quote-checkout-runtime-migration.sh",

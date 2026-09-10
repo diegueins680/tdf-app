@@ -75,7 +75,10 @@ export function classifyChangedFiles(files, options = {}) {
       || changed.some((file) => isPathOrChild(file, 'tdf-mobile')),
     backend: options.forceBackend === true
       || pipelineChanged
-      || changed.some((file) => isPathOrChild(file, 'tdf-hq') || file === 'fly.toml' || file === '.dockerignore'),
+      || changed.some((file) => isPathOrChild(file, 'tdf-hq')
+        || file === 'fly.toml'
+        || file === '.dockerignore'
+        || file === 'scripts/test-public-booking-http-concurrency.sh'),
     contracts: pipelineChanged || changed.some(affectsContracts),
     migrations: pipelineChanged || changed.some(affectsMigrations),
   };

@@ -11894,8 +11894,6 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
         , "engineer_name" .= engineerNameClean
         , "resource_ids" .= requestedResourceIds
         ]
-  resourceKeys <- runDB $
-    resolveResourcesForBooking (Just serviceOffering) requestedResourceIds startsAtClean endsAt
   let resolvedEngineerName =
         resolveBookingEngineerName engineerNameClean mEngineerParty
   let bookingRecord partyId = Booking
@@ -11917,7 +11915,9 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
         }
   creation <- createPublicTentativeBookingTransaction
     idempotencyKey requestHash now (Just fullNameClean) emailClean phoneClean
-    bookingRecord resourceKeys
+    bookingRecord
+    (resolveResourcesForBooking
+      (Just serviceOffering) requestedResourceIds startsAtClean endsAt)
   (bookingId, createdNow) <- either throwError pure creation
   dtoResult <- liftIO $ flip runSqlPool pool $ do
     created <- getJustEntity bookingId
@@ -11935,10 +11935,10 @@ createPublicTentativeBookingTransaction
   -> Text
   -> Maybe Text
   -> (Key Party -> Booking)
-  -> [Key Resource]
+  -> SqlPersistT IO [Key Resource]
   -> AppM (Either ServerError (Key Booking, Bool))
 createPublicTentativeBookingTransaction
-    idempotencyKey requestHash now partyName emailClean phoneClean buildBooking resourceKeys = do
+    idempotencyKey requestHash now partyName emailClean phoneClean buildBooking resolveResourceKeys = do
   Env{ envPool } <- ask
   result <- liftIO $
     (try (flip runSqlPool envPool transactionBody)
@@ -11972,6 +11972,7 @@ createPublicTentativeBookingTransaction
         _ -> pure (Left err500
           { errBody = "Tentative booking idempotency lookup was ambiguous" })
     createNew = do
+      resourceKeys <- resolveResourceKeys
       forM_ (sortOn fromSqlKey (nub resourceKeys)) $ \resourceKey -> do
         _ <- (rawSql "SELECT id FROM resource WHERE id = ? FOR UPDATE"
           [toPersistValue resourceKey] :: SqlPersistT IO [Single Int64])
