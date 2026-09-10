@@ -59,6 +59,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpTaxBps          :: Int
   , atpHoldMinutes     :: Int
   , atpTermsVersion    :: Text
+  , atpTermsSummary    :: Text
   , atpRefundPolicy    :: Text
   , atpTransferAllowed :: Bool
   } deriving (Eq, Show)
@@ -195,7 +196,7 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ refund_policy, transfer_allowed\
+    \ terms_summary, refund_policy, transfer_allowed\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -204,13 +205,14 @@ loadApprovedTicketPolicy now eventKey = do
     [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
-       , Single Int, Single Int, Single Text, Single Text, Single Bool
+       , Single Int, Single Int, Single Text, Single Text, Single Text
+       , Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
-     , Single atpHoldMinutes, Single atpTermsVersion, Single atpRefundPolicy
-     , Single atpTransferAllowed
+     , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
+     , Single atpRefundPolicy, Single atpTransferAllowed
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -269,6 +271,19 @@ getPublicEventTicketStorefront rawEventId = do
       pure (SM.venueName <$> venue, venue >>= SM.venueAddress)
   let hasInventory = any ((> 0) . Routes.remaining) publicTiers
       available = domainEnabled && isJust policy && hasInventory
+      publicPolicy = (\ApprovedTicketPolicy{..} ->
+        Routes.PublicEventTicketPolicyDTO
+          { Routes.policyVersion = atpVersion
+          , Routes.currency = atpCurrency
+          , Routes.buyerFeeBps = atpBuyerFeeBps
+          , Routes.organizerFeeBps = atpOrganizerFeeBps
+          , Routes.taxBps = atpTaxBps
+          , Routes.holdMinutes = atpHoldMinutes
+          , Routes.termsVersion = atpTermsVersion
+          , Routes.termsSummary = atpTermsSummary
+          , Routes.refundPolicy = atpRefundPolicy
+          , Routes.transferAllowed = atpTransferAllowed
+          }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
         | not (isJust policy) = Just "This event has no approved active ticket price and fee policy"
@@ -285,6 +300,7 @@ getPublicEventTicketStorefront rawEventId = do
     , Routes.venueName = venueName
     , Routes.venueAddress = venueAddress
     , Routes.tiers = publicTiers
+    , Routes.policy = publicPolicy
     , Routes.checkoutAvailable = available
     , Routes.unavailableReason = reason
     }
@@ -529,6 +545,14 @@ createTicketCheckoutTransaction
     createNew = do
       lockedEvents <- (rawSql "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
         [toPersistValue eventKey] :: SqlPersistT IO [Entity SM.SocialEvent])
+      lockedEventEligibility <- case lockedEvents of
+        [Entity _ lockedEvent] -> do
+          purchaseEnabled <- SocialEvents.eventTicketPurchaseEnabledFor lockedEvent
+          pure $ case SocialEvents.validateTicketPurchaseEventEligibility
+              (SM.socialEventMetadata lockedEvent) purchaseEnabled of
+            Left _ -> Left err404
+            Right () -> Right ()
+        _ -> pure (Left err404)
       -- Expire this event's old holds while the event lock is authoritative,
       -- before taking tier or promotion locks. This keeps checkout -> runtime
       -- -> tier trigger locking consistent with concurrent status polling.
@@ -554,8 +578,9 @@ createTicketCheckoutTransaction
               | otherwise -> Left (conflict
                   "Promotion changed or became unavailable while ticket inventory was being held")
             _ -> Left (conflict "Promotion is no longer available")
-      case (lockedEvents, lockedTiers, lockedPromo) of
-        ([_], [Entity _ lockedTier], Right transactionPromo)
+      case (lockedEventEligibility, lockedTiers, lockedPromo) of
+        (Left eventError, _, _) -> pure (Left eventError)
+        (Right (), [Entity _ lockedTier], Right transactionPromo)
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
           , SocialEvents.isTicketTierSaleOpen now lockedTier ->

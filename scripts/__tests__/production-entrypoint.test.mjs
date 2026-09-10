@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -75,6 +75,18 @@ test('production entrypoint applies reviewed SQL then disables Persistent migrat
   assert.equal(readFileSync(current.serverLog, 'utf8'), 'RUN_MIGRATIONS=false\nAPP_PORT=18881\n');
 });
 
+test('migration precheck verifies reviewed SQL without starting the backend', (context) => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+
+  const result = run(current, { TDF_MIGRATION_PRECHECK_ONLY: 'true' });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /migration precheck completed/i);
+  assert.match(readFileSync(current.psqlLog, 'utf8'), /-X -v ON_ERROR_STOP=1 -f/);
+  assert.equal(existsSync(current.serverLog), false);
+});
+
 test('production entrypoint copies packaged assets into the served asset volume', (context) => {
   const current = fixture();
   context.after(() => rmSync(current.directory, { recursive: true, force: true }));
@@ -146,6 +158,13 @@ test('production entrypoint rejects invalid flags and a missing bundle', (contex
   const invalid = run(current, { AUTO_APPLY_PRODUCTION_MIGRATIONS: 'yes' });
   assert.equal(invalid.status, 64);
   assert.match(invalid.stderr, /must be true or false/i);
+
+  const invalidPrecheck = run(current, {
+    AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false',
+    TDF_MIGRATION_PRECHECK_ONLY: 'true',
+  });
+  assert.equal(invalidPrecheck.status, 64);
+  assert.match(invalidPrecheck.stderr, /precheck requires/i);
 
   const missing = run(current, { TDF_PRODUCTION_MIGRATIONS_SQL: path.join(current.directory, 'missing.sql') });
   assert.equal(missing.status, 66);

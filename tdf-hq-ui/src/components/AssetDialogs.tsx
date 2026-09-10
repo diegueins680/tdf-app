@@ -339,7 +339,7 @@ export function CheckoutDialog({
             onChange={(e) => onFormChange({ ...form, coConditionOut: e.target.value })}
             multiline
           />
-          {(onCheckoutPhotoSelect || form.coPhotoUrl) && (
+          {(Boolean(onCheckoutPhotoSelect) || Boolean(form.coPhotoUrl)) && (
             <Stack spacing={1}>
               {onCheckoutPhotoSelect && (
                 <Button component="label" variant="outlined" disabled={checkoutPhotoUploading}>
@@ -431,7 +431,7 @@ export function CheckinDialog({
             onChange={(e) => onFormChange({ ...form, ciNotes: e.target.value })}
             multiline
           />
-          {(onCheckinPhotoSelect || form.ciPhotoUrl) && (
+          {(Boolean(onCheckinPhotoSelect) || Boolean(form.ciPhotoUrl)) && (
             <Stack spacing={1}>
               {onCheckinPhotoSelect && (
                 <Button component="label" variant="outlined" disabled={checkinPhotoUploading}>

@@ -4,6 +4,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import {
+  captureContextualReputationGate,
+  runtimeEnvBlockers,
+} from '../production-release.mjs';
+import {
   buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMachineDeployArgs,
@@ -39,7 +43,12 @@ primary_region = "gru"
   AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
   CONTEXTUAL_REPUTATION_ENABLED = "false"
   SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
+  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
+  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
+  REPUTATION_AGGREGATION_ENVIRONMENT = "production"
+  REPUTATION_AGGREGATION_MODE = "simulation"
   EVENT_DISCOVERY_ENABLED = "false"
+  EVENT_DISCOVERY_AUTO_PUBLISH = "false"
   HQ_ASSETS_DIR = "/data/assets"
   TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
 
@@ -80,6 +89,10 @@ function releaseOptions(overrides = {}) {
     priorShas: {
       'canary-machine': '1111111111111111111111111111111111111111',
       'remaining-machine': '2222222222222222222222222222222222222222',
+    },
+    priorContextualReputationEnabled: {
+      'canary-machine': false,
+      'remaining-machine': false,
     },
     remainingMachineIds: ['remaining-machine'],
     sha: releaseSha,
@@ -139,6 +152,22 @@ test('production migration manifest uses immutable full commit SHAs', () => {
   assert.equal(backfillIndex, writerResumeIndex + 1, 'writer resume must run immediately before backfill');
 });
 
+test('suppressed-event privacy migration is anchored to its released squash commit', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const migration = manifest.migrations.find(
+    ({ id }) => id === '2026-09-09_music_directory_suppressed_event_privacy',
+  );
+
+  assert.deepEqual(migration, {
+    id: '2026-09-09_music_directory_suppressed_event_privacy',
+    path: 'tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+    introducedBy: '849444cdcce0254c3091293edce8a4cc5f8175fa',
+  });
+});
+
 test('already-applied production migrations retain their recorded checksums', () => {
   const expected = new Map([
     [
@@ -161,6 +190,26 @@ test('already-applied production migrations retain their recorded checksums', ()
       '../../tdf-hq/sql/2026-08-18_music_directory_profile_images.sql',
       '63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312',
     ],
+    [
+      '../../tdf-hq/sql/2026-09-06_contextual_reputation_staging_worker.sql',
+      '5ec11f453dddf2b167c79f4d54ac7ec677591f8c2f9fa7bb2a9bc389878a6959',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-04_access_request_notification_types.sql',
+      'a2eede1722ecfa4decd054755a3f871902808ec2bca5dcf8413d9b9b7c644d1e',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-08_notification_notif_type_not_null_repair.sql',
+      'f83049fb3f27f4d57ac2c5594849ec10cef83b847363a25e76712f9369d2cf5d',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-08_notification_notif_type_text_compatibility.sql',
+      'e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204',
+    ],
+    [
+      '../../tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql',
+      '33f89f61c2552cacc6c4842ac8513d6b518a7b342115a9b1cde3f01a76926712',
+    ],
   ]);
 
   for (const [relativePath, checksum] of expected) {
@@ -169,6 +218,32 @@ test('already-applied production migrations retain their recorded checksums', ()
       .digest('hex');
     assert.equal(actual, checksum, `${relativePath} must remain byte-for-byte immutable`);
   }
+});
+
+test('notification repair checksum history advances through a new forward migration', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../production-migrations.json', import.meta.url),
+    'utf8',
+  ));
+  const accessIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-04_access_request_notification_types',
+  );
+  const nullabilityIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-08_notification_notif_type_not_null_repair',
+  );
+  const compatibilityIndex = manifest.migrations.findIndex(
+    ({ id }) => id === '2026-09-08_notification_notif_type_text_compatibility',
+  );
+
+  assert.deepEqual(manifest.migrations[accessIndex].compatibleAppliedChecksums, [
+    '200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab',
+    'ad04cc74dae4f937932cc50772d8f2bcb0be8f8cf6652c0b6d1162d85fc7c0e9',
+    '90a2e34be1feb89975baa608a6a07a1491e4632fd0dd5bca3ac1edf387c8670c',
+  ]);
+  assert.deepEqual(manifest.migrations[nullabilityIndex].compatibleAppliedChecksums, [
+    '7942288682d50a655dd81f072b0ccd91d262d070b493cacad2602565e8e42347',
+  ]);
+  assert.equal(compatibilityIndex, nullabilityIndex + 1);
 });
 
 test('production release refuses to omit a migration outside the release ancestry', () => {
@@ -490,7 +565,11 @@ test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged ro
 
   assert.equal(validation.runMigrations, false);
   assert.equal(validation.autoApplyProductionMigrations, true);
+  assert.equal(validation.reputationAggregationWorkerEnabled, false);
+  assert.equal(validation.reputationAggregationEnvironment, 'production');
+  assert.equal(validation.reputationAggregationMode, 'simulation');
   assert.equal(validation.eventDiscoveryEnabled, false);
+  assert.equal(validation.eventDiscoveryAutoPublish, false);
   assert.equal(validation.internalFeedbackUploadRoot, '/data/assets/.internal-feedback');
   assert.equal(validation.healthCheckPath, '/health');
   assert.equal(validation.strategy, 'rolling');
@@ -552,7 +631,19 @@ test('validateFlyConfig fails closed when event discovery would start during the
   );
 });
 
-test('validateFlyConfig fails closed when contextual reputation would start during the initial release', () => {
+test('validateFlyConfig fails closed when event discovery could auto-publish during rollout', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'EVENT_DISCOVERY_AUTO_PUBLISH = "false"',
+        'EVENT_DISCOVERY_AUTO_PUBLISH = "true"',
+      ),
+    ),
+    /EVENT_DISCOVERY_AUTO_PUBLISH|auto-publish/i,
+  );
+});
+
+test('validateFlyConfig keeps contextual reputation dark without a production cohort gate', () => {
   assert.throws(
     () => validateFlyConfig(
       safeFlyConfig.replace(
@@ -573,6 +664,51 @@ test('validateFlyConfig keeps the onboarding experiment paused until activation 
       ),
     ),
     /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED|activation approval/i,
+  );
+});
+
+test('validateFlyConfig requires the separately authorized public projection gate', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"',
+        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "false"',
+      ),
+    ),
+    /PUBLIC_REPUTATION_PROJECTION_ENABLED|public-read gate/i,
+  );
+});
+
+test('validateFlyConfig rejects the staging-only reputation worker in production', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_WORKER_ENABLED = "false"',
+        'REPUTATION_AGGREGATION_WORKER_ENABLED = "true"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_WORKER_ENABLED|reputation worker/i,
+  );
+});
+
+test('validateFlyConfig structurally identifies production reputation configuration', () => {
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_ENVIRONMENT = "production"',
+        'REPUTATION_AGGREGATION_ENVIRONMENT = "staging"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_ENVIRONMENT|production/i,
+  );
+  assert.throws(
+    () => validateFlyConfig(
+      safeFlyConfig.replace(
+        'REPUTATION_AGGREGATION_MODE = "simulation"',
+        'REPUTATION_AGGREGATION_MODE = "publish"',
+      ),
+    ),
+    /REPUTATION_AGGREGATION_MODE|simulation/i,
   );
 });
 
@@ -608,6 +744,7 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
     app: 'tdf-hq',
     image,
     sha: normalizedReleaseSha,
+    contextualReputationEnabled: false,
     onlyMachine: 'canary-machine',
   });
 
@@ -619,6 +756,61 @@ test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks',
   assert.ok(args.includes('--update-only'));
   assert.ok(!args.includes('machine'));
   assert.ok(!args.includes('update'));
+  assert.ok(args.includes('CONTEXTUAL_REPUTATION_ENABLED=false'));
+});
+
+test('runtime preflight preserves a coherent captured contextual reputation gate', () => {
+  const values = {
+    RUN_MIGRATIONS: 'false',
+    AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
+    CONTEXTUAL_REPUTATION_ENABLED: 'false',
+    REPUTATION_AGGREGATION_WORKER_ENABLED: 'false',
+    REPUTATION_AGGREGATION_ENVIRONMENT: 'production',
+    REPUTATION_AGGREGATION_MODE: 'simulation',
+    EVENT_DISCOVERY_ENABLED: 'false',
+    EVENT_DISCOVERY_AUTO_PUBLISH: 'false',
+    DEFAULT_LOCALE: 'es',
+  };
+  const rows = [
+    { machineId: 'machine-a', values },
+    { machineId: 'machine-b', values: { ...values } },
+  ];
+
+  assert.equal(captureContextualReputationGate(rows), false);
+  assert.deepEqual(runtimeEnvBlockers(rows), []);
+  assert.deepEqual(runtimeEnvBlockers(rows, { contextualReputationEnabled: false }), []);
+  assert.match(
+    runtimeEnvBlockers(rows, { contextualReputationEnabled: true })[0],
+    /CONTEXTUAL_REPUTATION_ENABLED/,
+  );
+  const enabledRows = rows.map(({ machineId, values: rowValues }) => ({
+    machineId,
+    values: { ...rowValues, CONTEXTUAL_REPUTATION_ENABLED: 'true' },
+  }));
+  assert.equal(captureContextualReputationGate(enabledRows), true);
+  assert.match(runtimeEnvBlockers(enabledRows)[0], /CONTEXTUAL_REPUTATION_ENABLED/);
+  assert.throws(
+    () => captureContextualReputationGate([
+      rows[0],
+      { machineId: 'machine-b', values: { ...values, CONTEXTUAL_REPUTATION_ENABLED: 'true' } },
+    ]),
+    /same boolean CONTEXTUAL_REPUTATION_ENABLED/i,
+  );
+});
+
+test('buildMachineDeployArgs can restore a captured contextual-reputation gate', () => {
+  const args = buildMachineDeployArgs({
+    app: 'tdf-hq',
+    image: releaseImage,
+    sha: normalizedReleaseSha,
+    onlyMachine: 'canary-machine',
+    contextualReputationEnabled: false,
+  });
+
+  assert.equal(
+    args[args.indexOf('CONTEXTUAL_REPUTATION_ENABLED=false')],
+    'CONTEXTUAL_REPUTATION_ENABLED=false',
+  );
 });
 
 test('validateFlyConfig requires an HTTP readiness check on /health', () => {
@@ -863,6 +1055,16 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
   assert.match(sql, /RAISE\s+EXCEPTION|\\quit/i, 'schema drift must terminate verification');
   assert.match(sql, /social_event[\s\S]*end_time[\s\S]*is_nullable\s*=\s*'YES'/i);
   assert.match(sql, /social_event_time_order[\s\S]*convalidated/i);
+  assert.match(
+    sql,
+    /IF EXISTS \([\s\S]*notification_notif_type_check[\s\S]*\) AND NOT EXISTS \([\s\S]*access_request_submitted/i,
+    'the historical unconstrained notification baseline must remain valid while a named allowlist fails closed',
+  );
+  assert.match(
+    sql,
+    /conname = 'notification_notif_type_check'[\s\S]*OR \(contype = 'c' AND 3 = ANY \(conkey\)\)/i,
+    'unvalidated named and differently named notification allowlists must not be mistaken for no allowlist',
+  );
 });
 
 test('buildSchemaPreflightSql is read-only and accepts unapplied release tables', () => {
@@ -912,7 +1114,12 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
   assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.match(canaryCommand, /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false/);
+  assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
+  assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
   assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
+  assert.match(canaryCommand, /EVENT_DISCOVERY_AUTO_PUBLISH=false/);
   assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
 
   const remainingCommand = commandText(steps.find(({ id }) => id === 'deploy-remaining-1'));
@@ -920,6 +1127,15 @@ test('buildReleaseSteps orders schema work before a single-machine canary and fl
   assert.doesNotMatch(remainingCommand, /--exclude-machines/);
   assert.match(remainingCommand, /--strategy rolling(?:\s|$)/);
   assert.match(remainingCommand, /--max-unavailable 1(?:\s|$)/);
+
+  const attemptedOverride = buildReleaseSteps(releaseOptions({
+    contextualReputationEnabled: true,
+  }));
+  const guardedCanaryCommand = commandText(
+    attemptedOverride.find(({ id }) => id === 'deploy-canary'),
+  );
+  assert.match(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
+  assert.doesNotMatch(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
 });
 
 test('buildReleaseSteps rolls the canary back to its captured image before any remaining-machine rollout', () => {
@@ -939,6 +1155,7 @@ test('buildReleaseSteps rolls the canary back to its captured image before any r
   const rollbackCommand = commandText(rollback);
   assert.match(rollbackCommand, /--only-machines canary-machine(?:\s|$)/);
   assert.match(rollbackCommand, /--image registry\.fly\.io\/tdf-hq:deployment-old-canary(?:\s|$)/);
+  assert.match(rollbackCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
   assert.doesNotMatch(rollbackCommand, new RegExp(releaseImage));
 });
 

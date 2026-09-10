@@ -15,6 +15,7 @@ const INTERNAL_MANAGER_MODULE_KEYS = [
 const SCHOOL_STAFF_ROLE_KEYS = ['admin', 'manager', 'reception', 'studiomanager'] as const;
 const OPERATIONS_ROLE_KEYS = ['manager', 'maintenance'] as const;
 const ADMIN_ROLE_KEYS = ['admin'] as const;
+const STRICT_ADMIN_ROLE_KEYS = ['admin', 'fan', 'customer'] as const;
 const SOCIAL_INBOX_ROLE_KEYS = [
   'admin',
   'manager',
@@ -104,7 +105,9 @@ export function hasStrictAdminAccess(
 ): boolean {
   const normalizedRoles = normalizeAccessRoles(roles);
   const moduleSet = buildAccessibleModuleSet(roles, modules);
-  return moduleSet.has('admin') && hasAnyRole(normalizedRoles, ADMIN_ROLE_KEYS);
+  return moduleSet.has('admin')
+    && hasAnyRole(normalizedRoles, ADMIN_ROLE_KEYS)
+    && normalizedRoles.every((role) => STRICT_ADMIN_ROLE_KEYS.some((allowedRole) => allowedRole === role));
 }
 
 export function hasAiToolingAccess(
