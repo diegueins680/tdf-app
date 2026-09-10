@@ -50,7 +50,7 @@ jobs:
       migrations: ${{ steps.scope.outputs.migrations }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -71,10 +71,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -91,10 +91,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -111,10 +111,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload sanitized browser evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: persona-web-e2e-${{ github.run_id }}
           path: artifacts/persona-playwright
@@ -144,12 +144,12 @@ jobs:
       REQUIRE_MOBILE_WORKSPACE: '1'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -186,7 +186,7 @@ jobs:
       BACKEND_BINARY_OUT: ${{ github.workspace }}/tdf-hq/.release/tdf-hq-exe
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install native build dependencies
         run: |
@@ -194,13 +194,13 @@ jobs:
           apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs pkg-config git curl ca-certificates
 
       - name: Restore immutable Stack dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .stack-root
           key: stack-deps-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
 
       - name: Restore incremental backend objects
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: tdf-hq/.stack-work
           key: stack-work-v1-ghc-9.10.3-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tdf-hq/stack.yaml', 'tdf-hq/stack.yaml.lock', 'tdf-hq/tdf-hq.cabal') }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tdf-hq-binary-${{ github.sha }}
           path: tdf-hq/.release/tdf-hq-exe
@@ -260,12 +260,12 @@ jobs:
       REQUIRE_MOBILE_WORKSPACE: '1'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -319,10 +319,10 @@ jobs:
       PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_hq_migration_test
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -346,6 +346,9 @@ jobs:
 
       - name: Rehearse provider event operations migration
         run: ./scripts/test-provider-event-operations-migration.sh
+
+      - name: Rehearse contextual reputation staging worker migration
+        run: ./scripts/test-contextual-reputation-worker-migration.sh
 
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh

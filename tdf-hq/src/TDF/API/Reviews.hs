@@ -10,6 +10,7 @@ import Data.Text (Text)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
 import Servant
+import TDF.DTO.ReputationConsent (ReputationConsentDTO, ReputationConsentUpdate)
 
 data ExperienceReviewPage = ExperienceReviewPage
   { summary :: Value
@@ -81,3 +82,7 @@ type ReviewsProtectedAPI =
          :> RequiredReviewIdempotency
          :> ReqBody '[JSON] ReputationPreferenceSaveRequest
          :> Put '[JSON] Value
+  :<|> "reputation" :> "consents" :> Get '[JSON] [ReputationConsentDTO]
+  :<|> "reputation" :> "consents"
+         :> ReqBody '[JSON] [ReputationConsentUpdate]
+         :> Put '[JSON] [ReputationConsentDTO]

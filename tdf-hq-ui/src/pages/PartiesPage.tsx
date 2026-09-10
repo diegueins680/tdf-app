@@ -57,7 +57,8 @@ function normalizeSearch(text: string): string {
 
 const normalizePartyContactValue = (value?: string | null) => {
   const trimmed = value?.trim();
-  return trimmed ? trimmed : null;
+  if (trimmed === undefined || trimmed === '') return null;
+  return trimmed;
 };
 
 const getPartyContactSummary = (party: Pick<PartyDTO, 'primaryEmail' | 'instagram'>) => {

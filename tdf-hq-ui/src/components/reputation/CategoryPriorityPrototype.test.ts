@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReputationCategory, ReputationPreference } from '../../api/reputation';
+import { expectNoSeriousAccessibilityViolations } from '../../test/accessibility';
 
 const categoriesMock = jest.fn<() => Promise<ReputationCategory[]>>();
 const getPreferencesMock = jest.fn<() => Promise<ReputationPreference>>();
@@ -103,6 +104,24 @@ describe('CategoryPriorityPrototype preference loading', () => {
       expect(await screen.findByRole('button', { name: 'Save draft' })).toBeTruthy();
       expect(getPreferencesMock).toHaveBeenCalledTimes(2);
       expect(savePreferencesMock).not.toHaveBeenCalled();
+    } finally {
+      view.unmount();
+      queryClient.clear();
+    }
+  });
+
+  it('has no serious automated accessibility violations in the loaded priority editor', async () => {
+    getPreferencesMock.mockReset().mockResolvedValue(emptyPreference);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      createElement(CategoryPriorityPrototype, { locale: 'en' }),
+    ));
+
+    try {
+      await screen.findByRole('button', { name: 'Save draft' });
+      await expectNoSeriousAccessibilityViolations(view.container);
     } finally {
       view.unmount();
       queryClient.clear();

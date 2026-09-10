@@ -5,6 +5,9 @@ export type PublicReputation = components['schemas']['PublicReputation'];
 export type ReputationCategory = components['schemas']['ReputationCategory'];
 export type ReputationPreference = components['schemas']['ReputationPreference'];
 export type ReputationPreferenceSave = components['schemas']['ReputationPreferenceSave'];
+export type ReputationConsent = components['schemas']['ReputationConsent'];
+export type ReputationConsentUpdate = components['schemas']['ReputationConsentUpdate'];
+export type ReputationConsentKind = ReputationConsent['consentKind'];
 
 /** Public aggregate only: never use it to expose individual rankings. */
 export const Reputation = {
@@ -18,4 +21,6 @@ export const Reputation = {
     input,
     { headers: { 'Idempotency-Key': idempotencyKey } },
   ),
+  getMyConsents: () => get<ReputationConsent[]>('/reputation/consents'),
+  updateMyConsents: (input: ReputationConsentUpdate[]) => put<ReputationConsent[]>('/reputation/consents', input),
 };

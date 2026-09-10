@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { DDEX } from '../../api/ddex';
+import { firstNonEmptyString } from '../../utils/stringValues';
 
 const DdexInboxPage: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -66,7 +67,7 @@ const DdexInboxPage: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading DDEX documents: {(error || referencesError)?.message}
+          Error loading DDEX documents: {(error ?? referencesError)?.message}
         </Alert>
       </Box>
     );
@@ -131,10 +132,10 @@ const DdexInboxPage: React.FC = () => {
                 <TableCell>{doc.ddexDocumentVersionCode}</TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {doc.ddexDocumentMessageId || '-'}
+                    {firstNonEmptyString(doc.ddexDocumentMessageId, '-')}
                   </Typography>
                 </TableCell>
-                <TableCell>{doc.ddexDocumentSenderId || '-'}</TableCell>
+                <TableCell>{firstNonEmptyString(doc.ddexDocumentSenderId, '-')}</TableCell>
                 <TableCell>{formatDate(doc.ddexDocumentCreatedAt)}</TableCell>
                 <TableCell align="right">
                   <IconButton
