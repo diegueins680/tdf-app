@@ -5344,10 +5344,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/commerce/payment-capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List payment routes actually available for a transaction
+         * @description Returns only providers whose environment, feature, credential and contract gates are all verified. An empty route list is authoritative. Provider identifiers and configuration details are intentionally excluded.
+         */
+        get: operations["listPaymentCapabilities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        PaymentCapabilityName: "one_time" | "recurring" | "tokenization" | "three_ds" | "installments" | "authorize" | "capture" | "void" | "full_refund" | "partial_refund" | "disputes" | "chargebacks" | "payment_link" | "signed_webhook" | "server_verification" | "connected_accounts" | "split_settlement" | "seller_payouts";
+        PaymentRoute: {
+            /** @enum {string} */
+            provider: "datafast" | "paypal" | "placetopay" | "payphone" | "bank_transfer";
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            capabilities: components["schemas"]["PaymentCapabilityName"][];
+            priority: number;
+        };
+        PaymentCapabilityResponse: {
+            /** @enum {string} */
+            environment: "sandbox" | "production";
+            buyerCountry: string;
+            /** @enum {string} */
+            currency: "USD";
+            /** Format: int64 */
+            amountMinor: number;
+            /** @enum {string} */
+            paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+            /** @enum {string} */
+            productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+            routes: components["schemas"]["PaymentRoute"][];
+            fallbackPolicy: string;
+        };
         PublicDomoStorefront: {
             checkoutAvailable: boolean;
             unavailableReason?: string | null;
@@ -21006,6 +21051,47 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPaymentCapabilities: {
+        parameters: {
+            query: {
+                buyerCountry: string;
+                currency: "USD";
+                amountMinor: number;
+                paymentMethod: "card" | "paypal_wallet" | "bank_redirect" | "deuna_qr" | "payphone_wallet" | "payment_link" | "manual_bank_transfer";
+                productFlow: "merchandise" | "booking" | "professional_service" | "course" | "event_ticket" | "digital_product" | "subscription" | "marketplace";
+                requires?: components["schemas"]["PaymentCapabilityName"][];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ordered, transaction-specific routes; may be empty when no provider is fully active. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentCapabilityResponse"];
+                };
+            };
+            /** @description Invalid money */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Checkout environment configuration is invalid */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

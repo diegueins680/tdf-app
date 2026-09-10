@@ -90,6 +90,8 @@ data CheckoutLineCreation = CheckoutLineCreation
 data PaymentProvider
   = ProviderDatafast
   | ProviderPayPal
+  | ProviderPlaceToPay
+  | ProviderPayPhone
   | ProviderStripe
   | ProviderBankTransfer
   | ProviderCash
@@ -181,6 +183,8 @@ paymentProviderText :: PaymentProvider -> Text
 paymentProviderText provider = case provider of
   ProviderDatafast -> "datafast"
   ProviderPayPal -> "paypal"
+  ProviderPlaceToPay -> "placetopay"
+  ProviderPayPhone -> "payphone"
   ProviderStripe -> "stripe"
   ProviderBankTransfer -> "bank_transfer"
   ProviderCash -> "cash"

@@ -4,10 +4,14 @@
 module TDF.Commerce.StateMachine
   ( CheckoutState(..)
   , CheckoutEvent(..)
+  , PaymentState(..)
+  , PaymentLifecycle(..)
+  , PaymentEvent(..)
   , ProviderEnvironment(..)
   , VerificationEvidence(..)
   , PaymentVerification(..)
   , transitionCheckout
+  , transitionPayment
   , verifyPaymentBinding
   , ledgerBalances
   ) where
@@ -75,6 +79,46 @@ data CheckoutEvent
   | CheckoutChargebackConfirmed
   deriving (Eq, Show)
 
+-- | The payment lifecycle is separate from the checkout lifecycle. An
+-- authorization is not a paid checkout and a void is not a refund. Amounts
+-- are always represented in integer minor units.
+data PaymentState
+  = PaymentRequiresMethod
+  | PaymentRequiresCustomerAction
+  | PaymentProcessing
+  | PaymentAuthorized
+  | PaymentPartiallyCaptured
+  | PaymentCaptured
+  | PaymentVoided
+  | PaymentFailed
+  | PaymentCancelled
+  | PaymentPartiallyRefunded
+  | PaymentRefunded
+  | PaymentDisputed
+  | PaymentChargeback
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+data PaymentLifecycle = PaymentLifecycle
+  { paymentState           :: PaymentState
+  , paymentAmountMinor     :: Int64
+  , paymentAuthorizedMinor :: Int64
+  , paymentCapturedMinor   :: Int64
+  , paymentRefundedMinor   :: Int64
+  } deriving (Eq, Show)
+
+data PaymentEvent
+  = PaymentCustomerActionRequired
+  | PaymentProcessingObserved
+  | PaymentAuthorizationVerified Int64
+  | PaymentCaptureVerified Int64
+  | PaymentVoidVerified Int64
+  | PaymentFailureConfirmed
+  | PaymentCancellationRequested
+  | PaymentRefundVerified Int64
+  | PaymentDisputeObserved
+  | PaymentChargebackObserved
+  deriving (Eq, Show)
+
 transitionCheckout :: CheckoutState -> CheckoutEvent -> Either Text CheckoutState
 transitionCheckout current event = case (current, event) of
   (CheckoutDraft, CheckoutValidationPassed) -> Right CheckoutValidated
@@ -100,6 +144,139 @@ transitionCheckout current event = case (current, event) of
   (CheckoutPartiallyRefunded, CheckoutDisputeOpened) -> Right CheckoutDisputed
   (CheckoutDisputed, CheckoutChargebackConfirmed) -> Right CheckoutChargeback
   _ -> Left ("Invalid checkout transition from " <> T.pack (show current) <> " using " <> eventName event)
+
+transitionPayment
+  :: PaymentLifecycle
+  -> PaymentEvent
+  -> Either Text PaymentLifecycle
+transitionPayment lifecycle event
+  | paymentAmountMinor lifecycle <= 0 = Left "Payment amount must be positive"
+  | any (< 0)
+      [ paymentAuthorizedMinor lifecycle
+      , paymentCapturedMinor lifecycle
+      , paymentRefundedMinor lifecycle
+      ] = Left "Payment lifecycle amounts cannot be negative"
+  | paymentAuthorizedMinor lifecycle > paymentAmountMinor lifecycle =
+      Left "Authorized amount exceeds the payment amount"
+  | paymentCapturedMinor lifecycle > paymentAmountMinor lifecycle =
+      Left "Captured amount exceeds the payment amount"
+  | paymentRefundedMinor lifecycle > paymentCapturedMinor lifecycle =
+      Left "Refunded amount exceeds the captured amount"
+  | otherwise = applyPaymentEvent lifecycle event
+
+applyPaymentEvent
+  :: PaymentLifecycle
+  -> PaymentEvent
+  -> Either Text PaymentLifecycle
+applyPaymentEvent lifecycle event = case (paymentState lifecycle, event) of
+  (PaymentRequiresMethod, PaymentCustomerActionRequired) ->
+    Right lifecycle { paymentState = PaymentRequiresCustomerAction }
+  (PaymentRequiresMethod, PaymentProcessingObserved) ->
+    Right lifecycle { paymentState = PaymentProcessing }
+  (PaymentRequiresCustomerAction, PaymentProcessingObserved) ->
+    Right lifecycle { paymentState = PaymentProcessing }
+  (PaymentProcessing, PaymentAuthorizationVerified amount) ->
+    authorize lifecycle amount
+  (PaymentRequiresCustomerAction, PaymentAuthorizationVerified amount) ->
+    authorize lifecycle amount
+  (PaymentRequiresMethod, PaymentAuthorizationVerified amount) ->
+    authorize lifecycle amount
+  (PaymentProcessing, PaymentCaptureVerified amount) ->
+    capture lifecycle amount
+  (PaymentRequiresCustomerAction, PaymentCaptureVerified amount) ->
+    capture lifecycle amount
+  (PaymentRequiresMethod, PaymentCaptureVerified amount) ->
+    capture lifecycle amount
+  (PaymentAuthorized, PaymentCaptureVerified amount) ->
+    capture lifecycle amount
+  (PaymentPartiallyCaptured, PaymentCaptureVerified amount) ->
+    capture lifecycle amount
+  (PaymentAuthorized, PaymentVoidVerified amount) ->
+    voidAuthorization lifecycle amount
+  (PaymentPartiallyCaptured, PaymentVoidVerified amount) ->
+    voidAuthorization lifecycle amount
+  (state, PaymentFailureConfirmed)
+    | state `elem` [PaymentRequiresMethod, PaymentRequiresCustomerAction, PaymentProcessing] ->
+        Right lifecycle { paymentState = PaymentFailed }
+  (state, PaymentCancellationRequested)
+    | state `elem` [PaymentRequiresMethod, PaymentRequiresCustomerAction, PaymentProcessing, PaymentFailed] ->
+        Right lifecycle { paymentState = PaymentCancelled }
+  (PaymentCaptured, PaymentRefundVerified amount) -> refund lifecycle amount
+  (PaymentPartiallyRefunded, PaymentRefundVerified amount) -> refund lifecycle amount
+  (state, PaymentDisputeObserved)
+    | state `elem` [PaymentCaptured, PaymentPartiallyRefunded] ->
+        Right lifecycle { paymentState = PaymentDisputed }
+  (PaymentDisputed, PaymentChargebackObserved) ->
+    Right lifecycle { paymentState = PaymentChargeback }
+  _ -> invalidPaymentTransition lifecycle event
+
+authorize :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
+authorize lifecycle amount
+  | amount <= 0 = Left "Authorization amount must be positive"
+  | amount > paymentAmountMinor lifecycle = Left "Authorization exceeds the payment amount"
+  | otherwise = Right lifecycle
+      { paymentState = PaymentAuthorized
+      , paymentAuthorizedMinor = amount
+      }
+
+capture :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
+capture lifecycle amount
+  | amount <= 0 = Left "Capture amount must be positive"
+  | newCaptured > maximumCapture = Left "Capture exceeds the authorized payment balance"
+  | otherwise = Right lifecycle
+      { paymentState = if newCaptured == paymentAmountMinor lifecycle
+          then PaymentCaptured
+          else PaymentPartiallyCaptured
+      , paymentAuthorizedMinor = max
+          (paymentAuthorizedMinor lifecycle)
+          maximumCapture
+      , paymentCapturedMinor = newCaptured
+      }
+  where
+    newCaptured = paymentCapturedMinor lifecycle + amount
+    maximumCapture = case paymentState lifecycle of
+      PaymentAuthorized -> paymentAuthorizedMinor lifecycle
+      PaymentPartiallyCaptured -> paymentAuthorizedMinor lifecycle
+      _ -> paymentAmountMinor lifecycle
+
+voidAuthorization :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
+voidAuthorization lifecycle amount
+  | amount <= 0 = Left "Void amount must be positive"
+  | amount /= remainingAuthorization = Left "Void must release the exact uncaptured authorization balance"
+  | otherwise = Right lifecycle
+      { paymentState = if paymentCapturedMinor lifecycle == 0
+          then PaymentVoided
+          else PaymentCaptured
+      , paymentAuthorizedMinor = paymentCapturedMinor lifecycle
+      }
+  where
+    remainingAuthorization =
+      paymentAuthorizedMinor lifecycle - paymentCapturedMinor lifecycle
+
+refund :: PaymentLifecycle -> Int64 -> Either Text PaymentLifecycle
+refund lifecycle amount
+  | amount <= 0 = Left "Refund amount must be positive"
+  | newRefunded > paymentCapturedMinor lifecycle = Left "Refund exceeds the captured balance"
+  | otherwise = Right lifecycle
+      { paymentState = if newRefunded == paymentCapturedMinor lifecycle
+          then PaymentRefunded
+          else PaymentPartiallyRefunded
+      , paymentRefundedMinor = newRefunded
+      }
+  where
+    newRefunded = paymentRefundedMinor lifecycle + amount
+
+invalidPaymentTransition
+  :: PaymentLifecycle
+  -> PaymentEvent
+  -> Either Text PaymentLifecycle
+invalidPaymentTransition lifecycle event =
+  Left
+    ( "Invalid payment transition from "
+        <> T.pack (show (paymentState lifecycle))
+        <> " using "
+        <> T.pack (show event)
+    )
 
 verifyPaymentBinding :: PaymentVerification -> Either Text ()
 verifyPaymentBinding verification

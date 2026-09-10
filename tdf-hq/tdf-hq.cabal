@@ -24,6 +24,7 @@ executable tdf-hq-exe
     TDF.API.LiveSessions
     TDF.API.Feedback
     TDF.API.Payments
+    TDF.API.PaymentCapabilities
     TDF.API.Inventory
     TDF.API.Pipelines
     TDF.API.Proposals
@@ -66,6 +67,8 @@ executable tdf-hq-exe
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.ProviderCapabilities
+    TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -114,6 +117,7 @@ executable tdf-hq-exe
     TDF.Seed
     TDF.Server
     TDF.Server.CommerceOperations
+    TDF.Server.PaymentCapabilities
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -250,6 +254,7 @@ test-suite tdf-hq-test
     TDF.API.Facebook
     TDF.API.Future
     TDF.API.Payments
+    TDF.API.PaymentCapabilities
     TDF.API.Feedback
     TDF.API.Inventory
     TDF.API.Instagram
@@ -296,6 +301,8 @@ test-suite tdf-hq-test
     TDF.Commerce.ServiceBookings
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
+    TDF.Commerce.ProviderCapabilities
+    TDF.Commerce.ProviderCapabilityStore
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -346,6 +353,7 @@ test-suite tdf-hq-test
     TDF.Server
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
+    TDF.Server.PaymentCapabilities
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout

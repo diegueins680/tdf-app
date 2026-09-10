@@ -5818,6 +5818,55 @@ paths:
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
 
+  /commerce/payment-capabilities:
+    get:
+      tags: [Commerce]
+      summary: List payment routes actually available for a transaction
+      description: Returns only providers whose environment, feature, credential and contract gates are all verified. An empty route list is authoritative. Provider identifiers and configuration details are intentionally excluded.
+      operationId: listPaymentCapabilities
+      security: []
+      parameters:
+        - name: buyerCountry
+          in: query
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z]{2}$' }
+        - name: currency
+          in: query
+          required: true
+          schema: { type: string, enum: [USD] }
+        - name: amountMinor
+          in: query
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+        - name: paymentMethod
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer]
+        - name: productFlow
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace]
+        - name: requires
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+      responses:
+        '200':
+          description: Ordered, transaction-specific routes; may be empty when no provider is fully active.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentCapabilityResponse' }
+        '400': { description: Invalid money, country, method, flow, or required capability }
+        '503': { description: Checkout environment configuration is invalid }
+
 security:
   - bearerAuth: [ ]
 
@@ -5962,6 +6011,36 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    PaymentCapabilityName:
+      type: string
+      enum: [one_time, recurring, tokenization, three_ds, installments, authorize, capture, void, full_refund, partial_refund, disputes, chargebacks, payment_link, signed_webhook, server_verification, connected_accounts, split_settlement, seller_payouts]
+    PaymentRoute:
+      type: object
+      additionalProperties: false
+      required: [provider, paymentMethod, capabilities, priority]
+      properties:
+        provider: { type: string, enum: [datafast, paypal, placetopay, payphone, bank_transfer] }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        capabilities:
+          type: array
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/PaymentCapabilityName' }
+        priority: { type: integer, minimum: 1 }
+    PaymentCapabilityResponse:
+      type: object
+      additionalProperties: false
+      required: [environment, buyerCountry, currency, amountMinor, paymentMethod, productFlow, routes, fallbackPolicy]
+      properties:
+        environment: { type: string, enum: [sandbox, production] }
+        buyerCountry: { type: string, pattern: '^[A-Z]{2}$' }
+        currency: { type: string, enum: [USD] }
+        amountMinor: { type: integer, format: int64, minimum: 1 }
+        paymentMethod: { type: string, enum: [card, paypal_wallet, bank_redirect, deuna_qr, payphone_wallet, payment_link, manual_bank_transfer] }
+        productFlow: { type: string, enum: [merchandise, booking, professional_service, course, event_ticket, digital_product, subscription, marketplace] }
+        routes:
+          type: array
+          items: { $ref: '#/components/schemas/PaymentRoute' }
+        fallbackPolicy: { type: string }
     PublicDomoStorefront:
       type: object
       additionalProperties: false
