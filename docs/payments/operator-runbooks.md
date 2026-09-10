@@ -12,7 +12,7 @@ These procedures are safe defaults for sandbox and staging. They do not authoriz
 6. Update the provider-account metadata only after contract and credential evidence is reviewed. Production additionally requires the matching `revenue_feature_flag` and a separately authorized change window.
 7. Call `/commerce/payment-capabilities` for each intended flow. An empty `routes` array blocks the checkout UI; it is not a reason to bypass the gate.
 
-Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PAYPHONE_TOKEN`, and `PAYPHONE_STORE_ID`. Presence alone is not validation. PlaceToPay and PayPhone remain disabled until the adapter executor and credentialed sandbox evidence are complete.
+Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PAYPHONE_TOKEN`, and `PAYPHONE_STORE_ID`. Presence alone is not validation. PlaceToPay and PayPhone remain disabled until the canonical runtime endpoints and credentialed sandbox evidence are complete.
 
 ## 2. Sandbox qualification
 
