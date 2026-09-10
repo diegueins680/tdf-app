@@ -14,7 +14,7 @@ Existían perfiles/directorio/comunidad, marketplace de activos, checkouts Dataf
 - Reutilización de `party`, `directory_profile`, permisos/PartySelector, `/assets/serve` y `commerce_checkout_*`.
 - Tokens opacos hasheados para carrito/orden y snapshots inmutables.
 - API Servant/OpenAPI y clientes TypeScript regenerados.
-- UI web completa para comprador/vendedor/staff, incluida cancelación sin pagar, triage de incidencias y pedidos filtrables con totales/exportación sin PII; móvil para compra, seguimiento, soporte y operación esencial.
+- UI web completa para comprador/vendedor/staff, incluida cancelación sin pagar, triage de incidencias, pedidos filtrables con totales/exportación sin PII y liquidación manual con evidencia privada; móvil para compra, seguimiento, soporte y operación esencial.
 - Dependencia móvil revisable: [TDF-mobile#49](https://github.com/diegueins680/TDF-mobile/pull/49).
 
 ## UX
@@ -29,7 +29,7 @@ Incidencias: vendedor puede revisar/responder/resolver casos operativos; cancela
 
 ## Seguridad y privacidad
 
-Autorización backend por store/acción; elegibilidad reclamada/verificada; locks/constraints contra sobreventa; idempotencia con fingerprint; `paid` solo por evidencia server-side; archivos decodificados/reencodados y object keys generados; referencias HTTPS/durables; analítica sin PII; auditoría append-only; settlement con doble control; flags cerrados y kill switch `merch.checkout.runtime_ready`.
+Autorización backend por store/acción; elegibilidad reclamada/verificada; locks/constraints contra sobreventa; idempotencia con fingerprint; `paid` solo por evidencia server-side; archivos decodificados/reencodados y object keys generados; referencias HTTPS/durables; analítica sin PII; auditoría append-only; settlement con doble control, evidencia privada e identidad independiente del preparador; flags cerrados y kill switch `merch.checkout.runtime_ready`.
 
 ## Migración
 
@@ -42,12 +42,12 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 ## Pruebas ejecutadas
 
 - Migración PostgreSQL aislada: PASS, incluida reejecución, concurrencia, expiración, pago, comisión y rollback.
-- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor, validación del filtro de pedidos y triage seller/admin.
+- Runtime handlers + HTTP Servant + PostgreSQL 16 temporal: `./scripts/test-artist-merch-runtime.sh` PASS 1/1 y agregado a `backend-quality`. Cubre autenticación, aplicación/aprobación de piloto a 0%, catálogo público, checkout invitado, cálculo server-side, recuperación idempotente de carrito convertido, conflicto de fingerprint, falso retorno de navegador, cero intentos de pago, capability privada, cancelación/liberación de stock, permisos/finanzas, aislamiento de vendedor, validación del filtro de pedidos, triage seller/admin y liquidación con órdenes elegibles sin PII, doble control y comprobante privado idempotente.
 - Backend Haskell: PASS, 2.487/2.487 ejemplos sobre la integración final con `main`.
 - Reglas focalizadas posteriores: PASS 8/8 coincidencias `merch`.
-- Build web: PASS; presupuesto inicial JS PASS (416.063 bytes gzip).
+- Build web: PASS; presupuesto inicial JS PASS (416.033 bytes gzip).
 - Web y móvil typecheck: PASS.
-- Jest web merch API + exportación CSV: PASS 10/10.
+- Jest web admin merch + API/cliente + exportación CSV: PASS 29/29; incluye Axe sin impactos serios/críticos sobre el formulario de evidencia.
 - Jest móvil deep links: PASS 2/2.
 - Android nativo API 36.1: `app:assembleDebug` PASS (481 tareas), APK instalado y runtime verificado con API sintética local. Pasaron deep link público, catálogo, producto, aviso de piloto y bloqueo accesible de compra (`enabled=false`); sin excepciones TDF en logcat. Capturas reales obtenidas localmente.
 - iOS nativo: Xcode 16.2 / iOS 18.3 Simulator / iPhone 16 `x86_64`. CocoaPods quedó sincronizado con las dependencias Expo declaradas; `pod install --deployment` y el build Release sin firma terminaron PASS. El `.app` se instaló y verificaron deep links de catálogo, storefront y producto contra fixture local read-only; el CTA de compra permaneció deshabilitado, solo se registraron GET y no hubo logs `error`/`fault` de TDF. Expo Updates se apagó solo en el artefacto de prueba para fijar el bundle local. Capturas reales versionadas en `docs/artist-merch/media/`. Dispositivo físico no ejecutado.
@@ -56,7 +56,7 @@ Rollback se niega si existe evidencia comercial. No hay conversión automática 
 - Regresión móvil global: 319/320 en una corrida simultánea; la única prueba con timeout pasó aislada 15/15.
 - Regresión web global: la suite preexistente de administración de cursos falló durante la corrida simultánea; queda por repetir en CI/aislamiento. Las pruebas específicas de merch pasaron.
 - OpenAPI YAML + regeneración web/móvil: PASS.
-- Verificador del manifiesto de release: PASS 47/47 sobre el `main` final.
+- Verificador del manifiesto de release: PASS 59/59 sobre el `main` final.
 - Feature generation: PASS; auditoría conserva un fallo preexistente no relacionado en `/reputation/consents`.
 - Auditoría de listas/catálogos: PASS, 1.007/1.007 candidatos clasificados; prueba determinista PASS 1/1. La fixture móvil read-only está revisada como estructura técnica sintética y no como autoridad de capacidades o permisos.
 - Gate remoto del PR: PASS 17/17 en la corrida que incluyó explícitamente el runtime HTTP autenticado dentro de `backend-quality`, además de migraciones, contratos, UI, móvil, E2E y auditoría de listas. El estado del HEAD vigente debe consultarse en GitHub; los previews automáticos no se consideran staging ni producción.
@@ -65,7 +65,7 @@ No se ejecutó dispositivo físico ni integración real con proveedor de pagos. 
 
 ## Configuración y staging
 
-Todos los flags permanecen `false`. Staging debe configurar de forma independiente storefront, solicitud, catálogo, checkout runtime, proveedor, reviews, notificaciones y experimentos. Sin credenciales sandbox y evidencia de adapter, checkout debe continuar cerrado.
+Todos los flags permanecen `false`. Staging debe configurar de forma independiente storefront, solicitud, catálogo, checkout runtime, proveedor, reviews, notificaciones y experimentos. También debe proporcionar `MERCH_SETTLEMENT_EVIDENCE_DIR` como volumen privado, durable, cifrado y respaldado. Sin credenciales sandbox y evidencia de adapter, checkout debe continuar cerrado.
 
 ## Riesgos
 
@@ -87,7 +87,8 @@ Local sintético → staging → prueba interna con dos adultos/roles → piloto
 - [ ] Observabilidad y soporte on-call.
 - [ ] Vendedor formal, facturación, impuestos/retenciones.
 - [ ] Acuerdo vendedor, privacidad, consumidor, IP y productos prohibidos.
-- [ ] Flujo de evidencia final de settlement y conciliación.
+- [x] Flujo técnico local de evidencia final de settlement, doble control e idempotencia con datos sintéticos.
+- [ ] Conciliación humana/contable del settlement ejercitada en staging con evidencia autorizada.
 
 ## Alcance diferido
 

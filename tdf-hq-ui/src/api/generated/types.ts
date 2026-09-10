@@ -5943,10 +5943,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List manual seller settlements for strict administrators */
+        get: operations["listMerchSettlements"];
         put?: never;
         /** Prepare an auditable manual seller settlement */
         post: operations["createMerchSettlement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/stores/{storeId}/settlement-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List delivered paid orders eligible for a manual settlement
+         * @description Returns financial and operational identifiers to strict administrators without buyer personal data.
+         */
+        get: operations["listMerchSettlementEligibleOrders"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5966,8 +5987,28 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** @description Approval and paid confirmation require separation of duties; this endpoint never triggers an automatic payout. */
+        /** @description Approval requires an administrator other than the preparer. A held settlement may be independently reviewed and approved later. This endpoint never records payment or triggers an automatic payout. */
         patch: operations["updateMerchSettlementStatus"];
+        trace?: never;
+    };
+    "/merch/admin/settlements/{settlementId}/payment-evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record private evidence for an already executed manual seller payment
+         * @description Decodes and re-encodes a JPEG/PNG receipt into private storage, records immutable evidence, and marks the approved settlement paid. It never initiates or executes a transfer. The preparer cannot confirm payment.
+         */
+        post: operations["recordMerchSettlementPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
@@ -6437,6 +6478,56 @@ export interface components {
             orderIds: string[];
             reviewNotes?: string | null;
         };
+        MerchSettlementPaymentEvidenceRequest: {
+            /**
+             * Format: binary
+             * @description JPEG or PNG receipt, at most 10 MB and 40 megapixels. It is re-encoded as a private JPEG.
+             */
+            file: string;
+            /**
+             * Format: date-time
+             * @description Timestamp from the independently verified transfer evidence.
+             */
+            paidAt: string;
+            /** @description Non-secret bank or accounting reference. */
+            externalReference: string;
+            notes?: string | null;
+        };
+        /** @enum {string} */
+        MerchSettlementStatus: "draft" | "under_review" | "approved" | "paid" | "held" | "reversed";
+        MerchSettlementEligibleOrder: {
+            /** Format: uuid */
+            id: string;
+            orderNumber: string;
+            /** @enum {string} */
+            currency: "USD";
+            /** Format: int64 */
+            productSubtotalMinor: number;
+            /** Format: int64 */
+            discountMinor: number;
+            /** Format: int64 */
+            taxMinor: number;
+            /** Format: int64 */
+            shippingMinor: number;
+            /** Format: int64 */
+            processorFeeMinor: number;
+            /** Format: int64 */
+            tdfCommissionMinor: number;
+            /** Format: int64 */
+            sellerNetMinor: number;
+            /** Format: int64 */
+            refundsMinor: number;
+            /** Format: int64 */
+            adjustmentsMinor: number;
+            /** @enum {string} */
+            paymentStatus: "paid" | "partially_refunded";
+            /** @enum {string} */
+            fulfillmentStatus: "delivered" | "returned";
+            /** @enum {string} */
+            settlementStatus: "not_ready" | "ready";
+            /** Format: date-time */
+            createdAt: string;
+        };
         MerchSettlement: {
             /** Format: uuid */
             id: string;
@@ -6448,8 +6539,8 @@ export interface components {
             periodEnd: string;
             /** @enum {string} */
             currency: "USD";
-            /** @enum {string} */
-            status: "draft" | "under_review" | "approved" | "paid" | "held" | "reversed";
+            status: components["schemas"]["MerchSettlementStatus"];
+            storeName: string;
             /** Format: int64 */
             grossProductMinor: number;
             /** Format: int64 */
@@ -6470,15 +6561,24 @@ export interface components {
             sellerNetMinor: number;
             /** Format: int64 */
             preparedBy: number;
+            preparedByName: string;
             /** Format: int64 */
             approvedBy?: number | null;
+            approvedByName?: string | null;
             /** Format: int64 */
             paidBy?: number | null;
+            paidByName?: string | null;
             /** Format: date-time */
             approvedAt?: string | null;
             /** Format: date-time */
             paidAt?: string | null;
             evidenceObjectKey?: string | null;
+            /** @enum {string|null} */
+            evidenceMimeType?: "image/jpeg" | null;
+            /** Format: int64 */
+            evidenceByteSize?: number | null;
+            evidenceChecksumSha256?: string | null;
+            externalReference?: string | null;
             /** Format: int64 */
             orderCount: number;
         } & {
@@ -23318,6 +23418,35 @@ export interface operations {
             };
         };
     };
+    listMerchSettlements: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MerchSettlementStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Manual settlement queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchSettlement"][];
+                };
+            };
+            /** @description Unsupported settlement status filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     createMerchSettlement: {
         parameters: {
             query?: never;
@@ -23340,12 +23469,41 @@ export interface operations {
                     "application/json": components["schemas"]["MerchSettlement"];
                 };
             };
-            /** @description Orders are ineligible or already assigned */
+            /** @description Invalid period or request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Orders are outside the period, ineligible, or already assigned */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listMerchSettlementEligibleOrders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: components["parameters"]["MerchStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Eligible orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchSettlementEligibleOrder"][];
+                };
             };
         };
     };
@@ -23364,7 +23522,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Updated manual settlement evidence */
+            /** @description Approved or held manual settlement */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -23373,8 +23531,57 @@ export interface operations {
                     "application/json": components["schemas"]["MerchSettlement"];
                 };
             };
-            /** @description Invalid transition or dual-control violation */
+            /** @description Invalid transition, unchanged status, or dual-control violation */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recordMerchSettlementPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                settlementId: components["parameters"]["MerchSettlementId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["MerchSettlementPaymentEvidenceRequest"];
+            };
+        };
+        responses: {
+            /** @description Settlement marked paid from private immutable evidence; no transfer was initiated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchSettlement"];
+                };
+            };
+            /** @description Invalid timestamp, reference, image type, image bytes, dimensions, or idempotency key */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Settlement is not approved, separation of duties failed, or evidence conflicts */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Durable private evidence storage is not configured in production */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

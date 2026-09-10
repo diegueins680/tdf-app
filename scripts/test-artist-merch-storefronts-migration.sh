@@ -88,7 +88,8 @@ INSERT INTO party(id,display_name,is_org,created_at) VALUES
   (900003,'Synthetic Collaborator',FALSE,now()),
   (900004,'Synthetic Other Seller',FALSE,now()),
   (900005,'Synthetic Admin',FALSE,now()),
-  (900006,'Synthetic Buyer',FALSE,now());
+  (900006,'Synthetic Buyer',FALSE,now()),
+  (900007,'Synthetic Independent Reviewer',FALSE,now());
 SELECT setval(pg_get_serial_sequence('party','id'), 900100, TRUE);
 
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status)
@@ -336,6 +337,50 @@ psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_order SET fulfillment_status='p
 separated_state=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT payment_status || '|' || fulfillment_status FROM merch_order WHERE id='98000000-0000-4000-8000-000000000001';")
 test "$separated_state" = "paid|preparing"
 
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+UPDATE merch_order SET fulfillment_status='delivered', settlement_status='under_review'
+WHERE id='98000000-0000-4000-8000-000000000001';
+INSERT INTO merch_settlement(
+  id,store_id,period_start,period_end,currency,gross_product_minor,
+  discounts_minor,taxes_minor,shipping_minor,processor_fees_minor,tdf_commission_minor,
+  refunds_minor,adjustments_minor,seller_net_minor,status,review_notes,prepared_by
+) VALUES(
+  '9d000000-0000-4000-8000-000000000001','92000000-0000-4000-8000-000000000001',
+  now()-interval '30 days',now()+interval '1 day','USD',20000,0,0,500,0,2000,0,0,18500,
+  'under_review','Synthetic settlement preparation.',900005
+);
+INSERT INTO merch_settlement_order(settlement_id,order_id,seller_net_minor)
+VALUES('9d000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000001',18500);
+UPDATE merch_settlement SET status='approved',approved_by=900007,approved_at=now(),updated_at=now()
+WHERE id='9d000000-0000-4000-8000-000000000001';
+UPDATE merch_order SET settlement_status='approved'
+WHERE id='98000000-0000-4000-8000-000000000001';
+SQL
+
+if psql_exec "$TDF_MERCH_DATABASE" -c "INSERT INTO merch_settlement_payment_evidence(id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,external_reference,payment_recorded_at,idempotency_key,request_sha256,submitted_by) VALUES('9c000000-0000-4000-8000-000000000099','9d000000-0000-4000-8000-000000000001','merch-settlements/9d000000-0000-4000-8000-000000000001/9c000000-0000-4000-8000-000000000099.jpg','image/jpeg',100,repeat('a',64),'SYNTH-SELF-CONFIRM',now(),'synthetic-settlement-evidence-self',repeat('b',64),900005);" >/dev/null 2>&1; then
+  echo "Settlement preparer confirmed their own payment" >&2
+  exit 1
+fi
+
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+INSERT INTO merch_settlement_payment_evidence(
+  id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,
+  external_reference,payment_recorded_at,notes,idempotency_key,request_sha256,submitted_by
+) VALUES(
+  '9c000000-0000-4000-8000-000000000001','9d000000-0000-4000-8000-000000000001',
+  'merch-settlements/9d000000-0000-4000-8000-000000000001/9c000000-0000-4000-8000-000000000001.jpg',
+  'image/jpeg',100,repeat('c',64),'SYNTH-BANK-REFERENCE-001',now(),
+  'Synthetic immutable settlement payment evidence.','synthetic-settlement-evidence-001',repeat('d',64),900007
+);
+SQL
+
+settlement_state=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT settlement.status || '|' || settlement.paid_by || '|' || order_record.settlement_status || '|' || count(evidence.id) FROM merch_settlement settlement JOIN merch_settlement_order linked ON linked.settlement_id=settlement.id JOIN merch_order order_record ON order_record.id=linked.order_id JOIN merch_settlement_payment_evidence evidence ON evidence.settlement_id=settlement.id WHERE settlement.id='9d000000-0000-4000-8000-000000000001' GROUP BY settlement.status,settlement.paid_by,order_record.settlement_status;")
+test "$settlement_state" = "paid|900007|paid|1"
+if psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_settlement_payment_evidence SET external_reference='REWRITTEN' WHERE id='9c000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Immutable settlement payment evidence was rewritten" >&2
+  exit 1
+fi
+
 psql_exec postgres -c "CREATE DATABASE $TDF_MERCH_ROLLBACK_DATABASE;" >/dev/null
 prepare_dependencies "$TDF_MERCH_ROLLBACK_DATABASE"
 apply_file "$TDF_MERCH_ROLLBACK_DATABASE" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
@@ -346,4 +391,4 @@ remaining_functions=$(psql_exec "$TDF_MERCH_ROLLBACK_DATABASE" -Atc "SELECT coun
 test "$remaining_functions" = "0"
 apply_file "$TDF_MERCH_ROLLBACK_DATABASE" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
 
-echo "Artist merch storefront migration passed rerun, claimed-profile eligibility, scoped ownership, cross-store policy isolation, immutable snapshots, payment evidence gating, independent fulfillment, concurrent no-oversell reservation and expiry, stock consumption and lower-bound protection, commission override, analytics privacy, guarded rollback, clean rollback, and reapply checks."
+echo "Artist merch storefront migration passed rerun, claimed-profile eligibility, scoped ownership, cross-store policy isolation, immutable snapshots, payment evidence gating, independent fulfillment, concurrent no-oversell reservation and expiry, stock consumption and lower-bound protection, commission override, private settlement evidence dual control and immutability, analytics privacy, guarded rollback, clean rollback, and reapply checks."

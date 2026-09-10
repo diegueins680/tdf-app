@@ -29,7 +29,8 @@ INSERT INTO party(id,display_name,is_org,created_at) VALUES
   (900004,'Runtime Other Seller',FALSE,now()),
   (900005,'Runtime Strict Admin',FALSE,now()),
   (900006,'Runtime Pilot Applicant',FALSE,now()),
-  (900007,'Runtime Applicant Band',TRUE,now());
+  (900007,'Runtime Applicant Band',TRUE,now()),
+  (900008,'Runtime Independent Admin',FALSE,now());
 SELECT setval(pg_get_serial_sequence('party','id'), 900100, TRUE);
 
 INSERT INTO api_token(token,party_id,label,active) VALUES
@@ -37,10 +38,13 @@ INSERT INTO api_token(token,party_id,label,active) VALUES
   ('runtime-collaborator-token',900003,'Synthetic merch HTTP collaborator',TRUE),
   ('runtime-other-seller-token',900004,'Synthetic merch HTTP other seller',TRUE),
   ('runtime-admin-token',900005,'Synthetic merch HTTP strict administrator',TRUE),
+  ('runtime-independent-admin-token',900008,'Synthetic independent settlement reviewer',TRUE),
   ('runtime-applicant-token',900006,'Synthetic merch HTTP pilot applicant',TRUE);
 
 INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
-SELECT 900005,id,'bootstrap',TRUE FROM security_role WHERE code='admin' AND active;
+SELECT actor.id,role.id,'bootstrap',TRUE
+FROM (VALUES (900005::bigint),(900008::bigint)) actor(id)
+CROSS JOIN security_role role WHERE role.code='admin' AND role.active;
 
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status) VALUES
   ('91000000-0000-4000-8000-000000000001',900001,'band','Runtime Band','runtime-band','published','public','allowed'),
@@ -122,6 +126,22 @@ INSERT INTO merch_order(
   '{"id":"93000000-0000-4000-8000-000000000001","version":1}',
   '{"commissionBps":1000,"basis":"product_subtotal_after_discount"}',
   'runtime-checkout-key-004',encode(digest('runtime-checkout-request-004','sha256'),'hex')
+);
+INSERT INTO merch_order(
+  id,order_number,store_id,customer_email,customer_name,lookup_token_hash,currency,
+  product_subtotal_minor,shipping_minor,tdf_commission_bps,tdf_commission_minor,seller_net_minor,total_minor,
+  commercial_status,payment_status,fulfillment_status,settlement_status,shipping_method,
+  shipping_zone_snapshot,recipient_snapshot,policy_snapshot,commission_snapshot,
+  create_idempotency_key,create_request_sha256,confirmed_at,completed_at
+) VALUES(
+  '98000000-0000-4000-8000-000000000005','TDF-MERCH-RUNTIME05','92000000-0000-4000-8000-000000000001',
+  'settlement.buyer@example.test','Synthetic Settlement Buyer',encode(digest('runtime-settlement-order-token','sha256'),'hex'),'USD',
+  5000,500,1000,500,5000,5500,'completed','paid','delivered','ready','national_shipping',
+  '{"deliveryMethod":"national_shipping","rateMinor":500}',
+  '{"name":"Synthetic Settlement Buyer","countryCode":"EC","city":"Quito","addressLine1":"Synthetic settlement address"}',
+  '{"id":"93000000-0000-4000-8000-000000000001","version":1}',
+  '{"commissionBps":1000,"basis":"product_subtotal_after_discount"}',
+  'runtime-settlement-order-005',encode(digest('runtime-settlement-order-request-005','sha256'),'hex'),now(),now()
 );
 INSERT INTO merch_order_line(
   id,order_id,line_number,product_id,variant_id,quantity,unit_price_minor,subtotal_minor,total_minor,

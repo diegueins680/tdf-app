@@ -6203,20 +6203,56 @@ paths:
         '200': { description: Updated issue, content: { application/json: { schema: { $ref: '#/components/schemas/MerchOperationalIssue' } } } }
         '409': { description: Terminal case or concurrent update }
   /merch/admin/settlements:
+    get:
+      tags: [Artist merch administration]
+      operationId: listMerchSettlements
+      summary: List manual seller settlements for strict administrators
+      parameters: [ { name: status, in: query, schema: { $ref: '#/components/schemas/MerchSettlementStatus' } } ]
+      responses:
+        '200': { description: Manual settlement queue, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchSettlement' } } } } }
+        '400': { description: Unsupported settlement status filter }
     post:
       tags: [Artist merch administration]
       operationId: createMerchSettlement
       summary: Prepare an auditable manual seller settlement
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlementRequest' } } } }
-      responses: { '201': { description: Prepared settlement; no payout was executed, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '409': { description: Orders are ineligible or already assigned } }
+      responses: { '201': { description: Prepared settlement; no payout was executed, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '400': { description: Invalid period or request }, '409': { description: 'Orders are outside the period, ineligible, or already assigned' } }
+  /merch/admin/stores/{storeId}/settlement-orders:
+    get:
+      tags: [Artist merch administration]
+      operationId: listMerchSettlementEligibleOrders
+      summary: List delivered paid orders eligible for a manual settlement
+      description: Returns financial and operational identifiers to strict administrators without buyer personal data.
+      parameters: [ { $ref: '#/components/parameters/MerchStoreId' } ]
+      responses: { '200': { description: Eligible orders, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MerchSettlementEligibleOrder' } } } } } }
   /merch/admin/settlements/{settlementId}/status:
     patch:
       tags: [Artist merch administration]
       operationId: updateMerchSettlementStatus
-      description: Approval and paid confirmation require separation of duties; this endpoint never triggers an automatic payout.
+      description: Approval requires an administrator other than the preparer. A held settlement may be independently reviewed and approved later. This endpoint never records payment or triggers an automatic payout.
       parameters: [ { $ref: '#/components/parameters/MerchSettlementId' } ]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/MerchStatusRequest' } } } }
-      responses: { '200': { description: Updated manual settlement evidence, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '409': { description: Invalid transition or dual-control violation } }
+      responses: { '200': { description: Approved or held manual settlement, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }, '409': { description: 'Invalid transition, unchanged status, or dual-control violation' } }
+  /merch/admin/settlements/{settlementId}/payment-evidence:
+    post:
+      tags: [Artist merch administration]
+      operationId: recordMerchSettlementPayment
+      summary: Record private evidence for an already executed manual seller payment
+      description: Decodes and re-encodes a JPEG/PNG receipt into private storage, records immutable evidence, and marks the approved settlement paid. It never initiates or executes a transfer. The preparer cannot confirm payment.
+      parameters:
+        - { $ref: '#/components/parameters/MerchSettlementId' }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 8, maxLength: 200 } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MerchSettlementPaymentEvidenceRequest'
+      responses:
+        '200': { description: Settlement marked paid from private immutable evidence; no transfer was initiated, content: { application/json: { schema: { $ref: '#/components/schemas/MerchSettlement' } } } }
+        '400': { description: 'Invalid timestamp, reference, image type, image bytes, dimensions, or idempotency key' }
+        '409': { description: 'Settlement is not approved, separation of duties failed, or evidence conflicts' }
+        '503': { description: Durable private evidence storage is not configured in production }
 
 security:
   - bearerAuth: [ ]
@@ -6832,17 +6868,51 @@ components:
         periodEnd: { type: string, format: date }
         orderIds: { type: array, minItems: 1, uniqueItems: true, items: { type: string, format: uuid } }
         reviewNotes: { type: string, maxLength: 2000, nullable: true }
+    MerchSettlementPaymentEvidenceRequest:
+      type: object
+      additionalProperties: false
+      required: [file, paidAt, externalReference]
+      properties:
+        file: { type: string, format: binary, description: 'JPEG or PNG receipt, at most 10 MB and 40 megapixels. It is re-encoded as a private JPEG.' }
+        paidAt: { type: string, format: date-time, description: Timestamp from the independently verified transfer evidence. }
+        externalReference: { type: string, minLength: 3, maxLength: 160, description: Non-secret bank or accounting reference. }
+        notes: { type: string, minLength: 3, maxLength: 2000, nullable: true }
+    MerchSettlementStatus:
+      type: string
+      enum: [draft, under_review, approved, paid, held, reversed]
+    MerchSettlementEligibleOrder:
+      type: object
+      additionalProperties: false
+      required: [id, orderNumber, currency, productSubtotalMinor, discountMinor, taxMinor, shippingMinor, processorFeeMinor, tdfCommissionMinor, sellerNetMinor, refundsMinor, adjustmentsMinor, paymentStatus, fulfillmentStatus, settlementStatus, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        orderNumber: { type: string }
+        currency: { type: string, enum: [USD] }
+        productSubtotalMinor: { type: integer, format: int64 }
+        discountMinor: { type: integer, format: int64 }
+        taxMinor: { type: integer, format: int64 }
+        shippingMinor: { type: integer, format: int64 }
+        processorFeeMinor: { type: integer, format: int64 }
+        tdfCommissionMinor: { type: integer, format: int64 }
+        sellerNetMinor: { type: integer, format: int64 }
+        refundsMinor: { type: integer, format: int64 }
+        adjustmentsMinor: { type: integer, format: int64 }
+        paymentStatus: { type: string, enum: [paid, partially_refunded] }
+        fulfillmentStatus: { type: string, enum: [delivered, returned] }
+        settlementStatus: { type: string, enum: [not_ready, ready] }
+        createdAt: { type: string, format: date-time }
     MerchSettlement:
       type: object
       additionalProperties: true
-      required: [id, storeId, periodStart, periodEnd, currency, status, grossProductMinor, discountsMinor, taxesMinor, shippingMinor, processorFeesMinor, tdfCommissionMinor, refundsMinor, adjustmentsMinor, sellerNetMinor, preparedBy, orderCount]
+      required: [id, storeId, storeName, periodStart, periodEnd, currency, status, grossProductMinor, discountsMinor, taxesMinor, shippingMinor, processorFeesMinor, tdfCommissionMinor, refundsMinor, adjustmentsMinor, sellerNetMinor, preparedBy, preparedByName, orderCount]
       properties:
         id: { type: string, format: uuid }
         storeId: { type: string, format: uuid }
         periodStart: { type: string, format: date-time }
         periodEnd: { type: string, format: date-time }
         currency: { type: string, enum: [USD] }
-        status: { type: string, enum: [draft, under_review, approved, paid, held, reversed] }
+        status: { $ref: '#/components/schemas/MerchSettlementStatus' }
+        storeName: { type: string }
         grossProductMinor: { type: integer, format: int64 }
         discountsMinor: { type: integer, format: int64 }
         taxesMinor: { type: integer, format: int64 }
@@ -6853,11 +6923,18 @@ components:
         adjustmentsMinor: { type: integer, format: int64 }
         sellerNetMinor: { type: integer, format: int64 }
         preparedBy: { type: integer, format: int64 }
+        preparedByName: { type: string }
         approvedBy: { type: integer, format: int64, nullable: true }
+        approvedByName: { type: string, nullable: true }
         paidBy: { type: integer, format: int64, nullable: true }
+        paidByName: { type: string, nullable: true }
         approvedAt: { type: string, format: date-time, nullable: true }
         paidAt: { type: string, format: date-time, nullable: true }
         evidenceObjectKey: { type: string, nullable: true }
+        evidenceMimeType: { type: string, enum: [image/jpeg], nullable: true }
+        evidenceByteSize: { type: integer, format: int64, nullable: true }
+        evidenceChecksumSha256: { type: string, pattern: '^[a-f0-9]{64}$', nullable: true }
+        externalReference: { type: string, nullable: true }
         orderCount: { type: integer, format: int64 }
     PublicDomoStorefront:
       type: object

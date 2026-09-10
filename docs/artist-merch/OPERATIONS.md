@@ -21,7 +21,11 @@
 - Ante envío: conservar tracking, timeline y comunicación pública; notas internas nunca se muestran al comprador.
 - Cancelación sin pagar: el comprador puede cancelarla solo antes de procesamiento de pago/preparación; el backend libera la reserva y audita el cambio de forma idempotente.
 - Reembolso/disputa: mantener estado financiero separado de la incidencia, cancelación, devolución, fulfillment y settlement. El vendedor escala; staff solo cierra el caso después de verificar evidencia y ejecutar el flujo financiero independiente correspondiente.
-- Settlement: preparador y aprobador deben ser distintos. Pago manual final exige referencia/evidencia durable y conciliación; el handler final está diferido.
+- Settlement: filtrar una tienda y seleccionar únicamente órdenes que la consola muestre como elegibles y que hayan sido creadas dentro del período contable elegido (`inicio` inclusivo, `fin` exclusivo). Preparar agrupa snapshots financieros y deja las órdenes `under_review`; no mueve fondos.
+- Aprobación: debe realizarla otra persona autorizada después de cotejar órdenes, comisión, ajustes y neto. Un `hold` exige motivo, conserva las órdenes vinculadas en espera y no altera pagos ni fulfillment; un revisor independiente puede resolverlo y aprobar después.
+- Registro de pago: después de ejecutar y verificar la transferencia fuera de TDF, una persona distinta del preparador carga un JPEG/PNG, fecha, referencia externa única y notas opcionales. La API reencoda el archivo, guarda checksum y metadatos append-only, y cambia liquidación/órdenes a `paid` idempotentemente. Este paso documenta evidencia; nunca inicia un payout.
+- Evidencia: en staging/producción es obligatorio configurar `MERCH_SETTLEMENT_EVIDENCE_DIR` sobre un volumen privado, durable, cifrado, respaldado y legible solo por el servicio/operadores autorizados. No usar `/assets/serve`, enlaces públicos ni nombres suministrados por usuarios. El MVP no expone descarga HTTP; el acceso excepcional se hace por el procedimiento auditado del almacenamiento.
+- Conciliación: contrastar referencia, fecha, monto y beneficiario con el extracto autorizado; investigar discrepancias sin editar la evidencia. Cualquier corrección requiere un evento/ajuste hacia adelante, nunca mutar la fila o el archivo original.
 - Incidente grave: apagar el flag más específico; para cualquier pago apagar primero `merch.checkout.runtime_ready` y `merch.checkout`.
 
 ## Observabilidad mínima antes del piloto

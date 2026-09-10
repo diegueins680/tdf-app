@@ -17,7 +17,7 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 | Falso retorno de navegador | Trigger rechaza `paid` sin intento exitoso y evidencia server-side verificada | Verificar firma/replay de cada webhook en staging |
 | Replay o webhook forjado | Infraestructura canónica de provider events y evidencia; provider flags cerrados | Merch aún no expone adapters específicos; no habilitar runtime |
 | Enumeración de órdenes/PII | UUID + lookup token hasheado en header; 404 uniforme; snapshots no aparecen en analítica | Añadir rate limits de borde y rotación/revocación operativa |
-| Insider/refund/settlement fraud | Estados separados, auditoría append-only, settlement preparado/aprobado por personas distintas | Handler de evidencia final y runbook contable pendientes |
+| Insider/refund/settlement fraud | Estados separados, auditoría append-only, doble control, órdenes elegibles sin PII y evidencia privada/idempotente; el registrador no puede ser el preparador | Revisión humana y conciliación contable en staging siguen pendientes |
 | Archivo malicioso | MIME/extensión coincidentes, límite 10 MB/40 MP, decode+reencode, nombre generado, rutas server-side, moderación previa a publicación | Integrar scanner/moderación operativa y retención/borrado |
 | XSS/SSRF/path traversal | Texto controlado, React escaping, slugs/SKU validados, object keys generados, URLs de tienda limitadas a `/assets/serve/merch/`, tracking solo HTTPS | CSP y proxy/CDN se validan en staging |
 | Spam/abuso | Directorio usa consentimiento, follow/contacto y reporte/bloqueo existentes; sin chat nuevo | Rate limits y revisión de abuso E2E pendientes |
@@ -30,6 +30,7 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 - `merch.checkout.runtime_ready` es un kill switch adicional; nunca se activa solo por existir credenciales.
 - Datafast, PayPal y transferencia tienen flags separados y requieren configuración completa.
 - Payouts automáticos permanecen `false` y no existe ruta para activarlos.
+- Registrar evidencia de liquidación solo documenta una transferencia ejecutada fuera de TDF: no llama bancos ni proveedores. El archivo se guarda fuera de `/assets/serve`, se reencoda y no tiene endpoint público de descarga.
 - La migración de rollback se niega si ya hay órdenes o settlements.
 - Los logs y capturas de staging deben usar exclusivamente identidades y direcciones sintéticas.
 
@@ -37,6 +38,6 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 
 - DAST, CSP/CORS/cookies/CSRF y rate-limit en un deployment de staging real.
 - Pruebas de replay/firma y consulta autoritativa con sandbox Datafast/PayPal.
-- Revisión manual independiente de comprobantes y evidencias de settlement.
+- Revisión manual independiente de comprobantes, acceso al volumen privado y conciliación de settlement en staging.
 - Repetición en staging del E2E cross-tenant local ya aprobado con vendedor A, vendedor B, comprador invitado y staff.
 - Revisión WCAG con lector de pantalla, zoom 200/400% y teclado sobre build servido.

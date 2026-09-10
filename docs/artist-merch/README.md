@@ -17,7 +17,7 @@ La solución amplía esas fuentes de verdad. No convierte `asset`, equipos del e
 | Comercio | `commerce_checkout_session`, line items, intentos y evidencia | Orden, snapshots y reserva de stock de merch | Implementado; proveedor externo bloqueado |
 | Catálogo | Búsqueda y marketplace general | Tiendas, productos, variantes, SKU, imágenes y stock específicos | Implementado |
 | Entrega | Estados y patrones de órdenes existentes | Zonas Ecuador, retiro, envío, tracking y timeline | Implementado para operación manual |
-| Finanzas | Evidencia y conciliación canónicas | 10%, override por vendedor, ledger de settlement manual | Implementado en datos/API admin; pago real deshabilitado |
+| Finanzas | Evidencia y conciliación canónicas | 10%, override por vendedor, ledger y comprobante privado de settlement manual | Implementado y verificado localmente con datos sintéticos; pago real deshabilitado |
 | Archivos | Servicio durable `/assets/serve` | Reencode JPEG, tamaños responsive, checksum, alt y moderación | Implementado; revisión humana sigue requerida |
 | Clientes | OpenAPI y generadores existentes | Tipos y APIs web/móvil regenerados | Verificado por typecheck |
 | UX web | React, MUI, routing y analítica existentes | Descubrimiento, storefront, producto, carrito, tracking, seller y admin | Implementado; runtime visual responsive verificado, staging pendiente |
@@ -31,7 +31,7 @@ La solución amplía esas fuentes de verdad. No convierte `asset`, equipos del e
 - Catálogo: prendas, vinilo, CD, cassette, póster, accesorios, ediciones limitadas, bundles y extensión `other`; variantes, stock con versión optimista, preventa, bajo pedido, límites, publicación y revisión.
 - Storefront: URL `/tienda/{slug}`, integración con perfil/directorio y marketplace, SEO/OG, relacionados y favoritos.
 - Compra: carrito de un solo vendedor, invitado, cálculo servidor, snapshots, reserva atómica de veinte minutos, idempotencia y tracking mediante token opaco.
-- Operación: retiro o envío nacional, políticas versionadas, panel de órdenes con filtro/totales/exportación sin PII, preparación, tracking, cancelación segura sin pagar, cola de incidencias con escalamiento y settlements manuales con doble control.
+- Operación: retiro o envío nacional, políticas versionadas, panel de órdenes con filtro/totales/exportación sin PII, preparación, tracking, cancelación segura sin pagar, cola de incidencias con escalamiento y settlements manuales con doble control y comprobante privado.
 - Rollout: todos los flags se crean en `false`; `merch.checkout.runtime_ready` funciona como kill switch adicional.
 
 ## Estado honesto
@@ -47,4 +47,4 @@ La tienda no está lanzada. La implementación disponible permite probar localme
 - Chat nuevo en tiempo real.
 - Reseñas públicas hasta completar moderación y criterios de salida.
 - Disponibilidad fuera de Ecuador o moneda distinta de USD.
-- Integración de refund/dispute por proveedor y consola completa de evidencia, pendiente del adapter sandbox.
+- Integración de refund/dispute por proveedor y acceso excepcional auditado a comprobantes privados, pendientes del adapter sandbox y del diseño operativo de retención.

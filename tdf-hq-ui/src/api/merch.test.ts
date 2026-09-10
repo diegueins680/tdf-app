@@ -120,4 +120,28 @@ describe('merch API capabilities and idempotency', () => {
     expect(patchMock).toHaveBeenNthCalledWith(1, '/merch/seller/stores/store%2Fid/issues/issue%2Fid', body);
     expect(patchMock).toHaveBeenNthCalledWith(2, '/merch/admin/issues/issue%2Fid', body);
   });
+
+  it('records private settlement evidence with multipart idempotency and no payout request', async () => {
+    postFormMock.mockResolvedValueOnce({ id: 'settlement-id', status: 'paid' });
+    const file = new File(['synthetic-image'], 'receipt.png', { type: 'image/png' });
+
+    await Merch.recordSettlementPayment(
+      'settlement/id',
+      file,
+      '2026-09-09T18:00:00.000Z',
+      'SYNTHETIC-REFERENCE-001',
+      'Synthetic evidence only',
+      'settlement-payment-key-001',
+    );
+
+    expect(postFormMock).toHaveBeenCalledWith(
+      '/merch/admin/settlements/settlement%2Fid/payment-evidence',
+      expect.any(FormData),
+      { headers: { 'Idempotency-Key': 'settlement-payment-key-001' } },
+    );
+    const form = postFormMock.mock.calls[0]?.[1] as FormData;
+    expect(form.get('file')).toBe(file);
+    expect(form.get('externalReference')).toBe('SYNTHETIC-REFERENCE-001');
+    expect(Array.from(form.keys()).sort()).toEqual(['externalReference', 'file', 'notes', 'paidAt']);
+  });
 });

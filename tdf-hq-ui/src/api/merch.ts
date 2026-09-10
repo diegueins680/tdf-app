@@ -20,6 +20,9 @@ export type MerchShippingZoneRequest = components['schemas']['MerchShippingZoneR
 export type MerchFulfillmentRequest = components['schemas']['MerchFulfillmentRequest'];
 export type MerchOperationalIssue = components['schemas']['MerchOperationalIssue'];
 export type MerchIssueTriageRequest = components['schemas']['MerchIssueTriageRequest'];
+export type MerchSettlement = components['schemas']['MerchSettlement'];
+export type MerchSettlementRequest = components['schemas']['MerchSettlementRequest'];
+export type MerchSettlementEligibleOrder = components['schemas']['MerchSettlementEligibleOrder'];
 
 const CART_KEY_PREFIX = 'tdf-merch-cart:';
 const ORDER_KEY_PREFIX = 'tdf-merch-order:';
@@ -157,4 +160,22 @@ export const Merch = {
     get<MerchOperationalIssue[]>(`/merch/admin/issues${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   updateAdminIssue: (issueId: string, payload: MerchIssueTriageRequest) =>
     patch<MerchOperationalIssue>(`/merch/admin/issues/${encodeURIComponent(issueId)}`, payload),
+  adminSettlements: (status?: string) =>
+    get<MerchSettlement[]>(`/merch/admin/settlements${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  settlementEligibleOrders: (storeId: string) =>
+    get<MerchSettlementEligibleOrder[]>(`/merch/admin/stores/${encodeURIComponent(storeId)}/settlement-orders`),
+  createSettlement: (payload: MerchSettlementRequest) =>
+    post<MerchSettlement>('/merch/admin/settlements', payload),
+  updateSettlementStatus: (settlementId: string, status: 'approved' | 'held', reason?: string | null) =>
+    patch<MerchSettlement>(`/merch/admin/settlements/${encodeURIComponent(settlementId)}/status`, { status, reason }),
+  recordSettlementPayment: (settlementId: string, file: File, paidAt: string, externalReference: string, notes: string | null, idempotencyKey: string) => {
+    const form = new FormData();
+    form.set('file', file);
+    form.set('paidAt', paidAt);
+    form.set('externalReference', externalReference);
+    if (notes) form.set('notes', notes);
+    return postForm<MerchSettlement>(`/merch/admin/settlements/${encodeURIComponent(settlementId)}/payment-evidence`, form, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+  },
 };

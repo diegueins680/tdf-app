@@ -19,13 +19,14 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isControl)
 import           Data.Int (Int64)
-import           Data.List (nub)
+import           Data.List (isPrefixOf, nub)
 import           Data.Maybe (catMaybes, fromMaybe, listToMaybe)
 import qualified Data.Set as Set
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (UTCTime, addUTCTime, getCurrentTime)
+import           Data.Time (Day, UTCTime(..), addUTCTime, getCurrentTime)
+import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import           Data.UUID.V4 (nextRandom)
@@ -33,9 +34,9 @@ import           Database.Persist (PersistValue(..), toPersistValue)
 import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import           Servant
 import           Servant.Multipart (FileData(..))
-import           System.Directory (createDirectoryIfMissing, getFileSize, removeFile)
+import           System.Directory (canonicalizePath, createDirectoryIfMissing, emptyPermissions, getFileSize, makeAbsolute, removeFile, setOwnerReadable, setOwnerSearchable, setOwnerWritable, setPermissions)
 import           System.Environment (lookupEnv)
-import           System.FilePath ((</>), takeExtension)
+import           System.FilePath ((</>), addTrailingPathSeparator, normalise, takeExtension)
 
 import           TDF.API.Merch
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
@@ -684,6 +685,9 @@ merchProtectedServer user =
   :<|> updateAdminIssue user
   :<|> createSettlement user
   :<|> updateSettlementStatus user
+  :<|> listAdminSettlements user
+  :<|> listSettlementEligibleOrders user
+  :<|> recordSettlementPayment user
 
 addFavorite :: AuthedUser -> UUID -> AppM NoContent
 addFavorite user productId = do
@@ -1315,15 +1319,22 @@ createSettlement :: AuthedUser -> MerchSettlementRequest -> AppM Value
 createSettlement user MerchSettlementRequest{..} = do
   requireAdmin user
   when (null mseOrderIds || length mseOrderIds > 1000) $ throwError (badRequest "Settlement requires 1 to 1000 orders")
+  periodStart <- maybe (throwError (badRequest "periodStart must be an ISO date")) pure
+    (iso8601ParseM (T.unpack msePeriodStart) :: Maybe Day)
+  periodEnd <- maybe (throwError (badRequest "periodEnd must be an ISO date")) pure
+    (iso8601ParseM (T.unpack msePeriodEnd) :: Maybe Day)
+  when (periodEnd <= periodStart) $ throwError (badRequest "periodEnd must be after periodStart")
+  reviewNotes <- traverse (requiredSafeText "reviewNotes" 2000) mseReviewNotes
   settlementId <- liftIO nextRandom
   created <- runDB (rawSql
-    "WITH selected AS (SELECT order_record.* FROM merch_order order_record WHERE order_record.id=ANY(?::uuid[]) AND order_record.store_id=?::uuid AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') FOR UPDATE),\
+    "WITH selected AS (SELECT order_record.* FROM merch_order order_record WHERE order_record.id=ANY(?::uuid[]) AND order_record.store_id=?::uuid AND order_record.created_at>=?::timestamptz AND order_record.created_at<?::timestamptz AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') FOR UPDATE),\
     \ totals AS (SELECT count(*) count,sum(product_subtotal_minor) gross,sum(discount_minor) discounts,sum(tax_minor) taxes,sum(shipping_minor) shipping,sum(processor_fee_minor) processor_fees,sum(tdf_commission_minor) commission,sum(refunded_minor) refunds,sum(adjusted_minor) adjustments,sum(seller_net_minor-refunded_minor+adjusted_minor) seller_net FROM selected),\
     \ inserted AS (INSERT INTO merch_settlement(id,store_id,period_start,period_end,currency,gross_product_minor,discounts_minor,taxes_minor,shipping_minor,processor_fees_minor,tdf_commission_minor,refunds_minor,adjustments_minor,seller_net_minor,status,review_notes,prepared_by) SELECT ?::uuid,?::uuid,?::timestamptz,?::timestamptz,'USD',gross,discounts,taxes,shipping,processor_fees,commission,refunds,adjustments,seller_net,'under_review',?,? FROM totals WHERE count=? RETURNING id),\
     \ linked AS (INSERT INTO merch_settlement_order(settlement_id,order_id,seller_net_minor,refund_minor,adjustment_minor) SELECT inserted.id,selected.id,selected.seller_net_minor,selected.refunded_minor,selected.adjusted_minor FROM inserted CROSS JOIN selected RETURNING order_id)\
-    \ SELECT jsonb_build_object('id',inserted.id,'orderCount',(SELECT count(*) FROM linked)) FROM inserted"
-    [ PersistArray (map toPersistValue mseOrderIds),PersistText (uuidText mseStoreId),PersistText (uuidText settlementId)
-    , PersistText (uuidText mseStoreId),PersistText msePeriodStart,PersistText msePeriodEnd,optionalText mseReviewNotes
+    \ , marked AS (UPDATE merch_order SET settlement_status='under_review',updated_at=now() WHERE id IN (SELECT order_id FROM linked) RETURNING id)\
+    \ SELECT jsonb_build_object('id',inserted.id,'orderCount',(SELECT count(*) FROM marked)) FROM inserted"
+    [ PersistArray (map toPersistValue mseOrderIds),PersistText (uuidText mseStoreId),PersistUTCTime (readDateUtc periodStart),PersistUTCTime (readDateUtc periodEnd),PersistText (uuidText settlementId)
+    , PersistText (uuidText mseStoreId),PersistText msePeriodStart,PersistText msePeriodEnd,optionalText reviewNotes
     , PersistInt64 (currentPartyId user),PersistInt64 (fromIntegral (length mseOrderIds))
     ] :: SqlPersistT IO [Single CMS.AesonValue])
   case created of
@@ -1331,25 +1342,178 @@ createSettlement user MerchSettlementRequest{..} = do
       runDB $ appendMerchAudit user "staff" (Just mseStoreId) "settlement.created" "settlement" (uuidText settlementId)
         (object ["orderCount" .= length mseOrderIds, "periodStart" .= msePeriodStart, "periodEnd" .= msePeriodEnd])
       loadSettlement settlementId
-    _ -> throwError (conflict "Settlement orders are ineligible, already linked, or belong to another seller")
+    _ -> throwError (conflict "Settlement orders are outside the period, ineligible, already linked, or belong to another seller")
+  where
+    readDateUtc day = UTCTime day 0
 
 updateSettlementStatus :: AuthedUser -> UUID -> MerchStatusRequest -> AppM Value
 updateSettlementStatus user settlementId MerchStatusRequest{..} = do
   requireAdmin user
   let status = T.toLower (T.strip mstStatus)
   unless (status `elem` ["approved","held"]) $ throwError (badRequest "Settlement can only be approved or held here; paid requires a separate evidence workflow")
-  updated <- runDB (rawSql
-    "UPDATE merch_settlement SET status=?,approved_by=CASE WHEN ?='approved' THEN ? ELSE approved_by END,approved_at=CASE WHEN ?='approved' THEN now() ELSE approved_at END,review_notes=coalesce(?,review_notes),updated_at=now() WHERE id=?::uuid AND status='under_review' AND prepared_by<>? RETURNING store_id::text"
-    [PersistText status,PersistText status,PersistInt64 (currentPartyId user),PersistText status,optionalText mstReason,PersistText (uuidText settlementId),PersistInt64 (currentPartyId user)]
-    :: SqlPersistT IO [Single Text])
-  storeId <- case updated of
+  reason <- traverse (requiredSafeText "reason" 2000) mstReason
+  when (status == "held" && maybe True ((<3) . T.length) reason) $
+    throwError (badRequest "A hold reason of at least 3 characters is required")
+  updated <- runDB $ do
+    rows <- (rawSql
+      "UPDATE merch_settlement SET status=?,approved_by=CASE WHEN ?='approved' THEN ? ELSE approved_by END,approved_at=CASE WHEN ?='approved' THEN now() ELSE approved_at END,review_notes=coalesce(?,review_notes),updated_at=now() WHERE id=?::uuid AND status IN ('under_review','held') AND status<>? AND prepared_by<>? RETURNING store_id::text"
+      [PersistText status,PersistText status,PersistInt64 (currentPartyId user),PersistText status,optionalText reason,PersistText (uuidText settlementId),PersistText status,PersistInt64 (currentPartyId user)]
+      :: SqlPersistT IO [Single Text])
+    case rows of
+      [Single value] -> do
+        rawExecute
+          "UPDATE merch_order order_record SET settlement_status=?,updated_at=now() FROM merch_settlement_order linked WHERE linked.settlement_id=?::uuid AND order_record.id=linked.order_id AND order_record.settlement_status IN ('under_review','held')"
+          [PersistText status,PersistText (uuidText settlementId)]
+        appendMerchAudit user "staff" (UUID.fromText value) "settlement.status_changed" "settlement" (uuidText settlementId)
+          (object ["status" .= status, "reason" .= reason])
+        pure rows
+      _ -> pure rows
+  _ <- case updated of
     [Single value] -> maybe (throwError err500) pure (UUID.fromText value)
-    _ -> throwError (conflict "Settlement must be under review and approved by someone other than its preparer")
-  runDB $ appendMerchAudit user "staff" (Just storeId) "settlement.status_changed" "settlement" (uuidText settlementId)
-    (object ["status" .= status, "reason" .= mstReason])
+    _ -> throwError (conflict "Settlement must be under review or held, change state, and be reviewed by someone other than its preparer")
   loadSettlement settlementId
+
+settlementStatuses :: [Text]
+settlementStatuses = ["draft","under_review","approved","paid","held","reversed"]
+
+validatedSettlementStatus :: Maybe Text -> AppM (Maybe Text)
+validatedSettlementStatus Nothing = pure Nothing
+validatedSettlementStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+  unless (status `elem` settlementStatuses) $ throwError (badRequest "Unsupported settlement status")
+  pure (Just status)
+
+listAdminSettlements :: AuthedUser -> Maybe Text -> AppM [Value]
+listAdminSettlements user rawStatus = do
+  requireAdmin user
+  status <- validatedSettlementStatus rawStatus
+  jsonRows
+    (settlementSelectSql <> " WHERE (?::text IS NULL OR settlement.status=?::text) ORDER BY settlement.created_at DESC,settlement.id")
+    [optionalText status,optionalText status]
+
+listSettlementEligibleOrders :: AuthedUser -> UUID -> AppM [Value]
+listSettlementEligibleOrders user storeId = do
+  requireAdmin user
+  jsonRows
+    "SELECT jsonb_build_object('id',order_record.id,'orderNumber',order_record.order_number,'currency',order_record.currency,'productSubtotalMinor',order_record.product_subtotal_minor,'discountMinor',order_record.discount_minor,'taxMinor',order_record.tax_minor,'shippingMinor',order_record.shipping_minor,'processorFeeMinor',order_record.processor_fee_minor,'tdfCommissionMinor',order_record.tdf_commission_minor,'sellerNetMinor',order_record.seller_net_minor,'refundsMinor',order_record.refunded_minor,'adjustmentsMinor',order_record.adjusted_minor,'paymentStatus',order_record.payment_status,'fulfillmentStatus',order_record.fulfillment_status,'settlementStatus',order_record.settlement_status,'createdAt',order_record.created_at) FROM merch_order order_record WHERE order_record.store_id=?::uuid AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') AND NOT EXISTS(SELECT 1 FROM merch_settlement_order linked WHERE linked.order_id=order_record.id) ORDER BY order_record.created_at,order_record.id"
+    [PersistText (uuidText storeId)]
+
+recordSettlementPayment :: AuthedUser -> UUID -> Maybe Text -> MerchSettlementPaymentForm -> AppM Value
+recordSettlementPayment user settlementId rawIdempotency MerchSettlementPaymentForm{..} = do
+  requireAdmin user
+  idempotency <- requireIdempotencyKey rawIdempotency
+  paidAt <- maybe (throwError (badRequest "paidAt must be an ISO-8601 timestamp with timezone")) pure
+    (iso8601ParseM (T.unpack mspfPaidAt) :: Maybe UTCTime)
+  now <- liftIO getCurrentTime
+  when (paidAt > addUTCTime 300 now) $ throwError (badRequest "paidAt cannot be in the future")
+  externalReference <- requiredSafeText "externalReference" 160 mspfExternalReference
+  when (T.length externalReference < 3) $ throwError (badRequest "externalReference must contain at least 3 characters")
+  notes <- traverse (requiredSafeText "notes" 2000) mspfNotes
+  sourceSize <- liftIO (getFileSize (fdPayload mspfFile))
+  when (sourceSize < 1 || sourceSize > 10*1024*1024) $ throwError (badRequest "Settlement evidence must be between 1 byte and 10 MB")
+  let mime = T.toLower (T.strip (fdFileCType mspfFile))
+      extension = T.toLower . T.pack . takeExtension . T.unpack $ fdFileName mspfFile
+      mimeMatches = (mime == "image/jpeg" && extension `elem` [".jpg",".jpeg"])
+        || (mime == "image/png" && extension == ".png")
+  unless mimeMatches $ throwError (badRequest "Settlement evidence MIME type and extension must match JPEG or PNG")
+  sourceBytes <- liftIO (BS.readFile (fdPayload mspfFile))
+  decoded <- either (const (throwError (badRequest "Settlement evidence image is invalid or unsupported"))) pure (decodeImage sourceBytes)
+  let rgb = convertRGB8 decoded
+      width = imageWidth rgb
+      height = imageHeight rgb
+  when (width < 1 || height < 1 || width > 12000 || height > 12000 || width*height > 40000000) $
+    throwError (badRequest "Settlement evidence dimensions exceed the safe processing limit")
+  let sourceChecksum = T.pack (show (hash sourceBytes :: Digest SHA256))
+      requestFingerprint = hashText (jsonText (object
+        [ "settlementId" .= settlementId, "paidAt" .= paidAt
+        , "externalReference" .= externalReference, "notes" .= notes
+        , "sourceChecksum" .= sourceChecksum
+        ]))
+  existing <- runDB (rawSql
+    "SELECT request_sha256 FROM merch_settlement_payment_evidence WHERE settlement_id=?::uuid AND idempotency_key=?"
+    [PersistText (uuidText settlementId),PersistText idempotency] :: SqlPersistT IO [Single Text])
+  case existing of
+    [Single storedFingerprint]
+      | storedFingerprint == requestFingerprint -> loadSettlement settlementId
+      | otherwise -> throwError (conflict "Idempotency-Key conflicts with different settlement evidence")
+    [] -> persistEvidence idempotency paidAt externalReference notes requestFingerprint rgb
+    _ -> throwError (conflict "Settlement evidence idempotency state is ambiguous")
+  where
+    persistEvidence idempotency paidAt externalReference notes requestFingerprint rgb = do
+      eligible <- runDB (rawSql
+        "SELECT TRUE FROM merch_settlement WHERE id=?::uuid AND status='approved' AND prepared_by<>? AND approved_at IS NOT NULL AND ?::timestamptz>=approved_at"
+        [PersistText (uuidText settlementId),PersistInt64 (currentPartyId user),PersistUTCTime paidAt]
+        :: SqlPersistT IO [Single Bool])
+      unless (eligible == [Single True]) $
+        throwError (conflict "Settlement must be approved and payment confirmed by someone other than its preparer")
+      evidenceId <- liftIO nextRandom
+      configuredRoot <- liftIO (lookupEnv "MERCH_SETTLEMENT_EVIDENCE_DIR")
+      environment <- liftIO featureEnvironment
+      when (environment == "production" && configuredRoot == Nothing) $
+        throwError err503 { errBody = "MERCH_SETTLEMENT_EVIDENCE_DIR must point to durable private storage in production" }
+      let evidenceRoot = fromMaybe "uploads/merch-settlements" configuredRoot
+          directory = evidenceRoot </> T.unpack (uuidText settlementId)
+          fileName = T.unpack (uuidText evidenceId) <> ".jpg"
+          destination = directory </> fileName
+          objectKey = "merch-settlements/" <> uuidText settlementId <> "/" <> T.pack fileName
+      when (null evidenceRoot) $ throwError err503 { errBody = "Private settlement evidence storage is not configured" }
+      publicAssetsRoot <- asks (assetsRootDir . envConfig)
+      rootResult <- liftIO (tryAny (createDirectoryIfMissing True evidenceRoot))
+      either (const (throwError err500 { errBody = "Settlement evidence storage is unavailable" })) pure rootResult
+      evidenceAbsolute <- liftIO (normalise <$> makeAbsolute evidenceRoot)
+      assetsAbsolute <- liftIO (normalise <$> makeAbsolute publicAssetsRoot)
+      evidenceCanonical <- liftIO (normalise <$> canonicalizePath evidenceAbsolute)
+      assetsCanonical <- liftIO (normalise <$> canonicalizePath assetsAbsolute)
+      let evidencePrefix = addTrailingPathSeparator evidenceCanonical
+          assetsPrefix = addTrailingPathSeparator assetsCanonical
+      when (evidenceCanonical == assetsCanonical || assetsPrefix `isPrefixOf` evidencePrefix) $
+        throwError err503 { errBody = "Settlement evidence storage must be outside the public assets directory" }
+      let privateDirectoryPermissions = setOwnerSearchable True . setOwnerWritable True . setOwnerReadable True $ emptyPermissions
+          privateFilePermissions = setOwnerWritable True . setOwnerReadable True $ emptyPermissions
+      writeResult <- liftIO $ tryAny $ do
+        setPermissions evidenceRoot privateDirectoryPermissions
+        createDirectoryIfMissing True directory
+        setPermissions directory privateDirectoryPermissions
+        saveJpgImage 90 destination (ImageRGB8 rgb)
+        setPermissions destination privateFilePermissions
+      either (const (throwError err500 { errBody = "Settlement evidence processing failed" })) pure writeResult
+      storedBytes <- liftIO (BS.readFile destination)
+      let storedSize = BS.length storedBytes
+          storedChecksum = T.pack (show (hash storedBytes :: Digest SHA256))
+      pool <- asks envPool
+      stored <- liftIO $ tryAny $ runSqlPool (do
+        rawExecute
+          "INSERT INTO merch_settlement_payment_evidence(id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,external_reference,payment_recorded_at,notes,idempotency_key,request_sha256,submitted_by) VALUES(?::uuid,?::uuid,?,'image/jpeg',?,?,?,?,?,?,?,?)"
+          [ PersistText (uuidText evidenceId),PersistText (uuidText settlementId),PersistText objectKey
+          , PersistInt64 (fromIntegral storedSize),PersistText storedChecksum,PersistText externalReference
+          , PersistUTCTime paidAt,optionalText notes,PersistText idempotency,PersistText requestFingerprint
+          , PersistInt64 (currentPartyId user)
+          ]
+        storeRows <- (rawSql "SELECT store_id::text FROM merch_settlement WHERE id=?::uuid AND status='paid'"
+          [PersistText (uuidText settlementId)] :: SqlPersistT IO [Single Text])
+        case storeRows of
+          [Single storeText] -> appendMerchAudit user "staff" (UUID.fromText storeText) "settlement.payment_recorded" "settlement" (uuidText settlementId)
+            (object ["status" .= ("paid" :: Text),"evidenceChecksum" .= storedChecksum,"evidenceBytes" .= storedSize])
+          _ -> fail "Settlement evidence did not produce a paid settlement"
+        ) pool
+      case stored of
+        Right () -> loadSettlement settlementId
+        Left _ -> do
+          liftIO $ do
+            _ <- try (removeFile destination) :: IO (Either SomeException ())
+            pure ()
+          retry <- runDB (rawSql
+            "SELECT request_sha256 FROM merch_settlement_payment_evidence WHERE settlement_id=?::uuid AND idempotency_key=?"
+            [PersistText (uuidText settlementId),PersistText idempotency] :: SqlPersistT IO [Single Text])
+          if retry == [Single requestFingerprint]
+            then loadSettlement settlementId
+            else throwError (conflict "Settlement changed, evidence reference was reused, or payment evidence could not be recorded")
 
 loadSettlement :: UUID -> AppM Value
 loadSettlement settlementId = jsonOne err404
-  "SELECT jsonb_build_object('id',settlement.id,'storeId',settlement.store_id,'periodStart',settlement.period_start,'periodEnd',settlement.period_end,'currency',settlement.currency,'grossProductMinor',settlement.gross_product_minor,'discountsMinor',settlement.discounts_minor,'taxesMinor',settlement.taxes_minor,'shippingMinor',settlement.shipping_minor,'processorFeesMinor',settlement.processor_fees_minor,'tdfCommissionMinor',settlement.tdf_commission_minor,'refundsMinor',settlement.refunds_minor,'adjustmentsMinor',settlement.adjustments_minor,'sellerNetMinor',settlement.seller_net_minor,'status',settlement.status,'preparedBy',settlement.prepared_by,'approvedBy',settlement.approved_by,'paidBy',settlement.paid_by,'approvedAt',settlement.approved_at,'paidAt',settlement.paid_at,'evidenceObjectKey',settlement.evidence_object_key,'orderCount',(SELECT count(*) FROM merch_settlement_order linked WHERE linked.settlement_id=settlement.id)) FROM merch_settlement settlement WHERE settlement.id=?::uuid"
+  (settlementSelectSql <> " WHERE settlement.id=?::uuid")
   [PersistText (uuidText settlementId)]
+
+settlementSelectSql :: Text
+settlementSelectSql =
+  "SELECT jsonb_strip_nulls(jsonb_build_object('id',settlement.id,'storeId',settlement.store_id,'storeName',store.display_name,'periodStart',settlement.period_start,'periodEnd',settlement.period_end,'currency',settlement.currency,'grossProductMinor',settlement.gross_product_minor,'discountsMinor',settlement.discounts_minor,'taxesMinor',settlement.taxes_minor,'shippingMinor',settlement.shipping_minor,'processorFeesMinor',settlement.processor_fees_minor,'tdfCommissionMinor',settlement.tdf_commission_minor,'refundsMinor',settlement.refunds_minor,'adjustmentsMinor',settlement.adjustments_minor,'sellerNetMinor',settlement.seller_net_minor,'status',settlement.status,'preparedBy',settlement.prepared_by,'preparedByName',prepared.display_name,'approvedBy',settlement.approved_by,'approvedByName',approved.display_name,'paidBy',settlement.paid_by,'paidByName',paid.display_name,'approvedAt',settlement.approved_at,'paidAt',settlement.paid_at,'evidenceObjectKey',settlement.evidence_object_key,'evidenceMimeType',evidence.mime_type,'evidenceByteSize',evidence.byte_size,'evidenceChecksumSha256',evidence.checksum_sha256,'externalReference',evidence.external_reference,'orderCount',(SELECT count(*) FROM merch_settlement_order linked WHERE linked.settlement_id=settlement.id))) FROM merch_settlement settlement JOIN merch_store store ON store.id=settlement.store_id JOIN party prepared ON prepared.id=settlement.prepared_by LEFT JOIN party approved ON approved.id=settlement.approved_by LEFT JOIN party paid ON paid.id=settlement.paid_by LEFT JOIN merch_settlement_payment_evidence evidence ON evidence.settlement_id=settlement.id"

@@ -4,6 +4,7 @@ module TDF.Server.MerchRuntimeSpec (spec) where
 
 import           Control.Monad (unless)
 import           Control.Monad.Reader (runReaderT)
+import           Codec.Picture (PixelRGB8(..), encodePng, generateImage)
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as KeyMap
@@ -14,6 +15,8 @@ import           Data.Int (Int64)
 import           Data.Set (empty)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Time (getCurrentTime)
+import           Data.Time.Format.ISO8601 (iso8601Show)
 import qualified Data.UUID as UUID
 import           Database.Persist (PersistValue(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool, toSqlKey)
@@ -23,6 +26,9 @@ import qualified Network.Wai.Handler.Warp as Warp
 import           Servant (ServerError(..), (:<|>)(..))
 import           Servant.Server (runHandler)
 import           System.Environment (lookupEnv, setEnv)
+import           System.FilePath ((</>))
+import           System.Directory (doesFileExist)
+import           System.IO.Temp (withSystemTempDirectory)
 import           Test.Hspec (Spec, describe, it, runIO)
 
 import           TDF.API.Merch (MerchCancellationRequest(..), MerchIssueTriageRequest(..))
@@ -73,6 +79,40 @@ httpJson manager port requestMethod path headers body = do
       decoded = either (const Aeson.Null) id (Aeson.eitherDecode raw)
   pure (HTTPTypes.statusCode (HTTP.responseStatus response), decoded, raw)
 
+httpMultipart
+  :: HTTP.Manager
+  -> Int
+  -> String
+  -> [HTTPTypes.Header]
+  -> [(BS8.ByteString, BS8.ByteString)]
+  -> BL.ByteString
+  -> IO HttpResponse
+httpMultipart manager port path headers fields fileBytes = do
+  base <- HTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+  let boundary = "----tdf-merch-settlement-runtime"
+      line value = BL.fromStrict value <> "\r\n"
+      fieldPart (name,value) =
+        line ("--" <> boundary)
+          <> line ("Content-Disposition: form-data; name=\"" <> name <> "\"")
+          <> "\r\n" <> line value
+      filePart =
+        line ("--" <> boundary)
+          <> line "Content-Disposition: form-data; name=\"file\"; filename=\"synthetic-receipt.png\""
+          <> line "Content-Type: image/png"
+          <> "\r\n" <> fileBytes <> "\r\n"
+      body = mconcat (map fieldPart fields) <> filePart <> line ("--" <> boundary <> "--")
+      request = base
+        { HTTP.method = "POST"
+        , HTTP.requestHeaders =
+            [("Accept","application/json"),("Content-Type","multipart/form-data; boundary=" <> boundary)] <> headers
+        , HTTP.requestBody = HTTP.RequestBodyLBS body
+        , HTTP.checkResponse = \_ _ -> pure ()
+        }
+  response <- HTTP.httpLbs request manager
+  let raw = HTTP.responseBody response
+      decoded = either (const Aeson.Null) id (Aeson.eitherDecode raw)
+  pure (HTTPTypes.statusCode (HTTP.responseStatus response), decoded, raw)
+
 expectStatus :: Int -> String -> HttpResponse -> IO Aeson.Value
 expectStatus expected label (actual, value, raw) = do
   assert (actual == expected)
@@ -98,11 +138,16 @@ auth :: BS8.ByteString -> [HTTPTypes.Header]
 auth token = [("Authorization", "Bearer " <> token)]
 
 runHttpChecks :: String -> IO ()
-runHttpChecks databaseUrl = do
+runHttpChecks databaseUrl =
+  withSystemTempDirectory "tdf-merch-settlement-evidence" (runHttpChecksWithEvidenceRoot databaseUrl)
+
+runHttpChecksWithEvidenceRoot :: String -> FilePath -> IO ()
+runHttpChecksWithEvidenceRoot databaseUrl evidenceRoot = do
   -- loadConfig supplies the real session-cookie/auth parser used by mkApp.
   -- The database and feature flags remain isolated to the disposable runtime.
   setEnv "DATABASE_URL" databaseUrl
   setEnv "APP_ENV" "sandbox"
+  setEnv "MERCH_SETTLEMENT_EVIDENCE_DIR" evidenceRoot
   cfg <- loadConfig
   pool <- makePool (BS8.pack databaseUrl)
   let app = mkApp Env { envPool = pool, envConfig = cfg }
@@ -110,10 +155,12 @@ runHttpChecks databaseUrl = do
       variantId = "96000000-0000-4000-8000-000000000001" :: Text
       shippingZoneId = "93000000-0000-4000-8000-000000000002" :: Text
       applicantProfileId = "91000000-0000-4000-8000-000000000003" :: Text
+      settlementOrderId = "98000000-0000-4000-8000-000000000005" :: Text
       ownerHeaders = auth "runtime-owner-token"
       collaboratorHeaders = auth "runtime-collaborator-token"
       outsiderHeaders = auth "runtime-other-seller-token"
       adminHeaders = auth "runtime-admin-token"
+      independentAdminHeaders = auth "runtime-independent-admin-token"
       applicantHeaders = auth "runtime-applicant-token"
   Warp.testWithApplication (pure app) $ \port -> do
     manager <- HTTP.newManager HTTP.defaultManagerSettings
@@ -268,6 +315,89 @@ runHttpChecks databaseUrl = do
       "Orders collaborator did not resolve the operational issue over HTTP"
     _ <- httpJson manager port "GET" "/merch/admin/issues" adminHeaders Nothing
       >>= expectStatus 200 "Administrator issue queue"
+
+    _ <- httpJson manager port "GET" ("/merch/admin/stores/" <> storeId <> "/settlement-orders") outsiderHeaders Nothing
+      >>= expectStatus 403 "Non-admin settlement order queue"
+    eligibleSettlementOrders <- httpJson manager port "GET" ("/merch/admin/stores/" <> storeId <> "/settlement-orders") adminHeaders Nothing
+      >>= expectStatus 200 "Settlement eligible order queue"
+    let eligibleRows = case eligibleSettlementOrders of Aeson.Array rows -> toList rows; _ -> []
+        isSettlementOrder value = textField "id" value == Just settlementOrderId
+        leaksBuyerData (Aeson.Object row) = any (`KeyMap.member` row) (map AesonKey.fromText ["customerName","customerEmail","customerPhone","recipient"])
+        leaksBuyerData _ = True
+    assert (any isSettlementOrder eligibleRows) "Delivered paid order was not eligible for settlement"
+    assert (not (any leaksBuyerData eligibleRows)) "Settlement preparation queue exposed buyer personal data"
+
+    let settlementBody = Aeson.object
+          [ "storeId" Aeson..= (T.pack storeId)
+          , "periodStart" Aeson..= ("2026-01-01" :: Text)
+          , "periodEnd" Aeson..= ("2027-01-01" :: Text)
+          , "orderIds" Aeson..= [settlementOrderId]
+          , "reviewNotes" Aeson..= ("Synthetic preparation; no funds are moved by this request." :: Text)
+          ]
+        outsidePeriodBody = Aeson.object
+          [ "storeId" Aeson..= (T.pack storeId)
+          , "periodStart" Aeson..= ("2025-01-01" :: Text)
+          , "periodEnd" Aeson..= ("2025-02-01" :: Text)
+          , "orderIds" Aeson..= [settlementOrderId]
+          ]
+    _ <- httpJson manager port "POST" "/merch/admin/settlements" adminHeaders (Just outsidePeriodBody)
+      >>= expectStatus 409 "Settlement order outside accounting period"
+    settlement <- httpJson manager port "POST" "/merch/admin/settlements" adminHeaders (Just settlementBody)
+      >>= expectStatus 201 "Settlement preparation"
+    settlementId <- maybe (fail "Settlement response omitted id") pure (textField "id" settlement)
+    assert (textField "status" settlement == Just "under_review")
+      "Settlement preparation implied approval or payment"
+    _ <- httpJson manager port "GET" "/merch/admin/settlements?status=under_review" independentAdminHeaders Nothing
+      >>= expectStatus 200 "Settlement review queue"
+    let settlementStatusPath = "/merch/admin/settlements/" <> T.unpack settlementId <> "/status"
+        approvalBody = Aeson.object
+          [ "status" Aeson..= ("approved" :: Text)
+          , "reason" Aeson..= ("Independently checked against the synthetic reconciliation data." :: Text)
+          ]
+        holdBody = Aeson.object
+          [ "status" Aeson..= ("held" :: Text)
+          , "reason" Aeson..= ("Synthetic discrepancy requires independent review." :: Text)
+          ]
+    _ <- httpJson manager port "PATCH" settlementStatusPath adminHeaders (Just approvalBody)
+      >>= expectStatus 409 "Settlement self-approval"
+    heldSettlement <- httpJson manager port "PATCH" settlementStatusPath independentAdminHeaders (Just holdBody)
+      >>= expectStatus 200 "Independent settlement hold"
+    assert (textField "status" heldSettlement == Just "held")
+      "Independent review did not place the settlement on hold"
+    approvedSettlement <- httpJson manager port "PATCH" settlementStatusPath independentAdminHeaders (Just approvalBody)
+      >>= expectStatus 200 "Independent approval after settlement hold"
+    assert (textField "status" approvedSettlement == Just "approved")
+      "Independent review did not approve the settlement"
+
+    paidAt <- BS8.pack . iso8601Show <$> getCurrentTime
+    let evidenceBytes = encodePng (generateImage (\_ _ -> PixelRGB8 32 64 96) 4 4)
+        evidenceHeaders = ("Idempotency-Key","runtime-settlement-payment-001") : independentAdminHeaders
+        evidenceFields reference =
+          [ ("paidAt",paidAt)
+          , ("externalReference",reference)
+          , ("notes","Synthetic receipt; no real bank transfer or provider was used.")
+          ]
+        evidencePath = "/merch/admin/settlements/" <> T.unpack settlementId <> "/payment-evidence"
+    paidSettlement <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") evidenceBytes
+      >>= expectStatus 200 "Settlement payment evidence"
+    paidSettlementRetry <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "SYNTHETIC-BANK-REFERENCE-001") evidenceBytes
+      >>= expectStatus 200 "Settlement payment evidence retry"
+    assert (textField "status" paidSettlement == Just "paid" && textField "status" paidSettlementRetry == Just "paid")
+      "Private payment evidence did not idempotently record the paid settlement"
+    _ <- httpMultipart manager port evidencePath evidenceHeaders (evidenceFields "DIFFERENT-REFERENCE") evidenceBytes
+      >>= expectStatus 409 "Conflicting settlement payment evidence retry"
+    evidenceObjectKey <- maybe (fail "Paid settlement omitted evidence object key") pure (textField "evidenceObjectKey" paidSettlement)
+    evidenceFileName <- maybe (fail "Settlement evidence object key was outside its private namespace") pure
+      (T.stripPrefix ("merch-settlements/" <> settlementId <> "/") evidenceObjectKey)
+    evidenceExists <- doesFileExist (evidenceRoot </> T.unpack settlementId </> T.unpack evidenceFileName)
+    assert evidenceExists "Re-encoded private settlement evidence was not persisted"
+
+    persistedSettlement <- runSqlPool (rawSql
+      "SELECT settlement.status,order_record.settlement_status,(SELECT count(*) FROM merch_settlement_payment_evidence evidence WHERE evidence.settlement_id=settlement.id),(SELECT count(*) FROM merch_audit_event audit WHERE audit.entity_type='settlement' AND audit.entity_id=settlement.id::text AND audit.action='settlement.payment_recorded') FROM merch_settlement settlement JOIN merch_settlement_order linked ON linked.settlement_id=settlement.id JOIN merch_order order_record ON order_record.id=linked.order_id WHERE settlement.id=?::uuid"
+      [PersistText settlementId]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Int64,Single Int64)]) pool
+    assert (persistedSettlement == [(Single "paid",Single "paid",Single 1,Single 1)])
+      "Settlement evidence did not preserve one paid ledger state and one audit event"
 
     let cancellationBody = Aeson.object
           ["reason" Aeson..= ("Synthetic buyer cancels before any payment attempt." :: Text)]

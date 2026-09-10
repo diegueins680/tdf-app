@@ -539,6 +539,33 @@ CREATE TABLE IF NOT EXISTS merch_settlement_order (
   PRIMARY KEY(settlement_id, order_id)
 );
 
+CREATE TABLE IF NOT EXISTS merch_settlement_payment_evidence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  settlement_id UUID NOT NULL UNIQUE REFERENCES merch_settlement(id) ON DELETE RESTRICT,
+  evidence_object_key TEXT NOT NULL UNIQUE,
+  mime_type TEXT NOT NULL,
+  byte_size BIGINT NOT NULL,
+  checksum_sha256 TEXT NOT NULL,
+  external_reference TEXT NOT NULL UNIQUE,
+  payment_recorded_at TIMESTAMPTZ NOT NULL,
+  notes TEXT,
+  idempotency_key TEXT NOT NULL,
+  request_sha256 TEXT NOT NULL,
+  submitted_by BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(settlement_id, idempotency_key),
+  CHECK (evidence_object_key ~ '^merch-settlements/[0-9a-f-]{36}/[0-9a-f-]{36}\.jpg$'),
+  CHECK (mime_type = 'image/jpeg'),
+  CHECK (byte_size BETWEEN 1 AND 10485760),
+  CHECK (checksum_sha256 ~ '^[a-f0-9]{64}$'),
+  CHECK (length(trim(external_reference)) BETWEEN 3 AND 160),
+  CHECK (notes IS NULL OR length(trim(notes)) BETWEEN 3 AND 2000),
+  CHECK (length(idempotency_key) BETWEEN 8 AND 200),
+  CHECK (request_sha256 ~ '^[a-f0-9]{64}$')
+);
+CREATE INDEX IF NOT EXISTS merch_settlement_payment_evidence_created_idx
+  ON merch_settlement_payment_evidence(created_at DESC, id);
+
 CREATE TABLE IF NOT EXISTS merch_favorite (
   party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES merch_product(id) ON DELETE CASCADE,
@@ -644,6 +671,54 @@ DROP TRIGGER IF EXISTS merch_fulfillment_event_immutable_trigger ON merch_fulfil
 CREATE TRIGGER merch_fulfillment_event_immutable_trigger
   BEFORE UPDATE OR DELETE ON merch_fulfillment_event
   FOR EACH ROW EXECUTE FUNCTION merch_reject_immutable_mutation();
+DROP TRIGGER IF EXISTS merch_settlement_payment_evidence_immutable_trigger ON merch_settlement_payment_evidence;
+CREATE TRIGGER merch_settlement_payment_evidence_immutable_trigger
+  BEFORE UPDATE OR DELETE ON merch_settlement_payment_evidence
+  FOR EACH ROW EXECUTE FUNCTION merch_reject_immutable_mutation();
+
+CREATE OR REPLACE FUNCTION merch_apply_settlement_payment_evidence()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  target merch_settlement%ROWTYPE;
+  linked_order_count BIGINT;
+  transitioned_order_count BIGINT;
+BEGIN
+  SELECT * INTO target FROM merch_settlement WHERE id = NEW.settlement_id FOR UPDATE;
+  IF NOT FOUND OR target.status <> 'approved' THEN
+    RAISE EXCEPTION 'Settlement payment evidence requires an approved settlement';
+  END IF;
+  IF NEW.submitted_by = target.prepared_by THEN
+    RAISE EXCEPTION 'Settlement preparer cannot confirm its payment';
+  END IF;
+  IF target.approved_at IS NULL OR NEW.payment_recorded_at < target.approved_at
+     OR NEW.payment_recorded_at > now() + interval '5 minutes' THEN
+    RAISE EXCEPTION 'Settlement payment timestamp is outside the allowed window';
+  END IF;
+
+  UPDATE merch_settlement SET
+    status = 'paid', evidence_object_key = NEW.evidence_object_key,
+    paid_by = NEW.submitted_by, paid_at = NEW.payment_recorded_at, updated_at = now()
+  WHERE id = NEW.settlement_id AND status = 'approved';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Settlement changed before payment evidence was recorded';
+  END IF;
+  SELECT count(*) INTO linked_order_count
+    FROM merch_settlement_order WHERE settlement_id = NEW.settlement_id;
+  UPDATE merch_order order_record SET settlement_status = 'paid', updated_at = now()
+    FROM merch_settlement_order linked
+    WHERE linked.settlement_id = NEW.settlement_id
+      AND order_record.id = linked.order_id
+      AND order_record.settlement_status = 'approved';
+  GET DIAGNOSTICS transitioned_order_count = ROW_COUNT;
+  IF linked_order_count = 0 OR transitioned_order_count <> linked_order_count THEN
+    RAISE EXCEPTION 'Every linked order must be approved before settlement payment evidence';
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_settlement_payment_evidence_apply_trigger ON merch_settlement_payment_evidence;
+CREATE TRIGGER merch_settlement_payment_evidence_apply_trigger
+  BEFORE INSERT ON merch_settlement_payment_evidence
+  FOR EACH ROW EXECUTE FUNCTION merch_apply_settlement_payment_evidence();
 
 CREATE OR REPLACE FUNCTION merch_validate_store_eligibility()
 RETURNS trigger LANGUAGE plpgsql AS $$

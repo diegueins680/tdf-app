@@ -194,13 +194,14 @@ describe('api client', () => {
     const form = new FormData();
     form.append('file', new Blob(['image-bytes'], { type: 'image/png' }), 'cover.png');
 
-    await postForm<{ ok: boolean }>('/upload', form);
+    await postForm<{ ok: boolean }>('/upload', form, { headers: { 'Idempotency-Key': 'upload-key-123' } });
 
     const call = fetchMock.mock.calls[0];
     expect(call).toBeDefined();
     expect(call?.[1]?.body).toBe(form);
     const headers = new Headers(call?.[1]?.headers);
     expect(headers.get('Content-Type')).toBeNull();
+    expect(headers.get('Idempotency-Key')).toBe('upload-key-123');
   });
 
   it('joins API base and paths that omit the leading slash', async () => {

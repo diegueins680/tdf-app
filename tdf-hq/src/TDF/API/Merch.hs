@@ -239,6 +239,55 @@ data MerchSettlementRequest = MerchSettlementRequest
 instance FromJSON MerchSettlementRequest where parseJSON = genericParseJSON (merchOptions 3)
 instance ToJSON MerchSettlementRequest where toJSON = genericToJSON (merchOptions 3)
 
+data MerchSettlementPaymentForm = MerchSettlementPaymentForm
+  { mspfFile              :: FileData Tmp
+  , mspfPaidAt            :: Text
+  , mspfExternalReference :: Text
+  , mspfNotes             :: Maybe Text
+  }
+
+instance FromMultipart Tmp MerchSettlementPaymentForm where
+  fromMultipart multipart = do
+    rejectUnexpected multipart
+    file <- singleFile "file" multipart
+    paidAt <- requiredInput "paidAt" multipart
+    externalReference <- requiredInput "externalReference" multipart
+    notes <- optionalInput "notes" multipart
+    if T.null (T.strip paidAt) || T.length paidAt > 80
+      then Left "paidAt must contain 1 to 80 characters"
+      else if T.length (T.strip externalReference) < 3 || T.length (T.strip externalReference) > 160
+        then Left "externalReference must contain 3 to 160 characters"
+        else if maybe False (\value -> T.length value < 3 || T.length value > 2000) (T.strip <$> notes)
+          then Left "notes must contain 3 to 2000 characters when provided"
+          else Right MerchSettlementPaymentForm
+            { mspfFile = file
+            , mspfPaidAt = T.strip paidAt
+            , mspfExternalReference = T.strip externalReference
+            , mspfNotes = T.strip <$> notes
+            }
+    where
+      requiredInput field mp =
+        case [value | Input name value <- inputs mp, name == field] of
+          [value] -> Right value
+          [] -> Left ("Missing field: " <> T.unpack field)
+          _ -> Left ("Duplicate field: " <> T.unpack field)
+      optionalInput field mp =
+        case [value | Input name value <- inputs mp, name == field] of
+          [] -> Right Nothing
+          [value] -> Right (Just value)
+          _ -> Left ("Duplicate field: " <> T.unpack field)
+      singleFile field mp =
+        case [file | file <- files mp, fdInputName file == field] of
+          [file] -> Right file
+          [] -> Left ("Missing file field: " <> T.unpack field)
+          _ -> Left ("Duplicate file field: " <> T.unpack field)
+      rejectUnexpected mp =
+        case [name | Input name _ <- inputs mp, name `notElem` ["paidAt","externalReference","notes"]] of
+          name:_ -> Left ("Unexpected field: " <> T.unpack name)
+          [] -> case [fdInputName file | file <- files mp, fdInputName file /= "file"] of
+            name:_ -> Left ("Unexpected file field: " <> T.unpack name)
+            [] -> Right ()
+
 data MerchImageUploadForm = MerchImageUploadForm
   { miuFile      :: FileData Tmp
   , miuAltText   :: Text
@@ -355,4 +404,8 @@ type MerchProtectedAPI = "merch" :>
   :<|> "admin" :> "settlements" :> ReqBody '[JSON] MerchSettlementRequest :> PostCreated '[JSON] Value
   :<|> "admin" :> "settlements" :> Capture "settlementId" UUID :> "status"
          :> ReqBody '[JSON] MerchStatusRequest :> Patch '[JSON] Value
+  :<|> "admin" :> "settlements" :> QueryParam "status" Text :> Get '[JSON] [Value]
+  :<|> "admin" :> "stores" :> Capture "storeId" UUID :> "settlement-orders" :> Get '[JSON] [Value]
+  :<|> "admin" :> "settlements" :> Capture "settlementId" UUID :> "payment-evidence"
+         :> Header "Idempotency-Key" Text :> MultipartForm Tmp MerchSettlementPaymentForm :> Post '[JSON] Value
   )
