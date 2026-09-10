@@ -5,7 +5,7 @@
 | Capacidad | Resultado |
 |---|---|
 | Leer/modificar repositorio | Disponible; trabajo en worktree aislado |
-| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `1157258b6a6551d49708fa9eb21ab893b6a051f1` |
+| Rama | `feat/artist-merch-storefronts`; inició en `269f3784121b8bdca378ec516d5cb446cc818e39` y se integró sobre `e2086e25bca856a413433a28f8ae83219b05ed38` |
 | Backend Haskell | Build/test local disponible; resultado final se registra abajo |
 | PostgreSQL aislado | Disponible; PostgreSQL 16 temporal en Docker verificado en la última corrida; el wrapper también admite una URL de base externa vacía y desechable |
 | Migraciones | Aplicación, reejecución, rollback guardado/limpio y reapply disponibles |
@@ -22,7 +22,7 @@
 - Web `tsc --noEmit -p tdf-hq-ui/tsconfig.app.json`: PASS.
 - Móvil `tsc --noEmit -p tdf-mobile/tsconfig.json`: PASS.
 - Backend `stack test --fast`: PASS, 2.489/2.489 ejemplos sobre la integración final con `main` (incluye ocho reglas unitarias de merch).
-- Build web de producción: PASS; presupuesto inicial de JavaScript PASS (416.043 bytes gzip).
+- Build web de producción: PASS; presupuesto inicial de JavaScript PASS (416.059 bytes gzip).
 - Reglas Haskell focalizadas `stack test --fast --test-arguments='--match=merch'`: PASS, 9/9 (ocho de merch y una coincidencia preexistente de storefront).
 - Jest web focalizado `MerchAdminPage.test.tsx` + API merch + exportación CSV: PASS, 15/15. Comprueba consola de liquidación en espera/aprobada, refund autorizado pero no ejecutado, contrato idempotente del cliente, disputa read-only, Axe sin impactos serios/críticos, evidencia sin solicitud de transferencia, exportación sin PII, columnas financieras condicionadas y neutralización de fórmulas CSV.
 - Jest móvil `tdf-mobile/__tests__/merchDeepLinks.test.ts`: PASS, 2/2.
@@ -35,7 +35,7 @@
 - OpenAPI: YAML parseado y tipos web/móvil regenerados; ambos archivos generados tienen el mismo SHA-256 `aacf791db50990c47d4cd69e796808a22ab0a31179566479cbac757ed3aa654b`.
 - Manifiesto/mecanismo de release: PASS, 59/59 pruebas; migración anclada al SHA de introducción.
 - Feature registry: generación PASS. Auditoría reporta solo el destino preexistente no relacionado `/reputation/consents`.
-- Auditoría de listas/catálogos: PASS, 954/954 candidatos con decisión vigente. Los nuevos enums/listas de refund se clasificaron como límites financieros cerrados: PostgreSQL/canonical ledger es autoridad, Haskell falla cerrado y OpenAPI es consumidor generado.
+- Auditoría de listas/catálogos: PASS, 1.011/1.011 candidatos con decisión vigente. Los nuevos enums/listas de refund se clasificaron como límites financieros cerrados: PostgreSQL/canonical ledger es autoridad, Haskell falla cerrado y OpenAPI es consumidor generado.
 
 ## Pendiente antes de recomendar lanzamiento
 
