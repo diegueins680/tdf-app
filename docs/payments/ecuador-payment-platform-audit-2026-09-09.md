@@ -26,7 +26,7 @@ No TDF-managed “escrow,” pooled seller funds, or improvised split settlement
 | Commit history and relevant remote branches | Available | Fetched origin/tags and searched all refs for payment, checkout, refund, settlement, payout, Stripe, PayPal and Datafast work. |
 | Issues, PRs and CI | Available | GitHub CLI authenticated as repository administrator. Branch protection requires one approval, stale-review dismissal and resolved conversations. |
 | Branch/worktree changes | Available | Work is isolated in `/private/tmp/tdf-payment-platform-20260909` on `feat/canonical-payment-platform-20260909`; the human's dirty primary checkout was not modified. |
-| Push and draft PR | Authorized by the request, not yet claimed | No push or PR is recorded until the command and remote result are verified. |
+| Push and draft PR | Available and verified | Core branch pushed and draft PR [#326](https://github.com/diegueins680/tdf-app/pull/326) opened; generated mobile contract branch pushed and draft PR [TDF-mobile #76](https://github.com/diegueins680/TDF-mobile/pull/76) opened. Neither PR is merged. |
 | Current official internet sources | Available | Research used provider, BCE, SPDP, SRI, consumer-authority, Apple/Google and PCI SSC sources only for material claims. |
 | Provider public sandboxes/docs | Partially available | Public sandbox procedures exist for Datafast (credentials on request), PayPal, PlaceToPay, PayPhone controlled tests, Kushki UAT, Nuvei and dLocal. A documented sandbox is not a credentialed TDF test. |
 | Provider merchant contracts/accounts | Unverified | No contract or portal entitlement was inspected. Account onboarding, reserves, acquiring bank, enabled products and pricing require provider confirmation. |
@@ -321,6 +321,11 @@ Mocked/local tests are not proof of a provider sandbox or merchant entitlement.
 Qualified Ecuadorian reviewers must approve seller contractual role, fund-flow diagram, aggregation/custody conclusion, KYC/UAFE allocation, commission/IVA/withholding invoices, refund/cancellation terms, recurring consent/renewal notice, LOPDP roles/transfers/DPIA/retention, provider DPAs and PCI scope. This project does not provide certification or legal advice.
 
 ## 12. Delivery and merge order
+
+Verified remote delivery at 2026-09-10 local:
+
+- Core draft PR [tdf-app #326](https://github.com/diegueins680/tdf-app/pull/326), branch `feat/canonical-payment-platform-20260909`; core commits `329c1c83a`, `9acea472d`, `b3007f580`, `b01ab3caf`, with test-evidence follow-up `90b225a90`.
+- Generated mobile contract draft PR [TDF-mobile #76](https://github.com/diegueins680/TDF-mobile/pull/76), branch `feat/payment-capabilities-contract-20260909`, commit `b08f0c600468773f13e9c1b8c2701df5b7673467`; depends on #326.
 
 1. Canonical payment core, dated research, ADR, lifecycle, migrations, compatibility and generated contracts.
 2. Existing-provider repairs plus disabled PlaceToPay/PayPhone adapters and provider contract tests.
