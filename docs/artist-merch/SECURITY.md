@@ -17,7 +17,8 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 | Falso retorno de navegador | Trigger rechaza `paid` sin intento exitoso y evidencia server-side verificada | Verificar firma/replay de cada webhook en staging |
 | Replay o webhook forjado | Infraestructura canónica de provider events y evidencia; provider flags cerrados | Merch aún no expone adapters específicos; no habilitar runtime |
 | Enumeración de órdenes/PII | UUID + lookup token hasheado en header; 404 uniforme; snapshots no aparecen en analítica | Añadir rate limits de borde y rotación/revocación operativa |
-| Insider/refund/settlement fraud | Estados separados, auditoría append-only, settlement preparado/aprobado por personas distintas | Handler de evidencia final y runbook contable pendientes |
+| Insider/refund/settlement fraud | Refund canónico ligado a caso staff, asignaciones/saldo bajo lock, idempotencia exacta, aprobación por otra identidad, auditoría append-only, órdenes elegibles sin PII y evidencia privada de settlement; aprobar no ejecuta dinero | Adapter refund sandbox, revisión humana y conciliación contable en staging siguen pendientes |
+| Disputa o chargeback inventado | La API de merch solo lee `commerce_dispute`; no ofrece creación ni decisión, y la proyección no muta pago/fulfillment/settlement | Verificar firma, replay e ingestión real de cada proveedor en staging |
 | Archivo malicioso | MIME/extensión coincidentes, límite 10 MB/40 MP, decode+reencode, nombre generado, rutas server-side, moderación previa a publicación | Integrar scanner/moderación operativa y retención/borrado |
 | XSS/SSRF/path traversal | Texto controlado, React escaping, slugs/SKU validados, object keys generados, URLs de tienda limitadas a `/assets/serve/merch/`, tracking solo HTTPS | CSP y proxy/CDN se validan en staging |
 | Spam/abuso | Directorio usa consentimiento, follow/contacto y reporte/bloqueo existentes; sin chat nuevo | Rate limits y revisión de abuso E2E pendientes |
@@ -29,14 +30,18 @@ Activos críticos: control de tienda, catálogo/precios, stock, evidencia de pag
 - Todos los flags se insertan `false` por entorno.
 - `merch.checkout.runtime_ready` es un kill switch adicional; nunca se activa solo por existir credenciales.
 - Datafast, PayPal y transferencia tienen flags separados y requieren configuración completa.
+- `merch.refunds` y `merch.disputes` son flags independientes y también nacen en `false`. Habilitar el primero solo permite preparar/aprobar evidencia; no habilita ejecución de proveedor.
 - Payouts automáticos permanecen `false` y no existe ruta para activarlos.
-- La migración de rollback se niega si ya hay órdenes o settlements.
+- Registrar evidencia de liquidación solo documenta una transferencia ejecutada fuera de TDF: no llama bancos ni proveedores. El archivo se guarda fuera de `/assets/serve`, se reencoda y no tiene endpoint público de descarga.
+- La migración de rollback se niega si ya hay órdenes, refunds, disputas o settlements.
 - Los logs y capturas de staging deben usar exclusivamente identidades y direcciones sintéticas.
 
 ## Validaciones pendientes de seguridad
 
 - DAST, CSP/CORS/cookies/CSRF y rate-limit en un deployment de staging real.
 - Pruebas de replay/firma y consulta autoritativa con sandbox Datafast/PayPal.
-- Revisión manual independiente de comprobantes y evidencias de settlement.
+- Ejecución de refund `approved → processing → succeeded/failed` mediante adapter sandbox, con conciliación y recuperación; hoy no hay ruta merch que la realice.
+- Ingestión de `commerce_dispute` desde webhooks/consultas verificadas y ejercicio operativo de plazos/respuestas; hoy solo se probó una evidencia sintética canónica.
+- Revisión manual independiente de comprobantes, acceso al volumen privado y conciliación de settlement en staging.
 - Repetición en staging del E2E cross-tenant local ya aprobado con vendedor A, vendedor B, comprador invitado y staff.
 - Revisión WCAG con lector de pantalla, zoom 200/400% y teclado sobre build servido.

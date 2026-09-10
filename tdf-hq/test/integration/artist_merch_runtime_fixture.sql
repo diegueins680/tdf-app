@@ -29,7 +29,8 @@ INSERT INTO party(id,display_name,is_org,created_at) VALUES
   (900004,'Runtime Other Seller',FALSE,now()),
   (900005,'Runtime Strict Admin',FALSE,now()),
   (900006,'Runtime Pilot Applicant',FALSE,now()),
-  (900007,'Runtime Applicant Band',TRUE,now());
+  (900007,'Runtime Applicant Band',TRUE,now()),
+  (900008,'Runtime Independent Admin',FALSE,now());
 SELECT setval(pg_get_serial_sequence('party','id'), 900100, TRUE);
 
 INSERT INTO api_token(token,party_id,label,active) VALUES
@@ -37,10 +38,13 @@ INSERT INTO api_token(token,party_id,label,active) VALUES
   ('runtime-collaborator-token',900003,'Synthetic merch HTTP collaborator',TRUE),
   ('runtime-other-seller-token',900004,'Synthetic merch HTTP other seller',TRUE),
   ('runtime-admin-token',900005,'Synthetic merch HTTP strict administrator',TRUE),
+  ('runtime-independent-admin-token',900008,'Synthetic independent settlement reviewer',TRUE),
   ('runtime-applicant-token',900006,'Synthetic merch HTTP pilot applicant',TRUE);
 
 INSERT INTO party_security_role(party_id,role_id,approval_mode,active)
-SELECT 900005,id,'bootstrap',TRUE FROM security_role WHERE code='admin' AND active;
+SELECT actor.id,role.id,'bootstrap',TRUE
+FROM (VALUES (900005::bigint),(900008::bigint)) actor(id)
+CROSS JOIN security_role role WHERE role.code='admin' AND role.active;
 
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status) VALUES
   ('91000000-0000-4000-8000-000000000001',900001,'band','Runtime Band','runtime-band','published','public','allowed'),
@@ -123,12 +127,37 @@ INSERT INTO merch_order(
   '{"commissionBps":1000,"basis":"product_subtotal_after_discount"}',
   'runtime-checkout-key-004',encode(digest('runtime-checkout-request-004','sha256'),'hex')
 );
+INSERT INTO merch_order(
+  id,order_number,store_id,customer_email,customer_name,lookup_token_hash,currency,
+  product_subtotal_minor,shipping_minor,tdf_commission_bps,tdf_commission_minor,seller_net_minor,total_minor,
+  commercial_status,payment_status,fulfillment_status,settlement_status,shipping_method,
+  shipping_zone_snapshot,recipient_snapshot,policy_snapshot,commission_snapshot,
+  create_idempotency_key,create_request_sha256,confirmed_at,completed_at
+) VALUES(
+  '98000000-0000-4000-8000-000000000005','TDF-MERCH-RUNTIME05','92000000-0000-4000-8000-000000000001',
+  'settlement.buyer@example.test','Synthetic Settlement Buyer',encode(digest('runtime-settlement-order-token','sha256'),'hex'),'USD',
+  5000,500,1000,500,5000,5500,'completed','paid','delivered','ready','national_shipping',
+  '{"deliveryMethod":"national_shipping","rateMinor":500}',
+  '{"name":"Synthetic Settlement Buyer","countryCode":"EC","city":"Quito","addressLine1":"Synthetic settlement address"}',
+  '{"id":"93000000-0000-4000-8000-000000000001","version":1}',
+  '{"commissionBps":1000,"basis":"product_subtotal_after_discount"}',
+  'runtime-settlement-order-005',encode(digest('runtime-settlement-order-request-005','sha256'),'hex'),now(),now()
+);
 INSERT INTO merch_order_line(
   id,order_id,line_number,product_id,variant_id,quantity,unit_price_minor,subtotal_minor,total_minor,
   product_snapshot,variant_snapshot,policy_snapshot
 ) VALUES(
   '99000000-0000-4000-8000-000000000004','98000000-0000-4000-8000-000000000004',1,
   '95000000-0000-4000-8000-000000000001','96000000-0000-4000-8000-000000000001',2,5000,10000,10000,
+  '{"name":"Runtime Shirt"}','{"sku":"RUNTIME-TEE-M","name":"M"}',
+  '{"id":"93000000-0000-4000-8000-000000000001","version":1}'
+);
+INSERT INTO merch_order_line(
+  id,order_id,line_number,product_id,variant_id,quantity,unit_price_minor,subtotal_minor,total_minor,
+  product_snapshot,variant_snapshot,policy_snapshot
+) VALUES(
+  '99000000-0000-4000-8000-000000000005','98000000-0000-4000-8000-000000000005',1,
+  '95000000-0000-4000-8000-000000000001','96000000-0000-4000-8000-000000000001',1,5000,5000,5000,
   '{"name":"Runtime Shirt"}','{"sku":"RUNTIME-TEE-M","name":"M"}',
   '{"id":"93000000-0000-4000-8000-000000000001","version":1}'
 );
@@ -156,6 +185,36 @@ SELECT merch_reserve_stock(
   (SELECT expires_at FROM commerce_checkout_session WHERE id='9a000000-0000-4000-8000-000000000004')
 );
 
+INSERT INTO commerce_checkout_session(
+  id,domain_type,domain_order_id,status,environment,currency,subtotal_minor,fee_minor,total_minor,
+  paid_minor,customer_email,lookup_token_hash,idempotency_key,expires_at,paid_at
+) VALUES(
+  '9a000000-0000-4000-8000-000000000005','merch_order','98000000-0000-4000-8000-000000000005',
+  'paid','sandbox','USD',5000,500,5500,5500,'settlement.buyer@example.test',
+  encode(digest('runtime-settlement-checkout-token','sha256'),'hex'),
+  'runtime-settlement-checkout-005',now()+interval '20 minutes',now()
+);
+UPDATE merch_order SET checkout_id='9a000000-0000-4000-8000-000000000005'
+WHERE id='98000000-0000-4000-8000-000000000005';
+INSERT INTO commerce_checkout_line_item(
+  id,checkout_id,line_number,product_type,product_id,product_version,description,quantity,
+  unit_amount_minor,subtotal_minor,total_minor,snapshot
+) VALUES
+  ('9b000000-0000-4000-8000-000000000005','9a000000-0000-4000-8000-000000000005',1,
+   'merch_variant','96000000-0000-4000-8000-000000000001','1','Runtime Shirt — M',1,5000,5000,5000,
+   '{"storeId":"92000000-0000-4000-8000-000000000001","sku":"RUNTIME-TEE-M"}'),
+  ('9b000000-0000-4000-8000-000000000006','9a000000-0000-4000-8000-000000000005',2,
+   'merch_shipping','93000000-0000-4000-8000-000000000002','1','Synthetic shipping',1,500,500,500,
+   '{"storeId":"92000000-0000-4000-8000-000000000001","deliveryMethod":"national_shipping"}');
+INSERT INTO commerce_payment_attempt(
+  id,checkout_id,provider,environment,operation,status,amount_minor,currency,merchant_account_ref,
+  idempotency_key,created_at,updated_at
+) VALUES(
+  '9c000000-0000-4000-8000-000000000005','9a000000-0000-4000-8000-000000000005',
+  'paypal','sandbox','capture','succeeded',5500,'USD','runtime-merch-merchant',
+  'runtime-settlement-payment-005',now(),now()
+);
+
 INSERT INTO merch_order_issue(
   id,order_id,opened_by_type,issue_type,public_message,idempotency_key,request_sha256
 ) VALUES
@@ -178,5 +237,7 @@ WHERE environment='sandbox'
     'merch.public_catalog',
     'merch.checkout',
     'merch.checkout.runtime_ready',
-    'merch.checkout.manual'
+    'merch.checkout.manual',
+    'merch.refunds',
+    'merch.disputes'
   );

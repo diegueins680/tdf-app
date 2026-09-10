@@ -375,7 +375,7 @@ CREATE TABLE IF NOT EXISTS merch_order (
   CHECK (commercial_status IN ('created','confirmed','cancelled','completed')),
   CHECK (payment_status IN ('pending','processing','paid','partially_refunded','refunded','disputed','chargeback','failed','cancelled')),
   CHECK (fulfillment_status IN ('pending','preparing','ready_for_pickup','shipped','delivered','cancelled','return_requested','returned','problem')),
-  CHECK (refund_status IN ('none','requested','approved','processing','partial','completed','rejected','cancelled')),
+  CHECK (refund_status IN ('none','requested','approved','processing','partial','completed','failed','rejected','cancelled')),
   CHECK (dispute_status IN ('none','inquiry','open','won','lost','chargeback')),
   CHECK (settlement_status IN ('not_ready','ready','under_review','approved','paid','held','adjusted','reversed')),
   CHECK (shipping_method IN ('coordinated_pickup','national_shipping')),
@@ -495,6 +495,22 @@ CREATE TABLE IF NOT EXISTS merch_order_issue (
   CHECK (status NOT IN ('resolved','rejected','cancelled') OR closed_at IS NOT NULL)
 );
 
+CREATE TABLE IF NOT EXISTS merch_refund_case (
+  refund_id UUID PRIMARY KEY REFERENCES commerce_refund(id) ON DELETE RESTRICT,
+  order_id UUID NOT NULL REFERENCES merch_order(id) ON DELETE RESTRICT,
+  issue_id UUID NOT NULL REFERENCES merch_order_issue(id) ON DELETE RESTRICT,
+  request_note TEXT,
+  request_sha256 TEXT NOT NULL,
+  created_by BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (request_note IS NULL OR length(trim(request_note)) BETWEEN 1 AND 2000),
+  CHECK (request_sha256 ~ '^[a-f0-9]{64}$')
+);
+CREATE INDEX IF NOT EXISTS merch_refund_case_order_idx
+  ON merch_refund_case(order_id, created_at DESC, refund_id);
+CREATE INDEX IF NOT EXISTS merch_refund_case_issue_idx
+  ON merch_refund_case(issue_id, created_at DESC, refund_id);
+
 CREATE TABLE IF NOT EXISTS merch_settlement (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id UUID NOT NULL REFERENCES merch_store(id) ON DELETE RESTRICT,
@@ -538,6 +554,33 @@ CREATE TABLE IF NOT EXISTS merch_settlement_order (
   adjustment_minor BIGINT NOT NULL DEFAULT 0,
   PRIMARY KEY(settlement_id, order_id)
 );
+
+CREATE TABLE IF NOT EXISTS merch_settlement_payment_evidence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  settlement_id UUID NOT NULL UNIQUE REFERENCES merch_settlement(id) ON DELETE RESTRICT,
+  evidence_object_key TEXT NOT NULL UNIQUE,
+  mime_type TEXT NOT NULL,
+  byte_size BIGINT NOT NULL,
+  checksum_sha256 TEXT NOT NULL,
+  external_reference TEXT NOT NULL UNIQUE,
+  payment_recorded_at TIMESTAMPTZ NOT NULL,
+  notes TEXT,
+  idempotency_key TEXT NOT NULL,
+  request_sha256 TEXT NOT NULL,
+  submitted_by BIGINT NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(settlement_id, idempotency_key),
+  CHECK (evidence_object_key ~ '^merch-settlements/[0-9a-f-]{36}/[0-9a-f-]{36}\.jpg$'),
+  CHECK (mime_type = 'image/jpeg'),
+  CHECK (byte_size BETWEEN 1 AND 10485760),
+  CHECK (checksum_sha256 ~ '^[a-f0-9]{64}$'),
+  CHECK (length(trim(external_reference)) BETWEEN 3 AND 160),
+  CHECK (notes IS NULL OR length(trim(notes)) BETWEEN 3 AND 2000),
+  CHECK (length(idempotency_key) BETWEEN 8 AND 200),
+  CHECK (request_sha256 ~ '^[a-f0-9]{64}$')
+);
+CREATE INDEX IF NOT EXISTS merch_settlement_payment_evidence_created_idx
+  ON merch_settlement_payment_evidence(created_at DESC, id);
 
 CREATE TABLE IF NOT EXISTS merch_favorite (
   party_id BIGINT NOT NULL REFERENCES party(id) ON DELETE CASCADE,
@@ -644,6 +687,54 @@ DROP TRIGGER IF EXISTS merch_fulfillment_event_immutable_trigger ON merch_fulfil
 CREATE TRIGGER merch_fulfillment_event_immutable_trigger
   BEFORE UPDATE OR DELETE ON merch_fulfillment_event
   FOR EACH ROW EXECUTE FUNCTION merch_reject_immutable_mutation();
+DROP TRIGGER IF EXISTS merch_settlement_payment_evidence_immutable_trigger ON merch_settlement_payment_evidence;
+CREATE TRIGGER merch_settlement_payment_evidence_immutable_trigger
+  BEFORE UPDATE OR DELETE ON merch_settlement_payment_evidence
+  FOR EACH ROW EXECUTE FUNCTION merch_reject_immutable_mutation();
+
+CREATE OR REPLACE FUNCTION merch_apply_settlement_payment_evidence()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  target merch_settlement%ROWTYPE;
+  linked_order_count BIGINT;
+  transitioned_order_count BIGINT;
+BEGIN
+  SELECT * INTO target FROM merch_settlement WHERE id = NEW.settlement_id FOR UPDATE;
+  IF NOT FOUND OR target.status <> 'approved' THEN
+    RAISE EXCEPTION 'Settlement payment evidence requires an approved settlement';
+  END IF;
+  IF NEW.submitted_by = target.prepared_by THEN
+    RAISE EXCEPTION 'Settlement preparer cannot confirm its payment';
+  END IF;
+  IF target.approved_at IS NULL OR NEW.payment_recorded_at < target.approved_at
+     OR NEW.payment_recorded_at > now() + interval '5 minutes' THEN
+    RAISE EXCEPTION 'Settlement payment timestamp is outside the allowed window';
+  END IF;
+
+  UPDATE merch_settlement SET
+    status = 'paid', evidence_object_key = NEW.evidence_object_key,
+    paid_by = NEW.submitted_by, paid_at = NEW.payment_recorded_at, updated_at = now()
+  WHERE id = NEW.settlement_id AND status = 'approved';
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Settlement changed before payment evidence was recorded';
+  END IF;
+  SELECT count(*) INTO linked_order_count
+    FROM merch_settlement_order WHERE settlement_id = NEW.settlement_id;
+  UPDATE merch_order order_record SET settlement_status = 'paid', updated_at = now()
+    FROM merch_settlement_order linked
+    WHERE linked.settlement_id = NEW.settlement_id
+      AND order_record.id = linked.order_id
+      AND order_record.settlement_status = 'approved';
+  GET DIAGNOSTICS transitioned_order_count = ROW_COUNT;
+  IF linked_order_count = 0 OR transitioned_order_count <> linked_order_count THEN
+    RAISE EXCEPTION 'Every linked order must be approved before settlement payment evidence';
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_settlement_payment_evidence_apply_trigger ON merch_settlement_payment_evidence;
+CREATE TRIGGER merch_settlement_payment_evidence_apply_trigger
+  BEFORE INSERT ON merch_settlement_payment_evidence
+  FOR EACH ROW EXECUTE FUNCTION merch_apply_settlement_payment_evidence();
 
 CREATE OR REPLACE FUNCTION merch_validate_store_eligibility()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -943,6 +1034,132 @@ CREATE TRIGGER merch_apply_checkout_status_trigger
   AFTER UPDATE OF status ON commerce_checkout_session
   FOR EACH ROW EXECUTE FUNCTION merch_apply_checkout_status();
 
+CREATE OR REPLACE FUNCTION merch_validate_refund_case()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  refund_record commerce_refund%ROWTYPE;
+  issue_record merch_order_issue%ROWTYPE;
+  order_checkout UUID;
+  reason_requires_note BOOLEAN;
+BEGIN
+  SELECT * INTO refund_record FROM commerce_refund WHERE id=NEW.refund_id;
+  SELECT * INTO issue_record FROM merch_order_issue WHERE id=NEW.issue_id;
+  SELECT checkout_id INTO order_checkout FROM merch_order WHERE id=NEW.order_id;
+  SELECT requires_note INTO reason_requires_note FROM commerce_refund_reason_code
+    WHERE reason_code=refund_record.reason_code AND active;
+  IF NOT FOUND OR refund_record.id IS NULL OR issue_record.id IS NULL OR order_checkout IS NULL
+     OR refund_record.checkout_id IS DISTINCT FROM order_checkout
+     OR issue_record.order_id IS DISTINCT FROM NEW.order_id
+     OR issue_record.issue_type NOT IN ('cancellation','return','refund','damaged','missing','fraud')
+     OR issue_record.status <> 'staff_review'
+     OR refund_record.requested_by <> NEW.created_by THEN
+    RAISE EXCEPTION 'Merch refund must bind an eligible staff-review case, order, checkout, and requester';
+  END IF;
+  IF reason_requires_note AND (NEW.request_note IS NULL OR length(trim(NEW.request_note)) < 10) THEN
+    RAISE EXCEPTION 'Configured refund reason requires an operational note';
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_refund_case_validate_trigger ON merch_refund_case;
+CREATE TRIGGER merch_refund_case_validate_trigger
+  BEFORE INSERT ON merch_refund_case
+  FOR EACH ROW EXECUTE FUNCTION merch_validate_refund_case();
+DROP TRIGGER IF EXISTS merch_refund_case_immutable_trigger ON merch_refund_case;
+CREATE TRIGGER merch_refund_case_immutable_trigger
+  BEFORE UPDATE OR DELETE ON merch_refund_case
+  FOR EACH ROW EXECUTE FUNCTION merch_reject_immutable_mutation();
+
+CREATE OR REPLACE FUNCTION merch_apply_refund_state()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  order_value UUID;
+  mapped_status TEXT;
+BEGIN
+  IF TG_OP='UPDATE' AND NEW.status IS NOT DISTINCT FROM OLD.status THEN RETURN NEW; END IF;
+  SELECT order_record.id INTO order_value
+    FROM merch_order order_record
+    JOIN commerce_checkout_session checkout ON checkout.id=order_record.checkout_id
+    WHERE checkout.id=NEW.checkout_id AND checkout.domain_type='merch_order'
+      AND checkout.domain_order_id=order_record.id::text;
+  IF NOT FOUND THEN RETURN NEW; END IF;
+  mapped_status := CASE NEW.status
+    WHEN 'requested' THEN 'requested'
+    WHEN 'approved' THEN 'approved'
+    WHEN 'processing' THEN 'processing'
+    WHEN 'succeeded' THEN CASE WHEN
+      (SELECT refunded_minor FROM commerce_checkout_session WHERE id=NEW.checkout_id) + NEW.amount_minor >=
+      (SELECT paid_minor FROM commerce_checkout_session WHERE id=NEW.checkout_id)
+      THEN 'completed' ELSE 'partial' END
+    WHEN 'failed' THEN 'failed'
+    WHEN 'cancelled' THEN 'cancelled'
+    ELSE 'none' END;
+  UPDATE merch_order SET refund_status=mapped_status,
+    adjusted_minor=adjusted_minor + CASE WHEN NEW.status='succeeded' THEN
+      least(tdf_commission_minor,
+        (coalesce((SELECT sum(allocation.amount_minor)
+          FROM commerce_refund_allocation allocation
+          JOIN commerce_refund successful ON successful.id=allocation.refund_id
+          JOIN commerce_checkout_line_item line ON line.id=allocation.line_item_id
+          WHERE successful.checkout_id=NEW.checkout_id AND successful.status='succeeded'
+            AND line.product_type='merch_variant'),0) * tdf_commission_bps) / 10000)
+      - least(tdf_commission_minor,
+        (coalesce((SELECT sum(allocation.amount_minor)
+          FROM commerce_refund_allocation allocation
+          JOIN commerce_refund successful ON successful.id=allocation.refund_id
+          JOIN commerce_checkout_line_item line ON line.id=allocation.line_item_id
+          WHERE successful.checkout_id=NEW.checkout_id AND successful.status='succeeded'
+            AND successful.id<>NEW.id AND line.product_type='merch_variant'),0)
+         * tdf_commission_bps) / 10000) ELSE 0 END,
+    settlement_status=CASE WHEN NEW.status='succeeded' AND settlement_status='paid'
+      THEN 'adjusted' ELSE settlement_status END,
+    updated_at=now() WHERE id=order_value;
+  INSERT INTO merch_fulfillment_event(
+    order_id,event_type,from_status,to_status,actor_party_id,metadata
+  ) VALUES(
+    order_value,CASE WHEN NEW.status='requested' THEN 'refund_requested' ELSE 'refund_updated' END,
+    CASE WHEN TG_OP='UPDATE' THEN OLD.status ELSE NULL END,NEW.status,
+    CASE WHEN NEW.status='requested' THEN NEW.requested_by ELSE NEW.approved_by END,
+    jsonb_build_object('refundId',NEW.id,'amountMinor',NEW.amount_minor,'currency',NEW.currency)
+  );
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_apply_refund_state_trigger ON commerce_refund;
+CREATE TRIGGER merch_apply_refund_state_trigger
+  AFTER INSERT OR UPDATE OF status ON commerce_refund
+  FOR EACH ROW EXECUTE FUNCTION merch_apply_refund_state();
+
+CREATE OR REPLACE FUNCTION merch_apply_dispute_state()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  order_value UUID;
+  mapped_status TEXT;
+BEGIN
+  IF TG_OP='UPDATE' AND (NEW.status,NEW.kind) IS NOT DISTINCT FROM (OLD.status,OLD.kind) THEN
+    RETURN NEW;
+  END IF;
+  SELECT order_record.id INTO order_value
+    FROM merch_order order_record
+    JOIN commerce_checkout_session checkout ON checkout.id=order_record.checkout_id
+    WHERE checkout.id=NEW.checkout_id AND checkout.domain_type='merch_order'
+      AND checkout.domain_order_id=order_record.id::text;
+  IF NOT FOUND THEN RETURN NEW; END IF;
+  mapped_status := CASE
+    WHEN lower(NEW.status) IN ('won','resolved_won') THEN 'won'
+    WHEN lower(NEW.status) IN ('lost','accepted','resolved_lost') THEN 'lost'
+    WHEN NEW.kind='chargeback' THEN 'chargeback'
+    WHEN NEW.kind='inquiry' THEN 'inquiry'
+    ELSE 'open' END;
+  UPDATE merch_order SET dispute_status=mapped_status,updated_at=now() WHERE id=order_value;
+  INSERT INTO merch_fulfillment_event(order_id,event_type,from_status,to_status,metadata)
+  VALUES(order_value,'dispute_updated',CASE WHEN TG_OP='UPDATE' THEN OLD.status ELSE NULL END,
+    NEW.status,jsonb_build_object('disputeId',NEW.id,'kind',NEW.kind,'amountMinor',NEW.amount_minor,'currency',NEW.currency));
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS merch_apply_dispute_state_trigger ON commerce_dispute;
+CREATE TRIGGER merch_apply_dispute_state_trigger
+  AFTER INSERT OR UPDATE OF status,kind ON commerce_dispute
+  FOR EACH ROW EXECUTE FUNCTION merch_apply_dispute_state();
+
 CREATE OR REPLACE FUNCTION merch_protect_order_snapshots()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -1025,6 +1242,8 @@ FROM (VALUES
   ('merch.checkout.datafast', 'Requires Datafast merchant capability, signed callbacks, refunds, and reconciliation'),
   ('merch.checkout.paypal', 'Requires PayPal merchant capability, signed webhooks, refunds, and reconciliation'),
   ('merch.checkout.manual', 'Requires approved bank account, independent evidence review, and reconciliation'),
+  ('merch.refunds', 'Requires dual-control operations and a merch provider adapter verified in sandbox before execution'),
+  ('merch.disputes', 'Read-only monitoring requires verified provider dispute ingestion and operational response ownership'),
   ('merch.reviews', 'Requires verified-purchase moderation rollout'),
   ('merch.notifications', 'Requires opt-in templates, worker monitoring, and support readiness'),
   ('merch.experimental', 'Experimental merch functions remain disabled by default')
@@ -1035,6 +1254,7 @@ ON CONFLICT(flag_key, environment) DO NOTHING;
 COMMENT ON TABLE merch_store IS 'Pilot-gated artist/band storefront attached to a claimed or verified public directory profile.';
 COMMENT ON TABLE merch_product IS 'Merch-specific catalog; never represents studio assets, tickets, services, or digital downloads.';
 COMMENT ON TABLE merch_order IS 'Immutable commercial snapshot. Payment, fulfillment, dispute, refund, and settlement states remain separate.';
+COMMENT ON TABLE merch_refund_case IS 'Immutable bridge from a staff-reviewed merch support case to the canonical commerce refund ledger; it never executes a provider refund.';
 COMMENT ON COLUMN merch_order.recipient_snapshot IS 'Operational delivery snapshot. Never expose from a public lookup response; redact from logs and exports.';
 COMMENT ON TABLE merch_settlement IS 'Manual, dual-control seller settlement record. Automated payouts are intentionally out of scope.';
 COMMENT ON TABLE merch_analytics_event IS 'Privacy-minimized product analytics. Payment credentials and recipient PII are forbidden.';

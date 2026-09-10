@@ -5,6 +5,7 @@
 module TDF.Server.Merch
   ( merchPublicServer
   , merchProtectedServer
+  , allocateRefundAcrossLines
   ) where
 
 import           Codec.Picture (DynamicImage(..), Image, PixelRGB8, convertRGB8, decodeImage, generateImage, imageHeight, imageWidth, pixelAt, saveJpgImage)
@@ -19,13 +20,14 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isControl)
 import           Data.Int (Int64)
-import           Data.List (nub)
+import           Data.List (isPrefixOf, nub)
 import           Data.Maybe (catMaybes, fromMaybe, listToMaybe)
 import qualified Data.Set as Set
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Data.Time (UTCTime, addUTCTime, getCurrentTime)
+import           Data.Time (Day, UTCTime(..), addUTCTime, getCurrentTime)
+import           Data.Time.Format.ISO8601 (iso8601ParseM)
 import           Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import           Data.UUID.V4 (nextRandom)
@@ -33,14 +35,16 @@ import           Database.Persist (PersistValue(..), toPersistValue)
 import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import           Servant
 import           Servant.Multipart (FileData(..))
-import           System.Directory (createDirectoryIfMissing, getFileSize, removeFile)
+import           System.Directory (canonicalizePath, createDirectoryIfMissing, emptyPermissions, getFileSize, makeAbsolute, removeFile, setOwnerReadable, setOwnerSearchable, setOwnerWritable, setPermissions)
 import           System.Environment (lookupEnv)
-import           System.FilePath ((</>), takeExtension)
+import           System.FilePath ((</>), addTrailingPathSeparator, normalise, takeExtension)
 
 import           TDF.API.Merch
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.CMS.Models as CMS
+import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.Merch
+import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (assetsRootDir)
 import           TDF.DB (Env(..))
 
@@ -56,6 +60,13 @@ runCheckoutDB action = do
   pool <- asks envPool
   outcome <- liftIO (tryAny (runSqlPool action pool))
   either (const (throwError err409 { errBody = "Cart, price, or stock changed; refresh and retry" })) pure outcome
+
+runFinancialDB :: SqlPersistT IO a -> AppM a
+runFinancialDB action = do
+  pool <- asks envPool
+  outcome <- liftIO (tryAny (runSqlPool action pool))
+  either (const (throwError err409
+    { errBody = "Refund state changed concurrently; reload and retry" })) pure outcome
 
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
@@ -209,6 +220,8 @@ merchCapabilities = do
         , "sellerApplications" .= enabled "merch.seller_applications"
         , "publicCatalog" .= enabled "merch.public_catalog"
         , "checkout" .= checkoutAvailable
+        , "refundOperations" .= enabled "merch.refunds"
+        , "disputeMonitoring" .= enabled "merch.disputes"
         , "reviews" .= enabled "merch.reviews"
         , "notifications" .= enabled "merch.notifications"
         , "experimental" .= enabled "merch.experimental"
@@ -226,7 +239,7 @@ merchCapabilities = do
       [ "merch.storefronts", "merch.seller_applications", "merch.public_catalog"
       , "merch.checkout", "merch.checkout.runtime_ready", "merch.checkout.datafast", "merch.checkout.paypal"
       , "merch.checkout.manual", "merch.reviews", "merch.notifications"
-      , "merch.experimental"
+      , "merch.refunds", "merch.disputes", "merch.experimental"
       ]
 
 merchPublicServer :: ServerT MerchPublicAPI AppM
@@ -703,8 +716,15 @@ merchProtectedServer user =
   :<|> reviewProduct user
   :<|> listAdminIssues user
   :<|> updateAdminIssue user
+  :<|> listAdminRefunds user
+  :<|> createAdminRefund user
+  :<|> reviewAdminRefund user
+  :<|> listAdminDisputes user
   :<|> createSettlement user
   :<|> updateSettlementStatus user
+  :<|> listAdminSettlements user
+  :<|> listSettlementEligibleOrders user
+  :<|> recordSettlementPayment user
 
 addFavorite :: AuthedUser -> UUID -> AppM NoContent
 addFavorite user productId = do
@@ -1119,9 +1139,18 @@ listSellerOrders :: AuthedUser -> UUID -> Maybe Text -> AppM [Value]
 listSellerOrders user storeId rawStatus = do
   requireStorePermission user storeId "orders"
   financeAllowed <- hasStorePermission user storeId "finance"
+  status <- validatedSellerOrderStatus rawStatus
   jsonRows
     "SELECT jsonb_strip_nulls(jsonb_build_object('id',order_record.id,'orderNumber',order_record.order_number,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'customerPhone',order_record.customer_phone,'recipient',order_record.recipient_snapshot,'shippingMethod',order_record.shipping_method,'currency',order_record.currency,'productSubtotalMinor',order_record.product_subtotal_minor,'taxMinor',order_record.tax_minor,'shippingMinor',order_record.shipping_minor,'totalMinor',order_record.total_minor,'tdfCommissionMinor',CASE WHEN ?::boolean THEN order_record.tdf_commission_minor ELSE NULL END,'sellerNetMinor',CASE WHEN ?::boolean THEN order_record.seller_net_minor ELSE NULL END,'commercialStatus',order_record.commercial_status,'paymentStatus',order_record.payment_status,'fulfillmentStatus',order_record.fulfillment_status,'refundStatus',order_record.refund_status,'disputeStatus',order_record.dispute_status,'settlementStatus',order_record.settlement_status,'createdAt',order_record.created_at,'lines',(SELECT jsonb_agg(jsonb_build_object('quantity',line.quantity,'product',line.product_snapshot,'variant',line.variant_snapshot) ORDER BY line.line_number) FROM merch_order_line line WHERE line.order_id=order_record.id))) FROM merch_order order_record WHERE order_record.store_id=?::uuid AND (?::text IS NULL OR order_record.fulfillment_status=?::text) ORDER BY order_record.created_at DESC,order_record.id"
-    [PersistBool financeAllowed,PersistBool financeAllowed,PersistText (uuidText storeId),optionalText rawStatus,optionalText rawStatus]
+    [PersistBool financeAllowed,PersistBool financeAllowed,PersistText (uuidText storeId),optionalText status,optionalText status]
+
+validatedSellerOrderStatus :: Maybe Text -> AppM (Maybe Text)
+validatedSellerOrderStatus Nothing = pure Nothing
+validatedSellerOrderStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+      supported = ["pending","preparing","ready_for_pickup","shipped","delivered","return_requested","returned","problem","cancelled"]
+  unless (status `elem` supported) $ throwError (badRequest "Unsupported fulfillment status")
+  pure (Just status)
 
 issueStatuses :: [Text]
 issueStatuses = ["open","seller_review","staff_review","awaiting_buyer","resolved","rejected","cancelled"]
@@ -1135,7 +1164,7 @@ validatedIssueStatus (Just raw) = do
 
 issueOperationalSql :: Text
 issueOperationalSql =
-  "SELECT jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at)) FROM merch_order_issue issue JOIN merch_order order_record ON order_record.id=issue.order_id JOIN merch_store store ON store.id=order_record.store_id"
+  "SELECT jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'currency',order_record.currency,'totalMinor',order_record.total_minor,'refundedMinor',order_record.refunded_minor,'paymentStatus',order_record.payment_status,'refundStatus',order_record.refund_status,'disputeStatus',order_record.dispute_status,'settlementStatus',order_record.settlement_status,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at)) FROM merch_order_issue issue JOIN merch_order order_record ON order_record.id=issue.order_id JOIN merch_store store ON store.id=order_record.store_id"
 
 listSellerIssues :: AuthedUser -> UUID -> Maybe Text -> AppM [Value]
 listSellerIssues user storeId rawStatus = do
@@ -1163,6 +1192,272 @@ updateAdminIssue user issueId request = do
   requireAdmin user
   updateIssue user "staff" Nothing issueId request
 
+refundStatuses :: [Text]
+refundStatuses = ["requested","approved","processing","succeeded","failed","cancelled"]
+
+validatedRefundStatus :: Maybe Text -> AppM (Maybe Text)
+validatedRefundStatus Nothing = pure Nothing
+validatedRefundStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+  unless (status `elem` refundStatuses) $ throwError (badRequest "Unsupported refund status")
+  pure (Just status)
+
+listAdminRefunds :: AuthedUser -> Maybe Text -> AppM [Value]
+listAdminRefunds user rawStatus = do
+  requireAdmin user
+  requireFeature "merch.refunds"
+  status <- validatedRefundStatus rawStatus
+  jsonRows
+    (refundSelectSql <> " WHERE (?::text IS NULL OR refund.status=?::text) ORDER BY refund.created_at DESC,refund.id")
+    [optionalText status,optionalText status]
+
+createAdminRefund
+  :: AuthedUser
+  -> UUID
+  -> Maybe Text
+  -> MerchRefundRequest
+  -> AppM Value
+createAdminRefund user orderId rawIdempotency MerchRefundRequest{..} = do
+  requireAdmin user
+  requireFeature "merch.refunds"
+  idempotency <- requireRefundIdempotencyKey rawIdempotency
+  reason <- either (throwError . badRequest) pure (Refund.validateRefundReason mreReasonCode)
+  note <- traverse (requiredSafeText "note" 2000) mreNote
+  paymentRows <- runDB (rawSql
+    "SELECT checkout.id::text,attempt.id::text,attempt.provider,attempt.environment,\
+    \ attempt.merchant_account_ref,checkout.currency,checkout.paid_minor,checkout.refunded_minor,\
+    \ coalesce((SELECT sum(other.amount_minor) FROM commerce_refund other\
+    \   WHERE other.checkout_id=checkout.id AND other.status IN ('requested','approved','processing')\
+    \   AND NOT (other.payment_attempt_id=attempt.id AND other.idempotency_key=?)),0)\
+    \ FROM merch_order order_record\
+    \ JOIN commerce_checkout_session checkout ON checkout.id=order_record.checkout_id\
+    \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=checkout.id\
+    \ WHERE order_record.id=?::uuid AND checkout.domain_type='merch_order'\
+    \   AND checkout.domain_order_id=order_record.id::text AND attempt.status='succeeded'\
+    \ ORDER BY attempt.updated_at DESC,attempt.id"
+    [PersistText idempotency,PersistText (uuidText orderId)]
+    :: SqlPersistT IO
+      [(Single Text,Single Text,Single Text,Single Text,Single Text,Single Text,
+        Single Int64,Single Int64,Single Int64)])
+  (checkoutId,attemptId,providerText,environmentText,merchantRef,currency,paidMinor,refundedMinor,reservedMinor) <-
+    case paymentRows of
+      [(Single checkout,Single attempt,Single provider,Single environment,Single merchant,
+        Single storedCurrency,Single paid,Single refunded,Single reserved)] ->
+          pure (checkout,attempt,provider,environment,merchant,storedCurrency,paid,refunded,reserved)
+      [] -> throwError (conflict "Refund requires exactly one verified successful payment attempt")
+      _ -> throwError (conflict "Refund payment binding is ambiguous and requires reconciliation")
+  provider <- maybe (throwError (conflict "Refund provider is not supported by the canonical refund ledger")) pure
+    (merchRefundProvider providerText)
+  environment <- maybe (throwError (conflict "Refund environment is not supported")) pure
+    (merchRefundEnvironment environmentText)
+  let remainingMinor = paidMinor - refundedMinor - reservedMinor
+      requestedMinor = fromMaybe remainingMinor mreAmountMinor
+  when (requestedMinor <= 0 || requestedMinor > remainingMinor) $
+    throwError (conflict "Refund amount exceeds the unreserved verified payment balance")
+  lineRows <- runDB (rawSql
+    "SELECT item.id::text,item.total_minor-coalesce(sum(allocation.amount_minor)\
+    \ FILTER (WHERE prior.status IN ('requested','approved','processing','succeeded')\
+    \ AND NOT (prior.payment_attempt_id=?::uuid AND prior.idempotency_key=?)),0) AS available_minor\
+    \ FROM commerce_checkout_line_item item\
+    \ LEFT JOIN commerce_refund_allocation allocation ON allocation.line_item_id=item.id\
+    \ LEFT JOIN commerce_refund prior ON prior.id=allocation.refund_id\
+    \ WHERE item.checkout_id=?::uuid GROUP BY item.id,item.line_number,item.total_minor\
+    \ ORDER BY item.line_number,item.id"
+    [PersistText attemptId,PersistText idempotency,PersistText checkoutId]
+    :: SqlPersistT IO [(Single Text,Single Int64)])
+  allocations <- either (throwError . conflict) pure $ allocateRefundAcrossLines requestedMinor
+    [(lineId,available) | (Single lineId,Single available) <- lineRows]
+  now <- liftIO getCurrentTime
+  let requestFingerprint = hashText (jsonText (object
+        [ "orderId" .= orderId, "issueId" .= mreIssueId, "amountMinor" .= requestedMinor
+        , "reasonCode" .= reason, "note" .= note
+        , "allocations" .= [object ["lineItemId" .= Refund.raLineItemId allocation,
+            "amountMinor" .= Refund.raAmountMinor allocation] | allocation <- allocations]
+        ]))
+      creation = Refund.RefundCreation
+        { Refund.rcCheckout = Checkout.CheckoutReference checkoutId
+        , Refund.rcPaymentAttempt = Checkout.PaymentAttemptReference attemptId
+        , Refund.rcProvider = provider
+        , Refund.rcEnvironment = environment
+        , Refund.rcMerchantRef = merchantRef
+        , Refund.rcAmountMinor = requestedMinor
+        , Refund.rcCurrency = currency
+        , Refund.rcReasonCode = reason
+        , Refund.rcIdempotencyKey = idempotency
+        , Refund.rcRequestedBy = currentPartyId user
+        , Refund.rcCreatedAt = now
+        }
+  result <- runFinancialDB $ do
+    issueRows <- (rawSql
+      "SELECT issue.issue_type,issue.status,reason.requires_note\
+      \ FROM merch_order_issue issue\
+      \ JOIN commerce_refund_reason_code reason ON reason.reason_code=? AND reason.active\
+      \ WHERE issue.id=?::uuid AND issue.order_id=?::uuid\
+      \   AND issue.issue_type IN ('cancellation','return','refund','damaged','missing','fraud')\
+      \ FOR UPDATE OF issue"
+      [PersistText reason,PersistText (uuidText mreIssueId),PersistText (uuidText orderId)]
+      :: SqlPersistT IO [(Single Text,Single Text,Single Bool)])
+    case issueRows of
+      [(Single _,Single "staff_review",Single requiresNote)]
+        | not requiresNote || maybe False ((>=10) . T.length . T.strip) note -> do
+            refundResult <- Refund.requestAllocatedRefund creation allocations
+            case refundResult of
+              Left message -> pure (Left message)
+              Right record -> do
+                inserted <- (rawSql
+                  "INSERT INTO merch_refund_case(refund_id,order_id,issue_id,request_note,request_sha256,created_by)\
+                  \ VALUES(?::uuid,?::uuid,?::uuid,?,?,?) ON CONFLICT(refund_id) DO NOTHING\
+                  \ RETURNING TRUE"
+                  [ PersistText (Refund.refundReferenceId (Refund.rrReference record))
+                  , PersistText (uuidText orderId),PersistText (uuidText mreIssueId),optionalText note
+                  , PersistText requestFingerprint,PersistInt64 (currentPartyId user)
+                  ] :: SqlPersistT IO [Single Bool])
+                case inserted of
+                  [Single True] -> do
+                    appendMerchAudit user "staff" Nothing "refund.requested" "refund"
+                      (Refund.refundReferenceId (Refund.rrReference record))
+                      (object ["orderId" .= orderId,"issueId" .= mreIssueId,
+                        "amountMinor" .= requestedMinor,"currency" .= currency])
+                    pure (Right record)
+                  [] -> do
+                    replay <- (rawSql
+                      "SELECT TRUE FROM merch_refund_case WHERE refund_id=?::uuid AND order_id=?::uuid\
+                      \ AND issue_id=?::uuid AND request_sha256=?"
+                      [ PersistText (Refund.refundReferenceId (Refund.rrReference record))
+                      , PersistText (uuidText orderId),PersistText (uuidText mreIssueId)
+                      , PersistText requestFingerprint
+                      ] :: SqlPersistT IO [Single Bool])
+                    pure $ if replay == [Single True]
+                      then Right record
+                      else Left "Refund Idempotency-Key conflicts with another support case request"
+                  _ -> pure (Left "Refund case idempotency state is ambiguous")
+      [(Single _,Single _,Single _)] -> pure (Left "Refund requires a financial support case in staff review")
+      [] -> pure (Left "Refund reason or financial support case is not eligible")
+      _ -> pure (Left "Refund support case binding is ambiguous")
+  record <- either (throwError . conflict) pure result
+  loadAdminRefund (Refund.refundReferenceId (Refund.rrReference record))
+
+reviewAdminRefund :: AuthedUser -> UUID -> MerchRefundReviewRequest -> AppM Value
+reviewAdminRefund user refundId MerchRefundReviewRequest{..} = do
+  requireAdmin user
+  requireFeature "merch.refunds"
+  let decision = T.toLower (T.strip mrvDecision)
+  unless (decision `elem` ["approve","cancel"]) $
+    throwError (badRequest "Refund decision must be approve or cancel")
+  reviewNote <- requiredSafeText "reviewNote" 2000 mrvReviewNote
+  when (T.length reviewNote < 10) $
+    throwError (badRequest "Refund review note must contain at least 10 characters")
+  now <- liftIO getCurrentTime
+  let reference = Refund.RefundReference (uuidText refundId)
+  result <- runFinancialDB $ do
+    linked <- (rawSql
+      "SELECT case_record.order_id::text,order_record.store_id::text\
+      \ FROM merch_refund_case case_record\
+      \ JOIN merch_order order_record ON order_record.id=case_record.order_id\
+      \ JOIN commerce_refund refund ON refund.id=case_record.refund_id\
+      \ WHERE case_record.refund_id=?::uuid AND order_record.checkout_id=refund.checkout_id\
+      \ FOR UPDATE OF case_record"
+      [PersistText (uuidText refundId)] :: SqlPersistT IO [(Single Text,Single Text)])
+    case linked of
+      [(Single orderText,Single storeText)] -> do
+        transition <- if decision == "approve"
+          then Refund.approveRefundRequest reference (currentPartyId user) now
+          else Refund.cancelRefundRequest reference (currentPartyId user) now
+        case transition of
+          Left message -> pure (Left message)
+          Right (_,changed) -> do
+            when changed $ appendMerchAudit user "staff" (UUID.fromText storeText)
+              (if decision == "approve" then "refund.approved" else "refund.cancelled")
+              "refund" (uuidText refundId)
+              (object ["orderId" .= orderText,"reviewNote" .= reviewNote,
+                "providerExecution" .= False])
+            pure (Right ())
+      [] -> pure (Left "Merch refund was not found")
+      _ -> pure (Left "Merch refund binding is ambiguous")
+  either (throwError . conflict) pure result
+  loadAdminRefund (uuidText refundId)
+
+listAdminDisputes :: AuthedUser -> AppM [Value]
+listAdminDisputes user = do
+  requireAdmin user
+  requireFeature "merch.disputes"
+  jsonRows
+    "SELECT jsonb_strip_nulls(jsonb_build_object('id',dispute.id,'orderId',order_record.id,\
+    \ 'orderNumber',order_record.order_number,'storeId',store.id,'storeName',store.display_name,\
+    \ 'providerDisputeId',dispute.provider_dispute_id,'kind',dispute.kind,'status',dispute.status,\
+    \ 'amountMinor',dispute.amount_minor,'currency',dispute.currency,'reasonCode',dispute.reason_code,\
+    \ 'openedAt',dispute.opened_at,'dueAt',dispute.due_at,'closedAt',dispute.closed_at,\
+    \ 'readOnly',TRUE)) FROM commerce_dispute dispute\
+    \ JOIN merch_order order_record ON order_record.checkout_id=dispute.checkout_id\
+    \ JOIN merch_store store ON store.id=order_record.store_id\
+    \ ORDER BY CASE WHEN dispute.closed_at IS NULL THEN 0 ELSE 1 END,dispute.due_at NULLS LAST,dispute.opened_at,dispute.id"
+    []
+
+loadAdminRefund :: Text -> AppM Value
+loadAdminRefund refundId = jsonOne err404
+  (refundSelectSql <> " WHERE refund.id=?::uuid") [PersistText refundId]
+
+refundSelectSql :: Text
+refundSelectSql =
+  "SELECT jsonb_strip_nulls(jsonb_build_object('id',refund.id,'orderId',order_record.id,\
+  \ 'orderNumber',order_record.order_number,'storeId',store.id,'storeName',store.display_name,\
+  \ 'issueId',case_record.issue_id,'status',refund.status,'amountMinor',refund.amount_minor,\
+  \ 'currency',refund.currency,'reasonCode',refund.reason_code,'requestNote',case_record.request_note,\
+  \ 'provider',refund.provider,'providerRefundId',refund.provider_refund_id,\
+  \ 'requestedBy',refund.requested_by,'requestedByName',requester.display_name,\
+  \ 'approvedBy',refund.approved_by,'approvedByName',approver.display_name,\
+  \ 'createdAt',refund.created_at,'completedAt',refund.completed_at,\
+  \ 'settlementStatus',order_record.settlement_status,\
+  \ 'executionAvailable',FALSE,\
+  \ 'executionMessage','Provider execution is disabled until the merch adapter passes sandbox verification'))\
+  \ FROM merch_refund_case case_record\
+  \ JOIN commerce_refund refund ON refund.id=case_record.refund_id\
+  \ JOIN merch_order order_record ON order_record.id=case_record.order_id AND order_record.checkout_id=refund.checkout_id\
+  \ JOIN merch_store store ON store.id=order_record.store_id\
+  \ JOIN party requester ON requester.id=refund.requested_by\
+  \ LEFT JOIN party approver ON approver.id=refund.approved_by"
+
+requireRefundIdempotencyKey :: Maybe Text -> AppM Text
+requireRefundIdempotencyKey raw = do
+  key <- requiredSafeText "Idempotency-Key" 128 (fromMaybe "" raw)
+  when (T.length key < 16) $
+    throwError (badRequest "Refund Idempotency-Key must contain 16 to 128 characters")
+  pure key
+
+merchRefundProvider :: Text -> Maybe Checkout.PaymentProvider
+merchRefundProvider raw = case T.toLower (T.strip raw) of
+  "datafast" -> Just Checkout.ProviderDatafast
+  "paypal" -> Just Checkout.ProviderPayPal
+  "stripe" -> Just Checkout.ProviderStripe
+  "bank_transfer" -> Just Checkout.ProviderBankTransfer
+  "cash" -> Just Checkout.ProviderCash
+  "pos" -> Just Checkout.ProviderPos
+  _ -> Nothing
+
+merchRefundEnvironment :: Text -> Maybe Checkout.CheckoutEnvironment
+merchRefundEnvironment raw = case T.toLower (T.strip raw) of
+  "sandbox" -> Just Checkout.CheckoutSandbox
+  "production" -> Just Checkout.CheckoutProduction
+  _ -> Nothing
+
+allocateRefundAcrossLines
+  :: Int64
+  -> [(Text,Int64)]
+  -> Either Text [Refund.RefundAllocation]
+allocateRefundAcrossLines requested rows
+  | requested <= 0 = Left "Refund amount must be positive"
+  | toInteger requested > sum (map (toInteger . max 0 . snd) rows) =
+      Left "Refund amount exceeds the remaining immutable line balances"
+  | otherwise = Right (go requested rows)
+  where
+    go 0 _ = []
+    go _ [] = []
+    go remaining ((lineId,available):rest)
+      | available <= 0 = go remaining rest
+      | otherwise =
+          let amount = min remaining available
+          in Refund.RefundAllocation lineId amount : go (remaining-amount) rest
+
 updateIssue :: AuthedUser -> Text -> Maybe UUID -> UUID -> MerchIssueTriageRequest -> AppM Value
 updateIssue user actorType expectedStore issueId MerchIssueTriageRequest{..} = do
   let target = T.toLower (T.strip mitStatus)
@@ -1187,7 +1482,7 @@ updateIssue user actorType expectedStore issueId MerchIssueTriageRequest{..} = d
   unless allowed $ throwError (conflict "Issue transition is not allowed for this role or issue type")
   updated <- runDB $ do
     rows <- (rawSql
-      "UPDATE merch_order_issue issue SET status=?,resolution=coalesce(?,resolution),internal_notes=coalesce(?,internal_notes),closed_at=CASE WHEN ? IN ('resolved','rejected','cancelled') THEN now() ELSE NULL END,updated_at=now() FROM merch_order order_record,merch_store store WHERE issue.id=?::uuid AND issue.status=? AND order_record.id=issue.order_id AND order_record.store_id=?::uuid AND store.id=order_record.store_id RETURNING jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at))"
+      "UPDATE merch_order_issue issue SET status=?,resolution=coalesce(?,resolution),internal_notes=coalesce(?,internal_notes),closed_at=CASE WHEN ? IN ('resolved','rejected','cancelled') THEN now() ELSE NULL END,updated_at=now() FROM merch_order order_record,merch_store store WHERE issue.id=?::uuid AND issue.status=? AND order_record.id=issue.order_id AND order_record.store_id=?::uuid AND store.id=order_record.store_id RETURNING jsonb_strip_nulls(jsonb_build_object('id',issue.id,'storeId',order_record.store_id,'orderId',order_record.id,'orderNumber',order_record.order_number,'storeName',store.display_name,'customerName',order_record.customer_name,'customerEmail',order_record.customer_email,'issueType',issue.issue_type,'status',issue.status,'message',issue.public_message,'resolution',issue.resolution,'internalNotes',issue.internal_notes,'currency',order_record.currency,'totalMinor',order_record.total_minor,'refundedMinor',order_record.refunded_minor,'paymentStatus',order_record.payment_status,'refundStatus',order_record.refund_status,'disputeStatus',order_record.dispute_status,'settlementStatus',order_record.settlement_status,'createdAt',issue.created_at,'updatedAt',issue.updated_at,'closedAt',issue.closed_at))"
       [PersistText target,optionalText publicResponse,optionalText internalNotes,PersistText target,PersistText (uuidText issueId),PersistText fromStatus,PersistText (uuidText storeId)]
       :: SqlPersistT IO [Single CMS.AesonValue])
     case rows of
@@ -1327,15 +1622,22 @@ createSettlement :: AuthedUser -> MerchSettlementRequest -> AppM Value
 createSettlement user MerchSettlementRequest{..} = do
   requireAdmin user
   when (null mseOrderIds || length mseOrderIds > 1000) $ throwError (badRequest "Settlement requires 1 to 1000 orders")
+  periodStart <- maybe (throwError (badRequest "periodStart must be an ISO date")) pure
+    (iso8601ParseM (T.unpack msePeriodStart) :: Maybe Day)
+  periodEnd <- maybe (throwError (badRequest "periodEnd must be an ISO date")) pure
+    (iso8601ParseM (T.unpack msePeriodEnd) :: Maybe Day)
+  when (periodEnd <= periodStart) $ throwError (badRequest "periodEnd must be after periodStart")
+  reviewNotes <- traverse (requiredSafeText "reviewNotes" 2000) mseReviewNotes
   settlementId <- liftIO nextRandom
   created <- runDB (rawSql
-    "WITH selected AS (SELECT order_record.* FROM merch_order order_record WHERE order_record.id=ANY(?::uuid[]) AND order_record.store_id=?::uuid AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') FOR UPDATE),\
+    "WITH selected AS (SELECT order_record.* FROM merch_order order_record WHERE order_record.id=ANY(?::uuid[]) AND order_record.store_id=?::uuid AND order_record.created_at>=?::timestamptz AND order_record.created_at<?::timestamptz AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') AND order_record.refund_status NOT IN ('requested','approved','processing') AND order_record.dispute_status IN ('none','won') AND NOT EXISTS(SELECT 1 FROM merch_order_issue issue WHERE issue.order_id=order_record.id AND issue.issue_type IN ('cancellation','return','refund','dispute','fraud') AND issue.status IN ('open','seller_review','staff_review','awaiting_buyer')) FOR UPDATE),\
     \ totals AS (SELECT count(*) count,sum(product_subtotal_minor) gross,sum(discount_minor) discounts,sum(tax_minor) taxes,sum(shipping_minor) shipping,sum(processor_fee_minor) processor_fees,sum(tdf_commission_minor) commission,sum(refunded_minor) refunds,sum(adjusted_minor) adjustments,sum(seller_net_minor-refunded_minor+adjusted_minor) seller_net FROM selected),\
     \ inserted AS (INSERT INTO merch_settlement(id,store_id,period_start,period_end,currency,gross_product_minor,discounts_minor,taxes_minor,shipping_minor,processor_fees_minor,tdf_commission_minor,refunds_minor,adjustments_minor,seller_net_minor,status,review_notes,prepared_by) SELECT ?::uuid,?::uuid,?::timestamptz,?::timestamptz,'USD',gross,discounts,taxes,shipping,processor_fees,commission,refunds,adjustments,seller_net,'under_review',?,? FROM totals WHERE count=? RETURNING id),\
     \ linked AS (INSERT INTO merch_settlement_order(settlement_id,order_id,seller_net_minor,refund_minor,adjustment_minor) SELECT inserted.id,selected.id,selected.seller_net_minor,selected.refunded_minor,selected.adjusted_minor FROM inserted CROSS JOIN selected RETURNING order_id)\
-    \ SELECT jsonb_build_object('id',inserted.id,'orderCount',(SELECT count(*) FROM linked)) FROM inserted"
-    [ PersistArray (map toPersistValue mseOrderIds),PersistText (uuidText mseStoreId),PersistText (uuidText settlementId)
-    , PersistText (uuidText mseStoreId),PersistText msePeriodStart,PersistText msePeriodEnd,optionalText mseReviewNotes
+    \ , marked AS (UPDATE merch_order SET settlement_status='under_review',updated_at=now() WHERE id IN (SELECT order_id FROM linked) RETURNING id)\
+    \ SELECT jsonb_build_object('id',inserted.id,'orderCount',(SELECT count(*) FROM marked)) FROM inserted"
+    [ PersistArray (map toPersistValue mseOrderIds),PersistText (uuidText mseStoreId),PersistUTCTime (readDateUtc periodStart),PersistUTCTime (readDateUtc periodEnd),PersistText (uuidText settlementId)
+    , PersistText (uuidText mseStoreId),PersistText msePeriodStart,PersistText msePeriodEnd,optionalText reviewNotes
     , PersistInt64 (currentPartyId user),PersistInt64 (fromIntegral (length mseOrderIds))
     ] :: SqlPersistT IO [Single CMS.AesonValue])
   case created of
@@ -1343,25 +1645,178 @@ createSettlement user MerchSettlementRequest{..} = do
       runDB $ appendMerchAudit user "staff" (Just mseStoreId) "settlement.created" "settlement" (uuidText settlementId)
         (object ["orderCount" .= length mseOrderIds, "periodStart" .= msePeriodStart, "periodEnd" .= msePeriodEnd])
       loadSettlement settlementId
-    _ -> throwError (conflict "Settlement orders are ineligible, already linked, or belong to another seller")
+    _ -> throwError (conflict "Settlement orders are outside the period, ineligible, already linked, or belong to another seller")
+  where
+    readDateUtc day = UTCTime day 0
 
 updateSettlementStatus :: AuthedUser -> UUID -> MerchStatusRequest -> AppM Value
 updateSettlementStatus user settlementId MerchStatusRequest{..} = do
   requireAdmin user
   let status = T.toLower (T.strip mstStatus)
   unless (status `elem` ["approved","held"]) $ throwError (badRequest "Settlement can only be approved or held here; paid requires a separate evidence workflow")
-  updated <- runDB (rawSql
-    "UPDATE merch_settlement SET status=?,approved_by=CASE WHEN ?='approved' THEN ? ELSE approved_by END,approved_at=CASE WHEN ?='approved' THEN now() ELSE approved_at END,review_notes=coalesce(?,review_notes),updated_at=now() WHERE id=?::uuid AND status='under_review' AND prepared_by<>? RETURNING store_id::text"
-    [PersistText status,PersistText status,PersistInt64 (currentPartyId user),PersistText status,optionalText mstReason,PersistText (uuidText settlementId),PersistInt64 (currentPartyId user)]
-    :: SqlPersistT IO [Single Text])
-  storeId <- case updated of
+  reason <- traverse (requiredSafeText "reason" 2000) mstReason
+  when (status == "held" && maybe True ((<3) . T.length) reason) $
+    throwError (badRequest "A hold reason of at least 3 characters is required")
+  updated <- runDB $ do
+    rows <- (rawSql
+      "UPDATE merch_settlement SET status=?,approved_by=CASE WHEN ?='approved' THEN ? ELSE approved_by END,approved_at=CASE WHEN ?='approved' THEN now() ELSE approved_at END,review_notes=coalesce(?,review_notes),updated_at=now() WHERE id=?::uuid AND status IN ('under_review','held') AND status<>? AND prepared_by<>? RETURNING store_id::text"
+      [PersistText status,PersistText status,PersistInt64 (currentPartyId user),PersistText status,optionalText reason,PersistText (uuidText settlementId),PersistText status,PersistInt64 (currentPartyId user)]
+      :: SqlPersistT IO [Single Text])
+    case rows of
+      [Single value] -> do
+        rawExecute
+          "UPDATE merch_order order_record SET settlement_status=?,updated_at=now() FROM merch_settlement_order linked WHERE linked.settlement_id=?::uuid AND order_record.id=linked.order_id AND order_record.settlement_status IN ('under_review','held')"
+          [PersistText status,PersistText (uuidText settlementId)]
+        appendMerchAudit user "staff" (UUID.fromText value) "settlement.status_changed" "settlement" (uuidText settlementId)
+          (object ["status" .= status, "reason" .= reason])
+        pure rows
+      _ -> pure rows
+  _ <- case updated of
     [Single value] -> maybe (throwError err500) pure (UUID.fromText value)
-    _ -> throwError (conflict "Settlement must be under review and approved by someone other than its preparer")
-  runDB $ appendMerchAudit user "staff" (Just storeId) "settlement.status_changed" "settlement" (uuidText settlementId)
-    (object ["status" .= status, "reason" .= mstReason])
+    _ -> throwError (conflict "Settlement must be under review or held, change state, and be reviewed by someone other than its preparer")
   loadSettlement settlementId
+
+settlementStatuses :: [Text]
+settlementStatuses = ["draft","under_review","approved","paid","held","reversed"]
+
+validatedSettlementStatus :: Maybe Text -> AppM (Maybe Text)
+validatedSettlementStatus Nothing = pure Nothing
+validatedSettlementStatus (Just raw) = do
+  let status = T.toLower (T.strip raw)
+  unless (status `elem` settlementStatuses) $ throwError (badRequest "Unsupported settlement status")
+  pure (Just status)
+
+listAdminSettlements :: AuthedUser -> Maybe Text -> AppM [Value]
+listAdminSettlements user rawStatus = do
+  requireAdmin user
+  status <- validatedSettlementStatus rawStatus
+  jsonRows
+    (settlementSelectSql <> " WHERE (?::text IS NULL OR settlement.status=?::text) ORDER BY settlement.created_at DESC,settlement.id")
+    [optionalText status,optionalText status]
+
+listSettlementEligibleOrders :: AuthedUser -> UUID -> AppM [Value]
+listSettlementEligibleOrders user storeId = do
+  requireAdmin user
+  jsonRows
+    "SELECT jsonb_build_object('id',order_record.id,'orderNumber',order_record.order_number,'currency',order_record.currency,'productSubtotalMinor',order_record.product_subtotal_minor,'discountMinor',order_record.discount_minor,'taxMinor',order_record.tax_minor,'shippingMinor',order_record.shipping_minor,'processorFeeMinor',order_record.processor_fee_minor,'tdfCommissionMinor',order_record.tdf_commission_minor,'sellerNetMinor',order_record.seller_net_minor,'refundsMinor',order_record.refunded_minor,'adjustmentsMinor',order_record.adjusted_minor,'paymentStatus',order_record.payment_status,'fulfillmentStatus',order_record.fulfillment_status,'settlementStatus',order_record.settlement_status,'createdAt',order_record.created_at) FROM merch_order order_record WHERE order_record.store_id=?::uuid AND order_record.payment_status IN ('paid','partially_refunded') AND order_record.fulfillment_status IN ('delivered','returned') AND order_record.settlement_status IN ('not_ready','ready') AND order_record.refund_status NOT IN ('requested','approved','processing') AND order_record.dispute_status IN ('none','won') AND NOT EXISTS(SELECT 1 FROM merch_order_issue issue WHERE issue.order_id=order_record.id AND issue.issue_type IN ('cancellation','return','refund','dispute','fraud') AND issue.status IN ('open','seller_review','staff_review','awaiting_buyer')) AND NOT EXISTS(SELECT 1 FROM merch_settlement_order linked WHERE linked.order_id=order_record.id) ORDER BY order_record.created_at,order_record.id"
+    [PersistText (uuidText storeId)]
+
+recordSettlementPayment :: AuthedUser -> UUID -> Maybe Text -> MerchSettlementPaymentForm -> AppM Value
+recordSettlementPayment user settlementId rawIdempotency MerchSettlementPaymentForm{..} = do
+  requireAdmin user
+  idempotency <- requireIdempotencyKey rawIdempotency
+  paidAt <- maybe (throwError (badRequest "paidAt must be an ISO-8601 timestamp with timezone")) pure
+    (iso8601ParseM (T.unpack mspfPaidAt) :: Maybe UTCTime)
+  now <- liftIO getCurrentTime
+  when (paidAt > addUTCTime 300 now) $ throwError (badRequest "paidAt cannot be in the future")
+  externalReference <- requiredSafeText "externalReference" 160 mspfExternalReference
+  when (T.length externalReference < 3) $ throwError (badRequest "externalReference must contain at least 3 characters")
+  notes <- traverse (requiredSafeText "notes" 2000) mspfNotes
+  sourceSize <- liftIO (getFileSize (fdPayload mspfFile))
+  when (sourceSize < 1 || sourceSize > 10*1024*1024) $ throwError (badRequest "Settlement evidence must be between 1 byte and 10 MB")
+  let mime = T.toLower (T.strip (fdFileCType mspfFile))
+      extension = T.toLower . T.pack . takeExtension . T.unpack $ fdFileName mspfFile
+      mimeMatches = (mime == "image/jpeg" && extension `elem` [".jpg",".jpeg"])
+        || (mime == "image/png" && extension == ".png")
+  unless mimeMatches $ throwError (badRequest "Settlement evidence MIME type and extension must match JPEG or PNG")
+  sourceBytes <- liftIO (BS.readFile (fdPayload mspfFile))
+  decoded <- either (const (throwError (badRequest "Settlement evidence image is invalid or unsupported"))) pure (decodeImage sourceBytes)
+  let rgb = convertRGB8 decoded
+      width = imageWidth rgb
+      height = imageHeight rgb
+  when (width < 1 || height < 1 || width > 12000 || height > 12000 || width*height > 40000000) $
+    throwError (badRequest "Settlement evidence dimensions exceed the safe processing limit")
+  let sourceChecksum = T.pack (show (hash sourceBytes :: Digest SHA256))
+      requestFingerprint = hashText (jsonText (object
+        [ "settlementId" .= settlementId, "paidAt" .= paidAt
+        , "externalReference" .= externalReference, "notes" .= notes
+        , "sourceChecksum" .= sourceChecksum
+        ]))
+  existing <- runDB (rawSql
+    "SELECT request_sha256 FROM merch_settlement_payment_evidence WHERE settlement_id=?::uuid AND idempotency_key=?"
+    [PersistText (uuidText settlementId),PersistText idempotency] :: SqlPersistT IO [Single Text])
+  case existing of
+    [Single storedFingerprint]
+      | storedFingerprint == requestFingerprint -> loadSettlement settlementId
+      | otherwise -> throwError (conflict "Idempotency-Key conflicts with different settlement evidence")
+    [] -> persistEvidence idempotency paidAt externalReference notes requestFingerprint rgb
+    _ -> throwError (conflict "Settlement evidence idempotency state is ambiguous")
+  where
+    persistEvidence idempotency paidAt externalReference notes requestFingerprint rgb = do
+      eligible <- runDB (rawSql
+        "SELECT TRUE FROM merch_settlement WHERE id=?::uuid AND status='approved' AND prepared_by<>? AND approved_at IS NOT NULL AND ?::timestamptz>=approved_at"
+        [PersistText (uuidText settlementId),PersistInt64 (currentPartyId user),PersistUTCTime paidAt]
+        :: SqlPersistT IO [Single Bool])
+      unless (eligible == [Single True]) $
+        throwError (conflict "Settlement must be approved and payment confirmed by someone other than its preparer")
+      evidenceId <- liftIO nextRandom
+      configuredRoot <- liftIO (lookupEnv "MERCH_SETTLEMENT_EVIDENCE_DIR")
+      environment <- liftIO featureEnvironment
+      when (environment == "production" && configuredRoot == Nothing) $
+        throwError err503 { errBody = "MERCH_SETTLEMENT_EVIDENCE_DIR must point to durable private storage in production" }
+      let evidenceRoot = fromMaybe "uploads/merch-settlements" configuredRoot
+          directory = evidenceRoot </> T.unpack (uuidText settlementId)
+          fileName = T.unpack (uuidText evidenceId) <> ".jpg"
+          destination = directory </> fileName
+          objectKey = "merch-settlements/" <> uuidText settlementId <> "/" <> T.pack fileName
+      when (null evidenceRoot) $ throwError err503 { errBody = "Private settlement evidence storage is not configured" }
+      publicAssetsRoot <- asks (assetsRootDir . envConfig)
+      rootResult <- liftIO (tryAny (createDirectoryIfMissing True evidenceRoot))
+      either (const (throwError err500 { errBody = "Settlement evidence storage is unavailable" })) pure rootResult
+      evidenceAbsolute <- liftIO (normalise <$> makeAbsolute evidenceRoot)
+      assetsAbsolute <- liftIO (normalise <$> makeAbsolute publicAssetsRoot)
+      evidenceCanonical <- liftIO (normalise <$> canonicalizePath evidenceAbsolute)
+      assetsCanonical <- liftIO (normalise <$> canonicalizePath assetsAbsolute)
+      let evidencePrefix = addTrailingPathSeparator evidenceCanonical
+          assetsPrefix = addTrailingPathSeparator assetsCanonical
+      when (evidenceCanonical == assetsCanonical || assetsPrefix `isPrefixOf` evidencePrefix) $
+        throwError err503 { errBody = "Settlement evidence storage must be outside the public assets directory" }
+      let privateDirectoryPermissions = setOwnerSearchable True . setOwnerWritable True . setOwnerReadable True $ emptyPermissions
+          privateFilePermissions = setOwnerWritable True . setOwnerReadable True $ emptyPermissions
+      writeResult <- liftIO $ tryAny $ do
+        setPermissions evidenceRoot privateDirectoryPermissions
+        createDirectoryIfMissing True directory
+        setPermissions directory privateDirectoryPermissions
+        saveJpgImage 90 destination (ImageRGB8 rgb)
+        setPermissions destination privateFilePermissions
+      either (const (throwError err500 { errBody = "Settlement evidence processing failed" })) pure writeResult
+      storedBytes <- liftIO (BS.readFile destination)
+      let storedSize = BS.length storedBytes
+          storedChecksum = T.pack (show (hash storedBytes :: Digest SHA256))
+      pool <- asks envPool
+      stored <- liftIO $ tryAny $ runSqlPool (do
+        rawExecute
+          "INSERT INTO merch_settlement_payment_evidence(id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,external_reference,payment_recorded_at,notes,idempotency_key,request_sha256,submitted_by) VALUES(?::uuid,?::uuid,?,'image/jpeg',?,?,?,?,?,?,?,?)"
+          [ PersistText (uuidText evidenceId),PersistText (uuidText settlementId),PersistText objectKey
+          , PersistInt64 (fromIntegral storedSize),PersistText storedChecksum,PersistText externalReference
+          , PersistUTCTime paidAt,optionalText notes,PersistText idempotency,PersistText requestFingerprint
+          , PersistInt64 (currentPartyId user)
+          ]
+        storeRows <- (rawSql "SELECT store_id::text FROM merch_settlement WHERE id=?::uuid AND status='paid'"
+          [PersistText (uuidText settlementId)] :: SqlPersistT IO [Single Text])
+        case storeRows of
+          [Single storeText] -> appendMerchAudit user "staff" (UUID.fromText storeText) "settlement.payment_recorded" "settlement" (uuidText settlementId)
+            (object ["status" .= ("paid" :: Text),"evidenceChecksum" .= storedChecksum,"evidenceBytes" .= storedSize])
+          _ -> fail "Settlement evidence did not produce a paid settlement"
+        ) pool
+      case stored of
+        Right () -> loadSettlement settlementId
+        Left _ -> do
+          liftIO $ do
+            _ <- try (removeFile destination) :: IO (Either SomeException ())
+            pure ()
+          retry <- runDB (rawSql
+            "SELECT request_sha256 FROM merch_settlement_payment_evidence WHERE settlement_id=?::uuid AND idempotency_key=?"
+            [PersistText (uuidText settlementId),PersistText idempotency] :: SqlPersistT IO [Single Text])
+          if retry == [Single requestFingerprint]
+            then loadSettlement settlementId
+            else throwError (conflict "Settlement changed, evidence reference was reused, or payment evidence could not be recorded")
 
 loadSettlement :: UUID -> AppM Value
 loadSettlement settlementId = jsonOne err404
-  "SELECT jsonb_build_object('id',settlement.id,'storeId',settlement.store_id,'periodStart',settlement.period_start,'periodEnd',settlement.period_end,'currency',settlement.currency,'grossProductMinor',settlement.gross_product_minor,'discountsMinor',settlement.discounts_minor,'taxesMinor',settlement.taxes_minor,'shippingMinor',settlement.shipping_minor,'processorFeesMinor',settlement.processor_fees_minor,'tdfCommissionMinor',settlement.tdf_commission_minor,'refundsMinor',settlement.refunds_minor,'adjustmentsMinor',settlement.adjustments_minor,'sellerNetMinor',settlement.seller_net_minor,'status',settlement.status,'preparedBy',settlement.prepared_by,'approvedBy',settlement.approved_by,'paidBy',settlement.paid_by,'approvedAt',settlement.approved_at,'paidAt',settlement.paid_at,'evidenceObjectKey',settlement.evidence_object_key,'orderCount',(SELECT count(*) FROM merch_settlement_order linked WHERE linked.settlement_id=settlement.id)) FROM merch_settlement settlement WHERE settlement.id=?::uuid"
+  (settlementSelectSql <> " WHERE settlement.id=?::uuid")
   [PersistText (uuidText settlementId)]
+
+settlementSelectSql :: Text
+settlementSelectSql =
+  "SELECT jsonb_strip_nulls(jsonb_build_object('id',settlement.id,'storeId',settlement.store_id,'storeName',store.display_name,'periodStart',settlement.period_start,'periodEnd',settlement.period_end,'currency',settlement.currency,'grossProductMinor',settlement.gross_product_minor,'discountsMinor',settlement.discounts_minor,'taxesMinor',settlement.taxes_minor,'shippingMinor',settlement.shipping_minor,'processorFeesMinor',settlement.processor_fees_minor,'tdfCommissionMinor',settlement.tdf_commission_minor,'refundsMinor',settlement.refunds_minor,'adjustmentsMinor',settlement.adjustments_minor,'sellerNetMinor',settlement.seller_net_minor,'status',settlement.status,'preparedBy',settlement.prepared_by,'preparedByName',prepared.display_name,'approvedBy',settlement.approved_by,'approvedByName',approved.display_name,'paidBy',settlement.paid_by,'paidByName',paid.display_name,'approvedAt',settlement.approved_at,'paidAt',settlement.paid_at,'evidenceObjectKey',settlement.evidence_object_key,'evidenceMimeType',evidence.mime_type,'evidenceByteSize',evidence.byte_size,'evidenceChecksumSha256',evidence.checksum_sha256,'externalReference',evidence.external_reference,'orderCount',(SELECT count(*) FROM merch_settlement_order linked WHERE linked.settlement_id=settlement.id))) FROM merch_settlement settlement JOIN merch_store store ON store.id=settlement.store_id JOIN party prepared ON prepared.id=settlement.prepared_by LEFT JOIN party approved ON approved.id=settlement.approved_by LEFT JOIN party paid ON paid.id=settlement.paid_by LEFT JOIN merch_settlement_payment_evidence evidence ON evidence.settlement_id=settlement.id"

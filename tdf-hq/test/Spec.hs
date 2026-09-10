@@ -140,6 +140,7 @@ import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
+import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
 import TDF.Services.EventLogisticsRoutes (RouteEstimateResult (..), parseGoogleDurationSeconds, parseGoogleRouteResponse)
 import TDF.DB (Env (..))
@@ -946,6 +947,19 @@ main = hspec $ do
             Merch.validateQuantity 100 `shouldBe` Right 100
             Merch.validateQuantity 101 `shouldSatisfy` isLeft
             Merch.validateCheckoutText "recipient.name" 80 "  Paola  " `shouldBe` Right "Paola"
+
+        it "allocates partial refunds deterministically across immutable checkout lines" $ do
+            MerchServer.allocateRefundAcrossLines 5500
+              [ ("9b000000-0000-4000-8000-000000000001",5000)
+              , ("9b000000-0000-4000-8000-000000000002",800)
+              ] `shouldBe` Right
+                [ RefundStore.RefundAllocation "9b000000-0000-4000-8000-000000000001" 5000
+                , RefundStore.RefundAllocation "9b000000-0000-4000-8000-000000000002" 500
+                ]
+            MerchServer.allocateRefundAcrossLines 5801
+              [ ("9b000000-0000-4000-8000-000000000001",5000)
+              , ("9b000000-0000-4000-8000-000000000002",800)
+              ] `shouldSatisfy` isLeft
             Merch.validateCheckoutText "recipient.name" 80 "Paola\nAdmin" `shouldSatisfy` isLeft
 
     MerchRuntimeSpec.spec
@@ -1032,6 +1046,8 @@ main = hspec $ do
             statement `shouldSatisfy` Data.Text.isInfixOf "deprecated_at IS NULL"
 
         it "does not offer review creation for hidden targets" $ do
+            eligibilitySql `shouldSatisfy`
+                Data.Text.isInfixOf "orders.buyer_party_id=(?::bigint)::text"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "offering.active AND offering.deprecated_at IS NULL"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "WHERE package.active"
             eligibilitySql `shouldSatisfy` Data.Text.isInfixOf "delivered.created_at=listing.updated_at"
@@ -1265,6 +1281,12 @@ main = hspec $ do
               Right headers ->
                 ServiceStorefront.buildPaypalWebhookVerificationBody
                   "webhook-1" headers rawEvent `shouldBe` expected
+
+        it "computes the provider-event stale lease before binding the SQL timestamp" $ do
+            let now = UTCTime (fromGregorian 2026 8 14)
+                  (secondsToDiffTime (12 * 60 * 60))
+            ProviderEventStore.providerEventStaleBefore now
+              `shouldBe` addUTCTime (negate (15 * 60)) now
 
         it "rejects stale, future, and unsupported PayPal webhook headers" $ do
             let now = UTCTime (fromGregorian 2026 8 14) (secondsToDiffTime (12 * 60 * 60))

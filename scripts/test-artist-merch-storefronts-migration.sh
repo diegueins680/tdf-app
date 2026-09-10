@@ -50,6 +50,7 @@ prepare_dependencies() {
   database="$1"
   apply_file "$database" "$TDF_MERCH_ROOT/tdf-hq/sql/init_schema.sql"
   apply_file "$database" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql"
+  apply_file "$database" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql"
   psql_exec "$database" <<'SQL' >/dev/null
 CREATE TABLE directory_profile (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -88,7 +89,8 @@ INSERT INTO party(id,display_name,is_org,created_at) VALUES
   (900003,'Synthetic Collaborator',FALSE,now()),
   (900004,'Synthetic Other Seller',FALSE,now()),
   (900005,'Synthetic Admin',FALSE,now()),
-  (900006,'Synthetic Buyer',FALSE,now());
+  (900006,'Synthetic Buyer',FALSE,now()),
+  (900007,'Synthetic Independent Reviewer',FALSE,now());
 SELECT setval(pg_get_serial_sequence('party','id'), 900100, TRUE);
 
 INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status)
@@ -230,10 +232,15 @@ UPDATE merch_order SET checkout_id='9a000000-0000-4000-8000-000000000001' WHERE 
 INSERT INTO commerce_checkout_line_item(
   checkout_id,line_number,product_type,product_id,product_version,description,quantity,unit_amount_minor,
   subtotal_minor,total_minor,snapshot
-) VALUES(
+) VALUES
+(
   '9a000000-0000-4000-8000-000000000001',1,'merch_variant','96000000-0000-4000-8000-000000000001','1',
   'Camiseta Synthetic — Negra / M',4,5000,20000,20000,
   '{"storeId":"92000000-0000-4000-8000-000000000001","sku":"TEE-BLK-M"}'
+),(
+  '9a000000-0000-4000-8000-000000000001',2,'merch_shipping','94000000-0000-4000-8000-000000000001','1',
+  'Envío sintético',1,500,500,500,
+  '{"storeId":"92000000-0000-4000-8000-000000000001","deliveryMethod":"national_shipping"}'
 );
 SELECT merch_reserve_stock(
   '98000000-0000-4000-8000-000000000001','9a000000-0000-4000-8000-000000000001',
@@ -336,6 +343,143 @@ psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_order SET fulfillment_status='p
 separated_state=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT payment_status || '|' || fulfillment_status FROM merch_order WHERE id='98000000-0000-4000-8000-000000000001';")
 test "$separated_state" = "paid|preparing"
 
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+UPDATE merch_order SET fulfillment_status='delivered', settlement_status='under_review'
+WHERE id='98000000-0000-4000-8000-000000000001';
+INSERT INTO merch_settlement(
+  id,store_id,period_start,period_end,currency,gross_product_minor,
+  discounts_minor,taxes_minor,shipping_minor,processor_fees_minor,tdf_commission_minor,
+  refunds_minor,adjustments_minor,seller_net_minor,status,review_notes,prepared_by
+) VALUES(
+  '9d000000-0000-4000-8000-000000000001','92000000-0000-4000-8000-000000000001',
+  now()-interval '30 days',now()+interval '1 day','USD',20000,0,0,500,0,2000,0,0,18500,
+  'under_review','Synthetic settlement preparation.',900005
+);
+INSERT INTO merch_settlement_order(settlement_id,order_id,seller_net_minor)
+VALUES('9d000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000001',18500);
+UPDATE merch_settlement SET status='approved',approved_by=900007,approved_at=now(),updated_at=now()
+WHERE id='9d000000-0000-4000-8000-000000000001';
+UPDATE merch_order SET settlement_status='approved'
+WHERE id='98000000-0000-4000-8000-000000000001';
+SQL
+
+if psql_exec "$TDF_MERCH_DATABASE" -c "INSERT INTO merch_settlement_payment_evidence(id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,external_reference,payment_recorded_at,idempotency_key,request_sha256,submitted_by) VALUES('9c000000-0000-4000-8000-000000000099','9d000000-0000-4000-8000-000000000001','merch-settlements/9d000000-0000-4000-8000-000000000001/9c000000-0000-4000-8000-000000000099.jpg','image/jpeg',100,repeat('a',64),'SYNTH-SELF-CONFIRM',now(),'synthetic-settlement-evidence-self',repeat('b',64),900005);" >/dev/null 2>&1; then
+  echo "Settlement preparer confirmed their own payment" >&2
+  exit 1
+fi
+
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+INSERT INTO merch_settlement_payment_evidence(
+  id,settlement_id,evidence_object_key,mime_type,byte_size,checksum_sha256,
+  external_reference,payment_recorded_at,notes,idempotency_key,request_sha256,submitted_by
+) VALUES(
+  '9c000000-0000-4000-8000-000000000001','9d000000-0000-4000-8000-000000000001',
+  'merch-settlements/9d000000-0000-4000-8000-000000000001/9c000000-0000-4000-8000-000000000001.jpg',
+  'image/jpeg',100,repeat('c',64),'SYNTH-BANK-REFERENCE-001',now(),
+  'Synthetic immutable settlement payment evidence.','synthetic-settlement-evidence-001',repeat('d',64),900007
+);
+SQL
+
+settlement_state=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT settlement.status || '|' || settlement.paid_by || '|' || order_record.settlement_status || '|' || count(evidence.id) FROM merch_settlement settlement JOIN merch_settlement_order linked ON linked.settlement_id=settlement.id JOIN merch_order order_record ON order_record.id=linked.order_id JOIN merch_settlement_payment_evidence evidence ON evidence.settlement_id=settlement.id WHERE settlement.id='9d000000-0000-4000-8000-000000000001' GROUP BY settlement.status,settlement.paid_by,order_record.settlement_status;")
+test "$settlement_state" = "paid|900007|paid|1"
+if psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_settlement_payment_evidence SET external_reference='REWRITTEN' WHERE id='9c000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Immutable settlement payment evidence was rewritten" >&2
+  exit 1
+fi
+
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+INSERT INTO merch_order_issue(
+  id,order_id,opened_by_type,issue_type,status,public_message,idempotency_key,request_sha256
+) VALUES(
+  '9e000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000001',
+  'buyer','refund','staff_review','Synthetic refund case after a seller settlement was recorded.',
+  'synthetic-refund-issue-001',encode(digest('synthetic-refund-issue-request','sha256'),'hex')
+);
+INSERT INTO commerce_refund(
+  id,checkout_id,payment_attempt_id,provider,environment,merchant_account_ref,status,
+  amount_minor,currency,reason_code,idempotency_key,requested_by,created_at,updated_at
+) VALUES(
+  '9f000000-0000-4000-8000-000000000001','9a000000-0000-4000-8000-000000000001',
+  '9b000000-0000-4000-8000-000000000001','bank_transfer','sandbox','synthetic-sandbox',
+  'requested',10001,'USD','customer_request','synthetic-refund-request-001',900005,now(),now()
+);
+INSERT INTO commerce_refund_allocation(refund_id,line_item_id,amount_minor)
+SELECT '9f000000-0000-4000-8000-000000000001',id,10001
+FROM commerce_checkout_line_item
+WHERE checkout_id='9a000000-0000-4000-8000-000000000001' AND product_type='merch_variant';
+INSERT INTO merch_refund_case(refund_id,order_id,issue_id,request_note,request_sha256,created_by)
+VALUES(
+  '9f000000-0000-4000-8000-000000000001','98000000-0000-4000-8000-000000000001',
+  '9e000000-0000-4000-8000-000000000001','First synthetic partial refund request; no provider call.',
+  encode(digest('synthetic-refund-case-request','sha256'),'hex'),900005
+);
+INSERT INTO commerce_refund(
+  id,checkout_id,payment_attempt_id,provider,environment,merchant_account_ref,status,
+  amount_minor,currency,reason_code,idempotency_key,requested_by,created_at,updated_at
+) VALUES(
+  '9f000000-0000-4000-8000-000000000003','9a000000-0000-4000-8000-000000000001',
+  '9b000000-0000-4000-8000-000000000001','bank_transfer','sandbox','synthetic-sandbox',
+  'requested',10499,'USD','customer_request','synthetic-refund-request-002',900005,now(),now()
+);
+INSERT INTO commerce_refund_allocation(refund_id,line_item_id,amount_minor)
+SELECT '9f000000-0000-4000-8000-000000000003',id,
+  CASE WHEN product_type='merch_variant' THEN total_minor-10001 ELSE total_minor END
+FROM commerce_checkout_line_item
+WHERE checkout_id='9a000000-0000-4000-8000-000000000001';
+INSERT INTO merch_refund_case(refund_id,order_id,issue_id,request_note,request_sha256,created_by)
+VALUES(
+  '9f000000-0000-4000-8000-000000000003','98000000-0000-4000-8000-000000000001',
+  '9e000000-0000-4000-8000-000000000001','Second synthetic partial refund request; no provider call.',
+  encode(digest('synthetic-refund-case-request-002','sha256'),'hex'),900005
+);
+SQL
+
+if psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE commerce_refund SET status='approved',approved_by=900005,updated_at=now() WHERE id='9f000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Refund requester approved their own refund" >&2
+  exit 1
+fi
+if psql_exec "$TDF_MERCH_DATABASE" -c "UPDATE merch_refund_case SET request_note='Rewritten' WHERE refund_id='9f000000-0000-4000-8000-000000000001';" >/dev/null 2>&1; then
+  echo "Immutable merch refund case was rewritten" >&2
+  exit 1
+fi
+
+psql_exec "$TDF_MERCH_DATABASE" <<'SQL' >/dev/null
+UPDATE commerce_refund SET status='approved',approved_by=900007,updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000001';
+UPDATE commerce_refund SET status='processing',updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000001';
+UPDATE commerce_refund SET status='succeeded',provider_refund_id='SYNTHETIC-REFUND-EVIDENCE-001',
+  completed_at=now(),updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000001';
+UPDATE commerce_checkout_session SET refunded_minor=10001,status='partially_refunded',updated_at=now()
+WHERE id='9a000000-0000-4000-8000-000000000001';
+DO $$ BEGIN
+  IF (SELECT adjusted_minor FROM merch_order WHERE id='98000000-0000-4000-8000-000000000001') <> 1000
+  THEN RAISE EXCEPTION 'First partial refund did not project the cumulative commission reversal'; END IF;
+END $$;
+UPDATE commerce_refund SET status='approved',approved_by=900007,updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000003';
+UPDATE commerce_refund SET status='processing',updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000003';
+UPDATE commerce_refund SET status='succeeded',provider_refund_id='SYNTHETIC-REFUND-EVIDENCE-002',
+  completed_at=now(),updated_at=now()
+WHERE id='9f000000-0000-4000-8000-000000000003';
+UPDATE commerce_checkout_session SET refunded_minor=20500,status='refunded',updated_at=now()
+WHERE id='9a000000-0000-4000-8000-000000000001';
+INSERT INTO commerce_dispute(
+  id,checkout_id,payment_attempt_id,provider_dispute_id,kind,status,amount_minor,currency,reason_code,opened_at
+) VALUES(
+  '9f000000-0000-4000-8000-000000000002','9a000000-0000-4000-8000-000000000001',
+  '9b000000-0000-4000-8000-000000000001','SYNTHETIC-DISPUTE-EVIDENCE-001','inquiry',
+  'needs_response',20500,'USD','synthetic_inquiry',now()
+);
+SQL
+
+refund_state=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT payment_status || '|' || refund_status || '|' || dispute_status || '|' || settlement_status || '|' || refunded_minor || '|' || adjusted_minor FROM merch_order WHERE id='98000000-0000-4000-8000-000000000001';")
+test "$refund_state" = "refunded|completed|inquiry|adjusted|20500|2000"
+refund_events=$(psql_exec "$TDF_MERCH_DATABASE" -Atc "SELECT count(*) FROM merch_fulfillment_event WHERE order_id='98000000-0000-4000-8000-000000000001' AND event_type IN ('refund_requested','refund_updated','dispute_updated');")
+test "$refund_events" = "9"
+
 psql_exec postgres -c "CREATE DATABASE $TDF_MERCH_ROLLBACK_DATABASE;" >/dev/null
 prepare_dependencies "$TDF_MERCH_ROLLBACK_DATABASE"
 apply_file "$TDF_MERCH_ROLLBACK_DATABASE" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
@@ -346,4 +490,4 @@ remaining_functions=$(psql_exec "$TDF_MERCH_ROLLBACK_DATABASE" -Atc "SELECT coun
 test "$remaining_functions" = "0"
 apply_file "$TDF_MERCH_ROLLBACK_DATABASE" "$TDF_MERCH_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
 
-echo "Artist merch storefront migration passed rerun, claimed-profile eligibility, scoped ownership, cross-store policy isolation, immutable snapshots, payment evidence gating, independent fulfillment, concurrent no-oversell reservation and expiry, stock consumption and lower-bound protection, commission override, analytics privacy, guarded rollback, clean rollback, and reapply checks."
+echo "Artist merch storefront migration passed rerun, claimed-profile eligibility, scoped ownership, cross-store policy isolation, immutable snapshots, payment evidence gating, independent fulfillment, concurrent no-oversell reservation and expiry, stock consumption and lower-bound protection, commission override, canonical refund allocation and dual control, read-only dispute projection, settlement adjustment, private settlement evidence dual control and immutability, analytics privacy, guarded rollback, clean rollback, and reapply checks."
