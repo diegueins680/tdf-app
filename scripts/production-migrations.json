@@ -455,6 +455,11 @@
       "id": "2026-09-09_music_directory_suppressed_event_privacy",
       "path": "tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql",
       "introducedBy": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+    },
+    {
+      "id": "2026-09-09_experience_review_ticket_buyer_type_repair",
+      "path": "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+      "introducedBy": "0e76d6ff36bae6b0a9d1b22515b8f60abdcaafd0"
     }
   ]
 }
