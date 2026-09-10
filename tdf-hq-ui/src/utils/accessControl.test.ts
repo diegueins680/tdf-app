@@ -116,6 +116,9 @@ describe('buildAccessibleModuleSet', () => {
     expect(hasAiToolingAccess(['Maintenance'], ['Packages'])).toBe(true);
     expect(hasStrictAdminAccess(['Fan', 'Customer'], ['Packages'])).toBe(false);
     expect(hasStrictAdminAccess(['Admin'], ['admin'])).toBe(true);
+    expect(hasStrictAdminAccess(['Admin', 'Fan', 'Customer'], ['admin'])).toBe(true);
+    expect(hasStrictAdminAccess(['Admin', 'Manager'], ['admin'])).toBe(false);
+    expect(hasStrictAdminAccess(['Admin', 'Webmaster'], ['admin'])).toBe(false);
     expect(hasStrictAdminAccess(['Webmaster'], ['admin'])).toBe(false);
   });
 });

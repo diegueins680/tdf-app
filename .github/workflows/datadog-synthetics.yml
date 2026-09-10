@@ -27,7 +27,7 @@ jobs:
       DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # Run Synthetic tests within your GitHub workflow.
     # For additional configuration options visit the action within the marketplace: https://github.com/marketplace/actions/datadog-synthetics-ci
@@ -42,4 +42,3 @@ jobs:
     - name: Skip Datadog Synthetic tests
       if: ${{ env.DD_API_KEY == '' || env.DD_APP_KEY == '' }}
       run: echo "Datadog API and/or APP key secrets are not configured. Skipping Synthetic tests."
-

@@ -69,10 +69,10 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { completeOnboardingProgress, loadOnboardingProgress } from '../api/session';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
-
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
     <Box
@@ -148,34 +148,44 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       release && (() => {
         const collection = collectionFor('release');
         return {
-          eyebrow: contributorNames(release.contributors) || collection?.name || release.code,
+          eyebrow: firstNonEmptyString(contributorNames(release.contributors), collection?.name, release.code),
           title: release.title,
-          description: collection?.description || collection?.name || release.title,
+          description: firstNonEmptyString(collection?.description, collection?.name, release.title),
           image: primaryRecordsImage(release.resources),
-          to: collection?.publicRoute || '/records',
-          action: collection?.name || 'Ver lanzamientos',
+          to: firstNonEmptyString(collection?.publicRoute, '/records'),
+          action: firstNonEmptyString(collection?.name, 'Ver lanzamientos'),
         };
       })(),
       recording && (() => {
         const collection = collectionFor('recording');
         return {
-          eyebrow: contributorNames(recording.contributors) || collection?.name || recording.code,
+          eyebrow: firstNonEmptyString(contributorNames(recording.contributors), collection?.name, recording.code),
           title: recording.title,
-          description: recording.description || collection?.description || collection?.name || recording.title,
+          description: firstNonEmptyString(
+            recording.description,
+            collection?.description,
+            collection?.name,
+            recording.title,
+          ),
           image: primaryRecordsImage(recording.resources),
-          to: collection?.publicRoute || '/records',
-          action: collection?.name || 'Ver grabaciones',
+          to: firstNonEmptyString(collection?.publicRoute, '/records'),
+          action: firstNonEmptyString(collection?.name, 'Ver grabaciones'),
         };
       })(),
       sessionItem && (() => {
         const collection = collectionFor('session');
         return {
-          eyebrow: contributorNames(sessionItem.contributors) || collection?.name || sessionItem.code,
+          eyebrow: firstNonEmptyString(contributorNames(sessionItem.contributors), collection?.name, sessionItem.code),
           title: sessionItem.title,
-          description: sessionItem.description || collection?.description || collection?.name || sessionItem.title,
+          description: firstNonEmptyString(
+            sessionItem.description,
+            collection?.description,
+            collection?.name,
+            sessionItem.title,
+          ),
           image: primaryRecordsImage(sessionItem.resources),
-          to: collection?.publicRoute || '/records',
-          action: collection?.name || 'Ver sesiones',
+          to: firstNonEmptyString(collection?.publicRoute, '/records'),
+          action: firstNonEmptyString(collection?.name, 'Ver sesiones'),
         };
       })(),
     ].filter((card): card is CatalogRecoveryCard => Boolean(card));

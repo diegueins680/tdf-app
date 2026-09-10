@@ -1,4 +1,5 @@
 import rawRegistry from '../../../tdf-hq/assets/feature-registry.json';
+import { firstNonEmptyString } from '../utils/stringValues';
 
 export type FeatureAction =
   | 'discover'
@@ -247,7 +248,8 @@ const routeCandidates = featureRegistry.flatMap((feature) =>
 });
 
 export function getFeatureByPath(pathname: string): FeatureDefinition | null {
-  const pathnameOnly = pathname.split(/[?#]/, 1)[0] || '/';
+  const candidate = pathname.split(/[?#]/, 1)[0];
+  const pathnameOnly = firstNonEmptyString(candidate, '/');
   return routeCandidates.find(({ matcher }) => matcher.test(pathnameOnly))?.feature ?? null;
 }
 
