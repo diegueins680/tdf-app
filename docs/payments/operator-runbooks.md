@@ -12,7 +12,7 @@ These procedures are safe defaults for sandbox and staging. They do not authoriz
 6. Update the provider-account metadata only after contract and credential evidence is reviewed. Production additionally requires the matching `revenue_feature_flag` and a separately authorized change window.
 7. Call `/commerce/payment-capabilities` for each intended flow. An empty `routes` array blocks the checkout UI; it is not a reason to bypass the gate.
 
-Required secret names by provider are documented in the provider adapter PR. Existing names include Datafast server credentials, PayPal client credentials/merchant/webhook identity, and `COMMERCE_EVENT_ENCRYPTION_KEY`. Presence alone is not validation.
+Required server-only secret names are `DATAFAST_ENTITY_ID`, `DATAFAST_BEARER_TOKEN`, `DATAFAST_BASE_URL`, PayPal client credentials/merchant/webhook identity, `COMMERCE_EVENT_ENCRYPTION_KEY`, `PLACETOPAY_LOGIN`, `PLACETOPAY_SECRET_KEY`, `PAYPHONE_TOKEN`, and `PAYPHONE_STORE_ID`. Presence alone is not validation. PlaceToPay and PayPhone remain disabled until the adapter executor and credentialed sandbox evidence are complete.
 
 ## 2. Sandbox qualification
 
@@ -43,6 +43,7 @@ Screenshots and mocks may support UX review but cannot be recorded as provider s
 6. Bind amount, currency, order and resource before a financial state change.
 7. Rotate by accepting old/new secrets only for a short documented overlap. Test both, remove old, and record the rotation audit event.
 8. For PayPhone, until a signed scheme is contractually documented, accept notification only as a hint and query the authenticated transaction endpoint before state change.
+9. For PlaceToPay, verify the documented SHA-256 notification but still query the authenticated session endpoint and bind the stored request ID, reference, amount and currency before state change.
 
 ## 4. Deployment and rollback
 
@@ -113,4 +114,3 @@ For each provider/environment/currency:
 Allowed in an incident ticket: internal UUID, correlation ID, provider name/environment, truncated safe external ID, state, amount/currency, timestamps and redacted error class.
 
 Never include: secret/token/signature values, Authorization headers, full provider payloads, PAN, CVV, magnetic-stripe data, bank credentials, unredacted payer/seller personal data, vault tokens, encryption keys or secret digests.
-

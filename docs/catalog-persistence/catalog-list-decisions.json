@@ -9912,6 +9912,16 @@
       "risk": "An unknown provider, state, actor, ledger kind, or payout status could bypass payment, accounting, or approval invariants.",
       "justification": "This migration creates the canonical persisted payment domain and intentionally closed database constraints; changes require a new reviewed forward migration and coordinated adapter/API updates.",
       "reviewed": true
+    },
+    {
+      "id": "de9f674875cbad1d6445",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-low",
+      "risk": "Treating HTTP verbs as editable catalog data could permit unsupported or unsafe provider request semantics.",
+      "justification": "The payment adapter executor intentionally supports only the closed GET and POST operations required by the selected provider contracts; this protocol enum is not business-owned catalog data.",
+      "reviewed": true
     }
   ]
 }

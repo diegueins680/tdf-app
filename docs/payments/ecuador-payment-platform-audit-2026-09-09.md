@@ -263,6 +263,15 @@ BCE authorizes payment-system administrators, gateways and aggregators and expec
 - PlaceToPay and PayPhone enum compatibility without modifying historical migration files.
 - All new providers and production capabilities default disabled.
 
+### Adapter slice verified 2026-09-10
+
+- A closed provider-adapter boundary now represents create, query, cancel, capture, void, refund and same-day reversal operations without accepting PAN, CVV or magnetic-stripe data. Request bodies intentionally have no `Show` instance; log output is limited to a redacted request summary.
+- Capability evidence is stored and routed as exact `(payment method, capability)` pairs. A capability verified for one method can no longer be combined with a different method.
+- The disabled PlaceToPay Ecuador WebCheckout adapter builds authenticated session create/query/cancel requests against fixed sandbox or production hosts, validates the returned redirect host, verifies SHA-256 notifications in constant time, and requires an authenticated session query plus exact reference/amount/currency binding before success. Only implemented operations are advertised; preauthorization, capture and refunds remain contract/documentation work, not runtime claims.
+- The disabled PayPhone API Sale adapter builds integer-cent create/query/cancel/same-day-reversal requests against its fixed host. Browser callbacks are always untrusted hints; an authenticated query with exact reference/amount/currency binding is required. It advertises only the implemented PayPhone-wallet method, not its separate card box, links, tokenization or post-settlement refunds.
+- Existing Datafast configuration now rejects malformed credentials/hosts and redacts entity and bearer fields from `Show`. The legacy duplicated PayPal token type now also redacts its access token instead of deriving a revealing `Show` instance.
+- No remote request was sent and no provider sandbox result is claimed. Activation still requires the database gates plus `PLACETOPAY_LOGIN`/`PLACETOPAY_SECRET_KEY` or `PAYPHONE_TOKEN`/`PAYPHONE_STORE_ID` in the approved secret manager and credentialed contract tests.
+
 ## 10. Test and verification record
 
 | Time / commit | Command | Evidence class | Result |
@@ -278,6 +287,11 @@ BCE authorizes payment-system administrators, gateways and aggregators and expec
 | 2026-09-09 local / pre-rebase equivalent tree `e7a071b` | `npm run quality:repo` | local repository policy/formal/CI | passed; 8,972 findings: 0 critical, 0 errors, 322 warnings, 8,650 informational; all supporting suites passed. |
 | 2026-09-10 local / post-rebase `b01ab3c` | `npm run test:production-release` | local release-manifest tests | 60/60 passed, including immutable introduction-commit anchoring for the canonical migration. |
 | 2026-09-10 local / post-rebase `b01ab3c` | `npm run test:canonical-payment-lifecycle-migration` | disposable PostgreSQL 16 integration | passed reapply, clean rollback, gates, money constraints, immutability, provider-managed funds, commission, dual-control payout, and evidence-preserving rollback tests. |
+| 2026-09-10 local / `bb01a6b13` | `stack test --test-arguments=--match=provider --fast` | local adapter/unit/property | 68 examples, 0 failures. Includes exact binding, fixed-host redirect rejection, PlaceToPay signature verification, PayPhone untrusted callback/query, same-day reversal cutoff, capability gating and safe fallback. |
+| 2026-09-10 local / `bb01a6b13` | `stack test --fast` | local full backend regression | 2,506 examples, 0 failures on GHC 9.10.3. Existing Cabal/module/linker warnings remain. |
+| 2026-09-10 local / `bb01a6b13` tree | `npm run quality:repo` | local repository policy/formal/CI | passed; formal audit reported 8,976 findings: 0 critical, 0 errors, 323 warnings and 8,653 informational; supporting suites passed. |
+| 2026-09-10 local / `f98b399d9`+adapter tree | `TDF_AUTOMIG_TEST_DATABASE_URL=postgresql://127.0.0.1:54329/tdf_auto TDF_AUTOMIG_SERVER_BIN=... ./scripts/test-automatic-migrations-production-schema.sh` | disposable PostgreSQL 16 integration | passed against the fully cut-over production fixture and passed its second idempotence start. The first run stopped before schema load on the PostgreSQL-17-only dump setting `transaction_timeout`; commit `f98b399d9` removed that non-schema session setting, then the exact command passed. |
+| 2026-09-10 local / adapter tree | `npm run audit:catalog-lists` | local governance audit | passed with 0 unreviewed candidates and 0 stale decisions after classifying the adapter HTTP-method enum as a technical constant. |
 | 2026-09-09 local / generated from the versioned OpenAPI contract | `npm run generate:api` | contract generation | web and mobile generation completed successfully; regenerated files had no uncommitted drift. |
 | none | Datafast/PayPal/PlaceToPay/PayPhone sandbox | provider sandbox | not executed—credentials/contracts missing. |
 | none | staging checkout | staging | not executed—provider credential names absent. |
@@ -306,12 +320,12 @@ Mocked/local tests are not proof of a provider sandbox or merchant entitlement.
 
 1. Obtain Ecuador merchant agreement, login/secret, acquiring banks/methods, settlement schedule, refund/preauth/recurring/link/DeUna and dispersion entitlements.
 2. Confirm SHA-256 notification registration, status polling limits and notification non-retry behavior.
-3. Add sandbox secrets only after the adapter lands; run contract and full flow tests.
+3. Store `PLACETOPAY_LOGIN` and `PLACETOPAY_SECRET_KEY` in staging only; register the return/notification URLs, then enable only the exact contracted sandbox method-capability rows and run full flow tests.
 4. Obtain written legal/commercial responsibility for dispersion/connected sellers before marketplace activation.
 
 ### PayPhone
 
-1. Complete RUC/business agreement and obtain development token/store ID and controlled test users.
+1. Complete RUC/business agreement and obtain development `PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` and controlled test users.
 2. Confirm the authoritative transaction-query lifecycle, refund after settlement, tokenization/subscription product, disputes and foreign-card coverage.
 3. Obtain written webhook-authentication details. Until then, treat notifications only as a prompt to query the authenticated API.
 4. Do not use PayPhone split for marketplace: the documented immediate-final split/refund coordination does not meet the canonical liability/refund model.
@@ -324,7 +338,7 @@ Qualified Ecuadorian reviewers must approve seller contractual role, fund-flow d
 
 Verified remote delivery at 2026-09-10 local:
 
-- Core draft PR [tdf-app #326](https://github.com/diegueins680/tdf-app/pull/326), branch `feat/canonical-payment-platform-20260909`; core commits `329c1c83a`, `9acea472d`, `b3007f580`, `b01ab3caf`, with test-evidence follow-up `90b225a90`.
+- Core draft PR [tdf-app #326](https://github.com/diegueins680/tdf-app/pull/326), branch `feat/canonical-payment-platform-20260909`; core commits `329c1c83a`, `9acea472d`, `b3007f580`, `b01ab3caf`, `90b225a90`, `502be0c7a`, `3016f362e` and `f98b399d9`.
 - Generated mobile contract draft PR [TDF-mobile #76](https://github.com/diegueins680/TDF-mobile/pull/76), branch `feat/payment-capabilities-contract-20260909`, commit `b08f0c600468773f13e9c1b8c2701df5b7673467`; depends on #326.
 
 1. Canonical payment core, dated research, ADR, lifecycle, migrations, compatibility and generated contracts.
