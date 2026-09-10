@@ -57,6 +57,8 @@ bootstrap_schema() {
 bootstrap_schema
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
+apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
+apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE enabled=FALSE AND status='disabled';")" \
@@ -68,6 +70,11 @@ if psql_exec -c "UPDATE commerce_provider_account SET enabled=TRUE WHERE provide
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='commerce_payment_attempt' AND column_name='payment_intent_id';")" \
+  "0" \
+  "Unused payment-attempt binding rollback"
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle_rollback.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT to_regclass('commerce_payment_intent') IS NULL;")" \
@@ -75,6 +82,7 @@ assert_equal \
   "Unused lifecycle rollback"
 
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
+apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 
 checkout_id='10000000-0000-4000-8000-000000000001'
 attempt_id='10000000-0000-4000-8000-000000000002'
@@ -114,7 +122,15 @@ psql_exec -c "
     '$authorization_id', '$intent_id', '$attempt_id', 'AUTH-100',
     'authorized', 10000, 'USD', NOW()
   );
+  UPDATE commerce_payment_attempt
+  SET payment_intent_id='$intent_id'
+  WHERE id='$attempt_id';
 " >/dev/null
+
+if psql_exec -c "UPDATE commerce_payment_attempt SET payment_intent_id='20000000-0000-4000-8000-000000000099' WHERE id='$attempt_id';" >/dev/null 2>&1; then
+  echo "Payment attempt accepted a nonexistent canonical intent" >&2
+  exit 1
+fi
 
 if psql_exec -c "UPDATE commerce_payment_authorization SET provider_authorization_id='AUTH-TAMPERED' WHERE id='$authorization_id';" >/dev/null 2>&1; then
   echo "Immutable provider authorization reference was mutable" >&2
@@ -199,6 +215,16 @@ if psql_exec -c "UPDATE commerce_payout SET provider_payout_id='PAYOUT-TAMPERED'
   echo "Bound provider payout reference was mutable" >&2
   exit 1
 fi
+
+if apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql; then
+  echo "Payment-attempt binding rollback erased canonical evidence" >&2
+  exit 1
+fi
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT payment_intent_id FROM commerce_payment_attempt WHERE id='$attempt_id';")" \
+  "$intent_id" \
+  "Attempt-to-intent evidence survived refused rollback"
 
 if apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle_rollback.sql; then
   echo "Lifecycle rollback erased payment or marketplace evidence" >&2
