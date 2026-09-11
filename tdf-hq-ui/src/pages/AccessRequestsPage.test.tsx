@@ -23,6 +23,7 @@ jest.unstable_mockModule('../api/accessRequests', () => ({
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getActiveSession: () => null,
   useSession: () => ({
     session: {
       username: 'readonly',

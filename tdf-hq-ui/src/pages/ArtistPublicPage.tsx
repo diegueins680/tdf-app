@@ -238,7 +238,7 @@ export default function ArtistPublicPage() {
   if (artistQuery.isLoading && !artist) {
     return (
       <Box py={4} display="flex" alignItems="center" gap={1.5}>
-        <CircularProgress size={20} />
+        <CircularProgress size={20} aria-label="Cargando perfil del artista" />
         <Typography>Cargando perfil...</Typography>
       </Box>
     );
@@ -570,7 +570,7 @@ export default function ArtistPublicPage() {
 
               {releasesQuery.isLoading && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
-                  <CircularProgress size={18} />
+                  <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
                   <Typography variant="body2" color="text.secondary">
                     Cargando releases...
                   </Typography>

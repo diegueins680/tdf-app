@@ -112,6 +112,25 @@ describe('onboarding intent routing', () => {
     );
     expect(resolvePostAuthPath('internships', ['Intern'], ['Internships'])).toBe('/practicas');
   });
+
+  it('lands public learning and professional intents on a concrete first action', () => {
+    const learningPath = resolvePostAuthPath('learning', ['Customer']);
+    const professionalPath = resolvePostAuthPath('professional_tools', ['Customer']);
+
+    expect(learningPath).toBe('/trials');
+    expect(professionalPath).toBe('/herramientas/creador-musical');
+    expect(canAccessPath(learningPath, ['Customer'], [])).toBe(true);
+    expect(canAccessPath(professionalPath, ['Customer'], [])).toBe(true);
+  });
+
+  it('preserves an accessible task-specific redirect ahead of the professional fallback', () => {
+    expect(resolvePostAuthPath(
+      'professional_tools',
+      ['Customer'],
+      [],
+      '/directorio/ana?resume=contact&profileId=profile-17',
+    )).toBe('/directorio/ana?resume=contact&profileId=profile-17');
+  });
 });
 
 describe('redirect helpers', () => {

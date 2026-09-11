@@ -20,6 +20,8 @@ import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
+import { retryPendingFirstValueCompletion } from '../analytics/onboardingProgress';
+import { retryPendingOnboardingIntent } from '../session/onboardingIntentRecovery';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
@@ -36,6 +38,10 @@ export function Shell() {
   );
   const sidebarToggleRef = useRef<HTMLButtonElement | null>(null);
   const recordedPathRef = useRef('');
+  const onboardingRecoveryRef = useRef<{
+    partyId: number;
+    promise: Promise<void>;
+  } | null>(null);
   const navigationPreferences = useNavigationPreferences(Boolean(session));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -137,6 +143,37 @@ export function Shell() {
       });
     }
   }, [legacyEventsTarget, loading, location.pathname, navigationPreferences.visit, session]);
+
+  useEffect(() => {
+    if (loading || !session?.partyId) return;
+    const partyId = session.partyId;
+    const replayPendingOnboarding = (): Promise<void> => {
+      const currentRecovery = onboardingRecoveryRef.current;
+      if (currentRecovery?.partyId === partyId) return currentRecovery.promise;
+
+      const promise = (async () => {
+        await Promise.all([
+          retryPendingOnboardingIntent(partyId),
+          retryPendingFirstValueCompletion(getAnalyticsClient(), partyId),
+        ]);
+      })()
+        .catch(() => undefined)
+        .finally(() => {
+          if (onboardingRecoveryRef.current?.promise === promise) {
+            onboardingRecoveryRef.current = null;
+          }
+        });
+      onboardingRecoveryRef.current = { partyId, promise };
+      return promise;
+    };
+    const handleOnline = () => {
+      void replayPendingOnboarding();
+    };
+
+    void replayPendingOnboarding();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [loading, session?.partyId]);
 
   if (loading) {
     return <RouteLoadingFallback />;

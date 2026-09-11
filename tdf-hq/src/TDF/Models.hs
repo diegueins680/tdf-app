@@ -327,6 +327,16 @@ UserOnboardingProgress sql=user_onboarding_progress
     updatedAt             UTCTime
     UniqueUserOnboardingProgress partyId
     deriving Show Generic
+UserExperimentAssignment sql=user_experiment_assignment
+    partyId          PartyId
+    experimentId     Text
+    experimentVersion Int
+    variant          Text
+    assignedAt       UTCTime
+    eligibleUntil    UTCTime
+    exposedAt        UTCTime Maybe
+    UniqueUserExperimentAssignment partyId experimentId experimentVersion
+    deriving Show Generic
 CurrencyConversionAudit sql=currency_conversion_audit
     userId           PartyId Maybe
     sourceCurrency   Text

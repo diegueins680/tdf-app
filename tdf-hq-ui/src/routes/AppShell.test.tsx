@@ -5,7 +5,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
-const session = {
+const session: {
+  username: string;
+  displayName: string;
+  roles: string[];
+  modules: string[];
+  partyId?: number;
+} = {
   username: 'admin',
   displayName: 'Admin',
   roles: ['admin'],
@@ -23,6 +29,18 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 
 jest.unstable_mockModule('../hooks/useNavigationPreferences', () => ({
   useNavigationPreferences: () => ({ visit: { mutate: jest.fn() } }),
+}));
+
+const retryPendingFirstValueCompletionMock = jest.fn(async () => false);
+
+jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
+  retryPendingFirstValueCompletion: retryPendingFirstValueCompletionMock,
+}));
+
+const retryPendingOnboardingIntentMock = jest.fn(async () => false);
+
+jest.unstable_mockModule('../session/onboardingIntentRecovery', () => ({
+  retryPendingOnboardingIntent: retryPendingOnboardingIntentMock,
 }));
 
 jest.unstable_mockModule('../components/SidebarNav', () => ({
@@ -101,6 +119,82 @@ describe('Shell', () => {
 
   beforeEach(() => {
     window.localStorage.clear();
+    delete session.partyId;
+    retryPendingFirstValueCompletionMock.mockReset();
+    retryPendingFirstValueCompletionMock.mockResolvedValue(false);
+    retryPendingOnboardingIntentMock.mockReset();
+    retryPendingOnboardingIntentMock.mockResolvedValue(false);
+  });
+
+  it('replays pending onboarding state for the authenticated Party', async () => {
+    session.partyId = 42;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/inicio');
+
+    try {
+      expect(retryPendingOnboardingIntentMock).toHaveBeenCalledWith(42);
+      expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledWith(expect.anything(), 42);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('replays pending onboarding state when connectivity returns and removes the listener on unmount', async () => {
+    session.partyId = 42;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/inicio');
+
+    expect(retryPendingOnboardingIntentMock).toHaveBeenCalledTimes(1);
+    expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      await flushPromises();
+    });
+
+    expect(retryPendingOnboardingIntentMock).toHaveBeenCalledTimes(2);
+    expect(retryPendingOnboardingIntentMock).toHaveBeenLastCalledWith(42);
+    expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledTimes(2);
+    expect(retryPendingFirstValueCompletionMock).toHaveBeenLastCalledWith(expect.anything(), 42);
+
+    await cleanup();
+    window.dispatchEvent(new Event('online'));
+
+    expect(retryPendingOnboardingIntentMock).toHaveBeenCalledTimes(2);
+    expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('deduplicates reconnect signals while Party recovery is already in flight', async () => {
+    session.partyId = 42;
+    let resolveIntent: ((value: boolean) => void) | undefined;
+    let resolveFirstValue: ((value: boolean) => void) | undefined;
+    retryPendingOnboardingIntentMock.mockImplementation(() => new Promise<boolean>((resolve) => {
+      resolveIntent = resolve;
+    }));
+    retryPendingFirstValueCompletionMock.mockImplementation(() => new Promise<boolean>((resolve) => {
+      resolveFirstValue = resolve;
+    }));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderShell(container, '/inicio');
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      window.dispatchEvent(new Event('online'));
+      await flushPromises();
+    });
+
+    expect(retryPendingOnboardingIntentMock).toHaveBeenCalledTimes(1);
+    expect(retryPendingFirstValueCompletionMock).toHaveBeenCalledTimes(1);
+
+    resolveIntent?.(false);
+    resolveFirstValue?.(false);
+    await act(async () => {
+      await flushPromises();
+    });
+    await cleanup();
   });
 
   it('canonicalizes the legacy social events route and preserves deep links', () => {

@@ -101,7 +101,7 @@ export function resolvePostAuthPath(
     case 'events':
       return '/inicio';
     case 'professional_tools':
-      return pickLandingPath(roles, modules);
+      return '/herramientas/creador-musical';
     default:
       return pickLandingPath(roles, modules);
   }

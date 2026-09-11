@@ -7,6 +7,7 @@ import { captureReconciledFirstValue } from '../analytics/onboardingProgress';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
+import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
 
 export interface SessionUser {
   username: string;
@@ -213,6 +214,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const sessionVersionRef = useRef(0);
 
   const updateSessionState = useCallback((next: SessionUser | null) => {
+    reconcileSessionPersonalData(currentSession?.partyId, next?.partyId);
     currentSession = next;
     setSession(next);
   }, []);
@@ -264,6 +266,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
             preferences: snapshot.preferences,
             apiToken: prev?.apiToken,
           });
+          reconcileSessionPersonalData(prev?.partyId, next.partyId);
           currentSession = next;
           return next;
         });
