@@ -119,6 +119,7 @@ import qualified TDF.Commerce.Merch as Merch
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
+import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
 import qualified TDF.Commerce.RefundStore as RefundStore
 import qualified TDF.Commerce.StateMachine as Commerce
 import qualified TDF.Routes.EventTickets as EventTicketRoutes
@@ -132,6 +133,7 @@ import TDF.Email (accountCreatedEmailContent, resolveRefundTimelineMessage)
 import TDF.Services.InstagramSync (buildUserMediaRequestUrl)
 import qualified TDF.Services.EventDiscoverySpec as EventDiscoverySpec
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
+import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
 import qualified TDF.Server.EventResearchSpec as EventResearchSpec
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MerchRuntimeSpec as MerchRuntimeSpec
@@ -1971,6 +1973,178 @@ main = hspec $ do
               `shouldBe` True
             Commerce.ledgerBalances [("USD", 10000), ("EUR", -10000)]
               `shouldBe` False
+
+    describe "provider-neutral payment routing" $ do
+        let active provider = ProviderCapabilities.ProviderActivation
+              { ProviderCapabilities.paProvider = provider
+              , ProviderCapabilities.paEnvironment = CheckoutStore.CheckoutSandbox
+              , ProviderCapabilities.paFeatureEnabled = True
+              , ProviderCapabilities.paCredentialsValidated = True
+              , ProviderCapabilities.paContractApproved = True
+              , ProviderCapabilities.paVerifiedMethods = [minBound .. maxBound]
+              , ProviderCapabilities.paVerifiedCapabilities = [minBound .. maxBound]
+              }
+            cardRequest = ProviderCapabilities.PaymentRouteRequest
+              { ProviderCapabilities.prEnvironment = CheckoutStore.CheckoutSandbox
+              , ProviderCapabilities.prBuyerCountry = "EC"
+              , ProviderCapabilities.prCurrency = "usd"
+              , ProviderCapabilities.prAmountMinor = 12500
+              , ProviderCapabilities.prMethod = ProviderCapabilities.MethodCard
+              , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMerchandise
+              , ProviderCapabilities.prRequiredCapabilities =
+                  [ProviderCapabilities.CapabilityOneTime]
+              }
+            providerOrder = map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments
+                [ active CheckoutStore.ProviderPayPhone
+                , active CheckoutStore.ProviderPlaceToPay
+                , active CheckoutStore.ProviderDatafast
+                ]
+                cardRequest)
+
+        it "routes domestic cards deterministically through the selected portfolio" $
+            providerOrder `shouldBe`
+              [ CheckoutStore.ProviderDatafast
+              , CheckoutStore.ProviderPlaceToPay
+              , CheckoutStore.ProviderPayPhone
+              ]
+
+        it "does not route a documented capability until every runtime gate is true" $ do
+            let disabled = (active CheckoutStore.ProviderPlaceToPay)
+                  { ProviderCapabilities.paContractApproved = False }
+                request = cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodDeunaQr }
+            ProviderCapabilities.routePayments [disabled] request `shouldBe` []
+
+        it "does not expose a contracted capability until that exact capability is environment-verified" $ do
+            let methodOnly = (active CheckoutStore.ProviderPlaceToPay)
+                  { ProviderCapabilities.paVerifiedMethods = [ProviderCapabilities.MethodCard]
+                  , ProviderCapabilities.paVerifiedCapabilities =
+                      [ProviderCapabilities.CapabilityOneTime]
+                  }
+                request = cardRequest
+                  { ProviderCapabilities.prRequiredCapabilities =
+                      [ProviderCapabilities.CapabilityPartialRefund]
+                  }
+            ProviderCapabilities.routePayments [methodOnly] request `shouldBe` []
+
+        it "filters providers by operation capability instead of exposing impossible UI actions" $ do
+            let request = cardRequest
+                  { ProviderCapabilities.prRequiredCapabilities =
+                      [ ProviderCapabilities.CapabilityAuthorize
+                      , ProviderCapabilities.CapabilityCapture
+                      ]
+                  }
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments
+                [ active CheckoutStore.ProviderDatafast
+                , active CheckoutStore.ProviderPlaceToPay
+                , active CheckoutStore.ProviderPayPhone
+                ] request)
+              `shouldBe` [CheckoutStore.ProviderPlaceToPay]
+
+        it "routes marketplace funds only through a contract-approved connected-account rail" $ do
+            let marketplaceRequest = cardRequest
+                  { ProviderCapabilities.prMethod = ProviderCapabilities.MethodPayPalWallet
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowMarketplace
+                  , ProviderCapabilities.prRequiredCapabilities =
+                      [ ProviderCapabilities.CapabilityConnectedAccounts
+                      , ProviderCapabilities.CapabilitySellerPayouts
+                      ]
+                  }
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments
+                [active CheckoutStore.ProviderPayPal] marketplaceRequest)
+              `shouldBe` [CheckoutStore.ProviderPayPal]
+
+        it "never falls back after an ambiguous or successful provider result" $ do
+            ProviderCapabilities.safeToFallback
+              ProviderCapabilities.ProviderAmbiguous `shouldBe` False
+            ProviderCapabilities.safeToFallback
+              ProviderCapabilities.ProviderSucceeded `shouldBe` False
+            ProviderCapabilities.safeToFallback
+              ProviderCapabilities.ProviderConfirmedNoCharge `shouldBe` True
+
+        it "rejects non-positive, non-USD, and malformed-country routing requests" $ do
+            ProviderCapabilities.routePayments [active CheckoutStore.ProviderDatafast]
+              cardRequest { ProviderCapabilities.prAmountMinor = 0 } `shouldBe` []
+            ProviderCapabilities.routePayments [active CheckoutStore.ProviderDatafast]
+              cardRequest { ProviderCapabilities.prCurrency = "EUR" } `shouldBe` []
+            ProviderCapabilities.routePayments [active CheckoutStore.ProviderDatafast]
+              cardRequest { ProviderCapabilities.prBuyerCountry = "Ecuador" } `shouldBe` []
+
+        it "parses only canonical public capability query values" $ do
+            PaymentCapabilitiesServer.parsePaymentMethod " DeUna_QR "
+              `shouldBe` Right ProviderCapabilities.MethodDeunaQr
+            PaymentCapabilitiesServer.parseProductFlow "EVENT_TICKET"
+              `shouldBe` Right ProviderCapabilities.FlowEventTicket
+            PaymentCapabilitiesServer.parsePaymentCapability "partial_refund"
+              `shouldBe` Right ProviderCapabilities.CapabilityPartialRefund
+            PaymentCapabilitiesServer.parsePaymentMethod "crypto" `shouldSatisfy` isLeft
+
+    describe "provider-neutral payment lifecycle" $ do
+        let created = Commerce.PaymentLifecycle
+              { Commerce.paymentState = Commerce.PaymentRequiresMethod
+              , Commerce.paymentAmountMinor = 10000
+              , Commerce.paymentAuthorizedMinor = 0
+              , Commerce.paymentCapturedMinor = 0
+              , Commerce.paymentRefundedMinor = 0
+              }
+
+        it "keeps authorization distinct from capture and supports a later partial capture" $ do
+            let authorized = Commerce.transitionPayment created
+                  (Commerce.PaymentAuthorizationVerified 10000)
+            fmap Commerce.paymentState authorized
+              `shouldBe` Right Commerce.PaymentAuthorized
+            let partiallyCaptured = authorized >>= \state ->
+                  Commerce.transitionPayment state (Commerce.PaymentCaptureVerified 4000)
+            fmap Commerce.paymentState partiallyCaptured
+              `shouldBe` Right Commerce.PaymentPartiallyCaptured
+            fmap Commerce.paymentCapturedMinor partiallyCaptured `shouldBe` Right 4000
+
+        it "captures a direct sale but rejects capture beyond its immutable total" $ do
+            let captured = Commerce.transitionPayment created
+                  (Commerce.PaymentCaptureVerified 10000)
+            fmap Commerce.paymentState captured `shouldBe` Right Commerce.PaymentCaptured
+            Commerce.transitionPayment created (Commerce.PaymentCaptureVerified 10001)
+              `shouldSatisfy` isLeft
+
+        it "voids only the exact remaining authorization" $ do
+            let partiallyCaptured =
+                  Commerce.transitionPayment created
+                    (Commerce.PaymentAuthorizationVerified 10000)
+                    >>= \state -> Commerce.transitionPayment state
+                      (Commerce.PaymentCaptureVerified 4000)
+            (partiallyCaptured >>= \state -> Commerce.transitionPayment state
+              (Commerce.PaymentVoidVerified 5999)) `shouldSatisfy` isLeft
+            fmap Commerce.paymentState
+              (partiallyCaptured >>= \state -> Commerce.transitionPayment state
+                (Commerce.PaymentVoidVerified 6000))
+              `shouldBe` Right Commerce.PaymentCaptured
+
+        it "tracks cumulative partial refunds without exceeding captured funds" $ do
+            let captured = Commerce.transitionPayment created
+                  (Commerce.PaymentCaptureVerified 10000)
+                firstRefund = captured >>= \state -> Commerce.transitionPayment state
+                  (Commerce.PaymentRefundVerified 2500)
+                fullRefund = firstRefund >>= \state -> Commerce.transitionPayment state
+                  (Commerce.PaymentRefundVerified 7500)
+            fmap Commerce.paymentState firstRefund
+              `shouldBe` Right Commerce.PaymentPartiallyRefunded
+            fmap Commerce.paymentState fullRefund
+              `shouldBe` Right Commerce.PaymentRefunded
+            (firstRefund >>= \state -> Commerce.transitionPayment state
+              (Commerce.PaymentRefundVerified 7501)) `shouldSatisfy` isLeft
+
+        it "does not equate a customer return or cancellation with a financial reversal" $ do
+            Commerce.transitionPayment created Commerce.PaymentCancellationRequested
+              `shouldBe` Right created { Commerce.paymentState = Commerce.PaymentCancelled }
+            Commerce.transitionPayment
+              created { Commerce.paymentState = Commerce.PaymentCaptured
+                      , Commerce.paymentAuthorizedMinor = 10000
+                      , Commerce.paymentCapturedMinor = 10000
+                      }
+              Commerce.PaymentCancellationRequested `shouldSatisfy` isLeft
 
     describe "distribution state machine invariants" $ do
         let completeGates = Distribution.DistributionGates

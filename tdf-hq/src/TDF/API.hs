@@ -69,6 +69,7 @@ import           TDF.API.DDEX (DDEXAPI)
 import           TDF.API.Catalog (CatalogAPI, PublicCatalogAPI, SecurityGrantRevisionDTO, SelfFanRoleRequest)
 import           TDF.API.ServiceStorefront (ServiceStorefrontPublicAPI, ServiceStorefrontAdminAPI)
 import           TDF.API.CommerceOperations (CommerceOperationsAPI)
+import           TDF.API.PaymentCapabilities (PaymentCapabilitiesAPI)
 import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
@@ -651,6 +652,7 @@ type API =
   :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
+  :<|> PaymentCapabilitiesAPI
   -- Keep the authenticated marketplace branch ahead of the public one so
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
