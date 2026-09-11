@@ -313,6 +313,7 @@ UserLocalePreference sql=user_locale_preferences
     localeId         UUID Maybe
     currencyId       UUID Maybe
     countryId        UUID Maybe
+    showEventRsvpsOnProfile Bool default=TRUE
     updatedAt        UTCTime
     UniqueUserLocalePreference userId
     deriving Show Generic

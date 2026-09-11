@@ -15,6 +15,7 @@ import { useSession } from '../session/SessionContext';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import EventRsvpControls from '../components/events/EventRsvpControls';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
   if (!value) return '';
@@ -212,6 +213,22 @@ export default function SocialEventDetailPage() {
             </CardContent>
           </Card>
         )}
+
+        {event && <Card variant="outlined">
+          <CardContent>
+            <EventRsvpControls
+              eventId={eventId}
+              title={event.eventTitle}
+              start={event.eventStart}
+              timezone={event.eventTimezone ?? timezone}
+              locale={locale}
+              eligible={event.eventRsvpEligible === true}
+              cancelled={event.eventWorkflowStateCode === 'cancelled'}
+              publicShareEligible={event.eventIsPublic === true && event.eventPublicListable === true}
+              origin="internal_event_detail"
+            />
+          </CardContent>
+        </Card>}
 
         <Card variant="outlined">
           <CardContent>

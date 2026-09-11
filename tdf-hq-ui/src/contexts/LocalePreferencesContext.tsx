@@ -27,6 +27,7 @@ function defaults(): LocalePreferences {
     timezone: configuredTimezone && configuredTimezone.length > 0 ? configuredTimezone : browserTimezone(),
     countryId: null,
     countryCode: null,
+    showEventRsvpsOnProfile: true,
   };
 }
 
@@ -47,6 +48,9 @@ function readStoredPreferences(): LocalePreferences {
       timezone: typeof stored.timezone === 'string' && stored.timezone.trim() ? stored.timezone : fallback.timezone,
       countryId: typeof stored.countryId === 'string' && stored.countryId.trim() ? stored.countryId.trim() : null,
       countryCode: typeof stored.countryCode === 'string' ? stored.countryCode.toUpperCase() : null,
+      showEventRsvpsOnProfile: typeof stored.showEventRsvpsOnProfile === 'boolean'
+        ? stored.showEventRsvpsOnProfile
+        : fallback.showEventRsvpsOnProfile,
     };
   } catch {
     return fallback;
@@ -74,6 +78,9 @@ export function normalizePreferences(value: unknown, fallback: LocalePreferences
   const countryCode = typeof source['countryCode'] === 'string'
     ? source['countryCode'].trim().toUpperCase()
     : fallback.countryCode;
+  const showEventRsvpsOnProfile = typeof source['showEventRsvpsOnProfile'] === 'boolean'
+    ? source['showEventRsvpsOnProfile']
+    : fallback.showEventRsvpsOnProfile;
   return {
     localeId,
     locale: normalizedLocale,
@@ -82,6 +89,7 @@ export function normalizePreferences(value: unknown, fallback: LocalePreferences
     timezone: normalizedTimezone,
     countryId: countryId && countryId.length > 0 ? countryId : null,
     countryCode: countryCode && countryCode.length > 0 ? countryCode : null,
+    showEventRsvpsOnProfile,
   };
 }
 

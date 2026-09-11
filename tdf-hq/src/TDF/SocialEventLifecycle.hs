@@ -45,6 +45,7 @@ recognizedSocialEventCapabilityCodes :: [Text]
 recognizedSocialEventCapabilityCodes =
   [ "public-listable"
   , "ticket-purchase"
+  , "rsvp"
   ]
 
 resolveActiveSocialEventStateId :: Text -> SqlPersistT IO UUID

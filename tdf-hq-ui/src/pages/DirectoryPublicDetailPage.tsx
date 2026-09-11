@@ -22,7 +22,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
@@ -30,6 +30,11 @@ import { API_BASE_URL } from '../api/client';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
+import EventRsvpControls from '../components/events/EventRsvpControls';
+import EventRsvpFeed from '../components/events/EventRsvpFeed';
+import { canonicalEventUrl, safePublicImageUrl } from '../utils/eventSharing';
+import { useAnalytics } from '../analytics/useAnalytics';
+import { captureGrowthEvent } from '../analytics/growthAttribution';
 
 type DetailKind = Exclude<DirectoryEntityType, never>;
 
@@ -39,19 +44,23 @@ const record = (value: unknown): Record<string, unknown> | undefined =>
   typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 const rows = (value: unknown): Record<string, unknown>[] =>
   Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => Boolean(record(item))) : [];
-const absoluteUrl = (value: string | undefined, origin: string): string | undefined => {
-  if (!value) return undefined;
+const formatEventDate = (value: unknown, locale: string, timezone?: string): string | undefined => {
+  const raw = text(value);
+  if (!raw) return undefined;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return undefined;
   try {
-    return new URL(value, origin).toString();
+    return parsed.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short', ...(timezone ? { timeZone: timezone } : {}) });
   } catch {
-    return undefined;
+    return parsed.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
   }
 };
-
 export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }) {
   const params = useParams();
   const location = useLocation();
   const { session } = useSession();
+  const analytics = useAnalytics();
+  const trackedEventView = useRef<string | null>(null);
   const identifier = params['slug'] ?? params['eventId'] ?? params['venueId'] ?? '';
   const detail = useQuery({
     queryKey: ['directory', kind, identifier],
@@ -64,17 +73,29 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
     enabled: Boolean(identifier),
   });
   const value = detail.data ?? {};
+  const displayLocale = navigator.language || 'es';
+  const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
   const absoluteProfileImage = kind === 'profile'
     ? rows(value['portfolio'])
         .filter((item) => text(item['itemType']) === 'image')
         .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
-        .map((url) => absoluteUrl(url, API_BASE_URL || window.location.origin))
+        .map((url) => safePublicImageUrl(url, API_BASE_URL || window.location.origin))
         .find((url): url is string => Boolean(url))
     : undefined;
+  const absoluteEventImage = kind === 'event'
+    ? safePublicImageUrl(text(value['imageUrl']), API_BASE_URL || window.location.origin)
+    : undefined;
+  const absolutePreviewImage = absoluteProfileImage ?? absoluteEventImage;
+  const eventDate = kind === 'event' ? formatEventDate(value['startTime'], displayLocale, text(value['timezone'])) : undefined;
+  const eventCancelled = kind === 'event' && text(value['workflowStateCode']) === 'cancelled';
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
-  const canonical = `${window.location.origin}${canonicalPath}`;
+  const canonical = kind === 'event'
+    ? (() => {
+        try { return canonicalEventUrl(window.location.origin, identifier); } catch { return `${window.location.origin}${canonicalPath}`; }
+      })()
+    : `${window.location.origin}${canonicalPath}`;
   const categoryCode = text(record(value['category'])?.['code']);
   const profileKind = text(value['kind']);
   const reputation = record(value['reputation']);
@@ -88,11 +109,25 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
             : ['organization', 'company', 'venue', 'studio', 'agency', 'label', 'distributor', 'school', 'band', 'project'].includes(profileKind ?? '') ? 'Organization'
               : 'Person';
 
+  useEffect(() => {
+    if (kind !== 'event' || !identifier || detail.isLoading || detail.isError || trackedEventView.current === identifier) return;
+    trackedEventView.current = identifier;
+    const params = new URLSearchParams(location.search);
+    const source = params.get('utm_source');
+    if (params.get('utm_campaign') !== 'event_rsvp' || !['tdf_web', 'tdf_mobile'].includes(source ?? '')) return;
+    captureGrowthEvent(analytics, 'event_shared_viewed', {
+      platform: 'web',
+      event_id: identifier,
+      attributed: true,
+      source,
+    });
+  }, [analytics, detail.isError, detail.isLoading, identifier, kind, location.search]);
+
   useMetaTags({
     title,
     description,
     canonical,
-    ogImage: absoluteProfileImage,
+    ogImage: absolutePreviewImage,
     ogType: kind === 'profile' ? 'profile' : 'website',
     structuredData: {
       '@context': 'https://schema.org',
@@ -100,7 +135,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       name: title,
       description,
       url: canonical,
-      ...(absoluteProfileImage ? { image: absoluteProfileImage } : {}),
+      ...(absolutePreviewImage ? { image: absolutePreviewImage } : {}),
       ...(reviewAverage && reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: reviewAverage, reviewCount } } : {}),
     },
   });
@@ -136,11 +171,11 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
-                  {absoluteProfileImage && (
+                  {absolutePreviewImage && (
                     <Box
                       component="img"
-                      src={absoluteProfileImage}
-                      alt={`Foto de ${title}`}
+                      src={absolutePreviewImage}
+                      alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
                       sx={{
                         width: { xs: '100%', sm: 220 },
                         height: { xs: 300, sm: 220 },
@@ -155,16 +190,18 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                     <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
                       <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
                       {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
+                      {eventCancelled && <Chip color="error" label={english ? 'Cancelled' : 'Cancelado'} />}
                     </Stack>
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
+                    {eventDate && <Typography variant="h6" color="text.secondary" mt={1}>{eventDate}</Typography>}
                     {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
                     {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
                   </Box>
                 </Stack>
-                <Stack direction="row" gap={1} flexWrap="wrap" alignSelf={{ md: 'flex-start' }}>
+                {kind !== 'event' && <Stack direction="row" gap={1} flexWrap="wrap" alignSelf={{ md: 'flex-start' }}>
                   <Button onClick={() => { void share(); }} startIcon={<ShareIcon />}>Compartir</Button>
                   <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />}>WhatsApp</Button>
-                </Stack>
+                </Stack>}
               </Stack>
 
               {locationValue && (
@@ -176,18 +213,47 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
               <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</Typography>
 
               {kind === 'event' && (
-                <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                  <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
-                  <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
-                  <Button
-                    component={RouterLink}
-                    to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
-                    variant="contained"
-                    sx={{ mt: 2 }}
-                  >
-                    Ver entradas
-                  </Button>
-                </Paper>
+                <Stack spacing={2}>
+                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+                    <EventRsvpControls
+                      eventId={identifier}
+                      title={title}
+                      start={text(value['startTime'])}
+                      timezone={text(value['timezone'])}
+                      venue={text(venue?.['name']) ?? text(record(value['location'])?.['city'])}
+                      locale={displayLocale}
+                      eligible={value['rsvpEligible'] === true}
+                      cancelled={eventCancelled}
+                      publicShareEligible={value['publicShareEligible'] === true}
+                      initialSummary={{
+                        rsvpAcceptedCount: number(record(value['rsvpSummary'])?.['acceptedCount']) ?? 0,
+                        rsvpMaybeCount: number(record(value['rsvpSummary'])?.['maybeCount']) ?? 0,
+                      }}
+                      origin="public_event_detail"
+                    />
+                  </Paper>
+                  <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                    <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
+                    <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
+                    <Button
+                      component={RouterLink}
+                      to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
+                      variant="contained"
+                      sx={{ mt: 2 }}
+                    >
+                      Ver entradas
+                    </Button>
+                  </Paper>
+                </Stack>
+              )}
+
+              {kind === 'profile' && profileKind === 'person' && session && (
+                <Box component="section" aria-labelledby="directory-profile-rsvp-activity">
+                  <Typography id="directory-profile-rsvp-activity" variant="h5" fontWeight={800} mb={1.5}>
+                    {english ? 'Activity' : 'Actividad'}
+                  </Typography>
+                  <EventRsvpFeed directorySlug={identifier} isSelf={false} locale={displayLocale} />
+                </Box>
               )}
 
               {(professions.length > 0 || instruments.length > 0 || genres.length > 0) && (

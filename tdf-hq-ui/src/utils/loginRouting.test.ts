@@ -100,6 +100,7 @@ describe('onboarding intent routing', () => {
   it('honors a redirect only when the returned session can access it', () => {
     expect(resolvePostAuthPath('follow_artists', ['Customer'], [], '/fans')).toBe('/fans');
     expect(resolvePostAuthPath('follow_artists', ['Customer'], [], '/practicas')).toBe('/fans');
+    expect(resolvePostAuthPath('events', ['Customer'], [], '/eventos/42')).toBe('/eventos/42');
   });
 
   it('turns governed artist and internship intents into access requests for Customer accounts', () => {
@@ -123,6 +124,9 @@ describe('redirect helpers', () => {
     expect(sanitizeRedirectPath(null)).toBeNull();
     expect(sanitizeRedirectPath('https://example.com')).toBeNull();
     expect(sanitizeRedirectPath('//example.com')).toBeNull();
+    expect(sanitizeRedirectPath('/\\example.com')).toBeNull();
+    expect(sanitizeRedirectPath('/eventos/42\nhttps://example.com')).toBeNull();
+    expect(sanitizeRedirectPath('/eventos/42?token=secret&partyId=7')).toBe('/eventos/42');
     expect(sanitizeRedirectPath('/login?signup=1')).toBeNull();
     expect(readSafeRedirectPath('?redirect=%2Flogin%3Fsignup%3D1')).toBeNull();
   });

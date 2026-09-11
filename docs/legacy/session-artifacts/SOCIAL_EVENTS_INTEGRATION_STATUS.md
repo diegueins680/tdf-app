@@ -1,5 +1,9 @@
 # Social Events Feature - Integration Status
 
+> Archived session snapshot. Statements below that call RSVP handlers stubs or placeholders
+> are historical and superseded by `docs/social-events/rsvp-sharing-profile-feed.md` and the
+> current Servant/OpenAPI contracts.
+
 ## Overview
 The Social Events feature (artists, events, venues, RSVPs, invitations) has been successfully implemented across the backend (Haskell) and mobile (React Native) layers with complete data transformation/mapping between backend and frontend data models.
 

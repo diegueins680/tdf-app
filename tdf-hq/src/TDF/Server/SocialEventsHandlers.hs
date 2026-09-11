@@ -10,7 +10,8 @@ module TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     socialEventsServer,
     stripeWebhookServer,
-    validateRsvpStatus,
+    validateRsvpPageLimit,
+    decodeRsvpCursor,
     validateInvitationToPartyId,
     validateInvitationFromPartyId,
     validateInvitationStatusInput,
@@ -129,6 +130,7 @@ import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Char (
     GeneralCategory (Format, LineSeparator, ParagraphSeparator),
     generalCategory,
@@ -247,6 +249,11 @@ import TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
+    RsvpSummaryDTO (..),
+    RsvpFeedItemDTO (..),
+    RsvpFeedPageDTO (..),
+    RsvpAdminDTO (..),
+    RsvpAdminPageDTO (..),
     StripePaymentIntentDTO (..),
     TicketCheckInRequestDTO (..),
     TicketDTO (..),
@@ -314,7 +321,6 @@ selectPublicUpcomingSocialEvents ::
     Int ->
     SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
 selectPublicUpcomingSocialEvents mCity startAfter limit = do
-    backend <- ask :: SqlPersistT IO SqlBackend
     eventTable <- getEscapedRawName "social_event"
     eventIdField <- getEscapedRawName "id"
     eventStartField <- getEscapedRawName "start_time"
@@ -3433,96 +3439,163 @@ socialEventsServer user =
                 envPool
         pure NoContent
 
-    -- RSVPs
+    -- RSVP identity is always derived from the validated session. Public
+    -- responses deliberately contain aggregate counts only.
     rsvpsServer :: ServerT RsvpRoutes AppM
-    rsvpsServer = listRsvps :<|> createRsvp
+    rsvpsServer =
+        getMyRsvp
+            :<|> upsertMyRsvp
+            :<|> deleteMyRsvp
+            :<|> getRsvpSummary
+            :<|> listRsvpsForOrganizer
+            :<|> listProfileRsvpFeed
+            :<|> listDirectoryProfileRsvpFeed
 
-    listRsvps :: T.Text -> AppM [RsvpDTO]
-    listRsvps eventIdStr = do
+    getMyRsvp :: T.Text -> AppM (Maybe RsvpDTO)
+    getMyRsvp eventIdStr = do
         Env{..} <- ask
-        eventKey <- parseVisibleEventKey eventIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
-        rsvpRows <- liftIO $ runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) envPool
-        pure $
-            map
-                ( \(Entity rid rsvp) ->
-                    RsvpDTO
-                        { rsvpId = Just (renderKeyText rid)
-                        , rsvpEventId = eventIdStr
-                        , rsvpPartyId = eventRsvpPartyId rsvp
-                        , rsvpStatus = eventRsvpStatus rsvp
-                        , rsvpCreatedAt = Just (eventRsvpCreatedAt rsvp)
-                        , rsvpUpdatedAt = Just (eventRsvpUpdatedAt rsvp)
-                        }
-                )
-                rsvpRows
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        _ <- requireRsvpEventAccess eventKey False
+        row <- liftIO $ runSqlPool (getBy (UniqueEventRsvp eventKey currentPartyId)) envPool
+        pure (rsvpEntityToSelfDTO eventKey <$> row)
 
-    createRsvp :: T.Text -> RsvpCreateDTO -> AppM RsvpDTO
-    createRsvp eventIdStr dto = do
+    upsertMyRsvp :: T.Text -> RsvpCreateDTO -> AppM RsvpDTO
+    upsertMyRsvp eventIdStr RsvpCreateDTO{..} = do
         Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        _ <- requireRsvpEventAccess eventKey True `catchError` \serverError -> do
+            liftIO $ logRsvpMutation "upsert" eventKey rsvpStatus ("rejected_" <> T.pack (show (errHTTPCode serverError)))
+            throwError serverError
+        let statusValue = rsvpStatus
         now <- liftIO getCurrentTime
-        eventKey <- parseVisibleEventKey eventIdStr
-        let eventIdVal = T.strip eventIdStr
-            RsvpCreateDTO partyIdInput statusInput = dto
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        when (isNothing mEvent) $ throwError err404{errBody = "Event not found"}
-        statusVal <- either throwError pure (validateRsvpStatus statusInput)
-        partyIdVal <-
-            liftIO (resolveExistingPartyIdText envPool "rsvpPartyId" partyIdInput)
+        let visibleOnProfile = statusValue /= "declined" && rsvpShowOnProfile
+            newRow =
+                EventRsvp
+                    { eventRsvpEventId = eventKey
+                    , eventRsvpPartyId = currentPartyId
+                    , eventRsvpStatus = statusValue
+                    , eventRsvpShowOnProfile = visibleOnProfile
+                    , eventRsvpVisibilityDecidedAt = Just now
+                    , eventRsvpMetadata = Nothing
+                    , eventRsvpCreatedAt = now
+                    , eventRsvpUpdatedAt = now
+                    }
+        rateAllowed <- liftIO $ runSqlPool (consumeRsvpMutationRateLimit currentPartyId now) envPool
+        unless rateAllowed $ do
+            liftIO $ logRsvpMutation "upsert" eventKey statusValue "rate_limited"
+            throwError err429{errBody = "Too many RSVP changes; try again later"}
+        result <- liftIO $ runSqlPool (do
+            upsertBy
+                (UniqueEventRsvp eventKey currentPartyId)
+                newRow
+                [ EventRsvpStatus =. statusValue
+                , EventRsvpShowOnProfile =. visibleOnProfile
+                , EventRsvpVisibilityDecidedAt =. Just now
+                , EventRsvpUpdatedAt =. now
+                ]) envPool
+        liftIO $ logRsvpMutation "upsert" eventKey statusValue "success"
+        pure (rsvpEntityToSelfDTO eventKey result)
+
+    deleteMyRsvp :: T.Text -> AppM NoContent
+    deleteMyRsvp eventIdStr = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        now <- liftIO getCurrentTime
+        rateAllowed <- liftIO $ runSqlPool (consumeRsvpMutationRateLimit currentPartyId now) envPool
+        unless rateAllowed $ do
+            liftIO $ logRsvpMutation "delete" eventKey "absent" "rate_limited"
+            throwError err429{errBody = "Too many RSVP changes; try again later"}
+        liftIO $ runSqlPool (deleteBy (UniqueEventRsvp eventKey currentPartyId)) envPool
+        liftIO $ logRsvpMutation "delete" eventKey "absent" "success"
+        pure NoContent
+
+    getRsvpSummary :: T.Text -> AppM RsvpSummaryDTO
+    getRsvpSummary eventIdStr = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        _ <- requireRsvpEventAccess eventKey False
+        liftIO $ runSqlPool (rsvpSummaryForEvent eventKey) envPool
+
+    listRsvpsForOrganizer :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpAdminPageDTO
+    listRsvpsForOrganizer eventIdStr mCursor mLimit = do
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" eventIdStr
+        eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure
+            =<< liftIO (runSqlPool (get eventKey) envPool)
+        unless (hasStrictAdminAccess user || socialEventOrganizerPartyId eventRow == Just currentPartyId) $
+            throwError err403{errBody = "Organizer RSVP access is required"}
+        limit <- either throwError pure (validateRsvpPageLimit mLimit)
+        cursor <- either throwError pure (traverse decodeRsvpCursor (cleanMaybeText mCursor))
+        rows <- liftIO $ runSqlPool (loadOrganizerRsvpPage eventKey cursor (limit + 1)) envPool
+        let visible = take limit rows
+            next = if length rows > limit then encodeRsvpCursorFromAdmin <$> listToMaybe (reverse visible) else Nothing
+        pure RsvpAdminPageDTO{adminRsvpItems = visible, adminRsvpNextCursor = next}
+
+    listProfileRsvpFeed :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpFeedPageDTO
+    listProfileRsvpFeed partyIdInput mCursor mLimit = do
+        Env{..} <- ask
+        targetPartyId <-
+            liftIO (resolveExistingPartyIdText envPool "partyId" partyIdInput)
                 >>= either throwError pure
+        let self = targetPartyId == currentPartyId
+        unless self $ do
+            allowed <- liftIO $ runSqlPool (canViewRsvpProfileFeed currentPartyId targetPartyId) envPool
+            unless allowed $ throwError err404{errBody = "Profile not found"}
+        limit <- either throwError pure (validateRsvpPageLimit mLimit)
+        cursor <- either throwError pure (traverse decodeRsvpCursor (cleanMaybeText mCursor))
+        rows <- liftIO $ runSqlPool (loadRsvpFeedPage targetPartyId currentPartyId self cursor (limit + 1)) envPool
+        let visible = take limit rows
+            next = if length rows > limit then encodeRsvpCursorFromFeed <$> listToMaybe (reverse visible) else Nothing
+        pure RsvpFeedPageDTO{feedItems = visible, feedNextCursor = next}
 
-        existingRsvps <-
-            liftIO $
-                runSqlPool
-                    (selectList [EventRsvpEventId ==. eventKey, EventRsvpPartyId ==. partyIdVal] [])
-                    envPool
+    listDirectoryProfileRsvpFeed :: T.Text -> Maybe T.Text -> Maybe Int -> AppM RsvpFeedPageDTO
+    listDirectoryProfileRsvpFeed slugInput mCursor mLimit = do
+        Env{..} <- ask
+        let slug = T.toLower (T.strip slugInput)
+        when (T.null slug || T.length slug > 160 || T.any (`elem` ['/', '\\', '\NUL', '\n', '\r']) slug) $
+            throwError err404{errBody = "Profile not found"}
+        candidates <- liftIO $ runSqlPool
+            (rawSql
+                "SELECT canonical.subject_party_id::text FROM directory_public_profile_resolution public_profile \
+                \JOIN directory_profile canonical ON canonical.id=public_profile.id \
+                \WHERE public_profile.requested_slug=? AND public_profile.profile_kind='person' \
+                \AND canonical.subject_party_id IS NOT NULL"
+                [PersistText slug]
+                :: SqlPersistT IO [Single T.Text])
+            envPool
+        targetPartyId <- case candidates of
+            [Single partyIdValue] -> pure partyIdValue
+            _ -> throwError err404{errBody = "Profile not found"}
+        listProfileRsvpFeed targetPartyId mCursor mLimit
 
-        existingRsvp <- either throwError pure (resolveUniqueRsvpRow existingRsvps)
-        case existingRsvp of
-            Nothing -> do
-                key <-
-                    liftIO $
-                        runSqlPool
-                            ( insert
-                                EventRsvp
-                                    { eventRsvpEventId = eventKey
-                                    , eventRsvpPartyId = partyIdVal
-                                    , eventRsvpStatus = statusVal
-                                    , eventRsvpMetadata = Nothing
-                                    , eventRsvpCreatedAt = now
-                                    , eventRsvpUpdatedAt = now
-                                    }
-                            )
-                            envPool
-                pure
-                    RsvpDTO
-                        { rsvpId = Just (renderKeyText key)
-                        , rsvpEventId = eventIdVal
-                        , rsvpPartyId = partyIdVal
-                        , rsvpStatus = statusVal
-                        , rsvpCreatedAt = Just now
-                        , rsvpUpdatedAt = Just now
-                        }
-            Just (Entity existingKey existing) -> do
-                liftIO $
-                    runSqlPool
-                        ( update
-                            existingKey
-                            [ EventRsvpStatus =. statusVal
-                            , EventRsvpUpdatedAt =. now
-                            ]
-                        )
-                        envPool
-                pure
-                    RsvpDTO
-                        { rsvpId = Just (renderKeyText existingKey)
-                        , rsvpEventId = eventIdVal
-                        , rsvpPartyId = partyIdVal
-                        , rsvpStatus = statusVal
-                        , rsvpCreatedAt = Just (eventRsvpCreatedAt existing)
-                        , rsvpUpdatedAt = Just now
-                        }
+    requireRsvpEventAccess :: SocialEventId -> Bool -> AppM SocialEvent
+    requireRsvpEventAccess eventKey requireEligible = do
+        Env{..} <- ask
+        (eventRow, accessible, eligible) <- liftIO $ runSqlPool (do
+            mEvent <- get eventKey
+            case mEvent of
+                Nothing -> pure (Nothing, False, False)
+                Just row -> do
+                    publicListable <- maybe (pure False) (`EventLifecycle.socialEventStateHasCapability` "public-listable") (socialEventWorkflowStateId row)
+                    rsvpEligible <- maybe (pure False) (`EventLifecycle.socialEventStateHasCapability` "rsvp") (socialEventWorkflowStateId row)
+                    stateCode <- traverse EventLifecycle.resolveSocialEventStateCode (socialEventWorkflowStateId row)
+                    invited <- isJust <$> selectFirst
+                        [ EventInvitationEventId ==. eventKey
+                        , EventInvitationToPartyId ==. Just currentPartyId
+                        , EventInvitationStatus !=. Just "declined"
+                        ] []
+                    let isOwner = socialEventOrganizerPartyId row == Just currentPartyId
+                        publicFlag = case decodeStoredEventMetadata (socialEventMetadata row) of
+                            Right metadata -> emIsPublic metadata == Just True
+                            Left _ -> False
+                        stillPublic = publicFlag && (publicListable || stateCode == Just "cancelled")
+                    pure (Just row, stillPublic || invited || isOwner || hasStrictAdminAccess user, rsvpEligible)
+            ) envPool
+        row <- maybe (throwError err404{errBody = "Event not found"}) pure eventRow
+        unless accessible $ throwError err404{errBody = "Event not found"}
+        when (requireEligible && not eligible) $
+            throwError err409{errBody = "Event is not currently accepting RSVPs"}
+        pure row
 
     -- Invitations
     invitationsServer :: ServerT InvitationsRoutes AppM
@@ -7105,6 +7178,237 @@ resolveUniqueRsvpRow _ =
                 "Multiple RSVP rows exist for this event and party; resolve duplicate rows before updating RSVP"
             }
 
+data RsvpCursor = RsvpCursor
+    { rsvpCursorUpdatedAt :: UTCTime
+    , rsvpCursorStableId :: Int64
+    }
+    deriving (Show, Eq)
+
+rsvpEntityToSelfDTO :: SocialEventId -> Entity EventRsvp -> RsvpDTO
+rsvpEntityToSelfDTO eventKey (Entity _ row) =
+    RsvpDTO
+        { rsvpEventId = renderKeyText eventKey
+        , rsvpStatus = eventRsvpStatus row
+        , rsvpShowOnProfile = eventRsvpShowOnProfile row
+        , rsvpCreatedAt = Just (eventRsvpCreatedAt row)
+        , rsvpUpdatedAt = Just (eventRsvpUpdatedAt row)
+        }
+
+consumeRsvpMutationRateLimit :: T.Text -> UTCTime -> SqlPersistT IO Bool
+consumeRsvpMutationRateLimit partyIdValue now = do
+    deleteWhere
+        [ EventRsvpMutationRateWindowStart <. addUTCTime (-7200) now
+        ]
+    backendName <- T.toCaseFold <$> getRDBMS
+    if "sqlite" `T.isInfixOf` backendName
+        then consumeSqlite
+        else do
+            counts <- (rawSql
+                "INSERT INTO event_rsvp_mutation_rate_limit(party_id,window_start,mutation_count,updated_at) \
+                \VALUES (?,date_trunc('hour',?::timestamptz),1,?) \
+                \ON CONFLICT (party_id,window_start) DO UPDATE SET mutation_count=event_rsvp_mutation_rate_limit.mutation_count+1,updated_at=excluded.updated_at \
+                \RETURNING mutation_count"
+                [PersistText partyIdValue, toPersistValue now, toPersistValue now]
+                :: SqlPersistT IO [Single Int])
+            pure $ case counts of
+                [Single countValue] -> countValue <= 120
+                _ -> False
+  where
+    consumeSqlite = do
+        let hourText = T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:00:00Z" now)
+            hourStart = fromMaybe now (iso8601ParseM (T.unpack hourText) :: Maybe UTCTime)
+            seed = EventRsvpMutationRate partyIdValue hourStart 1 now
+        inserted <- insertUnique seed
+        case inserted of
+            Just _ -> pure True
+            Nothing -> do
+                updateWhere
+                    [ EventRsvpMutationRatePartyId ==. partyIdValue
+                    , EventRsvpMutationRateWindowStart ==. hourStart
+                    ]
+                    [ EventRsvpMutationRateMutationCount +=. 1
+                    , EventRsvpMutationRateUpdatedAt =. now
+                    ]
+                current <- getBy (UniqueEventRsvpMutationWindow partyIdValue hourStart)
+                pure $ maybe False ((<= 120) . eventRsvpMutationRateMutationCount . entityVal) current
+
+logRsvpMutation :: T.Text -> SocialEventId -> T.Text -> T.Text -> IO ()
+logRsvpMutation operation eventKey statusValue outcome =
+    hPutStrLn stderr . T.unpack . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+        Aeson.object
+            [ "event" Aeson..= ("event_rsvp_mutation" :: T.Text)
+            , "operation" Aeson..= operation
+            , "eventId" Aeson..= renderKeyText eventKey
+            , "status" Aeson..= statusValue
+            , "outcome" Aeson..= outcome
+            ]
+
+rsvpSummaryForEvent :: SocialEventId -> SqlPersistT IO RsvpSummaryDTO
+rsvpSummaryForEvent eventKey = do
+    rows <- rawSql
+        "SELECT count(*) FILTER (WHERE status='accepted'),count(*) FILTER (WHERE status='maybe') FROM event_rsvp WHERE event_id=?"
+        [toPersistValue eventKey]
+    pure $ case rows of
+        [(Single acceptedCount, Single maybeCount)] ->
+            RsvpSummaryDTO
+                { rsvpAcceptedCount = fromIntegral (acceptedCount :: Int64)
+                , rsvpMaybeCount = fromIntegral (maybeCount :: Int64)
+                }
+        _ -> RsvpSummaryDTO 0 0
+
+validateRsvpPageLimit :: Maybe Int -> Either ServerError Int
+validateRsvpPageLimit Nothing = Right 20
+validateRsvpPageLimit (Just limit)
+    | limit >= 1 && limit <= 50 = Right limit
+    | otherwise = Left err400{errBody = "limit must be between 1 and 50"}
+
+encodeRsvpCursor :: RsvpCursor -> T.Text
+encodeRsvpCursor RsvpCursor{..} =
+    TE.decodeUtf8 . B64URL.encode . TE.encodeUtf8 $
+        T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S%QZ" rsvpCursorUpdatedAt)
+            <> "|"
+            <> T.pack (show rsvpCursorStableId)
+
+decodeRsvpCursor :: T.Text -> Either ServerError RsvpCursor
+decodeRsvpCursor rawCursor =
+    case B64URL.decode (TE.encodeUtf8 (T.strip rawCursor)) of
+        Left _ -> invalid
+        Right bytes ->
+            case TE.decodeUtf8' bytes of
+                Left _ -> invalid
+                Right decoded ->
+                    case T.splitOn "|" decoded of
+                        [rawTime, rawId] ->
+                            case (iso8601ParseM (T.unpack rawTime) :: Maybe UTCTime, normalizePositiveIdentifier rawId) of
+                                (Just timestamp, Just stableId) -> Right (RsvpCursor timestamp stableId)
+                                _ -> invalid
+                        _ -> invalid
+  where
+    invalid = Left err400{errBody = "cursor is malformed or expired"}
+
+encodeRsvpCursorFromAdmin :: RsvpAdminDTO -> T.Text
+encodeRsvpCursorFromAdmin item =
+    encodeRsvpCursor
+        RsvpCursor
+            { rsvpCursorUpdatedAt = adminRsvpUpdatedAt item
+            , rsvpCursorStableId = fromMaybe 0 (normalizePositiveIdentifier (adminRsvpId item))
+            }
+
+encodeRsvpCursorFromFeed :: RsvpFeedItemDTO -> T.Text
+encodeRsvpCursorFromFeed item =
+    encodeRsvpCursor
+        RsvpCursor
+            { rsvpCursorUpdatedAt = feedActionAt item
+            , rsvpCursorStableId = fromMaybe 0 (normalizePositiveIdentifier (feedEventId item))
+            }
+
+loadOrganizerRsvpPage :: SocialEventId -> Maybe RsvpCursor -> Int -> SqlPersistT IO [RsvpAdminDTO]
+loadOrganizerRsvpPage eventKey mCursor limit = do
+    let cursorTime = maybe PersistNull (toPersistValue . rsvpCursorUpdatedAt) mCursor
+        cursorId = maybe PersistNull (PersistInt64 . rsvpCursorStableId) mCursor
+    rows <- rawSql
+        "SELECT id,party_id,status,show_on_profile,created_at,updated_at FROM event_rsvp \
+        \WHERE event_id=? AND (?::timestamptz IS NULL OR (updated_at,id)<(?::timestamptz,?::bigint)) \
+        \ORDER BY updated_at DESC,id DESC LIMIT ?"
+        [toPersistValue eventKey, cursorTime, cursorTime, cursorId, PersistInt64 (fromIntegral limit)]
+    pure
+        [ RsvpAdminDTO
+            { adminRsvpId = T.pack (show (rowId :: Int64))
+            , adminRsvpPartyId = partyIdValue
+            , adminRsvpStatus = statusValue
+            , adminRsvpShowOnProfile = showOnProfile
+            , adminRsvpCreatedAt = createdAt
+            , adminRsvpUpdatedAt = updatedAt
+            }
+        | (Single rowId, Single partyIdValue, Single statusValue, Single showOnProfile, Single createdAt, Single updatedAt) <- rows
+        ]
+
+canViewRsvpProfileFeed :: T.Text -> T.Text -> SqlPersistT IO Bool
+canViewRsvpProfileFeed viewerPartyId targetPartyId = do
+    rows <- rawSql
+        "WITH target_public AS ( \
+        \ SELECT DISTINCT coalesce(profile.canonical_profile_id,profile.id) AS id \
+        \ FROM directory_profile profile JOIN directory_public_profile public_profile ON public_profile.id=coalesce(profile.canonical_profile_id,profile.id) \
+        \ WHERE profile.subject_party_id=?::bigint AND profile.profile_kind='person' \
+        \), target_all AS ( \
+        \ SELECT profile.id FROM directory_profile profile WHERE profile.subject_party_id=?::bigint \
+        \ UNION SELECT id FROM target_public \
+        \), viewer_all AS ( \
+        \ SELECT profile.id FROM directory_profile profile WHERE profile.subject_party_id=?::bigint \
+        \ UNION SELECT coalesce(profile.canonical_profile_id,profile.id) FROM directory_profile profile WHERE profile.subject_party_id=?::bigint \
+        \) \
+        \SELECT (SELECT count(*)=1 FROM target_public) AND NOT EXISTS ( \
+        \ SELECT 1 FROM directory_profile_block block \
+        \ WHERE (block.blocker_profile_id IN (SELECT id FROM target_all) AND block.blocked_profile_id IN (SELECT id FROM viewer_all)) \
+        \ OR (block.blocked_profile_id IN (SELECT id FROM target_all) AND block.blocker_profile_id IN (SELECT id FROM viewer_all)) \
+        \)"
+        [ PersistText targetPartyId
+        , PersistText targetPartyId
+        , PersistText viewerPartyId
+        , PersistText viewerPartyId
+        ]
+    pure $ rows == [Single True]
+
+loadRsvpFeedPage :: T.Text -> T.Text -> Bool -> Maybe RsvpCursor -> Int -> SqlPersistT IO [RsvpFeedItemDTO]
+loadRsvpFeedPage targetPartyId _viewerPartyId self mCursor limit = do
+    let cursorTime = maybe PersistNull (toPersistValue . rsvpCursorUpdatedAt) mCursor
+        cursorId = maybe PersistNull (PersistInt64 . rsvpCursorStableId) mCursor
+    rows <- rawSql
+        "SELECT event.id,rsvp.status,event.title,event.start_time,event.timezone, \
+        \ CASE WHEN event.metadata IS JSON OBJECT \
+        \ AND strpos(event.metadata::jsonb->>'imageUrl',chr(92))=0 \
+        \ AND (((event.metadata::jsonb->>'imageUrl') ~* '^https://[^[:space:][:cntrl:]]+$' AND split_part(event.metadata::jsonb->>'imageUrl','/',3) NOT LIKE '%@%') \
+        \ OR (event.metadata::jsonb->>'imageUrl') ~ '^/[^/[:space:][:cntrl:]][^[:space:][:cntrl:]]*$') \
+        \ THEN event.metadata::jsonb->>'imageUrl' ELSE NULL END, \
+        \ venue.name,venue.city,state.code,rsvp.updated_at \
+        \FROM event_rsvp rsvp \
+        \JOIN social_event event ON event.id=rsvp.event_id \
+        \JOIN workflow_state state ON state.id=event.workflow_state_id \
+        \JOIN workflow_definition workflow ON workflow.id=state.workflow_id AND workflow.code='social-event-lifecycle' AND workflow.active \
+        \LEFT JOIN venue ON venue.id=event.venue_id \
+        \WHERE rsvp.party_id=? AND rsvp.show_on_profile AND rsvp.visibility_decided_at IS NOT NULL \
+        \AND rsvp.status IN ('accepted','maybe') \
+        \AND coalesce(CASE WHEN event.metadata IS JSON OBJECT AND event.metadata::jsonb->>'isPublic' IN ('true','false') THEN (event.metadata::jsonb->>'isPublic')::boolean ELSE FALSE END,FALSE) \
+        \AND (state.code='cancelled' OR EXISTS (SELECT 1 FROM workflow_state_capability capability WHERE capability.state_id=state.id AND capability.capability_code='public-listable' AND capability.enabled)) \
+        \AND (?::timestamptz IS NULL OR (rsvp.updated_at,event.id)<(?::timestamptz,?::bigint)) \
+        \ORDER BY rsvp.updated_at DESC,event.id DESC LIMIT ?"
+        [ PersistText targetPartyId
+        , cursorTime
+        , cursorTime
+        , cursorId
+        , PersistInt64 (fromIntegral limit)
+        ]
+    pure
+        [ RsvpFeedItemDTO
+            { feedItemType = "event_rsvp"
+            , feedEventId = T.pack (show (eventIdValue :: Int64))
+            , feedStatus = statusValue
+            , feedShowOnProfile = True
+            , feedEventTitle = title
+            , feedEventStart = startTime
+            , feedEventTimezone = eventTimezone
+            , feedEventImageUrl = imageUrl
+            , feedVenueName = venueName
+            , feedCity = venueCity
+            , feedWorkflowStateCode = stateCode
+            , feedActionAt = actionAt
+            , feedCanonicalUrl = "/eventos/" <> T.pack (show eventIdValue)
+            , feedCanEdit = self
+            , feedCanShare = stateCode /= "cancelled"
+            }
+        | ( Single eventIdValue
+            , Single statusValue
+            , Single title
+            , Single startTime
+            , Single eventTimezone
+            , Single imageUrl
+            , Single venueName
+            , Single venueCity
+            , Single stateCode
+            , Single actionAt
+            ) <- rows
+        ]
+
 normalizePositiveIdentifierText :: T.Text -> Maybe T.Text
 normalizePositiveIdentifierText rawIdentifier =
     T.pack . show <$> normalizePositiveIdentifier rawIdentifier
@@ -7151,14 +7455,6 @@ validateInvitationFromPartyId currentPartyId rawInvitationPartyId =
                     | normalized == currentPartyId -> Right currentPartyId
                     | otherwise ->
                         Left err403{errBody = "invitationFromPartyId must match the authenticated party"}
-
-validateRsvpStatus :: T.Text -> Either ServerError T.Text
-validateRsvpStatus raw =
-    case T.toLower (T.strip raw) of
-        "accepted" -> Right "accepted"
-        "declined" -> Right "declined"
-        "maybe" -> Right "maybe"
-        _ -> Left err400{errBody = "rsvpStatus must be one of: accepted, declined, maybe"}
 
 parseInvitationStatus :: T.Text -> Maybe T.Text
 parseInvitationStatus raw =
@@ -8667,6 +8963,7 @@ data EventWorkflowProjection = EventWorkflowProjection
     , ewpNameEs :: T.Text
     , ewpNameEn :: T.Text
     , ewpPublicListable :: Bool
+    , ewpRsvpEligible :: Bool
     , ewpTicketPurchaseEnabled :: Bool
     }
 
@@ -8899,6 +9196,8 @@ loadEventWorkflowProjections eventRows = do
                     , ewpNameEn = nameEn
                     , ewpPublicListable =
                         "public-listable" `Set.member` capabilities
+                    , ewpRsvpEligible =
+                        "rsvp" `Set.member` capabilities
                     , ewpTicketPurchaseEnabled =
                         "ticket-purchase" `Set.member` capabilities
                     }
@@ -9409,6 +9708,7 @@ eventEntityToDTO configuredDefault eid eventRow artists = do
             Nothing -> pure (Left err500{errBody = "Event references an invalid workflow state"})
             Just (stateCode, nameEs, nameEn) -> do
               publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+              rsvpEligible <- EventLifecycle.socialEventStateHasCapability workflowStateId "rsvp"
               ticketPurchaseEnabled <- EventLifecycle.socialEventStateHasCapability workflowStateId "ticket-purchase"
               pure $
                 eventEntityToDTOWithWorkflow
@@ -9421,6 +9721,7 @@ eventEntityToDTO configuredDefault eid eventRow artists = do
                     , ewpNameEs = nameEs
                     , ewpNameEn = nameEn
                     , ewpPublicListable = publicListable
+                    , ewpRsvpEligible = rsvpEligible
                     , ewpTicketPurchaseEnabled = ticketPurchaseEnabled
                     }
 
@@ -9461,6 +9762,7 @@ eventEntityToDTOWithWorkflow configuredDefault eid eventRow artists workflow = d
             , eventWorkflowStateNameEs = Just (ewpNameEs workflow)
             , eventWorkflowStateNameEn = Just (ewpNameEn workflow)
             , eventPublicListable = Just (ewpPublicListable workflow)
+            , eventRsvpEligible = Just (ewpRsvpEligible workflow)
             , eventTicketPurchaseEnabled = Just (ewpTicketPurchaseEnabled workflow)
             , eventCurrency = emCurrency metadata <|> Just configuredDefault
             , eventBudgetCents = emBudgetCents metadata

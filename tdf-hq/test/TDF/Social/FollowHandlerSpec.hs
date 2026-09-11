@@ -13,10 +13,10 @@ import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
 import qualified Data.UUID as UUID
 import qualified Data.UUID.V4 as UUIDV4
-import Database.Persist (Entity (..), get, insert, insertKey, toPersistValue)
+import Database.Persist (Entity (..), count, get, insert, insertKey, selectList, toPersistValue, (==.))
 import Database.Persist.Sql (SqlPersistT, fromSqlKey, rawExecute, runSqlPool, toSqlKey)
 import Database.Persist.Sqlite (createSqlitePool)
-import Servant (Handler, NoContent, ServerError (errBody, errHTTPCode), (:<|>) (..))
+import Servant (Handler, NoContent (..), ServerError (errBody, errHTTPCode), (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -50,7 +50,8 @@ import TDF.DTO.SocialEventsDTO
     , RefundRequestDTO (..)
     , RejectionReasonDTO (..)
     , RsvpCreateDTO (..)
-    , RsvpDTO
+    , RsvpDTO (RsvpDTO)
+    , RsvpSummaryDTO (..)
     , StripePaymentIntentDTO
     , TicketDTO
     , TicketPurchaseRequestDTO (..)
@@ -70,6 +71,8 @@ import TDF.Server.SocialEventsHandlers
     , resolveUniqueRsvpRow
     , socialEventsServer
     , suppressImportedEventMetadata
+    , decodeRsvpCursor
+    , validateRsvpPageLimit
     , validateEventImageUploadSize
     , validateEventDeleteAccess
     , validateEventDeletionCheckoutHistory
@@ -102,6 +105,19 @@ mkEventImageUploadFile fileName =
 
 spec :: Spec
 spec = describe "social event handler helpers" $ do
+    it "bounds RSVP feed pages and fails closed on malformed cursors" $ do
+        validateRsvpPageLimit Nothing `shouldBe` Right 20
+        validateRsvpPageLimit (Just 1) `shouldBe` Right 1
+        validateRsvpPageLimit (Just 50) `shouldBe` Right 50
+        mapM_ (\limit -> case validateRsvpPageLimit (Just limit) of
+            Left err -> errHTTPCode err `shouldBe` 400
+            Right value -> expectationFailure ("Expected invalid RSVP page limit, got " <> show value)) [0, 51]
+        case decodeRsvpCursor "not-a-valid-cursor" of
+            Left err -> do
+                errHTTPCode err `shouldBe` 400
+                BL8.unpack (errBody err) `shouldContain` "cursor is malformed"
+            Right value -> expectationFailure ("Expected malformed RSVP cursor to fail, got " <> show value)
+
     it "rejects duplicate RSVP rows instead of updating an arbitrary existing match" $ do
         now <- getCurrentTime
         let rsvpRow rowId status =
@@ -111,6 +127,8 @@ spec = describe "social event handler helpers" $ do
                         { eventRsvpEventId = toSqlKey 7
                         , eventRsvpPartyId = "42"
                         , eventRsvpStatus = status
+                        , eventRsvpShowOnProfile = False
+                        , eventRsvpVisibilityDecidedAt = Nothing
                         , eventRsvpMetadata = Nothing
                         , eventRsvpCreatedAt = now
                         , eventRsvpUpdatedAt = now
@@ -122,6 +140,66 @@ spec = describe "social event handler helpers" $ do
                 BL8.unpack (errBody err) `shouldContain` "Multiple RSVP rows exist"
             Right value ->
                 expectationFailure ("Expected duplicate RSVP rows to be rejected, got: " <> show value)
+
+    it "creates, updates, reads, summarizes, and idempotently deletes only the session Party RSVP" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 71
+            user = socialEventUser 2
+            (getMine, upsertMine, deleteMine, getSummary) = socialEventRsvpHandlersFor user
+            env = Env { envPool = pool, envConfig = error "envConfig is unused by RSVP handlers" }
+        runSqlPool
+            (do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1), (?, 'rsvp', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId, toPersistValue socialEventWorkflowStateFixtureId]
+                insertKey eventKey
+                    ((seedSocialEvent "1" "RSVP integration event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            )
+            pool
+
+        first <- runHandler $ runReaderT (upsertMine "71" (RsvpCreateDTO "accepted" True)) env
+        case first of
+            Right (RsvpDTO _ actualStatus actualShowOnProfile _ _) -> do
+                actualStatus `shouldBe` "accepted"
+                actualShowOnProfile `shouldBe` True
+            Left err -> expectationFailure ("Expected first RSVP upsert, got: " <> show err)
+
+        second <- runHandler $ runReaderT (upsertMine "71" (RsvpCreateDTO "maybe" False)) env
+        case second of
+            Right (RsvpDTO _ actualStatus actualShowOnProfile _ _) -> do
+                actualStatus `shouldBe` "maybe"
+                actualShowOnProfile `shouldBe` False
+            Left err -> expectationFailure ("Expected RSVP update, got: " <> show err)
+
+        rows <- runSqlPool (selectList [EventRsvpEventId ==. eventKey] []) pool
+        length rows `shouldBe` 1
+        map (eventRsvpPartyId . entityVal) rows `shouldBe` ["2"]
+        current <- runHandler $ runReaderT (getMine "71") env
+        fmap (fmap (\(RsvpDTO _ statusValue _ _ _) -> statusValue)) current `shouldBe` Right (Just "maybe")
+        totals <- runHandler $ runReaderT (getSummary "71") env
+        totals `shouldBe` Right (RsvpSummaryDTO 0 1)
+
+        declined <- runHandler $ runReaderT (upsertMine "71" (RsvpCreateDTO "declined" True)) env
+        case declined of
+            Right (RsvpDTO _ actualStatus actualShowOnProfile _ _) -> do
+                actualStatus `shouldBe` "declined"
+                actualShowOnProfile `shouldBe` False
+            Left err -> expectationFailure ("Expected declined RSVP update, got: " <> show err)
+        declinedTotals <- runHandler $ runReaderT (getSummary "71") env
+        declinedTotals `shouldBe` Right (RsvpSummaryDTO 0 0)
+
+        firstDelete <- runHandler $ runReaderT (deleteMine "71") env
+        secondDelete <- runHandler $ runReaderT (deleteMine "71") env
+        firstDelete `shouldBe` Right NoContent
+        secondDelete `shouldBe` Right NoContent
+        remaining <- runSqlPool (count [EventRsvpEventId ==. eventKey]) pool
+        remaining `shouldBe` 0
 
     it "rejects empty or oversized event image uploads before copying files" $ do
         case validateEventImageUploadSize 1 of
@@ -896,7 +974,7 @@ spec = describe "social event handler helpers" $ do
         rsvpResult <-
             runHandler $
                 runReaderT
-                    (socialEventRsvpCreateHandlerFor ordinaryUser "13" (RsvpCreateDTO "2" "accepted"))
+                    (socialEventRsvpCreateHandlerFor ordinaryUser "13" (RsvpCreateDTO "accepted" True))
                     env
         assertHiddenEventRoute "RSVP" rsvpResult
 
@@ -1672,6 +1750,17 @@ socialEventRsvpCreateHandlerFor
     -> RsvpCreateDTO
     -> ReaderT Env Handler RsvpDTO
 socialEventRsvpCreateHandlerFor user =
+    let (_, createRsvpHandler, _, _) = socialEventRsvpHandlersFor user
+     in createRsvpHandler
+
+socialEventRsvpHandlersFor
+    :: AuthedUser
+    -> ( T.Text -> ReaderT Env Handler (Maybe RsvpDTO)
+       , T.Text -> RsvpCreateDTO -> ReaderT Env Handler RsvpDTO
+       , T.Text -> ReaderT Env Handler NoContent
+       , T.Text -> ReaderT Env Handler RsvpSummaryDTO
+       )
+socialEventRsvpHandlersFor user =
     case socialEventsServer user of
         _events
             :<|> _cities
@@ -1682,7 +1771,14 @@ socialEventRsvpCreateHandlerFor user =
             :<|> rsvpsServer
             :<|> _ ->
             case rsvpsServer of
-                _listRsvps :<|> createRsvpHandler -> createRsvpHandler
+                getMyRsvp
+                    :<|> createRsvpHandler
+                    :<|> deleteRsvp
+                    :<|> summary
+                    :<|> _adminList
+                    :<|> _profileFeed
+                    :<|> _directoryProfileFeed ->
+                        (getMyRsvp, createRsvpHandler, deleteRsvp, summary)
 
 socialEventMomentCreateHandlerFor
     :: AuthedUser
@@ -1910,6 +2006,7 @@ socialEventUpdatePayload title =
                 , eventWorkflowStateNameEs = Nothing
                 , eventWorkflowStateNameEn = Nothing
                 , eventPublicListable = Nothing
+                , eventRsvpEligible = Nothing
                 , eventTicketPurchaseEnabled = Nothing
                 , eventCurrency = Nothing
                 , eventBudgetCents = Nothing
@@ -2039,6 +2136,15 @@ initializeSocialSchema = do
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL\
         \)"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_rsvp\" (\"id\" INTEGER PRIMARY KEY AUTOINCREMENT,\"event_id\" INTEGER NOT NULL,\"party_id\" VARCHAR NOT NULL,\"status\" VARCHAR NOT NULL,\"show_on_profile\" BOOLEAN NOT NULL DEFAULT 0,\"visibility_decided_at\" TIMESTAMP NULL,\"metadata\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE(\"event_id\",\"party_id\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_rsvp_mutation_rate_limit\" (\"id\" INTEGER PRIMARY KEY AUTOINCREMENT,\"party_id\" VARCHAR NOT NULL,\"window_start\" TIMESTAMP NOT NULL,\"mutation_count\" INTEGER NOT NULL DEFAULT 1,\"updated_at\" TIMESTAMP NOT NULL,UNIQUE(\"party_id\",\"window_start\"))"
+        []
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_invitation\" (\"id\" INTEGER PRIMARY KEY AUTOINCREMENT,\"event_id\" INTEGER NOT NULL,\"from_party_id\" VARCHAR NULL,\"to_party_id\" VARCHAR NULL,\"status\" VARCHAR NULL,\"message\" VARCHAR NULL,\"created_at\" TIMESTAMP NOT NULL,\"updated_at\" TIMESTAMP NOT NULL)"
         []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"workflow_definition\" (\"id\" VARCHAR PRIMARY KEY,\"code\" VARCHAR NOT NULL UNIQUE,\"active\" BOOLEAN NOT NULL)"

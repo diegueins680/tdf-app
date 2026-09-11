@@ -95,6 +95,155 @@ paths:
                 $ref: '#/components/schemas/SocialEvent'
         '422':
           description: Event type is unknown, inactive, ineffective, deprecated, or unpublished
+  /social-events/events/{eventId}/rsvp:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema: { type: string, pattern: '^[1-9][0-9]*$' }
+    get:
+      tags: [Social events]
+      summary: Get the authenticated user's RSVP for an event
+      operationId: getMyEventRsvp
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current RSVP or null
+          content:
+            application/json:
+              schema:
+                nullable: true
+                allOf: [{ $ref: '#/components/schemas/EventRsvp' }]
+        '401': { description: Authentication required }
+        '404': { description: Event is missing or not visible }
+    put:
+      tags: [Social events]
+      summary: Atomically create or update the authenticated user's RSVP
+      operationId: upsertMyEventRsvp
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventRsvpWrite' }
+      responses:
+        '200':
+          description: Authoritative current RSVP
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRsvp' }
+        '401': { description: Authentication required }
+        '404': { description: Event is missing, hidden, private, or not authorized }
+        '409': { description: Event no longer accepts RSVPs }
+        '400': { description: Unknown status or unknown request field }
+        '429': { description: Mutation rate limit exceeded }
+    delete:
+      tags: [Social events]
+      summary: Delete the authenticated user's RSVP
+      operationId: deleteMyEventRsvp
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: RSVP absent after the idempotent operation }
+        '401': { description: Authentication required }
+        '429': { description: Mutation rate limit exceeded }
+  /social-events/events/{eventId}/rsvp-summary:
+    get:
+      tags: [Social events]
+      summary: Get privacy-safe aggregate RSVP counts
+      operationId: getEventRsvpSummary
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[1-9][0-9]*$' }
+      responses:
+        '200':
+          description: Separate accepted and interested counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRsvpSummary' }
+        '401': { description: Authentication required }
+        '404': { description: Event is missing or not visible }
+  /social-events/events/{eventId}/rsvps:
+    get:
+      tags: [Social events]
+      summary: List RSVPs for an authorized organizer
+      operationId: listEventRsvpsForOrganizer
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[1-9][0-9]*$' }
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 500 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Authorized administrative list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRsvpAdminPage' }
+        '400': { description: Cursor is malformed or limit is outside 1 through 50 }
+        '401': { description: Authentication required }
+        '403': { description: Organizer permission required }
+        '404': { description: Event not found }
+  /social-events/profiles/{partyId}/rsvp-feed:
+    get:
+      tags: [Social events]
+      summary: Get the privacy-filtered event RSVP profile feed
+      operationId: getEventRsvpProfileFeed
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: partyId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[1-9][0-9]*$' }
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 500 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Stable cursor page with accepted and interested RSVPs only
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRsvpFeedPage' }
+        '400': { description: Cursor is malformed or limit is outside 1 through 50 }
+        '401': { description: Authentication required }
+        '404': { description: Profile is missing, non-public, or hidden by a user block }
+  /social-events/directory-profiles/{slug}/rsvp-feed:
+    get:
+      tags: [Social events]
+      summary: Get RSVP activity for an unambiguously person-linked public directory profile
+      operationId: getDirectoryProfileEventRsvpFeed
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 160 }
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 500 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Privacy-filtered cursor page; organization and ambiguous profiles fail closed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventRsvpFeedPage' }
+        '400': { description: Cursor is malformed or limit is outside 1 through 50 }
+        '401': { description: Authentication required }
+        '404': { description: Profile is missing, ambiguous, non-person, blocked, or non-public }
   /social-events/events/{eventId}/moments/{momentId}/reactions:
     post:
       tags: [Social events]
@@ -7638,6 +7787,85 @@ components:
         erChangeExternalId: { type: string }
         erChangeResult: { type: string }
         erChangeCreatedAt: { type: string, format: date-time }
+    EventRsvpStatus:
+      type: string
+      enum: [accepted, maybe, declined]
+      description: Canonical persisted vocabulary. Clients localize these values at the presentation boundary.
+    EventRsvp:
+      type: object
+      additionalProperties: false
+      required: [rsvpEventId, rsvpStatus, rsvpShowOnProfile]
+      properties:
+        rsvpEventId: { type: string, readOnly: true }
+        rsvpStatus: { $ref: '#/components/schemas/EventRsvpStatus' }
+        rsvpShowOnProfile: { type: boolean }
+        rsvpCreatedAt: { type: string, format: date-time, nullable: true, readOnly: true }
+        rsvpUpdatedAt: { type: string, format: date-time, nullable: true, readOnly: true }
+    EventRsvpWrite:
+      type: object
+      additionalProperties: false
+      required: [rsvpStatus, rsvpShowOnProfile]
+      properties:
+        rsvpStatus: { $ref: '#/components/schemas/EventRsvpStatus' }
+        rsvpShowOnProfile:
+          type: boolean
+          description: Explicit decision for this RSVP. Declined RSVPs are never published regardless of this value.
+    EventRsvpSummary:
+      type: object
+      additionalProperties: false
+      required: [rsvpAcceptedCount, rsvpMaybeCount]
+      properties:
+        rsvpAcceptedCount: { type: integer, minimum: 0 }
+        rsvpMaybeCount: { type: integer, minimum: 0 }
+    EventRsvpAdmin:
+      type: object
+      additionalProperties: false
+      required: [adminRsvpId, adminRsvpPartyId, adminRsvpStatus, adminRsvpShowOnProfile, adminRsvpCreatedAt, adminRsvpUpdatedAt]
+      properties:
+        adminRsvpId: { type: string }
+        adminRsvpPartyId: { type: string }
+        adminRsvpStatus: { $ref: '#/components/schemas/EventRsvpStatus' }
+        adminRsvpShowOnProfile: { type: boolean }
+        adminRsvpCreatedAt: { type: string, format: date-time }
+        adminRsvpUpdatedAt: { type: string, format: date-time }
+    EventRsvpAdminPage:
+      type: object
+      additionalProperties: false
+      required: [adminRsvpItems]
+      properties:
+        adminRsvpItems:
+          type: array
+          items: { $ref: '#/components/schemas/EventRsvpAdmin' }
+        adminRsvpNextCursor: { type: string, nullable: true }
+    EventRsvpFeedItem:
+      type: object
+      additionalProperties: false
+      required: [feedItemType, feedEventId, feedStatus, feedShowOnProfile, feedEventTitle, feedEventStart, feedWorkflowStateCode, feedActionAt, feedCanonicalUrl, feedCanEdit, feedCanShare]
+      properties:
+        feedItemType: { type: string, enum: [event_rsvp] }
+        feedEventId: { type: string }
+        feedStatus: { type: string, enum: [accepted, maybe] }
+        feedShowOnProfile: { type: boolean, enum: [true] }
+        feedEventTitle: { type: string }
+        feedEventStart: { type: string, format: date-time }
+        feedEventTimezone: { type: string, nullable: true }
+        feedEventImageUrl: { type: string, format: uri, nullable: true }
+        feedVenueName: { type: string, nullable: true }
+        feedCity: { type: string, nullable: true }
+        feedWorkflowStateCode: { type: string }
+        feedActionAt: { type: string, format: date-time }
+        feedCanonicalUrl: { type: string, pattern: '^/eventos/[1-9][0-9]*$' }
+        feedCanEdit: { type: boolean }
+        feedCanShare: { type: boolean }
+    EventRsvpFeedPage:
+      type: object
+      additionalProperties: false
+      required: [feedItems]
+      properties:
+        feedItems:
+          type: array
+          items: { $ref: '#/components/schemas/EventRsvpFeedItem' }
+        feedNextCursor: { type: string, nullable: true }
     SocialEvent:
       type: object
       additionalProperties: false
@@ -7697,6 +7925,10 @@ components:
           nullable: true
           readOnly: true
         eventPublicListable:
+          type: boolean
+          nullable: true
+          readOnly: true
+        eventRsvpEligible:
           type: boolean
           nullable: true
           readOnly: true
@@ -7878,7 +8110,7 @@ components:
           $ref: '#/components/schemas/LocalePreferences'
     LocalePreferences:
       type: object
-      required: [localeId, locale, currencyId, currency, timezone]
+      required: [localeId, locale, currencyId, currency, timezone, showEventRsvpsOnProfile]
       properties:
         localeId:
           type: string
@@ -7913,6 +8145,9 @@ components:
           pattern: '^[A-Z]{2}$'
           readOnly: true
           description: Presentation and external-wire code resolved from countryId; legacy rows may use preserved migration evidence until backfilled.
+        showEventRsvpsOnProfile:
+          type: boolean
+          description: Default presented for new public-event RSVPs. Every RSVP still records an explicit per-action decision.
     LocalePreferencesUpdate:
       type: object
       additionalProperties: false
@@ -7933,6 +8168,9 @@ components:
           format: uuid
           nullable: true
           description: Canonical active country identity. Null explicitly clears the preference.
+        showEventRsvpsOnProfile:
+          type: boolean
+          description: Optional new default for subsequent RSVP decisions.
     CurrencyConversionAuditCreate:
       type: object
       additionalProperties: false

@@ -47,6 +47,7 @@ export interface SocialEventDTO {
   eventWorkflowStateNameEs?: string | null;
   eventWorkflowStateNameEn?: string | null;
   eventPublicListable?: boolean | null;
+  eventRsvpEligible?: boolean | null;
   eventTicketPurchaseEnabled?: boolean | null;
   eventCurrency?: string | null;
   eventBudgetCents?: number | null;
@@ -114,14 +115,48 @@ export interface SocialInvitationDTO {
   invitationCreatedAt?: string | null;
 }
 
-export type SocialRsvpStatus = 'Accepted' | 'Declined' | 'Maybe';
+/** Canonical RSVP vocabulary. Normalize display labels only at the UI boundary. */
+export type SocialRsvpStatus = 'accepted' | 'maybe' | 'declined';
 
 export interface SocialRsvpDTO {
-  rsvpId?: string | null;
   rsvpEventId: string;
-  rsvpPartyId: string;
   rsvpStatus: SocialRsvpStatus;
+  rsvpShowOnProfile: boolean;
   rsvpCreatedAt?: string | null;
+  rsvpUpdatedAt?: string | null;
+}
+
+export interface SocialRsvpWriteDTO {
+  rsvpStatus: SocialRsvpStatus;
+  rsvpShowOnProfile: boolean;
+}
+
+export interface SocialRsvpSummaryDTO {
+  rsvpAcceptedCount: number;
+  rsvpMaybeCount: number;
+}
+
+export interface SocialRsvpFeedItemDTO {
+  feedItemType: 'event_rsvp';
+  feedEventId: string;
+  feedStatus: Extract<SocialRsvpStatus, 'accepted' | 'maybe'>;
+  feedShowOnProfile: true;
+  feedEventTitle: string;
+  feedEventStart: string;
+  feedEventTimezone?: string | null;
+  feedEventImageUrl?: string | null;
+  feedVenueName?: string | null;
+  feedCity?: string | null;
+  feedWorkflowStateCode: string;
+  feedActionAt: string;
+  feedCanonicalUrl: string;
+  feedCanEdit: boolean;
+  feedCanShare: boolean;
+}
+
+export interface SocialRsvpFeedPageDTO {
+  feedItems: SocialRsvpFeedItemDTO[];
+  feedNextCursor?: string | null;
 }
 
 export interface SocialTicketTierDTO {
@@ -656,12 +691,22 @@ export const SocialEventsAPI = {
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/activities/${encodeURIComponent(activityId)}/verify-route`, {}) as EventRouteVerificationDTO,
   verifyAllLogisticsRoutes: async (eventId: string) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics/verify-routes`, {}) as EventRouteVerificationDTO[],
-  rsvp: async (eventId: string, partyId: string, status: SocialRsvpDTO['rsvpStatus']) =>
-    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvps`, {
-      rsvpEventId: eventId,
-      rsvpPartyId: partyId,
-      rsvpStatus: status,
-    }) as SocialRsvpDTO,
+  getMyRsvp: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp`) as SocialRsvpDTO | null,
+  getRsvpSummary: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp-summary`) as SocialRsvpSummaryDTO,
+  upsertMyRsvp: async (eventId: string, input: SocialRsvpWriteDTO) =>
+    await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp`, input) as SocialRsvpDTO,
+  deleteMyRsvp: async (eventId: string) =>
+    await delUnknown(`/social-events/events/${encodeURIComponent(eventId)}/rsvp`),
+  listRsvpFeed: async (partyId: string, cursor?: string, limit = 20) => {
+    const query = buildQuery({ cursor, limit });
+    return await getUnknown(`/social-events/profiles/${encodeURIComponent(partyId)}/rsvp-feed${query}`) as SocialRsvpFeedPageDTO;
+  },
+  listDirectoryProfileRsvpFeed: async (slug: string, cursor?: string, limit = 20) => {
+    const query = buildQuery({ cursor, limit });
+    return await getUnknown(`/social-events/directory-profiles/${encodeURIComponent(slug)}/rsvp-feed${query}`) as SocialRsvpFeedPageDTO;
+  },
   // Promo Codes
   listPromoCodes: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/promo-codes`) as PromoCodeDTO[],

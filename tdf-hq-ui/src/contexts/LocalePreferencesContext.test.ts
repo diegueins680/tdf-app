@@ -9,6 +9,7 @@ const fallback: LocalePreferences = {
   timezone: 'UTC',
   countryId: null,
   countryCode: null,
+  showEventRsvpsOnProfile: true,
 };
 
 describe('normalizePreferences', () => {
@@ -26,6 +27,7 @@ describe('normalizePreferences', () => {
       timezone: 'America/Guayaquil',
       countryId: null,
       countryCode: 'EC',
+      showEventRsvpsOnProfile: true,
     });
   });
 
