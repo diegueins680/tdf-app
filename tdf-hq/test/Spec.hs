@@ -382,7 +382,13 @@ import TDF.Server
       extractApiErrorMessage,
       chatKitSessionErrorMessage,
       shouldRetryWithFallbackModel )
-import TDF.Server.Reviews (eligibilitySql, publicReviewTargetStatement, reputationCategoriesSql, reviewsPublicServer)
+import TDF.Server.Reviews
+    ( eligibilitySql
+    , publicReviewTargetStatement
+    , reputationCategoriesSql
+    , reputationPilotMembershipSql
+    , reviewsPublicServer
+    )
 import TDF.ServerLiveSessions
     ( buildLiveSessionUsernameCollisionCandidate,
       LiveSessionMusicianLookup (..),
@@ -1062,6 +1068,11 @@ main = hspec $ do
         it "lists only active database-owned categories" $ do
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "FROM reputation_category WHERE status='active'"
             reputationCategoriesSql `shouldSatisfy` Data.Text.isInfixOf "ORDER BY default_position,slug"
+
+        it "requires an active, unexpired server-side pilot membership" $ do
+            reputationPilotMembershipSql `shouldSatisfy` Data.Text.isInfixOf "reputation_pilot_cohort_membership"
+            reputationPilotMembershipSql `shouldSatisfy` Data.Text.isInfixOf "status='active'"
+            reputationPilotMembershipSql `shouldSatisfy` Data.Text.isInfixOf "expires_at IS NULL OR expires_at > now()"
 
         it "keeps public aggregates dark until the independent public projection gate is enabled" $
             withEnvOverrides
