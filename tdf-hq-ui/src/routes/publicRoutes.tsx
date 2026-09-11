@@ -26,6 +26,7 @@ const LiveSessionPublicPage = lazy(() => import('../pages/LiveSessionPublicPage'
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
+const MerchReputationPage = lazy(() => import('../pages/MerchReputationPage'));
 const MerchCartPage = lazy(() => import('../pages/MerchCartPage'));
 const MerchDiscoveryPage = lazy(() => import('../pages/MerchDiscoveryPage'));
 const MerchOrderTrackingPage = lazy(() => import('../pages/MerchOrderTrackingPage'));
@@ -84,6 +85,8 @@ export function renderPublicRoutes() {
       <Route path="/artista/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/a/:slugOrId" element={<PublicBranding><ArtistPublicPage /></PublicBranding>} />
       <Route path="/marketplace" element={<PublicBranding><MarketplacePage /></PublicBranding>} />
+      <Route path="/merch/tiendas/:storeId" element={<PublicBranding><MerchReputationPage kind="store" /></PublicBranding>} />
+      <Route path="/merch/productos/:productId" element={<PublicBranding><MerchReputationPage kind="product" /></PublicBranding>} />
       <Route path="/tiendas" element={<PublicBranding><MerchDiscoveryPage /></PublicBranding>} />
       <Route path="/tienda/:storeSlug" element={<PublicBranding><MerchStorefrontPage /></PublicBranding>} />
       <Route path="/tienda/:storeSlug/producto/:productSlug" element={<PublicBranding><MerchProductPage /></PublicBranding>} />

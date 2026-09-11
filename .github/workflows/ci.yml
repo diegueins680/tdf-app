@@ -358,6 +358,9 @@ jobs:
       - name: Rehearse contextual reputation staging worker migration
         run: ./scripts/test-contextual-reputation-worker-migration.sh
 
+      - name: Rehearse merch reputation migration with synthetic evidence
+        run: ./scripts/test-merch-reputation-migration.sh
+
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
 

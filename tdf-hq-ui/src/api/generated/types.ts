@@ -5433,6 +5433,391 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/merch/artists/{artistPartyId}/stores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List an artist's stores with separately labelled commercial reputation */
+        get: operations["listArtistMerchStores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/stores/{storeId}/reputation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMerchStoreReputation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/stores/{storeId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMerchStoreReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/products/{productId}/reputation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMerchProductReputation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/products/{productId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMerchProductReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/formula": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMerchReputationFormula"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}/reviews/eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMerchOrderReviewEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}/review-buyer-claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Links the authenticated buyer to a guest checkout after validating its private tracking capability. The token is neither persisted nor returned; unknown, mismatched, and already-claimed orders have the same response. */
+        put: operations["claimMerchOrderReviewBuyer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}/store-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putMerchStoreReview"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/orders/{orderId}/lines/{lineId}/product-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putMerchProductReview"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reviews/{reviewId}/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putMerchSellerResponse"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reportMerchReputationContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/decisions/{decisionId}/appeal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["appealMerchModerationDecision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/preferences/{subjectKind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the authenticated user's discovery priorities
+         * @description The order personalizes discovery explanations only and never changes a public store or product score.
+         */
+        get: operations["getMerchReputationPriorities"];
+        /** Save an auditable priority ordering without changing public scores */
+        put: operations["putMerchReputationPriorities"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read opt-in notification choices without returning message content */
+        get: operations["getMerchReputationNotificationPreferences"];
+        /** Replace the authenticated user's notification choices */
+        put: operations["putMerchReputationNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/reputation/category-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suggest a commercial category without changing any public score */
+        post: operations["submitMerchReputationCategorySuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/seller/stores/{storeId}/reputation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSellerMerchReputation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMerchModerationCases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/category-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List category suggestions for bias and utility review */
+        get: operations["listMerchReputationCategorySuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/category-suggestions/{suggestionId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a decision; approval requires sample, bias and utility evidence */
+        post: operations["decideMerchReputationCategorySuggestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/cases/{caseId}/workflow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Triage, request evidence, or control a provisional visibility measure
+         * @description A provisional hide preserves the original content and visibility for later restoration or appeal.
+         */
+        post: operations["transitionMerchModerationCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/cases/{caseId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decideMerchModerationCase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/merch/admin/reputation/appeals/{appealId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve an appeal with a reviewer independent from the first decision */
+        post: operations["decideMerchModerationAppeal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/merch/capabilities": {
         parameters: {
             query?: never;
@@ -6181,6 +6566,231 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        MerchReputationSummary: {
+            /** @enum {string} */
+            subjectKind: "store" | "product";
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            storeId?: string;
+            /** Format: uuid */
+            productId?: string;
+            name?: string;
+            storeName?: string;
+            productName?: string;
+            slug?: string;
+            /** @description True only for store aggregates; never an artistic score */
+            commercialReputation?: boolean;
+            reputationLabel?: string;
+            /** @enum {string} */
+            state: "new_store" | "unrated" | "published";
+            rating?: number | null;
+            verifiedReviewCount?: number;
+            verifiedPurchaseReviewCount?: number;
+            historicalReviewCount?: number;
+            /** @enum {string} */
+            confidence?: "new" | "limited" | "moderate" | "strong";
+            formulaVersion?: string | null;
+            dimensions?: components["schemas"]["MerchDimensionAggregate"][];
+            objectiveSignals?: {
+                [key: string]: unknown;
+            };
+            badges?: {
+                [key: string]: unknown;
+            }[];
+        };
+        MerchDimensionAggregate: {
+            code: string;
+            average?: number | null;
+            count: number;
+            distribution?: {
+                [key: string]: number;
+            };
+        };
+        MerchReviewPublic: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "store" | "product";
+            rating: number;
+            comment?: string | null;
+            /** @enum {string} */
+            status: "published" | "limited";
+            /** @enum {boolean} */
+            verifiedPurchase: true;
+            /** @enum {string} */
+            badge: "Compra verificada";
+            /** @description Public name/avatar according to buyer privacy preferences */
+            author: {
+                [key: string]: unknown;
+            };
+            dimensions: {
+                [key: string]: number;
+            };
+            images: {
+                /** Format: uuid */
+                assetId: string;
+                url: string;
+                altText: string;
+                position: number;
+            }[];
+            sellerResponse?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        MerchReviewPage: {
+            items: components["schemas"]["MerchReviewPublic"][];
+            /** Format: uuid */
+            nextCursor?: string | null;
+        };
+        MerchReviewImageInput: {
+            /** Format: uuid */
+            mediaAssetId: string;
+            altText: string;
+        };
+        MerchReviewSubmit: {
+            overallRating: number;
+            issueOccurred: boolean;
+            comment?: string;
+            dimensions: {
+                [key: string]: number;
+            };
+            images?: components["schemas"]["MerchReviewImageInput"][];
+            expectedRevision: number;
+        };
+        MerchReviewMutation: {
+            /** Format: uuid */
+            reviewId: string;
+            revision: number;
+            status: string;
+            /** @enum {boolean} */
+            verifiedPurchase: true;
+            /** Format: date-time */
+            editDeadline: string;
+        };
+        MerchReviewBuyerClaim: {
+            /** Format: uuid */
+            orderId: string;
+            /** @enum {boolean} */
+            buyerLinked: true;
+        };
+        MerchReviewEligibility: {
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            storeId: string;
+            /** @enum {string} */
+            orderState: "created" | "confirmed" | "cancelled" | "completed";
+            /** @enum {string} */
+            fulfillmentState: "pending" | "preparing" | "partially_delivered" | "delivered" | "picked_up" | "cancelled";
+            storeReview: {
+                [key: string]: unknown;
+            };
+            productLines: {
+                [key: string]: unknown;
+            }[];
+        };
+        MerchSellerResponseSubmit: {
+            responseBody: string;
+            responseExpectedRevision: number;
+        };
+        MerchContentReport: {
+            /** @enum {string} */
+            reportTargetType: "review" | "seller_response";
+            /** Format: uuid */
+            reportTargetId: string;
+            /** @enum {string} */
+            reportReason: "offensive" | "personal_information" | "spam" | "extortion" | "conflict_of_interest" | "false_review" | "coordinated_manipulation" | "duplicate" | "irrelevant";
+            reportDetails?: string;
+            authorizedEvidence?: {
+                [key: string]: unknown;
+            }[];
+        };
+        MerchModerationDecision: {
+            /** @enum {string} */
+            moderationDecision: "approve" | "reject_report" | "hide" | "restore" | "limit";
+            /** @enum {string} */
+            moderationReasonCode: "legitimate_negative_opinion" | "offensive" | "personal_information" | "spam" | "extortion" | "conflict_of_interest" | "false_review" | "coordinated_manipulation" | "duplicate" | "irrelevant";
+            moderationRationale: string;
+            moderationEvidence: {
+                [key: string]: unknown;
+            };
+        };
+        MerchModerationWorkflow: {
+            /** @enum {string} */
+            moderationAction: "triage" | "request_evidence" | "provisionally_hide" | "resume_review";
+            workflowRationale: string;
+            workflowEvidence: {
+                [key: string]: unknown;
+            };
+        };
+        MerchAppeal: {
+            appealGrounds: string;
+        };
+        MerchAppealDecision: {
+            /** @enum {string} */
+            appealOutcome: "upheld" | "reversed";
+            appealRationale: string;
+            appealEvidence: {
+                [key: string]: unknown;
+            };
+        };
+        MerchCategorySuggestionSubmit: {
+            /** @enum {string} */
+            suggestionSubjectKind: "store" | "product";
+            suggestionLabel: string;
+            suggestionDefinition: string;
+        };
+        MerchCategorySuggestionDecision: {
+            /** @enum {string} */
+            suggestionStatus: "duplicate" | "testing" | "approved" | "rejected";
+            suggestionMinimumSample?: number;
+            suggestionBiasTest?: {
+                [key: string]: unknown;
+            };
+            suggestionUtilityTest?: {
+                [key: string]: unknown;
+            };
+            suggestionDecisionReason: string;
+        };
+        MerchReputationPrioritySubmit: {
+            orderedDimensionCodes: string[];
+            priorityExpectedRevision: number;
+        };
+        MerchReputationPriorities: {
+            /** @enum {string} */
+            subjectKind: "store" | "product";
+            revision: number;
+            /** @enum {boolean} */
+            affectsPublicScore: false;
+            orderedDimensions: {
+                code: string;
+                nameEs: string;
+                nameEn: string;
+                definitionEs: string;
+                definitionEn: string;
+            }[];
+        };
+        MerchNotificationPreferences: {
+            /** @default false */
+            reviewInvitation: boolean;
+            /** @default false */
+            reviewReminder: boolean;
+            /** @default false */
+            sellerResponseNotification: boolean;
+            /** @default false */
+            moderationChange: boolean;
+            /** @default false */
+            evidenceRequest: boolean;
+            /** @default false */
+            appealResult: boolean;
+            /** @default false */
+            badgeChange: boolean;
+        };
         MerchCapabilities: {
             /** @enum {string} */
             environment: "sandbox" | "staging" | "production";
@@ -6244,6 +6854,12 @@ export interface components {
             countryCode?: "EC";
             /** @enum {string} */
             currency: "USD";
+            discovery?: {
+                /** @description True while no public numeric store score is eligible. */
+                newStore: boolean;
+                /** @description Neutral exploration signal; it is never inherited from an owner or artist. */
+                explorationEligible: boolean;
+            };
             /** @enum {string} */
             applicationStatus?: "requested" | "under_review" | "approved" | "rejected" | "withdrawn";
             /** @enum {string} */
@@ -22896,6 +23512,768 @@ export interface operations {
             };
             /** @description PayPal capture or immutable payment fields could not be verified */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listArtistMerchStores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                artistPartyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published stores; no artistic or professional score is combined into these values */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReputationSummary"][];
+                };
+            };
+            /** @description Store reviews are disabled in this environment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchStoreReputation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Commercial store aggregate with governed category breakdown */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReputationSummary"];
+                };
+            };
+            /** @description Store not found or feature disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMerchStoreReviews: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                storeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public verified reviews without order, contact, payment or shipping data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewPage"];
+                };
+            };
+        };
+    };
+    getMerchProductReputation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Product rating kept separate from store reputation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReputationSummary"];
+                };
+            };
+            /** @description Product not found or feature disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMerchProductReviews: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public product reviews from verified order lines */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewPage"];
+                };
+            };
+        };
+    };
+    getMerchReputationFormula: {
+        parameters: {
+            query?: {
+                locale?: "es" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accessible explanation and public governed parameters */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    getMerchOrderReviewEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Eligibility for the authenticated order buyer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewEligibility"];
+                };
+            };
+            /** @description Order not found in buyer scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    claimMerchOrderReviewBuyer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unguessable token returned once at guest order creation. Invalid values receive the same response as unknown orders. */
+                "X-Order-Lookup-Token": components["parameters"]["OrderLookupToken"];
+            };
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order is idempotently linked to the authenticated buyer for review eligibility */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewBuyerClaim"];
+                };
+            };
+            /** @description Order unavailable or private capability does not match */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putMerchStoreReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchReviewSubmit"];
+            };
+        };
+        responses: {
+            /** @description Created or revised verified store review */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewMutation"];
+                };
+            };
+            /** @description Not the eligible buyer or known related account */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing review changed; reload before editing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putMerchProductReview: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                orderId: string;
+                lineId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchReviewSubmit"];
+            };
+        };
+        responses: {
+            /** @description Created or revised verified product-line review */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReviewMutation"];
+                };
+            };
+            /** @description Line is not eligible or belongs to another buyer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Existing review changed; reload before editing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putMerchSellerResponse: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                reviewId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchSellerResponseSubmit"];
+            };
+        };
+        responses: {
+            /** @description Public seller response; the review itself is unchanged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor does not administer the review store */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Response changed elsewhere */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reportMerchReputationContent: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchContentReport"];
+            };
+        };
+        responses: {
+            /** @description Report and moderation case created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    appealMerchModerationDecision: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                decisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchAppeal"];
+            };
+        };
+        responses: {
+            /** @description Appeal opened for an affected party */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not affected by this decision */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchReputationPriorities: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subjectKind: "store" | "product";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Governed dimensions in the user's preferred order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchReputationPriorities"];
+                };
+            };
+        };
+    };
+    putMerchReputationPriorities: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                subjectKind: "store" | "product";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchReputationPrioritySubmit"];
+            };
+        };
+        responses: {
+            /** @description New immutable preference revision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preferences changed elsewhere; reload before editing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getMerchReputationNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current choices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchNotificationPreferences"];
+                };
+            };
+        };
+    };
+    putMerchReputationNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchNotificationPreferences"];
+            };
+        };
+        responses: {
+            /** @description Saved choices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MerchNotificationPreferences"];
+                };
+            };
+        };
+    };
+    submitMerchReputationCategorySuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCategorySuggestionSubmit"];
+            };
+        };
+        responses: {
+            /** @description Pending suggestion or reference to an existing normalized duplicate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Subject feature is disabled */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSellerMerchReputation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                storeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authorized panel including private order-to-review linkage */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Store is outside actor scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMerchModerationCases: {
+        parameters: {
+            query?: {
+                state?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Strict-admin moderation queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Strict Admin permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMerchReputationCategorySuggestions: {
+        parameters: {
+            query?: {
+                status?: "pending" | "duplicate" | "testing" | "approved" | "rejected";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Strict-admin category governance queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            /** @description Strict Admin permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideMerchReputationCategorySuggestion: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                suggestionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchCategorySuggestionDecision"];
+            };
+        };
+        responses: {
+            /** @description Audited status; the current formula remains unchanged */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionMerchModerationCase: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchModerationWorkflow"];
+            };
+        };
+        responses: {
+            /** @description Audited intermediate workflow state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Case cannot transition from its current state */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideMerchModerationCase: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchModerationDecision"];
+            };
+        };
+        responses: {
+            /** @description Audited visibility decision; original evidence is retained */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin permission required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    decideMerchModerationAppeal: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                appealId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MerchAppealDecision"];
+            };
+        };
+        responses: {
+            /** @description Audited appeal result; a reversal restores the prior visibility */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strict Admin or independent-review requirement not met */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

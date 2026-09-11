@@ -6,6 +6,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Merch, readStoredMerchCart, storeMerchCart, type MerchProduct } from '../api/merch';
+import { MerchReputation } from '../api/merchReputation';
+import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
@@ -27,6 +29,18 @@ export default function MerchProductPage() {
     queryKey: ['merch-product', storeSlug, productSlug],
     queryFn: () => Merch.product(storeSlug, productSlug),
     enabled: Boolean(storeSlug && productSlug && capabilities.data?.features.publicCatalog),
+    retry: false,
+  });
+  const productReputation = useQuery({
+    queryKey: ['merch-product-reputation', productQuery.data?.id],
+    queryFn: () => MerchReputation.product(productQuery.data!.id),
+    enabled: Boolean(productQuery.data?.id),
+    retry: false,
+  });
+  const storeReputation = useQuery({
+    queryKey: ['merch-store-reputation', productQuery.data?.storeId],
+    queryFn: () => MerchReputation.store(productQuery.data!.storeId),
+    enabled: Boolean(productQuery.data?.storeId),
     retry: false,
   });
   const variants = useMemo(() => productQuery.data?.variants ?? [], [productQuery.data?.variants]);
@@ -90,6 +104,8 @@ export default function MerchProductPage() {
           </Stack>
           <Typography variant="h5">{selectedVariant ? formatMerchMoney(selectedVariant.priceMinor, selectedVariant.currency, language === 'en' ? 'en-US' : 'es-EC') : '—'}</Typography>
           <Typography sx={{ whiteSpace: 'pre-wrap' }}>{product.description}</Typography>
+          {productReputation.data && <Card variant="outlined"><CardContent><MerchReputationSummary summary={productReputation.data} compact /><Button component={RouterLink} to={`/merch/productos/${product.id}`} size="small">{language === 'en' ? 'Product reviews' : 'Valoraciones del producto'}</Button></CardContent></Card>}
+          {storeReputation.data && <Card variant="outlined"><CardContent><MerchReputationSummary summary={storeReputation.data} compact /><Button component={RouterLink} to={`/merch/tiendas/${product.storeId}`} size="small">{language === 'en' ? 'Store reputation' : 'Reputación de la tienda'}</Button></CardContent></Card>}
           <FormControl fullWidth>
             <InputLabel id="merch-variant-label">{language === 'en' ? 'Variant' : 'Variante'}</InputLabel>
             <Select labelId="merch-variant-label" label={language === 'en' ? 'Variant' : 'Variante'} value={selectedVariant?.id ?? ''} onChange={(event) => setVariantId(event.target.value)}>

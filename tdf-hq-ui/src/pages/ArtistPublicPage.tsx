@@ -33,6 +33,7 @@ import LazyPaginatedList from '../components/LazyPaginatedList';
 import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
+import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
@@ -409,6 +410,8 @@ export default function ArtistPublicPage() {
               </Alert>
             )}
 
+            <ArtistMerchStores artistPartyId={artist.apArtistId} />
+
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography component="h2" variant="h6" fontWeight={800}>
@@ -505,6 +508,9 @@ export default function ArtistPublicPage() {
                 </Box>
               </>
             )}
+
+            <Divider />
+            <ArtistMerchStores artistPartyId={artist.apArtistId} />
 
             {artist.apFollowerCount > 0 && (
               <>

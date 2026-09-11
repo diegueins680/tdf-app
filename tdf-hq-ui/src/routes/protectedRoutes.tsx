@@ -55,6 +55,10 @@ const LiveSessionIntakePage = lazy(() => import('../pages/LiveSessionIntakePage'
 const LogsPage = lazy(() => import('../pages/LogsPage'));
 const ManualPage = lazy(() => import('../pages/ManualPage'));
 const MarketplaceOrdersPage = lazy(() => import('../pages/MarketplaceOrdersPage'));
+const MerchOrderReviewPage = lazy(() => import('../pages/MerchOrderReviewPage'));
+const MerchSellerReputationPage = lazy(() => import('../pages/MerchSellerReputationPage'));
+const MerchReputationModerationPage = lazy(() => import('../pages/MerchReputationModerationPage'));
+const MerchReputationPreferencesPage = lazy(() => import('../pages/MerchReputationPreferencesPage'));
 const MerchAdminPage = lazy(() => import('../pages/MerchAdminPage'));
 const MerchSellerPage = lazy(() => import('../pages/MerchSellerPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
@@ -119,6 +123,10 @@ export function renderProtectedRoutes() {
         <Route path="/perfil/:partyId" element={<PublicProfilePage />} />
         <Route path="/reputation/preferences" element={<ReputationPreferencesPage />} />
         <Route path="/reputation/consents" element={<ReputationConsentsPage />} />
+        <Route path="/merch/orden/:orderId/evaluar" element={<MerchOrderReviewPage />} />
+        <Route path="/merch/reputacion/preferencias" element={<MerchReputationPreferencesPage />} />
+        <Route path="/merch/vendedor/tiendas/:storeId/reputacion" element={<MerchSellerReputationPage />} />
+        <Route path="/admin/merch/reputacion" element={<MerchReputationModerationPage />} />
         <Route path="/social" element={<SocialPageView />} />
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />
