@@ -1,0 +1,1 @@
+[tdf-app/sessions/tdf-app/4b484f82-0a33-4b37-b06f-59be5f584e0a.jsonl#L5] User: Preflight only: reply with exactly READY. Do not call tools or modify anything.
