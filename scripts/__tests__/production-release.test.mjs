@@ -190,6 +190,10 @@ test('already-applied production migrations retain their recorded checksums', ()
       '7541ba81474ae699a6de2849ace0baad3623bc7dbffb285d70d611b17ea50b0b',
     ],
     [
+      '../../tdf-hq/sql/2026-08-14_catalog_integrity.sql',
+      '4a856fb813417e2e87aed286b1b664d54cbda004ffb1c44baed89f4b4901571b',
+    ],
+    [
       '../../tdf-hq/sql/2026-08-13_unified_checkout_core.sql',
       '79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0',
     ],
