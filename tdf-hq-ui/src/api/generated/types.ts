@@ -22182,14 +22182,17 @@ export interface operations {
     };
     listDirectoryFavorites: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Restrict the Party-scoped result to one supported favorite kind. Mobile saved-event synchronization uses `event`. */
+                targetKind?: components["schemas"]["DirectoryEntityType"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Current user's favorites */
+            /** @description Current authenticated Party's favorites */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -22197,6 +22200,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DirectoryFavorite"][];
                 };
+            };
+            /** @description Unsupported target kind */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -22212,8 +22222,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Idempotently saved favorite */
+            /** @description Favorite desired state is saved idempotently; event targets must exist in the public event projection */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid target kind or identifier */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event target does not exist or is not publicly visible */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

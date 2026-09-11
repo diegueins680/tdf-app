@@ -8,7 +8,7 @@ Original continuation baseline: `edbb90e4c98f174946fc39c15d362e4bd9084f3c` (`fea
 
 Reconciled stacked baseline: `e4ce8403127bc620de430af9e3a8e3cff3941f5f` (`feature/onboarding-first-ux-20260904`)
 
-Final integrated-code reconciliation: `1749e4c7d78ca44fae60e8a1eec1edf35bd50194` (includes root `main` at `b181fae331f900a7214feda140b5b36cd3fa9d28`)
+Latest-base reconciliation: `21edb4da6` (includes root `main` at `9a8697fe76d84d0b4503d2e6324b7fee91d23f7a`)
 
 Working branch: `feature/onboarding-continuity-20260906`
 
@@ -31,9 +31,9 @@ The existing onboarding experiment remains paused. Its exposure state is still d
 | Capability | Status | Evidence from actual check | Consequence |
 | --- | --- | --- | --- |
 | Repository read/write | Available | Isolated worktree `/private/tmp/tdf-onboarding-continuity-20260906` accepted source, test, migration, and report changes. | Safe implementation is possible without touching the user’s unrelated dirty checkout. |
-| Branch and commit | Available | Continuation branch started at `edbb90e4…`; schema commit `64702d26…` was created before the manifest entry, and the published integrated code head `1749e4c7d…` includes `main` at `b181fae33…`. | Migration ancestry is immutable and reviewable. Root PR #241 targets `main` directly. |
+| Branch and commit | Available | Continuation branch started at `edbb90e4…`; schema commit `64702d26…` was created before the manifest entry, and reconciliation `21edb4da6…` includes `main` at `9a8697fe7…`. | Migration ancestry is immutable and reviewable. Root PR #241 targets `main` directly. |
 | Existing work protection | Available | All continuation work stayed in the isolated worktree; no hard reset, force push, or default-branch mutation occurred. | Unrelated user work remains outside this batch. |
-| Mobile submodule | Available | Required client generation and checks executed against the initialized submodule. Mobile head `1e07ae92d46677b42b14f33c59766b3dea84e830` was pushed after the contract and Party-scoped saved-event changes. | The parent pointer references a published commit, not an unpublishable local object. |
+| Mobile submodule | Available | Required client generation and checks executed against the initialized submodule. Mobile head `2c050dc` includes the contract, Party-scoped saved-event changes, and current `main`; its full Jest, TypeScript, and lint gates passed before publication. | The parent pointer references a published commit, not an unpublishable local object. |
 | Runtimes and package managers | Available | Existing Node/npm, TypeScript, Jest, ESLint, OpenAPI generator, Stack/GHC, Docker, and PostgreSQL tooling executed. | Web/mobile/contract/migration verification is supported. |
 | Backend/database | Partial | Disposable PostgreSQL 16 Docker test applied, reapplied, rolled back non-destructively, and reapplied the new migration. After merged-base reconciliation, the current 184-module test target compiled and linked; a competing process reacquired Stack's lock before test launch, so the freshly linked executable was run directly and passed onboarding 3/3 plus access-request evidence 1/1. | Migration, compiler, and focused unit behavior are verified locally; the interrupted Stack wrapper is not called a pass, and no staging or production database was changed. |
 | Browser/device tooling | Partial | Browser tooling and prior real local screenshots remain available from the 2026-09-05 batch; no browser or native device runtime was launched for this continuation. | Source/unit evidence is not represented as device or browser proof. |
@@ -165,7 +165,7 @@ No uplift, completion rate, or conversion rate is claimed. The completion endpoi
 | Mobile follow-up auth Jest | 1 suite / 14 tests passed | Existing-login intent fallback resumes Social. |
 | Required mobile TypeScript and ESLint | Passed after stacked-base reconciliation | Final mobile TypeScript compiles and lint has zero warnings. |
 | Onboarding migration PostgreSQL test | Passed | Fresh/repeat apply, constraints, FK cascade, non-destructive rollback, and reapply work on disposable PostgreSQL 16. |
-| Production-release Node tests | 49/49 passed | Manifest/SHA/release/schema-verifier invariants pass; no deployment. |
+| Production-release Node tests | 50/50 passed | Manifest/SHA/release/schema-verifier invariants pass; no deployment. |
 | CI-pipeline Node tests | 16/16 passed | Changed scopes retain required CI selection. |
 | Catalog list audit | Passed | No unreviewed/stale scanned list remained in the audited tree. Intent remains a documented transitional duplicated catalog. |
 | Backend compile/link plus focused Hspec executable | After reconciliation with merged parent `main`, the current 184-module test target compiled and linked. Another process reacquired Stack's lock before test launch, so that wrapper was stopped; the freshly linked executable independently passed onboarding 3/3 in 0.0124 seconds and access-request evidence 1/1 in 0.0108 seconds, covering missing, other-Party, pre-signup, future, valid in-window, and repeated claims. | Compilation and focused behavior pass locally; the interrupted Stack wrapper is not presented as a passing command, and this is not the full suite or staging/production. |
@@ -206,7 +206,7 @@ Web:
 - `tdf-hq-ui/src/i18n/locales/es.ts`
 - `tdf-hq-ui/src/i18n/locales/en.ts`
 
-Mobile implementation commits include `c1421e0b14509713daa3bcd7cf3bffaca5d475aa`, `29299d042e0874bd7c49a993dac03245d4edeeaa`, `9739634`, saved-event containment `107232e`, and regenerated-contract head `1e07ae92d46677b42b14f33c59766b3dea84e830`:
+Mobile implementation commits include `c1421e0b14509713daa3bcd7cf3bffaca5d475aa`, `29299d042e0874bd7c49a993dac03245d4edeeaa`, `9739634`, saved-event containment `107232e`, regenerated-contract commit `1e07ae92d46677b42b14f33c59766b3dea84e830`, and latest-main reconciliation `2c050dc`:
 
 - `src/api/onboarding.ts` and generated types
 - `src/lib/onboardingIntent.ts`, `src/lib/firstRunFlags.ts`
@@ -251,11 +251,11 @@ No participant was contacted and no session result, quotation, completion rate, 
 
 ## 15. Branch and pull-request handoff
 
-- Root: `feature/onboarding-continuity-20260906`, with original implementation commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, evidence/contract/mobile-pointer commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test commit `98b195664`, documentation commit `34f0b53f0`, and integrated-code reconciliation `1749e4c7d78ca44fae60e8a1eec1edf35bd50194`. Draft PR: https://github.com/diegueins680/tdf-app/pull/241, targeting `main`.
+- Root: `feature/onboarding-continuity-20260906`, with original implementation commits `64702d26ac2129f96f40b921f943dea907828419` and `f24ec8cde83c2f50d569cd52ca164c2ca265dd7a`, evidence/contract/mobile-pointer commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test commit `98b195664`, documentation commits `34f0b53f0` and `8cd5cae4e`, and latest-main reconciliation `21edb4da6`. Draft PR: https://github.com/diegueins680/tdf-app/pull/241, targeting `main`.
 - Second-batch root code: `cf971dadc` (artist evidence, directory resume, regenerated contract, and published mobile pointer).
-- Mobile: `feature/onboarding-continuity-20260906`, published head `1e07ae92d46677b42b14f33c59766b3dea84e830`, including Party-scoped saved-event state and regenerated access-request operations. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, retargeted to `main` after its parent merged.
+- Mobile: `feature/onboarding-continuity-20260906`, published head `2c050dc`, including Party-scoped saved-event state, regenerated access-request operations, and current `main`. Draft PR: https://github.com/diegueins680/TDF-mobile/pull/40, retargeted to `main` after its parent merged.
 - No PR was merged and no production deployment was performed.
 
-At the final integrated-code reconciliation, root `main` was `b181fae331f900a7214feda140b5b36cd3fa9d28` and the continuation merged it at `1749e4c7d78ca44fae60e8a1eec1edf35bd50194`; the parent onboarding work, intervening catalog work, and service-storefront migration repair were therefore present. The mobile continuation was likewise retargeted to `main`. Every independently runnable affected local gate was rerun. Hosted exact-head status is recorded separately so local results are not treated as integration proof.
+At the latest-base reconciliation, root `main` was `9a8697fe76d84d0b4503d2e6324b7fee91d23f7a` and the continuation merged it at `21edb4da6`; the parent onboarding work, intervening catalog work, service-storefront migration repair, and production asset-seed ownership fix were therefore present. The mobile continuation merged its current `main` at `2c050dc`. Every independently runnable affected local gate was rerun. Hosted exact-head status is recorded separately so local results are not treated as integration proof.
 
 An existing workspace `continuous-improvement-loop[bot]` process had previously created the mobile-pointer and stacked-base merge commits while this work was active, later raced the catalog-audit fix into commit `d20cdf64f`, and completed/pushed reconciliation commit `1749e4c7d` while this task was active; this task did not start that process. Those commits were inspected rather than trusted: the catalog decisions match the combined migration registry, the root branch contains the published mobile commit, and the relevant local release, catalog, and focused backend evidence was independently reproduced.

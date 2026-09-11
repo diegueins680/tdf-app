@@ -14,7 +14,7 @@ The parent onboarding PRs have merged, so this root draft and mobile draft PR #4
 ## Verification
 
 - catalog list audit: passed
-- production-release tests: 49/49 passed
+- production-release tests: 50/50 passed
 - CI-pipeline tests: 16/16 passed
 - onboarding migration forward/idempotency/constraints/cascade/non-destructive rollback/reapply: passed on disposable PostgreSQL 16
 - focused web Jest: 5 suites, 27 tests passed on the second-batch tree

@@ -33,7 +33,7 @@ The mobile containment is intentionally honest about scope: saved events remain 
 | Database | Partial | No schema change was required in this continuation; the prior disposable PostgreSQL migration evidence remains current for the onboarding table. The new evidence test uses a synthetic in-memory SQLite access-request table. | No staging or production database was touched. |
 | Browser/device/screenshots | Available but unused | Existing browser artifacts remain under `artifacts/ux-audit-2026-09-05/`; no browser, simulator, physical device, or new screenshot was launched. | UI source/tests are not described as runtime visual proof. |
 | Test runners | Available | Node release/pipeline checks, TypeScript, catalog audit, Jest, and Stack are installed. Exact executed results are listed below. | Skipped and blocked execution remains explicit. |
-| Network/GitHub | Available | The mobile continuation is published at `1e07ae92d46677b42b14f33c59766b3dea84e830`; Mobile Validate and Datadog passed. The root integrated code head is published at `1749e4c7d78ca44fae60e8a1eec1edf35bd50194` in draft PR #241. | Both repositories are reviewable without merging or production deployment; hosted exact-head status is recorded separately. |
+| Network/GitHub | Available | The mobile continuation is published through latest-main merge `2c050dc`; full local Jest, TypeScript, and lint passed on that tree. Root draft PR #241 is reconciled with `main` through `21edb4da6`. | Both repositories are reviewable without merging or production deployment; hosted exact-head status is recorded separately. |
 | Local/staging/synthetic accounts | Partial | Local dependencies and synthetic unit fixtures are available; no controlled staging identity, OAuth provider, email sink, or payment fixture was exercised here. | Authentication/provider/transaction delivery remains unverified. |
 | Analytics | Source access only | Event semantics and call sites were inspected; no PostHog dashboard or representative field data was accessed. | No conversion uplift or field completion rate is claimed. |
 | Push/deploy safety | Available for feature-branch review | Existing root/mobile workflows were inspected; the parent onboarding PRs and the YouTube-catalog base are already on `main`, and their additive manifest conflict was resolved by retaining both entries. No production deploy, transaction, or customer communication occurred. | Push only the feature branch and leave production deployment outside this task. |
@@ -54,7 +54,7 @@ No credential value was printed or stored in the report.
 | Mobile profile saved tab | Authenticated customer/fan | iOS/Android source | Party switch, empty, loading, read error/retry, remove failure | Source and compile/test checks | Implemented; native runtime pending |
 | Legacy `tdf-saved-event-ids` data | Unknown prior account | Same mobile install | Account A to B switch, legacy values present | Storage source/unit fixture | Quarantined and preserved; explicit provenance-safe import deferred |
 | Web generated contract | Web roles using access requests | Responsive web source | Five access-request operations and evidence descriptions | Canonical generation, TypeScript, byte comparison | Verified locally |
-| Mobile generated contract | Mobile roles using access requests | iOS/Android source | Same five operations | Required workspace generation and byte comparison | Verified locally and published in mobile head `1e07ae92d` |
+| Mobile generated contract | Mobile roles using access requests | iOS/Android source | Same five operations | Required workspace generation and byte comparison | Verified locally and published through mobile head `2c050dc` |
 | Other public discovery, booking, commerce, education, and internal routes | Roles/devices in primary report | Web/mobile | Existing coverage states | Prior consolidated audit only | Not rerun; no broadened claim |
 
 Explicitly untested here: real multi-account device switching, iOS/Android persistence behavior, app upgrade with a legacy key, VoiceOver/TalkBack, virtual keyboard, orientation, safe areas, real OAuth, staging API, email delivery, payments, browser performance, field p75 metrics, and production deployment.
@@ -169,7 +169,7 @@ No representative field data, p75 LCP/INP/CLS, funnel baseline, or uplift was me
 | Generated client `cmp -s` | Passed; byte-for-byte equal | Does not compile consumers by itself |
 | Ruby YAML/operation structure check | Passed; four paths/five operations present | Structural contract check only |
 | `npm run typecheck:ui` | Passed | Web compile only |
-| `npm run test:production-release` | 49/49 passed | Release invariants; no deployment |
+| `npm run test:production-release` | 50/50 passed | Release invariants; no deployment |
 | `npm run test:ci-pipeline` | 16/16 passed | CI scope invariants |
 | `npm run audit:catalog-lists` | Passed | Static catalog governance |
 | Mobile saved-event focused Jest | 2 suites / 9 tests passed | Mocked AsyncStorage and rendered React Native components, not native OS storage |
@@ -232,5 +232,5 @@ No participant was contacted and no session result or quotation is claimed.
 
 - Root draft PR: https://github.com/diegueins680/tdf-app/pull/241
 - Mobile draft PR: https://github.com/diegueins680/TDF-mobile/pull/40
-- Mobile continuation head `1e07ae92d46677b42b14f33c59766b3dea84e830` is pushed and its native repository checks pass. Root functional commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test `98b195664`, documentation commit `34f0b53f0`, and integrated-code reconciliation `1749e4c7d78ca44fae60e8a1eec1edf35bd50194` are published. Draft PR #241 remains open and unmerged.
+- Mobile continuation head `2c050dc` is pushed after a current-`main` merge and full local Jest, TypeScript, and lint validation. Root functional commits `bfd39889e`, `d8d66e4c7`, and `248403e67`, future-evidence test `98b195664`, documentation commits `34f0b53f0` and `8cd5cae4e`, and latest-main reconciliation `21edb4da6` are included. Draft PR #241 remains open and unmerged.
 - No merge or deployment was performed.
