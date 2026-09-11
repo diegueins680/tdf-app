@@ -64,6 +64,7 @@ import TDF.Server.SocialEventsHandlers
     , resolveUniqueRsvpRow
     , socialEventsServer
     , validateEventImageUploadSize
+    , validateEventDeleteAccess
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
@@ -1070,6 +1071,22 @@ spec = describe "social event handler helpers" $ do
 
         stored <- runSqlPool (get eventKey) pool
         fmap socialEventTitle stored `shouldBe` Just "Original event"
+
+    it "allows strict admins, but not unrelated users, to delete another organizer's event" $ do
+        now <- getCurrentTime
+        let event = seedSocialEvent "1" "Admin-managed event" now
+        case validateEventDeleteAccess (socialEventUser 2) "2" event of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err)
+                    `shouldContain` "Only the event organizer or an administrator"
+            Right _ -> expectationFailure "Expected unrelated event deletion access to fail"
+        case validateEventDeleteAccess (socialEventUser 1) "1" event of
+            Left err -> expectationFailure ("Expected organizer deletion access, got: " <> show err)
+            Right () -> pure ()
+        case validateEventDeleteAccess (strictAdminSocialEventUser 3) "3" event of
+            Left err -> expectationFailure ("Expected strict admin deletion access, got: " <> show err)
+            Right () -> pure ()
 
     it "rejects spoofed invitation senders before inserting social event invitations" $ do
         pool <- runNoLoggingT $ createSqlitePool ":memory:" 1

@@ -124,9 +124,11 @@ describe('getSocialEventCardActionUiState', () => {
   it('keeps signed-out event cards to readable event and ticket summary only', () => {
     expect(getSocialEventCardActionUiState({
       hasSession: false,
+      hasAdminAccess: false,
       isOrganizer: false,
       ticketTierCount: 2,
     })).toEqual({
+      showDeleteAction: false,
       showInviteForm: false,
       showOrganizerTools: false,
       showRsvpActions: false,
@@ -139,6 +141,7 @@ describe('getSocialEventCardActionUiState', () => {
   it('hides empty ticket chrome when signed-out cards have no ticket tiers', () => {
     expect(getSocialEventCardActionUiState({
       hasSession: false,
+      hasAdminAccess: false,
       isOrganizer: false,
       ticketTierCount: 0,
     }).showTicketSection).toBe(false);
@@ -147,9 +150,11 @@ describe('getSocialEventCardActionUiState', () => {
   it('removes attendee RSVP actions from organizer cards while preserving organizer tools', () => {
     expect(getSocialEventCardActionUiState({
       hasSession: true,
+      hasAdminAccess: false,
       isOrganizer: true,
       ticketTierCount: 0,
     })).toEqual({
+      showDeleteAction: true,
       showInviteForm: true,
       showOrganizerTools: true,
       showRsvpActions: false,
@@ -157,6 +162,15 @@ describe('getSocialEventCardActionUiState', () => {
       showTicketPurchaseForm: true,
       showTicketSection: true,
     });
+  });
+
+  it('shows event deletion to admins even when another party organizes the event', () => {
+    expect(getSocialEventCardActionUiState({
+      hasSession: true,
+      hasAdminAccess: true,
+      isOrganizer: false,
+      ticketTierCount: 0,
+    }).showDeleteAction).toBe(true);
   });
 });
 

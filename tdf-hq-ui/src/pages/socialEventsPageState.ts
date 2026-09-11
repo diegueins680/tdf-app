@@ -26,11 +26,13 @@ interface SocialEventsCreateUiState {
 
 interface SocialEventCardActionUiStateInput {
   hasSession: boolean;
+  hasAdminAccess: boolean;
   isOrganizer: boolean;
   ticketTierCount: number;
 }
 
 interface SocialEventCardActionUiState {
+  showDeleteAction: boolean;
   showInviteForm: boolean;
   showOrganizerTools: boolean;
   showRsvpActions: boolean;
@@ -132,12 +134,14 @@ export function getSocialEventsCreateUiState({
 
 export function getSocialEventCardActionUiState({
   hasSession,
+  hasAdminAccess,
   isOrganizer,
   ticketTierCount,
 }: SocialEventCardActionUiStateInput): SocialEventCardActionUiState {
   const showTicketPurchaseForm = hasSession;
 
   return {
+    showDeleteAction: hasSession && (hasAdminAccess || isOrganizer),
     showInviteForm: hasSession,
     showOrganizerTools: hasSession && isOrganizer,
     showRsvpActions: hasSession && !isOrganizer,

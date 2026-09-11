@@ -1,0 +1,143 @@
+import { jest } from '@jest/globals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import type { SocialEventDTO, SocialTicketTierDTO } from '../api/socialEvents';
+
+const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
+const listMomentsMock = jest.fn<(eventId: string) => Promise<never[]>>();
+const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
+
+jest.unstable_mockModule('../api/socialEvents', () => ({
+  SocialEventsAPI: {
+    getEvent: (eventId: string) => getEventMock(eventId),
+    listMoments: (eventId: string) => listMomentsMock(eventId),
+    listTicketTiers: (eventId: string) => listTicketTiersMock(eventId),
+    createMoment: jest.fn(),
+    uploadMomentImage: jest.fn(),
+    createTicketTier: jest.fn(),
+  },
+}));
+
+jest.unstable_mockModule('../api/catalogs', () => ({
+  Catalogs: { getItem: jest.fn() },
+}));
+
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  useSession: () => ({ session: null }),
+}));
+
+jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
+  useLocalePreferences: () => ({
+    currency: 'USD',
+    locale: 'es-EC',
+    timezone: 'America/Guayaquil',
+  }),
+}));
+
+jest.unstable_mockModule('../components/reviews/ExperienceReviews', () => ({
+  default: () => null,
+}));
+
+const { default: SocialEventDetailPage } = await import('./SocialEventDetailPage');
+
+const eventFixture: SocialEventDTO = {
+  eventId: '121',
+  eventOrganizerPartyId: '7',
+  eventTitle: 'Listening Party — Labii & Llama Este Pez',
+  eventDescription: 'Una noche de música en vivo.',
+  eventStart: '2026-09-10T20:00:00-05:00',
+  eventCurrency: 'USD',
+  eventArtists: [],
+};
+
+const tierFixture: SocialTicketTierDTO = {
+  ticketTierId: 'tier-general',
+  ticketTierEventId: '121',
+  ticketTierCode: 'GENERAL',
+  ticketTierName: 'General',
+  ticketTierPriceCents: 500,
+  ticketTierCurrency: 'USD',
+  ticketTierQuantityTotal: 100,
+  ticketTierQuantitySold: 0,
+  ticketTierActive: true,
+};
+
+const renderPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  const view = render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/social/eventos/121']}>
+        <Routes>
+          <Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+  return {
+    ...view,
+    unmount: () => {
+      view.unmount();
+      queryClient.clear();
+    },
+  };
+};
+
+describe('SocialEventDetailPage ticket sharing', () => {
+  beforeEach(() => {
+    getEventMock.mockReset().mockResolvedValue(eventFixture);
+    listMomentsMock.mockReset().mockResolvedValue([]);
+    listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it('shows the share action only after a ticket tier exists', async () => {
+    listTicketTiersMock.mockResolvedValue([]);
+    const view = renderPage();
+
+    expect(await screen.findByText('Aún no hay tickets para este evento.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Compartir entradas' })).toBeNull();
+
+    view.unmount();
+  });
+
+  it('shares the canonical public purchase URL through the device share sheet', async () => {
+    const shareMock = jest.fn<(data?: ShareData) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { configurable: true, value: shareMock });
+    const view = renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Compartir entradas' }));
+
+    await waitFor(() => {
+      expect(shareMock).toHaveBeenCalledWith({
+        title: `Entradas para ${eventFixture.eventTitle}`,
+        text: `Compra tus entradas para ${eventFixture.eventTitle}.`,
+        url: 'http://localhost/eventos/121/entradas',
+      });
+    });
+    expect(await screen.findByText('Enlace de compra compartido.')).toBeTruthy();
+
+    view.unmount();
+  });
+
+  it('copies the canonical public purchase URL when native sharing is unavailable', async () => {
+    const writeTextMock = jest.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: writeTextMock },
+    });
+    const view = renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Compartir entradas' }));
+
+    await waitFor(() => {
+      expect(writeTextMock).toHaveBeenCalledWith('http://localhost/eventos/121/entradas');
+    });
+    expect(await screen.findByText('Enlace de compra copiado al portapapeles.')).toBeTruthy();
+
+    view.unmount();
+  });
+});
