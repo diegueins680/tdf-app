@@ -1038,6 +1038,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'allowed_versions',
     'records-cms-cutover-2026-08-07',
     'ddex-operational-cutover-2026-08-12',
+    'user_onboarding_progress',
+    'user_onboarding_progress_eligible_idx',
   ]) {
     assert.match(sql, new RegExp(requiredObject), `verification must inspect ${requiredObject}`);
   }

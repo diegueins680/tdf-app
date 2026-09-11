@@ -100,7 +100,9 @@ const defaultPublicServices: PublicServiceCatalogItem[] = [
   },
 ];
 
-const createPublicMock = jest.fn<(payload: CreatePublicPayload) => Promise<{ bookingId: number }>>(
+const createPublicMock = jest.fn<
+  (payload: CreatePublicPayload, idempotencyKey: string) => Promise<{ bookingId: number }>
+>(
   () => Promise.resolve({ bookingId: 123 }),
 );
 const createPublicCheckoutMock = jest.fn<
@@ -185,6 +187,11 @@ const listPublicRoomsMock = jest.fn<() => Promise<PublicRoomItem[]>>(
 );
 
 jest.unstable_mockModule('../api/bookings', () => ({
+  getOrCreatePublicBookingIdempotency: async (
+    _scope: string,
+    payload: unknown,
+    current?: { fingerprint: string; key: string } | null,
+  ) => current ?? ({ fingerprint: JSON.stringify(payload), key: 'service-booking-test-idempotency' }),
   loadPublicBookingLookupToken: () => 'lookup-secret',
   storePublicBookingLookupToken: storePublicBookingLookupTokenMock,
   Bookings: {
@@ -356,6 +363,29 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
+  it('preserves booking acquisition context through optional login and signup', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const route = '/reservar?service=dj-booth-practice&utm_source=campaign#horario';
+    const { cleanup } = await renderPage(container, { route });
+
+    const loginLink = Array.from(container.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (link) => link.textContent?.trim() === 'Iniciar sesión',
+    );
+    const signupLink = Array.from(container.querySelectorAll<HTMLAnchorElement>('a')).find(
+      (link) => link.textContent?.trim() === 'Crear cuenta',
+    );
+    const expectedRedirect = encodeURIComponent(route);
+
+    expect(loginLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}`);
+    expect(signupLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}&signup=1`);
+    expect(container.textContent).toContain('Crear una cuenta es opcional.');
+    expect(container.textContent).not.toContain('crearemos tu acceso automáticamente');
+
+    await cleanup();
+    document.body.removeChild(container);
+  });
+
   it('computes quick schedule shortcuts using studio-timezone opening hours', () => {
     const now = DateTime.fromISO('2030-01-01T06:30:00.000Z');
 
@@ -423,11 +453,16 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
+    const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+    expect(idempotencyKey).toMatch(/^service-booking-/);
     expect(container.textContent).toContain('Reserva enviada');
+    expect(container.textContent).toContain('Solicitud registrada');
+    expect(container.textContent).toContain('Guarda el ID de reserva.');
+    expect(container.textContent).not.toContain('Revisa tu correo para la confirmación.');
     expect(container.textContent).not.toContain('Ver mi reserva');
     expect(container.querySelector('a[href*="/estudio/calendario"]')).toBeNull();
 
@@ -576,6 +611,7 @@ describe('PublicBookingPage', () => {
         pbServiceOfferingId: DJ_PRACTICE_ID,
         pbResourceIds: null,
       }),
+      expect.stringMatching(/^service-booking-/),
     );
 
     await cleanup();
@@ -655,10 +691,12 @@ describe('PublicBookingPage', () => {
 
     expect(createPublicMock).toHaveBeenCalledTimes(1);
     const payload = createPublicMock.mock.calls[0]?.[0];
+    const idempotencyKey = createPublicMock.mock.calls[0]?.[1];
     expect(payload).toMatchObject({
       pbServiceOfferingId: BAND_RECORDING_ID,
       pbResourceIds: null,
     });
+    expect(idempotencyKey).toMatch(/^service-booking-/);
 
     await cleanup();
     document.body.removeChild(container);
@@ -676,7 +714,7 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    expect(container.textContent).toContain('Ingresa un correo válido para enviarte la confirmación.');
+    expect(container.textContent).toContain('Ingresa un correo válido para identificar tu reserva.');
     const dateLabel = Array.from(container.querySelectorAll('label')).find(
       (label) => (label.textContent ?? '').replace('*', '').trim() === 'Fecha y hora',
     );
@@ -842,6 +880,7 @@ describe('PublicBookingPage', () => {
           pbEngineerPartyId: null,
           pbEngineerName: 'Ana',
         }),
+        expect.stringMatching(/^service-booking-/),
       );
       expect(
         consoleErrorSpy.mock.calls.some(([message]) =>

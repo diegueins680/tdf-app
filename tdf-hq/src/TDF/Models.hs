@@ -317,6 +317,16 @@ UserLocalePreference sql=user_locale_preferences
     updatedAt        UTCTime
     UniqueUserLocalePreference userId
     deriving Show Generic
+UserOnboardingProgress sql=user_onboarding_progress
+    partyId               PartyId
+    signupCompletedAt     UTCTime Maybe
+    intent                Text Maybe
+    completedAt           UTCTime Maybe
+    firstValue            Text Maybe
+    firstValueCompletedAt UTCTime Maybe
+    updatedAt             UTCTime
+    UniqueUserOnboardingProgress partyId
+    deriving Show Generic
 CurrencyConversionAudit sql=currency_conversion_audit
     userId           PartyId Maybe
     sourceCurrency   Text

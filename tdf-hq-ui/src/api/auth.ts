@@ -1,6 +1,7 @@
 import type { components } from './generated/types';
 import { extractErrorDetails } from './errorMessage';
 import { resolveApiBase } from '../config/apiBase';
+import type { OnboardingIntent } from './session';
 
 const API_BASE = resolveApiBase();
 const SERVICE_STARTING_MESSAGE = 'El servicio está arrancando. Intenta de nuevo en unos segundos.';
@@ -182,6 +183,7 @@ export interface SignupPayload {
   termsVersion: string;
   fanArtistIds?: number[];
   claimArtistId?: number;
+  onboardingIntent?: OnboardingIntent;
 }
 
 export async function signupRequest(payload: SignupPayload): Promise<LoginResponseDTO> {

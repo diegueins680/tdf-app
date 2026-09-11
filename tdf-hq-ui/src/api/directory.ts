@@ -17,6 +17,7 @@ export type DirectoryInvitation = components['schemas']['DirectoryInvitation'];
 export type DirectoryReviewPage = components['schemas']['DirectoryReviewPage'];
 export type DirectoryReviewEligibility = components['schemas']['DirectoryReviewEligibility'];
 export type DirectoryReview = components['schemas']['DirectoryReview'];
+export type DirectoryFavorite = components['schemas']['DirectoryFavorite'];
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 
@@ -79,7 +80,8 @@ export const Directory = {
     post<components['schemas']['DirectoryInvitation']>('/directory/invitations', body, idempotencyHeaders(idempotencyKey)),
   setInvitationStatus: (invitationId: string, status: string) =>
     patch<components['schemas']['DirectoryInvitation']>(`/directory/invitations/${encodeURIComponent(invitationId)}/status`, { status }),
-  favorites: () => get<components['schemas']['DirectoryFavorite'][]>('/directory/favorites'),
+  favorites: (targetKind?: DirectoryEntityType) =>
+    get<components['schemas']['DirectoryFavorite'][]>(`/directory/favorites${targetKind ? `?targetKind=${encodeURIComponent(targetKind)}` : ''}`),
   addFavorite: (targetKind: DirectoryEntityType, targetId: string) =>
     put<void>(`/directory/favorites/${encodeURIComponent(targetKind)}/${encodeURIComponent(targetId)}`, {}),
   removeFavorite: (targetKind: DirectoryEntityType, targetId: string) =>

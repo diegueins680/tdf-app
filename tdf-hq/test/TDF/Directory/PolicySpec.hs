@@ -98,3 +98,17 @@ spec = describe "music directory formal invariants" $ do
   it "I16: a nonempty explicit service-area set has exactly one primary" $
     property $ \flags ->
       serviceAreaPrimaryValid flags == (null flags || length (filter id flags) == 1)
+
+  it "canonicalizes supported favorite targets before persistence" $ do
+    canonicalFavoriteTarget " Event " "0042" `shouldBe` Right ("event", "42")
+    canonicalFavoriteTarget "VENUE" " 7 " `shouldBe` Right ("venue", "7")
+    canonicalFavoriteTarget
+      "profile"
+      "D1000000-0000-4000-8000-000000000001"
+      `shouldBe` Right ("profile", "d1000000-0000-4000-8000-000000000001")
+
+  it "rejects malformed, non-positive, and unsupported favorite targets" $ do
+    canonicalFavoriteTarget "event" "abc" `shouldBe` Left "event targetId must be a positive integer"
+    canonicalFavoriteTarget "event" "0" `shouldBe` Left "event targetId must be a positive integer"
+    canonicalFavoriteTarget "profile" "not-a-uuid" `shouldBe` Left "profile targetId must be a UUID"
+    canonicalFavoriteTarget "application" "1" `shouldBe` Left "invalid targetKind"

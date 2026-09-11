@@ -2226,6 +2226,22 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'DDEX canonical cutover retained legacy values or missing IDs';
   END IF;
+
+  IF to_regclass('public.user_onboarding_progress') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_onboarding_progress'
+  ) <> 8 OR to_regclass('public.user_onboarding_progress_eligible_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound onboarding progress schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_onboarding_progress'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 8 THEN
+    RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
+  END IF;
 END
 $verify$;`;
 }

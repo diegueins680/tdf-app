@@ -88,6 +88,28 @@ const publicBookingService = {
   scSortOrder: 10,
   scActive: true,
 };
+const publicDomoFallbackService = {
+  ...publicBookingService,
+  scId: '77777777-7777-4777-8777-777777777778',
+  scCode: 'event-production',
+  scName: 'Producción sintética de eventos',
+  scNameEs: 'Producción sintética de eventos',
+  scNameEn: 'Synthetic event production',
+  scKind: 'event-production',
+  scDefaultDurationMinutes: 480,
+};
+const publicDomoFallbackStorefront = {
+  checkoutAvailable: false,
+  unavailableReason: 'No existe un tarifario aprobado para esta prueba aislada.',
+  rateCardVersion: null,
+  currency: null,
+  eventTypes: [],
+  maximumGuests: null,
+  maximumDurationHours: null,
+  maximumSetupHours: null,
+  quoteHoldMinutes: null,
+  timezone: 'America/Guayaquil',
+};
 
 async function mockIsolatedPublicApi(page) {
   await page.route('**/health', (route) => route.fulfill({ json: { status: 'ok' } }));
@@ -165,7 +187,16 @@ async function expectNoSeriousAxeViolations(page, testInfo) {
     });
     return result.violations
       .filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')
-      .map((violation) => ({ id: violation.id, impact: violation.impact, help: violation.help, nodes: violation.nodes.map((node) => node.target) }));
+      .map((violation) => ({
+        id: violation.id,
+        impact: violation.impact,
+        help: violation.help,
+        nodes: violation.nodes.map((node) => ({
+          target: node.target,
+          html: node.html,
+          failureSummary: node.failureSummary,
+        })),
+      }));
   });
   await testInfo.attach('axe-serious-critical.json', { body: JSON.stringify(violations, null, 2), contentType: 'application/json' });
   expect(violations).toEqual([]);
@@ -316,7 +347,168 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await expectNoSeriousAxeViolations(page, testInfo);
 });
 
+test('PW-PER-01-DOMO retries one truthful manual request in Ecuador time', async ({ page }, testInfo) => {
+  const bookingPayloads = [];
+  const bookingIdempotencyKeys = [];
+  const heroVideoRequests = [];
+  let bookingAttempts = 0;
+  let authoritativeQuoteAttempts = 0;
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLMediaElement.prototype, 'paused', {
+      configurable: true,
+      get() {
+        return this.getAttribute('data-test-playing') !== 'true';
+      },
+    });
+    HTMLMediaElement.prototype.play = function play() {
+      this.setAttribute('data-test-playing', 'true');
+      this.dispatchEvent(new Event('play'));
+      return Promise.resolve();
+    };
+    HTMLMediaElement.prototype.pause = function pause() {
+      this.removeAttribute('data-test-playing');
+      this.dispatchEvent(new Event('pause'));
+    };
+  });
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/videos/')) heroVideoRequests.push(request.url());
+  });
+  await page.route('**/public/domo', (route) => route.fulfill({ json: publicDomoFallbackStorefront }));
+  await page.route('**/public/domo/quotes', (route) => {
+    authoritativeQuoteAttempts += 1;
+    return route.fulfill({ status: 503, json: { message: 'La cotización autoritativa no debe ejecutarse.' } });
+  });
+  await page.route('**/services/catalog/public*', (route) => route.fulfill({
+    json: {
+      sceSchemaVersion: 1,
+      sceRevision: 1,
+      sceLocale: 'es',
+      sceItems: [publicDomoFallbackService],
+    },
+  }));
+  await page.route('**/bookings/public', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    bookingAttempts += 1;
+    bookingPayloads.push(route.request().postDataJSON());
+    bookingIdempotencyKeys.push(route.request().headers()['idempotency-key']);
+    if (bookingAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'No pudimos confirmar la solicitud. Intenta nuevamente.' }),
+      });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        bookingId: 321,
+        title: publicDomoFallbackService.scName,
+        startsAt: '2030-01-15T15:00:00Z',
+        endsAt: '2030-01-15T23:00:00Z',
+        status: 'Tentative',
+        serviceOfferingId: publicDomoFallbackService.scId,
+        serviceType: publicDomoFallbackService.scName,
+        resources: [],
+      },
+    });
+  });
+
+  const storefrontReady = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/public/domo',
+  );
+  const catalogReady = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === '/services/catalog/public',
+  );
+  await page.goto('/domo-del-pululahua#cotizar');
+  await Promise.all([storefrontReady, catalogReady]);
+  const heroMediaControl = page.getByRole('button', { name: 'Reproducir fondo' });
+  await expect(heroMediaControl).toBeVisible();
+  await expect(heroMediaControl).toHaveAttribute('aria-pressed', 'false');
+  expect((await heroMediaControl.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  expect(heroVideoRequests).toEqual([]);
+  await heroMediaControl.click();
+  const pauseHeroMedia = page.getByRole('button', { name: 'Pausar fondo' });
+  await expect(pauseHeroMedia).toHaveAttribute('aria-pressed', 'true');
+  await pauseHeroMedia.click();
+  await expect(page.getByRole('button', { name: 'Reproducir fondo' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('heading', { name: 'Solicitud de cotización' })).toBeVisible();
+  const name = page.getByLabel('Nombre');
+  const email = page.getByLabel('Correo');
+  const phone = page.getByLabel('WhatsApp');
+  await expect(name).toHaveAttribute('autocomplete', 'name');
+  await expect(email).toHaveAttribute('autocomplete', 'email');
+  await expect(phone).toHaveAttribute('autocomplete', 'tel');
+  await name.fill('Elena Paredes');
+  await email.fill('per-01.elena@persona.test');
+  await page.getByLabel('Fecha y hora').fill('2030-01-15T10:00');
+
+  const submit = page.getByRole('button', { name: 'Enviar solicitud manual' });
+  const submitBox = await submit.boundingBox();
+  expect(submitBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+  const failedAttempt = page.waitForResponse((response) =>
+    response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/bookings/public',
+  );
+  await submit.focus();
+  await expect(submit).toBeFocused();
+  await submit.press('Enter');
+  expect((await failedAttempt).status()).toBe(503);
+  await expect(page.getByRole('alert').filter({
+    hasText: 'No pudimos confirmar la solicitud. Intenta nuevamente.',
+  })).toBeVisible();
+  await expect(submit).toBeEnabled();
+
+  const successfulAttempt = page.waitForResponse((response) =>
+    response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/bookings/public',
+  );
+  await submit.click();
+  expect((await successfulAttempt).status()).toBe(200);
+  await expect(page.getByRole('alert').filter({
+    hasText: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago',
+  })).toBeVisible();
+
+  expect(bookingPayloads).toHaveLength(2);
+  expect(bookingPayloads[0]).toMatchObject({
+    pbFullName: 'Elena Paredes',
+    pbEmail: 'per-01.elena@persona.test',
+    pbServiceOfferingId: publicDomoFallbackService.scId,
+    pbStartsAt: '2030-01-15T15:00:00Z',
+    pbDurationMinutes: 480,
+  });
+  expect(bookingPayloads[0].pbNotes).toContain('Disponibilidad: no verificada; esta solicitud no retiene la fecha');
+  expect(bookingPayloads[1]).toEqual(bookingPayloads[0]);
+  expect(bookingIdempotencyKeys).toHaveLength(2);
+  expect(bookingIdempotencyKeys[0]).toMatch(/^service-booking-/);
+  expect(bookingIdempotencyKeys[1]).toBe(bookingIdempotencyKeys[0]);
+  expect(authoritativeQuoteAttempts).toBe(0);
+  await expect(page.locator('body')).not.toContainText('fecha reservada');
+  await expect(page.locator('body')).not.toContainText('pago confirmado');
+  await expectNoSeriousAxeViolations(page, testInfo);
+  await page.screenshot({ path: testInfo.outputPath('domo-manual-request-safe.png'), fullPage: true });
+  if (testInfo.project.name === 'chromium-phone') {
+    await page.setViewportSize({ width: 320, height: 800 });
+    const reflow = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(reflow.scrollWidth).toBeLessThanOrEqual(reflow.width + 1);
+    await expectNoSeriousAxeViolations(page, testInfo);
+  }
+  if (testInfo.project.name === 'chromium-desktop') {
+    const experienceNavigation = page.getByRole('navigation', { name: 'Experiencias del Domo' });
+    for (const experience of ['Eventos', 'Música', 'Ceremonias']) {
+      const experienceButton = experienceNavigation.getByRole('button', { name: experience });
+      await experienceButton.click();
+      await expect(experienceButton).toHaveAttribute('aria-pressed', 'true');
+      await expectNoSeriousAxeViolations(page, testInfo);
+    }
+  }
+});
+
 test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions', async ({ page }, testInfo) => {
+  const bookingIdempotencyKeys = [];
+  let bookingAttempts = 0;
   await page.route('**/services/catalog/public*', (route) => route.fulfill({
     json: {
       sceSchemaVersion: 1,
@@ -340,6 +532,16 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   }));
   await page.route('**/bookings/public', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
+    bookingAttempts += 1;
+    bookingIdempotencyKeys.push(route.request().headers()['idempotency-key']);
+    if (bookingAttempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Synthetic ambiguous upstream response' }),
+      });
+      return;
+    }
     await route.fulfill({
       json: {
         bookingId: 123,
@@ -360,8 +562,20 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   const engineersReady = page.waitForResponse((response) =>
     new URL(response.url()).pathname === '/engineers',
   );
-  await page.goto('/reservar');
+  const bookingEntry = '/reservar?service=synthetic-studio-session&utm_source=persona-booking#horario';
+  await page.goto(bookingEntry);
   await Promise.all([catalogReady, engineersReady]);
+  const encodedBookingEntry = encodeURIComponent(bookingEntry);
+  await expect(page.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+    'href',
+    `/login?redirect=${encodedBookingEntry}`,
+  );
+  await expect(page.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute(
+    'href',
+    `/login?redirect=${encodedBookingEntry}&signup=1`,
+  );
+  await expect(page.getByText(/crear una cuenta es opcional/i).first()).toBeVisible();
+  await expect(page.getByText(/crearemos tu acceso automáticamente/i)).toHaveCount(0);
   const fullNameInput = page.getByLabel('Nombre completo');
   await expect(fullNameInput).toBeVisible();
   await fullNameInput.fill('Elena Paredes');
@@ -369,10 +583,23 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Fecha y hora').fill('2030-01-01T12:00');
   await page.getByRole('button', { name: 'Revisar reserva' }).click();
-  await page.getByRole('button', { name: 'Confirmar reserva' }).click();
+  const confirmBookingButton = page.getByRole('button', { name: 'Confirmar reserva' });
+  const failedAttempt = page.waitForResponse((response) =>
+    response.request().method() === 'POST'
+      && new URL(response.url()).pathname === '/bookings/public',
+  );
+  await confirmBookingButton.click();
+  expect((await failedAttempt).status()).toBe(503);
+  await expect(confirmBookingButton).toBeEnabled();
+  await confirmBookingButton.click();
 
   await expect(page.getByRole('heading', { name: 'Reserva enviada' })).toBeVisible();
-  await expect(page.getByText('Reserva creada')).toBeVisible();
+  expect(bookingIdempotencyKeys).toHaveLength(2);
+  expect(bookingIdempotencyKeys[0]).toMatch(/^service-booking-/);
+  expect(bookingIdempotencyKeys[1]).toBe(bookingIdempotencyKeys[0]);
+  await expect(page.getByText('Solicitud registrada')).toBeVisible();
+  await expect(page.getByText(/Guarda el ID de reserva\./).first()).toBeVisible();
+  await expect(page.getByText(/Revisa tu correo para la confirmación/)).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Ver mi reserva' })).toHaveCount(0);
   await expect(page.locator('a[href*="/estudio/calendario"]')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Agregar a Google Calendar' })).toBeVisible();

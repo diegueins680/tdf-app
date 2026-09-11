@@ -33,15 +33,18 @@ import WifiIcon from '@mui/icons-material/Wifi';
 import SpaIcon from '@mui/icons-material/Spa';
 import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import PauseIcon from '@mui/icons-material/Pause';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { DateTime } from 'luxon';
-import { Bookings } from '../api/bookings';
+import { Bookings, getOrCreatePublicBookingIdempotency } from '../api/bookings';
 import { DomoQuotes, type PublicDomoQuoteCreateRequest } from '../api/domoQuotes';
 import { Services } from '../api/services';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { makeDomoQuoteIdempotencyKey, saveDomoQuoteLookupToken } from '../utils/domoQuoteAccess';
 
-const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.['VITE_DOMO_TIMEZONE'] ?? 'UTC';
+const DOMO_TIMEZONE = (import.meta.env as Record<string, string | undefined> | undefined)?.['VITE_DOMO_TIMEZONE']
+  ?? 'America/Guayaquil';
 
 type EventType = string;
 type DomoExperienceKey = 'naturaleza' | 'eventos' | 'musica' | 'ceremonias';
@@ -68,6 +71,7 @@ interface BookingFormState {
 interface DomoExperience {
   navLabel: string;
   accentColor: string;
+  accentOnDarkColor: string;
   accentTextColor: string;
   videoSrc: string;
   mobileVideoSrc?: string;
@@ -97,6 +101,7 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   naturaleza: {
     navLabel: 'Naturaleza',
     accentColor: '#1B4332',
+    accentOnDarkColor: '#7FD1A7',
     accentTextColor: '#FFFFFF',
     videoSrc: `${PUBLIC_BASE}/videos/nature-hero.mp4`,
     mobileVideoSrc: `${PUBLIC_BASE}/videos/nature-hero-mobile.mp4`,
@@ -105,8 +110,8 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
     ctaLabel: 'Explorar',
     bookingEventType: 'photo',
     infoBandBackground: '#1B4332',
-    infoBandNumberColor: 'rgba(255,255,255,0.3)',
-    infoBandLabelColor: 'rgba(255,255,255,0.6)',
+    infoBandNumberColor: '#99AAA3',
+    infoBandLabelColor: '#B7C5BF',
     infoBandValueColor: '#FFFFFF',
     infoBand: [
       { number: '01', label: 'Ubicación', value: 'Reserva Geobotánica Pululahua, Ecuador (0.027°N)' },
@@ -140,6 +145,7 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   eventos: {
     navLabel: 'Eventos',
     accentColor: '#C9A227',
+    accentOnDarkColor: '#E8C95C',
     accentTextColor: '#0F0F0F',
     videoSrc: `${PUBLIC_BASE}/videos/events-hero.mp4`,
     title: 'Celebraciones',
@@ -147,8 +153,8 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
     ctaLabel: 'Planificar',
     bookingEventType: 'wedding',
     infoBandBackground: '#F3EBCF',
-    infoBandNumberColor: 'rgba(132,99,0,0.28)',
-    infoBandLabelColor: 'rgba(27,67,50,0.58)',
+    infoBandNumberColor: '#725800',
+    infoBandLabelColor: '#315E4C',
     infoBandValueColor: '#1B4332',
     infoBand: [
       { number: '01', label: 'Bodas', value: 'Ceremonia y recepción con vista al cráter' },
@@ -178,6 +184,7 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   musica: {
     navLabel: 'Música',
     accentColor: '#4F46E5',
+    accentOnDarkColor: '#9EA7FF',
     accentTextColor: '#FFFFFF',
     videoSrc: `${PUBLIC_BASE}/videos/music-hero.mp4`,
     mobileVideoSrc: `${PUBLIC_BASE}/videos/music-hero-mobile.mp4`,
@@ -186,8 +193,8 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
     ctaLabel: 'Planificar concierto',
     bookingEventType: 'concert',
     infoBandBackground: '#0F0F0F',
-    infoBandNumberColor: 'rgba(79,70,229,0.46)',
-    infoBandLabelColor: 'rgba(255,255,255,0.48)',
+    infoBandNumberColor: '#9EA7FF',
+    infoBandLabelColor: '#C5C9D4',
     infoBandValueColor: '#FFFFFF',
     infoBand: [
       { number: '01', label: 'SpaceTrip Fest', value: 'Festival electrónico en el cráter' },
@@ -221,6 +228,7 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
   ceremonias: {
     navLabel: 'Ceremonias',
     accentColor: '#C8B6FF',
+    accentOnDarkColor: '#C8B6FF',
     accentTextColor: '#0F0F0F',
     videoSrc: `${PUBLIC_BASE}/videos/ceremonies-hero.mp4`,
     title: 'Santuario',
@@ -228,8 +236,8 @@ const DOMO_EXPERIENCES: Record<DomoExperienceKey, DomoExperience> = {
     ctaLabel: 'Reservar retiro',
     bookingEventType: 'retreat',
     infoBandBackground: '#F2EEFF',
-    infoBandNumberColor: 'rgba(95,72,160,0.24)',
-    infoBandLabelColor: 'rgba(15,15,15,0.48)',
+    infoBandNumberColor: '#67548F',
+    infoBandLabelColor: '#514C5A',
     infoBandValueColor: '#0F0F0F',
     infoBand: [
       { number: '01', label: 'Meditación', value: 'Retiros guiados de atención plena' },
@@ -351,11 +359,13 @@ export default function DomoVenuePage() {
     description: 'Solicita una cotización para eventos, música y experiencias en el Domo del Pululahua.',
   });
   const [activeExperienceKey, setActiveExperienceKey] = useState<DomoExperienceKey>('naturaleza');
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [heroVideoPlaying, setHeroVideoPlaying] = useState(false);
   const navigate = useNavigate();
   const [form, setForm] = useState<BookingFormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
-  const quoteIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const submissionIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const domoStorefrontQuery = useQuery({
     queryKey: ['public-domo-storefront'],
     queryFn: DomoQuotes.getStorefront,
@@ -403,6 +413,22 @@ export default function DomoVenuePage() {
     updateForm('eventType', activeExperience.bookingEventType);
   };
 
+  const selectExperience = (experienceKey: DomoExperienceKey) => {
+    heroVideoRef.current?.pause();
+    setHeroVideoPlaying(false);
+    setActiveExperienceKey(experienceKey);
+  };
+
+  const toggleHeroVideo = () => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play().catch(() => setHeroVideoPlaying(false));
+      return;
+    }
+    video.pause();
+  };
+
   const submitBooking = async () => {
     setStatus(null);
     if (!form.fullName.trim() || !form.email.trim()) {
@@ -436,10 +462,10 @@ export default function DomoVenuePage() {
           ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
         };
         const fingerprint = JSON.stringify(payload);
-        if (quoteIdempotency.current?.fingerprint !== fingerprint) {
-          quoteIdempotency.current = { fingerprint, key: makeDomoQuoteIdempotencyKey() };
+        if (submissionIdempotency.current?.fingerprint !== fingerprint) {
+          submissionIdempotency.current = { fingerprint, key: makeDomoQuoteIdempotencyKey() };
         }
-        const quote = await DomoQuotes.createQuote(payload, quoteIdempotency.current.key);
+        const quote = await DomoQuotes.createQuote(payload, submissionIdempotency.current.key);
         if (!quote.lookupToken) throw new Error('Secure quote lookup token missing');
         saveDomoQuoteLookupToken(quote.quoteId, quote.lookupToken);
         navigate(`/domo-del-pululahua/cotizaciones/${quote.quoteId}`);
@@ -448,7 +474,7 @@ export default function DomoVenuePage() {
       if (!eventProductionOffering) {
         throw new Error('El servicio de producción de eventos no está publicado.');
       }
-      await Bookings.createPublic({
+      const payload = {
         pbFullName: form.fullName.trim(),
         pbEmail: form.email.trim(),
         pbPhone: form.phone.trim() || null,
@@ -456,7 +482,13 @@ export default function DomoVenuePage() {
         pbStartsAt: bookingIso,
         pbDurationMinutes: requestSummary.durationHours * 60,
         pbNotes: buildBookingNotes(form, requestSummary),
-      });
+      };
+      submissionIdempotency.current = await getOrCreatePublicBookingIdempotency(
+        'tentative',
+        payload,
+        submissionIdempotency.current,
+      );
+      await Bookings.createPublic(payload, submissionIdempotency.current.key);
       setStatus({
         severity: 'success',
         message: 'Solicitud enviada. Este flujo manual no retiene la fecha ni confirma un pago; el equipo revisará disponibilidad y te contactará.',
@@ -533,7 +565,7 @@ export default function DomoVenuePage() {
                   key={experienceKey}
                   type="button"
                   aria-pressed={isActive}
-                  onClick={() => setActiveExperienceKey(experienceKey)}
+                  onClick={() => selectExperience(experienceKey)}
                   sx={{
                     flex: '0 0 auto',
                     minWidth: 0,
@@ -561,12 +593,15 @@ export default function DomoVenuePage() {
         <Box
           key={activeExperienceKey}
           component="video"
-          autoPlay
+          ref={heroVideoRef}
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           poster={DOMO_IMAGE_URL}
+          aria-hidden="true"
+          onPlay={() => setHeroVideoPlaying(true)}
+          onPause={() => setHeroVideoPlaying(false)}
           sx={{
             position: 'absolute',
             inset: 0,
@@ -609,6 +644,27 @@ export default function DomoVenuePage() {
             pointerEvents: 'none',
           }}
         />
+        <Button
+          type="button"
+          variant="contained"
+          size="small"
+          onClick={toggleHeroVideo}
+          startIcon={heroVideoPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+          aria-pressed={heroVideoPlaying}
+          sx={{
+            position: 'absolute',
+            zIndex: 3,
+            top: { xs: 84, md: 100 },
+            right: { xs: 16, md: 48 },
+            minHeight: 44,
+            bgcolor: 'rgba(15,23,42,0.9)',
+            color: '#fff',
+            textTransform: 'none',
+            '&:hover': { bgcolor: '#0F172A' },
+          }}
+        >
+          {heroVideoPlaying ? 'Pausar fondo' : 'Reproducir fondo'}
+        </Button>
         <Stack spacing={3} sx={{ maxWidth: 820, position: 'relative', zIndex: 2 }}>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip icon={<LandscapeIcon />} label="Domo del Pululahua" sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: '#fff', backdropFilter: 'blur(8px)' }} />
@@ -694,7 +750,7 @@ export default function DomoVenuePage() {
 
       {/* EXPERIENCE SELECTOR */}
       <Box id="experiencia" sx={{ px: { xs: 2, md: 6 }, py: { xs: 5, md: 7 }, bgcolor: '#f7f4ed' }}>
-        <Typography variant="overline" sx={{ color: 'rgba(27,67,50,0.6)', letterSpacing: 2, display: 'block', textAlign: 'center', mb: 1 }}>
+        <Typography variant="overline" sx={{ color: '#365A4A', letterSpacing: 2, display: 'block', textAlign: 'center', mb: 1 }}>
           Experiencias
         </Typography>
         <Typography variant="h3" sx={{ fontWeight: 900, textAlign: 'center', mb: 5, color: '#1a1a1a', fontSize: { xs: '1.75rem', md: '2.5rem' } }}>
@@ -724,15 +780,15 @@ export default function DomoVenuePage() {
                   textAlign: 'left',
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                   '&:hover': { transform: 'translateY(-3px)', boxShadow: `0 12px 28px ${experience.accentColor}24` },
-                  '&:focus-visible': { outline: `3px solid ${experience.accentColor}`, outlineOffset: 3 },
+                  '&:focus-visible': { outline: '3px solid #1F2937', outlineOffset: 3 },
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Typography variant="overline" sx={{ color: experience.accentColor, fontWeight: 800, letterSpacing: 1.5 }}>
+                  <Typography variant="overline" sx={{ color: '#374151', fontWeight: 800, letterSpacing: 1.5 }}>
                     {experience.navLabel}
                   </Typography>
                   <Typography variant="h6" fontWeight={800} sx={{ mt: 0.5, color: '#1a1a1a' }}>{experience.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, lineHeight: 1.6 }}>{experience.subtitle}</Typography>
+                  <Typography variant="body2" sx={{ mt: 1.5, lineHeight: 1.6, color: '#4B5563' }}>{experience.subtitle}</Typography>
                 </CardContent>
               </Card>
             </Grid>
@@ -746,7 +802,7 @@ export default function DomoVenuePage() {
         <Grid container spacing={3} alignItems="stretch">
           <Grid item xs={12} md={4}>
             <Stack spacing={2} sx={{ maxWidth: 440, height: '100%', justifyContent: 'center' }}>
-              <Typography variant="overline" sx={{ color: activeExperience.accentColor, letterSpacing: 1.5, fontWeight: 800 }}>
+              <Typography variant="overline" sx={{ color: activeExperience.accentOnDarkColor, letterSpacing: 1.5, fontWeight: 800 }}>
                 {activeExperience.navLabel}
               </Typography>
               <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
@@ -787,7 +843,7 @@ export default function DomoVenuePage() {
       <Box sx={{ bgcolor: '#0F0F0F', color: '#fff', py: { xs: 6, md: 8 }, px: { xs: 2, md: 6 } }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
           <Box sx={{ textAlign: 'center', mb: 5 }}>
-            <Typography variant="overline" sx={{ color: activeExperience.accentColor, letterSpacing: 2, display: 'block' }}>
+            <Typography variant="overline" sx={{ color: activeExperience.accentOnDarkColor, letterSpacing: 2, display: 'block' }}>
               Lo que ofrecemos
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 300, mt: 1, fontSize: { xs: '1.75rem', md: '2.5rem' }, color: '#fff' }}>
@@ -812,7 +868,7 @@ export default function DomoVenuePage() {
                     },
                   }}
                 >
-                  <Box sx={{ color: activeExperience.accentColor, mb: 1.5 }}>{amenity.icon}</Box>
+                  <Box sx={{ color: activeExperience.accentOnDarkColor, mb: 1.5 }}>{amenity.icon}</Box>
                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5, color: '#fff' }}>
                     {amenity.title}
                   </Typography>
@@ -852,6 +908,7 @@ export default function DomoVenuePage() {
                         label="Nombre"
                         value={form.fullName}
                         onChange={(event) => updateForm('fullName', event.target.value)}
+                        autoComplete="name"
                         fullWidth
                         required
                       />
@@ -862,6 +919,7 @@ export default function DomoVenuePage() {
                         value={form.email}
                         onChange={(event) => updateForm('email', event.target.value)}
                         type="email"
+                        autoComplete="email"
                         fullWidth
                         required
                       />
@@ -872,6 +930,7 @@ export default function DomoVenuePage() {
                         label="WhatsApp"
                         value={form.phone}
                         onChange={(event) => updateForm('phone', event.target.value)}
+                        autoComplete="tel"
                         fullWidth
                       />
                     </Grid>
@@ -1024,7 +1083,7 @@ export default function DomoVenuePage() {
       <Box sx={{ bgcolor: '#0F0F0F', color: '#fff', py: { xs: 6, md: 8 }, px: { xs: 2, md: 6 } }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
           <Box sx={{ mb: 4 }}>
-            <Typography variant="overline" sx={{ color: activeExperience.accentColor, letterSpacing: 2, display: 'block' }}>
+            <Typography variant="overline" sx={{ color: activeExperience.accentOnDarkColor, letterSpacing: 2, display: 'block' }}>
               Ubicación
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 300, mt: 1, fontSize: { xs: '1.75rem', md: '2.5rem' }, color: '#fff' }}>
@@ -1055,7 +1114,7 @@ export default function DomoVenuePage() {
               <Stack spacing={2}>
                 <Card sx={{ bgcolor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2, color: '#fff' }}>
                   <CardContent>
-                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.4)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
+                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.65)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
                       Dirección
                     </Typography>
                     <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9375rem' }}>
@@ -1066,18 +1125,18 @@ export default function DomoVenuePage() {
                 </Card>
                 <Card sx={{ bgcolor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2, color: '#fff' }}>
                   <CardContent>
-                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.4)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
+                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.65)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
                       Coordenadas
                     </Typography>
                     <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9375rem' }}>
                       0.027°N, 78.481°W<br />
-                      <Box component="span" sx={{ color: activeExperience.accentColor }}>A pasos de la línea del Ecuador</Box>
+                      <Box component="span" sx={{ color: activeExperience.accentOnDarkColor }}>A pasos de la línea del Ecuador</Box>
                     </Typography>
                   </CardContent>
                 </Card>
                 <Card sx={{ bgcolor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 2, color: '#fff' }}>
                   <CardContent>
-                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.4)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
+                    <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.65)', letterSpacing: 1, display: 'block', mb: 0.5 }}>
                       Desde Quito
                     </Typography>
                     <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9375rem' }}>
@@ -1176,7 +1235,7 @@ export default function DomoVenuePage() {
             <Typography
               component="a"
               href="mailto:info@domopululahua.com"
-              sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem', textDecoration: 'none', '&:hover': { color: 'rgba(255,255,255,0.7)' } }}
+              sx={{ color: 'rgba(255,255,255,0.72)', fontSize: '0.875rem', textDecoration: 'none', '&:hover': { color: '#fff' } }}
             >
               info@domopululahua.com
             </Typography>
@@ -1187,10 +1246,10 @@ export default function DomoVenuePage() {
       {/* DOMO FOOTER */}
       <Box sx={{ bgcolor: '#0F0F0F', color: '#fff', py: 4, px: { xs: 2, md: 6 }, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-          <Typography sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem' }}>
+          <Typography sx={{ color: 'rgba(255,255,255,0.68)', fontSize: '0.8125rem' }}>
             © {new Date().getFullYear()} Domo del Pululahua
           </Typography>
-          <Typography sx={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem' }}>
+          <Typography sx={{ color: 'rgba(255,255,255,0.68)', fontSize: '0.8125rem' }}>
             Hecho con intención en el corazón del cráter
           </Typography>
         </Box>

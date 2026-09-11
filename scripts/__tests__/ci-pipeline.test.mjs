@@ -42,6 +42,18 @@ test('backend quality compiles, tests and exports the binary in one Stack pass',
   assert.doesNotMatch(script, /stack --no-terminal test/);
 });
 
+test('backend quality exercises public booking concurrency with its tested binary', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const integration = await source('scripts/test-public-booking-http-concurrency.sh');
+  assert.match(
+    workflow,
+    /Exercise public booking HTTP idempotency and resource conflicts[\s\S]*TDF_PUBLIC_BOOKING_HTTP_DATABASE_URL: postgresql:\/\/postgres:postgres@postgres:5432\/tdf_hq_automatic_migration_test[\s\S]*TDF_PUBLIC_BOOKING_HTTP_SERVER_BIN: \$\{\{ env\.BACKEND_BINARY_OUT \}\}[\s\S]*run: bash scripts\/test-public-booking-http-concurrency\.sh/,
+  );
+  assert.match(integration, /env -i/);
+  assert.match(integration, /Refusing to run the HTTP write test outside loopback or the CI postgres service/);
+  assert.match(integration, /Refusing to write to database without a _test suffix/);
+});
+
 test('change detection includes deleted paths', async () => {
   const classifier = await source('scripts/ci-change-scope.mjs');
   assert.match(classifier, /--diff-filter=ACMRD/);

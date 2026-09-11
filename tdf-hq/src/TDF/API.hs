@@ -350,7 +350,10 @@ type BookingPublicAPI =
          :> QueryParam' '[Required] "startsAt" UTCTime
          :> QueryParam' '[Required] "durationMinutes" Int
          :> Get '[JSON] PublicBookingAvailabilityDTO
-  :<|> "bookings" :> "public" :> ReqBody '[JSON] PublicBookingReq :> Post '[JSON] BookingDTO
+  :<|> "bookings" :> "public"
+         :> Header "Idempotency-Key" Text
+         :> ReqBody '[JSON] PublicBookingReq
+         :> Post '[JSON] BookingDTO
   :<|> "bookings" :> "public" :> "checkout"
          :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] PublicBookingCheckoutReq
@@ -535,6 +538,10 @@ type SessionAPI =
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> Get '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "preferences" :> ReqBody '[JSON] LocalePreferencesUpdate :> Put '[JSON] LocalePreferencesDTO
   :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "currency-conversions" :> ReqBody '[JSON] CurrencyConversionAuditCreate :> Post '[JSON] NoContent
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> Get '[JSON] OnboardingProgressDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "intent" :> ReqBody '[JSON] OnboardingIntentUpdate :> Put '[JSON] OnboardingProgressDTO
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "complete" :> ReqBody '[JSON] OnboardingCompletionRequest :> Post '[JSON] OnboardingCompletionResult
+  :<|> Header "Authorization" Text :> Header "Cookie" Text :> "session" :> "onboarding" :> "reconcile" :> Post '[JSON] OnboardingCompletionResult
 
 type AccessRequestsAPI =
        Get '[JSON] [FeatureAccessRequestDTO]

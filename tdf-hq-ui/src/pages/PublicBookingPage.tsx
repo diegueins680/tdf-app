@@ -42,6 +42,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import {
   Bookings,
+  getOrCreatePublicBookingIdempotency,
   loadPublicBookingLookupToken,
   storePublicBookingLookupToken,
   type PublicBookingCheckoutDTO,
@@ -57,6 +58,7 @@ import { mergeServiceTypes, type ServiceType } from '../utils/serviceTypesStore'
 import { env } from '../utils/env';
 import { useSession } from '../session/SessionContext';
 import { resolveRuntimeCurrency } from '../utils/formatters';
+import { buildLoginRedirectPath } from '../utils/loginRouting';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 interface FormState {
@@ -97,13 +99,6 @@ const QUICK_SLOT_STEP_MINUTES = 30;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
-const createBookingIdempotencyKey = (): string => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `service-booking-${crypto.randomUUID()}`;
-  }
-  return `service-booking-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
-
 const formatMinorAmount = (currency: string, amountMinor: number): string =>
   `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -136,10 +131,10 @@ const PUBLIC_BOOKING_PRESETS: Record<
     introChips: [
       '1. Elige horario para DJ Booth',
       '2. Reservamos por horas',
-      '3. Confirmamos por email o WhatsApp',
+      '3. Guarda tu ID para cualquier ajuste',
     ],
     contactTitle: 'Datos para reservar tu booth',
-    contactDescription: 'Usa un correo válido para recibir la confirmación de tu práctica en DJ Booth.',
+    contactDescription: 'Usa un correo válido para identificar tu reserva de práctica en DJ Booth.',
     calendarNote: 'Bloque tentativo para el DJ Booth.',
     durationNote: 'Reserva por horas de práctica (30 min mínimo).',
     notesPlaceholder: 'Cuéntanos si traes USB/controlador, estilo musical o cualquier requerimiento para practicar.',
@@ -348,9 +343,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     [baseServices, presetConfig],
   );
   const services = baseServices;
-  const publicRoutePath = presetConfig?.path ?? '/reservar';
-  const loginPath = `/login?redirect=${encodeURIComponent(publicRoutePath)}`;
-  const signupPath = `/login?signup=1&redirect=${encodeURIComponent(publicRoutePath)}`;
+  const bookingReturnPath = `${location.pathname}${location.search}${location.hash}`;
+  const loginPath = buildLoginRedirectPath(bookingReturnPath);
+  const signupPath = `${loginPath}&signup=1`;
   const { session, logout } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
@@ -374,7 +369,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     (Boolean(healthQuery.data?.status) && String(healthQuery.data?.status).toLowerCase() !== 'ok');
   const bookingStatusChip = useMemo(() => {
     if (requiresManualConfirmation) {
-      return <Chip label="Te confirmamos por email" size="small" color="warning" variant="outlined" />;
+      return <Chip label="Solicitud para confirmar" size="small" color="warning" variant="outlined" />;
     }
     if (healthQuery.isLoading && !healthQuery.data) {
       return <Chip label="Preparando agenda" size="small" variant="outlined" />;
@@ -389,22 +384,22 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (serviceCatalogUnavailable) {
       return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
     }
-    return 'Puedes dejar la solicitud ahora mismo. Confirmaremos disponibilidad y recursos contigo por correo o WhatsApp antes de bloquear la sesión.';
+    return 'Puedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.';
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
   const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
   const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
   const pageDescription =
     presetConfig?.description ??
-    'Completa tus datos y agenda el horario que prefieras. Confirmaremos la reserva por correo y, si aún no tienes cuenta, crearemos tu acceso automáticamente.';
+    'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
   const introChips = presetConfig?.introChips ?? [
     '1. Agenda sin crear cuenta',
-    '2. Confirmamos por email',
-    '3. Coordinamos por WhatsApp si lo dejas',
+    '2. Recibe un ID de reserva',
+    '3. Coordina ajustes por WhatsApp',
   ];
   const contactTitle = presetConfig?.contactTitle ?? 'Datos de contacto';
   const contactDescription =
     presetConfig?.contactDescription ??
-    'Usa un correo válido para recibir la confirmación. Si eres nuevo, crearemos un perfil para ti.';
+    'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
   const calendarNote = presetConfig?.calendarNote ?? 'Bloque tentativo en el calendario.';
   const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
   const notesPlaceholder =
@@ -429,7 +424,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [manualReference, setManualReference] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const checkoutIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
+  const bookingIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
@@ -596,7 +591,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setManualDialogOpen(false);
     setManualReference('');
     setTermsAccepted(false);
-    checkoutIdempotency.current = null;
+    bookingIdempotency.current = null;
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
@@ -636,7 +631,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
     setTermsAccepted(false);
-    checkoutIdempotency.current = null;
+    bookingIdempotency.current = null;
     const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
     fetch(url, { signal: controller.signal })
       .then(async (res) => {
@@ -681,9 +676,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const validateContactStep = () => {
     if (!form.fullName.trim()) return 'Agrega tu nombre para continuar.';
     const trimmedEmail = form.email.trim();
-    if (!trimmedEmail) return 'Necesitamos un correo para confirmarte la reserva.';
+    if (!trimmedEmail) return 'Necesitamos un correo para identificar tu reserva.';
     if (!EMAIL_PATTERN.test(trimmedEmail)) {
-      return 'Ingresa un correo válido para enviarte la confirmación.';
+      return 'Ingresa un correo válido para identificar tu reserva.';
     }
     return null;
   };
@@ -792,19 +787,20 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           pbcResourceIds: null,
           pbcTermsAccepted: true,
         };
-        const fingerprint = JSON.stringify(checkoutPayload);
-        if (checkoutIdempotency.current?.fingerprint !== fingerprint) {
-          checkoutIdempotency.current = { fingerprint, key: createBookingIdempotencyKey() };
-        }
+        bookingIdempotency.current = await getOrCreatePublicBookingIdempotency(
+          'checkout',
+          checkoutPayload,
+          bookingIdempotency.current,
+        );
         const checkout = await Bookings.createPublicCheckout(
           checkoutPayload,
-          checkoutIdempotency.current.key,
+          bookingIdempotency.current.key,
         );
         storePublicBookingLookupToken(checkout.booking.bookingId, checkout.lookupToken);
         setCheckoutSuccess(checkout);
         setSuccess(checkout.booking);
       } else {
-        const dto = await Bookings.createPublic({
+        const bookingPayload = {
           pbFullName: form.fullName.trim(),
           pbEmail: form.email.trim(),
           pbPhone: form.phone.trim() || null,
@@ -815,7 +811,16 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           pbEngineerPartyId: engineerPartyId,
           pbEngineerName: engineerName,
           pbResourceIds: null,
-        });
+        };
+        bookingIdempotency.current = await getOrCreatePublicBookingIdempotency(
+          'tentative',
+          bookingPayload,
+          bookingIdempotency.current,
+        );
+        const dto = await Bookings.createPublic(
+          bookingPayload,
+          bookingIdempotency.current.key,
+        );
         setSuccess(dto);
       }
     } catch (err) {
@@ -1429,7 +1434,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                       : depositProcessing
                         ? 'El proveedor todavía no confirmó el resultado. Esta pantalla no representa un pago exitoso.'
                         : 'El horario está retenido temporalmente, pero todavía no está pagado ni confirmado. Solo una verificación del proveedor puede confirmar el depósito.'
-                    : 'Revisa tu correo para la confirmación. Si necesitas ajustar horario o salas, responde al correo o escríbenos por WhatsApp y lo coordinamos contigo.'}
+                    : 'Guarda el ID de reserva. Si necesitas confirmar o ajustar el horario o las salas, escríbenos por WhatsApp.'}
                 </Typography>
               </Stack>
 
@@ -1438,7 +1443,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   <Alert severity={checkoutSuccess ? (depositPaid ? 'success' : 'info') : 'success'}>
                     {checkoutSuccess
                       ? depositPaid ? 'Depósito pagado y verificado' : depositProcessing ? 'Pago en verificación' : 'Orden creada, pago pendiente'
-                      : 'Reserva creada'}. ID{' '}
+                      : 'Solicitud registrada'}. ID{' '}
                     <strong>{success.bookingId}</strong> · Servicio:{' '}
                     <strong>{success.serviceType ?? form.serviceType}</strong>
                     {checkoutSuccess && (
@@ -1550,7 +1555,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                         ? depositPaid
                           ? '• Depósito verificado por el servidor; revisa el saldo antes de la sesión.'
                           : `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
-                        : '• Te confirmamos por correo (y te contactamos si necesitamos ajustar recursos).'}
+                        : '• Guarda el ID de reserva y contáctanos si necesitas ajustar recursos.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
@@ -1780,7 +1785,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     <Stack spacing={0.3}>
                       <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Inicia sesión y saltamos tus datos para esta reserva. Si no tienes cuenta, puedes crearla rápido.
+                        Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
@@ -2357,7 +2362,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                   </Stack>
                                   <Divider sx={{ my: 1 }} />
                                   <Typography variant="body2" color="text.secondary">
-                                    Te enviaremos la confirmación por correo y coordinaremos cualquier ajuste de horario o salas contigo.
+                                    Al enviar, recibirás un ID de reserva. Guarda ese ID y contáctanos si necesitas coordinar ajustes.
                                   </Typography>
                                   {estimatePriceLabel && (
                                     <Typography variant="subtitle2" sx={{ mt: 1 }}>

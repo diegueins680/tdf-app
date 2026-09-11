@@ -24,6 +24,17 @@ test('ordinary backend changes avoid UI, mobile, contracts and migrations', () =
   });
 });
 
+test('public booking HTTP concurrency harness selects backend validation', () => {
+  assert.deepEqual(classifyChangedFiles(['scripts/test-public-booking-http-concurrency.sh']), {
+    repo: true,
+    ui: false,
+    mobile: false,
+    backend: true,
+    contracts: false,
+    migrations: false,
+  });
+});
+
 test('OpenAPI changes validate both generated clients', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq/docs/openapi/api.yaml']), {
     repo: true,

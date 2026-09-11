@@ -299,6 +299,7 @@ import TDF.Server
     , requirePersistedBookingDTO
     , selectUniquePartyByPrimaryEmail
     , selectUniquePartyByPrimaryPhone
+    , ensurePartyRecord
     , ensurePartyForInquiry
     , ensurePartyForCourseRegistrationDb
     , findExistingRegistration
@@ -504,7 +505,7 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
-import TDF.Server.SocialEventsHandlers (validateEventArtistIds)
+import TDF.Server.SocialEventsHandlers (toggleMomentReactionDb, validateEventArtistIds)
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -4931,7 +4932,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
+                        _currentSession :<|> logout :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
                     result <-
                         liftIO $
                             runHandler $
@@ -4970,7 +4971,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion = sessionServer
+                        currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateOnboardingIntent :<|> _completeOnboarding :<|> _reconcileOnboarding = sessionServer
                         runSession tokenValue =
                             liftIO $
                                 runHandler $
@@ -5019,6 +5020,725 @@ spec = describe "TDF.Server helpers" $ do
                 "google@example.com"
                 googlePartyId
                 googleResult
+
+        it "keeps onboarding progress Party-bound, evidence-backed, and completion idempotent" $ do
+            (currentResult, updatedResult, missingEvidenceResult, firstResult, repeatedResult) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (artistPartyId, partyId) <- liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just now
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = now
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> getOnboarding :<|> updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        runSessionAction action =
+                            liftIO $ runHandler $ runReaderT action env
+                    current <- runSessionAction (getOnboarding (Just "Bearer google-token") Nothing)
+                    updated <- runSessionAction
+                        ( updateIntent
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingIntentUpdate "follow_artists")
+                        )
+                    missingEvidence <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "artist_followed"))
+                        )
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.EngagementEvent
+                            { M.engagementEventActorPartyId = Just partyId
+                            , M.engagementEventTargetArtistId = Just artistPartyId
+                            , M.engagementEventEntityType = "artist"
+                            , M.engagementEventEntityId = Just (fromIntegral (fromSqlKey artistPartyId))
+                            , M.engagementEventEventType = "follow"
+                            , M.engagementEventMetadata = Nothing
+                            , M.engagementEventCreatedAt = now
+                            }
+                    first <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "artist_followed"))
+                        )
+                    repeated <- runSessionAction
+                        ( completeProgress
+                            (Just "Bearer google-token")
+                            Nothing
+                            (DTO.OnboardingCompletionRequest (Just "event_saved"))
+                        )
+                    pure (current, updated, missingEvidence, first, repeated)
+
+            case currentResult of
+                Right (DTO.OnboardingProgressDTO eligibleValue _ intentValue completedValue _ _ _) -> do
+                    eligibleValue `shouldBe` True
+                    intentValue `shouldBe` Just "events"
+                    completedValue `shouldBe` Nothing
+                Left serverErr -> expectationFailure ("Expected onboarding progress, got: " <> show serverErr)
+            case updatedResult of
+                Right (DTO.OnboardingProgressDTO eligibleValue _ intentValue _ _ _ _) -> do
+                    eligibleValue `shouldBe` True
+                    intentValue `shouldBe` Just "follow_artists"
+                Left serverErr -> expectationFailure ("Expected onboarding intent update, got: " <> show serverErr)
+            case missingEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` True
+                    completedValue `shouldBe` Nothing
+                    firstValueValue `shouldBe` Nothing
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected missing follow evidence to fail closed, got: " <> show serverErr)
+            case firstResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "artist_followed"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr -> expectationFailure ("Expected first onboarding completion, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "artist_followed"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr -> expectationFailure ("Expected repeated onboarding completion, got: " <> show serverErr)
+
+        it "reconciles in-window first-value evidence after expiry without allowing a late explicit exit" $ do
+            (lateFirstValueResult, repeatedResult, postWindowEvidenceResult, lateExitResult, evidenceAt) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (lateExitPartyId, firstValuePartyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-(25 * 60 * 60)) now
+                        actionAt = addUTCTime (23 * 60 * 60) signupAt
+                        postWindowActionAt = addUTCTime ((24 * 60 * 60) + 60) signupAt
+                        progressFor partyIdValue =
+                            M.UserOnboardingProgress
+                                { M.userOnboardingProgressPartyId = partyIdValue
+                                , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                                , M.userOnboardingProgressIntent = Just "events"
+                                , M.userOnboardingProgressCompletedAt = Nothing
+                                , M.userOnboardingProgressFirstValue = Nothing
+                                , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                , M.userOnboardingProgressUpdatedAt = signupAt
+                                }
+                    liftIO $ flip runSqlPool pool $ do
+                        insert_ (progressFor firstValuePartyId)
+                        insert_ (progressFor lateExitPartyId)
+                        insert_
+                            M.EngagementEvent
+                                { M.engagementEventActorPartyId = Just firstValuePartyId
+                                , M.engagementEventTargetArtistId = Nothing
+                                , M.engagementEventEntityType = "event_moment"
+                                , M.engagementEventEntityId = Just 42
+                                , M.engagementEventEventType = "reaction_added"
+                                , M.engagementEventMetadata = Nothing
+                                , M.engagementEventCreatedAt = actionAt
+                                }
+                        insert_
+                            M.EngagementEvent
+                                { M.engagementEventActorPartyId = Just lateExitPartyId
+                                , M.engagementEventTargetArtistId = Nothing
+                                , M.engagementEventEntityType = "event_moment"
+                                , M.engagementEventEntityId = Just 43
+                                , M.engagementEventEventType = "reaction_added"
+                                , M.engagementEventMetadata = Nothing
+                                , M.engagementEventCreatedAt = postWindowActionAt
+                                }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        completeWith tokenValue request =
+                            liftIO $ runHandler $ runReaderT
+                                (completeProgress (Just ("Bearer " <> tokenValue)) Nothing request)
+                                env
+                    first <- completeWith
+                        "google-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    repeated <- completeWith
+                        "google-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    postWindowEvidence <- completeWith
+                        "ambiguous-token"
+                        (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                    lateExit <- completeWith
+                        "ambiguous-token"
+                        (DTO.OnboardingCompletionRequest Nothing)
+                    pure (first, repeated, postWindowEvidence, lateExit, actionAt)
+
+            case lateFirstValueResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "moment_reaction", Just evidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected late retry with in-window evidence to complete, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult _ newlyCompletedValue) ->
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated late retry to remain idempotent, got: " <> show serverErr)
+            case postWindowEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                    (eligibleValue, completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, Nothing, Nothing, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected post-window evidence to remain ineligible, got: " <> show serverErr)
+            case lateExitResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                    (eligibleValue, completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, Nothing, Nothing, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected late explicit exit to remain ineligible, got: " <> show serverErr)
+
+        it "reconciles cross-device evidence without a client assertion and selects the earliest stable value" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , missingSignupResult
+                , explicitExitEvidenceResult
+                , postWindowEvidenceResult
+                , reconciledResult
+                , repeatedResult
+                , unauthenticatedResult
+                , expectedEvidenceAt
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-(25 * 60 * 60)) now
+                        earliestAt = addUTCTime (2 * 60 * 60) signupAt
+                        laterAt = addUTCTime (3 * 60 * 60) signupAt
+                        postWindowAt = addUTCTime ((24 * 60 * 60) + 60) signupAt
+                        progressFor partyIdValue signupValue =
+                            M.UserOnboardingProgress
+                                { M.userOnboardingProgressPartyId = partyIdValue
+                                , M.userOnboardingProgressSignupCompletedAt = signupValue
+                                , M.userOnboardingProgressIntent = Just "events"
+                                , M.userOnboardingProgressCompletedAt = Nothing
+                                , M.userOnboardingProgressFirstValue = Nothing
+                                , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                                , M.userOnboardingProgressUpdatedAt = maybe now id signupValue
+                                }
+                        insertEngagement actorPartyId entityTypeValue eventTypeValue occurredAtValue entityIdValue =
+                            insert_
+                                M.EngagementEvent
+                                    { M.engagementEventActorPartyId = Just actorPartyId
+                                    , M.engagementEventTargetArtistId = Nothing
+                                    , M.engagementEventEntityType = entityTypeValue
+                                    , M.engagementEventEntityId = Just entityIdValue
+                                    , M.engagementEventEventType = eventTypeValue
+                                    , M.engagementEventMetadata = Nothing
+                                    , M.engagementEventCreatedAt = occurredAtValue
+                                    }
+                    liftIO $ flip runSqlPool pool $ do
+                        insert_ (progressFor partyId (Just signupAt))
+                        insert_ (progressFor otherPartyId Nothing)
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress = sessionServer
+                        reconcileWith mToken =
+                            liftIO $ runHandler $ runReaderT
+                                (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
+                                env
+                        completeExitWith tokenValue =
+                            liftIO $ runHandler $ runReaderT
+                                (completeProgress
+                                    (Just ("Bearer " <> tokenValue))
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest Nothing))
+                                env
+                    missing <- reconcileWith (Just "google-token")
+                    liftIO $ flip runSqlPool pool $
+                        insertEngagement otherPartyId "event_moment" "reaction_added" earliestAt 40
+                    otherPartyEvidence <- reconcileWith (Just "google-token")
+                    missingSignup <- reconcileWith (Just "ambiguous-token")
+                    liftIO $ flip runSqlPool pool $
+                        rawExecute
+                            "UPDATE user_onboarding_progress SET signup_completed_at = ? WHERE party_id = ?"
+                            [toPersistValue signupAt, toPersistValue otherPartyId]
+                    explicitExitEvidence <- completeExitWith "ambiguous-token"
+                    liftIO $ flip runSqlPool pool $
+                        insertEngagement partyId "event_moment" "reaction_added" postWindowAt 41
+                    postWindowEvidence <- reconcileWith (Just "google-token")
+                    liftIO $ flip runSqlPool pool $ do
+                        insertEngagement partyId "artist" "follow" laterAt 42
+                        insertEngagement partyId "event_moment" "reaction_added" earliestAt 43
+                        rawExecute
+                            "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved','event','42','cross-device-save','{}',?)"
+                            [toPersistValue partyId, toPersistValue earliestAt]
+                    reconciled <- reconcileWith (Just "google-token")
+                    repeated <- reconcileWith (Just "google-token")
+                    unauthenticated <- reconcileWith Nothing
+                    pure
+                        ( missing
+                        , otherPartyEvidence
+                        , missingSignup
+                        , explicitExitEvidence
+                        , postWindowEvidence
+                        , reconciled
+                        , repeated
+                        , unauthenticated
+                        , earliestAt
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ completedValue firstValueValue _ _) newlyCompletedValue) ->
+                            (completedValue, firstValueValue, newlyCompletedValue)
+                                `shouldBe` (Nothing, Nothing, False)
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " to leave reconciliation pending, got: " <> show serverErr)
+            assertPending "missing evidence" missingEvidenceResult
+            assertPending "other-Party evidence" otherPartyEvidenceResult
+            assertPending "missing signup marker" missingSignupResult
+            case explicitExitEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "moment_reaction", Just expectedEvidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected authoritative evidence to win over an explicit exit, got: " <> show serverErr)
+            assertPending "post-window evidence" postWindowEvidenceResult
+            case reconciledResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue firstValueAt _) newlyCompletedValue) -> do
+                    (eligibleValue, firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (False, Just "event_saved", Just expectedEvidenceAt, True)
+                    completedValue `shouldSatisfy` (/= Nothing)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected server-inferred cross-device evidence to complete, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue firstValueAt _) newlyCompletedValue) ->
+                    (firstValueValue, firstValueAt, newlyCompletedValue)
+                        `shouldBe` (Just "event_saved", Just expectedEvidenceAt, False)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated reconciliation to remain idempotent, got: " <> show serverErr)
+            case unauthenticatedResult of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 401
+                Right _ -> expectationFailure "Expected reconciliation without a session to return 401"
+
+        it "requires Party-bound, in-window access-request evidence and stays idempotent" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertAccessRequest requesterPartyId requestedAtValue featureIdValue =
+                            liftIO $ flip runSqlPool pool $ insert_
+                                ME.FeatureAccessRequest
+                                    { ME.featureAccessRequestRequesterPartyId = requesterPartyId
+                                    , ME.featureAccessRequestFeatureId = featureIdValue
+                                    , ME.featureAccessRequestAction = "view"
+                                    , ME.featureAccessRequestRoleContext = "[]"
+                                    , ME.featureAccessRequestModuleContext = "[]"
+                                    , ME.featureAccessRequestJustification = Nothing
+                                    , ME.featureAccessRequestStatus = "pending"
+                                    , ME.featureAccessRequestReviewerGroup = "admin"
+                                    , ME.featureAccessRequestReviewerPartyId = Nothing
+                                    , ME.featureAccessRequestReviewerNotes = Nothing
+                                    , ME.featureAccessRequestRequestedAt = requestedAtValue
+                                    , ME.featureAccessRequestUpdatedAt = requestedAtValue
+                                    , ME.featureAccessRequestDecidedAt = Nothing
+                                    , ME.featureAccessRequestCancelledAt = Nothing
+                                    , ME.featureAccessRequestExpiresAt = Nothing
+                                    }
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "professional_tools"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        completeAccessRequest =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "access_requested"))
+                                )
+                                env
+                    missingEvidence <- completeAccessRequest
+                    insertAccessRequest otherPartyId signupAt "other-party-request"
+                    otherPartyEvidence <- completeAccessRequest
+                    insertAccessRequest
+                        partyId
+                        (addUTCTime (-1) signupAt)
+                        "pre-signup-request"
+                    preSignupEvidence <- completeAccessRequest
+                    insertAccessRequest
+                        partyId
+                        (addUTCTime 3600 now)
+                        "future-request"
+                    futureEvidence <- completeAccessRequest
+                    insertAccessRequest partyId now "in-window-request"
+                    validEvidence <- completeAccessRequest
+                    repeated <- completeAccessRequest
+                    pure
+                        ( missingEvidence
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    eligibleValue `shouldBe` False
+                    completedValue `shouldSatisfy` (/= Nothing)
+                    firstValueValue `shouldBe` Just "access_requested"
+                    newlyCompletedValue `shouldBe` True
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid access-request evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "access_requested"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated access-request completion to remain idempotent, got: " <> show serverErr)
+
+        it "requires Party-bound, in-window, server-validated event-save evidence" $ do
+            ( missingEvidenceResult
+                , legacyFavoriteResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , wrongEntityEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertFavoriteAudit actorPartyId entityKindValue occurredAtValue correlationIdValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved',?,'42',?,'{}',?)"
+                                [ toPersistValue actorPartyId
+                                , PersistText entityKindValue
+                                , PersistText correlationIdValue
+                                , toPersistValue occurredAtValue
+                                ]
+                        insertCurrentFavoriteAudit actorPartyId entityKindValue correlationIdValue =
+                            liftIO $ flip runSqlPool pool $ rawExecute
+                                "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,correlation_id,metadata,created_at) VALUES (?,'favorite.saved',?,'42',?,'{}',CURRENT_TIMESTAMP)"
+                                [ toPersistValue actorPartyId
+                                , PersistText entityKindValue
+                                , PersistText correlationIdValue
+                                ]
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        completeEventSave =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "event_saved"))
+                                )
+                                env
+                    missingEvidence <- completeEventSave
+                    liftIO $ flip runSqlPool pool $ do
+                        rawExecute
+                            "INSERT INTO directory_public_event(id) VALUES (42)"
+                            []
+                        rawExecute
+                            "INSERT INTO directory_favorite(account_party_id,target_kind,target_id,created_at) VALUES (?,'event','42',?)"
+                            [toPersistValue partyId, toPersistValue now]
+                    legacyFavorite <- completeEventSave
+                    insertFavoriteAudit otherPartyId "event" now "other-party-save"
+                    otherPartyEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "event" (addUTCTime (-1) signupAt) "pre-signup-save"
+                    preSignupEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "event" (addUTCTime 3600 now) "future-save"
+                    futureEvidence <- completeEventSave
+                    insertFavoriteAudit partyId "venue" now "wrong-entity-save"
+                    wrongEntityEvidence <- completeEventSave
+                    insertCurrentFavoriteAudit partyId "event" "valid-event-save"
+                    validEvidence <- completeEventSave
+                    repeated <- completeEventSave
+                    pure
+                        ( missingEvidence
+                        , legacyFavorite
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , wrongEntityEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " event-save evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "pre-hardening favorite without validation audit" legacyFavoriteResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            assertPending "wrong-entity" wrongEntityEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    (eligibleValue, maybe False (const True) completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, True, Just "event_saved", True)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid event-save evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "event_saved"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated event-save completion to remain idempotent, got: " <> show serverErr)
+
+        it "requires durable Party-bound, in-window moment-reaction evidence" $ do
+            ( missingEvidenceResult
+                , otherPartyEvidenceResult
+                , preSignupEvidenceResult
+                , futureEvidenceResult
+                , wrongEntityEvidenceResult
+                , wrongEventEvidenceResult
+                , validEvidenceResult
+                , repeatedResult
+                ) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let signupAt = addUTCTime (-3600) now
+                        insertEngagement actorPartyId entityTypeValue eventTypeValue occurredAtValue entityIdValue =
+                            liftIO $ flip runSqlPool pool $ insert_
+                                M.EngagementEvent
+                                    { M.engagementEventActorPartyId = Just actorPartyId
+                                    , M.engagementEventTargetArtistId = Nothing
+                                    , M.engagementEventEntityType = entityTypeValue
+                                    , M.engagementEventEntityId = Just entityIdValue
+                                    , M.engagementEventEventType = eventTypeValue
+                                    , M.engagementEventMetadata = Nothing
+                                    , M.engagementEventCreatedAt = occurredAtValue
+                                    }
+                    liftIO $ flip runSqlPool pool $ insert_
+                        M.UserOnboardingProgress
+                            { M.userOnboardingProgressPartyId = partyId
+                            , M.userOnboardingProgressSignupCompletedAt = Just signupAt
+                            , M.userOnboardingProgressIntent = Just "events"
+                            , M.userOnboardingProgressCompletedAt = Nothing
+                            , M.userOnboardingProgressFirstValue = Nothing
+                            , M.userOnboardingProgressFirstValueCompletedAt = Nothing
+                            , M.userOnboardingProgressUpdatedAt = signupAt
+                            }
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> _reconcileOnboarding = sessionServer
+                        completeMomentReaction =
+                            liftIO $ runHandler $ runReaderT
+                                ( completeProgress
+                                    (Just "Bearer google-token")
+                                    Nothing
+                                    (DTO.OnboardingCompletionRequest (Just "moment_reaction"))
+                                )
+                                env
+                    missingEvidence <- completeMomentReaction
+                    insertEngagement otherPartyId "event_moment" "reaction_added" now 41
+                    otherPartyEvidence <- completeMomentReaction
+                    insertEngagement partyId "event_moment" "reaction_added" (addUTCTime (-1) signupAt) 42
+                    preSignupEvidence <- completeMomentReaction
+                    insertEngagement partyId "event_moment" "reaction_added" (addUTCTime 3600 now) 43
+                    futureEvidence <- completeMomentReaction
+                    insertEngagement partyId "social_event" "reaction_added" now 44
+                    wrongEntityEvidence <- completeMomentReaction
+                    insertEngagement partyId "event_moment" "reaction_removed" now 45
+                    wrongEventEvidence <- completeMomentReaction
+                    insertEngagement partyId "event_moment" "reaction_added" now 46
+                    validEvidence <- completeMomentReaction
+                    repeated <- completeMomentReaction
+                    pure
+                        ( missingEvidence
+                        , otherPartyEvidence
+                        , preSignupEvidence
+                        , futureEvidence
+                        , wrongEntityEvidence
+                        , wrongEventEvidence
+                        , validEvidence
+                        , repeated
+                        )
+
+            let assertPending evidenceLabel result =
+                    case result of
+                        Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                            eligibleValue `shouldBe` True
+                            completedValue `shouldBe` Nothing
+                            firstValueValue `shouldBe` Nothing
+                            newlyCompletedValue `shouldBe` False
+                        Left serverErr ->
+                            expectationFailure
+                                ("Expected " <> evidenceLabel <> " moment-reaction evidence to leave onboarding pending, got: " <> show serverErr)
+            assertPending "missing" missingEvidenceResult
+            assertPending "other-Party" otherPartyEvidenceResult
+            assertPending "pre-signup" preSignupEvidenceResult
+            assertPending "future" futureEvidenceResult
+            assertPending "wrong-entity" wrongEntityEvidenceResult
+            assertPending "wrong-event-type" wrongEventEvidenceResult
+            case validEvidenceResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO eligibleValue _ _ completedValue firstValueValue _ _) newlyCompletedValue) -> do
+                    (eligibleValue, maybe False (const True) completedValue, firstValueValue, newlyCompletedValue)
+                        `shouldBe` (False, True, Just "moment_reaction", True)
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected valid moment-reaction evidence to complete onboarding, got: " <> show serverErr)
+            case repeatedResult of
+                Right (DTO.OnboardingCompletionResult (DTO.OnboardingProgressDTO _ _ _ _ firstValueValue _ _) newlyCompletedValue) -> do
+                    firstValueValue `shouldBe` Just "moment_reaction"
+                    newlyCompletedValue `shouldBe` False
+                Left serverErr ->
+                    expectationFailure
+                        ("Expected repeated moment-reaction completion to remain idempotent, got: " <> show serverErr)
+
+        it "records moment-reaction additions atomically and retains evidence after removal" $ do
+            states <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    (_otherPartyId, partyId) <-
+                        liftIO $ runSqlPool seedSessionUsernameFallbackRows pool
+                    now <- liftIO getCurrentTime
+                    let momentKey = toSqlKey 42 :: Social.EventMomentId
+                        firstReactionType = fixtureUuidKey "50800000-0000-4000-8000-000000000001"
+                        changedReactionType = fixtureUuidKey "50800000-0000-4000-8000-000000000002"
+                        actorPartyText = T.pack (show (fromSqlKey partyId))
+                        reactionFilters =
+                            [ Social.EventMomentReactionMomentId ==. momentKey
+                            , Social.EventMomentReactionReactorPartyId ==. actorPartyText
+                            ]
+                        evidenceFilters =
+                            [ M.EngagementEventActorPartyId ==. Just partyId
+                            , M.EngagementEventEntityType ==. "event_moment"
+                            , M.EngagementEventEventType ==. "reaction_added"
+                            ]
+                    liftIO $ flip runSqlPool pool $ rawExecute
+                        "INSERT INTO event_moment(id) VALUES (42)"
+                        []
+                    first <- liftIO $ flip runSqlPool pool $
+                        toggleMomentReactionDb partyId actorPartyText momentKey firstReactionType (Just True) now
+                    firstReactions <- liftIO $ flip runSqlPool pool $ count reactionFilters
+                    firstEvidence <- liftIO $ flip runSqlPool pool $ count evidenceFilters
+                    repeated <- liftIO $ flip runSqlPool pool $
+                        toggleMomentReactionDb partyId actorPartyText momentKey firstReactionType (Just True) now
+                    repeatedReactions <- liftIO $ flip runSqlPool pool $ count reactionFilters
+                    repeatedEvidence <- liftIO $ flip runSqlPool pool $ count evidenceFilters
+                    removal <- liftIO $ flip runSqlPool pool $
+                        toggleMomentReactionDb partyId actorPartyText momentKey firstReactionType (Just False) now
+                    removedReactions <- liftIO $ flip runSqlPool pool $ count reactionFilters
+                    retainedEvidence <- liftIO $ flip runSqlPool pool $ count evidenceFilters
+                    changed <- liftIO $ flip runSqlPool pool $
+                        toggleMomentReactionDb partyId actorPartyText momentKey changedReactionType (Just True) now
+                    changedReactions <- liftIO $ flip runSqlPool pool $ count reactionFilters
+                    changedEvidence <- liftIO $ flip runSqlPool pool $ count evidenceFilters
+                    pure
+                        [ (first, firstReactions, firstEvidence)
+                        , (repeated, repeatedReactions, repeatedEvidence)
+                        , (removal, removedReactions, retainedEvidence)
+                        , (changed, changedReactions, changedEvidence)
+                        ]
+
+            states `shouldBe`
+                [ (True, 1, 1)
+                , (True, 1, 1)
+                , (False, 0, 1)
+                , (True, 1, 2)
+                ]
 
     describe "validateOptionalSignupPhone" $ do
         it "treats omitted or blank signup phones as absent and canonicalizes valid numbers" $ do
@@ -5095,16 +5815,17 @@ spec = describe "TDF.Server helpers" $ do
     describe "SignupRequest FromJSON" $ do
         it "accepts canonical public signup fields" $
             case decodeSignup
-                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42}" of
+                "{\"firstName\":\"Ada\",\"lastName\":\"Lovelace\",\"email\":\"ada@example.com\",\"phone\":\"+593991234567\",\"password\":\"supersecret\",\"fanArtistIds\":[7,11],\"claimArtistId\":42,\"onboardingIntent\":\"follow_artists\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical signup payload to decode, got: " <> decodeErr)
-                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ fanArtistIdsValue claimArtistIdValue) -> do
+                Right (DTO.SignupRequest firstNameValue lastNameValue emailValue phoneValue _ _ _ _ _ fanArtistIdsValue claimArtistIdValue onboardingIntentValue) -> do
                     firstNameValue `shouldBe` "Ada"
                     lastNameValue `shouldBe` "Lovelace"
                     emailValue `shouldBe` "ada@example.com"
                     phoneValue `shouldBe` Just "+593991234567"
                     fanArtistIdsValue `shouldBe` Just [7, 11]
                     claimArtistIdValue `shouldBe` Just 42
+                    onboardingIntentValue `shouldBe` Just "follow_artists"
 
         it "rejects caller-selected security roles" $
             decodeSignup
@@ -5131,7 +5852,7 @@ spec = describe "TDF.Server helpers" $ do
             case decodeGoogleLoginRequest "{\"idToken\":\"google-id-token\"}" of
                 Left decodeErr ->
                     expectationFailure ("Expected canonical Google login payload to decode, got: " <> decodeErr)
-                Right (DTO.GoogleLoginRequest idTokenValue _ _ _) ->
+                Right (DTO.GoogleLoginRequest idTokenValue _ _ _ _) ->
                     idTokenValue `shouldBe` "google-id-token"
 
             case decodeChangePasswordRequest
@@ -11161,6 +11882,44 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "user()@example.com" Nothing "email inválido"
             assertInvalid "user@example.com" (Just "call me at 099 123 4567") "phoneE164 inválido"
 
+    describe "ensurePartyRecord" $
+        it "keeps guest-commerce identity Party-only and reuses the same contact" $ do
+            (firstResult, secondResult, credentialCount, partyCount) <-
+                runNoLoggingT $ do
+                    pool <- createSqlitePool ":memory:" 1
+                    liftIO $ runSqlPool initializeAuthSchema pool
+                    let env =
+                            Env
+                                { envPool = pool
+                                , envConfig = marketplaceTestConfig False
+                                }
+                        ensureGuestParty displayName phoneNumber =
+                            liftIO $
+                                runHandler $
+                                    runReaderT
+                                        (ensurePartyRecord displayName "guest-booking@example.com" phoneNumber)
+                                        env
+                    first <- ensureGuestParty (Just "Guest Booking") Nothing
+                    second <- ensureGuestParty (Just "Updated Guest") (Just "+593991234567")
+                    let firstPartyId = case first of
+                            Left serverErr -> error ("Guest Party creation failed: " <> show serverErr)
+                            Right partyId -> partyId
+                    counts <- liftIO $ flip runSqlPool pool $
+                        (,)
+                            <$> count [M.UserCredentialPartyId ==. firstPartyId]
+                            <*> count [M.PartyPrimaryEmail ==. Just "guest-booking@example.com"]
+                    pure (first, second, fst counts, snd counts)
+
+            case (firstResult, secondResult) of
+                (Right firstPartyId, Right secondPartyId) ->
+                    secondPartyId `shouldBe` firstPartyId
+                (Left serverErr, _) ->
+                    expectationFailure ("Expected first guest Party creation to succeed, got: " <> show serverErr)
+                (_, Left serverErr) ->
+                    expectationFailure ("Expected repeated guest Party lookup to succeed, got: " <> show serverErr)
+            credentialCount `shouldBe` 0
+            partyCount `shouldBe` 1
+
     describe "validatePublicBookingNotes" $ do
         it "trims optional public-booking notes and keeps multiline intent" $ do
             validatePublicBookingNotes Nothing `shouldBe` Right Nothing
@@ -14804,6 +15563,117 @@ initializeAuthSchema = do
         \\"country_id\" VARCHAR NULL,\
         \\"updated_at\" TIMESTAMP NOT NULL,\
         \FOREIGN KEY(\"user_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"user_onboarding_progress\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"party_id\" INTEGER NOT NULL UNIQUE,\
+        \\"signup_completed_at\" TIMESTAMP NULL,\
+        \\"intent\" VARCHAR NULL,\
+        \\"completed_at\" TIMESTAMP NULL,\
+        \\"first_value\" VARCHAR NULL,\
+        \\"first_value_completed_at\" TIMESTAMP NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"fan_follow\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"fan_party_id\" INTEGER NOT NULL,\
+        \\"artist_party_id\" INTEGER NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"fan_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"artist_party_id\") REFERENCES \"party\"(\"id\"),\
+        \UNIQUE(\"fan_party_id\", \"artist_party_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_favorite\" (\
+        \\"account_party_id\" INTEGER NOT NULL,\
+        \\"target_kind\" VARCHAR NOT NULL,\
+        \\"target_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \PRIMARY KEY(\"account_party_id\", \"target_kind\", \"target_id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_public_event\" (\
+        \\"id\" INTEGER PRIMARY KEY\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_audit_event\" (\
+        \\"id\" VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))),\
+        \\"actor_party_id\" INTEGER NULL,\
+        \\"action\" VARCHAR NOT NULL,\
+        \\"entity_kind\" VARCHAR NOT NULL,\
+        \\"entity_id\" VARCHAR NOT NULL,\
+        \\"correlation_id\" VARCHAR NOT NULL,\
+        \\"metadata\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"engagement_event\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"actor_party_id\" INTEGER NULL,\
+        \\"target_artist_id\" INTEGER NULL,\
+        \\"entity_type\" VARCHAR NOT NULL,\
+        \\"entity_id\" INTEGER NULL,\
+        \\"event_type\" VARCHAR NOT NULL,\
+        \\"metadata\" VARCHAR NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"actor_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"target_artist_id\") REFERENCES \"party\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment\" (\
+        \\"id\" INTEGER PRIMARY KEY\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_moment_reaction\" (\
+        \\"id\" VARCHAR PRIMARY KEY DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-8' || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6)))),\
+        \\"moment_id\" INTEGER NOT NULL,\
+        \\"reaction_type_id\" VARCHAR NULL,\
+        \\"reaction\" VARCHAR NULL,\
+        \\"reactor_party_id\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \FOREIGN KEY(\"moment_id\") REFERENCES \"event_moment\"(\"id\")\
+        \)"
+        []
+
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"feature_access_requests\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"requester_party_id\" INTEGER NOT NULL,\
+        \\"feature_id\" VARCHAR NOT NULL,\
+        \\"action\" VARCHAR NOT NULL,\
+        \\"role_context\" VARCHAR NOT NULL,\
+        \\"module_context\" VARCHAR NOT NULL,\
+        \\"justification\" VARCHAR NULL,\
+        \\"status\" VARCHAR NOT NULL,\
+        \\"reviewer_group\" VARCHAR NOT NULL,\
+        \\"reviewer_party_id\" INTEGER NULL,\
+        \\"reviewer_notes\" VARCHAR NULL,\
+        \\"requested_at\" TIMESTAMP NOT NULL,\
+        \\"updated_at\" TIMESTAMP NOT NULL,\
+        \\"decided_at\" TIMESTAMP NULL,\
+        \\"cancelled_at\" TIMESTAMP NULL,\
+        \\"expires_at\" TIMESTAMP NULL,\
+        \FOREIGN KEY(\"requester_party_id\") REFERENCES \"party\"(\"id\"),\
+        \FOREIGN KEY(\"reviewer_party_id\") REFERENCES \"party\"(\"id\")\
         \)"
         []
 

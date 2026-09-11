@@ -4,6 +4,10 @@ import { resolveApiBase } from '../config/apiBase';
 const API_BASE = resolveApiBase();
 
 export type SessionResponseDTO = components['schemas']['SessionResponse'];
+export type OnboardingIntent = components['schemas']['OnboardingIntent'];
+export type OnboardingFirstValue = NonNullable<components['schemas']['OnboardingCompletionRequest']['firstValue']>;
+export type OnboardingProgressDTO = components['schemas']['OnboardingProgress'];
+export type OnboardingCompletionResultDTO = components['schemas']['OnboardingCompletionResult'];
 
 const readErrorText = async (response: Response): Promise<string> => {
   const text = await response.text().catch(() => '');
@@ -42,4 +46,70 @@ export async function logoutSessionRequest(): Promise<void> {
   if (!response.ok) {
     throw new Error(await readErrorText(response));
   }
+}
+
+export async function completeOnboardingProgress(
+  firstValue?: OnboardingFirstValue,
+): Promise<OnboardingCompletionResultDTO> {
+  const response = await fetch(sessionUrl('/session/onboarding/complete'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(firstValue ? { firstValue } : {}),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<OnboardingCompletionResultDTO>;
+}
+
+export async function reconcileOnboardingProgress(
+  apiToken?: string,
+): Promise<OnboardingCompletionResultDTO> {
+  const response = await fetch(sessionUrl('/session/onboarding/reconcile'), {
+    method: 'POST',
+    credentials: 'include',
+    ...(apiToken ? { headers: { Authorization: `Bearer ${apiToken}` } } : {}),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<OnboardingCompletionResultDTO>;
+}
+
+export async function loadOnboardingProgress(): Promise<OnboardingProgressDTO> {
+  const response = await fetch(sessionUrl('/session/onboarding'), {
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<OnboardingProgressDTO>;
+}
+
+export async function persistOnboardingIntent(
+  onboardingIntent: OnboardingIntent,
+  apiToken?: string,
+): Promise<OnboardingProgressDTO> {
+  const response = await fetch(sessionUrl('/session/onboarding/intent'), {
+    method: 'PUT',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+    },
+    body: JSON.stringify({ onboardingIntent }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<OnboardingProgressDTO>;
 }

@@ -109,6 +109,12 @@ const es = {
     empty: 'Este artista aún no tiene fans.',
     followedSince: 'Fan desde {{date}}',
   },
+  artistFollow: {
+    authCta: 'Crear cuenta o ingresar para seguir',
+    resumeMessage: 'Ya ingresaste. Continúa donde estabas y sigue a {{artist}}.',
+    resumeAction: 'Seguir ahora',
+    resumeError: 'No pudimos seguir a {{artist}}. Revisa tu conexión e inténtalo de nuevo.',
+  },
   partyRelated: {
     unavailable: 'Contacto no disponible',
     contact: 'Contacto',

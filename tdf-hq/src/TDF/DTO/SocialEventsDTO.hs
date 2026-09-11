@@ -718,7 +718,7 @@ data EventMomentReactionDTO = EventMomentReactionDTO
     , emrReactionNameEs :: Text
     , emrReactionNameEn :: Text
     , emrReactionEmoji :: Text
-    , emrPartyId :: Text
+    , emrPartyId :: Maybe Text
     , emrCreatedAt :: Maybe UTCTime
     }
     deriving (Show, Eq, Generic)
@@ -851,6 +851,7 @@ validateOptionalNonNegativeInt fieldName (Just value)
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
     { emrrReactionTypeId :: Text
+    , emrrActive :: Maybe Bool
     }
     deriving (Show, Eq, Generic)
 instance ToJSON EventMomentReactionRequestDTO
@@ -859,6 +860,7 @@ instance FromJSON EventMomentReactionRequestDTO where
         rejectUnknownObjectFields
             "EventMomentReactionRequestDTO"
             [ "emrrReactionTypeId"
+            , "emrrActive"
             ]
             o
         rawReactionTypeId <- o .: "emrrReactionTypeId"
@@ -867,7 +869,7 @@ instance FromJSON EventMomentReactionRequestDTO where
                 (fail "emrrReactionTypeId must be a canonical UUID")
                 (pure . UUID.toText)
                 (UUID.fromText (T.strip rawReactionTypeId))
-        pure (EventMomentReactionRequestDTO reactionTypeId)
+        EventMomentReactionRequestDTO reactionTypeId <$> o .:? "emrrActive"
 
 data EventMomentCommentCreateDTO = EventMomentCommentCreateDTO
     { emccAuthorName :: Maybe Text

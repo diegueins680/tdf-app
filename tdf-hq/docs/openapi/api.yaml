@@ -47,6 +47,7 @@ paths:
     get:
       tags: [Social events]
       summary: List social events using canonical catalog identifiers
+      description: Returns events whose canonical metadata does not mark them private and whose workflow state has the persisted `public-listable` capability, plus non-public events owned by the authenticated Party. Strict administrators retain internal visibility.
       operationId: listSocialEvents
       security:
         - bearerAuth: [ ]
@@ -247,7 +248,8 @@ paths:
   /social-events/events/{eventId}/moments/{momentId}/reactions:
     post:
       tags: [Social events]
-      summary: Toggle a persisted reaction type on an event moment
+      summary: Set a persisted reaction type on an event moment
+      description: Uses the authenticated Party and returns the resulting moment state. Supplying emrrActive makes retries idempotent; omitting it preserves legacy toggle behavior. Reaction rows retain count-compatible cardinality, but only the caller's own row includes Party identity and activity time.
       operationId: reactToSocialEventMoment
       security:
         - bearerAuth: [ ]
@@ -270,11 +272,17 @@ paths:
               $ref: '#/components/schemas/EventMomentReactionRequest'
       responses:
         '200':
-          description: Moment with canonical reaction references
+          description: Moment with canonical reaction references, anonymous counts, and only the caller's own reaction identity
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventMoment'
+        '400':
+          description: Event or moment identifier is malformed
+        '401':
+          description: Authentication required
+        '404':
+          description: Event or moment was not found or the moment does not belong to the event
         '422':
           description: Reaction type UUID is unknown, inactive, deprecated, or unpublished
   /social-events/event-research/pilot:
@@ -587,23 +595,6 @@ paths:
                 $ref: '#/components/schemas/LocalePreferences'
         '401':
           description: Authentication required
-  /session/currency-conversions:
-    post:
-      summary: Record an audited currency conversion
-      operationId: recordCurrencyConversion
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CurrencyConversionAuditCreate'
-      responses:
-        '200':
-          description: Conversion recorded
-        '400':
-          description: Invalid currency, amount, rate, or source
-        '401':
-          description: Authentication required
     put:
       summary: Update locale preferences
       operationId: updateLocalePreferences
@@ -622,6 +613,107 @@ paths:
                 $ref: '#/components/schemas/LocalePreferences'
         '400':
           description: Unsupported locale, currency, timezone, or country
+        '401':
+          description: Authentication required
+  /session/currency-conversions:
+    post:
+      summary: Record an audited currency conversion
+      operationId: recordCurrencyConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyConversionAuditCreate'
+      responses:
+        '200':
+          description: Conversion recorded
+        '400':
+          description: Invalid currency, amount, rate, or source
+        '401':
+          description: Authentication required
+  /session/onboarding:
+    get:
+      summary: Get account-bound onboarding progress
+      description: Returns durable onboarding eligibility, intent, and completion for the authenticated party. Accounts without an authoritative signup marker are never classified as new.
+      operationId: getOnboardingProgress
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Current onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingProgress'
+        '401':
+          description: Authentication required
+  /session/onboarding/intent:
+    put:
+      summary: Persist onboarding intent
+      description: Stores personalization intent for the authenticated party. It never grants a role, module, or permission.
+      operationId: updateOnboardingIntent
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingIntentUpdate'
+      responses:
+        '200':
+          description: Updated onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingProgress'
+        '400':
+          description: Unsupported onboarding intent
+        '401':
+          description: Authentication required
+  /session/onboarding/complete:
+    post:
+      summary: Complete eligible onboarding idempotently
+      description: Marks an authoritative new-account onboarding record complete after a successful action, or after an explicit optional-onboarding exit. A supplied first value is a validated observation only; the server selects the earliest Party-bound supported evidence created during the signup eligibility window, using the same stable tie order as reconciliation. The idempotent handshake may safely be retried after that window, and verified action evidence takes precedence over an exit request. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event saves use a validated favorite audit. Repeated calls, missing or out-of-window server evidence, and late explicit exits without valid evidence return newlyCompleted=false.
+      operationId: completeOnboarding
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingCompletionRequest'
+      responses:
+        '200':
+          description: Completion result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingCompletionResult'
+        '400':
+          description: Unsupported first useful action
+        '401':
+          description: Authentication required
+  /session/onboarding/reconcile:
+    post:
+      summary: Reconcile onboarding from authoritative evidence
+      description: Completes an incomplete signup onboarding record by inferring the earliest Party-bound first useful action created during the signup eligibility window. This supports recovery on another device without accepting a client-supplied action, role, module, or permission. Exact-timestamp ties use the stable order artist_followed, access_requested, event_saved, then moment_reaction. The mutation is idempotent; completed accounts, accounts without a signup marker, and accounts without in-window evidence return newlyCompleted=false.
+      operationId: reconcileOnboarding
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Reconciliation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingCompletionResult'
         '401':
           description: Authentication required
   /public/courses/{slug}:
@@ -5423,9 +5515,11 @@ paths:
     post:
       tags: [Public bookings]
       summary: Create an honest unpaid tentative booking
-      description: Compatibility path used when no approved payable-booking policy is active. It never reports payment or confirmation.
+      description: Compatibility path used when no approved payable-booking policy is active. The Idempotency-Key durably returns the original booking for an identical replay and rejects changed payloads. It never reports payment or confirmation.
       operationId: createPublicTentativeBooking
       security: [ ]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -5433,11 +5527,12 @@ paths:
             schema: { $ref: '#/components/schemas/PublicBookingCreate' }
       responses:
         '200':
-          description: Tentative booking created
+          description: Tentative booking created or replayed from the same request
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Booking' }
-        '409': { description: Resource was reserved by another request }
+        '400': { description: Missing or invalid idempotency key or booking input }
+        '409': { description: Idempotency-key payload conflict or resource was reserved by another request }
         '422': { description: Invalid service relationship }
   /bookings/public/checkout:
     post:
@@ -5966,6 +6061,134 @@ paths:
         '404': { description: Quote not found or lookup token does not match }
         '409': { description: Provider binding mismatch or verified payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /access-requests:
+    get:
+      tags: [Access requests]
+      summary: List the authenticated party's feature access requests
+      description: Returns only requests submitted by the authenticated Party, newest first. Expired pending requests are transitioned before the list is returned.
+      operationId: listMyFeatureAccessRequests
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      responses:
+        '200':
+          description: Requests submitted by the authenticated Party
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '401': { description: Authentication required }
+    post:
+      tags: [Access requests]
+      summary: Submit a governed feature access request
+      description: Creates a pending request for the authenticated Party. This does not assign a role, permission, or effective access.
+      operationId: createFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestCreate' }
+      responses:
+        '200':
+          description: Access request submitted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: 'Unknown, unavailable, unsupported, non-requestable, or malformed feature request' }
+        '401': { description: Authentication required }
+        '409': { description: The Party already has access or an active duplicate request exists }
+  /access-requests/review:
+    get:
+      tags: [Access requests]
+      summary: List the reviewer's visible feature access requests
+      description: Requires a compatible reviewer role and returns only requests the authenticated reviewer is authorized to decide.
+      operationId: listFeatureAccessRequestsForReview
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Request lifecycle state to review. Defaults to pending.
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/FeatureAccessRequestStatus'
+            default: pending
+      responses:
+        '200':
+          description: Requests visible within the reviewer's governed scope
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Unsupported status filter }
+        '401': { description: Authentication required }
+        '403': { description: Compatible reviewer role required }
+  /access-requests/{requestId}/decision:
+    patch:
+      tags: [Access requests]
+      summary: Approve or reject a pending feature access request
+      description: Requires a reviewer authorized for the requested feature action. Approval records a governance decision but does not itself assign a role, permission, or effective access.
+      operationId: decideFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestDecision' }
+      responses:
+        '200':
+          description: Updated access request and transition history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Unsupported decision or malformed reviewer notes }
+        '401': { description: Authentication required }
+        '403': { description: Reviewer is unauthorized or attempted to decide their own request }
+        '404': { description: Request or governed feature not found }
+        '409': { description: Request is no longer pending }
+  /access-requests/{requestId}/cancel:
+    patch:
+      tags: [Access requests]
+      summary: Cancel the authenticated party's pending feature access request
+      description: A request owned by another Party is not disclosed and returns the same response as a missing request.
+      operationId: cancelFeatureAccessRequest
+      security:
+        - bearerAuth: [ ]
+        - sessionCookie: [ ]
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureAccessRequestCancel' }
+      responses:
+        '200':
+          description: Cancelled access request and transition history
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FeatureAccessRequest' }
+        '400': { description: Malformed cancellation note }
+        '401': { description: Authentication required }
+        '404': { description: Request not found or owned by another Party }
+        '409': { description: Only pending access requests can be cancelled }
 
   /merch/artists/{artistPartyId}/stores:
     get:
@@ -9188,6 +9411,9 @@ components:
           type: string
           format: uuid
           description: Canonical UUID of an active published item in the `reaction-types` catalog.
+        emrrActive:
+          type: boolean
+          description: Desired selected state for the authenticated Party. Repeating the same value is idempotent. Omit only for legacy toggle behavior.
     ContentReactionRequest:
       type: object
       additionalProperties: false
@@ -9249,15 +9475,24 @@ components:
     EventMomentReaction:
       type: object
       additionalProperties: false
-      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji, emrPartyId]
+      required: [emrReactionTypeId, emrReactionCode, emrReactionNameEs, emrReactionNameEn, emrReactionEmoji]
       properties:
         emrReactionTypeId: { type: string, format: uuid }
         emrReactionCode: { type: string, readOnly: true }
         emrReactionNameEs: { type: string, readOnly: true }
         emrReactionNameEn: { type: string, readOnly: true }
         emrReactionEmoji: { type: string, readOnly: true }
-        emrPartyId: { type: string }
-        emrCreatedAt: { type: string, format: date-time, nullable: true }
+        emrPartyId:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Authenticated Party identifier when this is the caller's own reaction; null for every other count row.
+        emrCreatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+          description: Caller reaction time when this is the caller's own reaction; null for every other count row.
     EventMomentComment:
       type: object
       additionalProperties: false
@@ -9674,6 +9909,8 @@ components:
           type: string
           maxLength: 100
           description: Version of the account terms accepted during Google signup.
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
     SignupRequest:
       type: object
       additionalProperties: false
@@ -9717,10 +9954,12 @@ components:
         claimArtistId:
           type: integer
           format: int64
-          nullable: true
           description: Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
     LoginResponse:
       type: object
+      required: [token, partyId, roles, modules]
       properties:
         token:
           type: string
@@ -9740,6 +9979,68 @@ components:
         accountCreated:
           type: boolean
           description: Present on Google authentication to distinguish a newly created account from an existing login.
+    OnboardingIntent:
+      type: string
+      enum: [events, follow_artists, artist_profile, internships, learning, professional_tools]
+      description: Product-personalization intent only. It never assigns a security role or permission.
+    OnboardingIntentUpdate:
+      type: object
+      additionalProperties: false
+      required: [onboardingIntent]
+      properties:
+        onboardingIntent:
+          $ref: '#/components/schemas/OnboardingIntent'
+    OnboardingCompletionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        firstValue:
+          type: string
+          enum: [artist_followed, access_requested, event_saved, moment_reaction]
+          description: Optional observation of a successful first useful action. The server requires Party-bound evidence during the signup eligibility window and persists the earliest supported evidence across all categories, independent of this hint. Artist follows and moment-reaction additions use durable engagement evidence, access requests use their persisted request, and event_saved uses a validated event-favorite audit. Omit when the user explicitly exits optional onboarding; existing verified evidence still takes precedence.
+    OnboardingProgress:
+      type: object
+      required: [eligible, signupCompletedAt, onboardingIntent, completedAt, firstValue, firstValueCompletedAt, updatedAt]
+      properties:
+        eligible:
+          type: boolean
+          description: True only for an authoritative signup within the eligibility window that has not completed onboarding.
+        signupCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        onboardingIntent:
+          allOf:
+            - $ref: '#/components/schemas/OnboardingIntent'
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Server time when the completion handshake was accepted.
+        firstValue:
+          type: string
+          enum: [artist_followed, access_requested, event_saved, moment_reaction]
+          nullable: true
+        firstValueCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Server evidence time for first useful actions accepted by the current contract; it can precede completedAt when a handshake is retried. Legacy completed rows may retain the earlier handshake-time meaning.
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    OnboardingCompletionResult:
+      type: object
+      additionalProperties: false
+      required: [progress, newlyCompleted]
+      properties:
+        progress:
+          $ref: '#/components/schemas/OnboardingProgress'
+        newlyCompleted:
+          type: boolean
+          description: True only for the single request that changed an incomplete account to complete using an eligible explicit exit or in-window first-value evidence.
     SessionResponse:
       type: object
       required: [username, displayName, partyId, roles, modules, featureFlags, preferences]
@@ -9873,6 +10174,7 @@ components:
         - Promotor
         - Promoter
         - Producer
+        - Agency
         - Songwriter
         - DJ
         - Publicist

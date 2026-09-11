@@ -224,6 +224,12 @@ jobs:
           TDF_AUTOMIG_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/test-automatic-migrations-production-schema.sh
 
+      - name: Exercise public booking HTTP idempotency and resource conflicts
+        env:
+          TDF_PUBLIC_BOOKING_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+          TDF_PUBLIC_BOOKING_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+        run: bash scripts/test-public-booking-http-concurrency.sh
+
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true
         uses: actions/upload-artifact@v7
@@ -363,6 +369,9 @@ jobs:
 
       - name: Rehearse service booking checkout runtime migration
         run: ./scripts/test-service-booking-checkout-runtime-migration.sh
+
+      - name: Rehearse public tentative booking idempotency migration
+        run: ./scripts/test-public-booking-tentative-idempotency-migration.sh
 
       - name: Rehearse course checkout runtime migration
         run: ./scripts/test-course-checkout-runtime-migration.sh
