@@ -28,7 +28,7 @@ module TDF.Commerce.ProviderCapabilities
   ) where
 
 import           Data.Int (Int64)
-import           Data.List (sortOn)
+import           Data.List (nub, sortOn)
 import           Data.Maybe (mapMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -90,6 +90,7 @@ data ProviderActivation = ProviderActivation
   , paContractApproved     :: Bool
   , paVerifiedMethods      :: [PaymentMethod]
   , paVerifiedCapabilities :: [PaymentCapability]
+  , paVerifiedMethodCapabilities :: [(PaymentMethod, PaymentCapability)]
   } deriving (Eq, Show)
 
 data PaymentRouteRequest = PaymentRouteRequest
@@ -122,13 +123,13 @@ data ProviderOutcomeCertainty
 
 data ProviderProfile = ProviderProfile
   { ppProvider     :: PaymentProvider
-  , ppMethods      :: [PaymentMethod]
   , ppFlows        :: [ProductFlow]
-  , ppCapabilities :: [PaymentCapability]
+  , ppMethodCapabilities :: [(PaymentMethod, [PaymentCapability])]
   }
 
 providerCapabilities :: PaymentProvider -> [PaymentCapability]
-providerCapabilities provider = maybe [] ppCapabilities (providerProfile provider)
+providerCapabilities provider =
+  maybe [] (nub . concatMap snd . ppMethodCapabilities) (providerProfile provider)
 
 routePayments
   :: [ProviderActivation]
@@ -142,19 +143,25 @@ routePayments activations request
   where
     candidate activation = do
       profile <- providerProfile (paProvider activation)
+      documentedCapabilities <- lookup
+        (prMethod request)
+        (ppMethodCapabilities profile)
+      let verifiedCapabilities =
+            [ capability
+            | (method, capability) <- paVerifiedMethodCapabilities activation
+            , method == prMethod request
+            ]
       if activationReady activation
           && paEnvironment activation == prEnvironment request
-          && prMethod request `elem` ppMethods profile
-          && prMethod request `elem` paVerifiedMethods activation
           && prFlow request `elem` ppFlows profile
-          && all (`elem` ppCapabilities profile) (prRequiredCapabilities request)
-          && all (`elem` paVerifiedCapabilities activation) (prRequiredCapabilities request)
+          && all (`elem` documentedCapabilities) (prRequiredCapabilities request)
+          && all (`elem` verifiedCapabilities) (prRequiredCapabilities request)
         then Just PaymentRoute
           { routeProvider = ppProvider profile
           , routeMethod = prMethod request
           , routeCapabilities = filter
-              (`elem` paVerifiedCapabilities activation)
-              (ppCapabilities profile)
+              (`elem` verifiedCapabilities)
+              documentedCapabilities
           , routePriority = providerPriority request (ppProvider profile)
           }
         else Nothing
@@ -264,9 +271,8 @@ providerProfile :: PaymentProvider -> Maybe ProviderProfile
 providerProfile provider = case provider of
   ProviderDatafast -> Just ProviderProfile
     { ppProvider = provider
-    , ppMethods = [MethodCard]
     , ppFlows = directFlows <> [FlowSubscription]
-    , ppCapabilities =
+    , ppMethodCapabilities = [(MethodCard,
         [ CapabilityOneTime
         , CapabilityRecurring
         , CapabilityTokenization
@@ -277,13 +283,12 @@ providerProfile provider = case provider of
         , CapabilityDisputes
         , CapabilityChargebacks
         , CapabilityServerVerification
-        ]
+        ])]
     }
   ProviderPayPal -> Just ProviderProfile
     { ppProvider = provider
-    , ppMethods = [MethodPayPalWallet]
     , ppFlows = directFlows <> [FlowSubscription, FlowMarketplace]
-    , ppCapabilities =
+    , ppMethodCapabilities = [(MethodPayPalWallet,
         [ CapabilityOneTime
         , CapabilityRecurring
         , CapabilityAuthorize
@@ -298,51 +303,52 @@ providerProfile provider = case provider of
         , CapabilityConnectedAccounts
         , CapabilitySplitSettlement
         , CapabilitySellerPayouts
-        ]
+        ])]
     }
   ProviderPlaceToPay -> Just ProviderProfile
     { ppProvider = provider
-    , ppMethods = [MethodCard, MethodBankRedirect, MethodDeunaQr, MethodPaymentLink]
-    , ppFlows = directFlows <> [FlowSubscription, FlowMarketplace]
-    , ppCapabilities =
-        [ CapabilityOneTime
-        , CapabilityRecurring
-        , CapabilityTokenization
-        , CapabilityThreeDS
-        , CapabilityInstallments
-        , CapabilityAuthorize
-        , CapabilityCapture
-        , CapabilityVoid
-        , CapabilityFullRefund
-        , CapabilityPartialRefund
-        , CapabilityDisputes
-        , CapabilityChargebacks
-        , CapabilityPaymentLink
-        , CapabilitySignedWebhook
-        , CapabilityServerVerification
-        , CapabilitySplitSettlement
+    , ppFlows = directFlows <> [FlowSubscription]
+    , ppMethodCapabilities =
+        [ (MethodCard,
+            [ CapabilityOneTime
+            , CapabilityThreeDS
+            , CapabilityInstallments
+            , CapabilityPaymentLink
+            , CapabilitySignedWebhook
+            , CapabilityServerVerification
+            ])
+        , (MethodBankRedirect,
+            [ CapabilityOneTime
+            , CapabilitySignedWebhook
+            , CapabilityServerVerification
+            ])
+        , (MethodDeunaQr,
+            [ CapabilityOneTime
+            , CapabilitySignedWebhook
+            , CapabilityServerVerification
+            ])
+        , (MethodPaymentLink,
+            [ CapabilityOneTime
+            , CapabilityPaymentLink
+            , CapabilitySignedWebhook
+            , CapabilityServerVerification
+            ])
         ]
     }
   ProviderPayPhone -> Just ProviderProfile
     { ppProvider = provider
-    , ppMethods = [MethodCard, MethodPayPhoneWallet, MethodPaymentLink]
     , ppFlows = directFlows
-    , ppCapabilities =
-        [ CapabilityOneTime
-        , CapabilityTokenization
-        , CapabilityThreeDS
-        , CapabilityInstallments
-        , CapabilityVoid
-        , CapabilityFullRefund
-        , CapabilityPaymentLink
-        , CapabilityServerVerification
+    , ppMethodCapabilities =
+        [ (MethodPayPhoneWallet,
+            [ CapabilityOneTime
+            , CapabilityServerVerification
+            ])
         ]
     }
   ProviderBankTransfer -> Just ProviderProfile
     { ppProvider = provider
-    , ppMethods = [MethodManualBankTransfer]
     , ppFlows = directFlows
-    , ppCapabilities = []
+    , ppMethodCapabilities = [(MethodManualBankTransfer, [])]
     }
   ProviderStripe -> Nothing
   ProviderCash -> Nothing

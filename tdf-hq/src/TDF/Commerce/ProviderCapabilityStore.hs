@@ -61,6 +61,7 @@ loadProviderActivations environment = do
         , paContractApproved = contractStatus == "approved"
         , paVerifiedMethods = methodsFor providerText capabilityRows
         , paVerifiedCapabilities = capabilitiesFor providerText capabilityRows
+        , paVerifiedMethodCapabilities = methodCapabilitiesFor providerText capabilityRows
         }
     | ( Single providerText
       , Single enabled
@@ -90,6 +91,19 @@ capabilitiesFor provider rows = mapMaybe paymentCapabilityFromText
   | (Single rowProvider, _, Single capability) <- rows
   , rowProvider == provider
   ]
+
+methodCapabilitiesFor
+  :: Text
+  -> [(Single Text, Single Text, Single Text)]
+  -> [(PaymentMethod, PaymentCapability)]
+methodCapabilitiesFor provider rows = mapMaybe parsePair
+  [ (method, capability)
+  | (Single rowProvider, Single method, Single capability) <- rows
+  , rowProvider == provider
+  ]
+  where
+    parsePair (method, capability) =
+      (,) <$> paymentMethodFromText method <*> paymentCapabilityFromText capability
 
 parseProvider :: Text -> Maybe PaymentProvider
 parseProvider provider = case provider of

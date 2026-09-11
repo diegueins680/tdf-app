@@ -2058,7 +2058,14 @@ data ServiceDatafastEnv = ServiceDatafastEnv
   , sdfBaseUrl     :: String
   , sdfTestMode    :: Maybe Text
   , sdfEnvironment :: Checkout.CheckoutEnvironment
-  } deriving (Show)
+  }
+
+instance Show ServiceDatafastEnv where
+  show environment =
+    "ServiceDatafastEnv {sdfEntityId = <redacted>, sdfBearerToken = <redacted>, "
+      <> "sdfBaseUrl = " <> show (sdfBaseUrl environment)
+      <> ", sdfTestMode = " <> show (sdfTestMode environment)
+      <> ", sdfEnvironment = " <> show (sdfEnvironment environment) <> "}"
 
 validateDatafastEnvironmentBase
   :: Checkout.CheckoutEnvironment
@@ -2086,19 +2093,22 @@ validateDatafastEnvironmentBase environment rawBaseUrl = do
 -- | Load Datafast environment from env vars.
 loadServiceDatafastEnv :: AppM ServiceDatafastEnv
 loadServiceDatafastEnv = do
-  mEntity <- liftIO $ lookupEnv "DATAFAST_ENTITY_ID"
-  mBearer <- liftIO $ lookupEnv "DATAFAST_BEARER_TOKEN"
-  mBase   <- liftIO $ lookupEnv "DATAFAST_BASE_URL"
   mTest   <- liftIO $ lookupEnv "DATAFAST_TEST_MODE"
   mEnvironment <- liftIO $ lookupEnv "DATAFAST_ENV"
-  entityId <- maybe (throwError err500 { errBody = "DATAFAST_ENTITY_ID not set" }) (pure . T.pack) mEntity
-  bearer   <- maybe (throwError err500 { errBody = "DATAFAST_BEARER_TOKEN not set" }) (pure . T.pack) mBearer
-  baseUrl  <- maybe (throwError err500 { errBody = "DATAFAST_BASE_URL not set" }) (pure) mBase
+  entityId <- loadRequiredSafeEnv "DATAFAST_ENTITY_ID" 256
+  unless (isProviderReference entityId) $
+    throwError (configurationError
+      "DATAFAST_ENTITY_ID must contain only safe provider-reference characters")
+  bearer <- loadRequiredSafeEnv "DATAFAST_BEARER_TOKEN" 4096
+  baseUrlText <- loadRequiredSafeEnv "DATAFAST_BASE_URL" 512
+  testMode <- case mTest of
+    Nothing -> pure Nothing
+    Just _ -> Just <$> loadRequiredSafeEnv "DATAFAST_TEST_MODE" 128
+  let baseUrl = T.unpack baseUrlText
   environment <- either (throwError . configurationError) pure
     (Checkout.resolveCheckoutEnvironment mEnvironment)
   either (throwError . configurationError) pure
     (validateDatafastEnvironmentBase environment baseUrl)
-  let testMode = T.pack <$> mTest
   when (environment == Checkout.CheckoutProduction && testMode /= Nothing) $
     throwError (configurationError
       "DATAFAST_TEST_MODE must be unset when DATAFAST_ENV=production")

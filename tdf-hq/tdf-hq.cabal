@@ -69,10 +69,15 @@ executable tdf-hq-exe
     TDF.Commerce.Merch
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
+    TDF.Commerce.PaymentIntentStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderAdapter
+    TDF.Commerce.ProviderAdapter.Http
+    TDF.Commerce.ProviderAdapter.PlaceToPay
+    TDF.Commerce.ProviderAdapter.PayPhone
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config
@@ -311,10 +316,15 @@ test-suite tdf-hq-test
     TDF.Commerce.Merch
     TDF.Commerce.MerchReservationWorker
     TDF.Commerce.ServiceBookings
+    TDF.Commerce.PaymentIntentStore
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
     TDF.Commerce.ProviderCapabilityStore
+    TDF.Commerce.ProviderAdapter
+    TDF.Commerce.ProviderAdapter.Http
+    TDF.Commerce.ProviderAdapter.PlaceToPay
+    TDF.Commerce.ProviderAdapter.PayPhone
     TDF.Commerce.RefundStore
     TDF.Commerce.StateMachine
     TDF.Config

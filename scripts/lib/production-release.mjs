@@ -2119,6 +2119,7 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('commerce_payment_attempt', 'payment_intent_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'checkout_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
         ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
@@ -2153,10 +2154,11 @@ BEGIN
     SELECT 1
     FROM (
       VALUES
+        ('commerce_payment_attempt', 'fk_commerce_payment_attempt_intent', 'f', 'FOREIGN KEY (payment_intent_id) REFERENCES commerce_payment_intent(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
         ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
-        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
+        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''placetopay''::text, ''payphone''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
         ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
         ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
     ) AS expected(table_name, constraint_name, constraint_type, definition)
@@ -2171,7 +2173,8 @@ BEGIN
     RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
   END IF;
 
-  IF to_regclass('public.idx_commerce_provider_event_work') IS NULL
+  IF to_regclass('public.idx_commerce_payment_attempt_intent') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_work') IS NULL
      OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
      OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
      OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
