@@ -57,6 +57,7 @@ import           TDF.API.LiveSessions (LiveSessionsAPI)
 import           TDF.API.Feedback    (FeedbackAPI, InternalFeedbackAPI)
 import           TDF.API.Calendar    (CalendarAPI)
 import           TDF.API.Marketplace (MarketplaceAPI, MarketplaceAdminAPI)
+import           TDF.API.Merch (MerchPublicAPI, MerchProtectedAPI)
 import           TDF.API.Label (LabelAPI)
 import           TDF.API.Services (ServiceCatalogAPI, ServiceCatalogPublicAPI)
 import           TDF.API.SocialEventsAPI (SocialEventsAPI)
@@ -612,6 +613,7 @@ type ProtectedAPI =
   :<|> "access-requests" :> AccessRequestsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
+  :<|> MerchProtectedAPI
   :<|> OperationsAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
@@ -646,6 +648,7 @@ type API =
   :<|> FeedbackAPI
   :<|> PublicCatalogAPI
   :<|> DirectoryPublicAPI
+  :<|> MerchPublicAPI
   :<|> PublicUpcomingEventsAPI
   :<|> ReviewsPublicAPI
   -- Keep the authenticated marketplace branch ahead of the public one so

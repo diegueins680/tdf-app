@@ -60,6 +60,7 @@ import TDF.Config (
     supportedLocales,
   )
 import TDF.Commerce.ProviderEventWorker (startProviderEventWorker)
+import TDF.Commerce.MerchReservationWorker (startMerchReservationWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
 import qualified TDF.CMS.Models as CMS
@@ -178,6 +179,7 @@ runBootServer = do
         startCampaignAutomationJob env
         startOperationsWorker env
         startProviderEventWorker env
+        startMerchReservationWorker env
         startReputationWorker env
 
   serverResult <- newEmptyMVar
