@@ -9562,6 +9562,16 @@
       "risk": "Changing the rollback allowlist could reject valid historical counters or retain an application scope unsupported by the rolled-back runtime.",
       "justification": "The rollback constraint is immutable migration evidence for the prior closed rate-limit protocol, not an editable business catalog.",
       "reviewed": true
+    },
+    {
+      "id": "25bd48ebe5582108498d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the fixture response shape could weaken mobile API-contract coverage or conceal a merch-capabilities compatibility regression.",
+      "justification": "Synthetic MerchCapabilities response fields exercise the isolated native storefront fixture; they are transport-contract keys, not selectable or reportable business values.",
+      "reviewed": true
     }
   ]
 }
