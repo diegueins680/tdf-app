@@ -101,6 +101,7 @@ import qualified TDF.Server.DDEX as DDEXServer
 import qualified TDF.Server.Catalog as CatalogServer
 import qualified TDF.Server.CommerceOperations as CommerceOperationsServer
 import qualified TDF.Server.PaymentCapabilities as PaymentCapabilitiesServer
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Catalog.Models as Catalog
 import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
@@ -10746,6 +10747,8 @@ loadPublicBookingCheckoutDTO bookingKey lookupToken = do
         sbrvPaymentStatus
         sbrvHoldExpiresAt
         (Api.pbmpStatus <$> manualPayment)
+        sbrvDepositMinor
+        sbrvCurrency
       pure Api.PublicBookingCheckoutDTO
         { Api.pbcBooking = dto
         , Api.pbcCheckoutId = sbrvCheckoutId
@@ -10774,8 +10777,10 @@ loadPublicBookingPaymentMethods
   -> Text
   -> UTCTime
   -> Maybe Text
+  -> Int64
+  -> Text
   -> AppM [Text]
-loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus = do
+loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatus amountMinor currency = do
   now <- liftIO getCurrentTime
   if paymentStatus `notElem` ["awaiting_payment", "failed"]
       || holdExpiresAt <= now
@@ -10791,27 +10796,12 @@ loadPublicBookingPaymentMethods checkout paymentStatus holdExpiresAt manualStatu
             Checkout.domainEnabledForEnvironment checkoutEnvironment "service_bookings"
           if not domainEnabled
             then pure []
-            else do
-              datafastEnabled <- ((\datafast -> do
-                  if ServiceStorefront.sdfEnvironment datafast /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderDatafast)
-                =<< ServiceStorefront.loadServiceDatafastEnv)
-                `catchError` const (pure False)
-              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
-                  if paypalEnvironment /= checkoutEnvironment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      checkoutEnvironment Checkout.ProviderPayPal)
-                =<< ServiceStorefront.loadPaypalEnvForService)
-                `catchError` const (pure False)
-              bankTransferEnabled <- runDB $ Checkout.providerEnabledForEnvironment
-                checkoutEnvironment Checkout.ProviderBankTransfer
-              pure $
-                ["datafast" | datafastEnabled]
-                  <> ["paypal" | paypalEnabled]
-                  <> ["bank_transfer" | bankTransferEnabled]
+            else PaymentAvailability.availableImplementedPaymentMethods
+              checkoutEnvironment
+              PaymentAvailability.FlowBooking
+              amountMinor
+              currency
+              True
 
 serviceBookingLookupNotFound :: ServerError
 serviceBookingLookupNotFound = err404 { errBody = "Booking order not found" }

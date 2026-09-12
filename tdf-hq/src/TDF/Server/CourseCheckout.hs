@@ -48,6 +48,7 @@ import qualified TDF.Internationalization as Internationalization
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Routes.Courses as Courses
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Trials.Models as Trials
 
 type AppM = ReaderT Env Handler
@@ -630,22 +631,12 @@ loadPublicCoursePaymentMethods runtime = do
             Checkout.domainEnabledForEnvironment environment "courses"
           if not domainEnabled
             then pure []
-            else do
-              datafastEnabled <- ((\datafast -> do
-                  if ServiceStorefront.sdfEnvironment datafast /= environment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      environment Checkout.ProviderDatafast)
-                =<< ServiceStorefront.loadServiceDatafastEnv)
-                `catchError` const (pure False)
-              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
-                  if paypalEnvironment /= environment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      environment Checkout.ProviderPayPal)
-                =<< ServiceStorefront.loadPaypalEnvForService)
-                `catchError` const (pure False)
-              pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowCourse
+              (ccrvDueNowMinor runtime)
+              (ccrvCurrency runtime)
+              False
 
 courseLookupNotFound :: ServerError
 courseLookupNotFound = err404 { errBody = "Course order not found" }

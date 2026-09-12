@@ -2263,6 +2263,29 @@ main = hspec $ do
               CheckoutStore.ProviderStripe
               `shouldBe` Nothing
 
+        it "requires marketplace money movement capabilities at the attempt boundary" $ do
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowMarketplace
+              CheckoutStore.OperationCreate
+              `shouldBe`
+                [ ProviderCapabilities.CapabilityOneTime
+                , ProviderCapabilities.CapabilityConnectedAccounts
+                , ProviderCapabilities.CapabilitySplitSettlement
+                , ProviderCapabilities.CapabilitySellerPayouts
+                ]
+            PaymentRuntimeStore.operationCapabilities
+              ProviderCapabilities.FlowBooking
+              CheckoutStore.OperationCapture
+              `shouldBe` [ProviderCapabilities.CapabilityCapture]
+
+        it "derives routing policy from the immutable checkout domain" $ do
+            PaymentRuntimeStore.productFlowForDomain "event_ticket_order"
+              `shouldBe` Just ProviderCapabilities.FlowEventTicket
+            PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            PaymentRuntimeStore.productFlowForDomain "unknown"
+              `shouldBe` Nothing
+
     describe "provider adapter contracts" $ do
         let now = UTCTime (fromGregorian 2026 9 10)
               (secondsToDiffTime (22 * 60 * 60))

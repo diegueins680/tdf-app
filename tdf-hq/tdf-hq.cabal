@@ -129,6 +129,7 @@ executable tdf-hq-exe
     TDF.Server
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout
@@ -379,6 +380,7 @@ test-suite tdf-hq-test
     TDF.Server.Catalog
     TDF.Server.CommerceOperations
     TDF.Server.PaymentCapabilities
+    TDF.Server.PaymentAvailability
     TDF.Server.CourseCheckout
     TDF.Server.DomoQuoteCheckout
     TDF.Server.EventTicketCheckout

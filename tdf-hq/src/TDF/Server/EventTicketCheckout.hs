@@ -47,6 +47,7 @@ import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 type AppM = ReaderT Env Handler
@@ -840,22 +841,14 @@ loadPublicTicketPaymentMethods runtime = do
         Right environment -> do
           domainEnabled <- runDB $
             Checkout.domainEnabledForEnvironment environment "event_tickets"
-          if not domainEnabled then pure [] else do
-            datafastEnabled <- ((\datafast -> do
-                if ServiceStorefront.sdfEnvironment datafast /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderDatafast)
-              =<< ServiceStorefront.loadServiceDatafastEnv)
-              `catchError` const (pure False)
-            paypalEnabled <- ((\(_, _, _, configuredEnvironment, _) -> do
-                if configuredEnvironment /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderPayPal)
-              =<< ServiceStorefront.loadPaypalEnvForService)
-              `catchError` const (pure False)
-            pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+          if not domainEnabled
+            then pure []
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowEventTicket
+              (trvCheckoutTotalMinor runtime)
+              (trvCurrency runtime)
+              False
 
 requireLookupToken :: SM.EventTicketOrderId -> Maybe Text -> AppM ()
 requireLookupToken orderKey mLookupToken = do

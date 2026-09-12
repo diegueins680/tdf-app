@@ -49,6 +49,7 @@ import           TDF.DB (Env(..), sharedTlsManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Routes.DomoQuotes as Routes
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
 
 type AppM = ReaderT Env Handler
@@ -754,22 +755,14 @@ loadDomoPaymentMethods runtime = do
           domainEnabled <- runDB $ Checkout.domainEnabledForEnvironment environment "domo_quotes"
           checkoutEnabled <- runDB $ Checkout.capabilityEnabledForEnvironment
             environment "domo.checkout"
-          if not (domainEnabled && checkoutEnabled) then pure [] else do
-            datafastEnabled <- ((\datafast -> do
-                if ServiceStorefront.sdfEnvironment datafast /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderDatafast)
-              =<< ServiceStorefront.loadServiceDatafastEnv)
-              `catchError` const (pure False)
-            paypalEnabled <- ((\(_, _, _, configuredEnvironment, _) -> do
-                if configuredEnvironment /= environment
-                  then pure False
-                  else runDB $ Checkout.providerEnabledForEnvironment
-                    environment Checkout.ProviderPayPal)
-              =<< ServiceStorefront.loadPaypalEnvForService)
-              `catchError` const (pure False)
-            pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+          if not (domainEnabled && checkoutEnabled)
+            then pure []
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowBooking
+              (drvDepositMinor runtime)
+              (drvCurrency runtime)
+              False
 
 requireLookupToken :: Text -> Maybe Text -> AppM ()
 requireLookupToken quoteId mLookupToken = do
