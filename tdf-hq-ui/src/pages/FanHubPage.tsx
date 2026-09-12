@@ -69,6 +69,7 @@ import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { completeOnboardingProgress, loadOnboardingProgress } from '../api/session';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -114,6 +115,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
+  const activePartyRef = useRef(viewerId);
+  activePartyRef.current = viewerId;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const recordsFeedQuery = useQuery({
     queryKey: ['records', 'feed', 'es'],
@@ -333,10 +336,50 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
-  const [onboardingVisible, setOnboardingVisible] = useState(() => {
+  const [managerOnboardingVisible, setManagerOnboardingVisible] = useState(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
   });
+  const [dismissedOnboardingPartyId, setDismissedOnboardingPartyId] = useState<number | null>(null);
+  const [completionErrorPartyId, setCompletionErrorPartyId] = useState<number | null>(null);
+  const onboardingProgressQuery = useQuery({
+    queryKey: ['fan-onboarding-progress', viewerId],
+    queryFn: loadOnboardingProgress,
+    enabled: Boolean(viewerId && isFan && !isHomeManagerView),
+    retry: false,
+  });
+  const onboardingVisible = isHomeManagerView
+    ? managerOnboardingVisible
+    : Boolean(
+      viewerId
+      && onboardingProgressQuery.isSuccess
+      && onboardingProgressQuery.data?.eligible
+      && !onboardingProgressQuery.data.completedAt
+      && dismissedOnboardingPartyId !== viewerId,
+    );
+
+  const completeVisibleOnboarding = () => {
+    if (isHomeManagerView) {
+      setManagerOnboardingVisible(false);
+      return;
+    }
+    const partyId = viewerId;
+    if (!partyId) return;
+    setDismissedOnboardingPartyId(partyId);
+    setCompletionErrorPartyId(null);
+    void completeOnboardingProgress()
+      .then((result) => {
+        if (activePartyRef.current !== partyId) return;
+        if (result?.progress) {
+          qc.setQueryData(['fan-onboarding-progress', partyId], result.progress);
+        }
+      })
+      .catch(() => {
+        if (activePartyRef.current !== partyId) return;
+        setDismissedOnboardingPartyId(null);
+        setCompletionErrorPartyId(partyId);
+      });
+  };
 
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
@@ -369,10 +412,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!onboardingVisible) {
+    if (!managerOnboardingVisible) {
       window.localStorage.setItem('fanhub-onboarding-dismissed', '1');
     }
-  }, [onboardingVisible]);
+  }, [managerOnboardingVisible]);
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -797,10 +840,34 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {!isHomeManagerView && onboardingProgressQuery.isError && (
+          <Alert
+            severity="warning"
+            action={(
+              <Button size="small" onClick={() => { void onboardingProgressQuery.refetch(); }}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.
+          </Alert>
+        )}
+        {!isHomeManagerView && completionErrorPartyId === viewerId && (
+          <Alert
+            severity="warning"
+            action={(
+              <Button size="small" onClick={completeVisibleOnboarding}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.
+          </Alert>
+        )}
         {onboardingVisible && (
           <Alert
             severity="info"
-            onClose={() => setOnboardingVisible(false)}
+            onClose={completeVisibleOnboarding}
             icon={<VisibilityIcon />}
           >
             <AlertTitle>{isHomeManagerView ? 'Lo más útil ahora' : 'Primeros pasos'}</AlertTitle>
@@ -1463,7 +1530,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <Stack spacing={2}>
                   {artistProfileQuery.isLoading && (
                     <Box display="flex" justifyContent="center" py={1}>
-                      <CircularProgress size={20} />
+                      <CircularProgress size={20} aria-label="Cargando perfil de fan" />
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
@@ -1499,7 +1566,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               ) : (
                 <>
-                  {artistProfileQuery.isLoading && <CircularProgress size={20} />}
+                  {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label="Cargando perfil de artista" />}
                   {artistProfileQuery.isError && (
                     <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
                   )}
@@ -1739,7 +1806,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && isLoading && (
           <Card sx={{ p: 3, borderRadius: 3 }}>
             <Stack spacing={1.5} alignItems="center" textAlign="center">
-              <CircularProgress size={22} />
+              <CircularProgress size={22} aria-label="Cargando artistas" />
               <Typography variant="subtitle1" fontWeight={700}>
                 Cargando catálogo de artistas
               </Typography>
