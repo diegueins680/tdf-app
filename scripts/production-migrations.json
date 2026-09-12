@@ -505,6 +505,11 @@
       "id": "2026-09-11_payment_intent_runtime_sync",
       "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
       "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
     }
   ]
 }
