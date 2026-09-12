@@ -173,7 +173,17 @@ describe('LoginPage Google signup consent flow', () => {
       expect(signupDialog?.querySelector(
         'input[aria-label="Acepto los términos y la política de privacidad"]',
       )).not.toBeNull();
+      const existingAccountButton = findButton('Ya tengo una cuenta');
+      expect(existingAccountButton).not.toBeNull();
       expect(googleLoginRequestMock).not.toHaveBeenCalled();
+
+      await act(async () => {
+        existingAccountButton?.click();
+        await flushPromises();
+      });
+      await waitFor(() => {
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+      });
     } finally {
       await cleanup();
     }

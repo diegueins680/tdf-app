@@ -1469,7 +1469,7 @@ export default function LoginPage() {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={closeSignupDialog}>Cancelar</Button>
+            <Button type="button" onClick={closeSignupDialog}>Ya tengo una cuenta</Button>
             <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
               {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
             </Button>
