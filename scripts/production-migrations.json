@@ -485,6 +485,21 @@
       "id": "2026-09-10_party_selector_rate_limit_scopes",
       "path": "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql",
       "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
     }
   ]
 }
