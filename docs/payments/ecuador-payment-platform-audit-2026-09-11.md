@@ -27,7 +27,7 @@ The marketplace checkout is deliberately unavailable until a provider verifies c
 | Capability | Result on 2026-09-11 | Evidence and limitation |
 |---|---|---|
 | Repository/default branch/history | Available | `diegueins680/tdf-app`, default `main`; work began from fetched `17a33eca11d585d84435af85340beece9b51d14e` in an isolated worktree. Full local and remote history was searched for payment/provider work. |
-| Issues/open PRs | Available | GitHub reports open issues #128 and #130 and no open PRs. Neither issue concerns payments. Historical payment PRs and their merged code were inspected. |
+| Issues/open PRs | Available | At the initial parent-repository check, GitHub reported open issues #128 and #130 and no open `tdf-app` PRs; neither issue concerned payments. Historical parent payment PRs and merged code were inspected. In `TDF-mobile`, draft PR #76 contained an older generated-only payment-capability contract and draft PR #64 is the submodule lineage referenced by parent `main`; both were inspected before delivery. Mobile PR #78 is stacked on #64 and supersedes, rather than duplicates, #76. |
 | CI | Available/read-only | Recent default-branch workflow results and failing job logs were inspected. No check was represented as passing unless run locally or reported successful by GitHub. |
 | Repository writes/push/PR | Available | Authenticated GitHub permission is `ADMIN`. Branch and commits exist locally. Push and draft-PR outcomes are recorded only after those operations are performed. |
 | Official internet sources | Available | Provider, BCE, SPDP, SRI, consumer-law, UAFE, and PCI SSC sources in §15 were accessed on the verification date. |
@@ -43,7 +43,7 @@ The original checkout at `/Users/diegosaa/GitHub/tdf-app` contained user changes
 
 ## 3. Existing-system audit and reuse decisions
 
-The repository already had a substantial canonical commerce base: checkout sessions, provider attempts/bindings, verified payment evidence, an encrypted provider-event inbox, refunds/disputes, receipts, ledger entries, holds, idempotency, reconciliation, role checks, and audit rows. Merged payment PRs were reused rather than duplicated. No open payment PR existed to conflict with this branch.
+The repository already had a substantial canonical commerce base: checkout sessions, provider attempts/bindings, verified payment evidence, an encrypted provider-event inbox, refunds/disputes, receipts, ledger entries, holds, idempotency, reconciliation, role checks, and audit rows. Merged parent payment PRs were reused rather than duplicated. The only open payment-specific PR discovered across the parent/mobile delivery was mobile #76; its generated contract is superseded by the current generated contract in mobile #78, and the overlap is explicit in both PRs.
 
 | Area | 2026-09-11 classification | Finding / action |
 |---|---|---|
@@ -360,4 +360,4 @@ The intended review order is:
 4. Checkout visibility and mobile canonical ticket handoff.
 5. A later credentialed provider evidence/activation PR for each provider; activation must never be bundled with unverified adapter code.
 
-Local delivery branches are `codex/payment-platform-20260911` in `tdf-app` and `codex/provider-neutral-ticket-checkout-20260911` in `tdf-mobile`. The mobile branch head is `c1ae3e34b53f8e709d361677d20b9778bdf87d61`; the parent verification commit is `2eac48e2b4b0588ad162fe7fd44808b799261567`, followed only by delivery-evidence documentation. Remote draft-PR identifiers are added only after GitHub confirms creation. No merge or production deployment is part of this work.
+Local delivery branches are `codex/payment-platform-20260911` in `tdf-app` and `codex/provider-neutral-ticket-checkout-20260911` in `TDF-mobile`. The mobile branch head is `c1ae3e34b53f8e709d361677d20b9778bdf87d61`; GitHub verified draft [TDF-mobile PR #78](https://github.com/diegueins680/TDF-mobile/pull/78), based on the parent-referenced #64 lineage. It explicitly supersedes stale generated-only PR #76. The parent verification commit is `2eac48e2b4b0588ad162fe7fd44808b799261567`, followed only by delivery-evidence documentation. The parent PR identifier is added only after GitHub confirms creation. No merge or production deployment is part of this work.
