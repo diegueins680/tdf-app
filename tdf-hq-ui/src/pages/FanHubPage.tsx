@@ -409,7 +409,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
     },
   });
 

@@ -20,7 +20,6 @@ import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { retryPendingFirstValueCompletion } from '../analytics/onboardingProgress';
 import { retryPendingOnboardingIntent } from '../session/onboardingIntentRecovery';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
@@ -152,10 +151,7 @@ export function Shell() {
       if (currentRecovery?.partyId === partyId) return currentRecovery.promise;
 
       const promise = (async () => {
-        await Promise.all([
-          retryPendingOnboardingIntent(partyId),
-          retryPendingFirstValueCompletion(getAnalyticsClient(), partyId),
-        ]);
+        await retryPendingOnboardingIntent(partyId);
       })()
         .catch(() => undefined)
         .finally(() => {

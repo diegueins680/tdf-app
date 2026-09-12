@@ -34,6 +34,7 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
+import { parsePositiveSafeInt } from '../utils/ids';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
@@ -48,6 +49,29 @@ type ArtistPublicPageDisplayContract = Readonly<{
 const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
   releaseDescriptionPreviewChars: 100 + 4 * 10,
 } as const satisfies ArtistPublicPageDisplayContract;
+
+export const isArtistFollowResume = (search: string, artistId: number | null): boolean => {
+  if (!artistId) return false;
+  const params = new URLSearchParams(search);
+  return params.get('resume') === 'follow'
+    && parsePositiveSafeInt(params.get('artistId')) === artistId;
+};
+
+export const buildArtistFollowAuthPath = (
+  profileLink: string | null,
+  artistId: number | null,
+): string => {
+  if (!profileLink || !artistId) return '/login?signup=1&intent=follow_artists&redirect=%2Ffans';
+  const resumePath = `${profileLink}?${new URLSearchParams({
+    resume: 'follow',
+    artistId: String(artistId),
+  }).toString()}`;
+  return `/login?${new URLSearchParams({
+    signup: '1',
+    intent: 'follow_artists',
+    redirect: resumePath,
+  }).toString()}`;
+};
 
 const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
   if (!raw) return {};
@@ -190,7 +214,9 @@ export default function ArtistPublicPage() {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
-      if (!isFollowing) captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      if (!isFollowing) {
+        void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      }
     },
   });
 
