@@ -133,6 +133,16 @@ test('production migration manifest uses immutable full commit SHAs', () => {
 
   assert.equal(manifest.schemaVersion, 1);
   assert.ok(Array.isArray(manifest.migrations));
+  assert.equal(
+    new Set(manifest.migrations.map(({ id }) => id)).size,
+    manifest.migrations.length,
+    'migration IDs must be unique',
+  );
+  assert.equal(
+    new Set(manifest.migrations.map(({ path }) => path)).size,
+    manifest.migrations.length,
+    'migration paths must be unique',
+  );
   for (const migration of manifest.migrations) {
     assert.equal(normalizeFullSha(migration.introducedBy), migration.introducedBy);
   }
