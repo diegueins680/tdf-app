@@ -510,6 +510,11 @@
       "id": "2026-09-11_manual_bank_provider_activation",
       "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
       "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
     }
   ]
 }
