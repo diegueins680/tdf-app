@@ -61,17 +61,29 @@ apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE enabled=FALSE AND status='disabled';")" \
-  "8" \
+  "10" \
   "Provider accounts default disabled"
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability capability JOIN commerce_provider_account account ON account.id=capability.provider_account_id WHERE account.provider='bank_transfer' AND capability.payment_method='manual_bank_transfer' AND capability.capability='one_time' AND capability.verification_status='documented';")" \
+  "2" \
+  "Manual bank transfer requires explicit environment verification"
 
 if psql_exec -c "UPDATE commerce_provider_account SET enabled=TRUE WHERE provider='placetopay' AND environment='production';" >/dev/null 2>&1; then
   echo "Provider account enabled without contract, credentials and verification" >&2
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE provider='bank_transfer';")" \
+  "0" \
+  "Unused manual bank provider activation rollback"
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql
 assert_equal \
@@ -87,6 +99,7 @@ assert_equal \
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
 
 checkout_id='10000000-0000-4000-8000-000000000001'
 attempt_id='10000000-0000-4000-8000-000000000002'

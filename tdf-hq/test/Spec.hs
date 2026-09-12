@@ -2147,6 +2147,25 @@ main = hspec $ do
                   }
             ProviderCapabilities.routePayments [methodOnly] request `shouldBe` []
 
+        it "never routes a method that has no environment-specific verification evidence" $ do
+            let capabilityWithoutMethod = (active CheckoutStore.ProviderBankTransfer)
+                  { ProviderCapabilities.paVerifiedMethods = []
+                  , ProviderCapabilities.paVerifiedCapabilities =
+                      [ProviderCapabilities.CapabilityOneTime]
+                  , ProviderCapabilities.paVerifiedMethodCapabilities =
+                      [ ( ProviderCapabilities.MethodManualBankTransfer
+                        , ProviderCapabilities.CapabilityOneTime
+                        )
+                      ]
+                  }
+                request = cardRequest
+                  { ProviderCapabilities.prMethod =
+                      ProviderCapabilities.MethodManualBankTransfer
+                  , ProviderCapabilities.prFlow = ProviderCapabilities.FlowBooking
+                  }
+            ProviderCapabilities.routePayments [capabilityWithoutMethod] request
+              `shouldBe` []
+
         it "never combines a capability verified for one method with another method" $ do
             let mismatched = (active CheckoutStore.ProviderPlaceToPay)
                   { ProviderCapabilities.paVerifiedMethods =
