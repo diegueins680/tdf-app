@@ -1,8 +1,10 @@
 # TDF payment platform: Ecuador market decision, implementation audit, and activation record
 
-**Verification date:** 2026-09-11 (America/Guayaquil)  
-**Entity assumption:** an Ecuadorian S.A.S.; merchant and tax status must be confirmed by counsel/accounting  
-**Commercial scope:** Ecuador and international buyers; charges and settlement primarily in USD  
+**Verification date:** 2026-09-11 (America/Guayaquil)
+
+**Entity assumption:** an Ecuadorian S.A.S.; merchant and tax status must be confirmed by counsel/accounting
+
+**Commercial scope:** Ecuador and international buyers; charges and settlement primarily in USD
 **Evidence rule:** `documented` means an official public source supports a statement. `locally verified` means a repository test was run. `sandbox verified` means a credentialed provider sandbox was exercised. These labels are never interchangeable.
 
 This is an engineering and market-research record, not legal, accounting, PCI, tax, or regulatory certification.

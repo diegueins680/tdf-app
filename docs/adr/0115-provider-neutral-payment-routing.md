@@ -1,6 +1,6 @@
 # ADR 0115: provider-neutral payment routing with verified activation
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-09-11
 
 ## Context
