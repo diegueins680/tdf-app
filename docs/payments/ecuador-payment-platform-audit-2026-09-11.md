@@ -261,16 +261,21 @@ See [operator runbooks](operator-runbooks.md) for configuration, sandbox, webhoo
 
 ## 13. Test matrix and evidence boundary
 
-The final command log is updated after branch verification. Results available during implementation:
+Final local verification was recorded at `2026-09-12T06:34:46Z` (`2026-09-12T01:34:46-05:00`, America/Guayaquil) against parent code commit `2eac48e2b4b0588ad162fe7fd44808b799261567` and mobile commit `c1ae3e34b53f8e709d361677d20b9778bdf87d61`. The environment was macOS 14.7.7 (23H723), Node 24.8.0, npm 11.6.0, Stack 3.7.1 x86_64, and PostgreSQL 16.10. No provider environment was used. The timestamp is the final evidence-recording time immediately after the commands; earlier exploratory reruns were local-only and are not misrepresented as separate provider evidence.
 
 | Scope | Evidence class | Result |
 |---|---|---|
 | Provider-neutral route/money/state/adapter tests | Local mocked/unit/property | 24 examples, 0 failures after exact-method/runtime changes. Mock payloads are sanitized documentation examples. |
 | Canonical payment lifecycle/catalog migration | Disposable PostgreSQL 16 | Apply, constraints, activation gates, reapply, catalog rollback, and intentional evidence-preserving rollback refusal passed. |
+| Automatic production-schema startup | Disposable PostgreSQL 16 | Full registered migration startup and a second idempotent startup passed; the disposable database was then stopped and removed. No production data was read or changed. |
 | Admin operations view | Local web unit | 2 tests passed; generated OpenAPI web types refreshed. |
 | Service capability visibility | Local web unit | 3 tests passed, including fail-closed no-route behavior. |
 | Capability client | Local web unit | 2 tests passed, including marketplace connected/split/payout requirements. |
-| Mobile paid/free ticket routing | Local mobile unit/regression | Focused 17/17; full 68 suites/329 tests; lint/typecheck passed at mobile commit `c06f42276935e8a266c83347ba0bba8f8b51dd16`. Generated types will be refreshed again before delivery. |
+| Backend complete regression | Local compiled/unit/integration with mocked provider boundaries | `stack test --fast`: 2,544 examples, 0 failures. This is not a provider sandbox result. |
+| Web complete quality gate | Local lint/typecheck/unit/build | `npm run quality:ui`: lint and typecheck passed; 207/207 suites and 1,870/1,870 tests passed; production Vite build passed; initial-JS budget passed at 378,245 gzip bytes against the 419,840-byte limit. Non-fatal pre-existing test warnings remain documented in terminal output. |
+| Mobile paid/free ticket routing | Local mobile lint/typecheck/unit/regression | `npm run quality:mobile`: 68/68 suites and 329/329 tests passed at mobile commit `c1ae3e34b53f8e709d361677d20b9778bdf87d61`; OpenAPI types were regenerated afterward with no diff. Non-fatal SafeAreaView deprecation and disabled-PostHog notices are not payment failures. |
+| Generated API clients | Local deterministic generation | `npm run generate:api` regenerated web and mobile OpenAPI types with no working-tree diff. |
+| Repository invariants | Local repository test gate | `npm run quality:repo` passed: generated audit artifacts had no diff; 8 studio-audit tests, 42 auto-loop tests, 4 formal-audit tests, 60 production-release tests, 19 CI-pipeline tests, 2 visual-artifact tests, and 3 persona-program tests passed. Formal audit reported 0 critical and 0 error findings (351 advisory warnings). |
 | Datafast provider sandbox | Provider sandbox | **Not executed:** credentials/account/certification unavailable. |
 | PayPal provider sandbox | Provider sandbox | **Not executed:** app/webhook/account credentials unavailable. |
 | PlaceToPay provider sandbox | Provider sandbox | **Not executed:** login/secret/merchant contract unavailable. |
@@ -355,4 +360,4 @@ The intended review order is:
 4. Checkout visibility and mobile canonical ticket handoff.
 5. A later credentialed provider evidence/activation PR for each provider; activation must never be bundled with unverified adapter code.
 
-The final branch/commit/PR identifiers and exact full regression results are recorded in the delivery summary after verification. No merge or production deployment is part of this work.
+Local delivery branches are `codex/payment-platform-20260911` in `tdf-app` and `codex/provider-neutral-ticket-checkout-20260911` in `tdf-mobile`. The mobile branch head is `c1ae3e34b53f8e709d361677d20b9778bdf87d61`; the parent verification commit is `2eac48e2b4b0588ad162fe7fd44808b799261567`, followed only by delivery-evidence documentation. Remote draft-PR identifiers are added only after GitHub confirms creation. No merge or production deployment is part of this work.
