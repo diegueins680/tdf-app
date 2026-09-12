@@ -84,6 +84,7 @@ import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
@@ -1955,7 +1956,7 @@ beginCanonicalPaymentAttempt orderId order providerEnvironment provider operatio
       { errBody = "Payment provider is disabled for this checkout environment" }
   now <- liftIO getCurrentTime
   result <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = checkout
       , Checkout.pacProvider = provider
       , Checkout.pacEnvironment = storedEnvironment

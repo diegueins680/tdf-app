@@ -42,6 +42,7 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..), sharedTlsManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.ModelsExtra as ME
@@ -831,7 +832,7 @@ beginCoursePaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginCoursePaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = cpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = cpcEnvironment context

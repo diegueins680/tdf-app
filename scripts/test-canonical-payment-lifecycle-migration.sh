@@ -59,6 +59,8 @@ apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE enabled=FALSE AND status='disabled';")" \
@@ -70,6 +72,7 @@ if psql_exec -c "UPDATE commerce_provider_account SET enabled=TRUE WHERE provide
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='commerce_payment_attempt' AND column_name='payment_intent_id';")" \
@@ -83,6 +86,7 @@ assert_equal \
 
 apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 
 checkout_id='10000000-0000-4000-8000-000000000001'
 attempt_id='10000000-0000-4000-8000-000000000002'
@@ -90,6 +94,12 @@ intent_id='10000000-0000-4000-8000-000000000003'
 authorization_id='10000000-0000-4000-8000-000000000004'
 connected_id='10000000-0000-4000-8000-000000000005'
 payout_id='10000000-0000-4000-8000-000000000006'
+sync_checkout_id='10000000-0000-4000-8000-000000000007'
+sync_attempt_id='10000000-0000-4000-8000-000000000008'
+sync_intent_id='10000000-0000-4000-8000-000000000009'
+failure_checkout_id='10000000-0000-4000-8000-000000000010'
+failure_attempt_id='10000000-0000-4000-8000-000000000011'
+failure_intent_id='10000000-0000-4000-8000-000000000012'
 
 psql_exec -c "
   INSERT INTO commerce_checkout_session(
@@ -141,6 +151,100 @@ if psql_exec -c "UPDATE commerce_payment_intent SET captured_minor=10001 WHERE i
   echo "Payment intent accepted a capture above its immutable total" >&2
   exit 1
 fi
+
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '$sync_checkout_id', 'event_ticket_order', 'ticket-200', 'awaiting_payment',
+    'sandbox', 'USD', 2500, 2500, 'buyer@example.test', 'lookup-hash-sync',
+    'checkout-key-sync', NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    id, checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '$sync_intent_id', '$sync_checkout_id', 'requires_payment_method',
+    'automatic', 'paypal', 'paypal_wallet', 2500, 'USD', 'intent-key-sync'
+  );
+  INSERT INTO commerce_payment_attempt(
+    id, checkout_id, provider, environment, operation, status, amount_minor,
+    currency, merchant_account_ref, idempotency_key
+  ) VALUES (
+    '$sync_attempt_id', '$sync_checkout_id', 'paypal', 'sandbox', 'create',
+    'created', 2500, 'USD', 'merchant-test', 'attempt-key-sync'
+  );
+  UPDATE commerce_payment_attempt SET payment_intent_id='$sync_intent_id'
+   WHERE id='$sync_attempt_id';
+  UPDATE commerce_payment_attempt SET status='requires_customer_action'
+   WHERE id='$sync_attempt_id';
+" >/dev/null
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT status FROM commerce_payment_intent WHERE id='$sync_intent_id';")" \
+  "requires_customer_action" \
+  "Provider customer action synchronized to canonical intent"
+
+psql_exec -c "
+  UPDATE commerce_payment_attempt SET status='processing'
+   WHERE id='$sync_attempt_id';
+  UPDATE commerce_payment_attempt SET status='succeeded'
+   WHERE id='$sync_attempt_id';
+" >/dev/null
+
+assert_equal \
+  "$(psql_exec -Atc "SELECT status || ':' || authorized_minor || ':' || captured_minor FROM commerce_payment_intent WHERE id='$sync_intent_id';")" \
+  "captured:2500:2500" \
+  "Authoritative success synchronized exact canonical capture"
+assert_equal \
+  "$(psql_exec -Atc "SELECT string_agg(from_status || '>' || to_status, ',' ORDER BY CASE from_status WHEN 'requires_payment_method' THEN 1 WHEN 'requires_customer_action' THEN 2 WHEN 'processing' THEN 3 ELSE 4 END) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id';")" \
+  "requires_payment_method>requires_customer_action,requires_customer_action>processing,processing>captured" \
+  "Canonical runtime state history"
+
+# A provider/transport failure is not proof that no charge exists. It must
+# leave the intent active so another provider cannot be selected prematurely.
+psql_exec -c "
+  INSERT INTO commerce_checkout_session(
+    id, domain_type, domain_order_id, status, environment, currency,
+    subtotal_minor, total_minor, customer_email, lookup_token_hash,
+    idempotency_key, expires_at
+  ) VALUES (
+    '$failure_checkout_id', 'marketplace_sale', 'sale-failure',
+    'awaiting_payment', 'sandbox', 'USD', 3200, 3200,
+    'buyer@example.test', 'lookup-hash-failure', 'checkout-key-failure',
+    NOW() + interval '30 minutes'
+  );
+  INSERT INTO commerce_payment_intent(
+    id, checkout_id, status, capture_method, provider, payment_method,
+    amount_minor, currency, idempotency_key
+  ) VALUES (
+    '$failure_intent_id', '$failure_checkout_id', 'requires_payment_method',
+    'automatic', 'datafast', 'card', 3200, 'USD', 'intent-key-failure'
+  );
+  INSERT INTO commerce_payment_attempt(
+    id, checkout_id, payment_intent_id, provider, environment, operation,
+    status, amount_minor, currency, merchant_account_ref, idempotency_key
+  ) VALUES (
+    '$failure_attempt_id', '$failure_checkout_id', '$failure_intent_id',
+    'datafast', 'sandbox', 'create', 'created', 3200, 'USD',
+    'merchant-test', 'attempt-key-failure'
+  );
+  UPDATE commerce_payment_attempt SET status='failed'
+   WHERE id='$failure_attempt_id';
+" >/dev/null
+assert_equal \
+  "$(psql_exec -Atc "SELECT status FROM commerce_payment_intent WHERE id='$failure_intent_id';")" \
+  "requires_payment_method" \
+  "Ambiguous attempt failure did not release canonical routing lock"
+
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_payment_state_history WHERE payment_intent_id='$sync_intent_id';")" \
+  "3" \
+  "Runtime-sync rollback retained immutable history"
+apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 
 if psql_exec -c "
   INSERT INTO commerce_connected_account(

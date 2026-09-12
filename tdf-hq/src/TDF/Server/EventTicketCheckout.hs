@@ -41,6 +41,7 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..), sharedTlsManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
@@ -1019,7 +1020,7 @@ beginTicketPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginTicketPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = tpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = tpcEnvironment context

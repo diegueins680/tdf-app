@@ -128,6 +128,7 @@ import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Commerce.ProviderEventStore as ProviderEventStore
 import qualified TDF.Commerce.ProviderEventWorker as ProviderEventWorker
 import qualified TDF.Commerce.ProviderCapabilities as ProviderCapabilities
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntimeStore
 import qualified TDF.Commerce.ProviderAdapter as ProviderAdapter
 import qualified TDF.Commerce.ProviderAdapter.Http as ProviderAdapterHttp
 import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhoneAdapter
@@ -2225,6 +2226,23 @@ main = hspec $ do
             PaymentCapabilitiesServer.parsePaymentCapability "partial_refund"
               `shouldBe` Right ProviderCapabilities.CapabilityPartialRefund
             PaymentCapabilitiesServer.parsePaymentMethod "crypto" `shouldSatisfy` isLeft
+
+        it "binds only unambiguous selected rails into legacy payment flows" $ do
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderDatafast
+              `shouldBe` Just ProviderCapabilities.MethodCard
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPayPal
+              `shouldBe` Just ProviderCapabilities.MethodPayPalWallet
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderBankTransfer
+              `shouldBe` Just ProviderCapabilities.MethodManualBankTransfer
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderPlaceToPay
+              `shouldBe` Nothing
+            PaymentRuntimeStore.canonicalPaymentMethodForProvider
+              CheckoutStore.ProviderStripe
+              `shouldBe` Nothing
 
     describe "provider adapter contracts" $ do
         let now = UTCTime (fromGregorian 2026 9 10)

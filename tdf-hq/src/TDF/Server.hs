@@ -183,6 +183,7 @@ import           TDF.ServerLiveSessions (liveSessionsServer)
 import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, serviceStorefrontAdminServer)
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
 import qualified TDF.Server.DomoQuoteCheckout as DomoQuoteCheckoutServer
@@ -11027,7 +11028,7 @@ beginServiceBookingPaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginServiceBookingPaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = sbpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = sbpcEnvironment context
@@ -16359,7 +16360,7 @@ checkoutCart rawId mIdempotency payload = do
     throwError err503
       { errBody = "Bank transfer checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
         { Checkout.pacCheckout = msccCheckout context
         , Checkout.pacProvider = Checkout.ProviderBankTransfer
         , Checkout.pacEnvironment = msccEnvironment context
@@ -17246,7 +17247,7 @@ createDatafastCheckout rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderDatafast
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17383,7 +17384,7 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
           { errBody = "DATAFAST_ENV does not match the stored checkout environment"
           }
       attemptResult <- liftIO $ flip runSqlPool envPool $
-        Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
           { Checkout.pacCheckout = checkout
           , Checkout.pacProvider = Checkout.ProviderDatafast
           , Checkout.pacEnvironment = checkoutEnvironment
@@ -17470,7 +17471,7 @@ createPaypalOrder rawId mIdempotency payload = do
   unless providerEnabled $
     throwError err503 { errBody = "PayPal checkout is disabled in this environment" }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = msccEnvironment context
@@ -17585,7 +17586,7 @@ captureCanonicalPaypalOrder orderKey order canonicalCheckoutId createIdempotency
       { errBody = "PAYPAL_ENV does not match the stored checkout environment"
       }
   attemptResult <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = checkout
       , Checkout.pacProvider = Checkout.ProviderPayPal
       , Checkout.pacEnvironment = paypalEnvironment
