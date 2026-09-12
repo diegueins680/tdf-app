@@ -1,14 +1,13 @@
 import { Suspense } from 'react';
-import { Routes, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import AppErrorBoundary from './routes/AppErrorBoundary';
 import RouteLoadingFallback from './routes/RouteLoadingFallback';
-import { renderProtectedRoutes } from './routes/protectedRoutes';
-import { renderPublicRoutes } from './routes/publicRoutes';
 import { useSession } from './session/SessionContext';
 import { lazyWithReload } from './utils/lazyWithReload';
 import { shouldRenderRadioWidget } from './utils/radioRouteVisibility';
 
+const AppRoutes = lazyWithReload(() => import('./routes/AppRoutes'));
 const RadioWidget = lazyWithReload(() => import('./components/RadioWidget'));
 
 function RoutedRadioWidget() {
@@ -26,10 +25,7 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <Suspense fallback={<RouteLoadingFallback />}>
-        <Routes>
-          {renderPublicRoutes()}
-          {renderProtectedRoutes()}
-        </Routes>
+        <AppRoutes />
       </Suspense>
       <RoutedRadioWidget />
     </AppErrorBoundary>

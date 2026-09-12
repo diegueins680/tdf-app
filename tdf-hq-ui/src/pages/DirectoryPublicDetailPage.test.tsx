@@ -26,12 +26,41 @@ jest.unstable_mockModule('../api/directory', () => ({
   },
 }));
 
+jest.unstable_mockModule('../api/socialEvents', () => ({
+  SocialEventsAPI: {
+    deleteMyRsvp: jest.fn(),
+    listDirectoryProfileRsvpFeed: jest.fn(async () => ({
+      feedItems: [],
+      feedNextCursor: null,
+    })),
+    listRsvpFeed: jest.fn(async () => ({
+      feedItems: [],
+      feedNextCursor: null,
+    })),
+  },
+}));
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
+  getActiveSession: () => sessionMock,
+  getStoredSessionToken: () => null,
   useSession: () => ({ session: sessionMock }),
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
-jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.example.test' }));
+jest.unstable_mockModule('../api/client', () => ({
+  API_BASE_URL: 'https://tdf-hq.example.test',
+  ApiError: class ApiError extends Error {},
+  del: jest.fn(),
+  get: jest.fn(),
+  getPendingApiRequestCount: jest.fn(() => 0),
+  patch: jest.fn(),
+  post: jest.fn(),
+  postEmpty: jest.fn(),
+  postForm: jest.fn(),
+  postText: jest.fn(),
+  put: jest.fn(),
+  subscribeToApiActivity: jest.fn(() => jest.fn()),
+}));
 
 const { default: DirectoryPublicDetailPage } = await import('./DirectoryPublicDetailPage');
 

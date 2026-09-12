@@ -53,7 +53,6 @@ import {
 } from '../utils/loginRouting';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
-import { markWebSignupCompleted } from '../analytics/onboardingProgress';
 import { AUTH_PASSWORD_REQUIREMENTS_ES, isValidAuthPassword } from '../utils/passwordPolicy';
 import { env } from '../utils/env';
 
@@ -498,7 +497,6 @@ export default function LoginPage() {
           modules: response.modules,
           partyId: response.partyId,
         });
-        if (response.accountCreated === true) markWebSignupCompleted(response.partyId);
         const activeIntent = signupDialogOpen ? signupIntent : requestedIntent;
         const googleTargetPath = resolvePostAuthPath(activeIntent, nextSession.roles, nextSession.modules, redirectPath);
         login(nextSession, { remember: rememberDevice });
@@ -748,7 +746,6 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
-      markWebSignupCompleted(response.partyId);
       const targetPath = resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath);
       login(nextSession, { remember: rememberDevice });
       captureGrowthEvent(analytics, 'signup_completed', {
@@ -1472,7 +1469,7 @@ export default function LoginPage() {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={closeSignupDialog}>Cancelar</Button>
+            <Button type="button" onClick={closeSignupDialog}>Ya tengo una cuenta</Button>
             <Button type="submit" disabled={signupMutation.isPending || servicePreparing || !termsAccepted}>
               {signupMutation.isPending ? 'Creando…' : servicePreparing ? 'Preparando servicio…' : 'Crear e ingresar'}
             </Button>

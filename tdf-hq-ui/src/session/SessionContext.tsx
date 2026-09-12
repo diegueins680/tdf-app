@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
-import { captureReconciledFirstValue } from '../analytics/onboardingProgress';
+import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';

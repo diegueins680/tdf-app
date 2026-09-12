@@ -47,6 +47,7 @@ const listPackagesMock = jest.fn<() => Promise<ServiceStorefrontPackageDTO[]>>()
 const createOrderMock = jest.fn<(idempotencyKey: string, payload: ServiceStorefrontOrderCreate) => Promise<ServiceStorefrontOrderDTO>>();
 const selectManualPaymentMock = jest.fn<() => Promise<ServiceStorefrontOrderDTO>>();
 const createDatafastCheckoutMock = jest.fn<() => Promise<never>>();
+const loadAvailableCheckoutMethodsMock = jest.fn();
 
 const EmptyIcon = () => null;
 jest.unstable_mockModule('@mui/icons-material', () => ({
@@ -73,6 +74,10 @@ jest.unstable_mockModule('../api/serviceStorefront', () => ({
     createPaypalOrder: jest.fn(),
     capturePaypalOrder: jest.fn(),
   },
+}));
+
+jest.unstable_mockModule('../api/paymentCapabilities', () => ({
+  loadAvailableCheckoutMethods: loadAvailableCheckoutMethodsMock,
 }));
 
 jest.unstable_mockModule('../components/reviews/ExperienceReviews', () => ({
@@ -106,13 +111,18 @@ describe('MixingMasteringPage commercial truthfulness', () => {
     createOrderMock.mockReset();
     selectManualPaymentMock.mockReset();
     createDatafastCheckoutMock.mockReset();
+    loadAvailableCheckoutMethodsMock.mockReset().mockResolvedValue({
+      datafast: true,
+      paypal: false,
+      bankTransfer: true,
+    });
     window.sessionStorage.clear();
   });
 
   it('does not fabricate an order or show success after the API fails', async () => {
     createOrderMock.mockRejectedValueOnce(new Error('API unavailable; no order was created'));
     await reachPaymentStep();
-    fireEvent.click(screen.getByRole('button', { name: /Datafast/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Datafast/ }));
 
     expect(await screen.findByText('API unavailable; no order was created')).toBeTruthy();
     expect(screen.queryByText('Pedido creado')).toBeNull();
@@ -129,12 +139,26 @@ describe('MixingMasteringPage commercial truthfulness', () => {
       ssoPaymentProvider: 'bank_transfer',
     });
     await reachPaymentStep();
-    fireEvent.click(screen.getByRole('button', { name: /Transferencia bancaria/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Transferencia bancaria/ }));
 
     expect(await screen.findByText('Pedido creado')).toBeTruthy();
     expect(screen.getByText(/todavía no es un pago/)).toBeTruthy();
     const trackingLink = screen.getByRole('link', { name: 'Ver estado del pedido' });
     expect(trackingLink.getAttribute('href')).toContain('/mezcla-mastering/pedido/TDF-REAL1234#access=private-lookup-token');
     expect(trackingLink.getAttribute('href')).not.toContain('/marketplace/orden/');
+  });
+
+  it('fails closed when the canonical capability check finds no route', async () => {
+    loadAvailableCheckoutMethodsMock.mockResolvedValueOnce({
+      datafast: false,
+      paypal: false,
+      bankTransfer: false,
+    });
+    await reachPaymentStep();
+
+    expect(await screen.findByText(/No hay un método de pago verificado/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Datafast/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /PayPal/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Transferencia bancaria/ })).toBeNull();
   });
 });

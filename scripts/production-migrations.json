@@ -361,11 +361,6 @@
       "introducedBy": "88d2d847211c410793712135b7376f3f1924d5dd"
     },
     {
-      "id": "2026-09-01_contextual_reputation",
-      "path": "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
-      "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c"
-    },
-    {
       "id": "2026-09-04_contextual_reputation_integrity",
       "path": "tdf-hq/sql/2026-09-04_contextual_reputation_integrity.sql",
       "introducedBy": "e17cc72f92c39977251197cf1611fb3c33b33735"
@@ -462,6 +457,16 @@
       "introducedBy": "520222366178a2725172e3d54ec9928a1596f20d"
     },
     {
+      "id": "2026-09-06_user_onboarding_progress",
+      "path": "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql",
+      "introducedBy": "64702d26ac2129f96f40b921f943dea907828419"
+    },
+    {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "path": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f"
+    },
+    {
       "id": "2026-09-08_merch_reputation",
       "path": "tdf-hq/sql/2026-09-08_merch_reputation.sql",
       "introducedBy": "ec790e9c352bd085c07b66a6fa00d8df1c45d747"
@@ -485,6 +490,31 @@
       "id": "2026-09-10_party_selector_rate_limit_scopes",
       "path": "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes.sql",
       "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92"
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "path": "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128"
+    },
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139"
     }
   ]
 }

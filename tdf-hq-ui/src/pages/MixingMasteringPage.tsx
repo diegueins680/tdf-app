@@ -54,6 +54,7 @@ import {
   type ServiceStorefrontOrderDTO,
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
+import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 
 const IMPORT_META_ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
@@ -186,6 +187,22 @@ export default function MixingMasteringPage() {
   });
 
   const packages = useMemo(() => (apiPackages ?? []).map(mapPackageDTO), [apiPackages]);
+
+  const paymentMethodsQuery = useQuery({
+    queryKey: [
+      'serviceStorefrontPaymentMethods',
+      selectedPackage?.currency ?? '',
+      selectedPackage?.priceUsdCents ?? 0,
+    ],
+    enabled: Boolean(selectedPackage),
+    retry: false,
+    queryFn: () => loadAvailableCheckoutMethods({
+      currency: selectedPackage?.currency ?? 'USD',
+      amountMinor: selectedPackage?.priceUsdCents ?? 0,
+      productFlow: 'professional_service',
+    }),
+  });
+  const availablePaymentMethods = paymentMethodsQuery.data;
 
   const filteredPackages = useMemo(() => {
     if (serviceFilter === 'all') return packages;
@@ -574,8 +591,8 @@ export default function MixingMasteringPage() {
               </AccordionSummary>
               <AccordionDetails>
                 <Typography variant="body2">
-                  Aceptamos tarjetas de crédito/débito (Visa, Mastercard, Diners), PayPal,
-                  y transferencias bancarias. Todos los pagos son procesados de forma segura.
+                  Los métodos disponibles se verifican para cada compra antes de mostrarse.
+                  Si no aparece ninguno, el comercio todavía no está habilitado para cobrar.
                 </Typography>
               </AccordionDetails>
             </Accordion>
@@ -728,8 +745,9 @@ export default function MixingMasteringPage() {
 
           {/* Payment Methods */}
           <Typography variant="subtitle2" gutterBottom>Método de pago</Typography>
-          <Stack spacing={2} sx={{ mb: 3 }}>
-            <Button
+          {paymentMethodsQuery.isLoading && <CircularProgress size={24} aria-label="Verificando métodos de pago" />}
+          <Stack spacing={2} sx={{ my: 3 }}>
+            {availablePaymentMethods?.datafast && <Button
               variant="outlined"
               size="large"
               fullWidth
@@ -738,8 +756,8 @@ export default function MixingMasteringPage() {
               disabled={paymentBusy}
             >
               💳 Tarjeta de crédito/débito (Datafast)
-            </Button>
-            <Button
+            </Button>}
+            {availablePaymentMethods?.paypal && <Button
               variant="outlined"
               size="large"
               fullWidth
@@ -748,8 +766,8 @@ export default function MixingMasteringPage() {
               disabled={paymentBusy || !paypalClientId || !paypalReady}
             >
               🅿️ PayPal
-            </Button>
-            <Button
+            </Button>}
+            {availablePaymentMethods?.bankTransfer && <Button
               variant="outlined"
               size="large"
               fullWidth
@@ -758,12 +776,17 @@ export default function MixingMasteringPage() {
               disabled={paymentBusy}
             >
               🏦 Transferencia bancaria
-            </Button>
+            </Button>}
           </Stack>
 
-          {!paypalClientId && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              PayPal no está habilitado para este comercio. Datafast y transferencia permanecen disponibles.
+          {(paymentMethodsQuery.isError || (
+            !paymentMethodsQuery.isLoading
+            && !availablePaymentMethods?.datafast
+            && !availablePaymentMethods?.paypal
+            && !availablePaymentMethods?.bankTransfer
+          )) && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              No hay un método de pago verificado y operativo para este pedido. No se creó ningún cobro.
             </Alert>
           )}
 

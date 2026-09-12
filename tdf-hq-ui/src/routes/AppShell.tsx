@@ -20,8 +20,6 @@ import UpcomingEventsPublicPage from '../pages/UpcomingEventsPublicPage';
 import { evaluatePathAccess } from '../features/featureRegistry';
 import { useNavigationPreferences } from '../hooks/useNavigationPreferences';
 import { getAnalyticsClient } from '../analytics/posthog';
-import { retryPendingFirstValueCompletion } from '../analytics/onboardingProgress';
-import { retryPendingOnboardingIntent } from '../session/onboardingIntentRecovery';
 import { canonicalizeLegacySocialEventsPath } from '../utils/socialEventRoutes';
 
 const DESKTOP_NAV_MIN_WIDTH = 1024;
@@ -152,9 +150,13 @@ export function Shell() {
       if (currentRecovery?.partyId === partyId) return currentRecovery.promise;
 
       const promise = (async () => {
+        const [firstValueRecovery, intentRecovery] = await Promise.all([
+          import('../analytics/onboardingProgress'),
+          import('../session/onboardingIntentRecovery'),
+        ]);
         await Promise.all([
-          retryPendingOnboardingIntent(partyId),
-          retryPendingFirstValueCompletion(getAnalyticsClient(), partyId),
+          intentRecovery.retryPendingOnboardingIntent(partyId),
+          firstValueRecovery.retryPendingFirstValueCompletion(getAnalyticsClient(), partyId),
         ]);
       })()
         .catch(() => undefined)
