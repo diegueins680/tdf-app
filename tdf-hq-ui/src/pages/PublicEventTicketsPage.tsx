@@ -78,8 +78,15 @@ export default function PublicEventTicketsPage() {
   const navigate = useNavigate();
   const { locale, timezone } = useLocalePreferences();
   const english = locale.toLowerCase().startsWith('en');
-  const [tierId, setTierId] = useState('');
-  const [quantity, setQuantity] = useState('1');
+  const checkoutPrefill = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const prefilledTierId = checkoutPrefill.get('tierId') ?? '';
+  const prefilledQuantity = checkoutPrefill.get('quantity') ?? '1';
+  const [tierId, setTierId] = useState(() =>
+    /^[1-9]\d*$/.test(prefilledTierId) ? prefilledTierId : '');
+  const [quantity, setQuantity] = useState(() => {
+    const parsed = Number(prefilledQuantity);
+    return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 10 ? String(parsed) : '1';
+  });
   const [buyerName, setBuyerName] = useState('');
   const [buyerEmail, setBuyerEmail] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -108,7 +115,7 @@ export default function PublicEventTicketsPage() {
   });
 
   useEffect(() => {
-    if (tierId) return;
+    if (tierId && storefront.data?.tiers.some((tier) => String(tier.tierId) === tierId)) return;
     const firstTier = storefront.data?.tiers[0];
     if (firstTier) setTierId(String(firstTier.tierId));
   }, [storefront.data?.tiers, tierId]);
