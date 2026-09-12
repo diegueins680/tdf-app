@@ -63,6 +63,8 @@ apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
 apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
 
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE enabled=FALSE AND status='disabled';")" \
@@ -74,11 +76,21 @@ assert_equal \
   "2" \
   "Manual bank transfer requires explicit environment verification"
 
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability WHERE source_reference LIKE '%#tdf-capability-catalog-2026-09-11';")" \
+  "84" \
+  "Provider capability catalog is documentation-only and idempotent"
+
 if psql_exec -c "UPDATE commerce_provider_account SET enabled=TRUE WHERE provider='placetopay' AND environment='production';" >/dev/null 2>&1; then
   echo "Provider account enabled without contract, credentials and verification" >&2
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql
+assert_equal \
+  "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_capability WHERE source_reference LIKE '%#tdf-capability-catalog-2026-09-11';")" \
+  "0" \
+  "Untouched provider documentation catalog rollback"
 apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql
 assert_equal \
   "$(psql_exec -Atc "SELECT count(*) FROM commerce_provider_account WHERE provider='bank_transfer';")" \
@@ -100,6 +112,7 @@ apply_file tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql
 apply_file tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql
 apply_file tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql
 apply_file tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql
+apply_file tdf-hq/sql/2026-09-11_provider_capability_catalog.sql
 
 checkout_id='10000000-0000-4000-8000-000000000001'
 attempt_id='10000000-0000-4000-8000-000000000002'
