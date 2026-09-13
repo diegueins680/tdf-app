@@ -132,6 +132,15 @@ if [ -z "$TDF_PB_HTTP_DATABASE_URL" ]; then
     fi
     sleep 1
   done
+
+  # The official image briefly accepts connections during initialization and
+  # then performs a fast restart. Wait through that bootstrap transition before
+  # resolving the host port or starting the migration batch.
+  sleep 5
+  until docker exec "$TDF_PB_HTTP_CONTAINER" \
+    pg_isready -U postgres -d tdf_public_booking_http_test >/dev/null 2>&1; do
+    sleep 1
+  done
   database_port=$(docker port "$TDF_PB_HTTP_CONTAINER" 5432/tcp | sed 's/.*://')
   TDF_PB_HTTP_DATABASE_URL="postgresql://postgres:public-booking-http-test@127.0.0.1:$database_port/tdf_public_booking_http_test"
 

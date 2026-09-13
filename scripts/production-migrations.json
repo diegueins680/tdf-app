@@ -492,6 +492,11 @@
       "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92"
     },
     {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "path": "tdf-hq/sql/2026-09-09_public_booking_tentative_idempotency.sql",
+      "introducedBy": "2da5c939baca7cdeec8aba623a83e9b42440f2e3"
+    },
+    {
       "id": "2026-09-09_canonical_payment_lifecycle",
       "path": "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
       "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e"
