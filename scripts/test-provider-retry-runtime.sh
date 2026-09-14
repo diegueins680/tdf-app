@@ -69,4 +69,4 @@ done
 cd "$TDF_PROVIDER_RETRY_ROOT/tdf-hq"
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
-  stack test --fast --test-arguments=--match=provider-retry-runtime
+  stack test --fast --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'

@@ -230,8 +230,8 @@ newCheckout pool = do
     "INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,\
     \ currency,subtotal_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)\
     \ VALUES (?::uuid,'event_ticket_order',?,'awaiting_payment','sandbox','USD',12515,12515,\
-    \ 'synthetic@example.test','synthetic-lookup',?,?)"
-    [PersistText checkoutId, PersistText checkoutId, PersistText checkoutId,
+    \ 'synthetic@example.test',?,?,?)"
+    [PersistText checkoutId, PersistText checkoutId, PersistText checkoutId, PersistText checkoutId,
       PersistUTCTime (addUTCTime 1800 now)]) pool
   pure Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = Checkout.CheckoutReference checkoutId
