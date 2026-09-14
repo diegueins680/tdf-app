@@ -65,8 +65,15 @@ The workflow runs automatically every 30 days. You can also trigger it manually:
 # Actions → Refresh Instagram Token → Run workflow
 
 # Via GitHub CLI
-gh workflow run refresh-instagram-token.yml --repo diegueins680/tdf-app
+gh workflow run refresh-instagram-token.yml \
+  --repo diegueins680/tdf-app \
+  --ref main \
+  -f action=check
 ```
+
+The `check` action only validates the configured token. The `setup` and `refresh`
+actions update the Fly.io secret and restart the application, so run them only as
+an approved credential-maintenance operation.
 
 ### 4. Manual Commands
 
@@ -120,6 +127,12 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 - Check that the Instagram account hasn't been disconnected
 - Re-run setup: `node scripts/refresh-instagram-token.mjs --setup`
 
+### "Error validating application" / API code 190
+- Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
+- Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked
+- Replace the affected repository secrets through GitHub's secret settings; never paste their values into logs or issues
+- Run the workflow with `action=check` and confirm the `Check/Refresh Token` step succeeds before authorizing `setup` or `refresh`
+
 ### "Failed to update Fly secret" errors
 - Verify `FLY_API_TOKEN` is valid
 - Check Fly CLI is installed: `flyctl version`
@@ -127,10 +140,11 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 
 ## Security Notes
 
-- Tokens are never logged in full (only first 10 chars)
+- Tokens and token prefixes are never logged
 - Token state file (`.instagram-token-state.json`) is gitignored
 - All secrets are stored in GitHub Secrets or Fly.io secrets
 - The script uses HTTPS for all API calls
+- Meta authentication errors fail closed and are not retried as transient outages
 
 ## Files
 

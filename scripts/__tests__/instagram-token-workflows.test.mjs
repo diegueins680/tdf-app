@@ -66,6 +66,35 @@ test('Meta system errors without an API code still receive bounded retries', asy
   assert.equal(calls, 2);
 });
 
+test('Meta authentication errors fail immediately even when their wording mentions a system error', async () => {
+  let calls = 0;
+  const delays = [];
+
+  await assert.rejects(
+    checkTokenStatus('redacted', {
+      fetchImpl: async () => {
+        calls += 1;
+        return response({
+          ok: false,
+          status: 400,
+          data: {
+            error: {
+              code: 190,
+              message: 'Error validating application. Cannot get application info due to a system error.',
+            },
+          },
+        });
+      },
+      maxAttempts: 3,
+      sleep: async delay => delays.push(delay),
+    }),
+    /Error validating application.*HTTP 400, API code 190/
+  );
+
+  assert.equal(calls, 1);
+  assert.deepEqual(delays, []);
+});
+
 test('token checks recover after a bounded transient failure', async () => {
   const responses = [
     response({

@@ -84,12 +84,17 @@ function isTransientApiFailure(response, data, err) {
     return true;
   }
 
+  const apiCode = data?.error?.code;
+  if ([102, 190].includes(apiCode) || response?.status === 401 || response?.status === 403) {
+    return false;
+  }
+
   if (response?.status === 429 || response?.status >= 500) {
     return true;
   }
 
   return data?.error?.is_transient === true
-    || [1, 2, 4, 17, 341].includes(data?.error?.code)
+    || [1, 2, 4, 17, 341].includes(apiCode)
     || /system error|temporar|try again|service unavailable/i.test(err?.message || '');
 }
 
