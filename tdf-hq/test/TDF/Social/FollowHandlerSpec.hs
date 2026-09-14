@@ -8,6 +8,7 @@ import Control.Monad.Trans.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Char (chr)
 import Data.Int (Int64)
+import Data.List (sort)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
@@ -79,6 +80,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUpdate
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
+    , validateInvitationUpdateAuthorization
     , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
@@ -1585,6 +1587,129 @@ spec = describe "social event handler helpers" $ do
                 expectationFailure
                     ("Expected spoofed invitation sender to be rejected, got: " <> show value)
 
+    it "rejects invitation creation by a non-organizer even when the event is visible" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 10
+        runSqlPool
+            (insertKey eventKey (seedSocialEvent "1" "Organizer-only invitations" now))
+            pool
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by invitation auth tests"
+                    }
+        result <-
+            runHandler $
+                runReaderT
+                    ( socialEventInvitationCreateHandlerFor
+                        (socialEventUser 5)
+                        "10"
+                        (invitationCreatePayload Nothing)
+                    )
+                    env
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err) `shouldContain` "event organizer"
+            Right value ->
+                expectationFailure
+                    ("Expected non-organizer invitation creation to fail, got: " <> show value)
+
+    it "attenuates invitation updates for the intended recipient" $ do
+        validateInvitationUpdateAuthorization
+            False
+            "2"
+            (Just "2")
+            (Just "pending")
+            "2"
+            (Just "accepted")
+            FieldMissing
+            `shouldBe` Right ()
+
+        let assertForbidden result =
+                case result of
+                    Left err -> errHTTPCode err `shouldBe` 403
+                    Right () -> expectationFailure "Expected invitation mutation to be forbidden"
+
+        assertForbidden $
+            validateInvitationUpdateAuthorization
+                False
+                "3"
+                (Just "2")
+                (Just "pending")
+                "2"
+                (Just "accepted")
+                FieldMissing
+        assertForbidden $
+            validateInvitationUpdateAuthorization
+                False
+                "2"
+                (Just "2")
+                (Just "pending")
+                "3"
+                (Just "accepted")
+                FieldMissing
+        assertForbidden $
+            validateInvitationUpdateAuthorization
+                False
+                "2"
+                (Just "2")
+                (Just "pending")
+                "2"
+                (Just "accepted")
+                (FieldValue "rewritten")
+        assertForbidden $
+            validateInvitationUpdateAuthorization
+                False
+                "2"
+                (Just "2")
+                (Just "accepted")
+                "2"
+                (Just "declined")
+                FieldMissing
+
+    it "lists all event invitations only for the organizer and scopes recipients to their own" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 12
+            invitationFor toParty =
+                EventInvitation
+                    { eventInvitationEventId = eventKey
+                    , eventInvitationFromPartyId = Just "1"
+                    , eventInvitationToPartyId = Just toParty
+                    , eventInvitationStatus = Just "pending"
+                    , eventInvitationMessage = Just "Scoped invitation"
+                    , eventInvitationCreatedAt = now
+                    , eventInvitationUpdatedAt = now
+                    }
+        runSqlPool
+            ( do
+                insertKey eventKey (seedSocialEvent "1" "Scoped invitation reads" now)
+                _ <- insert (invitationFor "2")
+                _ <- insert (invitationFor "3")
+                pure ()
+            )
+            pool
+        let env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by invitation read tests"
+                    }
+        organizerResult <-
+            runHandler $
+                runReaderT (socialEventInvitationListHandlerFor (socialEventUser 1) "12") env
+        recipientResult <-
+            runHandler $
+                runReaderT (socialEventInvitationListHandlerFor (socialEventUser 2) "12") env
+        fmap (map invitationToPartyId) organizerResult
+            `shouldSatisfy` either (const False) ((== ["2", "3"]) . sort)
+        fmap (map invitationToPartyId) recipientResult `shouldBe` Right ["2"]
+
     it "creates a follow and is idempotent" $ do
         pool <- runStdoutLoggingT $ createSqlitePool ":memory:" 1
         runSqlPool initializeSocialSchema pool
@@ -1909,6 +2034,25 @@ socialEventInvitationCreateHandlerFor user eventIdText =
             case invitationsServer eventIdText of
                 _listInvitations :<|> createInvitationHandler :<|> _updateInvitation ->
                     createInvitationHandler
+
+socialEventInvitationListHandlerFor
+    :: AuthedUser
+    -> T.Text
+    -> ReaderT Env Handler [InvitationDTO]
+socialEventInvitationListHandlerFor user eventIdText =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> _artists
+            :<|> _rsvps
+            :<|> invitationsServer
+            :<|> _ ->
+            case invitationsServer eventIdText of
+                listInvitationsHandler :<|> _createInvitation :<|> _updateInvitation ->
+                    listInvitationsHandler
 
 assertHiddenEventRoute :: Show a => String -> Either ServerError a -> Expectation
 assertHiddenEventRoute label result =

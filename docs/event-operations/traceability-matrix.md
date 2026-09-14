@@ -1,0 +1,30 @@
+# Event operations traceability matrix
+
+Status values: `modeled` means the formal artifact passed in its documented finite scope;
+`planned` means implementation/test is intentionally not yet claimed. File/function names under
+planned rows are target boundaries, not assertions that code already exists.
+
+| Requirement | Invariant or operation | Formal model | Implementation boundary | Automated evidence | Status |
+|---|---|---|---|---|---|
+| EO-003, EO-045 | `Authorized`, scope attenuation, active grant | `EventLifecycle`, `EventStructure` | `event_operation_relationship`/`event_operation_grant`; contextual policy service remains | Migration constraints plus API cross-event/stale-grant tests | Foundation implemented; API integration planned |
+| EO-007 | `VisibilityMatchesLifecycle`, `canRead` | `EventLifecycle`, `EventStructure` | Field-aware event/task serializers, search/outbox filters | Authorization/privacy matrix tests | Modeled; implementation planned |
+| EO-008 | `AuditAppendOnly`, accepted/rejected audit records | `EventLifecycle` | Insert-only event audit + command receipt | DB mutation-denial, restore/replay tests | Modeled; implementation planned |
+| EO-009, EO-010 | `Allowed`, `Authorized`, idempotent transition | `EventLifecycle` | Compatibility-mapped lifecycle transition command | Model-based transition/API/outbox tests | Modeled; implementation planned |
+| EO-023–EO-028 | DAG, RACI, dependency-gated completion, audited override | `TaskRaci`, `EventStructure` | Existing `event_logistics_activity`/dependency plus policy/RACI/override sidecars and serialized DB triggers | PostgreSQL migration test covers sequential and two-transaction concurrent DAG rejection, RACI, orphan prevention, completion and override; HTTP/time tests remain | Foundation implemented and DB-tested |
+| EO-032 | Explainable allowlisted match factors | Relational visibility assumptions | Directory search rank policy/version and contribution payload | Golden ranking, sensitive-field exclusion, perf tests | Executable contract planned |
+| EO-033–EO-036 | Exclusive overlap, justified override, one effect/command | `ReservationRace` PlusCal, `EventStructure` | Existing `resource`/booking exclusion allocation and event bindings | Parallel-confirm HTTP/DB and retry tests | Modeled; integration planned |
+| EO-035 | Half-open occupied interval includes buffers | `ReservationRace` abstraction | Pure interval calculator and booking command | Property tests across zones/multi-day/DST | Abstraction modeled; detailed tests planned |
+| EO-037–EO-040 | Explicit engagement states and verified completion | `ContractPayment`, lifecycle tables | Event-linked opportunity/application/proposal/engagement service | Model-based lifecycle, no-show/replacement/review tests | Partially modeled; implementation planned |
+| EO-038 | All required parties accept same current version | `ConfirmedVersionAcceptedByAll`, Alloy contract assertion | DB-backed immutable contract versions/acceptances | Concurrent acceptance/amendment contract tests | Modeled; implementation planned |
+| EO-041–EO-044 | Exact money, verified evidence, milestone/payout gate, idempotency | `ContractPayment`, `OperationalLiveness` | Reuse canonical commerce/provider inbox/ledger | Sandbox webhook reorder/retry/reconciliation tests | Modeled; event coupling planned |
+| EO-047 | Intended guest, freshness, revoke/replay, scope attenuation | `InvitationSafety`, `EventStructure` | Organizer-only creation, recipient-attenuated update/list, `event_invitation_security`; external token conversion remains | Haskell handler tests and PostgreSQL token uniqueness; expiry/replay/revoke/account-link E2E remains | Auth flaw fixed; secure guest flow partial |
+| EO-048–EO-050 | Parent-scoped visibility, terminal delivery/DLQ | `EventStructure`, `OperationalLiveness` | Event/task discussions + canonical notification outbox | Privacy, dedupe, quiet-hour, DLQ/calendar/webhook tests | Modeled; implementation planned |
+| EO-051 | Reauthorize offline command; sync or conflict | `OperationalLiveness` | Versioned command receipt/sync API and client queue | Offline stale-role/stale-version/retry E2E | Liveness modeled; implementation planned |
+| EO-052–EO-054 | Workspace routes obey same API policies | API formal contracts | Existing web/mobile event surfaces | Playwright/mobile/a11y/locale tests | Planned |
+| EO-055–EO-056 | Atomic command/outbox, reversible additive schema | Transaction assumptions in all models | Additive state/relationship/grant/revision/session/receipt/audit schema; Servant/generated clients remain | PostgreSQL apply-twice/rollback/reapply test passes | Foundation implemented; API/client integration planned |
+| EO-057 | Bounded safety/liveness/relational checks | All files in `formal/event-operations` | Formal verification script and CI workflow | Completed local TLC/Alloy receipts summarized in README | Complete for phase 2 bounds |
+| EO-059–EO-061 | Production remains disabled | Environmental constraint | Existing feature/provider flags | Configuration tests and manual release review | Deferred by design |
+
+The matrix must be extended at each implementation PR with exact migration, module, API route,
+generated-client, UI, and test identifiers. A critical row cannot move to `implemented` until both
+the modeled guard and its database/API concurrency boundary have executable evidence.

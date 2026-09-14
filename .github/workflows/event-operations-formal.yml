@@ -1,0 +1,79 @@
+name: Event operations verification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "formal/event-operations/**"
+      - "docs/event-operations/**"
+      - "docs/adr/0115-canonical-event-operations.md"
+      - "docs/adr/0116-bounded-formal-verification.md"
+      - "docs/adr/0117-shared-resource-allocation.md"
+      - "scripts/verify-event-operations-formal.sh"
+      - "scripts/test-event-operations-foundation-migration.sh"
+      - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
+      - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
+      - "package.json"
+      - ".github/workflows/event-operations-formal.yml"
+  push:
+    branches: [main]
+    paths:
+      - "formal/event-operations/**"
+      - "docs/event-operations/**"
+      - "docs/adr/0115-canonical-event-operations.md"
+      - "docs/adr/0116-bounded-formal-verification.md"
+      - "docs/adr/0117-shared-resource-allocation.md"
+      - "scripts/verify-event-operations-formal.sh"
+      - "scripts/test-event-operations-foundation-migration.sh"
+      - "tdf-hq/sql/2026-09-14_event_operations_foundation.sql"
+      - "tdf-hq/sql/2026-09-14_event_operations_foundation_rollback.sql"
+      - "tdf-hq/test/integration/event_operations_foundation_fixture.sql"
+      - "package.json"
+      - ".github/workflows/event-operations-formal.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: event-operations-formal-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download pinned formal tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/tdf-formal-tools"
+          curl --fail --location --retry 3 \
+            https://github.com/tlaplus/tlaplus/releases/download/v1.7.2/tla2tools.jar \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/tla2tools-1.7.2.jar"
+          curl --fail --location --retry 3 \
+            https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar \
+            --output "${RUNNER_TEMP}/tdf-formal-tools/alloy-6.2.0.jar"
+
+      - name: Check event operations models
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+          ALLOY_JAR: ${{ runner.temp }}/tdf-formal-tools/alloy-6.2.0.jar
+        run: npm run verify:event-operations:formal
+
+  postgres-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check event operations foundation migration
+        run: npm run test:event-operations-foundation-migration
