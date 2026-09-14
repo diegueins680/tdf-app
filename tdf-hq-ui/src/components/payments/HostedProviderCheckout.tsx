@@ -255,10 +255,10 @@ export default function HostedProviderCheckout({
       setBusy(true);
       getProviderPaymentSession(context.checkoutId, resume.attemptId, context.lookupToken)
         .then((next) => { if (!cancelled) publishSession(next); })
-        .catch((resumeError: unknown) => {
+        .catch(() => {
           if (cancelled) return;
           setPotentiallyAmbiguous(true);
-          setError(publicError(english, isPotentiallyAmbiguous(resumeError)));
+          setError(publicError(english, true));
         })
         .finally(() => { if (!cancelled) setBusy(false); });
       return () => { cancelled = true; };

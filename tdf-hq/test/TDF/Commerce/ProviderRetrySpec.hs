@@ -338,8 +338,8 @@ spec = do
 recoveryEncryptionKey :: Text
 recoveryEncryptionKey = "synthetic-provider-recovery-encryption-key"
 
--- No provider credential is read or used. Restore any caller configuration
--- without printing it, even when an assertion fails.
+-- Clear provider authentication before invoking handlers. Restore caller
+-- configuration without printing it, even when an assertion fails.
 withRecoveryEnvironment :: IO a -> IO a
 withRecoveryEnvironment action = bracket
   (forM names $ \name -> (,) name <$> lookupEnv name)
