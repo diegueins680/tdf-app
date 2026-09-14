@@ -62,6 +62,8 @@ jobs:
         run: node --test scripts/__tests__/payment-staging-inspection.test.mjs
       - name: Install official Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1
+        with:
+          version: '0.4.103'
       - name: Inspect only existing staging metadata
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

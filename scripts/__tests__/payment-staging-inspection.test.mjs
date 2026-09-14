@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  assertStagingApp, inspectStaging, STAGING_APPS, summarizeConfig, summarizeSecrets, summarizeStatus,
+  assertStagingApp, classifyInspectionError, inspectStaging, STAGING_APPS,
+  summarizeConfig, summarizeSecrets, summarizeStatus,
 } from '../inspect-payment-staging.mjs';
 
 test('staging inspection refuses production and arbitrary targets', () => {
@@ -48,4 +49,14 @@ test('only read-only fixed-app commands run and errors cannot leak raw provider 
   }
   assert.equal(JSON.stringify(report).includes('SYNTHETIC-PRIVATE'), false);
   assert.equal(report.providerQualified, false);
+});
+
+test('auth failures are actionable without returning credential-bearing diagnostics', () => {
+  assert.equal(classifyInspectionError({ stderr: 'Error: authentication token expired SECRET-VALUE' }),
+    'hosting_authentication_unavailable');
+  assert.equal(classifyInspectionError({ stderr: 'Error: not authorized SECRET-VALUE' }),
+    'hosting_authorization_denied');
+  assert.equal(classifyInspectionError(new Error('Unexpected staging app identity')),
+    'unexpected_app_identity');
+  assert.equal(classifyInspectionError(new SyntaxError('PRIVATE-RESPONSE')), 'non_json_cli_response');
 });

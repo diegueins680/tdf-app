@@ -86,6 +86,21 @@ async function readHealth(app) {
   };
 }
 
+export function classifyInspectionError(error) {
+  // Match known failure classes in memory; never return error text or buffers.
+  const diagnostic = `${error?.message ?? ''} ${error?.stderr ?? ''}`.toLowerCase();
+  if (error?.code === 'ENOENT') return 'cli_not_installed';
+  if (error?.killed || /timed out|timeout/.test(diagnostic)) return 'timeout';
+  if (/no access token|not logged in|token.*expir|invalid.*token|unauthenticated|authentication|must be authenticated/.test(diagnostic)) return 'hosting_authentication_unavailable';
+  if (/not authorized|not allowed|permission denied|forbidden|unauthorized/.test(diagnostic)) return 'hosting_authorization_denied';
+  if (/could not find app|app.*not found/.test(diagnostic)) return 'staging_app_inaccessible';
+  if (/unexpected staging app identity/.test(diagnostic)) return 'unexpected_app_identity';
+  if (/unexpected secret-name listing/.test(diagnostic)) return 'unexpected_secret_metadata_schema';
+  if (error instanceof SyntaxError) return 'non_json_cli_response';
+  if (/resolve|enotfound|econnrefused|connection/.test(diagnostic)) return 'hosting_connection_failed';
+  return 'unclassified_failure_no_raw_output_retained';
+}
+
 export async function inspectStaging({ runFly = flyJson, health = readHealth } = {}) {
   const apps = [];
   for (const app of STAGING_APPS) {
@@ -98,9 +113,9 @@ export async function inspectStaging({ runFly = flyJson, health = readHealth } =
     ]) {
       try {
         result[field] = { accessible: true, ...summarize(await runFly(args)) };
-      } catch {
+      } catch (error) {
         // Child-process errors can contain raw stdout/stderr; never serialize them.
-        result[field] = { accessible: false, reason: 'Unavailable or unexpected response; no raw output retained' };
+        result[field] = { accessible: false, reason: classifyInspectionError(error) };
       }
     }
     try { result.health = await health(app); }
