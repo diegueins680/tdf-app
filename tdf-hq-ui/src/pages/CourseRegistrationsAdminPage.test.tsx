@@ -13,6 +13,10 @@ import type {
 } from '../api/courses';
 import { formatTimestampForDisplay } from '../utils/dateTime';
 
+// These full-page interaction tests intentionally exercise long dossier flows.
+// Keep the wider timeout scoped here so unrelated unit suites retain Jest's 5s watchdog.
+jest.setTimeout(15_000);
+
 const listCohortsMock = jest.fn<() => Promise<CourseCohortOptionDTO[]>>();
 const listRegistrationsMock = jest.fn<
   (params?: { slug?: string; status?: string; limit?: number }) => Promise<CourseRegistrationDTO[]>
