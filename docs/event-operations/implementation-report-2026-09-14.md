@@ -136,6 +136,28 @@ report.
 
 ## Remaining implementation
 
+### Fourth-branch task transaction correction
+
+`feat/event-task-commit-invariants` adds a checked `TaskCommit` model (121 generated / 112 distinct
+states, depth 5), two checked expected-counterexample mutation configurations, and a new reversible
+SQL migration. Final-state checks cover completed-task dependencies after relation replacement,
+policy activation, prerequisite reopening and version-bound overrides. A per-event write fence
+prevents concurrent RACI removals from each counting the other's uncommitted assignment. It also
+rejects generic protected-policy deletion/weakening and protected task deletion/movement.
+
+The full pinned TLC/Alloy runner, foundation migration, lifecycle API migration, and new task-commit
+migration tests all passed. The latter uses deterministic observed database-lock barriers under
+READ COMMITTED, REPEATABLE READ and SERIALIZABLE; tests both orders of completion/dependency races,
+immediate/deferred checks, incompatible-data migration refusal, rollback twice and reapply. Its
+foundation-only negative control first reproduced the old completion/dependency bypass. Details
+and operational limitations are in [PR 04](pr-04-task-commit-invariants.md).
+
+No Haskell/API/UI/mobile code changed in this branch. No new HTTP/E2E, payment sandbox, browser,
+accessibility or large-plan performance result is claimed. Task-sidecar exposure remains blocked
+on the contextual authorization, time-window, history and HTTP conflict handling still listed below.
+
+### Pending product work
+
 - Extend the typed lifecycle API beyond the five safe early edges only as each ticket, booking,
   contract, notification, public-visibility, and financial effect gains an atomic/outbox
   implementation and an executable failure/compensation test. Add HTTP-level authorization and
@@ -163,9 +185,11 @@ report.
 
 ## External limitations and prohibited actions
 
-`git remote show origin` could not resolve the GitHub SSH host and `gh auth status` reported invalid
-credentials. The first two branches are committed locally and the logistics hardening branch is
-local; no remote branch, push, PR, CI run, review, or merge is claimed. No screenshots were produced. No production database, deployment,
+Initially `git remote show origin` could not resolve the GitHub SSH host and `gh auth status`
+reported invalid credentials. During the fourth branch, read-only GitHub access recovered after
+sandbox escalation; both GitHub API and Git SSH confirm `main` remains the audited base. Remote
+publication evidence is recorded separately when verified; local checks are not hosted CI or review.
+No screenshots were produced. No production database, deployment,
 feature flag, credential, payment, refund, or payout was touched. The new migration is not added to
 the production manifest; that is a later reviewed rollout step after API/client compatibility and
 release rehearsal.

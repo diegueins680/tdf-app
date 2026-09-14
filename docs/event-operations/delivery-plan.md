@@ -42,3 +42,9 @@ social-event logistics handler: an activity row and its complete assignment/depe
 commit or roll back together. PostgreSQL tests cover cyclic-update and cross-event-create failures.
 This is only phase-4 transaction hardening; RACI HTTP commands, templates, workstreams, checklists,
 recurrence, readiness, typed production requirements, and workspace views remain unimplemented.
+
+The fourth branch, `feat/event-task-commit-invariants`, refines the transaction model and adds
+deferred final-state guards with a per-event write fence. It closes same-transaction dependency
+replacement and concurrent RACI-removal gaps and tests RC/RR/SERIALIZABLE writers, rollback and
+reapply. The complete operation contract and bounded results are linked from the specification
+index. This correction does not advance phase 4 to complete.

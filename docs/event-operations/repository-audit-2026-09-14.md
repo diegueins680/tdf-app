@@ -43,6 +43,16 @@ models without relabeling the prior checks as theorem proving.
 
 ## Existing domains and reuse decisions
 
+### Follow-up capability verification
+
+During the fourth branch, read-only GitHub access recovered after sandbox escalation.
+`gh repo view diegueins680/tdf-app --json defaultBranchRef,nameWithOwner` returned `main`;
+`gh api repos/diegueins680/tdf-app/commits/main --jq .sha` and
+`git ls-remote --heads origin main` both returned the audited
+`17a33eca11d585d84435af85340beece9b51d14e`. The earlier DNS/auth observations above are
+historical, not a current assertion that remote delivery is impossible. Publication evidence,
+if completed, belongs in the delivery report. No production permissions were exercised.
+
 ### Events, venues, RSVP, tickets, virtual/live
 
 - `TDF.Models.SocialEventsModels` already owns `SocialEvent`, artists, RSVP, event invitations,

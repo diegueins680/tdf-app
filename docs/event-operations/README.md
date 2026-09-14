@@ -13,6 +13,8 @@
 - [Draft PR 01](pr-01-formal-foundation.md)
 - [Draft PR 02](pr-02-api-foundation.md)
 - [Draft PR 03](pr-03-logistics-transaction-hardening.md)
+- [Draft PR 04](pr-04-task-commit-invariants.md)
+- [Task transaction contract](task-commit-contract.md)
 - [Formal models](../../formal/event-operations/README.md)
 - [ADR 0115: canonical event operations](../adr/0115-canonical-event-operations.md)
 - [ADR 0116: bounded formal verification](../adr/0116-bounded-formal-verification.md)
