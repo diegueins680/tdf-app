@@ -70,8 +70,27 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
   provider <- either (throwError . badRequest) pure (parseProvider (pscProvider request))
   paymentMethod <- either (throwError . badRequest) pure
     (parsePaymentMethod (pscPaymentMethod request))
-  now <- liftIO getCurrentTime
   let lookupHash = sha256Text lookupToken
+  encryptionKey <- liftIO loadProviderOperationEncryptionKey
+    >>= either (throwError . unavailableText) pure
+  replay <- liftIO (runSqlPool
+      (Store.loadAuthorizedCreateReplay checkoutId lookupHash provider paymentMethod
+        idempotencyKey (pscBuyerPhone request) (pscBuyerCountryCode request) encryptionKey) envPool)
+    >>= either (throwError . conflict) pure
+  case replay of
+    Just known | Store.porStatus known /= "prepared" -> pure (operationToDTO checkoutId known)
+    -- A prepared operation has not been contacted. Starting it still needs all
+    -- current checkout, account, capability and secret gates below.
+    _ -> startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider
+      paymentMethod remoteAddress request encryptionKey
+
+startPaymentSession
+  :: Text -> Text -> Text -> Text -> Checkout.PaymentProvider -> PaymentMethod
+  -> SockAddr -> PaymentSessionCreateDTO -> Text -> AppM PaymentSessionDTO
+startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paymentMethod
+    remoteAddress request encryptionKey = do
+  Env{envPool} <- ask
+  now <- liftIO getCurrentTime
   checkout <- liftIO (runSqlPool
       (Store.loadAuthorizedCheckout checkoutId lookupHash now) envPool)
     >>= either (const (throwError err404)) pure
@@ -97,8 +116,6 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
       (Store.loadReadyMerchantAccount (Store.ceEnvironment checkout) provider) envPool)
     >>= either (throwError . unavailableText) pure
   runtime <- liftIO (loadRuntimeProviderAdapter (Store.ceEnvironment checkout) provider)
-    >>= either (throwError . unavailableText) pure
-  encryptionKey <- liftIO loadProviderOperationEncryptionKey
     >>= either (throwError . unavailableText) pure
   clientIp <- liftIO (numericHost remoteAddress)
     >>= either (throwError . unavailableText) pure
@@ -143,7 +160,9 @@ createPaymentSession rawCheckoutId rawLookupToken rawIdempotencyKey rawUserAgent
       expected = ExpectedPayment merchantReference
         (Store.ceTotalMinor checkout) (Store.ceCurrency checkout)
       locator = PaymentLocator "pending" expected
-      fingerprint = requestFingerprint checkout provider paymentMethod payment
+      fingerprint = Store.providerCreateRequestFingerprint (Store.ceCheckout checkout)
+        provider paymentMethod merchantReference (Store.ceTotalMinor checkout)
+        (Store.ceCurrency checkout) (cpBuyerPhone payment) (cpBuyerCountryCode payment)
   adapterRequest <- either (throwError . badRequest . adapterErrorPublicMessage) pure
     (adapterBuildCreate adapter context payment)
   operation <- liftIO (runSqlPool
@@ -381,24 +400,6 @@ providerReference provider attemptId = case provider of
   _ -> "TDF-" <> T.take 28 (sha256Text scopedReference)
   where
     scopedReference = Checkout.paymentProviderText provider <> ":" <> attemptId
-
-requestFingerprint
-  :: Store.CheckoutExecution
-  -> Checkout.PaymentProvider
-  -> PaymentMethod
-  -> CreatePayment
-  -> Text
-requestFingerprint checkout provider method payment = sha256Text (T.intercalate "|"
-  [ Checkout.checkoutReferenceId (Store.ceCheckout checkout)
-  , Checkout.paymentProviderText provider
-  , paymentMethodText method
-  , paymentMethodText (cpPaymentMethod payment)
-  , cpReference payment
-  , T.pack (show (Store.ceTotalMinor checkout))
-  , T.toUpper (Store.ceCurrency checkout)
-  , fromMaybe "" (cpBuyerPhone payment)
-  , fromMaybe "" (cpBuyerCountryCode payment)
-  ])
 
 checkoutDescription :: Store.CheckoutExecution -> Text
 checkoutDescription checkout = T.take 120
