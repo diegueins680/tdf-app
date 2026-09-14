@@ -1,5 +1,10 @@
 # Hosted-provider execution and reconciliation record
 
+**Safety follow-up:** [Retry isolation and transaction-evidence repairs](retry-reconciliation-safety-2026-09-14.md)
+supersede the original retry/reference and PlaceToPay transaction-validation behavior described below.
+Parent checkout PR #334 subsequently passed [hosted CI run 34883596896](https://github.com/diegueins680/tdf-app/actions/runs/34883596896)
+at `3b81b687753520c6b56a6128d6c110846f1a8995`; that result is not evidence for later commits.
+
 **Implementation verification date:** 2026-09-14 (America/Guayaquil)
 **Research access date:** 2026-09-14
 **Scope:** PlaceToPay WebCheckout and PayPhone API Sale create/query/notification paths

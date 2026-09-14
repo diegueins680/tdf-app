@@ -2,6 +2,9 @@
 
 These procedures are safe defaults for sandbox and staging. They do not authorize production deployment, provider activation, a real charge, a refund or a payout.
 
+For per-request intent keys, legacy reference preservation, conflicting provider evidence and
+the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
+
 ## 1. Configuration and activation
 
 1. Identify the exact legal merchant, provider account, environment, USD settlement account and contracted capabilities.
