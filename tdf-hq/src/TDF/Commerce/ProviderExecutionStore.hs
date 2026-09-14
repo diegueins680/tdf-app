@@ -441,7 +441,7 @@ loadAuthorizedCreateReplay checkoutId lookupTokenHash provider method idempotenc
     \ AND operation.idempotency_key = attempt.idempotency_key\
     \ AND attempt.operation = 'create' AND attempt.environment = checkout.environment\
     \ AND attempt.amount_minor = checkout.total_minor AND attempt.currency = checkout.currency\
-    \ AND intent.checkout_id = checkout.id AND intent.environment = attempt.environment\
+    \ AND intent.checkout_id = checkout.id\
     \ AND intent.provider = attempt.provider AND intent.amount_minor = attempt.amount_minor\
     \ AND intent.currency = attempt.currency AND intent.payment_method = ?\
     \ AND intent.capture_method = 'automatic', FALSE)\
