@@ -142,6 +142,22 @@ async function makeRequest(url, {
   throw lastError;
 }
 
+export async function checkInstagramToken(token, requestOptions) {
+  // Validate Instagram Login credentials at their documented resource server
+  // before checking metadata. A Facebook app-auth error otherwise hides an
+  // expired/revoked Instagram token and incorrectly implicates the app secret.
+  const accountUrl = new URL(`${INSTAGRAM_API_BASE}/v26.0/me`);
+  accountUrl.searchParams.set('fields', 'user_id');
+  accountUrl.searchParams.set('access_token', token);
+  const data = await makeRequest(accountUrl.toString(), requestOptions);
+  const account = Array.isArray(data?.data) && data.data.length === 1 ? data.data[0] : data;
+  if (typeof account?.user_id !== 'string' || !/^\d+$/.test(account.user_id)) {
+    throw new Error('Instagram account validation returned no valid user ID');
+  }
+  log('Instagram account access verified; checking token metadata...');
+  return checkTokenStatus(token, requestOptions);
+}
+
 export async function checkTokenStatus(token, requestOptions) {
   log('Checking token status...');
 
@@ -283,7 +299,7 @@ async function setup() {
     assertCheckConfiguration({ token: TOKEN, appId: APP_ID, appSecret: APP_SECRET });
 
     // First check if current token is already long-lived
-    const status = await checkTokenStatus(TOKEN);
+    const status = await checkInstagramToken(TOKEN);
     assertTokenValid(status);
     
     if (status.type === 'long_lived' || status.daysUntilExpiry > 30) {
@@ -366,7 +382,7 @@ async function check() {
   try {
     assertCheckConfiguration({ token, appId: APP_ID, appSecret: APP_SECRET });
 
-    const status = await checkTokenStatus(token);
+    const status = await checkInstagramToken(token);
     assertTokenValid(status);
     
     log('\nCurrent state:');

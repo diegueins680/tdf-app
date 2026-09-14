@@ -129,6 +129,8 @@ Check the GitHub Actions logs for automated runs, or run locally with `--check`.
 - Re-run setup: `node scripts/refresh-instagram-token.mjs --setup`
 
 ### "Error validating application" / API code 190
+- The non-mutating check first verifies Instagram account access with the documented [Instagram Login `/me` request](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/get-started), then validates token metadata. An expired or revoked Instagram token now fails before app authentication can obscure the cause. A successful account request does not bypass metadata validation.
+- If the first request reports an expired session, obtain a replacement token through the approved Instagram login process; app-ID changes or retries cannot renew an expired token. Never disclose tokens in logs or issues.
 - Ensure the repository-level Actions secret `INSTAGRAM_APP_ID` is configured; the workflow intentionally has no hard-coded fallback
 - Verify that `INSTAGRAM_APP_ID` and `INSTAGRAM_APP_SECRET` belong to the same Meta app
 - Verify that `INSTAGRAM_ACCESS_TOKEN` was issued for that app and has not been revoked

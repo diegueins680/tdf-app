@@ -31,6 +31,13 @@ test('safe-install CI permits missing scripts without masking script failures', 
   assert.doesNotMatch(workflow, /\|\||no (?:build|test) script; skipping/);
 });
 
+test('configured Datadog checks fail when tests or results are missing', async () => {
+  const workflow = await source('.github/workflows/datadog-synthetics.yml');
+  assert.match(workflow, /test_search_query: 'tag:e2e-tests'/);
+  assert.match(workflow, /fail_on_critical_errors: true/);
+  assert.match(workflow, /fail_on_missing_tests: true/);
+});
+
 test('persona browser journeys are artifacted and gate aggregate quality', async () => {
   const workflow = await source('.github/workflows/ci.yml');
   const playwrightConfig = await source('playwright.config.mjs');

@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import {
   assertCheckConfiguration,
   assertTokenValid,
+  checkInstagramToken,
   checkTokenStatus,
 } from '../refresh-instagram-token.mjs';
 import { checkToken as checkMessagingToken } from '../check-messaging-token.mjs';
@@ -18,6 +19,48 @@ function response({ ok, status, data, retryAfter = null }) {
     json: async () => data,
   };
 }
+
+test('Instagram account validation reports an expired token before attempting app authentication', async () => {
+  const requests = [];
+  await assert.rejects(checkInstagramToken('redacted', {
+    fetchImpl: async url => {
+      requests.push(new URL(url));
+      return response({ ok: false, status: 400, data: {
+        error: { code: 190, message: 'Error validating access token: Session has expired.' },
+      } });
+    },
+    sleep: async () => assert.fail('Expired tokens must not be retried'),
+  }), /Session has expired/);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].origin, 'https://graph.instagram.com');
+  assert.equal(requests[0].pathname, '/v26.0/me');
+  assert.equal(requests[0].searchParams.get('fields'), 'user_id');
+});
+
+test('successful Instagram account access still requires valid token metadata', async () => {
+  const hosts = [];
+  const status = await checkInstagramToken('redacted', {
+    fetchImpl: async url => {
+      hosts.push(new URL(url).hostname);
+      return response({ ok: true, status: 200, data: hosts.length === 1
+        ? { user_id: '123' }
+        : { data: { is_valid: false } },
+      });
+    },
+  });
+  assert.deepEqual(hosts, ['graph.instagram.com', 'graph.facebook.com']);
+  assert.throws(() => assertTokenValid(status), /access token is invalid/);
+});
+
+test('an empty or ambiguous Instagram account response fails closed', async () => {
+  for (const data of [{}, { data: [] }, { data: [{ user_id: '1' }, { user_id: '2' }] }]) {
+    let calls = 0;
+    await assert.rejects(checkInstagramToken('redacted', {
+      fetchImpl: async () => { calls++; return response({ ok: true, status: 200, data }); },
+    }), /no valid user ID/);
+    assert.equal(calls, 1);
+  }
+});
 
 test('token checks retry transient Meta errors and ultimately fail closed', async () => {
   let calls = 0;
