@@ -3,6 +3,50 @@ BEGIN;
 SET LOCAL lock_timeout = '10s';
 SET LOCAL statement_timeout = '10min';
 
+-- This unmerged migration is not in the production manifest. Keep authorization
+-- changes on the command's existing row-lock boundary, without changing business version.
+ALTER TABLE event_operation_event_state
+  ADD COLUMN IF NOT EXISTS authorization_version BIGINT NOT NULL DEFAULT 0
+    CHECK (authorization_version >= 0);
+
+CREATE OR REPLACE FUNCTION event_operation_fence_authorization_change()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+DECLARE target_event_id BIGINT;
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.id <> OLD.id OR NEW.event_id <> OLD.event_id THEN
+      RAISE EXCEPTION 'authorization identity/event is immutable; revoke and issue explicitly'
+        USING ERRCODE = '23514';
+    END IF;
+    IF TG_TABLE_NAME = 'event_operation_grant' THEN
+      IF NEW.grantee_party_id <> OLD.grantee_party_id THEN
+        RAISE EXCEPTION 'grant recipient is immutable; revoke and issue explicitly' USING ERRCODE = '23514';
+      END IF;
+    ELSIF NEW.party_id <> OLD.party_id THEN
+      RAISE EXCEPTION 'relationship party is immutable; revoke and issue explicitly' USING ERRCODE = '23514';
+    END IF;
+  END IF;
+  target_event_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;
+  UPDATE event_operation_event_state
+    SET authorization_version = authorization_version + 1
+    WHERE event_id = target_event_id;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+END
+$$;
+
+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_grant;
+CREATE TRIGGER event_operation_authorization_fence
+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_grant
+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();
+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_relationship;
+CREATE TRIGGER event_operation_authorization_fence
+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_relationship
+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();
+
 CREATE TABLE IF NOT EXISTS event_operation_feature_flag (
   feature_code TEXT PRIMARY KEY,
   enabled BOOLEAN NOT NULL DEFAULT FALSE,
@@ -306,6 +350,7 @@ DECLARE
   state_record event_operation_event_state%ROWTYPE;
   policy_record event_operation_lifecycle_transition_policy%ROWTYPE;
   prior_receipt event_operation_command_receipt%ROWTYPE;
+  has_prior_receipt BOOLEAN;
   request_hash BYTEA;
   response_payload JSONB;
   review_requester BIGINT;
@@ -335,12 +380,45 @@ BEGIN
     RETURN jsonb_build_object('error', 'not_found');
   END IF;
 
+  -- A lock wait must not retain a previously enabled feature decision.
+  IF NOT EXISTS (
+    SELECT 1 FROM event_operation_feature_flag flag
+    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled
+  ) THEN
+    RETURN jsonb_build_object('error', 'feature_disabled');
+  END IF;
+
   SELECT * INTO prior_receipt
   FROM event_operation_command_receipt
   WHERE event_id = target_event_id
     AND operation_code = 'event.lifecycle.transition'
     AND command_id = target_command_id;
-  IF FOUND THEN
+  has_prior_receipt := FOUND;
+
+  -- Reauthorize before replay OR conflicting-key responses. Historical receipts
+  -- confer no permission, and unreadable callers must not learn whether a key exists.
+  -- Wall clock is sampled after the event/authorization fence, never transaction now().
+  IF NOT event_operation_actor_can_read(target_event_id, target_actor_party_id, clock_timestamp()) THEN
+    IF has_prior_receipt THEN
+      INSERT INTO event_operation_audit_event(
+        event_id, actor_party_id, actor_reference, operation_code, command_id,
+        resource_kind, resource_id, outcome, reason, correlation_id
+      ) VALUES (
+        target_event_id, target_actor_party_id, 'party:' || target_actor_party_id::TEXT,
+        'event.lifecycle.transition', target_command_id, 'event', target_event_id::TEXT,
+        'rejected', 'receipt access denied: no current event read authority', effective_correlation
+      );
+      RETURN jsonb_build_object('error', 'forbidden');
+    END IF;
+    PERFORM event_operation_record_transition_rejection(
+      target_event_id, target_actor_party_id, target_command_id, request_hash,
+      requested_expected_version, NULL, NULL, 'forbidden', 'rejected',
+      'actor has no active event relationship or scoped grant', effective_correlation
+    );
+    RETURN jsonb_build_object('error', 'forbidden');
+  END IF;
+
+  IF has_prior_receipt THEN
     IF prior_receipt.actor_party_id = target_actor_party_id
        AND prior_receipt.request_sha256 = request_hash THEN
       RETURN prior_receipt.response || jsonb_build_object('replayed', TRUE);
@@ -364,15 +442,6 @@ BEGIN
       'error', 'idempotency_conflict',
       'eventId', target_event_id,
       'commandId', target_command_id
-    );
-  END IF;
-
-  IF NOT event_operation_actor_can_read(target_event_id, target_actor_party_id) THEN
-    RETURN event_operation_record_transition_rejection(
-      target_event_id, target_actor_party_id, target_command_id, request_hash,
-      requested_expected_version, NULL, NULL, 'forbidden', 'rejected',
-      'actor has no active event relationship or scoped grant',
-      effective_correlation
     );
   END IF;
 
@@ -413,7 +482,7 @@ BEGIN
   END IF;
 
   IF NOT event_operation_actor_has_authority(
-    target_event_id, target_actor_party_id, policy_record.required_authority
+    target_event_id, target_actor_party_id, policy_record.required_authority, clock_timestamp()
   ) THEN
     RETURN event_operation_record_transition_rejection(
       target_event_id, target_actor_party_id, target_command_id, request_hash,

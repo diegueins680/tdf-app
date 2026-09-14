@@ -34,10 +34,20 @@ automatically started their normal PR preview checks; no manual deployment was i
 
 ## Activation and next implementation gates
 
-- Correct receipt replay to reauthorize current access; test revoked/expired grants and stale
-  offline commands. Database exception-log redaction also needs explicit security tests.
+- The dependent PR 05 branch corrects the SQL receipt replay bypass and verifies revocation/time
+  boundaries with real database races. HTTP/session/offline coverage, the GET snapshot handler
+  and database exception-log redaction still need explicit security tests.
 - Complete task/RACI contextual authorization, time-window and membership-removal behavior,
   audit-preserving command APIs and user-visible database-conflict handling before exposing the
   sidecar. The task commit correction does not implement those missing controls.
 - Resolve hosted-check failures and finish the remaining phase-3/4 work, then the later phases
   listed in the delivery plan. The overall end-to-end definition of done is not met.
+
+## Follow-up observation during PR 05 work
+
+At PR 339 head `35f261097d9e295794f4db7404ae7d9556a8e9d4`, hosted `verify`,
+`postgres-foundation`, `postgres-api`, `postgres-task-commit`, API-contract and mobile checks
+passed. `repo-quality`, `ui-quality`, `persona-web-e2e`, `hardcoded-list-audit`, `migration-tests`,
+`production-migrations` and both preview integrations failed; `backend-quality` was still running.
+The underlying failure causes were not investigated in the replay-security slice. No green-CI or
+production-readiness claim follows from the focused formal/database passes.

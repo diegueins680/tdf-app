@@ -30,6 +30,10 @@ The matrix must be extended at each implementation PR with exact migration, modu
 generated-client, UI, and test identifiers. A critical row cannot move to `implemented` until both
 the modeled guard and its database/API concurrency boundary have executable evidence.
 
-Known phase-3 limitation: the current transition function's exact-receipt replay path precedes
-fresh read authorization. Revoked/expired access and offline replay remain an activation blocker,
-not a satisfied part of EO-045/EO-051. See the GitHub delivery checkpoint and PR 337 limitations.
+The fifth branch corrects the phase-3 receipt-replay bypass identified in PR 337. EO-045/EO-051
+map to `ReceiptReplay` / `NoUnauthorizedDisclosure` / `ReceiptBindingPreserved`, implemented by
+`event_operation_apply_transition`, `event_operation_fence_authorization_change` and
+`authorization_version`. Executable coverage lives in `event_operations_replay_assertions.sql`
+and `test-event-operations-api-migration.sh` (revocation, expiration, downgrade, actor/hash/event
+binding, RC/RR/Serializable scope races, immutable receipt and duplicate-effect checks).
+This is the SQL command boundary, not full HTTP/session/offline synchronization verification.

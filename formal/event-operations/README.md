@@ -43,6 +43,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `TaskRaci.cfg` | 2 tasks, 3 collaborators, one documented override reason | PASS; 5,810 generated, 1,338 distinct states, depth 10 |
 | `TaskCommit.cfg` | 2 competing transactions, 2 Responsible people, 1 task, 1 abstract dependency, 5 operations | PASS; 121 generated, 112 distinct states, depth 5 |
 | `TaskCommitEarlyValidation.cfg` / `TaskCommitWriteSkew.cfg` | Negative controls: disable final validation / serialization respectively | Expected TLC exit 12 and named invariant violations; runner checks both |
+| `ReceiptReplay.cfg` | 1 stored receipt/read attempt; 8 actor/event/hash bindings; 3 grants; clock 0–3, expiry 2 | PASS; 2,866 generated, 1,164 distinct states, depth 8 |
+| `ReceiptReplayBypass.cfg`, `ReceiptReplayStaleClock.cfg`, `ReceiptReplayStaleSnapshot.cfg` | Negative controls: omit authorization, fresh clock, or scope-write serialization | Expected exit 12 with `NoUnauthorizedDisclosure`; all three detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -65,6 +67,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
   accountable party, non-empty responsible set, and collaborator-removal orphan prevention.
 - `TaskCommit.tla`: separate prepare/commit steps, final transaction-state validation, and write
   serialization; negative controls detect blocked completion and concurrent responsibility loss.
+- `ReceiptReplay.tla`: historical receipt reads require current access and exact actor/event/hash
+  binding. Captured decision evidence avoids incorrectly treating a later revocation as retroactive.
+  Reauthorization, current time and scope-write serialization each have an independent negative control.
 - `ContractPayment.tla`: exact-version consent, material amendment reset, milestone gate,
   separation of payout approval, and deduplicated payout effect.
 - `OperationalLiveness.tla`: eventual hold expiry, notification dead-lettering, offline sync/conflict,
@@ -109,3 +114,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    `TaskCommitWriteSkew.cfg` detects that unsafe abstraction. The passing model serializes writers;
    PostgreSQL tests use a real per-event write fence and deterministic concurrency barriers under
    READ COMMITTED, REPEATABLE READ and SERIALIZABLE. This does not prove arbitrary SQL isolation.
+6. The lifecycle SQL returned an exact stored receipt before checking current access. A disposable
+   PostgreSQL test reproduced an accepted response after revocation. `ReceiptReplayBypass` finds
+   the same disclosure. Two further negative configurations expose stale transaction-start time
+   and stale permission snapshots. The positive model rechecks current access with fresh time,
+   serialized against grant changes. Its scope is receipt disclosure, not all HTTP authorization;
+   duplicate-effect and durable-audit claims require the accompanying SQL tests.
