@@ -55,3 +55,10 @@ expiry is checked after lock acquisition. The existing unmerged API migration is
 because it has never entered the production manifest. Scope administration, consistent GET snapshot
 authorization, sensitive exception logging, full HTTP/offline tests and the remaining product phases
 are still required before activation.
+
+The sixth branch, `fix/event-snapshot-privacy-boundary`, addresses the preceding GET/logging gaps.
+The bounded `SnapshotRead` model and three expected counterexamples precede the implementation.
+Snapshots now share the permission-write fence, use one post-lock instant and suppress self-approval;
+database failures discard sensitive payloads without swallowing cancellation. Real database races,
+strict DTO decoding and the production PostgreSQL adapter have focused tests. This remains phase-3
+security hardening, not completion of scope administration, HTTP/offline verification or product UX.

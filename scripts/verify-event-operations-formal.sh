@@ -87,6 +87,10 @@ run_tlc ReceiptReplay.tla ReceiptReplay.cfg receipt-replay
 expect_counterexample ReceiptReplayBypass.cfg NoUnauthorizedDisclosure replay-bypass ReceiptReplay.tla
 expect_counterexample ReceiptReplayStaleClock.cfg NoUnauthorizedDisclosure replay-clock ReceiptReplay.tla
 expect_counterexample ReceiptReplayStaleSnapshot.cfg NoUnauthorizedDisclosure replay-snapshot ReceiptReplay.tla
+run_tlc SnapshotRead.tla SnapshotRead.cfg snapshot-read
+expect_counterexample SnapshotReadEarlyAuth.cfg NoUnauthorizedSnapshot snapshot-auth SnapshotRead.tla
+expect_counterexample SnapshotReadMixedClock.cfg CoherentProjection snapshot-clock SnapshotRead.tla
+expect_counterexample SnapshotReadRawLog.cfg LogFieldsAllowlisted snapshot-log SnapshotRead.tla
 run_tlc ContractPayment.tla ContractPayment.cfg contract-payment
 run_tlc OperationalLiveness.tla OperationalLiveness.cfg operational-liveness
 

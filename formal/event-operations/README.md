@@ -45,6 +45,8 @@ satisfiable, and requires every Alloy assertion to have no counterexample.
 | `TaskCommitEarlyValidation.cfg` / `TaskCommitWriteSkew.cfg` | Negative controls: disable final validation / serialization respectively | Expected TLC exit 12 and named invariant violations; runner checks both |
 | `ReceiptReplay.cfg` | 1 stored receipt/read attempt; 8 actor/event/hash bindings; 3 grants; clock 0–3, expiry 2 | PASS; 2,866 generated, 1,164 distinct states, depth 8 |
 | `ReceiptReplayBypass.cfg`, `ReceiptReplayStaleClock.cfg`, `ReceiptReplayStaleSnapshot.cfg` | Negative controls: omit authorization, fresh clock, or scope-write serialization | Expected exit 12 with `NoUnauthorizedDisclosure`; all three detected |
+| `SnapshotRead.cfg` | 1 read, 1 revocable grant, clock 0–3 with expiry 2, 2 representative secrets | PASS; 1,133 generated, 296 distinct states, depth 12 |
+| `SnapshotReadEarlyAuth.cfg`, `SnapshotReadMixedClock.cfg`, `SnapshotReadRawLog.cfg` | Negative controls: pre-lock authorization, different projection clocks, raw error logging | Expected exit 12 with `NoUnauthorizedSnapshot`, `CoherentProjection`, `LogFieldsAllowlisted` respectively; all detected |
 | `ContractPayment.cfg` | 2 contract versions, 2 required parties, 1 payout command | PASS; 31 generated, 16 distinct states, depth 8 |
 | `OperationalLiveness.cfg` | horizon 3, hold expiry 2, 2 notification attempts; weak fairness for each worker action | PASS; 5,713 generated, 1,440 distinct states, depth 11; all 5 temporal properties checked |
 | `EventStructure.als` scenario | 1 event, 5 parties, 2 tasks/bookings, 2 contract versions, 5-bit integers | SAT; a valid integrated instance exists |
@@ -72,6 +74,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
   Reauthorization, current time and scope-write serialization each have an independent negative control.
 - `ContractPayment.tla`: exact-version consent, material amendment reset, milestone gate,
   separation of payout approval, and deduplicated payout effect.
+- `SnapshotRead.tla`: current authorization after locking, one authorization instant for a coherent
+  projection, and allowlisted error-log fields. Its lock abstracts the PostgreSQL scope-write fence;
+  feature-disable races, JSON decoding and exception cancellation require executable tests.
 - `OperationalLiveness.tla`: eventual hold expiry, notification dead-lettering, offline sync/conflict,
   work terminal/attention state, and financial reconciliation/failure/alert under weak fairness.
 - `EventStructure.als`: ownership/coproduction, time-bounded grants, visibility, RACI, dependency,
@@ -120,3 +125,9 @@ all lifecycle states, actors, transition targets, guards, and authority rules.
    and stale permission snapshots. The positive model rechecks current access with fresh time,
    serialized against grant changes. Its scope is receipt disclosure, not all HTTP authorization;
    duplicate-effect and durable-audit claims require the accompanying SQL tests.
+7. The prior GET used transaction-start time and separately fetched state, capabilities and allowed
+   transitions. `SnapshotRead` negative controls expose early authorization and mixed-clock reads;
+   a PostgreSQL control reproduces stale-clock disclosure after expiry. The corrected read locks
+   first and samples one instant. A third negative control detects raw exception-log fields.
+   This model verifies field allowlisting, not all application logging or arbitrary secret content;
+   Haskell property tests and real database races complement the finite abstraction.

@@ -15,5 +15,6 @@ WHERE feature_code = 'event.operations.api'
 DROP FUNCTION IF EXISTS event_operation_apply_transition(
   BIGINT, BIGINT, UUID, BIGINT, TEXT, TEXT, TEXT, TEXT
 );
+DROP FUNCTION IF EXISTS event_operation_read_snapshot(BIGINT, BIGINT);
 
 COMMIT;

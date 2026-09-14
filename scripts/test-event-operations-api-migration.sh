@@ -21,6 +21,7 @@ trap cleanup EXIT INT TERM
 
 docker run --rm -d \
   --name "$test_container" \
+  -p 127.0.0.1::5432 \
   -e POSTGRES_PASSWORD=event-operations-api-test \
   -e POSTGRES_DB="$test_database" \
   postgres:16-alpine >/dev/null
@@ -98,6 +99,12 @@ test_replay_revocation_race() {
     COMMIT;" > "$result_dir/read.log" 2>&1 &
   replay_read=$!
   wait_for_replay_barrier "replay_read_$replay_event" Lock
+  psql_exec --set=VERBOSITY=verbose -qAtc "BEGIN ISOLATION LEVEL $replay_isolation;
+    SET LOCAL application_name='snapshot_read_$replay_event';
+    SELECT event_operation_read_snapshot($replay_event,2) IS NULL;
+    COMMIT;" > "$result_dir/snapshot.log" 2>&1 &
+  snapshot_read=$!
+  wait_for_replay_barrier "snapshot_read_$replay_event" Lock
   psql_exec -qAtc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
     WHERE datname=current_database() AND application_name='replay_coordinator_$replay_event'" >/dev/null
   wait "$replay_coordinator" || true
@@ -106,12 +113,19 @@ test_replay_revocation_race() {
     wait "$replay_read"
     test "$(jq -r 'keys|join(",")' "$result_dir/read.log")" = error
     test "$(jq -r '.error' "$result_dir/read.log")" = forbidden
+    wait "$snapshot_read"
+    test "$(tail -n 1 "$result_dir/snapshot.log")" = t
   else
     if wait "$replay_read"; then
       echo "Stale $replay_isolation command did not abort" >&2
       exit 1
     fi
     grep -q 40001 "$result_dir/read.log" || { sed -n '1,50p' "$result_dir/read.log" >&2; exit 1; }
+    if wait "$snapshot_read"; then
+      echo "Stale $replay_isolation snapshot did not abort" >&2
+      exit 1
+    fi
+    grep -q 40001 "$result_dir/snapshot.log" || { sed -n '1,50p' "$result_dir/snapshot.log" >&2; exit 1; }
   fi
   replay_retry=$(transition_json "$replay_event" 2 "$replay_command" 1 pending_approval NULL replay-race request-race)
   test "$(json_field "$replay_retry" '.error')" = forbidden
@@ -120,10 +134,35 @@ test_replay_revocation_race() {
   test "$(psql_exec -qAtc "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=$replay_event")" = 1
 }
 
+test_snapshot_disable_race() {
+  psql_exec -c "SET application_name='snapshot_flag_coordinator';
+    SELECT pg_advisory_lock(886,1); SELECT pg_sleep(60);" > "$result_dir/flag-coordinator.log" 2>&1 &
+  flag_coordinator=$!
+  wait_for_replay_barrier snapshot_flag_coordinator Timeout
+  psql_exec -c "BEGIN; SET LOCAL application_name='snapshot_flag_writer';
+    UPDATE event_operation_feature_flag SET enabled=FALSE,updated_at=clock_timestamp(),
+      change_reason='snapshot race disable' WHERE feature_code='event.operations.api';
+    SELECT pg_advisory_xact_lock(886,1); COMMIT;" > "$result_dir/flag-writer.log" 2>&1 &
+  flag_writer=$!
+  wait_for_replay_barrier snapshot_flag_writer Lock
+  psql_exec -qAtc "BEGIN; SET LOCAL application_name='snapshot_flag_reader';
+    SELECT event_operation_read_snapshot(10,1) IS NULL; COMMIT;" > "$result_dir/flag-reader.log" 2>&1 &
+  flag_reader=$!
+  wait_for_replay_barrier snapshot_flag_reader Lock
+  psql_exec -qAtc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity
+    WHERE datname=current_database() AND application_name='snapshot_flag_coordinator'" >/dev/null
+  wait "$flag_coordinator" || true
+  wait "$flag_writer"; wait "$flag_reader"
+  test "$(tail -n 1 "$result_dir/flag-reader.log")" = t
+  psql_exec -c "UPDATE event_operation_feature_flag SET enabled=TRUE,updated_at=clock_timestamp(),
+    updated_by_party_id=1,change_reason='snapshot test restore' WHERE feature_code='event.operations.api';" >/dev/null
+}
+
 apply_sql "$fixture_sql"
 apply_sql "$foundation_migration"
 apply_sql "$api_migration"
 apply_sql "$api_migration"
+test "$(psql_exec -qAtc 'SELECT event_operation_read_snapshot(10,1) IS NULL')" = t
 
 flag_enabled=$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")
 test "$flag_enabled" = "f"
@@ -216,15 +255,28 @@ test "$(psql_exec -qAt -c 'SELECT count(*) FROM event_operation_transition WHERE
 test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_command_receipt WHERE event_id=13 AND operation_code='event.lifecycle.transition';")" = "2"
 
 apply_sql "$repo_root/tdf-hq/test/integration/event_operations_replay_assertions.sql"
+apply_sql "$repo_root/tdf-hq/test/integration/event_operations_snapshot_assertions.sql"
 test_replay_revocation_race 30 'READ COMMITTED'
 test_replay_revocation_race 31 'REPEATABLE READ'
 test_replay_revocation_race 32 'SERIALIZABLE'
+test_snapshot_disable_race
 replay_epoch=$(psql_exec -qAtc 'SELECT authorization_version FROM event_operation_event_state WHERE event_id=20')
+
+if [ "${RUN_EVENT_OPERATIONS_HASKELL_TESTS:-0}" = 1 ]; then
+  snapshot_port=$(docker port "$test_container" 5432/tcp)
+  snapshot_port=${snapshot_port##*:}
+  (
+    cd "$repo_root/tdf-hq"
+    EVENT_OPERATIONS_TEST_DSN="host=127.0.0.1 port=$snapshot_port user=postgres password=event-operations-api-test dbname=$test_database" \
+      stack exec -- runghc -isrc -itest test/EventOperationsBoundaryMain.hs
+  )
+fi
 
 apply_sql "$api_rollback"
 apply_sql "$api_rollback"
 test "$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")" = "f"
-test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "3"
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "5"
+test "$(psql_exec -qAtc "SELECT to_regprocedure('event_operation_read_snapshot(bigint,bigint)') IS NULL")" = t
 if psql_exec -qAt -c "UPDATE event_operation_feature_flag_history SET change_reason='tampered' WHERE id=(SELECT min(id) FROM event_operation_feature_flag_history);" >/dev/null 2>&1; then
   echo "Feature flag history update unexpectedly succeeded" >&2
   exit 1
@@ -237,7 +289,8 @@ test "$(psql_exec -qAtc 'SELECT authorization_version FROM event_operation_event
 test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_transition WHERE event_id=20')" = 1
 test "$(psql_exec -qAtc 'SELECT count(*) FROM event_operation_command_receipt WHERE event_id=20')" = 3
 test "$(psql_exec -qAt -c "SELECT enabled FROM event_operation_feature_flag WHERE feature_code='event.operations.api';")" = "f"
-test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "3"
+test "$(psql_exec -qAt -c "SELECT count(*) FROM event_operation_feature_flag_history WHERE feature_code='event.operations.api';")" = "5"
+test "$(psql_exec -qAtc 'SELECT event_operation_read_snapshot(10,1) IS NULL')" = t
 test "$(psql_exec -qAt -c "SELECT to_regprocedure('event_operation_apply_transition(bigint,bigint,uuid,bigint,text,text,text,text)') IS NOT NULL;")" = "t"
 
-echo "Event operations API migration passed disabled-default/immutable history, contextual authorization, revoked/expired/future/restricted replay, current-clock write authority, concurrent duplicate replay and revocation (RC/RR/Serializable), command-key binding, conflict/rejection audit, version conflict, separation-of-duties, effects gate, concurrent transition, rollback, and reapply checks."
+echo "Event operations API migration passed replay/snapshot privacy, fresh-clock coherent projection, approval visibility, concurrent revocation (RC/RR/Serializable), flag-disable race, immutable history, idempotency, lifecycle guards, rollback and reapply."

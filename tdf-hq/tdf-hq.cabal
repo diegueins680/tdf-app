@@ -107,6 +107,7 @@ executable tdf-hq-exe
     TDF.Email.Service
     TDF.FeatureRegistry
     TDF.EventOperations.API
+    TDF.EventOperations.DatabaseBoundary
     TDF.EventOperations.Server
     TDF.EventOperations.Types
     TDF.Operations.API
@@ -355,6 +356,8 @@ test-suite tdf-hq-test
     TDF.ModelsExtra
     TDF.Models.SocialEventsModels
     TDF.EventOperations.API
+    TDF.EventOperations.DatabaseBoundary
+    TDF.EventOperations.DatabaseBoundarySpec
     TDF.EventOperations.Server
     TDF.EventOperations.Types
     TDF.EventOperations.TypesSpec
@@ -481,6 +484,7 @@ test-suite tdf-hq-test
     , wai-cors
     , http2                >=5.0 && <5.3
     , postgresql-simple
+    , postgresql-libpq
     , random
     , http-client
     , http-client-tls
