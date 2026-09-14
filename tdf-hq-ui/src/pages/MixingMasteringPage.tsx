@@ -56,6 +56,7 @@ import {
 } from '../api/serviceStorefront';
 import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
 const IMPORT_META_ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -162,6 +163,7 @@ export default function MixingMasteringPage() {
   const [lookupToken, setLookupToken] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<Awaited<ReturnType<typeof ServiceStorefront.createDatafastCheckout>> | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
@@ -203,6 +205,12 @@ export default function MixingMasteringPage() {
     }),
   });
   const availablePaymentMethods = paymentMethodsQuery.data;
+  const hostedPaymentMethods = useMemo(() => [
+    ...(availablePaymentMethods?.placeToPayCard ? ['placetopay_card'] : []),
+    ...(availablePaymentMethods?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
+    ...(availablePaymentMethods?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(availablePaymentMethods?.payPhoneWallet ? ['payphone_wallet'] : []),
+  ], [availablePaymentMethods]);
 
   const filteredPackages = useMemo(() => {
     if (serviceFilter === 'all') return packages;
@@ -753,7 +761,7 @@ export default function MixingMasteringPage() {
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handleDatafastPayment(); }}
-              disabled={paymentBusy}
+              disabled={paymentBusy || hostedPaymentLocked}
             >
               💳 Tarjeta de crédito/débito (Datafast)
             </Button>}
@@ -763,7 +771,7 @@ export default function MixingMasteringPage() {
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handlePaypalPayment(); }}
-              disabled={paymentBusy || !paypalClientId || !paypalReady}
+              disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady}
             >
               🅿️ PayPal
             </Button>}
@@ -773,10 +781,28 @@ export default function MixingMasteringPage() {
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handleManualPayment(); }}
-              disabled={paymentBusy}
+              disabled={paymentBusy || hostedPaymentLocked}
             >
               🏦 Transferencia bancaria
             </Button>}
+            <HostedProviderCheckout
+              offeredMethods={hostedPaymentMethods}
+              disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen}
+              initialBuyerPhone={formData.buyerPhone}
+              pendingReturnPathPrefix="/mezcla-mastering/pedido/"
+              onSafetyLockChange={setHostedPaymentLocked}
+              prepareCheckout={async () => {
+                const { order, token } = await createServiceOrder();
+                if (!order.ssoCheckoutId) {
+                  throw new Error('El servidor no entregó el checkout canónico. No se inició ningún cobro.');
+                }
+                return {
+                  checkoutId: order.ssoCheckoutId,
+                  lookupToken: token,
+                  returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
+                };
+              }}
+            />
           </Stack>
 
           {(paymentMethodsQuery.isError || (
@@ -784,6 +810,7 @@ export default function MixingMasteringPage() {
             && !availablePaymentMethods?.datafast
             && !availablePaymentMethods?.paypal
             && !availablePaymentMethods?.bankTransfer
+            && hostedPaymentMethods.length === 0
           )) && (
             <Alert severity="warning" sx={{ mb: 2 }}>
               No hay un método de pago verificado y operativo para este pedido. No se creó ningún cobro.

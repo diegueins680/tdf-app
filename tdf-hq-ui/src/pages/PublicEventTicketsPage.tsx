@@ -31,6 +31,7 @@ import {
   type PublicEventTicketCheckoutRequest,
 } from '../api/eventTickets';
 import type { DatafastCheckoutDTO } from '../api/types';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 
@@ -95,6 +96,7 @@ export default function PublicEventTicketsPage() {
   const [checkout, setCheckout] = useState<PublicEventTicketCheckout | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [datafastCheckout, setDatafastCheckout] = useState<DatafastCheckoutDTO | null>(null);
@@ -485,9 +487,32 @@ export default function PublicEventTicketsPage() {
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
                   {!paid && (
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                      {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy} onClick={() => void handleDatafast()}>Datafast</Button>}
-                      {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                    <Stack spacing={1.5}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        {checkout.paymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
+                        {checkout.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
+                      </Stack>
+                      {checkoutLookupToken && (
+                        <HostedProviderCheckout
+                          checkout={{
+                            checkoutId: checkout.checkoutId,
+                            lookupToken: checkoutLookupToken,
+                            returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
+                          }}
+                          offeredMethods={checkout.paymentMethods}
+                          disabled={paymentBusy || datafastOpen || paypalOpen}
+                          english={english}
+                          initialBuyerPhone={buyerPhone}
+                          onSafetyLockChange={setHostedPaymentLocked}
+                          onPaymentConfirmed={async () => {
+                            setCheckout(await EventTickets.getCheckout(
+                              checkout.eventId,
+                              checkout.orderId,
+                              checkoutLookupToken,
+                            ));
+                          }}
+                        />
+                      )}
                     </Stack>
                   )}
                   {paid && checkout.tickets.length > 0 && (
