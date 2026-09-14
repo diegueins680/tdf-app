@@ -83,6 +83,20 @@ All values are server-side environment/secret-manager entries. Values must never
 
 ## Verification commands
 
+The following completion record was captured at `2026-09-14T14:46:43Z` (`2026-09-14T09:46:43-05:00`) on macOS 14.7.7, Node 24.8.0, npm 11.6.0, Stack 3.7.1/GHC 9.10.3. Backend code was commit `6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5`; the generated mobile contract was commit `62dd38cfa0362d0fb880c9f0cd4933693fe77759`. The release-manifest content subsequently committed as `a03527fd4` was present during its release tests.
+
+| Command | Environment/evidence class | Outcome |
+|---|---|---|
+| `cd tdf-hq && stack test --fast --test-arguments='--match=provider'` | Local compiled unit/property/mocked provider boundaries | Passed: 76 examples, 0 failures. Existing unrelated compiler warnings were not suppressed. |
+| `./scripts/test-provider-execution-runtime-migration.sh` | Disposable `postgres:16-alpine` | Passed: double apply, constraints, encryption/no plaintext, immutable references/evidence, rollback refusal, operator-flag preservation, clean rollback, reapply. Container removed. |
+| `npm run test:production-release` | Local Node release-contract tests | Passed: 60 tests, 0 failures. |
+| `npm run generate:api` | Local OpenAPI generation | Passed for web and mobile generated TypeScript clients. |
+| `npm run typecheck:ui` | Local TypeScript | Passed. |
+| `npm --prefix tdf-mobile run typecheck` | Local TypeScript | Passed. |
+| `TDF_AUTOMIG_TEST_DATABASE_URL=… TDF_AUTOMIG_SERVER_BIN=… ./scripts/test-automatic-migrations-production-schema.sh` | Isolated `pgvector/pgvector:pg17`, compiled local backend; secrets/connection details redacted here | Passed: complete manifest apply, healthy backend, release-schema verification, second startup, unchanged schema checksum. Container removed. |
+
+No sandbox, staging, live, settlement, or production evidence was produced by any command above.
+
 Run from the parent repository unless noted:
 
 ```text
