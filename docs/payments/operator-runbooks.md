@@ -4,6 +4,8 @@ These procedures are safe defaults for sandbox and staging. They do not authoriz
 
 For per-request intent keys, legacy reference preservation, conflicting provider evidence and
 the required old/new writer cutover, follow the [2026-09-14 retry safety supplement](retry-reconciliation-safety-2026-09-14.md).
+For lost create responses after payment/expiry or account suspension, follow the
+[exact-response recovery supplement](terminal-recovery-2026-09-14.md).
 
 ## 1. Configuration and activation
 
@@ -67,6 +69,15 @@ Deploy code and schema separately from activation. Smoke-test health and read-on
 The provider-execution rollback additionally refuses when a remote-operation row or an untrusted callback exists. It deletes only exact untouched feature-flag seeds, preserving any operator-modified row. A hosted redirect URL is encrypted and must never be copied into logs or incident tickets.
 
 ## 5. Ambiguous transaction incident
+
+If the browser lost the create response, use **Recover original payment** with the original
+provider/method/key and checkout lookup token. It can read a contacted operation even if new
+payments are disabled. A 404, missing key or expired browser record is not no-charge evidence.
+Do not ask the customer to clear storage, alter their PayPhone number, mint a new key or use
+another provider. If the attempt ID is known, use the authorized payment-session GET. Otherwise
+reconcile through the original order and its stored provider binding; never collect tokens,
+secret keys or hosted redirect URLs in support tickets. A merely prepared operation still
+requires new-contact gates and must not be manually labeled paid or declined to bypass them.
 
 1. Freeze the checkout and prevent another provider attempt.
 2. Record the timeout/transport class without sensitive payloads.
